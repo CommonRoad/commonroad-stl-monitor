@@ -1,0 +1,91 @@
+
+# simulation parameters
+###
+# .. code-block:: yaml
+#
+#    - dt: time step size
+#    - store_results: set to true if the results should be stored in case if no valid solution is found
+#    - commonroad_benchmark_id: CommonRoad solution file name
+#    - sumo: use SUMO simulation for trajectories of other vehicles
+#    - verbose_mode: print status of algorithms and simulation
+#    - video_output_folder: folder in which the created videos are stored
+simulation_param:
+    dt: 0.1
+    store_results: true
+    commonroad_benchmark_id: 34_A9_SPEEDLIMIT
+    sumo: false
+    verbose_mode: false
+    video_output_folder: ./videos
+
+
+# Ego vehicle parameters
+###
+# .. code-block:: yaml
+#
+#    - vehicle_number: CommonRoad vehicle number; possible options are 1, 2 or 3 (see CommonRoad vehicle models)
+#    - s_x_init: initial x-position of ACC vehicle
+#    - s_y_init: initial y-position of ACC vehicle
+#    - v_init: initial velocity of ACC vehicle
+#    - initial_yaw_angle: initial yaw angle of ACC vehicle
+#    - initial_steering_angle: initial steering angle of ACC vehicle
+#    - initial_steering_velocity: initial steering velocity of ACC vehicle
+#    - a_init: initial acceleration of ACC vehicle
+#    - a_max: maximum acceleration of ACC vehicle
+#    - a_min: minimum acceleration of ACC vehicle
+#    - j_max: maximum jerk of ACC vehicle
+#    - j_min: minimum jerk of ACC vehicle
+#    - v_des: desired velocity of ACC vehicle
+#    - t_react: reaction time of ACC vehicle
+#    - dynamics_param: physical parameters of ACC vehicle; will be initialized during runtime
+#    - fov: field of view
+#    - v_max: maximum allowed velocity considering vehicle dynamics and safety based limit
+ego_vehicle_param:
+    vehicle_number: 2
+    s_x_init: 0
+    s_y_init: 1.75
+    v_init: 0
+    initial_yaw_angle: 0.0
+    initial_steering_angle: 0.0
+    initial_steering_velocity: 0.0
+    a_init: 0
+    a_max: 3
+    a_min: -10
+    j_max: 5
+    j_min: -10
+    v_des: 60
+    t_react: 0.0
+    dynamics_param: None
+    fov: 200
+    v_max: None
+    vehicle_id: 30
+
+# Other vehicle's parameters
+###
+# .. code-block:: yaml
+#
+#    - vehicle_number: CommonRoad vehicle number; possible options are 1, 2 or 3 (see CommonRoad vehicle models)
+#    - a_max: maximum acceleration of leading vehicle
+#    - a_min: minimum acceleration of leading vehicle
+#    - j_max: maximum jerk of leading vehicle
+#    - j_min: minimum jerk of leading vehicle
+#    - t_react: reaction time of leading vehicle
+#    - dynamics_param: physical parameters of leading vehicle; will be initialized during runtime
+other_vehicles_param:
+    vehicle_number: 2
+    a_max: 10
+    a_min: -10.0
+    j_max: 10
+    j_min: -10
+    t_react: 0.0
+    dynamics_param: None
+    th_theta: 0.025
+    th_offset: 0.35
+    n_cutin: 3
+
+traffic_rules:
+    1: G(keeps_speed_limit)
+
+predicates:
+    1: [keeps_speed_limit]
+
+
