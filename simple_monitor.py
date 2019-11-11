@@ -26,7 +26,21 @@ class SimpleMonitor:
             monitors.append(monitor)
         return monitors
 
+    def evaluate_predicate(self, predicate: str, state: State, scenario: Scenario) -> bool:
+        if predicate == "keeps_safe_distace":
+            return self.keeps_safe_distance(state, scenario)
+        elif predicate == "keeps_speed_limit":
+            return self.keeps_speed_limit(state, scenario)
+
     def keeps_speed_limit(self, state: State, scenario: Scenario):
+        lanelet_id = scenario.lanelet_network.find_lanelet_by_position([state.position])
+        lanlet = scenario.lanelet_network.find_lanelet_by_id(lanelet_id[0][0])
+        if lanlet.speed_limit < state.velocity:
+            return False
+        else:
+            return True
+
+    def keeps_safe_distance(self, state: State, scenario: Scenario):
         lanelet_id = scenario.lanelet_network.find_lanelet_by_position([state.position])
         lanlet = scenario.lanelet_network.find_lanelet_by_id(lanelet_id[0][0])
         if lanlet.speed_limit < state.velocity:
@@ -153,7 +167,7 @@ class SimpleMonitor:
                 for predicate in value:
                     if data.get(predicate) is None:
                         data[predicate] = []
-                    data[predicate].append((state.time_step, self.keeps_speed_limit(state, scenario)))
+                    data[predicate].append((state.time_step, self.evaluate_predicate(predicate, state, scenario)))
 
         for rule in self._rules:
             print(rule(data, quantitative=False))

@@ -88,6 +88,6 @@ traffic_rules:
 
 predicates:
     1: [keeps_speed_limit]
-    2: [safe_distance]
+    2: [keeps_safe_distance]
 
 
