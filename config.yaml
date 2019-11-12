@@ -12,7 +12,7 @@
 simulation_param:
     dt: 0.1
     store_results: true
-    commonroad_benchmark_id: 34_A9_SPEEDLIMIT
+    commonroad_benchmark_id: 34_A9_SPEEDLIMIT # USA_US101-10_1_T-1
     sumo: false
     verbose_mode: false
     video_output_folder: ./videos
@@ -57,7 +57,7 @@ ego_vehicle_param:
     dynamics_param: None
     fov: 200
     v_max: None
-    vehicle_id: 30
+    vehicle_id: 30 #525
 
 # Other vehicle's parameters
 ###
@@ -84,10 +84,12 @@ other_vehicles_param:
 
 traffic_rules:
     1: G(keeps_speed_limit)
-    2: G(safe_distance)
+#    2: G(keeps_safe_distance)
+#    3: G(~(brakes_abruptly))
 
 predicates:
     1: [keeps_speed_limit]
-    2: [keeps_safe_distance]
+#    2: [keeps_safe_distance]
+#    3: [brakes_abruptly]
 
 

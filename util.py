@@ -8,15 +8,15 @@ import math
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_ccosy.geometry.trapezoid_coordinate_system import create_coordinate_system_from_polyline
 from typing import Dict, Tuple
-from commonroad.scenario.trajectory import
 
-def create_curvilinear_coordinate_system_from_state(lanelet_network, state):
+
+def create_curvilinear_coordinate_system_from_state(lanelet_network, state, fov):
     point_list = list(np.array([state.position]))
     lanelet_id = lanelet_network.find_lanelet_by_position(point_list)
     lanelet = lanelet_network.find_lanelet_by_id(lanelet_id[0][0])
 
     if lanelet.successor is not None and len(lanelet.successor) > 0:
-        lanes = Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet, lanelet_network, conf.fov+100)[0][0]
+        lanes = Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet, lanelet_network, fov+100)[0][0]
     else:
         lanes = lanelet
     reference_path = lanes.center_vertices
@@ -158,7 +158,8 @@ def update_ego_lane_info(scenario: Scenario, ego_state: State, ego_vehicle_param
     ego_lanelet_id = scenario.lanelet_network.find_lanelet_by_position([ego_state.position])
     ego_lanelet = scenario.lanelet_network.find_lanelet_by_id(ego_lanelet_id[0][0])
     curvilinear_cosy_ego_lane, ego_lane = create_curvilinear_coordinate_system_from_state(scenario.lanelet_network,
-                                                                                          ego_state)
+                                                                                          ego_state,
+                                                                                          ego_vehicle_param.get("fov"))
     left_lane = None
     right_lane = None
 
