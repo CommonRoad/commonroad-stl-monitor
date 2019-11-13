@@ -84,12 +84,12 @@ other_vehicles_param:
 
 traffic_rules:
     1: G(keeps_speed_limit)
-    2: G(keeps_safe_distance)
+#    2: G(keeps_safe_distance)
 #    3: G(~(brakes_abruptly))
 
 predicates:
     1: [keeps_speed_limit]
-    2: [keeps_safe_distance]
+#    2: [keeps_safe_distance]
 #    3: [brakes_abruptly]
 
 
