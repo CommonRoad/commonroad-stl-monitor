@@ -9,23 +9,28 @@ from commonroad.geometry.shape import Rectangle
 from parameters_vehicle2 import parameters_vehicle2
 from commonroad.scenario.lanelet import Lanelet
 from commonroad.scenario.obstacle import DynamicObstacle
+import cProfile
 
 
 class SimpleMonitor:
-    def __init__(self, traffic_rules: Dict[str, str], predicates: Dict[str, List[str]],
-                 simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict):
+    def __init__(self, traffic_rules: Dict[str, str], predicates_per_mtl: Dict[str, List[str]], simulation_param: Dict,
+                 ego_vehicle_param: Dict, other_vehicles_param: Dict, scenario: Scenario, initial_state: State):
         """
         :param traffic_rules: dictionary with MTL formulas of traffic rules
-        :param predicates: dictionary predicates for each MTL formula
+        :param predicates_per_mtl: dictionary with predicates for each MTL formula
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
+        :param scenario: CommonRoad scenario
         """
         self._rules = self.create_monitors(traffic_rules)
-        self._formula_predicates = predicates
+        self._predicates_per_mtl = predicates_per_mtl
         self._simulation_param = simulation_param
         self._ego_vehicle_param = ego_vehicle_param
         self._other_vehicles_param = other_vehicles_param
+        self._scenario = scenario
+        self._ego_lanelet_id, self._ego_lanelet, self._ego_lane, self._curvilinear_cosy_ego_lane, self._left_lane, \
+        self._right_lane = update_ego_lane_info(scenario, initial_state, self._ego_vehicle_param)
 
     @staticmethod
     def create_monitors(mtl_rules: Dict[str, str]) -> List[str]:
@@ -42,24 +47,29 @@ class SimpleMonitor:
         return monitors
 
     def evaluate_predicates(self, predicate: str, state: State, scenario: Scenario) -> bool:
-        # ego_lanelet_id, ego_lanelet, ego_lane, curvilinear_cosy_ego_lane, left_lane, \
-        # right_lane = update_ego_lane_info(scenario, state, self._ego_vehicle_param)
-        # s_ego, d_ego = curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(state.position[0], state.position[1])
-        # obstacle_states_same_lane_cr, obstacle_states_right_lane_cr, obstacle_states_left_lane_cr = \
-        #     self.obstacles_at_time_step(state.time_step, scenario.dynamic_obstacles, right_lane, left_lane, ego_lane)
-        # obstacle_states_same_lane_clc = self.convert_to_curvilinear(obstacle_states_same_lane_cr,
-        #                                                             curvilinear_cosy_ego_lane)
+        s_ego, d_ego = self._curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(state.position[0],
+                                                                                     state.position[1])
+        obstacle_states_same_lane_cr, obstacle_states_right_lane_cr, obstacle_states_left_lane_cr = \
+            self.obstacles_at_time_step(state.time_step, scenario.dynamic_obstacles, self._right_lane,
+                                        self._left_lane, self._ego_lane)
+        obstacle_states_same_lane_clc = self.convert_to_curvilinear(obstacle_states_same_lane_cr,
+                                                                    self._curvilinear_cosy_ego_lane)
         #obstacle_states_same_lane_cr_fov = self.obstacles_fov(state.time_step, s_ego, obstacle_states_same_lane_clc)
 
-        #if predicate == "keeps_safe_distance":
-        #    return self.keeps_safe_distance(state, s_ego, obstacle_states_same_lane_clc, obstacle_states_same_lane_cr)
         if predicate == "keeps_speed_limit":
             return self.keeps_speed_limit(state, scenario)
+        if predicate == "keeps_safe_distance":
+            return self.keeps_safe_distance(state, s_ego, obstacle_states_same_lane_clc, obstacle_states_same_lane_cr)
 
     def keeps_speed_limit(self, state: State, scenario: Scenario):
+        #pr = cProfile.Profile()
+        #pr.enable()
         lanelet_id = scenario.lanelet_network.find_lanelet_by_position([state.position])
-        lanlet = scenario.lanelet_network.find_lanelet_by_id(lanelet_id[0][0])
-        if lanlet.speed_limit < state.velocity:
+        #pr.disable()
+        #pr.print_stats(sort='time')
+
+        lanelet = scenario.lanelet_network.find_lanelet_by_id(lanelet_id[0][0])
+        if lanelet.speed_limit < state.velocity:
             return False
         else:
             return True
@@ -71,7 +81,6 @@ class SimpleMonitor:
             clc_state_list.append([s, d])
 
         return clc_state_list
-
 
     def obstacles_at_time_step(self, time_step: int, dynamic_obstacles: List[DynamicObstacle], right_lane: Lanelet,
                                left_lane: Lanelet, same_lane: Lanelet) -> Tuple[List[State], List[State], List[State]]:
@@ -106,6 +115,7 @@ class SimpleMonitor:
 
     def keeps_safe_distance(self, state: State, s_ego, obstacle_states_same_lane_clc,
                             obstacle_states_same_lane_cr: List[State]) -> bool:
+        safe_distance_valid = True
         for idx, obs in enumerate(obstacle_states_same_lane_clc):
             if obs[0] - s_ego > 0 \
                     and obs[0] - s_ego < self.safe_distance(state.velocity,
@@ -119,9 +129,9 @@ class SimpleMonitor:
                                                             self._simulation_param.get("dt"),
                                                             s_ego, obs[0], self._ego_vehicle_param.get("a_max"),
                                                             self._ego_vehicle_param.get("j_max")):
-                return False
-            else:
-                return True
+                safe_distance_valid = False
+
+        return safe_distance_valid
 
     @staticmethod
     def simulate_vehicle_braking(velocity_list: List[float], position_list: List[float], acceleration: float,
@@ -242,7 +252,15 @@ class SimpleMonitor:
                 for predicate in value:
                     if data.get(predicate) is None:
                         data[predicate] = []
+                    #pr = cProfile.Profile()
+                    #pr.enable()
                     data[predicate].append((state.time_step, self.evaluate_predicates(predicate, state, scenario)))
+                    #pr.disable()
+                    #pr.print_stats(sort='time')
 
-        for rule in self._rules:
-            print(rule(data, quantitative=False))
+        for idx, rule in enumerate(self._rules):
+            predicate_list = self._formula_predicates.get(idx + 1)
+            formula_predicates = {}
+            for predicate in predicate_list:
+                formula_predicates[predicate] = data[predicate]
+            print(rule(formula_predicates, quantitative=False))

@@ -1,13 +1,11 @@
 from configuration import *
 from simple_monitor import SimpleMonitor
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.scenario import Scenario
-from vehicle import Vehicle
-# from util import create_curvilinear_states
-from visualization import create_video
 import cProfile
 
+
 def main():
+
     # Initialization of variables for simulation
     config = load_yaml("config.yaml")
     simulation_param = config.get("simulation_param")
@@ -16,23 +14,27 @@ def main():
     traffic_rules = config.get("traffic_rules")
     predicates = config.get("predicates")
 
-    monitor = SimpleMonitor(traffic_rules, predicates, simulation_param, ego_vehicle_param, other_vehicles_param)
     scenario, planning_problem_set = \
         CommonRoadFileReader("./scenarios/" + simulation_param.get("commonroad_benchmark_id") + ".xml").open()
 
     # Create ego vehicle trajectory and video
     ego_obstacle = scenario.obstacle_by_id(ego_vehicle_param.get("vehicle_id"))
-    create_video(simulation_param.get("video_output_folder"), scenario, ego_obstacle, planning_problem_set)
+    #create_video(simulation_param.get("video_output_folder"), scenario, ego_obstacle, planning_problem_set)
     scenario.remove_obstacle(ego_obstacle)
     trajectory = [ego_obstacle.initial_state] + ego_obstacle.prediction.trajectory.state_list
+    for lanelet in scenario.lanelet_network.lanelets:
+        lanelet.convert_to_polygon()
 
     # Monitor ego vehicle trajectory
+    monitor = SimpleMonitor(traffic_rules, predicates, simulation_param, ego_vehicle_param, other_vehicles_param,
+                            scenario, ego_obstacle.initial_state)
     print("length of traj.: " + str(len(trajectory)))
     pr = cProfile.Profile()
     pr.enable()
     monitor.evaluate_trajectory(scenario, trajectory)
     pr.disable()
     pr.print_stats(sort='time')
+
 
 if __name__ == "__main__":
     main()
