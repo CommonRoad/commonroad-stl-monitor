@@ -1,5 +1,5 @@
 from configuration import *
-from simple_monitor import SimpleMonitor
+from monitor import Monitor
 from commonroad.common.file_reader import CommonRoadFileReader
 import cProfile
 
@@ -12,6 +12,7 @@ def main():
     other_vehicles_param = config.get("other_vehicles_param")
     ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), simulation_param)
     traffic_rules = config.get("traffic_rules")
+    traffic_rule_param = config.get("traffic_rule_param")
     predicates = config.get("predicates")
 
     scenario, planning_problem_set = \
@@ -19,15 +20,17 @@ def main():
 
     # Create ego vehicle trajectory and video
     ego_obstacle = scenario.obstacle_by_id(ego_vehicle_param.get("vehicle_id"))
-    #create_video(simulation_param.get("video_output_folder"), scenario, ego_obstacle, planning_problem_set)
+    # create_video(simulation_param.get("video_output_folder"), scenario, ego_obstacle, planning_problem_set)
     scenario.remove_obstacle(ego_obstacle)
-    trajectory = [ego_obstacle.initial_state] + ego_obstacle.prediction.trajectory.state_list
+
+    if ego_obstacle.initial_state.time_step != ego_obstacle.prediction.trajectory.state_list[0].time_step:
+        trajectory = [ego_obstacle.initial_state] + ego_obstacle.prediction.trajectory.state_list
     for lanelet in scenario.lanelet_network.lanelets:
         lanelet.convert_to_polygon()
 
     # Monitor ego vehicle trajectory
-    monitor = SimpleMonitor(traffic_rules, predicates, simulation_param, ego_vehicle_param, other_vehicles_param,
-                            scenario, ego_obstacle.initial_state)
+    monitor = Monitor(traffic_rules, predicates, simulation_param, ego_vehicle_param, other_vehicles_param,
+                      traffic_rule_param, scenario, ego_obstacle.initial_state)
     print("length of traj.: " + str(len(trajectory)))
     pr = cProfile.Profile()
     pr.enable()
@@ -35,6 +38,6 @@ def main():
     pr.disable()
     pr.print_stats(sort='time')
 
-
 if __name__ == "__main__":
     main()
+
