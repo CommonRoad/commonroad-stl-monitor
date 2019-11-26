@@ -1,5 +1,4 @@
 import mtl
-import cProfile
 from predicates import *
 from predicates import Predicate
 
@@ -46,13 +45,15 @@ class Monitor:
         if predicate == "keeps_speed_limit":
             return self.predicate.keeps_speed_limit(state.velocity, self._ego_lane.speed_limit)
         if predicate == "keeps_safe_distance":
-            return self.predicate.keeps_safe_distance(state, self._ego_lane.dynamic_obstacles_on_lanelet[state.time_step])
+            return self.predicate.keeps_safe_distance(state,
+                                                      self._ego_lane.dynamic_obstacles_on_lanelet[state.time_step])
         if predicate == "brakes_abruptly":
             return self.predicate.brakes_abruptly(state, self._ego_lane.dynamic_obstacles_on_lanelet[state.time_step],
                                                   self._traffic_rule_param.get("j_min_abrupt"),
                                                   self._traffic_rule_param.get("delta_a_abrupt"))
 
-    def convert_to_curvilinear(self, obstacle_states_cr: List[State], curvilinear_coord_system):
+    @staticmethod
+    def convert_to_curvilinear(obstacle_states_cr: List[State], curvilinear_coord_system):
         clc_state_list = []
         for state in obstacle_states_cr:
             s, d = curvilinear_coord_system.convert_to_curvilinear_coords(state.position[0], state.position[1])
@@ -60,7 +61,8 @@ class Monitor:
 
         return clc_state_list
 
-    def add_jerk(self, state_list: List[State]):
+    @staticmethod
+    def add_jerk(state_list: List[State]):
         for idx, state in enumerate(state_list):
             if idx == 0:
                 state.jerk = 0
@@ -69,20 +71,12 @@ class Monitor:
 
         return state_list
 
-    def evaluate_trajectory(self, scenario: Scenario, trajectory: List[State]):
+    def evaluate_trajectory(self, trajectory: List[State]):
         """
-        :param scenario: CommonRoad scenario
         :param trajectory: ego vehicle trajectory
         """
-        # self._obstacle_states_same_lane_cr, self._obstacle_states_right_lane_cr, self._obstacle_states_left_lane_cr = \
-        #     self._obstacles_at_time_step([trajectory[0].time_step, trajectory[-1].time_step], scenario.dynamic_obstacles, self._right_lane,
-        #                              self._left_lane, self._ego_lane)
-        # self.obstacle_states_same_lane_clc = self.convert_to_curvilinear(self._obstacle_states_same_lane_cr,
-        #                                                          self._curvilinear_cosy_ego_lane)
-
         trajectory = self.add_jerk(trajectory)
-        #pr = cProfile.Profile()
-        #pr.enable()
+
         data = {}
         for state in trajectory:
             for key, value in self._predicates_per_mtl.items():
@@ -90,9 +84,6 @@ class Monitor:
                     if data.get(predicate) is None:
                         data[predicate] = []
                     data[predicate].append((state.time_step, self.evaluate_predicates(predicate, state)))
-
-        #pr.disable()
-        #pr.print_stats(sort='time')
 
         for key, rule in self._rules.items():
             predicate_list = self._predicates_per_mtl.get(key)

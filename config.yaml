@@ -16,6 +16,7 @@ simulation_param:
     sumo: false
     verbose_mode: false
     video_output_folder: ./videos
+    time_measuring: true
 
 
 # Ego vehicle parameters
