@@ -1,47 +1,46 @@
-from configuration import *
-from monitor import Monitor
+from common.configuration import *
+from traffic_rule_dispatcher import TrafficRuleDispatcher
+from typing import List
+from commonroad.scenario.trajectory import State
 from commonroad.common.file_reader import CommonRoadFileReader
-import cProfile
 
 
 def main():
-
     # Initialization of variables for simulation
     config = load_yaml("config.yaml")
     simulation_param = config.get("simulation_param")
     other_vehicles_param = config.get("other_vehicles_param")
     ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), simulation_param)
     traffic_rules = config.get("traffic_rules")
-    traffic_rule_param = config.get("traffic_rule_param")
-    predicates = config.get("predicates")
+    traffic_rules_param = config.get("traffic_rules_param")
+    visualization_param = config.get("visualization")
 
+    # Initialization of CommonRoad related variables
     scenario, planning_problem_set = \
-        CommonRoadFileReader("./scenarios/" + simulation_param.get("commonroad_benchmark_id") + ".xml").open()
+        CommonRoadFileReader(simulation_param.get("commonroad_scenario_folder") + "/" +
+                             simulation_param.get("commonroad_benchmark_id") + ".xml").open()
+    #planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
+    #initial_ego_state = planning_problem.initial_state
 
-    # Create ego vehicle trajectory
-    ego_obstacle = scenario.obstacle_by_id(ego_vehicle_param.get("vehicle_id"))
-    scenario.remove_obstacle(ego_obstacle)
+    dispatcher = TrafficRuleDispatcher(traffic_rules, scenario, simulation_param, ego_vehicle_param,
+                                       other_vehicles_param, traffic_rules_param)
 
-    if ego_obstacle.initial_state.time_step != ego_obstacle.prediction.trajectory.state_list[0].time_step:
-        trajectory = [ego_obstacle.initial_state] + ego_obstacle.prediction.trajectory.state_list
-    else:
-        trajectory = ego_obstacle.prediction.trajectory.state_list
-    for lanelet in scenario.lanelet_network.lanelets:
-        lanelet.convert_to_polygon()
 
-    # Monitor ego vehicle trajectory
-    monitor = Monitor(traffic_rules, predicates, simulation_param, ego_vehicle_param, other_vehicles_param,
-                      traffic_rule_param, scenario, ego_obstacle.initial_state)
-    print("length of traj.: " + str(len(trajectory)))
-    if simulation_param.get("time_measuring"):
-        pr = cProfile.Profile()
-        pr.enable()
-    monitor.evaluate_trajectory(trajectory)
-    if simulation_param.get("time_measuring"):
-        pr.disable()
-        pr.print_stats(sort='time')
+def add_jerk(state_list: List[State]) -> List[State]:
+    """
+    Adds jerk value to each trajectory state
+
+    :param state_list: trajectory
+    :returns modified trajectory
+    """
+    for idx, state in enumerate(state_list):
+        if idx == 0:
+            state.jerk = 0
+        else:
+            state.jerk = state_list[idx].acceleration - state_list[idx - 1].acceleration
+
+    return state_list
 
 
 if __name__ == "__main__":
     main()
-

@@ -4,33 +4,38 @@
 # .. code-block:: yaml
 #
 #    - dt: time step size
-#    - store_results: set to true if the results should be stored in case if no valid solution is found
 #    - commonroad_benchmark_id: CommonRoad solution file name
-#    - sumo: use SUMO simulation for trajectories of other vehicles
-#    - verbose_mode: print status of algorithms and simulation
+#    - commonroad_scenario_folder: folder in which CommonRoad scenarios are located
+#    - verbose_mode: activate/deactivate status output of algorithms and simulation
+#    - time_measuring: activate/deactivate computation time measuring
+#    - c_profile: activate/deactivate storing of computation time by using cProfile package
+#    - commonroad_video_creation: activate/deactivate video creation of CommonRoad scenario
+#    - profile_video_creation: activate/deactivate video creation of profiles
+#    - plotting: activate/deactivate plotting of state profiles
+#    - other_vehicle_plots: list with CommonRoad obstacle IDs which should be considered for plotting
+#    - store_profiles: activate/deactivate storage of profiles
 #    - video_output_folder: folder in which the created videos are stored
+#    - country: country of scenario
 simulation_param:
     dt: 0.1
-    store_results: true
-    commonroad_benchmark_id: USA_US101-10_1_T-1
-    sumo: false
-    verbose_mode: false
-    video_output_folder: ./videos
+    commonroad_benchmark_id: DEU_A9-1_3_T-1
+    commonroad_scenario_folder: ./scenarios/test/
+    verbose_mode: true
     time_measuring: true
-
+    c_profile: false
+    commonroad_video_creation: false
+    profile_video_creation: false
+    plotting: false
+    other_vehicle_plots: [140]
+    store_profiles: false
+    video_output_folder: ./videos
+    country: "DEU"
 
 # Ego vehicle parameters
 ###
 # .. code-block:: yaml
 #
 #    - vehicle_number: CommonRoad vehicle number; possible options are 1, 2 or 3 (see CommonRoad vehicle models)
-#    - s_x_init: initial x-position of ACC vehicle
-#    - s_y_init: initial y-position of ACC vehicle
-#    - v_init: initial velocity of ACC vehicle
-#    - initial_yaw_angle: initial yaw angle of ACC vehicle
-#    - initial_steering_angle: initial steering angle of ACC vehicle
-#    - initial_steering_velocity: initial steering velocity of ACC vehicle
-#    - a_init: initial acceleration of ACC vehicle
 #    - a_max: maximum acceleration of ACC vehicle
 #    - a_min: minimum acceleration of ACC vehicle
 #    - j_max: maximum jerk of ACC vehicle
@@ -38,61 +43,109 @@ simulation_param:
 #    - v_des: desired velocity of ACC vehicle
 #    - t_react: reaction time of ACC vehicle
 #    - dynamics_param: physical parameters of ACC vehicle; will be initialized during runtime
-#    - fov: field of view
+#    - fov: field of view (sensor range)
 #    - v_max: maximum allowed velocity considering vehicle dynamics and safety based limit
+#    - v_min: minimum allowed velocity considering vehicle dynamics
+#    - v_limit_engine: velocity above which the engine power is not sufficient to cause wheel slip
+#    - drag_coefficient: drag coefficient
+#    - frontal area: frontal area fo vehicle
 ego_vehicle_param:
     vehicle_number: 2
-    s_x_init: 0
-    s_y_init: 1.75
-    v_init: 0
-    initial_yaw_angle: 0.0
-    initial_steering_angle: 0.0
-    initial_steering_velocity: 0.0
-    a_init: 0
     a_max: 3
-    a_min: -10
-    j_max: 5
+    a_min: -10.0
+    a_corr: 0.0
+    j_max: 10
     j_min: -10
-    v_des: 60
+    v_des: 30
     t_react: 0.0
     dynamics_param: None
     fov: 200
     v_max: None
-    vehicle_id: 525 #30
+    v_min: 0
+    v_limit_engine: 50.8
+    drag_coefficient: 0
+    frontal_area: 0
+
+# Input constraint parameters
+###
+# .. code-block:: yaml
+#
+#    - air_density: air density
+#    - road_incline_angle: incline angle of the road
+#    - v_wind: headwind velocity
+#    - string_stability_horizon: time horizon which is considered for string stability
+#    - string_stability_gamma: parameter for string stability
+input_constr_param:
+    air_density: 0
+    road_incline_angle: 0
+    v_wind: 0
+    string_stability_horizon: 10
+    string_stability_gamma: 0.95
 
 # Other vehicle's parameters
 ###
 # .. code-block:: yaml
 #
 #    - vehicle_number: CommonRoad vehicle number; possible options are 1, 2 or 3 (see CommonRoad vehicle models)
+#    - v_max: maximum velocity of leading vehicle
+#    - v_min: minimum velocity of leading vehicle
 #    - a_max: maximum acceleration of leading vehicle
 #    - a_min: minimum acceleration of leading vehicle
 #    - j_max: maximum jerk of leading vehicle
 #    - j_min: minimum jerk of leading vehicle
 #    - t_react: reaction time of leading vehicle
-#    - dynamics_param: physical parameters of leading vehicle; will be initialized during runtime
+#    - th_theta: orientation threshold for cut-in detection
+#    - th_offset: distance to center line threshold for cut-in detection
+#    - n_cutin: number of consecutive time steps for a cut-in occurrence to be finally recognized
 other_vehicles_param:
     vehicle_number: 2
-    a_max: 10
-    a_min: -10.0
+    v_max: 60
+    v_min: 0
+    a_max: 5
+    a_min: -10.5
     j_max: 10
     j_min: -10
     t_react: 0.0
     dynamics_param: None
-    th_theta: 0.025
-    th_offset: 0.35
-    n_cutin: 3
+    th_theta: 0.035
+    th_offset: 0.4
+    n_cutin: 10
+
+# Visualization parameters
+###
+#    - Parameters for plotting of profiles
+#    - Parameters for video creation
+visualization:
+    # Parameters for plotting of profiles
+    ###
+    # .. code-block:: yaml
+    #
+    #   - width: width of matplotlib figure
+    #   - line_width: line width of profiles
+    #   - font_size: font size of text within the plot
+    #   - axes_line_width: line width of the axes
+    #   - type of figure which should be stored
+    plot:
+        width: 3.75
+        line_width: 0.75
+        font_size: 9
+        axes_line_width: 0.25
+        figure_type: eps
+
+    # Parameters for video creation
+    ###
+    # .. code-block:: yaml
+    #
+    #   - obstacle_label: activate/deactivate visualization of obstacle label (ID) in video
+    video:
+        obstacle_label : false
+
 
 traffic_rules:
-    1: G(keeps_speed_limit)
-    2: G(keeps_safe_distance)
-    3: G(~(brakes_abruptly))
+    speed_limit: G(keeps_speed_limit)
+#    2: G((same_lane & behind) -> keeps_safe_distance)
+#    3: G(~(brakes_abruptly))
 
-predicates:
-    1: [keeps_speed_limit]
-    2: [keeps_safe_distance]
-    3: [brakes_abruptly]
-
-traffic_rule_param:
+traffic_rules_param:
     j_min_abrupt: -2
     delta_a_abrupt: -2
