@@ -1,5 +1,5 @@
 from typing import List, Dict, Set
-from predicate_collection import PredicateCollection
+from predicates.predicate_collection import PredicateCollection
 from commonroad.scenario.lanelet import LaneletNetwork
 from common.vehicle import Vehicle
 
@@ -13,8 +13,6 @@ class SafetyPredicateCollection(PredicateCollection):
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         """
         super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param)
-        #self._ego_lanelet_id, self._ego_lanelet, self._ego_lane, self._curvilinear_cosy_ego_lane, self._left_lane, \
-        #self._right_lane = update_ego_lane_info(scenario, initial_state, self._ego_vehicle_param)
 
     # def brakes_abruptly(self, state: State, obstacle_ids: List[int], j_min_abrupt: float,
     #                     delta_a_abrupt: float) -> bool:
@@ -43,9 +41,9 @@ class SafetyPredicateCollection(PredicateCollection):
     #             return True
     #     return False
 
-    def _keeps_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
+    def _keeps_lane_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
         """
-        Predicate for speed limit evaluation
+        Predicate for lanelet speed limit evaluation
 
         :param velocity: Velocity of vehicle
         :param lanelet_ids: IDs of lanelets the vehicle is on
@@ -59,6 +57,38 @@ class SafetyPredicateCollection(PredicateCollection):
                     self._lanelet_network.find_traffic_sign_by_id(traffic_sign_id).speed_limit(self._country)
                 speed_limits.append(lanelet_speed_limits)
         if min(speed_limits) < velocity:
+            return False
+        else:
+            return True
+
+    def _keeps_min_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
+        """
+        Predicate for minimum speed limit evaluation
+
+        :param velocity: Velocity of vehicle
+        :param lanelet_ids: IDs of lanelets the vehicle is on
+        :returns Boolean indicating speed limit satisfaction
+        """
+        speed_limits = []
+        for lanelet_id in lanelet_ids:
+            lanelet = self._lanelet_network.find_lanelet_by_id(lanelet_id)
+            for traffic_sign_id in lanelet.traffic_signs:
+                lanelet_speed_limits = \
+                    self._lanelet_network.find_traffic_sign_by_id(traffic_sign_id).speed_limit(self._country)
+                speed_limits.append(lanelet_speed_limits)
+        if min(speed_limits) < velocity:
+            return False
+        else:
+            return True
+
+    def _keeps_fov_speed_limit(self, velocity: float) -> bool:
+        """
+        Predicate for field of view speed limit evaluation
+
+        :param velocity: Velocity of vehicle
+        :returns boolean indicating speed limit satisfaction
+        """
+        if self._ego_vehicle_param.get("fov_speed_limit") < velocity:
             return False
         else:
             return True
@@ -147,12 +177,18 @@ class SafetyPredicateCollection(PredicateCollection):
 
         :param vehicle: vehicle object
         """
-        predicate_trace = {"keeps_speed_limit": []}
+        predicate_trace = {"keeps_lane_speed_limit": [],
+                           "keeps_fov_speed_limit": [],
+                           "keeps_min_speed_limit": []}
                            #"keeps_safe_distance": [],
                           # "brakes_abruptly": []}
         for idx in range(len(vehicle.state_list_cr)):
-            predicate_trace["keeps_speed_limit"].append(self._keeps_speed_limit(vehicle.states_lon[idx].v,
-                                                                                vehicle.lanelet_assignment[idx]))
+            predicate_trace["keeps_lane_speed_limit"].append(
+                self._keeps_lane_speed_limit(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
+            predicate_trace["keeps_fov_speed_limit"].append(
+                self._keeps_fov_speed_limit(vehicle.states_lon[idx].v))
+            predicate_trace["keeps_min_speed_limit"].append(
+                self._keeps_min_speed_limit(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
             #predicate_trace["keeps_safe_distance"][idx] = self.keeps_safe_distance()
             #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
 

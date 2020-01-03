@@ -1,7 +1,7 @@
-from traffic_rule_monitor import TrafficRuleMonitor
+from monitor.traffic_rule_monitor import TrafficRuleMonitor
 from typing import List, Dict
 from commonroad.scenario.scenario import Scenario
-from safety_predicates import SafetyPredicateCollection
+from predicates.safety_predicates import SafetyPredicateCollection
 from common.vehicle import Vehicle
 
 

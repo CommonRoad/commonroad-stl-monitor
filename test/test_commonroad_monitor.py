@@ -1,18 +1,18 @@
 import unittest
 from common.configuration import *
-from traffic_rule_dispatcher import TrafficRuleDispatcher
+from monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.obstacle import DynamicObstacle
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
         config = load_yaml("./../config.yaml")
         self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.5, 'DEU')
-        self.other_vehicles_param = config.get("other_vehicles_param")
+        self.other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self.ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self.simulation_param)
         self.traffic_rules = config.get("traffic_rules")
         self.traffic_rules_param = config.get("traffic_rules_param")
@@ -37,18 +37,19 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
         return vehicle
 
-    def test_keeps_speed_limit(self):
-        scenario1, planning_problem_set = \
+    def test_keeps_max_speed_limit(self):
+        scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "DEU_A9-1_3_T-1.xml").open()
 
-        exp_result1 = [{'speed_limit': True}, {'speed_limit': True}, {'speed_limit': True}, {'speed_limit': True},
-                       {'speed_limit': False}, {'speed_limit': True}]
-        result1 = self.execute_velocity_test(scenario1)
-        self.assertEqual(exp_result1, result1)
+        exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
+                      (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
+                      (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
+        result = self.execute_velocity_test(scenario)
+        print(result)
+        self.assertEqual(exp_result, result)
 
-
-    def execute_velocity_test(self, scenario) -> List[Dict[str, bool]]:
+    def execute_velocity_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         vehicle_evaluation = []
         self.road_network = RoadNetwork(scenario.lanelet_network)
         vehicles = []
@@ -57,7 +58,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, scenario, self.simulation_param, self.ego_vehicle_param,
                                            self.other_vehicles_param, self.traffic_rules_param)
         for veh in vehicles:
-            vehicle_evaluation.append(dispatcher.evaluate_trajectory(veh))
+            vehicle_evaluation.append((veh.id, dispatcher.evaluate_trajectory(veh)))
 
         return vehicle_evaluation
 

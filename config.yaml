@@ -49,6 +49,7 @@ simulation_param:
 #    - v_limit_engine: velocity above which the engine power is not sufficient to cause wheel slip
 #    - drag_coefficient: drag coefficient
 #    - frontal area: frontal area fo vehicle
+#    - const_dist_offset: minimum distance at standstill
 ego_vehicle_param:
     vehicle_number: 2
     a_max: 3
@@ -59,12 +60,15 @@ ego_vehicle_param:
     v_des: 30
     t_react: 0.0
     dynamics_param: None
-    fov: 200
-    v_max: None
+    fov: 50
     v_min: 0
     v_limit_engine: 50.8
     drag_coefficient: 0
     frontal_area: 0
+    const_dist_offset: 0
+    emergency_profile: []
+    emergency_profile_num_steps_fb: 200
+    fov_speed_limit: None
 
 # Input constraint parameters
 ###
@@ -142,7 +146,8 @@ visualization:
 
 
 traffic_rules:
-    speed_limit: G(keeps_speed_limit)
+    max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit)
+#    min_speed_limit: G(keeps_min_speed_limit)
 #    2: G((same_lane & behind) -> keeps_safe_distance)
 #    3: G(~(brakes_abruptly))
 
