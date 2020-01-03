@@ -8,17 +8,17 @@ from common.vehicle import Vehicle
 class TrafficRuleDispatcher:
     """Manages the different monitors for each traffic rule"""
 
-    def __init__(self, traffic_rules: Dict[str, str], scenario: Scenario, simulation_param: Dict,
-                 ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict):
+    def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str], scenario: Scenario,
+                 simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict):
         """
         :param traffic_rules: dictionary with MTL formulas of traffic rules
+        :param traffic_rule_sets: dictionary with sets of related traffic rules
         :param scenario: CommonRoad scenario
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
         """
-        self._monitors = self.create_monitors(traffic_rules)
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
         self._ego_vehicle_param = ego_vehicle_param
@@ -26,18 +26,21 @@ class TrafficRuleDispatcher:
         self._traffic_rule_param = traffic_rule_param
         self._safety_predicates = SafetyPredicateCollection(scenario.lanelet_network, simulation_param,
                                                             ego_vehicle_param, other_vehicles_param)
+        self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets)
 
-    @staticmethod
-    def create_monitors(traffic_rules: Dict[str, str]) -> List[TrafficRuleMonitor]:
+    def create_monitors(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str]) -> \
+            List[TrafficRuleMonitor]:
         """
         Initialization of monitor for each MTL rule
 
         :param traffic_rules: dictionary with traffic rules in temporal logic
+        :param traffic_rule_sets: dictionary with sets of related traffic rules
         :returns list of monitors
         """
         monitors = []
-        for rule in traffic_rules.items():
-            monitors.append(TrafficRuleMonitor(rule))
+        for traffic_rule_set_id in self._simulation_param.get("activated_traffic_rule_sets"):
+            for rule in traffic_rule_sets.get(traffic_rule_set_id):
+                monitors.append(TrafficRuleMonitor((rule, traffic_rules.get(rule))))
 
         return monitors
 

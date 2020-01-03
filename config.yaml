@@ -16,6 +16,7 @@
 #    - store_profiles: activate/deactivate storage of profiles
 #    - video_output_folder: folder in which the created videos are stored
 #    - country: country of scenario
+#    - activated_traffic_rule_sets: IDs of traffic rule sets which should be activated
 simulation_param:
     dt: 0.1
     commonroad_benchmark_id: DEU_A9-1_3_T-1
@@ -30,6 +31,7 @@ simulation_param:
     store_profiles: false
     video_output_folder: ./videos
     country: "DEU"
+    activated_traffic_rule_sets: [1]
 
 # Ego vehicle parameters
 ###
@@ -154,3 +156,6 @@ traffic_rules:
 traffic_rules_param:
     j_min_abrupt: -2
     delta_a_abrupt: -2
+
+traffic_rule_sets:
+    1: [max_speed_limit]
