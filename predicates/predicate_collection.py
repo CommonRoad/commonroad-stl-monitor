@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from commonroad.scenario.trajectory import State
 from typing import List, Dict
 from commonroad.scenario.lanelet import LaneletNetwork
+from common.vehicle import Vehicle
 
 
 class PredicateCollection(ABC):
@@ -19,11 +19,13 @@ class PredicateCollection(ABC):
         self._other_vehicles_param = other_vehicles_param
         self._country = simulation_param.get("country")
 
-    @staticmethod
-    def convert_to_curvilinear(state_cr: State, curvilinear_coord_system):
-        s, d = curvilinear_coord_system.convert_to_curvilinear_coords(state_cr.position[0], state_cr.position[1])
-        return [s, d]
-
     @abstractmethod
-    def evaluate_predicates(self, trajectory: List[State]) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, List[bool]]:
+        """
+        Evaluates trajectory for safety predicate compliance
+
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :returns dictionary with trace of bool values for each predicate
+        """
         pass

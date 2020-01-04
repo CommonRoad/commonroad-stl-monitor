@@ -44,24 +44,26 @@ class TrafficRuleDispatcher:
 
         return monitors
 
-    def evaluate_predicates(self, vehicle: Vehicle) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: Dict[int, Vehicle]) -> Dict[str, List[bool]]:
         """
         Calls different predicate classes for predicate evaluation
 
-        :param vehicle: vehicle object containing trajectory and other relevant information
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         """
-        safety_predicates = self._safety_predicates.evaluate_predicates(vehicle)
+        safety_predicates = self._safety_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
 
         return safety_predicates
 
-    def evaluate_trajectory(self, vehicle: Vehicle) -> Dict[str, bool]:
+    def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: Dict[int, Vehicle]) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance
 
-        :param vehicle: vehicle object containing trajectory and other relevant information
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
-        evaluated_predicates = self.evaluate_predicates(vehicle)
+        evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors:
             rule_predicates = {}

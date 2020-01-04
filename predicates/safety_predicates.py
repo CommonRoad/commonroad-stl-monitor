@@ -2,10 +2,12 @@ from typing import List, Dict, Set
 from predicates.predicate_collection import PredicateCollection
 from commonroad.scenario.lanelet import LaneletNetwork
 from common.vehicle import Vehicle
+from common.vehicle_classification import VehicleClassification
 
 
 class SafetyPredicateCollection(PredicateCollection):
-    def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict):
+    def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
+                 other_vehicles_param: Dict):
         """
         :param lanelet_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
@@ -61,12 +63,13 @@ class SafetyPredicateCollection(PredicateCollection):
         else:
             return True
 
-    def _keeps_min_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
+    def _keeps_min_speed_limit(self, velocity: float, lanelet_ids: Set[int], time_step: int) -> bool:
         """
         Predicate for minimum speed limit evaluation
 
         :param velocity: Velocity of vehicle
         :param lanelet_ids: IDs of lanelets the vehicle is on
+        :param time_step: current time step
         :returns Boolean indicating speed limit satisfaction
         """
         speed_limits = []
@@ -118,77 +121,33 @@ class SafetyPredicateCollection(PredicateCollection):
         else:
             return d_safe_2
 
-    # def _keeps_safe_distance(self, state: State, obstacle_ids: List[int]) -> bool:
-    #     """
-    #     Predicate for safe distance evaluation
-    #
-    #     :param state: CommonRoad state
-    #     :param obstacle_ids: IDs of obstacles on lanelet at specific time step
-    #     :returns Boolean indicating predicate satisfaction
-    #     """
-    #     s_ego, _ = self._curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(state.position[0], state.position[1])
-    #     safe_distance_satisfied = True
-    #     for idx, obs_id in enumerate(obstacle_ids):
-    #         obs_state = self._scenario.obstacle_by_id(obs_id).prediction.trajectory.state_list[state.time_step-1]
-    #         s_obs, _ = self._curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(obs_state.position[0],
-    #                                                                                  obs_state.position[1])
-    #         if s_obs - s_ego > self._ego_vehicle_param.get("fov"):
-    #             continue
-    #         if 0 < s_obs - s_ego < safe_distance(state.velocity, obs_state.velocity,
-    #                                              self._ego_vehicle_param.get("a_min"),
-    #                                              self._other_vehicles_param.get("a_min"),
-    #                                              self._ego_vehicle_param.get("t_react"), state.acceleration,
-    #                                              obs_state.acceleration, self._ego_vehicle_param.get("j_min"),
-    #                                              self._other_vehicles_param.get("j_min"),
-    #                                              self._simulation_param.get("dt"), s_ego, s_obs,
-    #                                              self._ego_vehicle_param.get("a_max"),
-    #                                              self._ego_vehicle_param.get("j_max")):
-    #             safe_distance_satisfied = False
-    #
-    #     return safe_distance_satisfied
+    def _keeps_safe_distance(self, s_follow: float, s_lead:float, v_follow: float, v_lead: float,
+                             a_min_follow: float, a_min_lead: float, t_react_follow: float) -> bool:
+        if s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
+            return False
+        else:
+            return True
 
-    # def congestion_on_lanelet(self, lanelet: Lanelet, time_step: int, min_num_vehicles: int,
-    #                           max_dist_between_cars: float, v_max: float):
-    #     """ Predicate to check whether there is congestion on a lanelet at a specific time step.
-    #
-    #     :param lanelet: CommonRoad lanelet to be evaluated
-    #     :param time_step: time step at which congestion is evaluated
-    #     :param min_num_vehicles: minimum number of vehicles that have to be part of the congestion
-    #     :param max_dist_between_cars: maximum distance between two cars that are part of the congestion
-    #     :param v_max: maximum velocity obstacles are allowed to drive in the congestion
-    #     :return: boolean indicating if there is a congestion on a lanelet
-    #     """
-    #     obstacles_on_lane = lanelet.dynamic_obstacles_on_lanelet[time_step]
-    #     if len(obstacles_on_lane) < min_num_vehicles:
-    #         return False
-    #     for obs_id in obstacles_on_lane:
-    #         obstacle = self._scenario.obstacle_by_id(obs_id)
-    #     # TODO
-    #         # (front, front_distance) = front_vehicles(obstacle, obstacles_on_lane)
-    #         # if obstacle.get_velocity(time_step) > maximum_velocity \
-    #         #         or (front and front_distance > maximum_distance_between_cars) \
-    #         #         or (back and -back_distance > maximum_distance_between_cars):
-    #         #     return False
-    #     return True
-
-    def evaluate_predicates(self, vehicle: Vehicle) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[VehicleClassification]) -> Dict[str, List[bool]]:
         """
         Evaluates trajectory for safety predicate compliance
 
-        :param vehicle: vehicle object
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"keeps_lane_speed_limit": [],
-                           "keeps_fov_speed_limit": [],
-                           "keeps_min_speed_limit": []}
+                           "keeps_fov_speed_limit": []}
+       # for
                            #"keeps_safe_distance": [],
                           # "brakes_abruptly": []}
-        for idx in range(len(vehicle.state_list_cr)):
+        for idx in range(len(ego_vehicle.state_list_cr)):
             predicate_trace["keeps_lane_speed_limit"].append(
-                self._keeps_lane_speed_limit(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
+                self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx]))
             predicate_trace["keeps_fov_speed_limit"].append(
-                self._keeps_fov_speed_limit(vehicle.states_lon[idx].v))
-            predicate_trace["keeps_min_speed_limit"].append(
-                self._keeps_min_speed_limit(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
+                self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v))
+           # predicate_trace["keeps_min_speed_limit"].append(
+           #     self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx]))
             #predicate_trace["keeps_safe_distance"][idx] = self.keeps_safe_distance()
             #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
 

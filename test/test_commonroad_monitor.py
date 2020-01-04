@@ -6,7 +6,7 @@ from commonroad.scenario.obstacle import DynamicObstacle
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
 from typing import List, Dict, Tuple
-
+import copy
 
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
@@ -46,21 +46,24 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
                       (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
                       (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
-        result = self.execute_velocity_test(scenario)
+        result = self.execute__test(scenario)
         print(result)
         self.assertEqual(exp_result, result)
 
-    def execute_velocity_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
-        vehicle_evaluation = []
-        self.road_network = RoadNetwork(scenario.lanelet_network)
-        vehicles = []
-        for obs in scenario.dynamic_obstacles:
-            vehicles.append(self.create_vehicle(obs))
+    def execute__test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, scenario,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
                                            self.traffic_rules_param)
-        for veh in vehicles:
-            vehicle_evaluation.append((veh.id, dispatcher.evaluate_trajectory(veh)))
+        vehicle_evaluation = []
+        self.road_network = RoadNetwork(scenario.lanelet_network)
+        vehicles = {}
+        for obs in scenario.dynamic_obstacles:
+            vehicles[obs.obstacle_id] = self.create_vehicle(obs)
+
+        for veh in vehicles.values():
+            other_vehicles = copy.deepcopy(vehicles)
+            other_vehicles.pop(veh.id)
+            vehicle_evaluation.append((veh.id, dispatcher.evaluate_trajectory(veh, other_vehicles)))
 
         return vehicle_evaluation
 

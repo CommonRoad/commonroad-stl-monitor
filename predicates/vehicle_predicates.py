@@ -2,9 +2,10 @@ from typing import List, Dict
 from predicates.predicate_collection import PredicateCollection
 from commonroad.scenario.lanelet import LaneletNetwork
 from common.vehicle import Vehicle
+from commonroad.scenario.obstacle import SignalState
 
 
-class LanePredicateCollection(PredicateCollection):
+class VehiclePredicateCollection(PredicateCollection):
     def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
                  other_vehicles_param: Dict):
         """
@@ -16,14 +17,18 @@ class LanePredicateCollection(PredicateCollection):
         super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param)
 
     @staticmethod
-    def _behind_other_vehicle(s_ego: float, s_lead: float) -> bool:
-        if s_ego < s_lead:
+    def braking_lights(signal_state: SignalState):
+        if signal_state.braking_lights:
             return True
         else:
             return False
 
-    def _same_lane_as_other_vehicle(self, vehicle_id_ego: int, vehicle_id_other: int, time_step: int) -> bool:
-        pass
+    @staticmethod
+    def brakes(a: float):
+        if a < 0:
+            return True
+        else:
+            return False
 
     def evaluate_predicates(self, vehicle: Vehicle) -> Dict[str, List[bool]]:
         """
@@ -31,14 +36,10 @@ class LanePredicateCollection(PredicateCollection):
 
         :param vehicle: vehicle object
         """
-        predicate_trace = {"behind_other_vehicle": [],
-                           "same_lane_as_other_vehicle": []}
+        predicate_trace = {"braking_lights": []}
+
         for idx in range(len(vehicle.state_list_cr)):
-            predicate_trace["behind_other_vehicle"].append(
-                self._behind_other_vehicle(vehicle.states_lon[idx].s))
-            predicate_trace["same_lane_as_other_vehicle"].append(
-                self._same_lane_as_other_vehicle(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
-            #predicate_trace["keeps_safe_distance"][idx] = self.keeps_safe_distance()
-            #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
+            predicate_trace["braking_lights"].append(
+                self._braking_lights(vehicle.signal_series[idx]))
 
         return predicate_trace
