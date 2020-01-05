@@ -1,15 +1,10 @@
 from typing import Dict, Set
-from commonroad.scenario.lanelet import LaneletNetwork
 
 
-class LanePredicateCollection():
-    def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict):
+class LanePredicateCollection:
+    def __init__(self, ego_vehicle_param: Dict):
         """
-        :param lanelet_network: CommonRoad lanelet network
-        :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-        :param other_vehicles_param: dictionary with general parameters of the other vehicles
         """
         self._ego_vehicle_param = ego_vehicle_param
 

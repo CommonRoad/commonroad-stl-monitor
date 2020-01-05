@@ -253,12 +253,11 @@ class Vehicle:
         """
         self._jerk_profile[time_step] = jerk
 
-    def classify_vehicle(self, time_step: int, state_lon_ego: StateLongitudinal, lanelet_assignment_ego: Set[int],
-                         fov: float):
+    def classify_vehicle(self, time_step: int, state_lon_ego: StateLongitudinal, lane_assignment_ego: Set[int],
+                         fov: float, lane_assignment_other: Set[int]):
         if LanePredicateCollection.in_fov(self.states_lon[time_step].s, state_lon_ego.s, fov):
             if LanePredicateCollection.same_lane_behind_other(state_lon_ego.s, self.states_lon[time_step].s,
-                                                              lanelet_assignment_ego,
-                                                              self.lanelet_assignment[time_step]):
+                                                              lane_assignment_ego, lane_assignment_other):
                 self._classification[time_step] = {VehicleLocalization.EGO_LANE_FRONT}
             else:
                 self._classification[time_step] = {VehicleLocalization.EGO_LANE_REAR}

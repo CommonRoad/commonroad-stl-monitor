@@ -6,18 +6,27 @@ class TrafficRuleMonitor:
     """
     Represents single formalized traffic rule
     """
-    def __init__(self, logic_formula: Tuple[str, str]):
+    def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool):
         """
         :param logic_formula: temporal logic formula
         """
-        self.name = logic_formula[0]
+        self._name = logic_formula[0]
         self._logic_formula = logic_formula[1]
         self._monitor = mtl.parse(logic_formula[1])
         self._predicates = self._extract_predicates(logic_formula[1])
+        self._vehicle_dependency = vehicle_dependency
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def predicates(self) -> List[str]:
         return self._predicates
+
+    @property
+    def vehicle_dependency(self) -> bool:
+        return self._vehicle_dependency
 
     @staticmethod
     def _extract_predicates(logic_formula: str) -> List[str]:

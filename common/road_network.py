@@ -4,7 +4,7 @@ from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_pol
 import numpy as np
 from common.vehicle import StateLongitudinal, StateLateral
 from pycrccosy import SegmentCoordinateSystem
-from typing import Tuple, List
+from typing import Tuple, List, Set
 
 
 class Lane:
@@ -141,7 +141,16 @@ class RoadNetwork:
 
         return lanes
 
-    def find_lane(self, obstacle_id: int, time_step: int):
+    def find_lane_ids_by_obstacle(self, obstacle_id: int, time_step: int) -> Set[int]:
+        lane_ids = set()
+        for lane in self.lanes:
+            if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
+                lane_ids.add(lane.lanelet.lanelet_id)
+
+        return lane_ids
+
+    def find_lane_by_obstacle(self, obstacle_id: int, time_step: int) -> Lane:  # TODO return center assignment
         for lane in self.lanes:
             if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
                 return lane
+

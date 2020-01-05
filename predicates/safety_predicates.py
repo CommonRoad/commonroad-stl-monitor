@@ -133,17 +133,9 @@ class SafetyPredicateCollection(PredicateCollection):
         predicate_trace = {"keeps_lane_speed_limit": [],
                            "keeps_fov_speed_limit": [],
                            "keeps_min_speed_limit": [],
-                           "keeps_safe_distance": []}
+                           "keeps_safe_distance": {}}
 
         for idx in range(len(ego_vehicle.state_list_cr)):
-            for other_vehicle in other_vehicles:
-                if other_vehicle.classification[idx] == VehicleLocalization.EGO_LANE_FRONT:
-                    predicate_trace["keeps_safe_distance"][idx] = \
-                        self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
-                                                  ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
-                                                  self._ego_vehicle_param.get("a_min"),
-                                                  self._other_vehicles_param.get("a_min"),
-                                                  self._ego_vehicle_param.get("t_react"))
             predicate_trace["keeps_lane_speed_limit"].append(
                 self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx]))
             predicate_trace["keeps_fov_speed_limit"].append(
@@ -152,4 +144,13 @@ class SafetyPredicateCollection(PredicateCollection):
                 self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, other_vehicles, idx))
             #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
 
+        for other_vehicle in other_vehicles:
+            for idx in range(len(other_vehicle.state_list_cr)):
+                if VehicleLocalization.EGO_LANE_FRONT in other_vehicle.classification[idx]:
+                    predicate_trace["keeps_safe_distance"][other_vehicle.id][idx] = \
+                        self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
+                                                  ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
+                                                  self._ego_vehicle_param.get("a_min"),
+                                                  self._other_vehicles_param.get("a_min"),
+                                                  self._ego_vehicle_param.get("t_react"))
         return predicate_trace
