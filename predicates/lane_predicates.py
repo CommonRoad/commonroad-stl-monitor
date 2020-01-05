@@ -1,10 +1,8 @@
-from typing import List, Dict
-from predicates.predicate_collection import PredicateCollection
+from typing import Dict, Set
 from commonroad.scenario.lanelet import LaneletNetwork
-from common.vehicle import Vehicle
 
 
-class LanePredicateCollection(PredicateCollection):
+class LanePredicateCollection():
     def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
                  other_vehicles_param: Dict):
         """
@@ -13,32 +11,22 @@ class LanePredicateCollection(PredicateCollection):
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         """
-        super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param)
+        self._ego_vehicle_param = ego_vehicle_param
 
     @staticmethod
-    def _behind_other_vehicle(s_ego: float, s_lead: float) -> bool:
-        if s_ego < s_lead:
+    def in_fov(s_other: float, s_ego, fov: float) -> bool:
+        if abs(s_other - s_ego) < fov:
             return True
         else:
             return False
 
-    def _same_lane_as_other_vehicle(self, vehicle_id_ego: int, vehicle_id_other: int, time_step: int) -> bool:
-        pass
-
-    def evaluate_predicates(self, vehicle: Vehicle) -> Dict[str, List[bool]]:
-        """
-        Evaluates trajectory for safety predicate compliance
-
-        :param vehicle: vehicle object
-        """
-        predicate_trace = {"behind_other_vehicle": [],
-                           "same_lane_as_other_vehicle": []}
-        for idx in range(len(vehicle.state_list_cr)):
-            predicate_trace["behind_other_vehicle"].append(
-                self._behind_other_vehicle(vehicle.states_lon[idx].s))
-            predicate_trace["same_lane_as_other_vehicle"].append(
-                self._same_lane_as_other_vehicle(vehicle.states_lon[idx].v, vehicle.lanelet_assignment[idx]))
-            #predicate_trace["keeps_safe_distance"][idx] = self.keeps_safe_distance()
-            #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
-
-        return predicate_trace
+    @staticmethod
+    def same_lane_behind_other(s_ego: float, s_other: float, lanelet_ids_ego: Set[int],
+                               lanelet_ids_other: Set[int]) -> bool:
+        if s_ego < s_other:
+            for lanelet_id in lanelet_ids_ego:
+                if lanelet_id in lanelet_ids_other:
+                    return True
+            return False
+        else:
+            return False

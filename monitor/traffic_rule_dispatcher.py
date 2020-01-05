@@ -25,7 +25,7 @@ class TrafficRuleDispatcher:
         self._other_vehicles_param = other_vehicles_param
         self._traffic_rule_param = traffic_rule_param
         self._safety_predicates = SafetyPredicateCollection(scenario.lanelet_network, simulation_param,
-                                                            ego_vehicle_param, other_vehicles_param)
+                                                            ego_vehicle_param, other_vehicles_param, traffic_rule_param)
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets)
 
     def create_monitors(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str]) -> \
@@ -44,7 +44,7 @@ class TrafficRuleDispatcher:
 
         return monitors
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: Dict[int, Vehicle]) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, List[bool]]:
         """
         Calls different predicate classes for predicate evaluation
 
@@ -55,7 +55,7 @@ class TrafficRuleDispatcher:
 
         return safety_predicates
 
-    def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: Dict[int, Vehicle]) -> Dict[str, bool]:
+    def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance
 

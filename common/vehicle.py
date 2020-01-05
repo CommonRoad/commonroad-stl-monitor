@@ -2,6 +2,8 @@ from commonroad.geometry.shape import Shape, Rectangle
 from typing import Union, Set, Dict, List
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
+from predicates.lane_predicates import LanePredicateCollection
+from enum import Enum
 
 
 class StateLongitudinal:
@@ -92,6 +94,17 @@ class StateLateral:
         self._kappa_dot = value
 
 
+class VehicleLocalization(Enum):
+    LEFT_LANE = 1
+    RIGHT_LANE = 2
+    RIGHT = 3
+    LEFT = 4
+    EGO_LANE_FRONT = 5
+    EGO_LANE_REAR = 5
+    EGO_VEHICLE = 6
+    NONE = 7
+
+
 class Vehicle:
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
@@ -119,6 +132,7 @@ class Vehicle:
         self._obstacle_type = obstacle_type
         self._lanelet_assignment = {cr_state.time_step: lanelet_assignment}
         self._signal_series = {cr_state.time_step: signal_state}
+        self._classification = {}
 
     @property
     def shape(self) -> Rectangle:
@@ -162,6 +176,10 @@ class Vehicle:
     @property
     def signal_series(self) -> Dict[int, SignalState]:
         return self._signal_series
+
+    @property
+    def classification(self) -> Dict[int, Set[Union[VehicleLocalization]]]:
+        return self._classification
 
     def rear_position(self, time_step: int) -> float:
         """
@@ -234,3 +252,16 @@ class Vehicle:
         :param time_step: time step of new data
         """
         self._jerk_profile[time_step] = jerk
+
+    def classify_vehicle(self, time_step: int, state_lon_ego: StateLongitudinal, lanelet_assignment_ego: Set[int],
+                         fov: float):
+        if LanePredicateCollection.in_fov(self.states_lon[time_step].s, state_lon_ego.s, fov):
+            if LanePredicateCollection.same_lane_behind_other(state_lon_ego.s, self.states_lon[time_step].s,
+                                                              lanelet_assignment_ego,
+                                                              self.lanelet_assignment[time_step]):
+                self._classification[time_step] = {VehicleLocalization.EGO_LANE_FRONT}
+            else:
+                self._classification[time_step] = {VehicleLocalization.EGO_LANE_REAR}
+
+        else:
+            self._classification[time_step] = {VehicleLocalization.NONE}

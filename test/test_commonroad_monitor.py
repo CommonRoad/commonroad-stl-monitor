@@ -46,24 +46,55 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
                       (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
                       (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
-        result = self.execute__test(scenario)
+        result = self.execute_test(scenario)
+        print("Max Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
-    def execute__test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
+    def test_keeps_min_speed_limit(self):
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+        self.simulation_param["activated_traffic_rule_sets"] = [2]
+        exp_result = [(200, {'min_speed_limit': True}), (201, {'min_speed_limit': True}),
+                      (202, {'min_speed_limit': True}), (203, {'min_speed_limit': True}),
+                      (204, {'min_speed_limit': True}), (205, {'min_speed_limit': True})]
+        result = self.execute_test(scenario)
+        print("Min Speed Limit Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
+
+    # def test_keeps_safe_distance(self):
+    #     scenario, planning_problem_set = \
+    #         CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+    #                              "/" + "DEU_A9-1_3_T-1.xml").open()
+    #     self.simulation_param["activated_traffic_rule_sets"] = [2]
+    #     exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
+    #                   (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
+    #                   (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
+    #     result = self.execute_test(scenario)
+    #     print("Safe Distance Test:")
+    #     print(result)
+    #     self.assertEqual(exp_result, result)
+
+    def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, scenario,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
                                            self.traffic_rules_param)
         vehicle_evaluation = []
         self.road_network = RoadNetwork(scenario.lanelet_network)
-        vehicles = {}
+        vehicles = []
         for obs in scenario.dynamic_obstacles:
-            vehicles[obs.obstacle_id] = self.create_vehicle(obs)
+            vehicles.append(self.create_vehicle(obs))
 
-        for veh in vehicles.values():
+        for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
-            other_vehicles.pop(veh.id)
-            vehicle_evaluation.append((veh.id, dispatcher.evaluate_trajectory(veh, other_vehicles)))
+            other_vehicles.pop(idx)
+            for other_veh in other_vehicles:
+                for time_step in other_veh.states_cr.keys():
+                    other_veh.classify_vehicle(time_step, ego_veh.states_lon[time_step],
+                                               ego_veh.lanelet_assignment[time_step], self.ego_vehicle_param.get("fov"))
+            vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation
 
