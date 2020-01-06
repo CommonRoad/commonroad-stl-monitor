@@ -17,32 +17,33 @@ class SafetyPredicateCollection(PredicateCollection):
         super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
-    # def brakes_abruptly(self, state: State, obstacle_ids: List[int], j_min_abrupt: float,
-    #                     delta_a_abrupt: float) -> bool:
-    #     """ Predicate to check whether an obstacle brakes abruptly
-    #
-    #     :param state: CommonRoad state
-    #     :param obstacle_ids: IDs of obstacles on lanelet at specific time step
-    #     :param j_min_abrupt: the maximum allowed jerk for a braking maneuver to be considered not abrupt
-    #     :param delta_a_abrupt: the maximum allowed acceleration difference between two vehicles for a braking maneuver
-    #     to be considered not abrupt
-    #     :return: boolean indicating if vehicle brakes abruptly at current state
-    #     """
-    #     if len(obstacle_ids) == 0 and state.jerk < j_min_abrupt:
-    #         return True
-    #     s_ego, _ = self._curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(state.position[0], state.position[1])
-    #     for idx, obs_id in enumerate(obstacle_ids):
-    #         obs_state = self._scenario.obstacle_by_id(obs_id).prediction.trajectory.state_list[state.time_step-1]
-    #         s_obs, _ = self._curvilinear_cosy_ego_lane.convert_to_curvilinear_coords(obs_state.position[0],
-    #                                                                                  obs_state.position[1])
-    #         delta_s = s_obs - s_ego
-    #         if delta_s > self._ego_vehicle_param.get("fov"):
-    #             continue
-    #
-    #         if state.jerk < j_min_abrupt and obs_state.acceleration < 0 \
-    #                 and state.acceleration - obs_state.acceleration < delta_a_abrupt:
-    #             return True
-    #     return False
+    def _brakes_abruptly(self, a_ego: float, j_ego: float, other_vehicles: List[Vehicle], time_step: int) -> bool:
+        """ Predicate to check whether an obstacle brakes abruptly
+
+        :param state: CommonRoad state
+        :param obstacle_ids: IDs of obstacles on lanelet at specific time step
+        :param j_min_abrupt: the maximum allowed jerk for a braking maneuver to be considered not abrupt
+        :param delta_a_abrupt: the maximum allowed acceleration difference between two vehicles for a braking maneuver
+        to be considered not abrupt
+        :return: boolean indicating if vehicle brakes abruptly at current state
+        """
+        if a_ego >= 0:
+            return False
+
+        a_min_other = 100
+        for veh in other_vehicles:
+            if veh.classification[time_step] == VehicleLocalization.EGO_LANE_FRONT:
+                if veh.states_lon[time_step].a < a_min_other:
+                    a_min_other = veh.states_lon[time_step].a
+
+        if a_min_other == 100 and j_ego < self._traffic_rule_param.get("j_min_abrupt"):  # no leading vehicle
+            return True
+
+        if j_ego < self._traffic_rule_param.get("j_min_abrupt") and \
+                a_ego - a_min_other < self._traffic_rule_param.get("delta_a_abrupt"):
+            return True
+
+        return False
 
     def _keeps_lane_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
         """
@@ -134,6 +135,7 @@ class SafetyPredicateCollection(PredicateCollection):
         predicate_trace = {"keeps_lane_speed_limit": {ego_vehicle.id: {}},
                            "keeps_fov_speed_limit": {ego_vehicle.id: {}},
                            "keeps_min_speed_limit": {ego_vehicle.id: {}},
+                           "brakes_abruptly": {ego_vehicle.id: {}},
                            "keeps_safe_distance": {}}
 
         for idx in range(len(ego_vehicle.state_list_cr)):
@@ -144,7 +146,8 @@ class SafetyPredicateCollection(PredicateCollection):
                 self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v)
             predicate_trace["keeps_min_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, other_vehicles, idx)
-            #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
+            predicate_trace["brakes_abruptly"][ego_vehicle.id][time_step] = \
+                self._brakes_abruptly(ego_vehicle.states_lon[idx].a, ego_vehicle.jerk_profile[idx], other_vehicles, idx)
 
         for other_vehicle in other_vehicles:
             for idx in range(len(other_vehicle.state_list_cr)):

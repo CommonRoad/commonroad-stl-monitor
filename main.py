@@ -26,21 +26,5 @@ def main():
                                        other_vehicles_param, traffic_rules_param)
 
 
-def add_jerk(state_list: List[State]) -> List[State]:
-    """
-    Adds jerk value to each trajectory state
-
-    :param state_list: trajectory
-    :returns modified trajectory
-    """
-    for idx, state in enumerate(state_list):
-        if idx == 0:
-            state.jerk = 0
-        else:
-            state.jerk = state_list[idx].acceleration - state_list[idx - 1].acceleration
-
-    return state_list
-
-
 if __name__ == "__main__":
     main()

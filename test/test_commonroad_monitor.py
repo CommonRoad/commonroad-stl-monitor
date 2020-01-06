@@ -80,6 +80,42 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result)
         self.assertEqual(exp_result, result)
 
+    def test_brakes_abruptly(self):
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+        self.activated_traffic_rule_sets = [4]
+        exp_result = [(200, {'no_abrupt_braking': True}), (201, {'no_abrupt_braking': True}),
+                      (202, {'no_abrupt_braking': True}), (203, {'no_abrupt_braking': True}),
+                      (204, {'no_abrupt_braking': True}), (205, {'no_abrupt_braking': True})]
+        result = self.execute_test(scenario)
+        print("Brakes Abruptly Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
+
+    def add_jerk(self, vehicle: Vehicle):
+        for idx, state in enumerate(vehicle.state_list_cr):
+            if vehicle.jerk_profile.get(state.time_step) is None:
+                if idx + 1 < len(vehicle.state_list_cr):
+                    jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / \
+                           self.simulation_param.get("dt")
+                else:
+                    jerk = 0
+                vehicle.append_jerk(jerk, state.time_step)
+        return vehicle
+
+    def add_acceleration(self, vehicle: Vehicle):
+        for idx, state in enumerate(vehicle.state_list_cr):
+            if hasattr(state, "acceleration") is False:
+                if idx + 1 < len(vehicle.state_list_cr):
+                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
+                           self.simulation_param.get("dt")
+                else:
+                    acceleration = 0
+                vehicle.state_list_cr[idx].acceleration = acceleration
+                vehicle.states_lon[state.time_step].a = acceleration
+        return vehicle
+
     def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, scenario,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
@@ -94,6 +130,8 @@ class TestCommonRoadMonitor(unittest.TestCase):
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
             other_vehicles.pop(idx)
+            self.add_acceleration(ego_veh)
+            self.add_jerk(ego_veh)
             for other_veh in other_vehicles:
                 for time_step in other_veh.states_cr.keys():
                     other_veh.classify_vehicle(time_step, ego_veh.states_lon[time_step],
