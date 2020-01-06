@@ -72,9 +72,9 @@ class TestCommonRoadMonitor(unittest.TestCase):
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "DEU_A9-1_3_T-1.xml").open()
         self.activated_traffic_rule_sets = [3]
-        exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
-                      (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
-                      (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
+        exp_result = [(200, {'safe_distance': True}), (201, {'safe_distance': True}),
+                      (202, {'safe_distance_veh_201': True}), (203, {'safe_distance': True}),
+                      (204, {'safe_distance': True}), (205, {'safe_distance': True})]
         result = self.execute_test(scenario)
         print("Safe Distance Test:")
         print(result)
