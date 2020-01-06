@@ -67,18 +67,18 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result)
         self.assertEqual(exp_result, result)
 
-    # def test_keeps_safe_distance(self):
-    #     scenario, planning_problem_set = \
-    #         CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-    #                              "/" + "DEU_A9-1_3_T-1.xml").open()
-    #     self.simulation_param["activated_traffic_rule_sets"] = [2]
-    #     exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
-    #                   (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
-    #                   (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
-    #     result = self.execute_test(scenario)
-    #     print("Safe Distance Test:")
-    #     print(result)
-    #     self.assertEqual(exp_result, result)
+    def test_keeps_safe_distance(self):
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+        self.activated_traffic_rule_sets = [3]
+        exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
+                      (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
+                      (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
+        result = self.execute_test(scenario)
+        print("Safe Distance Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
 
     def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, scenario,

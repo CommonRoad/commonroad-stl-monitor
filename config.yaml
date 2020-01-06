@@ -149,7 +149,7 @@ traffic_rule_monitoring:
     traffic_rules:
         max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit)
         min_speed_limit: G(keeps_min_speed_limit)
-    #    safe_distance: G(keeps_safe_distance)
+        safe_distance: G(keeps_safe_distance)
     #    3: G(~(brakes_abruptly))
 
     traffic_rules_param:
@@ -160,7 +160,7 @@ traffic_rule_monitoring:
     traffic_rule_sets:
         1: [max_speed_limit]
         2: [min_speed_limit]
-    #    3: [safe_distance]
+        3: [safe_distance]
 
     activated_traffic_rule_sets: [1]
     vehicle_dependent_rules: [safe_distance]

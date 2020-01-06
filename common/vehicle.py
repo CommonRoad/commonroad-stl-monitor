@@ -100,9 +100,9 @@ class VehicleLocalization(Enum):
     RIGHT = 3
     LEFT = 4
     EGO_LANE_FRONT = 5
-    EGO_LANE_REAR = 5
-    EGO_VEHICLE = 6
-    NONE = 7
+    EGO_LANE_REAR = 6
+    EGO_VEHICLE = 7
+    NONE = 8
 
 
 class Vehicle:
@@ -260,7 +260,6 @@ class Vehicle:
                                                               lane_assignment_ego, lane_assignment_other):
                 self._classification[time_step] = {VehicleLocalization.EGO_LANE_FRONT}
             else:
-                self._classification[time_step] = {VehicleLocalization.EGO_LANE_REAR}
-
+                self._classification[time_step] = {VehicleLocalization.NONE}
         else:
             self._classification[time_step] = {VehicleLocalization.NONE}

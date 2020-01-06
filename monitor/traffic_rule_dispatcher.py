@@ -29,7 +29,8 @@ class TrafficRuleDispatcher:
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
                                               vehicle_dependent_rules)
 
-    def create_monitors(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
+    @staticmethod
+    def create_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
                         activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]) \
             -> List[TrafficRuleMonitor]:
         """
@@ -47,7 +48,8 @@ class TrafficRuleDispatcher:
 
         return monitors
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Calls different predicate classes for predicate evaluation
 
@@ -73,9 +75,30 @@ class TrafficRuleDispatcher:
                 rule_predicates = {}
                 for pred in rule.predicates:
                     trace = []
-                    for idx, value in enumerate(evaluated_predicates[pred]):
+                    for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
                     rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
-
+            else:
+                rule_predicates = {}
+                rule_evaluated = False
+                for vehicle in other_vehicles:
+                    for pred in rule.predicates:
+                        trace = []
+                        if len(evaluated_predicates[pred]) > 0 \
+                                and evaluated_predicates[pred].get(vehicle.id) is not None:
+                            for idx, value in enumerate(evaluated_predicates[pred][vehicle.id].values()):
+                                trace.append((idx * self._dt, value))
+                        elif len(evaluated_predicates[pred]) > 0 \
+                                and evaluated_predicates[pred].get(ego_vehicle.id) is not None and \
+                                rule_predicates.get(pred) is None:
+                            for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
+                                trace.append((idx * self._dt, value))
+                        else:
+                            break
+                        rule_predicates[pred] = trace
+                        rule_evaluated = True
+                        rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
+                if rule_evaluated is False:
+                    rule_evaluation[rule.name] = True
         return rule_evaluation

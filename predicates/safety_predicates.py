@@ -107,7 +107,7 @@ class SafetyPredicateCollection(PredicateCollection):
                    (-2 * (abs(a_min_lead) - abs(a_min_follow))) - \
                    v_lead * t_react_follow + 0.5 * abs(a_min_lead) * t_react_follow**2
 
-        d_safe_2 = v_lead**2 / (-2 * abs(a_min_lead)) - v_follow**2 / (-2 * abs(a_min_follow)) + \
+        d_safe_2 = (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow**2) / (-2 * abs(a_min_follow)) + \
                    v_follow * t_react_follow
 
         if precondition:
@@ -122,7 +122,8 @@ class SafetyPredicateCollection(PredicateCollection):
         else:
             return True
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
@@ -130,24 +131,28 @@ class SafetyPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        predicate_trace = {"keeps_lane_speed_limit": [],
-                           "keeps_fov_speed_limit": [],
-                           "keeps_min_speed_limit": [],
+        predicate_trace = {"keeps_lane_speed_limit": {ego_vehicle.id: {}},
+                           "keeps_fov_speed_limit": {ego_vehicle.id: {}},
+                           "keeps_min_speed_limit": {ego_vehicle.id: {}},
                            "keeps_safe_distance": {}}
 
         for idx in range(len(ego_vehicle.state_list_cr)):
-            predicate_trace["keeps_lane_speed_limit"].append(
-                self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx]))
-            predicate_trace["keeps_fov_speed_limit"].append(
-                self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v))
-            predicate_trace["keeps_min_speed_limit"].append(
-                self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, other_vehicles, idx))
+            time_step = ego_vehicle.state_list_cr[idx].time_step
+            predicate_trace["keeps_lane_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
+            predicate_trace["keeps_fov_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v)
+            predicate_trace["keeps_min_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, other_vehicles, idx)
             #predicate_trace["brakes_abruptly"][idx] = self.brakes_abruptly()
 
         for other_vehicle in other_vehicles:
             for idx in range(len(other_vehicle.state_list_cr)):
+                time_step = other_vehicle.state_list_cr[idx].time_step
                 if VehicleLocalization.EGO_LANE_FRONT in other_vehicle.classification[idx]:
-                    predicate_trace["keeps_safe_distance"][other_vehicle.id][idx] = \
+                    if predicate_trace["keeps_safe_distance"].get(other_vehicle.id) is None:
+                        predicate_trace["keeps_safe_distance"][other_vehicle.id] = {}
+                    predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = \
                         self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
                                                   ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
                                                   self._ego_vehicle_param.get("a_min"),
