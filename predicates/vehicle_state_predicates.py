@@ -101,7 +101,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
 
     @staticmethod
     def _safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
-                      a_min_lead: float, t_react_follow: float) -> float:
+                       a_min_lead: float, t_react_follow: float) -> float:
 
         u_max_follow = (v_follow**2) / (2 * abs(a_min_follow)) + v_follow * t_react_follow
         v_lead_t_react = v_lead + a_min_lead * t_react_follow
@@ -114,10 +114,10 @@ class VehicleStatePredicateCollection(PredicateCollection):
 
         d_safe_1 = (v_lead - abs(a_min_lead) * t_react_follow - v_follow) / \
                    (-2 * (abs(a_min_lead) - abs(a_min_follow))) - \
-                   v_lead * t_react_follow + 0.5 * abs(a_min_lead) * t_react_follow**2
+                    v_lead * t_react_follow + 0.5 * abs(a_min_lead) * t_react_follow**2
 
         d_safe_2 = (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow**2) / (-2 * abs(a_min_follow)) + \
-                   v_follow * t_react_follow
+                    v_follow * t_react_follow
 
         if precondition:
             return d_safe_1
