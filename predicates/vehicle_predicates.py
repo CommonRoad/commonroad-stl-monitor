@@ -1,20 +1,20 @@
 from typing import List, Dict
 from predicates.predicate_collection import PredicateCollection
-from commonroad.scenario.lanelet import LaneletNetwork
+from common.road_network import RoadNetwork
 from common.vehicle import Vehicle
 from commonroad.scenario.obstacle import SignalState
 
 
 class VehiclePredicateCollection(PredicateCollection):
-    def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
+    def __init__(self, road_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
                  other_vehicles_param: Dict):
         """
-        :param lanelet_network: CommonRoad lanelet network
+        :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         """
-        super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param)
+        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param)
 
     @staticmethod
     def braking_lights(signal_state: SignalState):

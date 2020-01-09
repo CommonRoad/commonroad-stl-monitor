@@ -1,0 +1,109 @@
+% !TeX root = ../traffic_rules.tex
+
+\section{Predicates}
+\label{sec:predicates}
+
+\subsection{Position}
+
+\begin{align}
+\occupiedLaneletsFunction(\mathbb{L}_\mathrm{i}, V_i) = \big\{l'   \, \big| \, l' \in \mathbb{L}_\mathrm{i}: l' \cap \proj(V_i) \neq \emptyset \big\}
+\end{align}
+
+\begin{align}
+\onSameLaneAsEgoVehiclePredicate \iff \occupiedLaneletsFunction(\mathbb{L}_\mathrm{i}, \egoVehicle) \cap \occupiedLaneletsFunction(\mathbb{L}_\mathrm{i}, \otherVehicle) \neq \emptyset 
+\end{align}
+
+\begin{align}
+\behindEgoVehiclePredicate \iff \frontPositionFunction(\otherVehicle) \leq \rearPositionFunction(\egoVehicle)
+\end{align}
+
+\begin{align}
+\frontOfEgoVehiclePredicate \iff \frontPositionFunction(\egoVehicle) \leq \rearPositionFunction(\otherVehicle)
+\end{align}
+
+\begin{align}
+\frontOfEgoVehiclePredicate \iff \frontPositionFunction(\egoVehicle) \leq \rearPositionFunction(\otherVehicle)
+\end{align}
+
+\begin{align}
+\begin{split}
+\vehiclesInFrontOfEgoVehicleFunction = \big\{V'   \, \big| \, V' \in \mathbb{V}: \occupiedLaneletsFunction(\mathbb{L}, V') \\ \subseteq \laneFrontFunction(\occupiedLaneletsFunction(\mathbb{L}, \egoVehicle)) \cup \occupiedLaneletsFunction(\mathbb{L}, \egoVehicle)  \big\}
+\end{split}
+\end{align}
+
+%\begin{align}
+%\mathtt{in\_fov} \iff 0 < \Delta s \leq fov
+%\end{align}
+
+\subsection{Velocity}
+\label{sec:speed_limit}
+
+
+Speed limit provided by traffic regulations for a vehicle $V_i$:
+\begin{align}
+\speedLimitLane := \sup \big( \big\{v   \, \big| \, \forall l \in \mathtt{\occupiedLaneletsFunction}(\mathbb{L}, V_i): v = \speedLimitFunction(l) \big\} \big)
+\end{align}
+
+The ego vehicle is always able to stop within the field of view. Therefore, the maximum allowed velocity based on the field of view $v_{sr}$ is chosen such that
+\begin{align}
+\speedLimitFOV := 
+\begin{split}
+& \mathrm{proj}(\xi(t_{s}(\tilde{u}_{brake}(\cdot));x_\mathrm{lon}^\mathrm{sr},\tilde{u}_{brake}(\cdot))) \leq fov, \\
+& x_\mathrm{lon}^\mathrm{sr} = [0, \speedLimitFOV, \overline{a}, \overline{j}]^T.
+\end{split}
+\end{align}
+This velocity be calculated offline using binary search.
+
+\begin{align}
+\laneSpeedLimitPredicate \iff \vego \leq \speedLimitLane
+\end{align}
+
+\begin{align}
+\fovSpeedLimitPredicate \iff \vego \leq \speedLimitFOV
+\end{align}
+
+\subsection{Safe distance}
+
+\begin{equation*} 
+\safeDistance(\vrear, \vlead) =
+\begin{cases}
+\safeDistanceA(\vrear, \vlead), & \big(\aminlead > \aminrear \big) \land \big(\vleadStar < \vrear \big) \land \\
+& \big(\timeDelay \leq \frac{\vlead}{-\aminlead}\big) \land \big(\frac{\vrear}{\aminrear} > \frac{\vleadStar}{\aminlead}\big), \\
+\safeDistanceB(\vrear, \vlead), & \text{otherwise},
+\end{cases}
+\end{equation*}
+where
+\allowdisplaybreaks
+\begin{align*}
+\vleadStar = & \; \begin{cases}
+\vlead - \aminlead \timeDelay, & \timeDelay \leq \frac{\vlead(t_k)}{-\aminlead}, \\
+0, & \text{otherwise}, 
+\end{cases} \\
+\safeDistanceA(\vrear, \vlead) := & \; \frac{\big(\vlead \! - \! \aminlead \timeDelay \! - \! \vrear^2\big)^2}{2 (\aminlead - \aminrear)} \! + \! \vrear \timeDelay \; - \vlead \timeDelay - \frac{1}{2} \aminlead \timeDelay^2 , \\
+\safeDistanceB(\vrear, \vlead) := & \; \frac{\vlead^2}{2 \aminlead} - \frac{\vrear^2}{2 \aminrear} + \vrear \timeDelay ,  \\
+\end{align*} 
+and \timeDelay denotes the reaction time of the ego vehicle.
+
+
+\begin{align}
+\safeDistanceFrontPredicate \iff \safeDistance(\vego, \vother) \leq (\rearPositionFunction(\egoVehicle) - \frontPositionFunction(V_\mathrm{ego}))
+\end{align}
+
+\begin{align}
+\safeDistanceRearPredicate \iff \safeDistance(\vother, \vego) \leq (\rearPositionFunction(\egoVehicle) - \frontPositionFunction(V_\mathrm{o}))
+\end{align}
+
+
+\subsection{Overtaking}
+
+
+\subsection{Unnecessary braking}
+\begin{align}
+\begin{split}
+&\mathtt{unnecessary\_braking} \iff \\ 
+& a_\mathrm{ego} < 0 \land j_\mathrm{ego} < j_\mathrm{abrupt} \land \nexists \ V' \in \ \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \\ 
+& \lor \exists V' \in \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land \Delta a  <  \Delta a_\mathrm{abrupt} \land \Delta j  <  \Delta j_\mathrm{abrupt} \\ 
+& \lor  \big(\speedLimitLane(V') \neq \emptyset  \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt}\big)
+\end{split}
+\end{align}
+\todo{change acceleration jerk for second case}

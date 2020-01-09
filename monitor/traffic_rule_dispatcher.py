@@ -1,14 +1,16 @@
 from monitor.traffic_rule_monitor import TrafficRuleMonitor
-from typing import List, Dict
+from typing import List, Dict, Set
 from commonroad.scenario.scenario import Scenario
-from predicates.safety_predicates import SafetyPredicateCollection
-from common.vehicle import Vehicle
+from predicates.vehicle_state_predicates import VehicleStatePredicateCollection
+from predicates.position_predicates import PositionPredicateCollection
+from common.vehicle import Vehicle, VehicleLocalization
+from common.road_network import RoadNetwork
 
 
 class TrafficRuleDispatcher:
     """Manages the different monitors for each traffic rule"""
 
-    def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str], scenario: Scenario,
+    def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict,
                  activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]):
         """
@@ -24,8 +26,9 @@ class TrafficRuleDispatcher:
         self._simulation_param = simulation_param
         self._ego_vehicle_param = ego_vehicle_param
         self._other_vehicles_param = other_vehicles_param
-        self._safety_predicates = SafetyPredicateCollection(scenario.lanelet_network, simulation_param,
-                                                            ego_vehicle_param, other_vehicles_param, traffic_rule_param)
+        self._safety_predicates = VehicleStatePredicateCollection(road_network, simulation_param,
+                                                                  ego_vehicle_param, other_vehicles_param,
+                                                                  traffic_rule_param)
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
                                               vehicle_dependent_rules)
 
@@ -60,6 +63,26 @@ class TrafficRuleDispatcher:
 
         return safety_predicates
 
+    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_assignment_ego: Set[int],
+                                lane_assignment_other: Set[int]) -> Set[VehicleLocalization]:
+        if PositionPredicateCollection.in_fov(s_ego, s_other, self._ego_vehicle_param.get("fov")):
+            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_assignment_ego,
+                                                                  lane_assignment_other):
+                return {VehicleLocalization.EGO_LANE_FRONT}
+            else:
+                return {VehicleLocalization.NONE}
+        else:
+            return {VehicleLocalization.NONE}
+
+    def classify_all_vehicles(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]):
+        for veh in other_vehicles:
+            for state in veh.state_list_cr:
+                veh.append_classification(self.classify_single_vehicle(ego_vehicle.states_lon[state.time_step].s,
+                                                                       veh.states_lon[state.time_step].s,
+                                                                       ego_vehicle.lanelet_assignment[state.time_step],
+                                                                       veh.lanelet_assignment[state.time_step]),
+                                          state.time_step)
+
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance
@@ -68,6 +91,7 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
+        self.classify_all_vehicles(ego_vehicle, other_vehicles)
         evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors:

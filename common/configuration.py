@@ -5,6 +5,7 @@ from typing import Dict, Union, List, Tuple
 import ruamel.yaml
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 import math
+from decimal import Decimal
 
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) -> Dict:
@@ -30,7 +31,8 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) ->
 
     ego_vehicle_param["fov_speed_limit"] = calc_v_max(ego_vehicle_param, simulation_param)
 
-    if not -1e-12 <= (ego_vehicle_param.get("t_react") % simulation_param.get("dt")) <= 1e-12:
+    if not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) %
+                      Decimal(str(simulation_param.get("dt")))) <= 1e-12:
         raise ValueError('Reaction time must be multiple of time step size.')
 
     return ego_vehicle_param

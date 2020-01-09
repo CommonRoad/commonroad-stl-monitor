@@ -1,0 +1,20 @@
+% !TeX root = ../traffic_rules.tex
+
+\section{Introduction}
+This document serves as an overview about formalized traffic rules based on the German Road Traffic
+Regulation (Stra\ss{}enverkehrs-Ordnung), in the following abbreviated with StVO, and the Vienna Convention on Road Traffic \cite{vienna_convention_1968}, in the following abbreviated with VCoRT. 
+
+The traffic rules formalization process is separated in four steps:
+\begin{enumerate}
+\item \textbf{Extracting rules from legal sources}: The rules of the road are specified in the traffic laws of a country or region. However, often traffic rules are not precise and concrete. Therefore, judical decisions which interpret the traffic laws have to be considered. Additionally, it is often the case that several laws have to be considered at the same time because the rules interrelate. Please note that no official translated version of the StVO exist. The translation used in this document is based on the \textit{German Law Archive} website\footnote{https://germanlawarchive.iuscomp.org/?p=1290}.
+
+\item \textbf{Concretizing traffic rules and legal judical decisions}: The considered traffic rules and judical decisions have to be combined to a sentence which on the one side describes the situation where the rule is applicable and on the other side concretizes the different legal sources. It can also be the case that a single traffic rule addresses different behaviors and therefore have to be divided (e.g., StVO \S 4 (1)).
+
+\item \textbf{Extracting predicates}: For the logical formalization of traffic rules one needs predicates for the evaluation of certain properties, e.g., allowed speed limit or velocity of preceeding vehicles.
+
+\item \textbf{Defining temporal logic formulas}: The last step is to formalize the concretized sentence using the extracted predicates in temporal logic.
+\end{enumerate}
+
+We formalize the traffic rules in Linear Temporal Logic (LTL), Metric Temporal Logic (MTL), and Signal Temporal Logic (STL).
+
+The remainder of this paper is structured as follows. Sec.~\ref{sec:preliminaries} introduces mathematical foundations and different temporal logics. Sec.~\ref{sec:rule_formalization} presents the formalization of traffic rules. The traffic rules are clustered in general traffic rules (Sec.~\ref{sec:general_rules}) applicable in all possible traffic situations, highway traffic rules (Sec.~\ref{sec:highway_rules}), urban traffic rules (Sec.~\ref{sec:urban_rules}), and cross-country road rules (Sec.~\ref{sec:cross_country_rules}). In Sec.~\ref{sec:predicates} predicates for the temporal logic formulas are defined.

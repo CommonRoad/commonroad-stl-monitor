@@ -2,7 +2,6 @@ from commonroad.geometry.shape import Shape, Rectangle
 from typing import Union, Set, Dict, List
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
-from predicates.lane_predicates import LanePredicateCollection
 from enum import Enum
 
 
@@ -253,13 +252,11 @@ class Vehicle:
         """
         self._jerk_profile[time_step] = jerk
 
-    def classify_vehicle(self, time_step: int, state_lon_ego: StateLongitudinal, lane_assignment_ego: Set[int],
-                         fov: float, lane_assignment_other: Set[int]):
-        if LanePredicateCollection.in_fov(self.states_lon[time_step].s, state_lon_ego.s, fov):
-            if LanePredicateCollection.same_lane_behind_other(state_lon_ego.s, self.states_lon[time_step].s,
-                                                              lane_assignment_ego, lane_assignment_other):
-                self._classification[time_step] = {VehicleLocalization.EGO_LANE_FRONT}
-            else:
-                self._classification[time_step] = {VehicleLocalization.NONE}
-        else:
-            self._classification[time_step] = {VehicleLocalization.NONE}
+    def append_classification(self, classification: Set[VehicleLocalization], time_step: int):
+        """
+        Sets classification at a specific time step
+
+        :param classification: classification of vehicle
+        :param time_step: time step of new data
+        """
+        self._classification[time_step] = classification

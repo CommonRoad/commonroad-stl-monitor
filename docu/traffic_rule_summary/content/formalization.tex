@@ -1,0 +1,288 @@
+% !TeX root = ../traffic_rules.tex
+
+\section{Traffic Rule Formalization}
+\label{sec:rule_formalization}
+
+\subsection{Traffic Law Terminology}
+\label{sec:def_law_terms}
+\begin{itemize}
+	\item access ramp / acceleration lane
+	\item off ramp / deceleration lane
+	\item main carriage way
+	\item motor road / motor street / highway
+	\item ego vehicle
+	\item other vehicle
+\end{itemize}
+
+\subsection{General Traffic Rules}
+\label{sec:general_rules}
+
+\subsubsection{Distance}
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{ll}
+\toprule
+\textbf{Safe distance front} & \\
+\midrule
+StVO \S 4 (1)& Der Abstand zu einem vorausfahrenden Fahrzeug muss in der Regel \\ 
+& so groß sein, dass auch dann hinter diesem gehalten werden kann, wenn es plötzlich  \\
+& gebremst wird.\\
+
+StVO English & A person operating a vehicle moving behind another vehicle must, as a rule,\\
+& keep a sufficient distance from that other vehicle so as to be able to pull up safely \\
+& even if it suddenly slows down or stops.\\
+
+VCoRT \S 13 (5) & The  driver  of  a  vehicle  moving  behind  another  vehicle  shall  keep  at \\ 
+& a  sufficient distance from that other vehicle to avoid collision if the vehicle in front \\ 
+& should suddenly slow down or stop. \\
+
+Concretization &  A vehicle moving behind other vehicles within a lane must keep a \\ 
+& distance which ensures collision freedom to each of these other vehicles even if one\\ 
+&  or several of them are suddenly slow down or stop.\\
+
+%Atomic Prepositions & $\mathtt{keeps\_safe\_distance}$\\
+
+Predicates & $\safeDistanceFrontPredicate$\\ 
+
+Comments &  Evaluated for all vehicles for which the following condition is valid: \\
+& $\onSameLaneAsEgoVehiclePredicate \land \frontOfEgoVehiclePredicate$\\
+
+LTL & G$(\safeDistanceFrontPredicate)$\\
+MTL & G$(\safeDistanceFrontPredicate)$\\
+STL & G$(\safeDistance(\vego, \vother) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(\egoVehicle)))$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Braking}
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{ll}
+\toprule
+\textbf{Unnecessary braking} & \\
+\midrule
+StVO \S 4 (1) & Wer vorausfährt, darf nicht ohne zwingenden
+Grund stark bremsen.\\
+ & \\
+StVO English & The person operating the vehicle in front must not brake suddenly \\
+& without a compelling reason.\\
+
+
+VCoRT \S 17 (1) &  No driver of a vehicle shall brake abruptly unless it is necessary to do so for\\
+&  safety reasons.\\
+
+Concretization &  A vehicle shall never brake abruptly unless it is necessary to do so \\
+& for safety reasons. A vehicle brakes abruptly if: 1. It brakes with an acceleration \\ 
+& which violates an user-defined threshold and there is no other vehicle, obstacle, \\ 
+& or speed limit front of the vehicle; 2. There is an obstacle in front of the vehicle \\ 
+& and the acceleration difference and jerk difference between the vehicle and the obstacle \\ 
+& violates an acceleration and jerk threshold, respectively; 3. There is an speed limit \\
+& in front of the vehicle and the acceleration and jerk of the vehicle violate \\
+& an acceleration and jerk threshold, respectively.\\
+
+Predicates & $\unnecessaryBraking$\\
+
+Comments & \\
+
+LTL & G$(\unnecessaryBraking)$\\
+MTL & G$(\unnecessaryBraking)$\\
+STL & \\
+\bottomrule
+\end{tabular}
+\end{table}%
+
+\subsubsection{Velocity}
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{ll}
+\toprule
+\textbf{Maximum Speed Limit} &\\
+\midrule
+StVO \S 3 (1), \S 3 (3),  & The legal text is omitted for reasons of space.\\
+\S 18 (1), \S 18 (5), \S 18 (6) & \\
+StVO English & The legal text is omitted for reasons of space.\\
+
+VCoRT \S 13 (2) &  Domestic legislation shall establish maximum speed limits for all roads. \\
+& Domestic legislation shall also determine special speed limits applicable \\ 
+& to certain categories of vehicles presenting a special danger, in particular by reason \\ & of their mass or their  load. They may establish similar provisions \\
+& for certain categories of drivers, in particular for new drivers.\\
+
+Concretization &  A vehicle shall not exceed the allowed speed limit of the lanes it drives on and shall \\
+& not exceed the speed limit which is necessary to ensure collision freedom with \\
+& respect to vehicles  outside the field of view.\\
+
+Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$\\
+
+Comments &  The traffic laws do not provide concrete information about speed limit, \\ 
+& e.g., the VCoRT passes the task of defining speed limits to national lawmakers. \\
+& The concretization assumes that a mapping of speed limits provided \\ 
+& by traffic signs to lanes is given. If no speed limit is given only, \\ 
+& the speed limit caused by the field of view must be considered (traffic sign based \\ 
+& speed limit set to infinity). The velocity with respect to vehicles inside the field of view \\
+& is considered in the safe distance traffic rule concretization.\\
+
+LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate)$\\
+MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate)$\\
+STL & G($\vego \leq \speedLimitLane \land \vego \leq \speedLimitFOV)$\\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Minimum Speed Limit} &\\
+		\midrule
+		StVO \S 3 (2) & Ohne triftigen Grund dürfen Kraftfahrzeuge nicht so langsam fahren, dass sie\\
+		& den Verkehrsfluss behindern.\\
+		
+		StVO English & No motor vehicle must, without good reason, travel so slowly as to impede\\ 
+		& the flow of traffic.\\
+		
+		VCoRT \S 13 (2) &  Similar to maximum speed limit.\\
+		
+		Concretization &  The relative velocity of a vehicle with respect to leading and following vehicles should \\
+		& not exceed a certain threshold.\\
+		
+		Predicates & $\minSpeedLimitPredicate$\\
+		
+		Comments &  \\
+		
+		LTL & G$(\minSpeedLimitPredicate)$\\
+		MTL & G$(\minSpeedLimitPredicate)$\\
+		STL & G($v_\mathrm{o}^\mathrm{min} - \vego \leq v_\mathrm{min}^\mathrm{slow})$\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+
+
+\subsection{Highway Traffic Rules}
+\label{sec:highway_rules}
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Driving right} & \\
+		\textbf{faster than left} &\\
+		\midrule
+		StVO \S 7 (2), \S 7 (2a),  & Ist der Verkehr so dicht, dass sich auf den Fahrstreifen für eine Richtung \\
+		\S 7a & Fahrzeugschlangen gebildet haben, darf rechts schneller als links gefahren werden.\\
+		& \\
+		& Wenn auf der Fahrbahn für eine Richtung eine Fahrzeugschlange auf dem jeweils linken \\ 
+		& Fahrstreifen steht oder langsam fährt, dürfen Fahrzeuge diese mit geringfügig höherer \\ 
+		& Geschwindigkeit und mit äußerster Vorsicht rechts überholen. \\ 
+		& \\
+		& Auf Ausfädelungsstreifen darf nicht schneller gefahren werden als auf den \\  
+		& durchgehenden Fahrstreifen. Stockt oder steht der Verkehr auf den durchgehenden \\ 
+		& Fahrstreifen, darf auf dem Ausfädelungsstreifen mit mäßiger Geschwindigkeit  \\
+		& und besonderer Vorsicht überholt werden. \\
+		& \\
+		& Gehen Fahrstreifen, insbesondere auf Autobahnen und Kraftfahrstraßen, \\
+		& von der durchgehenden Fahrbahn ab, darf beim Abbiegen vom Beginn einer breiten \\
+		& Leitlinie (Zeichen 340) rechts von dieser schneller als auf der durchgehenden Fahrbahn \\
+		& gefahren werden. \\ 
+		& \\
+		& Auf Ausfädelungsstreifen darf nicht schneller gefahren werden als auf den durchgehenden \\ 
+		& Fahrstreifen. Stockt oder steht der Verkehr auf den durchgehenden Fahrstreifen, darf \\ 
+		& auf dem Ausfädelungsstreifen mit mäßiger Geschwindigkeit und besonderer Vorsicht \\
+		& überholt werden. \\
+		
+		StVO English & If the density of traffic has resulted in queues of vehicles in the lanes of one \\
+		& carriageway, traffic on the right (nearside lane, middle lane) may move faster than \\
+		& traffic on the left (offside lane, middle lane).\\
+		& \\
+		& If, on a carriageway for one direction of traffic, a vehicle queue has formed and come to \\ 
+		& a standstill or is moving at low speed in the left-hand lane, vehicles may overtake this \\ 
+		& queue on the right at a slightly higher speed and with the utmost care. \\
+		& \\
+		& In deceleration lanes, vehicles must not travel faster than traffic on the main carriageway. \\
+		& If traffic on the main carriageway is moving slowly or is stationary, vehicles in a \\
+		& deceleration lane may overtake at a moderate speed and with great care. \\
+		& \\
+		& Where lanes diverge from the main carriageway, especially on motorways and motor roads, \\
+		& vehicles turning off may, from the beginning of and to the right of a lane marking with \\
+		& broad lines (sign 340), travel faster than traffic on the main carriageway. \\
+		& \\
+		& On motorways and other roads outside built-up areas, vehicles may travel faster in \\
+		& acceleration lanes than traffic on the main carriageway. \\
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Driving right} & \\
+		\textbf{faster than left} &\\
+		\midrule
+		VCoRT  &  \\
+		
+		Concretization &  A vehicle shall not drive faster than any vehicle on its left lanes. \\
+		& A exception is, if $1.$ the vehicle on the left lane is in a congestion; \\
+		& $2.$ the vehicle on the left lane is on the main carriage way and the vehicle on the right \\
+		& lane is on a off ramp; $3.$ the left vehicle and right vehicle are separated by a broad \\
+		& lane marking;  $4.$ the right vehicle is within an access ramp. For $1.$ and $2.$, the vehicle \\ 
+		& on the right lane is allowed to drive faster than the vehicle on the left lane \\
+		& with a slightly higher speed.\\
+		
+		Predicates & $\drivesFasterThanVehicleLeftPredicate$, $\congestionLeftPredicate$, $\otherVehicleLeftOfBroadLaneMarkingPredicate$,\\
+		& $\drivesMaxWithSlightlyHigherSpeedPredicate$, $\rightOfBroadLaneMarkingPredicate$\\
+		
+		Comments &  Assumption: Deceleration lane always right of main carriage way.\\
+		& Case two can be neglected -> same as case one \\
+		
+		LTL & G$(\neg \drivesFasterThanVehicleLeftPredicate$ \\ 
+		& $\lor (\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate)$\\
+		& $\lor (\rightOfBroadLaneMarkingPredicate \land \otherVehicleLeftOfBroadLaneMarkingPredicate)$\\
+		& $\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate))$\\
+		MTL & G$(\neg \drivesFasterThanVehicleLeftPredicate$ \\ 
+		& $\lor (\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate))$\\
+		STL & \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Emergency Lane} &\\
+		\midrule
+		StVO \S 3 (2) & Sobald Fahrzeuge auf Autobahnen sowie auf Außerortsstraßen mit mindestens zwei \\
+		& Fahrstreifen für eine Richtung mit Schrittgeschwindigkeit fahren oder sich die Fahrzeuge \\
+		& im Stillstand befinden, müssen diese Fahrzeuge für die Durchfahrt von Polizei- \\
+		& und Hilfsfahrzeugen zwischen dem äußerst linken und dem unmittelbar rechts \\
+		& daneben liegenden Fahrstreifen für eine Richtung eine freie Gasse bilden.\\
+		
+		StVO English & As soon as vehicles on motorways and roads outside a built-up area with at least two lanes \\
+		& for one direction start to move at walking pace or come to a standstill, these vehicles must \\
+		& leave a gap for one direction between the lane on the far left and the lane immediately \\
+		& adjacent to it on the right to allow police and emergency vehicles to pass.\\
+		
+		VCoRT  &  \\
+		
+		Concretization &  A vehicle in a congestion outside urban roads has to drive leftmost if it is in the leftmost \\
+		& lane and has to drive rightmost otherwise. \\
+		& not exceed a certain threshold.\\
+		
+		Predicates & $\minSpeedLimitPredicate$\\
+		
+		Comments &  \\
+		
+		LTL & G$(\minSpeedLimitPredicate)$\\
+		MTL & G$(\minSpeedLimitPredicate)$\\
+		STL & G($v_\mathrm{o}^\mathrm{min} - \vego \leq v_\mathrm{min}^\mathrm{slow})$\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+\subsection{Urban Traffic Rules}
+\label{sec:urban_rules}
+
+\subsection{Cross-Country Road Traffic Rules}
+\label{sec:cross_country_rules}

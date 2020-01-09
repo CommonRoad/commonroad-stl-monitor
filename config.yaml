@@ -59,9 +59,9 @@ ego_vehicle_param:
     j_max: 10
     j_min: -10
     v_des: 30
-    t_react: 0.0
+    t_react: 0.3
     dynamics_param: None
-    fov: 50
+    fov: 200
     v_min: 0
     v_limit_engine: 50.8
     drag_coefficient: 0
@@ -156,6 +156,9 @@ traffic_rule_monitoring:
         j_min_abrupt: -2
         delta_a_abrupt: -2
         min_velocity_dif: 10
+        standstill_error: 0.01
+        num_veh_congestion: 4
+        max_congestion_velocity: 10
 
     traffic_rule_sets:
         1: [max_speed_limit]

@@ -12,7 +12,7 @@ import copy
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
         config = load_yaml("./../config.yaml")
-        self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.5, 'DEU')
+        self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self.other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self.ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self.simulation_param)
         self.traffic_rule_sets = config.get("traffic_rule_monitoring").get("traffic_rule_sets")
@@ -44,7 +44,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
     def test_keeps_max_speed_limit(self):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+                                 "/" + "DEU_A9-3_1_T-1.xml").open()
         self.activated_traffic_rule_sets = [1]
         exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
                       (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
@@ -57,7 +57,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
     def test_keeps_min_speed_limit(self):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+                                 "/" + "DEU_A9-3_1_T-1.xml").open()
         self.activated_traffic_rule_sets = [2]
         exp_result = [(200, {'min_speed_limit': True}), (201, {'min_speed_limit': True}),
                       (202, {'min_speed_limit': True}), (203, {'min_speed_limit': True}),
@@ -70,7 +70,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
     def test_keeps_safe_distance(self):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-1_3_T-1.xml").open()
+                                 "/" + "DEU_A9-3_1_T-1.xml").open()
         self.activated_traffic_rule_sets = [3]
         exp_result = [(200, {'safe_distance': True}), (201, {'safe_distance': True}),
                       (202, {'safe_distance_veh_201': True}), (203, {'safe_distance': True}),
@@ -117,12 +117,13 @@ class TestCommonRoadMonitor(unittest.TestCase):
         return vehicle
 
     def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
-        dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, scenario,
+        self.road_network = RoadNetwork(scenario.lanelet_network)
+        dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, self.road_network,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
                                            self.traffic_rules_param, self.activated_traffic_rule_sets,
                                            self.vehicle_dependent_rules)
         vehicle_evaluation = []
-        self.road_network = RoadNetwork(scenario.lanelet_network)
+
         vehicles = []
         for obs in scenario.dynamic_obstacles:
             vehicles.append(self.create_vehicle(obs))
@@ -132,12 +133,6 @@ class TestCommonRoadMonitor(unittest.TestCase):
             other_vehicles.pop(idx)
             self.add_acceleration(ego_veh)
             self.add_jerk(ego_veh)
-            for other_veh in other_vehicles:
-                for time_step in other_veh.states_cr.keys():
-                    other_veh.classify_vehicle(time_step, ego_veh.states_lon[time_step],
-                                               self.road_network.find_lane_ids_by_obstacle(ego_veh.id, time_step),
-                                               self.ego_vehicle_param.get("fov"),
-                                               self.road_network.find_lane_ids_by_obstacle(other_veh.id, time_step))
             vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation

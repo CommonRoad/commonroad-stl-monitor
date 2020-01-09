@@ -81,7 +81,7 @@ simulation_param = config.get("simulation_param")
 
 filename = simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
-#scenario.translate_rotate(np.array([0, 0]), -0.03)
+#scenario.translate_rotate(np.array([0, 0]), -0.030)
 #fw = CommonRoadFileWriter(scenario, planning_problem_set, scenario.author, scenario.affiliation, scenario.source, scenario.tags)
 #fw.write_scenario_to_file("DEU_A9-3_1_T-1.xml")
 

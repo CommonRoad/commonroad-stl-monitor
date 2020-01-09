@@ -1,20 +1,20 @@
 from typing import List, Dict, Set
 from predicates.predicate_collection import PredicateCollection
-from commonroad.scenario.lanelet import LaneletNetwork
+from common.road_network import RoadNetwork
 from common.vehicle import Vehicle, VehicleLocalization
 
 
-class SafetyPredicateCollection(PredicateCollection):
-    def __init__(self, lanelet_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
+class VehicleStatePredicateCollection(PredicateCollection):
+    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
                  other_vehicles_param: Dict, traffic_rules_param: Dict):
         """
-        :param lanelet_network: CommonRoad lanelet network
+        :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         """
-        super().__init__(lanelet_network, simulation_param, ego_vehicle_param, other_vehicles_param,
+        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
     def _brakes_abruptly(self, a_ego: float, j_ego: float, other_vehicles: List[Vehicle], time_step: int) -> bool:
@@ -55,10 +55,11 @@ class SafetyPredicateCollection(PredicateCollection):
         """
         speed_limits = []
         for lanelet_id in lanelet_ids:
-            lanelet = self._lanelet_network.find_lanelet_by_id(lanelet_id)
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
             for traffic_sign_id in lanelet.traffic_signs:
                 lanelet_speed_limits = \
-                    self._lanelet_network.find_traffic_sign_by_id(traffic_sign_id).speed_limit(self._country)
+                    self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id).speed_limit(
+                        self._country)
                 speed_limits.append(lanelet_speed_limits)
         if min(speed_limits) < velocity:
             return False
@@ -91,8 +92,15 @@ class SafetyPredicateCollection(PredicateCollection):
         else:
             return True
 
+    def _in_standstill(self, velocity: float):
+        if self._traffic_rule_param.get("standstill_error") < velocity < \
+                self._traffic_rule_param.get("standstill_error"):
+            return True
+        else:
+            return False
+
     @staticmethod
-    def safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
+    def _safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
                       a_min_lead: float, t_react_follow: float) -> float:
 
         u_max_follow = (v_follow**2) / (2 * abs(a_min_follow)) + v_follow * t_react_follow
@@ -118,7 +126,7 @@ class SafetyPredicateCollection(PredicateCollection):
 
     def _keeps_safe_distance(self, s_follow: float, s_lead:float, v_follow: float, v_lead: float,
                              a_min_follow: float, a_min_lead: float, t_react_follow: float) -> bool:
-        if s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
+        if s_lead - s_follow < self._safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
             return False
         else:
             return True
