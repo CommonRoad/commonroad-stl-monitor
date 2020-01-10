@@ -12,7 +12,6 @@ from commonroad.scenario.obstacle import DynamicObstacle
 from common.vehicle import Vehicle
 from typing import List, Dict, Tuple
 from datetime import datetime
-from common.configuration import Strategy
 import warnings
 
 # CommonRoad Visualization Parameters:
@@ -113,8 +112,8 @@ def plot_vehicle_at_time_idx(ego_obstacle: DynamicObstacle):
     draw_object(ego_obstacle, draw_params=draw_params_scenario)
 
 
-def create_scenario_video(out_path: str, scenario: Scenario, ego_obstacle: DynamicObstacle, visualization_param: Dict,
-                          planning_problem_set: PlanningProblemSet = None):
+def create_scenario_video(out_path: str, scenario: Scenario, visualization_param: Dict, video_length: int,
+                          ego_obstacle: DynamicObstacle = None, planning_problem_set: PlanningProblemSet = None):
     """
     Creates a video of the solution for a specific planning problem
     :param out_path: The path where the video will be saved
@@ -145,12 +144,13 @@ def create_scenario_video(out_path: str, scenario: Scenario, ego_obstacle: Dynam
     if os.path.isfile(out_path):
         os.remove(out_path)
     with writer.saving(fig, out_path + "/" + scenario.benchmark_id + ".mp4", dpi=150):
-        for t in [state.time_step for state in ego_obstacle.prediction.trajectory.state_list]:
+        for t in range(video_length):
             plt.cla()
             plot_scenario_at_time_idx(t, scenario, obstacle_label)
             if planning_problem_set is not None:
                 draw_object(planning_problem_set)
-            plot_vehicle_at_time_idx(ego_obstacle)
+            if ego_obstacle is not None:
+                plot_vehicle_at_time_idx(ego_obstacle)
             plt.gca().set_aspect('equal')
             plt.gca().set_xlim([x_min, x_max])
             plt.gca().set_ylim([y_min, y_max])
@@ -172,7 +172,7 @@ def create_ego_profiles(ego_vehicle: Vehicle) -> Tuple[List[int], List[float], L
         acceleration_list.append(state.a)
         velocity_list.append(state.v)
         time.append(time_step)
-    for jerk in ego_vehicle.jerk_list.values():
+    for jerk in ego_vehicle.jerk_profile.values():
         jerk_list.append(jerk)
     jerk_list = [jerk_list[0]] + jerk_list
 
@@ -258,7 +258,7 @@ def get_date_and_time() -> str:
 
 def plot_figures(ego_vehicle: Vehicle, vehicles: Dict, emergency_maneuver_activity: List[bool],
                  ego_vehicle_param: Dict, simulation_param: Dict, plot_param: Dict, comp_time: List[float],
-                 strategy_list: List[Strategy], number_vehicles: List[Tuple[int]]):
+                 number_vehicles: List[Tuple[int]]):
     """
     Plotting of positions, acceleration, velocity, and distance of ACC and preceding vehicles, respectively
 
@@ -367,14 +367,6 @@ def plot_figures(ego_vehicle: Vehicle, vehicles: Dict, emergency_maneuver_activi
         if simulation_param.get("store_plots"):
             plt.savefig(path + "/comp_time" + ".svg", format="svg")
 
-    # Strategy plot
-    plt.figure(7, figsize=figsize)
-    plt.xlabel(r'$t~[s]$')
-    plt.step(time[0:-1], strategy_list, "-", color=(0.3, 0.3, 0.3, 0.35), label=r'$strategy$', linewidth=linewidth_plot)
-    plt.legend(loc='best')
-    if simulation_param.get("store_plots"):
-        plt.savefig(path + "/strategy" + ".svg", format="svg")
-
     # Number vehicles plot
     plt.figure(8, figsize=figsize)
     plt.xlabel(r'$t~[s]$')
@@ -388,9 +380,9 @@ def plot_figures(ego_vehicle: Vehicle, vehicles: Dict, emergency_maneuver_activi
     plt.show()
 
 
-def create_profile_videos(out_path: str, ego_vehicle: Vehicle, vehicles: Dict, emergency_maneuver_activity: List[bool],
-                          ego_vehicle_param: Dict, other_vehicle_param: Dict, simulation_param: Dict, plot_param: Dict,
-                          comp_time: List[float], strategy_list: List[Strategy], number_vehicles: List[Tuple[int]]):
+def create_profile_videos(out_path: str, ego_vehicle: Vehicle, vehicles: Dict,
+                          ego_vehicle_param: Dict, other_vehicle_param: Dict,
+                          simulation_param: Dict, number_vehicles: List[Tuple[int]]):
     """
     Plotting of positions, acceleration, velocity, and distance of ACC and preceding vehicles, respectively
 

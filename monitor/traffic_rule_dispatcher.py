@@ -26,6 +26,7 @@ class TrafficRuleDispatcher:
         self._simulation_param = simulation_param
         self._ego_vehicle_param = ego_vehicle_param
         self._other_vehicles_param = other_vehicles_param
+        self._road_network = road_network
         self._safety_predicates = VehicleStatePredicateCollection(road_network, simulation_param,
                                                                   ego_vehicle_param, other_vehicles_param,
                                                                   traffic_rule_param)
@@ -63,11 +64,10 @@ class TrafficRuleDispatcher:
 
         return safety_predicates
 
-    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_assignment_ego: Set[int],
-                                lane_assignment_other: Set[int]) -> Set[VehicleLocalization]:
+    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_id_ego: Set[int],
+                                lane_id_other: Set[int]) -> Set[VehicleLocalization]:
         if PositionPredicateCollection.in_fov(s_ego, s_other, self._ego_vehicle_param.get("fov")):
-            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_assignment_ego,
-                                                                  lane_assignment_other):
+            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_id_ego, lane_id_other):
                 return {VehicleLocalization.EGO_LANE_FRONT}
             else:
                 return {VehicleLocalization.NONE}
@@ -77,11 +77,14 @@ class TrafficRuleDispatcher:
     def classify_all_vehicles(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]):
         for veh in other_vehicles:
             for state in veh.state_list_cr:
-                veh.append_classification(self.classify_single_vehicle(ego_vehicle.states_lon[state.time_step].s,
-                                                                       veh.states_lon[state.time_step].s,
-                                                                       ego_vehicle.lanelet_assignment[state.time_step],
-                                                                       veh.lanelet_assignment[state.time_step]),
-                                          state.time_step)
+                veh.append_classification(
+                    self.classify_single_vehicle(ego_vehicle.states_lon[state.time_step].s,
+                                                 veh.states_lon[state.time_step].s,
+                                                 self._road_network.find_lane_ids_by_obstacle(ego_vehicle.id,
+                                                                                              state.time_step),
+                                                 self._road_network.find_lane_ids_by_obstacle(veh.id,
+                                                                                              state.time_step)),
+                    state.time_step)
 
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """

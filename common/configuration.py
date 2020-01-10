@@ -213,6 +213,35 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     return s_new, v_new, a_new
 
 
+def vehicle_dynamics_acc(s_0: float, v_0: float, a_input: float, v_min: float, v_max: float,
+                         dt: float) -> Tuple[float, float]:
+    """
+    Applying vehicle dynamics for one times step with acceleration as input
+
+    :param s_0: current longitudinal position at vehicle's front
+    :param v_0: current velocity of vehicle
+    :param a_input: acceleration input for vehicle
+    :param v_min: minimum velocity of vehicle
+    :param v_max: maximum velocity of vehicle
+    :param dt: time step size
+    :return: new position and velocity
+    """
+    v_new = v_0 + a_input * dt
+    if v_new > v_max:
+        t_v = (v_max - v_0) / a_input
+        v_new = v_max
+    elif v_new < v_min:
+        t_v = (v_0 - v_min) / a_input
+        v_new = v_min
+    else:
+        t_v = dt
+
+    s_new = s_0 + v_0 * t_v + 0.5 * a_input * t_v ** 2
+
+    return s_new, v_new
+
+
+
 def load_yaml(file_name: str) -> Union[Dict, None]:
     """
     Loads configuration setup from a yaml file

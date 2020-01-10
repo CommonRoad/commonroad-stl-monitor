@@ -75,8 +75,8 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :returns Boolean indicating speed limit satisfaction
         """
         for veh in other_vehicles:
-            if veh.classification[time_step] == VehicleLocalization.EGO_LANE_FRONT:
-                if veh.states_lon[time_step].v - velocity < self._traffic_rule_param.get("min_velocity_dif"):
+            if VehicleLocalization.EGO_LANE_FRONT in veh.classification[time_step]:
+                if veh.states_lon[time_step].v - velocity > self._traffic_rule_param.get("min_velocity_dif"):
                     return False
         return True
 

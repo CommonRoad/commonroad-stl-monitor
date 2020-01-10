@@ -19,7 +19,7 @@ class PositionPredicateCollection(PredicateCollection):
                          traffic_rules_param)
 
     @staticmethod
-    def in_fov(s_ego, fov: float, s_other: float) -> bool:
+    def in_fov(s_ego, s_other: float, fov: float) -> bool:
         if abs(s_other - s_ego) < fov:
             return True
         else:

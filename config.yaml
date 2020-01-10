@@ -19,7 +19,7 @@
 #    - activated_traffic_rule_sets: IDs of traffic rule sets which should be activated
 simulation_param:
     dt: 0.1
-    commonroad_benchmark_id: DEU_A9-1_3_T-1
+    commonroad_benchmark_id: test_min_speed_limit
     commonroad_scenario_folder: ./scenarios/test/
     verbose_mode: true
     time_measuring: true

@@ -41,57 +41,80 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
         return vehicle
 
-    def test_keeps_max_speed_limit(self):
+    def test_keeps_max_lane_speed_limit(self):
+        # trajectory which always violates speed limit
+        # two trajectories which never violate speed limit
+        # trajectory which violates speed limit partially
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-3_1_T-1.xml").open()
+                                 "/" + "test_max_speed_limit.xml").open()
         self.activated_traffic_rule_sets = [1]
-        exp_result = [(200, {'max_speed_limit': True}), (201, {'max_speed_limit': True}),
-                      (202, {'max_speed_limit': True}), (203, {'max_speed_limit': True}),
-                      (204, {'max_speed_limit': False}), (205, {'max_speed_limit': True})]
+        exp_result = [(100, {'max_speed_limit': False}), (101, {'max_speed_limit': True}),
+                      (102, {'max_speed_limit': False}), (103, {'max_speed_limit': True})]
         result = self.execute_test(scenario)
-        print("Max Speed Limit Test:")
+        print("Max Lane Speed Limit Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
+
+    def test_keeps_fov_speed_limit(self):
+        # two trajectories which always violate speed limit
+        # trajectory which never violates speed limit
+        # trajectory which violates speed limit partially
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "test_max_speed_limit.xml").open()
+        self.activated_traffic_rule_sets = [1]
+        exp_result = [(100, {'max_speed_limit': False}), (101, {'max_speed_limit': False}),
+                      (102, {'max_speed_limit': False}), (103, {'max_speed_limit': True})]
+        self.ego_vehicle_param["fov"] = 100
+        self.ego_vehicle_param = create_ego_vehicle_param(self.ego_vehicle_param, self.simulation_param)
+        result = self.execute_test(scenario)
+        print("Max FOV Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
     def test_keeps_min_speed_limit(self):
+        # three vehicles without leading vehicle
+        # one vehicle which drives to slow compared to second leading vehicle -> todo
+        # one vehicle which drives to slow compared to directly leading vehicle -> todo
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-3_1_T-1.xml").open()
+                                 "/" + "test_min_speed_limit.xml").open()
         self.activated_traffic_rule_sets = [2]
-        exp_result = [(200, {'min_speed_limit': True}), (201, {'min_speed_limit': True}),
-                      (202, {'min_speed_limit': True}), (203, {'min_speed_limit': True}),
-                      (204, {'min_speed_limit': True}), (205, {'min_speed_limit': True})]
+        exp_result = [(100, {'min_speed_limit': False}), (101, {'min_speed_limit': True}),
+                      (102, {'min_speed_limit': False}), (103, {'min_speed_limit': True}),
+                      (104, {'min_speed_limit': True}), (105, {'min_speed_limit': True}),
+                      (106, {'min_speed_limit': True})]
         result = self.execute_test(scenario)
         print("Min Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
-    def test_keeps_safe_distance(self):
-        scenario, planning_problem_set = \
-            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-3_1_T-1.xml").open()
-        self.activated_traffic_rule_sets = [3]
-        exp_result = [(200, {'safe_distance': True}), (201, {'safe_distance': True}),
-                      (202, {'safe_distance_veh_201': True}), (203, {'safe_distance': True}),
-                      (204, {'safe_distance': True}), (205, {'safe_distance': True})]
-        result = self.execute_test(scenario)
-        print("Safe Distance Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+    # def test_keeps_safe_distance(self):
+    #     scenario, planning_problem_set = \
+    #         CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+    #                              "/" + "DEU_A9-3_1_T-1.xml").open()
+    #     self.activated_traffic_rule_sets = [3]
+    #     exp_result = [(200, {'safe_distance': True}), (201, {'safe_distance': True}),
+    #                   (202, {'safe_distance_veh_201': True}), (203, {'safe_distance': True}),
+    #                   (204, {'safe_distance': True}), (205, {'safe_distance': True})]
+    #     result = self.execute_test(scenario)
+    #     print("Safe Distance Test:")
+    #     print(result)
+    #     self.assertEqual(exp_result, result)
 
-    def test_brakes_abruptly(self):
-        scenario, planning_problem_set = \
-            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "DEU_A9-1_3_T-1.xml").open()
-        self.activated_traffic_rule_sets = [4]
-        exp_result = [(200, {'no_abrupt_braking': True}), (201, {'no_abrupt_braking': True}),
-                      (202, {'no_abrupt_braking': True}), (203, {'no_abrupt_braking': True}),
-                      (204, {'no_abrupt_braking': True}), (205, {'no_abrupt_braking': True})]
-        result = self.execute_test(scenario)
-        print("Brakes Abruptly Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+    # def test_brakes_abruptly(self):
+    #     scenario, planning_problem_set = \
+    #         CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+    #                              "/" + "DEU_A9-1_3_T-1.xml").open()
+    #     self.activated_traffic_rule_sets = [4]
+    #     exp_result = [(200, {'no_abrupt_braking': True}), (201, {'no_abrupt_braking': True}),
+    #                   (202, {'no_abrupt_braking': True}), (203, {'no_abrupt_braking': True}),
+    #                   (204, {'no_abrupt_braking': True}), (205, {'no_abrupt_braking': True})]
+    #     result = self.execute_test(scenario)
+    #     print("Brakes Abruptly Test:")
+    #     print(result)
+    #     self.assertEqual(exp_result, result)
 
     def add_jerk(self, vehicle: Vehicle):
         for idx, state in enumerate(vehicle.state_list_cr):

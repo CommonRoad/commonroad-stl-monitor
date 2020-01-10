@@ -1,9 +1,7 @@
-import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.visualization.draw_dispatch_cr import draw_object
+from output.visualization import create_scenario_video
 from common.configuration import *
-import numpy as np
-from commonroad.common.file_writer import CommonRoadFileWriter
+
 # CommonRoad Visualization Parameters:
 basic_shape_parameters_static = {'opacity': 1.0,
                                  'facecolor': '#0f55a3',
@@ -78,31 +76,8 @@ draw_params_scenario = {'scenario': {
 
 config = load_yaml("config.yaml")
 simulation_param = config.get("simulation_param")
+visualization_param = config.get("visualization").get("video")
 
 filename = simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
-#scenario.translate_rotate(np.array([0, 0]), -0.030)
-#fw = CommonRoadFileWriter(scenario, planning_problem_set, scenario.author, scenario.affiliation, scenario.source, scenario.tags)
-#fw.write_scenario_to_file("DEU_A9-3_1_T-1.xml")
-
-plt.style.use('classic')
-inch_in_cm = 2.54
-figsize = [20, 8]
-x = [x for lanelet in scenario.lanelet_network.lanelets for x in lanelet.center_vertices[:, 0]]
-y = [y for lanelet in scenario.lanelet_network.lanelets for y in lanelet.center_vertices[:, 1]]
-x_min = min(x) - 10
-y_min = min(y) - 10
-x_max = max(x) + 5
-y_max = max(y) + 5
-plot_limits = [x_min, x_max, y_min , y_max]
-
-plt.figure(figsize=(8, 4.5))
-plt.gca().axis('equal')
-draw_params_scenario['scenario']['dynamic_obstacle']['show_label'] = True
-draw_params_scenario['scenario']['lanelet_network']['lanelet']['show_label'] = True
-draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#0070fe'
-draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#0070fe'
-draw_params_scenario['scenario']['dynamic_obstacle']['occupancy']['shape']['polygon']['opacity'] = .1
-draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
-#draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
-plt.show()
+create_scenario_video(simulation_param.get("video_output_folder"), scenario, visualization_param, 50)
