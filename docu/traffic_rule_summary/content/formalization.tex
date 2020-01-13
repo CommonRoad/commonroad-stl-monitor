@@ -49,7 +49,7 @@ Comments &  Evaluated for all vehicles for which the following condition is vali
 
 LTL & G$(\safeDistanceFrontPredicate)$\\
 MTL & G$(\safeDistanceFrontPredicate)$\\
-STL & G$(\safeDistance(\vego, \vother) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(\egoVehicle)))$\\
+STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(\egoVehicle)))$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -107,23 +107,25 @@ VCoRT \S 13 (2) &  Domestic legislation shall establish maximum speed limits for
 & to certain categories of vehicles presenting a special danger, in particular by reason \\ & of their mass or their  load. They may establish similar provisions \\
 & for certain categories of drivers, in particular for new drivers.\\
 
-Concretization &  A vehicle shall not exceed the allowed speed limit of the lanes it drives on and shall \\
+Concretization &  A vehicle shall not exceed the allowed speed limit of the lanes it drives on, shall \\
 & not exceed the speed limit which is necessary to ensure collision freedom with \\
-& respect to vehicles  outside the field of view.\\
+& respect to vehicles outside the field of view, and shall not exceed as speed which \\
+& is necessary to comfortably ensure traffic regulations.\\
 
-Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$\\
+Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$, $\brakingSpeedLimitPredicate$\\
 
 Comments &  The traffic laws do not provide concrete information about speed limit, \\ 
 & e.g., the VCoRT passes the task of defining speed limits to national lawmakers. \\
 & The concretization assumes that a mapping of speed limits provided \\ 
-& by traffic signs to lanes is given. If no speed limit is given only, \\ 
-& the speed limit caused by the field of view must be considered (traffic sign based \\ 
-& speed limit set to infinity). The velocity with respect to vehicles inside the field of view \\
-& is considered in the safe distance traffic rule concretization.\\
+& by traffic signs to lanes is given. If no speed limit is given, \\ 
+& the speed limit caused by the field of view (traffic sign based speed limit set \\ 
+& to infinity) and a speed limit which ensures comfortable braking for traffic regulations \\
+& (e.g., upcoming speed limit) must be considered. The velocity with respect to vehicles \\
+& inside the field of view is considered in the safe distance traffic rule concretization.\\
 
-LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate)$\\
-MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate)$\\
-STL & G($\vego \leq \speedLimitLane \land \vego \leq \speedLimitFOV)$\\ 
+LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land \brakingSpeedLimitPredicate)$\\
+MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land \brakingSpeedLimitPredicate)$\\
+STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV)$\\ 
 \bottomrule
 \end{tabular}
 \end{table}
@@ -151,7 +153,7 @@ STL & G($\vego \leq \speedLimitLane \land \vego \leq \speedLimitFOV)$\\
 		
 		LTL & G$(\minSpeedLimitPredicate)$\\
 		MTL & G$(\minSpeedLimitPredicate)$\\
-		STL & G($v_\mathrm{o}^\mathrm{min} - \vego \leq v_\mathrm{min}^\mathrm{slow})$\\
+		STL & G($\vOther^\mathrm{min} - \vEgo \leq v_\mathrm{min}^\mathrm{slow})$\\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -275,7 +277,7 @@ STL & G($\vego \leq \speedLimitLane \land \vego \leq \speedLimitFOV)$\\
 		
 		LTL & G$(\minSpeedLimitPredicate)$\\
 		MTL & G$(\minSpeedLimitPredicate)$\\
-		STL & G($v_\mathrm{o}^\mathrm{min} - \vego \leq v_\mathrm{min}^\mathrm{slow})$\\
+		STL & G($\vOther^\mathrm{min} - \vEgo \leq v_\mathrm{min}^\mathrm{slow})$\\
 		\bottomrule
 	\end{tabular}
 \end{table}

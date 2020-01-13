@@ -12,6 +12,7 @@ from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
 from common.configuration import *
+import scipy.interpolate
 
 
 def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_lanelets_per_lane: int,
@@ -91,7 +92,22 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
             else:
                 successor = None
             scenario.lanelet_network.add_lanelet(lanelet)
-
+        # right_coords = np.array([[0, 0], [1, -0.1], [1, -0.1], [3, -0.2], [4, -0.3],
+        #                         [5, -0.5], [6, -0.8], [7, -1.3], [8, -2.1], [9, -3.4],
+        #                         [10, -6.1], [11, -9.5], [12, -12], [13, -13], [14, -13.5],
+        #                         [15, -14], [16, -14], [17, -14], [18, -14], [19, -14],
+        #                         [20, -14], [21, -14], [2, -14], [23, -14], [24, -14],
+        #                         [25, -14], [26, -14], [27, -14], [28, -14], [29, -14],
+        #                         [30, -14], [31, -14], [31, -14], [33, -14], [34, -14],
+        #                         [35, -14], [36, -14], [37, -14], [38, -14], [39, -14],
+        #                         [40, -14], [41, -14], [41, -14], [43, -14], [44, -14],
+        #                         [45, -14], [46, -14], [47, -14], [48, -14], [49, -14]])
+        # center_coords = right_coords.copy()
+        # center_coords[:, 1] = center_coords[:, 1] + 1.75
+        # left_coords = right_coords.copy()
+        # left_coords[:, 1] = left_coords[:, 1] + 3.5
+        # lanelet = Lanelet(left_coords, center_coords, right_coords, 1000)
+        # scenario.lanelet_network.add_lanelet(lanelet)
     for obs in obstacles:
         scenario.add_objects(obs)
 
@@ -218,46 +234,57 @@ def create_min_speed_limit_scenario():
     return scenario
 
 
-def create_abrupt_braking_scenario():
+def create_safe_distance_scenario():
     obstacles = []
     obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([13.0, 1.75]), 100)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 40, np.array([3.0, 1.75]), 100)
     obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([3.0, 1.75]), 101)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([125.0, 1.75]), 101)
     obs3 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 5.25]), 102)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 30, np.array([3.0, 5.25]), 102)
     obs4 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 5, np.array([3.0, 8.75]), 103)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 30, np.array([13.0, 5.25]), 103)
     obs5 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([22.0, 8.75]), 104)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([75.0, 5.25]), 104)
+    obs6 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([3.0, 8.75]), 105)
+    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([40.0, 8.75]), 106)
     obstacles.append(obs1)
     obstacles.append(obs2)
     obstacles.append(obs3)
     obstacles.append(obs4)
     obstacles.append(obs5)
-    scenario = create_scenario("test_min_speed_limit", 3, 5, 150, obstacles,
+    obstacles.append(obs6)
+    obstacles.append(obs7)
+    scenario = create_scenario("test_safe_distance", 3, 5, 250, obstacles,
                                {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}, 22.22)
     return scenario
 
 
 def main():
     config = load_yaml("./../../config.yaml")
-    simulation_param = config.get("simulation_param")
     visualization_param = config.get("visualization").get("video")
 
     scenario = create_max_speed_limit_scenario()
@@ -265,6 +292,10 @@ def main():
 
     scenario = create_min_speed_limit_scenario()
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_safe_distance_scenario()
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
 
 if __name__ == "__main__":
     main()

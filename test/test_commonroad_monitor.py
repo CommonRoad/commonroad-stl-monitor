@@ -45,6 +45,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # trajectory which always violates speed limit
         # two trajectories which never violate speed limit
         # trajectory which violates speed limit partially
+
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
@@ -60,6 +61,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # two trajectories which always violate speed limit
         # trajectory which never violates speed limit
         # trajectory which violates speed limit partially
+
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
@@ -75,8 +77,9 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def test_keeps_min_speed_limit(self):
         # three vehicles without leading vehicle
-        # one vehicle which drives to slow compared to second leading vehicle -> todo
-        # one vehicle which drives to slow compared to directly leading vehicle -> todo
+        # one vehicle which drives to slow compared to second leading vehicle
+        # one vehicle which drives to slow compared to directly leading vehicle
+
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_min_speed_limit.xml").open()
@@ -90,18 +93,19 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result)
         self.assertEqual(exp_result, result)
 
-    # def test_keeps_safe_distance(self):
-    #     scenario, planning_problem_set = \
-    #         CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-    #                              "/" + "DEU_A9-3_1_T-1.xml").open()
-    #     self.activated_traffic_rule_sets = [3]
-    #     exp_result = [(200, {'safe_distance': True}), (201, {'safe_distance': True}),
-    #                   (202, {'safe_distance_veh_201': True}), (203, {'safe_distance': True}),
-    #                   (204, {'safe_distance': True}), (205, {'safe_distance': True})]
-    #     result = self.execute_test(scenario)
-    #     print("Safe Distance Test:")
-    #     print(result)
-    #     self.assertEqual(exp_result, result)
+    def test_keeps_safe_distance(self):
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "test_safe_distance.xml").open()
+        self.activated_traffic_rule_sets = [3]
+        exp_result = [(100, {'safe_distance_veh_101': False}), (101, {'safe_distance': True}),
+                      (102, {'safe_distance_veh_103': False, 'safe_distance_veh_104': False}),
+                      (103, {'safe_distance_veh_104': False}), (104, {'safe_distance': True}),
+                      (105, {'safe_distance_veh_106': True}), (106, {'safe_distance': True})]
+        result = self.execute_test(scenario)
+        print("Safe Distance Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
 
     # def test_brakes_abruptly(self):
     #     scenario, planning_problem_set = \

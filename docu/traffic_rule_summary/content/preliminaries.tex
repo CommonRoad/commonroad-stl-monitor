@@ -36,7 +36,7 @@ l' & \text{if } \exists \ l' \in \mathbb{L}: \mathrm{l}_\mathrm{begin}(l) = \mat
 \emptyset & \text{otherwise} 
 \end{cases}	
 \end{equation}
-return the adjacent left lanelet, adjacent right lanelet, successor lanelets, and predecessor lanelets of $l$, respectively. The function $\mathtt{speed\_limit}(l)$ returns the maximum speed which a vehicle is allowed to drive on a lanelet. A lanelet can have several attributes which further describe it. The set of all attributes is $\mathbb{A}$.  For the highway case, we have $\mathbb{A} =  \{ main\_carriage\_way, access\_ramp, exit\_ramp, shoulder \}$. The function $attr(l)$ returns the attributes which are valid for a lanelet. Similar, the left and right bounds of a lanelet can have lanelet markings, with the set of lanelet markings $\mathbb{LM} = \{solid, dashed, broad\_solid, broad\_dashed \}$. The functions $\mathrm{mark}_l(l)$ and $\mathrm{mark}_r(l)$ return the left and right lanelet marking, respectively.
+return the adjacent left lanelet, adjacent right lanelet, successor lanelets, and predecessor lanelets of $l$, respectively. The curvature of a lanelet at a given path length $s_\mathrm{l}$ is given by $\mathrm{curv}(s_\mathrm{l})$.The function $\mathtt{speed\_limit}(l)$ returns the maximum speed which a vehicle is allowed to drive on a lanelet. A lanelet can have several attributes which further describe it. The set of all attributes is $\mathbb{A}$.  For the highway case, we have $\mathbb{A} =  \{ main\_carriage\_way, access\_ramp, exit\_ramp, shoulder \}$. The function $attr(l)$ returns the attributes which are valid for a lanelet. Similar, the left and right bounds of a lanelet can have lanelet markings, with the set of lanelet markings $\mathbb{LM} = \{solid, dashed, broad\_solid, broad\_dashed \}$. The functions $\mathrm{mark}_l(l)$ and $\mathrm{mark}_r(l)$ return the left and right lanelet marking, respectively.
 We define the lane part in front of a lanelet, in the rear of a lanelet as follows:
 
 
@@ -55,11 +55,11 @@ We define the lane part in front of a lanelet, in the rear of a lanelet as follo
 We define the lane to which a lanelet belongs to, using the lanelets in front and rear of another lanelet:
 \begin{align}
 \begin{split}
-\mathrm{lane}(l) =  %{l' \cup \mathrm{pre}(l') \cup \mathrm{succ}(l')}
-\big\{l'   \, \big| \, \forall l'', l''' \in (l \ \cup \ \mathrm{lane}_\mathrm{rear}(l')  \ \cup \ \mathrm{lane}_\mathrm{front}(l')):\mathrm{attr}(l'') = \mathrm{attr}(l''') \big\}.
+\mathrm{lane}(l) &=  %{l' \cup \mathrm{pre}(l') \cup \mathrm{succ}(l')}
+\big\{l' \in (l \ \cup \ \mathrm{lane}_\mathrm{rear}(l)  \ \cup \ \mathrm{lane}_\mathrm{front}(l))   \, \big| \, \forall l'', l''' \in l': \mathrm{attr}(l'') = \mathrm{attr}(l''') \\
+& \land \mathrm{adj}_\mathrm{l}(l') \in \mathrm{succ}((\mathrm{adj}_\mathrm{l}(\mathrm{pre}(l'))) \land \mathrm{adj}_\mathrm{r}(l') \in \mathrm{succ}((\mathrm{adj}_\mathrm{r}(\mathrm{pre}(l'))) \big\}.
 \end{split}
 \end{align}
-\todo{Lane definition with several successor and predecessor lanelets, e.g. if a lane ends $\rightarrow$ distinction based on number of successors/predecessors?}
 
 The left and right lane are defined as follows:
 \begin{align}
@@ -81,6 +81,8 @@ return all left and right lanes of a given lanelet.
 A vehicle $V_i$, $i \in \mathbb{N}^+$, consists of a longitudinal, lateral, and signal state $x_\mathrm{lon} \in \mathbb{R}^n$ , $x_\mathrm{lat} \in \mathbb{R}^n$, and $x_\mathrm{sig} \subseteq \mathbb{SIG}$, respectively, where $\mathbb{SIG} = \{horn, indicator\_left,  indicator\_right, braking\_lights, hazard\_warning\_lights, \\ flashing\_blue\_lights\}$ represents possible active signals of a vehicle. The set of all vehicles is denoted by $\mathbb{V}$.The longitudinal state $x_\mathrm{lon} = \begin{bmatrix} s & v & a & j\end{bmatrix}^T$ consists of position $s$, velocity $v$, acceleration $a$, and jerk $j$. 
  %The longitudinal state of other vehicles $x_\mathrm{o} = \begin{bmatrix} s & v & a\end{bmatrix}^T$ consists only of position, velocity , acceleration. 
 The lateral state $x_\mathrm{lat} = \begin{bmatrix} d & \theta & \kappa & \dot{\kappa} \end{bmatrix}^T$ consists of the lateral distance to the reference path $\Gamma$, orientation $\theta$, curvature $\kappa$, and change of curvature $\dot{\kappa}$. The longitudinal input is $u(t) = \ddot{a}(t)$ and the lateral input is $u(t) = \ddot{\kappa}(t)$. The signal state contains only the subset of currently active elements of $\mathbb{SIG}$. The occupancy of a vehicle for given states $x_\mathrm{lon}$ and $x_\mathrm{lat}$ is denoted by $\mathcal{O}(x_\mathrm{lon}(t), x_\mathrm{lat}(t))$. The function $\mathrm{proj()}$ projects a vehicle to a position $s$. The functions  $\mathrm{front()}$ and $\mathrm{rear()}$ return the front and rear position of a vehicle. All variables associated to the ego vehicle are denoted by the subscript $\square_\mathrm{ego}$ and all variables associated to other vehicles are denote by the subscript $\square_\mathrm{o}$.
+For a given initial state, an input trajectory $u(\cdot)$, we introduce the solution of the model $\dot{x}=f(x,u)$ of the ego vehicle over time $t$ as $\xi(t;x_0,u(\cdot))$. 
+We denote a braking input by $u_{brake}(\cdot)$.  The time at which a safe state is reached for $u(\cdot)$, given the system dynamics and $x_0$, is denoted by $t_s(u(\cdot))$; we consider a state to be safe when one can stay in it indefinitely without causing a collision \cite{Pek2018b}.
 
 %
 %\begin{definition}[Safe distance]

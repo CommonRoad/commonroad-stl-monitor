@@ -30,4 +30,9 @@ P.~Bender, J.~Ziegler, and C.~Stiller, ``{Lanelets: Efficient map
   representation for autonomous driving},'' in \emph{Proc. of the IEEE
   Intelligent Vehicles Symposium}, 2014, pp. 420--425.
 
+\bibitem{Pek2018b}
+C.~Pek and M.~Althoff, ``{Efficient Computation of Invariably Safe States for
+  Motion Planning of Self-Driving Vehicles},'' in \emph{Proc. of the IEEE Int.
+  Conf. on Intelligent Robots and Systems}, 2018, pp. 3523--3530.
+
 \end{thebibliography}

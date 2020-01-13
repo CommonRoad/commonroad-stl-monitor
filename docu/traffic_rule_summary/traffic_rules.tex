@@ -38,7 +38,7 @@
 
 % basic symbols
 \newcommand{\egoVehicle}{\ensuremath{V_\text{ego}}\xspace}
-\newcommand{\otherVehicle}{\ensuremath{V_\text{other}}\xspace}
+\newcommand{\otherVehicle}{\ensuremath{V_\text{o}}\xspace}
 %\newcommand{\jmax}{\ensuremath{j_\text{max}}\xspace}
 %\newcommand{\jmin}{\ensuremath{j_\text{min}}\xspace}
 %\newcommand{\amax}{\ensuremath{a_\text{max}}\xspace}
@@ -49,23 +49,26 @@
 %\newcommand{\xlead}{\ensuremath{x_\text{lead}}\xspace}
 %\newcommand{\sego}{\ensuremath{s_\text{ego}}\xspace}
 %\newcommand{\slead}{\ensuremath{s_\text{lead}}\xspace}
-\newcommand{\vego}{\ensuremath{v_\text{ego}}\xspace}
-\newcommand{\vother}{\ensuremath{v_\text{o}}\xspace}
-%\newcommand{\aego}{\ensuremath{a_\text{ego}}\xspace}
-%\newcommand{\alead}{\ensuremath{a_\text{lead}}\xspace}
+\newcommand{\vEgo}{\ensuremath{v_\text{ego}}\xspace}
+\newcommand{\vOther}{\ensuremath{v_\text{o}}\xspace}
+\newcommand{\aEgo}{\ensuremath{a_\text{ego}}\xspace}
+\newcommand{\aOther}{\ensuremath{a_\text{o}}\xspace}
 %\newcommand{\aminego}{\ensuremath{a_\text{min,ego}}\xspace}
 %\newcommand{\aminlead}{\ensuremath{a_\text{min,lead}}\xspace}
-%\newcommand{\amaxego}{\ensuremath{a_\text{max,acc}}\xspace}
+\newcommand{\aMaxEgo}{\ensuremath{a_\text{max,ego}}\xspace}
 %\newcommand{\amaxlead}{\ensuremath{a_\text{max,lead}}\xspace}
+\newcommand{\jEgo}{\ensuremath{j_\text{ego}}\xspace}
 %\newcommand{\jminego}{\ensuremath{j_\text{min,ego}}\xspace}
 %\newcommand{\jminlead}{\ensuremath{j_\text{min,lead}}\xspace}
-%\newcommand{\jmaxego}{\ensuremath{j_\text{max,ego}}\xspace}
+\newcommand{\jMaxEgo}{\ensuremath{j_\text{max,ego}}\xspace}
 %\newcommand{\jmaxlead}{\ensuremath{j_\text{max,lead}}\xspace}
 %\newcommand{\distance}{\ensuremath{\Delta s}\xspace} %d
  %d
 %\newcommand{\deltaV}{\ensuremath{\Delta v}\xspace}
 \newcommand{\speedLimitLane}{\ensuremath{v_\text{sl}}\xspace}
 \newcommand{\speedLimitFOV}{\ensuremath{v_\text{fov}}\xspace}
+\newcommand{\speedLimitBraking}{\ensuremath{v_\text{br}}\xspace}
+
 
 %safe distance
 \newcommand{\safeDistance}{\ensuremath{d_\text{safe}}\xspace}
@@ -92,6 +95,7 @@
 \DeclareMathOperator*{\behindEgoVehiclePredicate}{is\_behind\_ego\_vehicle}
 \DeclareMathOperator*{\laneSpeedLimitPredicate}{keeps\_lane\_speed\_limit}
 \DeclareMathOperator*{\fovSpeedLimitPredicate}{keeps\_fov\_speed\_limit}
+\DeclareMathOperator*{\brakingSpeedLimitPredicate}{keeps\_braking\_speed\_limit}
 \DeclareMathOperator*{\minSpeedLimitPredicate}{keeps\_min\_speed\_limit}
 \DeclareMathOperator*{\unnecessaryBraking}{unnecessary\_braking}
 \DeclareMathOperator*{\drivesFasterThanVehicleLeftPredicate}{drives\_faster\_than\_vehicle\_left}
@@ -127,7 +131,7 @@
 \newcommand{\ie}{i.e.,\xspace}
 \newcommand{\todo}[1]{\textcolor{red}{#1\xspace}}
 \newcommand{\arstretch}[1]{\renewcommand{\arraystretch}{#1}}
-\newcommand{\comment}[1]{\textcolor{blue}{(#1)\xspace}}
+\newcommand{\comment}[1]{\textcolor{blue}{(#1)\xspace}} 
 
 \title{Traffic Rule Summary}
 \author{Sebasitan Maierhofer}
@@ -149,6 +153,6 @@
 
 
 \bibliographystyle{IEEEtran}
-\bibliography{./../../literature/maierhofer.bib}
+\bibliography{maierhofer}
 
 \end{document}

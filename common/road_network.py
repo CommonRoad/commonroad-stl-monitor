@@ -119,6 +119,17 @@ class RoadNetwork:
         for lanelet in self.lanelet_network.lanelets:
             if len(lanelet.predecessor) == 0:
                 start_lanelets.append(lanelet)
+            for pred in lanelet.predecessor:
+                if len(self.lanelet_network.find_lanelet_by_id(pred).successor) > 1:
+                    if lanelet.adj_left_same_direction is None and lanelet.adj_right_same_direction is None:
+                        start_lanelets.append(lanelet)
+                    if self.lanelet_network.find_lanelet_by_id(pred).adj_left_same_direction and lanelet.adj_left not \
+                            in self.lanelet_network.find_lanelet_by_id(
+                               self.lanelet_network.find_lanelet_by_id(pred).adj_left).successor and \
+                            self.lanelet_network.find_lanelet_by_id(pred).adj_right_same_direction and \
+                            lanelet.adj_right not in self.lanelet_network.find_lanelet_by_id(
+                               self.lanelet_network.find_lanelet_by_id(pred).adj_right).successor:
+                        start_lanelets.append(lanelet)
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
                 lanelet_type = LaneletType.ACCESS_RAMP

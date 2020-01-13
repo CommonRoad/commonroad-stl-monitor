@@ -44,7 +44,7 @@ Speed limit provided by traffic regulations for a vehicle $V_i$:
 \speedLimitLane := \sup \big( \big\{v   \, \big| \, \forall l \in \mathtt{\occupiedLaneletsFunction}(\mathbb{L}, V_i): v = \speedLimitFunction(l) \big\} \big)
 \end{align}
 
-The ego vehicle is always able to stop within the field of view. Therefore, the maximum allowed velocity based on the field of view $v_{sr}$ is chosen such that
+The ego vehicle must always be able to stop within the field of view. Therefore, the maximum allowed velocity based on the field of view $v_{sr}$ is chosen such that
 \begin{align}
 \speedLimitFOV := 
 \begin{split}
@@ -52,14 +52,29 @@ The ego vehicle is always able to stop within the field of view. Therefore, the 
 & x_\mathrm{lon}^\mathrm{sr} = [0, \speedLimitFOV, \overline{a}, \overline{j}]^T.
 \end{split}
 \end{align}
-This velocity be calculated offline using binary search.
+
+The ego vehicle must always be able reduce its velocity to a upcoming speed limit such that it does not brake abruptly. 
+Therefore, the maximum allowed velocity must be limited such that the braking trajectory does not exceed acceleration and jerk thresholds.
+\begin{align}
+\begin{split}
+& \speedLimitBraking :=  \sup \big( \big\{v   \, \big| \, x_\mathrm{f} = \xi(t^*;x_\mathrm{0}, u(\cdot))) \land \forall t \in [t_0, t^*]:\aEgo(t) \geq a^* \land \jEgo(t) \geq j^* \big\} \big) \\
+& x_\mathrm{0} = [0,\speedLimitBraking, \aMaxEgo, \jMaxEgo]^T. \\
+& x_\mathrm{f} = [fov, v_\mathrm{sl}^*, 0 , 0]^T,
+\end{split}
+\end{align}
+where $v_\mathrm{sl}^*$ is the maximum speed limit which is allowed after free driving, e.g., in Germany if there is now active speed limit, the next speed limit is maximal $100$~km/h.
+The velocity limits $\speedLimitFOV$ and $\speedLimitBraking$ can be calculated offline using binary search.
 
 \begin{align}
-\laneSpeedLimitPredicate \iff \vego \leq \speedLimitLane
+\laneSpeedLimitPredicate \iff \vEgo \leq \speedLimitLane
 \end{align}
 
 \begin{align}
-\fovSpeedLimitPredicate \iff \vego \leq \speedLimitFOV
+\fovSpeedLimitPredicate \iff \vEgo \leq \speedLimitFOV
+\end{align}
+
+\begin{align}
+\brakingSpeedLimitPredicate \iff \vEgo \leq \speedLimitBraking
 \end{align}
 
 \subsection{Safe distance}
@@ -86,11 +101,11 @@ and \timeDelay denotes the reaction time of the ego vehicle.
 
 
 \begin{align}
-\safeDistanceFrontPredicate \iff \safeDistance(\vego, \vother) \leq (\rearPositionFunction(\egoVehicle) - \frontPositionFunction(V_\mathrm{ego}))
+\safeDistanceFrontPredicate \iff \safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(V_\mathrm{ego}))
 \end{align}
 
 \begin{align}
-\safeDistanceRearPredicate \iff \safeDistance(\vother, \vego) \leq (\rearPositionFunction(\egoVehicle) - \frontPositionFunction(V_\mathrm{o}))
+\safeDistanceRearPredicate \iff \safeDistance(\vOther, \vEgo) \leq (\rearPositionFunction(\egoVehicle) - \frontPositionFunction(\otherVehicle))
 \end{align}
 
 
