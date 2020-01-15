@@ -63,7 +63,7 @@ Therefore, the maximum allowed velocity must be limited such that the braking tr
 \end{split}
 \end{align}
 where $v_\mathrm{sl}^*$ is the maximum speed limit which is allowed after free driving, e.g., in Germany if there is now active speed limit, the next speed limit is maximal $100$~km/h.
-The velocity limits $\speedLimitFOV$ and $\speedLimitBraking$ can be calculated offline using binary search.
+The velocity limits $\speedLimitFOV$ and $\speedLimitBraking$ can be calculated offline using binary search. The field of view based velocity limit $\speedLimitFOV$ can change during runtime, e.g., due to changing weather conditions.
 
 \begin{align}
 \laneSpeedLimitPredicate \iff \vEgo \leq \speedLimitLane

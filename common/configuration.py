@@ -8,12 +8,13 @@ import math
 from decimal import Decimal
 
 
-def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) -> Dict:
+def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> Dict:
     """
     Update ACC vehicle parameters
 
     :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
     :param simulation_param: dictionary with parameters of the simulation environment
+    :param traffic_rule_param: dictionary with parameters related to traffic rules
     :returns updated dictionary with parameters of ACC vehicle
     """
     if ego_vehicle_param.get("vehicle_number") == 1:
@@ -29,7 +30,9 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) ->
     emergency_profile += [ego_vehicle_param.get("j_min")] * ego_vehicle_param.get("emergency_profile_num_steps_fb")
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
-    ego_vehicle_param["fov_speed_limit"] = calc_v_max(ego_vehicle_param, simulation_param)
+    ego_vehicle_param["fov_speed_limit"] = calc_v_max_fov(ego_vehicle_param, simulation_param)
+    ego_vehicle_param["braking_speed_limit"] = calc_v_max_braking(ego_vehicle_param, simulation_param,
+                                                                  traffic_rule_param)
 
     if not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) %
                       Decimal(str(simulation_param.get("dt")))) <= 1e-12:
@@ -72,9 +75,9 @@ def create_simulation_param(simulation_param: Dict, dt: float, country: str) -> 
     return simulation_param
 
 
-def calc_v_max(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
+def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
     """
-    Calculates safety based maximum allowed velocity rounded to next lower integer value
+    Calculates safety (field of view) based maximum allowed velocity rounded to next lower integer value
 
     :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
     :param simulation_param: dictionary with parameters of the simulation environment
@@ -110,6 +113,49 @@ def calc_v_max(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
         dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
 
     return math.floor(v_max)
+
+
+def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> int:
+    """
+    Calculates braking based maximum allowed velocity rounded to next lower integer value
+
+    :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
+    :param simulation_param: dictionary with parameters of the simulation environment
+    :param traffic_rule_param: dictionary with parameters related to traffic rules
+    :returns maximum allowed velocity
+    """
+    s_ego = 0
+    v_max_delta = ego_vehicle_param.get("dynamics_param").longitudinal.v_max - \
+            traffic_rule_param.get("max_velocity_limit_free_driving")
+    v_ego = v_max_delta
+    a_ego = 0  # ego vehicle is already at v_max
+    dt = simulation_param.get("dt")
+    t_react = ego_vehicle_param.get("t_react")
+    a_min = traffic_rule_param.get("delta_a_abrupt")
+    a_max = ego_vehicle_param.get("a_max")
+    a_corr = ego_vehicle_param.get("a_corr")
+    j_max = ego_vehicle_param.get("j_max")
+    v_min = ego_vehicle_param.get("v_min")
+    v_max = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
+    emergency_profile = 200 * [traffic_rule_param.get("j_min_abrupt")]
+    stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react, a_min, a_max, j_max, v_min, v_max,
+                                              a_corr, emergency_profile)
+    dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
+    while dist_offset <= 0 or dist_offset >= 0.5 \
+            and not (v_max == v_max_delta and dist_offset > 0.5):
+        if ego_vehicle_param.get("fov") - stopping_distance < 0:
+            v_max -= 0.001
+        else:
+            v_max += 0.001
+        if v_max > v_max_delta:
+            v_max = v_max_delta
+        if v_max < v_min:
+            v_max = v_min
+        stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react, a_min, a_max, j_max, v_min, v_max,
+                                                  a_corr, emergency_profile)
+        dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
+
+    return math.floor(v_max + traffic_rule_param.get("max_velocity_limit_free_driving"))
 
 
 def emg_stopping_distance(s: float, v: float, a: float, dt: float, t_react: float, a_min: float, a_max: float,

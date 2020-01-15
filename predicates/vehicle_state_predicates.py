@@ -1,7 +1,9 @@
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Union
 from predicates.predicate_collection import PredicateCollection
 from common.road_network import RoadNetwork
 from common.vehicle import Vehicle, VehicleLocalization
+from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
+from predicates.position_predicates import PositionPredicateCollection
 
 
 class VehicleStatePredicateCollection(PredicateCollection):
@@ -53,20 +55,49 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :param lanelet_ids: IDs of lanelets the vehicle is on
         :returns Boolean indicating speed limit satisfaction
         """
-        speed_limits = []
-        for lanelet_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            for traffic_sign_id in lanelet.traffic_signs:
-                lanelet_speed_limits = \
-                    self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id).speed_limit(
-                        self._country)
-                speed_limits.append(lanelet_speed_limits)
-        if min(speed_limits) < velocity:
+        speed_limit = self.active_speed_limit(lanelet_ids)
+        if speed_limit is None:
+            return True
+        elif speed_limit < velocity:
             return False
         else:
             return True
 
-    def _keeps_min_speed_limit(self, velocity: float, other_vehicles: List[Vehicle], time_step: int) -> bool:
+    def active_speed_limit(self, lanelet_ids: Set[int]) -> Union[float, None]:
+        speed_limits = []
+        for lanelet_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            for traffic_sign_id in lanelet.traffic_signs:
+                traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
+                if self._country == SupportedTrafficSignCountry.GERMANY:
+                    for elem in traffic_sign.traffic_sign_elements:
+                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED.value:
+                            speed_limits.append(float(elem.additional_values[0]))
+                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED.value:
+                            speed_limits.append(50.0)
+        if len(speed_limits) == 0:
+            return None
+        else:
+            return min(speed_limits)
+
+    def _keeps_braking_speed_limit(self, velocity: float) -> bool:
+        """
+        Predicate for velocity limit to ensure comfortable braking for speed limits
+
+        :param velocity: Velocity of vehicle
+        :returns Boolean indicating speed limit satisfaction
+        """
+        if self._ego_vehicle_param.get("braking_speed_limit") < velocity:
+            return False
+        else:
+            return True
+
+    def leading_vehicle(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
+        front_vehicles = PositionPredicateCollection.front_vehicle_same_lane(ego_vehicle, other_vehicles, time_step)
+
+        return front_vehicles
+
+    def _keeps_flow_min_speed_limit(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
         """
         Predicate for minimum speed limit evaluation
 
@@ -74,11 +105,51 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :param time_step: current time step
         :returns Boolean indicating speed limit satisfaction
         """
+        front_vehicle = self.leading_vehicle(ego_vehicle, other_vehicles, time_step)
         for veh in other_vehicles:
             if VehicleLocalization.EGO_LANE_FRONT in veh.classification[time_step]:
-                if veh.states_lon[time_step].v - velocity > self._traffic_rule_param.get("min_velocity_dif"):
+                if veh.states_lon[time_step].v - ego_vehicle.states_lon[time_step].v > \
+                        self._traffic_rule_param.get("min_velocity_dif"):
                     return False
         return True
+
+    def _close_to_max_velocity(self, velocity: float, v_max_ego: float, lanelet_ids: Set[int]) -> bool:
+        """
+        Predicate for evaluation if vehicle drives close to maximum velocity
+
+        :param velocity: Velocity of vehicle
+        :param time_step: current time step
+        :returns Boolean indicating speed limit satisfaction
+        """
+        speed_limit = self.active_speed_limit(lanelet_ids)
+        if speed_limit is None:
+            speed_limit = self._traffic_rule_param.get("desired_highway_velocity")
+        if velocity - self._traffic_rule_param.get("min_velocity_dif") < min(speed_limit, v_max_ego):
+            return False
+        else:
+            return True
+
+    def _keeps_sign_min_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
+        """
+        Predicate for lanelet speed limit evaluation
+
+        :param velocity: Velocity of vehicle
+        :param lanelet_ids: IDs of lanelets the vehicle is on
+        :returns Boolean indicating speed limit satisfaction
+        """
+        speed_limits = [0]
+        for lanelet_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            for traffic_sign_id in lanelet.traffic_signs:
+                traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
+                if self._country == SupportedTrafficSignCountry.GERMANY:
+                    for elem in traffic_sign.traffic_sign_elements:
+                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MINSPEED.value:
+                            speed_limits.append(float(elem.additional_values[0]))
+        if min(speed_limits) > velocity:
+            return False
+        else:
+            return True
 
     def _keeps_fov_speed_limit(self, velocity: float) -> bool:
         """
@@ -142,7 +213,9 @@ class VehicleStatePredicateCollection(PredicateCollection):
         """
         predicate_trace = {"keeps_lane_speed_limit": {ego_vehicle.id: {}},
                            "keeps_fov_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_min_speed_limit": {ego_vehicle.id: {}},
+                           "keeps_flow_min_speed_limit": {ego_vehicle.id: {}},
+                           "keeps_sign_min_speed_limit": {ego_vehicle.id: {}},
+                           "keeps_braking_speed_limit": {ego_vehicle.id: {}},
                            "brakes_abruptly": {ego_vehicle.id: {}},
                            "keeps_safe_distance": {}}
 
@@ -152,8 +225,12 @@ class VehicleStatePredicateCollection(PredicateCollection):
                 self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
             predicate_trace["keeps_fov_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v)
-            predicate_trace["keeps_min_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_min_speed_limit(ego_vehicle.states_lon[idx].v, other_vehicles, idx)
+            predicate_trace["keeps_braking_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_braking_speed_limit(ego_vehicle.states_lon[idx].v)
+            predicate_trace["keeps_flow_min_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_flow_min_speed_limit(ego_vehicle, other_vehicles, idx)
+            predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
+                self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
             predicate_trace["brakes_abruptly"][ego_vehicle.id][time_step] = \
                 self._brakes_abruptly(ego_vehicle.states_lon[idx].a, ego_vehicle.jerk_profile[idx], other_vehicles, idx)
 

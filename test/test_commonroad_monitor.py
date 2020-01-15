@@ -14,10 +14,11 @@ class TestCommonRoadMonitor(unittest.TestCase):
         config = load_yaml("./../config.yaml")
         self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self.other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
-        self.ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self.simulation_param)
+        self.traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
+        self.ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self.simulation_param,
+                                                          self.traffic_rules_param)
         self.traffic_rule_sets = config.get("traffic_rule_monitoring").get("traffic_rule_sets")
         self.traffic_rules = config.get("traffic_rule_monitoring").get("traffic_rules")
-        self.traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
         self.activated_traffic_rule_sets = config.get("traffic_rule_monitoring").get("activated_traffic_rule_sets")
         self.vehicle_dependent_rules = config.get("traffic_rule_monitoring").get("vehicle_dependent_rules")
         self.road_network = None  # updated in each test case
@@ -69,7 +70,8 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(100, {'max_speed_limit': False}), (101, {'max_speed_limit': False}),
                       (102, {'max_speed_limit': False}), (103, {'max_speed_limit': True})]
         self.ego_vehicle_param["fov"] = 100
-        self.ego_vehicle_param = create_ego_vehicle_param(self.ego_vehicle_param, self.simulation_param)
+        self.ego_vehicle_param = create_ego_vehicle_param(self.ego_vehicle_param, self.simulation_param,
+                                                          self.traffic_rules_param)
         result = self.execute_test(scenario)
         print("Max FOV Speed Limit Test:")
         print(result)
@@ -87,7 +89,8 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(100, {'min_speed_limit': False}), (101, {'min_speed_limit': True}),
                       (102, {'min_speed_limit': False}), (103, {'min_speed_limit': True}),
                       (104, {'min_speed_limit': True}), (105, {'min_speed_limit': True}),
-                      (106, {'min_speed_limit': True})]
+                      (106, {'min_speed_limit': True}), (107, {'min_speed_limit': False}),
+                      (108, {'min_speed_limit': True})]
         result = self.execute_test(scenario)
         print("Min Speed Limit Test:")
         print(result)

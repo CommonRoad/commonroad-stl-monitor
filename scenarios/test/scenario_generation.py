@@ -12,29 +12,20 @@ from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
 from common.configuration import *
-import scipy.interpolate
 
 
-def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_lanelets_per_lane: int,
-                    road_length: int, obstacles: List[DynamicObstacle], lanelet_types, speed_limit):
-    # setting parameters
-    author = "Sebastian Maierhofer"
-    affiliation = 'Technical University of Munich, Germany'
-    source = 'CommonRoad Monitor'
-    tags = "highway multiple_lanes no_oncoming_traffic parallel_lanes"
-    dt = 0.1
+def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straight_lanes: int, num_lanelets_per_lane: int,
+                             road_length: int, obstacles: List[DynamicObstacle]):
 
     # desired number of lanes and parameters
     lane_width = 3.5
+    lanelet_types = {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}
     lanelet_length = int(road_length/num_lanelets_per_lane)
 
     # initializing scenario
     scenario = Scenario(dt, commonroad_benchmark_id)
     # create straight lanelets
     lanelet_id_list = range(1, num_straight_lanes * num_lanelets_per_lane + 1)
-    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(speed_limit)])
-    traffic_sign = TrafficSign(201, [traffic_sign_elem])
-    scenario.lanelet_network.add_traffic_sign(traffic_sign, set())
     lanelet_id_idx = 0
     for lane in range(num_straight_lanes):
         predecessor = None
@@ -64,7 +55,7 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
                                   adjacent_left_same_direction=True,
                                   line_marking_left_vertices=LineMarking.DASHED,
                                   line_marking_right_vertices=LineMarking.SOLID,
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE}, traffic_signs={201})
+                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
             # last lane: no adjecent left lane
             elif lane == num_straight_lanes - 1:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
@@ -73,7 +64,7 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
                                   adjacent_right_same_direction=True,
                                   line_marking_left_vertices=LineMarking.SOLID,
                                   line_marking_right_vertices=LineMarking.DASHED,
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE}, traffic_signs={201})
+                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
 
             else:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
@@ -84,7 +75,7 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
                                   adjacent_right_same_direction=True,
                                   line_marking_left_vertices=LineMarking.DASHED,
                                   line_marking_right_vertices=LineMarking.DASHED,
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE}, traffic_signs={201})
+                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
             predecessor = [lanelet_id_list[lanelet_id_idx]]
             lanelet_id_idx += 1
             if lanelet_id_idx + 1 < len(lanelet_id_list) and (lanelet_id_idx + 1) % num_lanelets_per_lane != 0.0:
@@ -92,24 +83,17 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
             else:
                 successor = None
             scenario.lanelet_network.add_lanelet(lanelet)
-        # right_coords = np.array([[0, 0], [1, -0.1], [1, -0.1], [3, -0.2], [4, -0.3],
-        #                         [5, -0.5], [6, -0.8], [7, -1.3], [8, -2.1], [9, -3.4],
-        #                         [10, -6.1], [11, -9.5], [12, -12], [13, -13], [14, -13.5],
-        #                         [15, -14], [16, -14], [17, -14], [18, -14], [19, -14],
-        #                         [20, -14], [21, -14], [2, -14], [23, -14], [24, -14],
-        #                         [25, -14], [26, -14], [27, -14], [28, -14], [29, -14],
-        #                         [30, -14], [31, -14], [31, -14], [33, -14], [34, -14],
-        #                         [35, -14], [36, -14], [37, -14], [38, -14], [39, -14],
-        #                         [40, -14], [41, -14], [41, -14], [43, -14], [44, -14],
-        #                         [45, -14], [46, -14], [47, -14], [48, -14], [49, -14]])
-        # center_coords = right_coords.copy()
-        # center_coords[:, 1] = center_coords[:, 1] + 1.75
-        # left_coords = right_coords.copy()
-        # left_coords[:, 1] = left_coords[:, 1] + 3.5
-        # lanelet = Lanelet(left_coords, center_coords, right_coords, 1000)
-        # scenario.lanelet_network.add_lanelet(lanelet)
     for obs in obstacles:
         scenario.add_objects(obs)
+
+    return scenario
+
+
+def write_to_file( scenario):
+    author = "Sebastian Maierhofer"
+    affiliation = 'Technical University of Munich, Germany'
+    source = 'CommonRoad Monitor'
+    tags = "highway multiple_lanes no_oncoming_traffic parallel_lanes"
 
     # create planing problem set (goal state is abitrarily chosen, since it is not needed for this purpose)
     goal_position_shape = Rectangle(10, 3.5, np.array([50, 1.75]))
@@ -119,13 +103,10 @@ def create_scenario(commonroad_benchmark_id: str, num_straight_lanes: int, num_l
     init_state = State(position=np.array([0.0, 1.75]), orientation=0, velocity=0, yaw_rate=0, slip_angle=0, time_step=0)
     planning_problem = PlanningProblem(1, init_state, goal_region)
     planning_problem_set = PlanningProblemSet([planning_problem])
-
     # write new scenario
     fw = CommonRoadFileWriter(scenario, planning_problem_set, author, affiliation, source, tags)
-    filename = "./" + commonroad_benchmark_id + ".xml"
+    filename = "./" + scenario.benchmark_id + ".xml"
     fw.write_to_file(filename, OverwriteExistingFile.ALWAYS)
-
-    return scenario
 
 
 def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id):
@@ -178,8 +159,10 @@ def create_max_speed_limit_scenario():
     obstacles.append(obs2)
     obstacles.append(obs3)
     obstacles.append(obs4)
-    scenario = create_scenario("test_max_speed_limit", 3, 5, 200, obstacles,
-                               {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}, 35)
+    scenario = create_straight_scenario("test_max_speed_limit", 0.1, 3, 5, 200, obstacles)
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(35)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 2, 13, 14, 15})
 
     return scenario
 
@@ -221,6 +204,17 @@ def create_min_speed_limit_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([13.0, 8.75]), 106)
+    obs8 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 12.25]), 107)
+    obs9 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([13.0, 12.25]), 108)
+
     obstacles.append(obs1)
     obstacles.append(obs2)
     obstacles.append(obs3)
@@ -228,8 +222,15 @@ def create_min_speed_limit_scenario():
     obstacles.append(obs5)
     obstacles.append(obs6)
     obstacles.append(obs7)
-    scenario = create_scenario("test_min_speed_limit", 3, 5, 200, obstacles,
-                               {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}, 22.22)
+    obstacles.append(obs8)
+    obstacles.append(obs9)
+    scenario = create_straight_scenario("test_min_speed_limit", 0.1, 4, 5, 200, obstacles)
+    traffic_sign_elem_1 = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(22.22)])
+    traffic_sign_1 = TrafficSign(201, [traffic_sign_elem_1])
+    traffic_sign_elem_2 = TrafficSignElement(TrafficSignIDGermany.MINSPEED.value, [str(30)])
+    traffic_sign_2 = TrafficSign(202, [traffic_sign_elem_2])
+    scenario.lanelet_network.add_traffic_sign(traffic_sign_1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
+    scenario.lanelet_network.add_traffic_sign(traffic_sign_2, {16, 17, 18, 19, 20})
 
     return scenario
 
@@ -278,8 +279,10 @@ def create_safe_distance_scenario():
     obstacles.append(obs5)
     obstacles.append(obs6)
     obstacles.append(obs7)
-    scenario = create_scenario("test_safe_distance", 3, 5, 250, obstacles,
-                               {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}, 22.22)
+    scenario = create_straight_scenario("test_safe_distance", 0.1, 3, 5, 250, obstacles)
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(22.22)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
     return scenario
 
 
@@ -288,12 +291,15 @@ def main():
     visualization_param = config.get("visualization").get("video")
 
     scenario = create_max_speed_limit_scenario()
+    write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_min_speed_limit_scenario()
+    write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_safe_distance_scenario()
+    write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
 

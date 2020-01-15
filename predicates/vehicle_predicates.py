@@ -6,7 +6,7 @@ from commonroad.scenario.obstacle import SignalState
 
 
 class VehiclePredicateCollection(PredicateCollection):
-    def __init__(self, road_network: LaneletNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
+    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
                  other_vehicles_param: Dict):
         """
         :param road_network: CommonRoad lanelet network
@@ -17,7 +17,7 @@ class VehiclePredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param)
 
     @staticmethod
-    def braking_lights(signal_state: SignalState):
+    def _braking_lights(signal_state: SignalState):
         if signal_state.braking_lights:
             return True
         else:
@@ -30,16 +30,17 @@ class VehiclePredicateCollection(PredicateCollection):
         else:
             return False
 
-    def evaluate_predicates(self, vehicle: Vehicle) -> Dict[str, List[bool]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, List[bool]]:
         """
         Evaluates trajectory for safety predicate compliance
 
-        :param vehicle: vehicle object
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         """
         predicate_trace = {"braking_lights": []}
 
-        for idx in range(len(vehicle.state_list_cr)):
+        for idx in range(len(ego_vehicle.state_list_cr)):
             predicate_trace["braking_lights"].append(
-                self._braking_lights(vehicle.signal_series[idx]))
+                self._braking_lights(ego_vehicle.signal_series[idx]))
 
         return predicate_trace

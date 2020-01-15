@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.6.25)  13 JAN 2020 15:24
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.6.25)  13 JAN 2020 17:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -875,29 +875,29 @@ Overfull \hbox (9.24144pt too wide) in paragraph at lines 97--131
  []
 
 [7]
-Overfull \hbox (9.83273pt too wide) in paragraph at lines 135--159
- [][] 
- []
-
-
-Overfull \hbox (15.69064pt too wide) in paragraph at lines 168--214
+Overfull \hbox (16.38141pt too wide) in paragraph at lines 135--169
  [][] 
  []
 
 [8]
-Overfull \hbox (7.71712pt too wide) in paragraph at lines 218--248
+Overfull \hbox (15.69064pt too wide) in paragraph at lines 178--224
  [][] 
  []
 
-[9]) (./traffic_rules.bbl [10])
+[9]
+Overfull \hbox (7.71712pt too wide) in paragraph at lines 228--258
+ [][] 
+ []
+
+[10]) (./traffic_rules.bbl [11])
 \tf@thm=\write3
 \openout3 = `traffic_rules.thm'.
 
- [11] (./traffic_rules.aux) ) 
+ [12] (./traffic_rules.aux) ) 
 Here is how much of TeX's memory you used:
  5726 strings out of 492982
  76928 string characters out of 6134896
- 171091 words of memory out of 5000000
+ 171092 words of memory out of 5000000
  9108 multiletter control sequences out of 15000+600000
  30388 words of font info for 77 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -917,10 +917,10 @@ sfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.
 pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share
 /texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on traffic_rules.pdf (11 pages, 188773 bytes).
+Output written on traffic_rules.pdf (12 pages, 190294 bytes).
 PDF statistics:
- 101 PDF objects out of 1000 (max. 8388607)
- 72 compressed objects within 1 object stream
+ 104 PDF objects out of 1000 (max. 8388607)
+ 74 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -147,8 +147,8 @@ visualization:
 
 traffic_rule_monitoring:
     traffic_rules:
-        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit)
-        min_speed_limit: G(keeps_min_speed_limit)
+        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit)
+        min_speed_limit: G((keeps_flow_min_speed_limit & keeps_sign_min_speed_limit) | close_to_max_velocity)
         safe_distance: G(keeps_safe_distance)
         no_abrupt_braking: G(~(brakes_abruptly))
 
@@ -159,6 +159,8 @@ traffic_rule_monitoring:
         standstill_error: 0.01
         num_veh_congestion: 4
         max_congestion_velocity: 10
+        max_velocity_limit_free_driving: 27.77
+        desired_highway_velocity: 36.11
 
     traffic_rule_sets:
         1: [max_speed_limit]

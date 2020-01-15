@@ -36,7 +36,7 @@ class TrafficRuleMonitor:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
-        replacements = ['U', 'X', 'G', '&', '->', '(', ')', '~']
+        replacements = ['U', 'X', 'G', '&', '->', '(', ')', '~', '|']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
