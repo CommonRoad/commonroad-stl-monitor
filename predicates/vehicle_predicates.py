@@ -7,17 +7,25 @@ from commonroad.scenario.obstacle import SignalState
 
 class VehiclePredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
+        :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         """
-        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param)
+        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
+                         traffic_rules_param)
 
     @staticmethod
     def _braking_lights(signal_state: SignalState):
+        """
+        Evaluates if braking lights are active
+
+        :param signal_state: CommonRoad signal state
+        :returns boolean indicating satisfaction
+        """
         if signal_state.braking_lights:
             return True
         else:
@@ -25,6 +33,12 @@ class VehiclePredicateCollection(PredicateCollection):
 
     @staticmethod
     def brakes(a: float):
+        """
+        Evaluates if vehicle brakes
+
+        :param a: acceleration of vehicle
+        :returns boolean indicating satisfaction
+        """
         if a < 0:
             return True
         else:

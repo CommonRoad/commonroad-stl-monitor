@@ -18,7 +18,16 @@ class CongestionPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
-    def _vehicles_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+    @staticmethod
+    def _vehicles_left(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+        """
+        Searches for vehicles left of a vehicle
+
+        :param vehicle: vehicle object
+        :param other_vehicles: other vehicles in scenario
+        :param time_step: time step of interest
+        :returns list of vehicles left of an vehicle
+        """
         vehicles_left = []
         for veh in other_vehicles:
             if veh.rear_position(time_step) < vehicle.front_position(time_step) < veh.front_position(time_step):
@@ -34,6 +43,14 @@ class CongestionPredicateCollection(PredicateCollection):
         return vehicles_left
 
     def _vehicle_in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
+        """
+        Evaluates if a vehicles is in a congestion
+
+        :param vehicle: vehicle object
+        :param other_vehicles: other vehicles in scenario
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
         front_vehicles_all_vehicle_lanes = PositionPredicateCollection.front_vehicle_same_lane(vehicle, other_vehicles,
                                                                                                time_step)
         if vehicle.states_lon[time_step].v > self._traffic_rule_param.get("max_congestion_velocity"):
@@ -47,35 +64,59 @@ class CongestionPredicateCollection(PredicateCollection):
                     return False
         return True
 
-    def _street_contains_two_lanes(self, lanelet_ids: Set[int]):
-        for l_id in lanelet_ids:
-            num_lanes = 0
-            l_id_tmp = l_id
-            while self._road_network.lanelet_network.find_lanelet_by_id(l_id_tmp).adj_right_same_direction:
-                num_lanes +=1
-                if num_lanes == 2:
-                    return True
-                l_id_tmp = self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right
-            l_id_tmp = l_id
-            while self._road_network.lanelet_network.find_lanelet_by_id(l_id_tmp).adj_left_same_direction:
-                num_lanes +=1
-                if num_lanes == 2:
-                    return True
-                l_id_tmp = self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left
+    # def _street_contains_two_lanes(self, lanelet_ids: Set[int]):
+    #     """
+    #     Evaluates if a street consists of at least two lanes
+    #
+    #     :param lanelet_ids: lanelet IDs of road network
+    #     :returns boolean indicating satisfaction
+    #     """
+    #     for l_id in lanelet_ids:
+    #         num_lanes = 0
+    #         l_id_tmp = l_id
+    #         while self._road_network.lanelet_network.find_lanelet_by_id(l_id_tmp).adj_right_same_direction:
+    #             num_lanes +=1
+    #             if num_lanes == 2:
+    #                 return True
+    #             l_id_tmp = self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right
+    #         l_id_tmp = l_id
+    #         while self._road_network.lanelet_network.find_lanelet_by_id(l_id_tmp).adj_left_same_direction:
+    #             num_lanes +=1
+    #             if num_lanes == 2:
+    #                 return True
+    #             l_id_tmp = self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left
 
     def _is_on_left_most_lane(self, lanelet_ids: Set[int]):
+        """
+        Evaluates if a vehicle is on the left most lane
+
+        :param lanelet_ids: lanelet IDs the vehicle is on
+        :returns boolean indicating satisfaction
+        """
         for l_id in lanelet_ids:
             if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left_same_direction is None:
                 return True
         return False
 
     def _is_on_right_most_lane(self, lanelet_ids: Set[int]):
+        """
+        Evaluates if a vehicle is on the right most lane
+
+        :param lanelet_ids: lanelet IDs the vehicle is on
+        :returns boolean indicating satisfaction
+        """
         for l_id in lanelet_ids:
             if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right_same_direction is None:
                 return True
         return False
 
     def _is_on_middle_lane(self, lanelet_ids: Set[int]):
+        """
+        Evaluates if a vehicle is on a middle lane
+
+        :param lanelet_ids: lanelet IDs the vehicle is on
+        :returns boolean indicating satisfaction
+        """
         for l_id in lanelet_ids:
             if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right_same_direction is not None \
                     and self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left_same_lane is not None:

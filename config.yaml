@@ -32,6 +32,12 @@ simulation_param:
     video_output_folder: ./videos
     country: "DEU"
 
+
+road_network_param:
+    num_chankins_corner_cutting: 250
+    polyline_resampling_step: 0.1
+    merging_length: 10000
+
 # Ego vehicle parameters
 ###
 # .. code-block:: yaml
@@ -70,6 +76,7 @@ ego_vehicle_param:
     emergency_profile: []
     emergency_profile_num_steps_fb: 200
     fov_speed_limit: None
+
 
 # Input constraint parameters
 ###

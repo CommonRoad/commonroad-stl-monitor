@@ -9,15 +9,17 @@ class StateLongitudinal:
     """
     Longitudinal state in curvilinear coordinate system
     """
-    def __init__(self, s: float, v: float, a: float):
+    def __init__(self, s: float, v: float, a: float, j: float):
         """
-        :param s: longitudinal position in curvilinear coordinates
-        :param v: longitudinal velocity in curvilinear coordinates
-        :param a: longitudinal acceleration in curvilinear coordinates
+        :param s: longitudinal position
+        :param v: velocity
+        :param a: acceleration
+        :param j: jerk
         """
         self._s = s
         self._v = v
         self._a = a
+        self._j = j
 
     @property
     def s(self) -> float:
@@ -42,6 +44,14 @@ class StateLongitudinal:
     @a.setter
     def a(self, value: float):
         self._a = value
+
+    @property
+    def j(self) -> float:
+        return self._j
+
+    @j.setter
+    def j(self, value: float):
+        self._j = value
 
 
 class StateLateral:

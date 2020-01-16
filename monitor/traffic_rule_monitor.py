@@ -9,6 +9,7 @@ class TrafficRuleMonitor:
     def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool):
         """
         :param logic_formula: temporal logic formula
+        :param vehicle_dependency: boolean indicating if rule must be evaluated with respect to several vehicles
         """
         self._name = logic_formula[0]
         self._logic_formula = logic_formula[1]

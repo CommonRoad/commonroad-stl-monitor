@@ -21,6 +21,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.traffic_rules = config.get("traffic_rule_monitoring").get("traffic_rules")
         self.activated_traffic_rule_sets = config.get("traffic_rule_monitoring").get("activated_traffic_rule_sets")
         self.vehicle_dependent_rules = config.get("traffic_rule_monitoring").get("vehicle_dependent_rules")
+        self.road_network_param = config.get("road_network_param")
         self.road_network = None  # updated in each test case
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
@@ -147,7 +148,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         return vehicle
 
     def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
-        self.road_network = RoadNetwork(scenario.lanelet_network)
+        self.road_network = RoadNetwork(scenario.lanelet_network, self.road_network_param)
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, self.road_network,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
                                            self.traffic_rules_param, self.activated_traffic_rule_sets,

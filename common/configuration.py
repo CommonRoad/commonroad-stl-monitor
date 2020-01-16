@@ -83,21 +83,11 @@ def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
     :param simulation_param: dictionary with parameters of the simulation environment
     :returns maximum allowed velocity
     """
-    s_ego = 0
     v_ego = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
-    a_ego = 0  # ego vehicle is already at v_max
-    dt = simulation_param.get("dt")
-    t_react = ego_vehicle_param.get("t_react")
     a_min = ego_vehicle_param.get("a_min") + ego_vehicle_param.get("a_corr")
-    a_max = ego_vehicle_param.get("a_max")
-    a_corr = ego_vehicle_param.get("a_corr")
-    j_max = ego_vehicle_param.get("j_max")
-    v_min = ego_vehicle_param.get("v_min")
-    v_max = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
     emergency_profile = ego_vehicle_param.get("emergency_profile")
-    stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react, a_min, a_max, j_max, v_min, v_max,
-                                              a_corr, emergency_profile)
-    dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
+    a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance, t_react, v_max, v_min = \
+        init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego)
     while dist_offset <= 0 or dist_offset >= 0.5 \
             and not (v_max == ego_vehicle_param.get("dynamics_param").longitudinal.v_max and dist_offset > 0.5):
         if ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset") < 0:
@@ -124,23 +114,14 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict, traffic_
     :param traffic_rule_param: dictionary with parameters related to traffic rules
     :returns maximum allowed velocity
     """
-    s_ego = 0
-    v_max_delta = ego_vehicle_param.get("dynamics_param").longitudinal.v_max - \
-            traffic_rule_param.get("max_velocity_limit_free_driving")
+    v_max_delta = \
+        ego_vehicle_param.get("dynamics_param").longitudinal.v_max - \
+        traffic_rule_param.get("max_velocity_limit_free_driving")
     v_ego = v_max_delta
-    a_ego = 0  # ego vehicle is already at v_max
-    dt = simulation_param.get("dt")
-    t_react = ego_vehicle_param.get("t_react")
     a_min = traffic_rule_param.get("delta_a_abrupt")
-    a_max = ego_vehicle_param.get("a_max")
-    a_corr = ego_vehicle_param.get("a_corr")
-    j_max = ego_vehicle_param.get("j_max")
-    v_min = ego_vehicle_param.get("v_min")
-    v_max = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
     emergency_profile = 200 * [traffic_rule_param.get("j_min_abrupt")]
-    stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react, a_min, a_max, j_max, v_min, v_max,
-                                              a_corr, emergency_profile)
-    dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
+    a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance, t_react, v_max, v_min = \
+        init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego)
     while dist_offset <= 0 or dist_offset >= 0.5 \
             and not (v_max == v_max_delta and dist_offset > 0.5):
         if ego_vehicle_param.get("fov") - stopping_distance < 0:
@@ -156,6 +137,34 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict, traffic_
         dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
 
     return math.floor(v_max + traffic_rule_param.get("max_velocity_limit_free_driving"))
+
+
+def init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego):
+    """
+    Helper function to initialize values for calculation of maximum velocity based on field of view and braking
+
+    :param a_min: minimum acceleration of the ego vehicle
+    :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
+    :param simulation_param: dictionary with parameters of the simulation environment
+    :param emergency_profile: emergency jerk profile which is executed in case of a fail-safe braking maneuver
+    :param simulation_param: dictionary with parameters of the simulation environment
+    :param v_ego: ego vehicle velocity
+    :returns different parameters for the calculation of the maximum allowed velocity
+    """
+    s_ego = 0
+    a_ego = 0  # ego vehicle is already at v_max
+    dt = simulation_param.get("dt")
+    t_react = ego_vehicle_param.get("t_react")
+    a_max = ego_vehicle_param.get("a_max")
+    a_corr = ego_vehicle_param.get("a_corr")
+    j_max = ego_vehicle_param.get("j_max")
+    v_min = ego_vehicle_param.get("v_min")
+    v_max = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
+    stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react, a_min, a_max, j_max, v_min, v_max,
+                                              a_corr, emergency_profile)
+    dist_offset = ego_vehicle_param.get("fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset")
+
+    return a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance, t_react, v_max, v_min
 
 
 def emg_stopping_distance(s: float, v: float, a: float, dt: float, t_react: float, a_min: float, a_max: float,
@@ -217,20 +226,17 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     """
     a_new = a_0 + j_input * dt
     if a_new > a_max:
-        t_a = abs((a_max - a_0) / j_input)
+        t_a = abs((a_max - a_0) / j_input)  # time until a_max is reached
         a_new = a_max
     elif a_new < a_min:
-        t_a = abs((a_0 - a_min) / j_input)
+        t_a = abs((a_0 - a_min) / j_input)  # time until a_min is reached
         a_new = a_min
     else:
         t_a = dt
 
     v_new = v_0 + a_0 * dt + 0.5 * j_input * t_a**2
     if v_new > v_max and j_input != 0.0:
-        d = abs(a_0) ** 2 - 4 * 0.5 * abs(j_input) * (v_max - v_0)
-        t_1 = (-abs(a_0) + math.sqrt(d)) / (2 * 0.5 * abs(j_input))
-        t_2 = (-abs(a_0) - math.sqrt(d)) / (2 * 0.5 * abs(j_input))
-        t_v = min(abs(t_1), abs(t_2))
+        t_v = calculate_tv(a_0, j_input, v_0, v_max)  # time until v_max is reached
         t_a = t_v
         v_new = v_max
     elif v_new > v_max and j_input == 0.0:
@@ -238,10 +244,7 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
         t_a = t_v
         v_new = v_max
     if v_new < v_min and j_input != 0.0:
-        d = abs(a_0) ** 2 - 4 * 0.5 * abs(j_input) * (v_min - v_0)
-        t_1 = (-abs(a_0) + math.sqrt(d)) / (2 * 0.5 * abs(j_input))
-        t_2 = (-abs(a_0) - math.sqrt(d)) / (2 * 0.5 * abs(j_input))
-        t_v = min(abs(t_1), abs(t_2))
+        t_v = calculate_tv(a_0, j_input, v_0, v_min)    # time until v_min is reached
         t_a = t_v
         v_new = v_min
     elif v_new < v_min and j_input == 0.0:
@@ -259,6 +262,24 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     return s_new, v_new, a_new
 
 
+def calculate_tv(a_0, j_input, v_0, v_max):
+    """
+    Calculates time how long input can be applied until minimum/maximum velocity is reached
+
+    :param a_0: current acceleration of vehicle
+    :param j_input: jerk input for vehicle
+    :param v_0: current velocity of vehicle
+    :param v_max: maximum velocity of vehicle
+    :returns time until v_max is reached
+    """
+    d = abs(a_0) ** 2 - 4 * 0.5 * abs(j_input) * (v_max - v_0)
+    t_1 = (-abs(a_0) + math.sqrt(d)) / (2 * 0.5 * abs(j_input))
+    t_2 = (-abs(a_0) - math.sqrt(d)) / (2 * 0.5 * abs(j_input))
+    t_v = min(abs(t_1), abs(t_2))
+
+    return t_v
+
+
 def vehicle_dynamics_acc(s_0: float, v_0: float, a_input: float, v_min: float, v_max: float,
                          dt: float) -> Tuple[float, float]:
     """
@@ -274,7 +295,7 @@ def vehicle_dynamics_acc(s_0: float, v_0: float, a_input: float, v_min: float, v
     """
     v_new = v_0 + a_input * dt
     if v_new > v_max:
-        t_v = (v_max - v_0) / a_input
+        t_v = (v_max - v_0) / a_input   # time until v_max is reached
         v_new = v_max
     elif v_new < v_min:
         t_v = (v_0 - v_min) / a_input
@@ -285,7 +306,6 @@ def vehicle_dynamics_acc(s_0: float, v_0: float, a_input: float, v_min: float, v
     s_new = s_0 + v_0 * t_v + 0.5 * a_input * t_v ** 2
 
     return s_new, v_new
-
 
 
 def load_yaml(file_name: str) -> Union[Dict, None]:

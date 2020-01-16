@@ -4,17 +4,34 @@ from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_pol
 import numpy as np
 from common.vehicle import StateLongitudinal, StateLateral
 from pycrccosy import SegmentCoordinateSystem
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Dict
 
 
 class Lane:
-    def __init__(self, merged_lanelet: Lanelet, contained_lanelets: List[int]):
-        self.lanelet = merged_lanelet
-        self.clcs = self._create_curvilinear_coordinate_system_from_lanelet(merged_lanelet.center_vertices)
-        self.contained_lanelets = set(contained_lanelets)
-        self.orientation = self._compute_orientation_from_polyline(merged_lanelet.center_vertices)
-        self.curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
-        self.path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
+    """
+    Lane representation build from several lanelets
+    """
+    def __init__(self, merged_lanelet: Lanelet, contained_lanelets: List[int], road_network_param: Dict):
+        """
+        :param merged_lanelet: lanelet element of lane
+        :param contained_lanelets: lanelets lane consists of
+        :param road_network_param: dictionary with parameters for the road network
+        """
+        self._lanelet = merged_lanelet
+        self._clcs = self._create_curvilinear_coordinate_system_from_lanelet(merged_lanelet.center_vertices)
+        self._contained_lanelets = set(contained_lanelets)
+        self._orientation = self._compute_orientation_from_polyline(merged_lanelet.center_vertices)
+        self._curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
+        self._path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
+        self._road_network_param = road_network_param
+
+    @property
+    def lanelet(self) -> Lanelet:
+        return self._lanelet
+
+    @property
+    def contained_lanelets(self) -> Set[int]:
+        return self._contained_lanelets
 
     @staticmethod
     def _create_curvilinear_coordinate_system_from_lanelet(ref_path: np.array) -> SegmentCoordinateSystem:
@@ -39,12 +56,14 @@ class Lane:
         :param state: CommonRoad state
         :return: lateral and longitudinal state of vehicle
         """
-        s, d = self.clcs.convert_to_curvilinear_coords(state.position[0], state.position[1])
-        theta_cl = np.interp(s, self.path_length, self.orientation)
-        if hasattr(state, "acceleration"):
-            x_lon = StateLongitudinal(s, state.velocity, state.acceleration)
+        s, d = self._clcs.convert_to_curvilinear_coords(state.position[0], state.position[1])
+        theta_cl = np.interp(s, self._path_length, self._orientation)
+        if hasattr(state, "acceleration") and hasattr(state, "jerk"):
+            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, state.jerk)
+        elif hasattr(state, "acceleration"):
+            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, 0)
         else:
-            x_lon = StateLongitudinal(s, state.velocity, 0)
+            x_lon = StateLongitudinal(s, state.velocity, 0, 0)
         x_lat = StateLateral(d, theta_cl - state.orientation, 0, 0)
 
         return x_lon, x_lat
@@ -108,11 +127,23 @@ class Lane:
 
 
 class RoadNetwork:
-    def __init__(self, lanelet_network: LaneletNetwork):
+    """
+    Representation of the complete road network of a CommonRoad scenario abstracted to lanes
+    """
+    def __init__(self, lanelet_network: LaneletNetwork, road_network_param: Dict):
+        """
+        :param lanelet_network: CommonRoad lanelet network
+        :param road_network_param: dictionary with parameters for the road network
+        """
         self.lanelet_network = lanelet_network
-        self.lanes = self._create_lanes()
+        self.lanes = self._create_lanes(road_network_param)
 
-    def _create_lanes(self) -> List[Lane]:
+    def _create_lanes(self, road_network_param: Dict) -> List[Lane]:
+        """
+        Creates lanes for road network
+
+        :param road_network_param: dictionary with parameters for the road network
+        """
         lanes = []
         lane_lanelets = []
         start_lanelets = []
@@ -140,7 +171,8 @@ class RoadNetwork:
             else:
                 lanelet_type = None
             merged_lanelets, merge_jobs = \
-                Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet, self.lanelet_network, 10000.0,
+                Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet, self.lanelet_network,
+                                                                        road_network_param.get("merging_length"),
                                                                         lanelet_type)
             if len(merged_lanelets) == 0 or len(merge_jobs) == 0:
                 merged_lanelets.append(lanelet)
@@ -148,11 +180,17 @@ class RoadNetwork:
             for idx in range(len(merged_lanelets)):
                 lane_lanelets.append((merged_lanelets[idx], merge_jobs[idx]))
         for lane_element in lane_lanelets:
-            lanes.append(Lane(lane_element[0], lane_element[1]))
+            lanes.append(Lane(lane_element[0], lane_element[1], road_network_param))
 
         return lanes
 
     def find_lane_ids_by_obstacle(self, obstacle_id: int, time_step: int) -> Set[int]:
+        """
+        Finds the lanes an obstacle belongs to and returns their IDs
+
+        :param obstacle_id: ID of the obstacle
+        :param time_step: time step of interest
+        """
         lane_ids = set()
         for lane in self.lanes:
             if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
@@ -161,7 +199,12 @@ class RoadNetwork:
         return lane_ids
 
     def find_lane_by_obstacle(self, obstacle_id: int, time_step: int) -> Lane:  # TODO return center assignment
+        """
+        Finds the lanes an obstacle belongs to
+
+        :param obstacle_id: ID of the obstacle
+        :param time_step: time step of interest
+        """
         for lane in self.lanes:
             if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
                 return lane
-

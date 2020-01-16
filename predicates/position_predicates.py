@@ -1,6 +1,5 @@
 from typing import List, Dict, Set
 from predicates.predicate_collection import PredicateCollection
-from commonroad.scenario.lanelet import LaneletNetwork, LaneletType
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
 
@@ -20,6 +19,14 @@ class PositionPredicateCollection(PredicateCollection):
 
     @staticmethod
     def in_fov(s_ego, s_other: float, fov: float) -> bool:
+        """
+        Evaluates if another vehicle is inside the field of view of the ego vehicle
+
+        :param s_ego: ego vehicle position
+        :param s_other: other vehicle's position
+        :param fov: field of view of the ego vehicle
+        :returns boolean indicating satisfaction
+        """
         if abs(s_other - s_ego) < fov:
             return True
         else:
@@ -28,6 +35,15 @@ class PositionPredicateCollection(PredicateCollection):
     @staticmethod
     def same_lane_behind_other(s_ego: float, s_other: float, lanelet_ids_ego: Set[int],
                                lanelet_ids_other: Set[int]) -> bool:
+        """
+        Evaluates if another vehicle is inside the same lane and behind the ego vehicle
+
+        :param s_ego: ego vehicle position
+        :param s_other: other vehicle's position
+        :param lanelet_ids_ego: lanelet IDs of the ego vehicle
+        :param lanelet_ids_other: lanelet IDs of the other vehicle
+        :returns boolean indicating satisfaction
+        """
         if s_ego < s_other:
             for lanelet_id in lanelet_ids_ego:
                 if lanelet_id in lanelet_ids_other:
@@ -38,6 +54,14 @@ class PositionPredicateCollection(PredicateCollection):
 
     @staticmethod
     def front_vehicle_same_lane(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[List[Vehicle]]:
+        """
+        Searches the vehicles in the same lane and in front of a given vehicle
+
+        :param vehicle: vehicle object
+        :param other_vehicles: other vehicles in scenario
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
         front_vehicles_all_vehicle_lanes = []
         for lanelet in vehicle.lanelet_assignment[time_step]:
             front_vehicles_single_vehicle_lanes = []
@@ -50,6 +74,13 @@ class PositionPredicateCollection(PredicateCollection):
 
     @staticmethod
     def same_lane(lanelet_ids_ego: Set[int], lanelet_ids_other: Set[int]) -> bool:
+        """
+        Evaluates if another vehicle is within the same lane as the ego vehicle
+
+        :param lanelet_ids_ego: lanelet IDs of lanelets the ego vehicle is on
+        :param lanelet_ids_other: lanelet IDs of lanelets the other vehicle is on
+        :returns boolean indicating satisfaction
+        """
         for lanelet_id in lanelet_ids_ego:
             if lanelet_id in lanelet_ids_other:
                 return True
@@ -57,26 +88,33 @@ class PositionPredicateCollection(PredicateCollection):
 
     @staticmethod
     def behind(s_ego: float, s_other: float) -> bool:
+        """
+        Evaluates if another vehicle is behind the ego vehicle
+
+        :param s_ego: longitudinal position of the ego vehicle
+        :param s_other: longitudinal position of the other vehicle
+        :returns boolean indicating satisfaction
+        """
         if s_ego < s_other:
             return True
         else:
             return False
 
-    def _on_ramp(self, vehicle: Vehicle, time_step: int) -> bool:
-        lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
-            if LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type:
-                return True
-        return False
-
-    def _urban(self, vehicle: Vehicle, time_step: int) -> bool:
-        lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
-            if LaneletType.URBAN in lanelet.lanelet_type:
-                return True
-        return False
+    # def _on_ramp(self, vehicle: Vehicle, time_step: int) -> bool:
+    #     lanelet_ids = vehicle.lanelet_assignment[time_step]
+    #     for l_id in lanelet_ids:
+    #         lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
+    #         if LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type:
+    #             return True
+    #     return False
+    #
+    # def _urban(self, vehicle: Vehicle, time_step: int) -> bool:
+    #     lanelet_ids = vehicle.lanelet_assignment[time_step]
+    #     for l_id in lanelet_ids:
+    #         lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
+    #         if LaneletType.URBAN in lanelet.lanelet_type:
+    #             return True
+    #     return False
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:

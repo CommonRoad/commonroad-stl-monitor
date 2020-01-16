@@ -1,6 +1,5 @@
 from monitor.traffic_rule_monitor import TrafficRuleMonitor
 from typing import List, Dict, Set
-from commonroad.scenario.scenario import Scenario
 from predicates.vehicle_state_predicates import VehicleStatePredicateCollection
 from predicates.position_predicates import PositionPredicateCollection
 from common.vehicle import Vehicle, VehicleLocalization
@@ -8,19 +7,22 @@ from common.road_network import RoadNetwork
 
 
 class TrafficRuleDispatcher:
-    """Manages the different monitors for each traffic rule"""
-
-    def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
+    """
+    Manages the different monitors for each traffic rule
+    """
+    def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[int, str], road_network: RoadNetwork,
                  simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict,
                  activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]):
         """
         :param traffic_rules: dictionary with MTL formulas of traffic rules
         :param traffic_rule_sets: dictionary with sets of related traffic rules
-        :param scenario: CommonRoad scenario
+        :param road_network: road network with lanes based on CommonRoad scenario
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
+        :param activated_traffic_rule_sets: set of rules which are activated
+        :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
@@ -34,7 +36,7 @@ class TrafficRuleDispatcher:
                                               vehicle_dependent_rules)
 
     @staticmethod
-    def create_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
+    def create_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[int, str],
                         activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]) \
             -> List[TrafficRuleMonitor]:
         """
@@ -42,6 +44,8 @@ class TrafficRuleDispatcher:
 
         :param traffic_rules: dictionary with traffic rules in temporal logic
         :param traffic_rule_sets: dictionary with sets of related traffic rules
+        :param activated_traffic_rule_sets: set of rules which are activated
+        :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
         :returns list of monitors
         """
         monitors = []
@@ -59,15 +63,25 @@ class TrafficRuleDispatcher:
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :returns dictionary containing predicate evaluation
         """
         safety_predicates = self._safety_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
 
         return safety_predicates
 
-    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_id_ego: Set[int],
-                                lane_id_other: Set[int]) -> Set[VehicleLocalization]:
+    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_ids_ego: Set[int],
+                                lane_ids_other: Set[int]) -> Set[VehicleLocalization]:
+        """
+        Classifies single other vehicle according to its localization
+
+        :param s_ego: longitudinal position of ego vehicle
+        :param s_other: longitudinal position of other vehicle
+        :param lane_ids_ego: lanes the ego vehicle is on
+        :param lane_ids_other: lanes the other vehicle is on
+        :returns classified localization of other vehicle
+        """
         if PositionPredicateCollection.in_fov(s_ego, s_other, self._ego_vehicle_param.get("fov")):
-            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_id_ego, lane_id_other):
+            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_ids_ego, lane_ids_other):
                 return {VehicleLocalization.EGO_LANE_FRONT}
             else:
                 return {VehicleLocalization.NONE}
@@ -75,6 +89,12 @@ class TrafficRuleDispatcher:
             return {VehicleLocalization.NONE}
 
     def classify_all_vehicles(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]):
+        """
+        Classifies all other vehicles according to their localization
+
+        :param ego_vehicle: ego vehicle object
+        :param other_vehicles: list with other vehicles
+        """
         for veh in other_vehicles:
             for state in veh.state_list_cr:
                 veh.append_classification(
