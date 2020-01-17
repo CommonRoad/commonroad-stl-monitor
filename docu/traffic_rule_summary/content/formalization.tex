@@ -2,7 +2,7 @@
 
 \section{Traffic Rule Formalization}
 \label{sec:rule_formalization}
-
+Rules are formalized to account for general situations, e.g. the handling after collisions is not formalized.
 \subsection{Traffic Law Terminology}
 \label{sec:def_law_terms}
 \begin{itemize}
@@ -17,7 +17,7 @@
 \subsection{General Traffic Rules}
 \label{sec:general_rules}
 
-\subsubsection{Distance}
+\subsubsection{Position}
 \begin{table}[H]
 \centering
 \begin{tabular}[t]{ll}
@@ -40,8 +40,6 @@ Concretization &  A vehicle moving behind other vehicles within a lane must keep
 & distance which ensures collision freedom to each of these other vehicles even if one\\ 
 &  or several of them are suddenly slow down or stop.\\
 
-%Atomic Prepositions & $\mathtt{keeps\_safe\_distance}$\\
-
 Predicates & $\safeDistanceFrontPredicate$\\ 
 
 Comments &  Evaluated for all vehicles for which the following condition is valid: \\
@@ -53,6 +51,47 @@ STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Lane following} & \\
+		\textbf{vertical position} & \\
+		\midrule
+		StVO \S 2 (2)& Es ist möglichst weit rechts zu fahren, nicht nur bei Gegenverkehr, \\
+		& beim Überholtwerden, an Kuppen, in Kurven oder bei Unübersichtlichkeit. \\ 
+		
+		StVO English & Drivers and riders must always keep as far to the right as possible, not only when \\
+		& traffic is approaching from the opposite direction, when being overtaken, \\
+		& when approaching the brow of a hill, on bends or when their view ahead is obstructed.\\
+		
+		VCoRT \S 12 (1) & When passing oncoming traffic, a driver shall leave sufficient lateral space and, \\
+		& if necessary, move close to the edge of the carriageway appropriate to the direction of traffic. \\
+		& If in so doing he finds his progress impeded by an obstruction or by the presence of other \\ 
+		& road-users, he shall slow down and if necessary stop to allow the oncoming road-user \\
+		& or road-users to pass. \\
+		
+		Concretization &  If there exist only one lane on a road and vehicles can drive in both directions on this lane, \\
+		& the ego vehicle should drive as to the right as possible. If there exist at least one lane \\
+		& for each driving direction and the ego vehicle's lane is at least as broad as the ego vehicle \\
+		& or there is no adjacent lane in opposite driving direction, the ego vehicle should \\
+		& drive in the lane center.\\
+				
+		Predicates & \\ 
+		
+		Comments &  \\
+		
+		LTL & G$((\onlyOnLanePredicate \land \noLaneInOppositeDirectionPredicate \implies \drivesFarRightInLanePredicate)   $\\
+		& $ \land (\twoLanesWithDifferentDirectionsPredicate \land \egoLaneBroadEnoughPredicate$ \\
+		& $\implies \drivesOnLaneCenterPredicate))$\\
+		MTL & G$(\safeDistanceFrontPredicate)$\\
+		STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(\egoVehicle)))$\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
 
 \subsubsection{Braking}
 \begin{table}[H]
@@ -71,14 +110,14 @@ StVO English & The person operating the vehicle in front must not brake suddenly
 VCoRT \S 17 (1) &  No driver of a vehicle shall brake abruptly unless it is necessary to do so for\\
 &  safety reasons.\\
 
-Concretization &  A vehicle shall never brake abruptly unless it is necessary to do so \\
-& for safety reasons. A vehicle brakes abruptly if: 1. It brakes with an acceleration \\ 
-& which violates an user-defined threshold and there is no other vehicle, obstacle, \\ 
-& or speed limit front of the vehicle; 2. There is an obstacle in front of the vehicle \\ 
-& and the acceleration difference and jerk difference between the vehicle and the obstacle \\ 
-& violates an acceleration and jerk threshold, respectively; 3. There is an speed limit \\
-& in front of the vehicle and the acceleration and jerk of the vehicle violate \\
-& an acceleration and jerk threshold, respectively.\\
+Concretization &  A vehicle shall never brake abruptly unless it has a reason to do so. \\
+& A vehicle brakes abruptly if: \\
+& 1. The vehicle brakes although there is no leading vehicle and there is reason caused by \\
+& a traffic regulation to reduce its velocity; \\ 
+& 2. There is an obstacle in front of the vehicle and the acceleration difference and \\
+& jerk difference between the vehicle and the obstacle violate thresholds; \\
+& 3. The maximum allowed speed will change or changed due to traffic \\
+& signs or environmental conditions.\\
 
 Predicates & $\unnecessaryBraking$\\
 
@@ -89,6 +128,40 @@ MTL & G$(\unnecessaryBraking)$\\
 STL & \\
 \bottomrule
 \end{tabular}
+\end{table}%
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{No stopping} & \\
+		\midrule
+		StVO \S 18 (8), \S 12 (1), & Halten, auch auf Seitenstreifen, ist verboten.\\
+		OLG Karlsruhe DAR 02, 34,& \\
+		OLG Frankfurt DAR 01, 504, & Das Halten ist unzulässig auf Einfädelungs- und auf Ausfädelungsstreifen.\\
+		OLG Hamm VersR 91, 83, & \\
+		Bay VRS 59, 54 = StVE 23 & Das Anhalten auf allen Teilen der Autobahn, die dem Zweck dienen einen \\
+		 & flüssigen Verkehr zu gewährleisten, wie die Autobahnen selbst, Zufahrtswege \\
+		 & oder dem Seitenstreifen, ist verboten. \\
+		StVO English & \\
+		
+		
+		VCoRT \S 17 (1) &  \\
+		
+		Concretization & Stopping on the main carriage way, shoulder lane, and ramps is forbidden.  \\
+		
+		Predicates & $\inCongestion$,$\onAccessRampPredicate$, $\onExitRampPredicate$, \\
+		& $\onMainCarriageWayPredicate$, $\onShoulderPredicate$, $\inStandStillPredicate$ \\
+		
+		Comments & \\
+		
+		LTL & G$(\neg \inCongestion \land (\onAccessRampPredicate \lor \onExitRampPredicate $ \\
+		& $\lor \onMainCarriageWayPredicate \lor \onShoulderPredicate) \implies \neg \inStandStillPredicate)$\\
+		MTL & G$(\neg \inCongestion \land (\onAccessRampPredicate \lor \onExitRampPredicate $ \\
+		& $\lor \onMainCarriageWayPredicate \lor \onShoulderPredicate) \implies \neg \inStandStillPredicate)$\\
+		STL & \\
+		\bottomrule
+	\end{tabular}
 \end{table}%
 
 \subsubsection{Velocity}
@@ -112,7 +185,8 @@ Concretization &  A vehicle shall not exceed the allowed speed limit of the lane
 & respect to vehicles outside the field of view, and shall not exceed as speed which \\
 & is necessary to comfortably ensure traffic regulations.\\
 
-Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$, $\brakingSpeedLimitPredicate$\\
+Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$, \\
+& $\brakingSpeedLimitPredicate$, $\roadConditionSpeedLimitPredicate$\\
 
 Comments &  The traffic laws do not provide concrete information about speed limit, \\ 
 & e.g., the VCoRT passes the task of defining speed limits to national lawmakers. \\
@@ -123,9 +197,11 @@ Comments &  The traffic laws do not provide concrete information about speed lim
 & (e.g., upcoming speed limit) must be considered. The velocity with respect to vehicles \\
 & inside the field of view is considered in the safe distance traffic rule concretization.\\
 
-LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land \brakingSpeedLimitPredicate)$\\
-MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land \brakingSpeedLimitPredicate)$\\
-STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV)$\\ 
+LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$ \\
+& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
+MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$\\
+& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
+STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo \leq \speedLimitBraking \land \vEgo \leq \speedLimitWeather)$\\ 
 \bottomrule
 \end{tabular}
 \end{table}
@@ -157,13 +233,13 @@ STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV)$\\
 		Concretization &  The relative velocity of a vehicle with respect to leading and following vehicles should \\
 		& not exceed a certain threshold.\\
 		
-		Predicates & $\minSpeedLimitPredicate$\\
+		Predicates & $\minSpeedLimitPredicate$, $\preservesTrafficFlowPredicate$\\
 		
 		Comments &  \\
 		
-		LTL & G$(\minSpeedLimitPredicate)$\\
-		MTL & G$(\minSpeedLimitPredicate)$\\
-		STL & G($\vOther^\mathrm{min} - \vEgo \leq v_\mathrm{min}^\mathrm{slow})$\\
+		LTL & G$(\minSpeedLimitPredicate \land \preservesTrafficFlowPredicate)$\\
+		MTL & G$(\minSpeedLimitPredicate \land \preservesTrafficFlowPredicate)$\\
+		STL & G$()$\\
 		\bottomrule
 	\end{tabular}
 \end{table}

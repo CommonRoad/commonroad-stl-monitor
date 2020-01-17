@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.6.25)  13 JAN 2020 17:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.6.25)  17 JAN 2020 15:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -709,19 +709,19 @@ Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
 (./traffic_rules.aux)
 \openout1 = `traffic_rules.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 141.
-LaTeX Font Info:    ... okay on input line 141.
-LaTeX Font Info:    Try loading font information for OT1+ptm on input line 141.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 161.
+LaTeX Font Info:    ... okay on input line 161.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 161.
 
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
@@ -824,16 +824,16 @@ e
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Font Info:    Try loading font information for U+wasy on input line 143.
+LaTeX Font Info:    Try loading font information for U+wasy on input line 163.
 (/usr/share/texlive/texmf-dist/tex/latex/wasysym/uwasy.fd
 File: uwasy.fd 2003/10/30 v2.0 Wasy-2 symbol font definitions
 )
-LaTeX Font Info:    Try loading font information for U+msa on input line 143.
+LaTeX Font Info:    Try loading font information for U+msa on input line 163.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 143.
+LaTeX Font Info:    Try loading font information for U+msb on input line 163.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -856,52 +856,50 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
 ex
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 5.
-
-Overfull \hbox (104.62415pt too wide) in paragraph at lines 38--41
-\OT1/ptm/m/n/10.95 de-scribe it. The set of all at-tributes is $\U/msb/m/n/10.9
-5 A$\OT1/ptm/m/n/10.95 . For the high-way case, we have $\U/msb/m/n/10.95 A \OT
-1/cmr/m/n/10.95 = \OMS/cmsy/m/n/10.95 f\OML/cmm/m/it/10.95 main[]carriage[]way;
- access[]ramp; exit[]ramp; shoulder\OMS/cmsy/m/n/10.95 g$\OT1/ptm/m/n/10.95 .
- []
-
-[2]) [3] (./content/predicates.tex [4]) [5] (./content/formalization.tex
-Overfull \hbox (4.76271pt too wide) in paragraph at lines 60--92
- [][] 
- []
-
-[6]
-Overfull \hbox (9.24144pt too wide) in paragraph at lines 97--131
+ [2]) [3]
+(./content/predicates.tex [4] [5]) [6] (./content/formalization.tex
+Overfull \hbox (3.99638pt too wide) in paragraph at lines 58--93
  [][] 
  []
 
 [7]
-Overfull \hbox (16.38141pt too wide) in paragraph at lines 135--169
+Overfull \hbox (5.74878pt too wide) in paragraph at lines 99--131
  [][] 
  []
 
 [8]
-Overfull \hbox (15.69064pt too wide) in paragraph at lines 178--224
+Overfull \hbox (9.24144pt too wide) in paragraph at lines 170--207
  [][] 
  []
 
 [9]
-Overfull \hbox (7.71712pt too wide) in paragraph at lines 228--258
+Overfull \hbox (16.38141pt too wide) in paragraph at lines 211--245
  [][] 
  []
 
-[10]) (./traffic_rules.bbl [11])
+[10]
+Overfull \hbox (15.69064pt too wide) in paragraph at lines 254--300
+ [][] 
+ []
+
+[11]
+Overfull \hbox (7.71712pt too wide) in paragraph at lines 304--334
+ [][] 
+ []
+
+[12]) (./traffic_rules.bbl [13])
 \tf@thm=\write3
 \openout3 = `traffic_rules.thm'.
 
- [12] (./traffic_rules.aux) ) 
+ [14] (./traffic_rules.aux) ) 
 Here is how much of TeX's memory you used:
- 5726 strings out of 492982
- 76928 string characters out of 6134896
- 171092 words of memory out of 5000000
- 9108 multiletter control sequences out of 15000+600000
+ 5765 strings out of 492982
+ 77853 string characters out of 6134896
+ 171643 words of memory out of 5000000
+ 9147 multiletter control sequences out of 15000+600000
  30388 words of font info for 77 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,18n,43p,1016b,238s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 41i,18n,43p,1436b,238s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/bas
 e/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.p
 fb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
@@ -917,10 +915,10 @@ sfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.
 pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share
 /texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on traffic_rules.pdf (12 pages, 190294 bytes).
+Output written on traffic_rules.pdf (14 pages, 196200 bytes).
 PDF statistics:
- 104 PDF objects out of 1000 (max. 8388607)
- 74 compressed objects within 1 object stream
+ 111 PDF objects out of 1000 (max. 8388607)
+ 79 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

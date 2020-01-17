@@ -65,9 +65,14 @@
 %\newcommand{\distance}{\ensuremath{\Delta s}\xspace} %d
  %d
 %\newcommand{\deltaV}{\ensuremath{\Delta v}\xspace}
-\newcommand{\speedLimitLane}{\ensuremath{v_\text{sl}}\xspace}
+
+% traffic rule parameters
+\newcommand{\speedLimitLane}{\ensuremath{v_\text{sl}^\text{max}}\xspace}
+\newcommand{\requiredSpeedLane}{\ensuremath{v_\text{sl}^\text{min}}\xspace}
 \newcommand{\speedLimitFOV}{\ensuremath{v_\text{fov}}\xspace}
+\newcommand{\speedLimitWeather}{\ensuremath{v_\text{w}}\xspace}
 \newcommand{\speedLimitBraking}{\ensuremath{v_\text{br}}\xspace}
+\newcommand{\deltaVTrafficFlow}{\ensuremath{\Delta v_\text{fl}}\xspace}
 
 
 %safe distance
@@ -96,23 +101,38 @@
 \DeclareMathOperator*{\laneSpeedLimitPredicate}{keeps\_lane\_speed\_limit}
 \DeclareMathOperator*{\fovSpeedLimitPredicate}{keeps\_fov\_speed\_limit}
 \DeclareMathOperator*{\brakingSpeedLimitPredicate}{keeps\_braking\_speed\_limit}
+\DeclareMathOperator*{\roadConditionSpeedLimitPredicate}{keeps\_road\_condition\_speed\_limit}
 \DeclareMathOperator*{\minSpeedLimitPredicate}{keeps\_min\_speed\_limit}
+\DeclareMathOperator*{\preservesTrafficFlowPredicate}{preserves\_traffic\_flow}
 \DeclareMathOperator*{\unnecessaryBraking}{unnecessary\_braking}
 \DeclareMathOperator*{\drivesFasterThanVehicleLeftPredicate}{drives\_faster\_than\_vehicle\_left}
 \DeclareMathOperator*{\onAccessRampPredicate}{on\_access\_ramp}
-%\DeclareMathOperator*{\onExitRampPredicate}{on\_exit\_ramp}
+\DeclareMathOperator*{\onExitRampPredicate}{on\_exit\_ramp}
+\DeclareMathOperator*{\onShoulderPredicate}{on\_shoulder\_lane}
+\DeclareMathOperator*{\onMainCarriageWayPredicate}{on\_main\_carriage\_way}
 \DeclareMathOperator*{\congestionLeftPredicate}{congestion\_left}
 \DeclareMathOperator*{\drivesMaxWithSlightlyHigherSpeedPredicate}{drives\_max\_with\_slightly\_higher\_speed}
 \DeclareMathOperator*{\rightOfBroadLaneMarkingPredicate}{right\_of\_broad\_lane\_marking}
 \DeclareMathOperator*{\otherVehicleLeftOfBroadLaneMarkingPredicate}{other\_vehicle\_left\_of\_broad\_lane\_marking}
+\DeclareMathOperator*{\slowLeadingVehicle}{slow\_leading\_vehicle}
+\DeclareMathOperator*{\inCongestion}{in\_congestion}
+\DeclareMathOperator*{\inStandStillPredicate}{in\_standstill}
+\DeclareMathOperator*{\drivesOnLaneCenterPredicate}{drives\_on\_lane\_center}
+\DeclareMathOperator*{\onlyOnLanePredicate}{only\_one\_lane}
+\DeclareMathOperator*{\drivesFarRightInLanePredicate}{drives\_far\_right\_in\_lane}
+\DeclareMathOperator*{\noLaneInOppositeDirectionPredicate}{no\_lane\_in\_opposite\_direction}
+\DeclareMathOperator*{\twoLanesWithDifferentDirectionsPredicate}{two\_lanes\_with\_different\_directions}
+\DeclareMathOperator*{\egoLaneBroadEnoughPredicate}{ego\_lane\_broad\_enough\_directions}
 
 % functions
 \DeclareMathOperator*{\rearPositionFunction}{rear}
 \DeclareMathOperator*{\frontPositionFunction}{front}
 \DeclareMathOperator*{\vehiclesInFrontOfEgoVehicleFunction}{vehicles\_in\_front\_of\_ego\_vehicle}
 \DeclareMathOperator*{\speedLimitFunction}{speed\_limit}
+\DeclareMathOperator*{\requiredSpeedFunction}{required\_speed}
 \DeclareMathOperator*{\occupiedLaneletsFunction}{occupied\_lanelets}
-\DeclareMathOperator*{\laneFrontFunction}{lane_{front}}
+\DeclareMathOperator*{\laneFrontFunction}{lane\_front}
+\DeclareMathOperator*{\velocityLeadingVehicleFunction}{vel\_lead}
 
 % algorithms
 

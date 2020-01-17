@@ -44,6 +44,11 @@ Speed limit provided by traffic regulations for a vehicle $V_i$:
 \speedLimitLane := \sup \big( \big\{v   \, \big| \, \forall l \in \mathtt{\occupiedLaneletsFunction}(\mathbb{L}, V_i): v = \speedLimitFunction(l) \big\} \big)
 \end{align}
 
+Required speed limit provided by traffic regulations for a vehicle $V_i$:
+\begin{align}
+\requiredSpeedLane := \sup \big( \big\{v   \, \big| \, \forall l \in \mathtt{\occupiedLaneletsFunction}(\mathbb{L}, V_i): v = \requiredSpeedFunction(l) \big\} \big)
+\end{align}
+
 The ego vehicle must always be able to stop within the field of view. Therefore, the maximum allowed velocity based on the field of view $v_{sr}$ is chosen such that
 \begin{align}
 \speedLimitFOV := 
@@ -75,6 +80,19 @@ The velocity limits $\speedLimitFOV$ and $\speedLimitBraking$ can be calculated 
 
 \begin{align}
 \brakingSpeedLimitPredicate \iff \vEgo \leq \speedLimitBraking
+\end{align}
+
+\begin{align}
+\roadConditionSpeedLimitPredicate \iff \vEgo \leq \speedLimitWeather
+\end{align}
+
+
+\begin{align}
+\minSpeedLimitPredicate \iff \requiredSpeedLane < \speedLimitFOV \land \requiredSpeedLane < \speedLimitWeather  \implies \requiredSpeedLane \leq \vEgo
+\end{align}
+
+\begin{align}
+\preservesTrafficFlowPredicate \iff \neg \slowLeadingVehicle \implies \vEgo - \velocityLeadingVehicleFunction() > \deltaVTrafficFlow
 \end{align}
 
 \subsection{Safe distance}
@@ -116,9 +134,9 @@ and \timeDelay denotes the reaction time of the ego vehicle.
 \begin{align}
 \begin{split}
 &\mathtt{unnecessary\_braking} \iff \\ 
-& a_\mathrm{ego} < 0 \land j_\mathrm{ego} < j_\mathrm{abrupt} \land \nexists \ V' \in \ \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \\ 
-& \lor \exists V' \in \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land \Delta a  <  \Delta a_\mathrm{abrupt} \land \Delta j  <  \Delta j_\mathrm{abrupt} \\ 
-& \lor  \big(\speedLimitLane(V') \neq \emptyset  \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt}\big)
+& a_\mathrm{ego} < 0 \land j_\mathrm{ego} < j_\mathrm{abrupt} \land \nexists \ V' \in \ \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land \speedLimitLane \neq \emptyset  \\ 
+& \lor \exists V' \in \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt} \\ 
+& \lor  \big(\speedLimitLane \neq \emptyset  \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt}\big)
 \end{split}
 \end{align}
-\todo{change acceleration jerk for second case}
+\todo{future traffic signs velocity limits through environmental conditions}
