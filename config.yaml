@@ -16,7 +16,6 @@
 #    - store_profiles: activate/deactivate storage of profiles
 #    - video_output_folder: folder in which the created videos are stored
 #    - country: country of scenario
-#    - activated_traffic_rule_sets: IDs of traffic rule sets which should be activated
 simulation_param:
     dt: 0.1
     commonroad_benchmark_id: test_min_speed_limit
@@ -32,7 +31,13 @@ simulation_param:
     video_output_folder: ./videos
     country: "DEU"
 
-
+# road network and curvilinear coordinate system parameters
+###
+# .. code-block:: yaml
+#
+#    - num_chankins_corner_cutting: number of how often chankins algorithm should be applied
+#    - polyline_resampling_step: step size for polyline resampling
+#    - merging_length: maximum accumulated length of lanalets belonging to a lane
 road_network_param:
     num_chankins_corner_cutting: 250
     polyline_resampling_step: 0.1
@@ -51,12 +56,12 @@ road_network_param:
 #    - t_react: reaction time of ACC vehicle
 #    - dynamics_param: physical parameters of ACC vehicle; will be initialized during runtime
 #    - fov: field of view (sensor range)
-#    - v_max: maximum allowed velocity considering vehicle dynamics and safety based limit
 #    - v_min: minimum allowed velocity considering vehicle dynamics
-#    - v_limit_engine: velocity above which the engine power is not sufficient to cause wheel slip
-#    - drag_coefficient: drag coefficient
-#    - frontal area: frontal area fo vehicle
 #    - const_dist_offset: minimum distance at standstill
+#    - emergency_profile: emergency jerk profile
+#    - emergency_profile_num_steps_fb: number of steps minimum jerk should be attended to emergency profile
+#    - fov_speed_limit: speed limit based on field of view
+
 ego_vehicle_param:
     vehicle_number: 2
     a_max: 3
@@ -69,30 +74,10 @@ ego_vehicle_param:
     dynamics_param: None
     fov: 200
     v_min: 0
-    v_limit_engine: 50.8
-    drag_coefficient: 0
-    frontal_area: 0
     const_dist_offset: 0
     emergency_profile: []
     emergency_profile_num_steps_fb: 200
     fov_speed_limit: None
-
-
-# Input constraint parameters
-###
-# .. code-block:: yaml
-#
-#    - air_density: air density
-#    - road_incline_angle: incline angle of the road
-#    - v_wind: headwind velocity
-#    - string_stability_horizon: time horizon which is considered for string stability
-#    - string_stability_gamma: parameter for string stability
-input_constr_param:
-    air_density: 0
-    road_incline_angle: 0
-    v_wind: 0
-    string_stability_horizon: 10
-    string_stability_gamma: 0.95
 
 # Other vehicle's parameters
 ###
@@ -105,10 +90,7 @@ input_constr_param:
 #    - a_min: minimum acceleration of leading vehicle
 #    - j_max: maximum jerk of leading vehicle
 #    - j_min: minimum jerk of leading vehicle
-#    - t_react: reaction time of leading vehicle
-#    - th_theta: orientation threshold for cut-in detection
-#    - th_offset: distance to center line threshold for cut-in detection
-#    - n_cutin: number of consecutive time steps for a cut-in occurrence to be finally recognized
+
 other_vehicles_param:
     vehicle_number: 2
     v_max: 60
@@ -117,11 +99,7 @@ other_vehicles_param:
     a_min: -10.5
     j_max: 10
     j_min: -10
-    t_react: 0.0
-    dynamics_param: None
-    th_theta: 0.035
-    th_offset: 0.4
-    n_cutin: 10
+    dynamics_param: None  # TODO replace dynamics parameter with worst case behavior
 
 # Visualization parameters
 ###
@@ -152,14 +130,40 @@ visualization:
     video:
         obstacle_label : false
 
+# Traffic rule information
+###
+#    - traffic rules formalized in temporal logic
+#    - traffic rule parameters
+#    - supported traffic rule sets
+#    - activated traffic rule set
+#    - list of traffic rules which must be evaluated with respect to several other vehicles
 traffic_rule_monitoring:
+    # Traffic rules formalized in metric temporal logic (MTL)
+    ###
+    # .. code-block:: yaml
+    #
+    #   - max_speed_limit: rule which evaluates maximum speed limit
+    #   - min_speed_limit: rule which evaluates minimum speed limit
+    #   - safe_distance: rule which evaluates safe distance
+    #   - no_abrupt_braking: rule which evaluates abrupt braking
     traffic_rules:
         max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit)
         min_speed_limit: G((keeps_flow_min_speed_limit & keeps_sign_min_speed_limit) | close_to_max_velocity)
         safe_distance: G(keeps_safe_distance)
         no_abrupt_braking: G(~(brakes_abruptly))
 
-    traffic_rules_param:
+    # Parameters for traffic rules
+    ###
+    # .. code-block:: yaml
+    #
+    #   - j_min_abrupt:
+    #   - delta_a_abrupt:
+    #   - min_velocity_dif:
+    #   - standstill_error:
+    #   - num_veh_congestion:
+    #   - max_congestion_velocity:
+    #   - max_velocity_limit_free_driving:
+    #   - desired_highway_velocity:
         j_min_abrupt: -2
         delta_a_abrupt: -2
         min_velocity_dif: 10
