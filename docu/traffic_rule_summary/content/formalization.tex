@@ -314,7 +314,7 @@ STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo 
 		& lane is on a off ramp; $3.$ the left vehicle and right vehicle are separated by a broad \\
 		& lane marking;  $4.$ the right vehicle is within an access ramp. For $1.$ and $2.$, the vehicle \\ 
 		& on the right lane is allowed to drive faster than the vehicle on the left lane \\
-		& with a slightly higher speed.\\
+		& with only a slightly higher speed.\\
 		
 		Predicates & $\drivesFasterThanVehicleLeftPredicate$, $\congestionLeftPredicate$, $\otherVehicleLeftOfBroadLaneMarkingPredicate$,\\
 		& $\drivesMaxWithSlightlyHigherSpeedPredicate$, $\rightOfBroadLaneMarkingPredicate$\\
@@ -355,19 +355,87 @@ STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo 
 		
 		Concretization &  A vehicle in a congestion outside urban roads has to drive leftmost if it is in the leftmost \\
 		& lane and has to drive rightmost otherwise. \\
-		& not exceed a certain threshold.\\
 		
-		Predicates & $\minSpeedLimitPredicate$\\
+		Predicates & $\inLeftMostLanePredicate$, $\drivesLeftMostPredicate$\\
 		
 		Comments &  \\
 		
-		LTL & G$(\minSpeedLimitPredicate)$\\
-		MTL & G$(\minSpeedLimitPredicate)$\\
-		STL & G($\vOther^\mathrm{min} - \vEgo \leq v_\mathrm{min}^\mathrm{slow})$\\
+		LTL & G$((\inLeftMostLanePredicate \implies \drivesLeftMostPredicate)$ \\
+		& $\land (\neg \inLeftMostLanePredicate \implies \drivesRightMostPredicate))$\\
+		MTL & G$((\inLeftMostLanePredicate \implies \drivesLeftMostPredicate)$ \\
+		& $\land (\neg \inLeftMostLanePredicate \implies \drivesRightMostPredicate))$\\
+		STL & \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{No reversing}&\\ 
+		\textbf{and turning} &\\
+		\midrule
+		StVO \S 18 (7) & Wenden und Rückwärtsfahren sind verboten.\\
+		
+		StVO English & Making U-turns and reversing are prohibited.\\
+		
+		VCoRT  &  \\
+		
+		Concretization &  Making U-turns and reversing are prohibited.\\
+		
+		Predicates & $\makesUTurnPredicate$, $\reversesPredicate$\\
+		
+		Comments &  \\
+		
+		LTL & G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$ \\
+		MTL & G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$\\
+		STL & \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}[t]{ll}
+		\toprule
+		\textbf{Direction indicator}&\\ 
+		\midrule
+		StVO \S 5 (4a) & Das Ausscheren zum Überholen und das Wiedereinordnen sind rechtzeitig und \\
+		& deutlich  anzukündigen; dabei sind die Fahrtrichtungsanzeiger zu benutzen. \\
+		& The intention of pulling out to overtake and of moving back to the right-hand side \\
+		& of the road are to be signalled clearly and in good time, using the vehicle’s \\
+		& direction indicators to do so.\\
+		&\\
+		StVO \S 7 (5) & [...] Jeder Fahrstreifenwechsel ist rechtzeitig und deutlich anzukündigen; \\
+		& dabei sind die Fahrtrichtungsanzeiger zu benutzen. \\
+		& [...] Any change of lane must be signalized clearly and in good time, \\
+		& using the vehicle’s direction indicators to do so. \\
+		&\\
+		Burmann, et al., &  Der Fahrtrichtungsanzeiger is rechtzeitig bevor Verlassen der Hauptfahrbahn und\\
+		Straßenverkehrsrecht,&  dem Befahren des Ausfädelungsstreifen zu benutzen. Sobald der Ausfädelungsstreifen\\
+		Recital 11  &  befahren wird, soll der Fahrtrichtungsanzeiger deaktiviert werden. \\
+		
+		& The direction indicator shall be timely switched on before leaving \\
+		& the main carriageway and moving to the exit ramp. When the \\
+		& exit ramp had been entered, the direction indicator should be switched off. \\
+		&\\
+		VCoRT  &  \\
+		&\\
+		Concretization &  Any change of lane must be signalized clearly and enough time before \\
+		& entering the new lane, using the vehicle’s direction indicators.\\
+		& When the new lane had been entered, the direction indicator should be switched off.\\
+		&\\
+		Predicates & \\
+		&\\
+		Comments & We assume the exit ramp is long enough so that a vehicle can switch off the direction indicator before the vehicle has to turn the indicator on for a possible intersection.  \\
+		&\\
+		LTL & G$()$ \\
+		MTL & G$()$\\
+		STL & \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
 \subsection{Urban Traffic Rules}
 \label{sec:urban_rules}
