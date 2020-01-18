@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" tags="highway multiple_lanes no_oncoming_traffic parallel_lanes" benchmarkID="test_max_speed_limit" date="2020-01-15">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" tags="highway multiple_lanes no_oncoming_traffic parallel_lanes" benchmarkID="test_max_speed_limit" date="2020-01-18">
   <lanelet id="1">
     <leftBound>
       <point>

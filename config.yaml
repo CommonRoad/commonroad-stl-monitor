@@ -18,7 +18,7 @@
 #    - country: country of scenario
 simulation_param:
     dt: 0.1
-    commonroad_benchmark_id: test_min_speed_limit
+    commonroad_benchmark_id: test_safe_distance
     commonroad_scenario_folder: ./scenarios/test/
     verbose_mode: true
     time_measuring: true
