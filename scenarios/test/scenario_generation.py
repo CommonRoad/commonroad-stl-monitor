@@ -639,17 +639,17 @@ def main():
     config = load_yaml("./../../config.yaml")
     visualization_param = config.get("visualization").get("video")
 
-    # scenario = create_max_speed_limit_scenario()
-    # write_to_file(scenario)
-    # create_scenario_video("./../../videos", scenario, visualization_param, 50)
-    #
-    # scenario = create_min_speed_limit_scenario()
-    # write_to_file(scenario)
-    # create_scenario_video("./../../videos", scenario, visualization_param, 50)
-    #
-    # scenario = create_safe_distance_scenario()
-    # write_to_file(scenario)
-    # create_scenario_video("./../../videos", scenario, visualization_param, 50)
+    scenario = create_max_speed_limit_scenario()
+    write_to_file(scenario)
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_min_speed_limit_scenario()
+    write_to_file(scenario)
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_safe_distance_scenario()
+    write_to_file(scenario)
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_unnecessary_braking_scenario_1()
     write_to_file(scenario)
@@ -658,6 +658,7 @@ def main():
     scenario = create_unnecessary_braking_scenario_2()
     write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
 
 if __name__ == "__main__":
     main()
