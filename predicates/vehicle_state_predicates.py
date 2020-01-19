@@ -19,9 +19,11 @@ class VehicleStatePredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
-    def _brakes_abruptly(self, a_ego: float, j_ego: float, other_vehicles: List[Vehicle], time_step: int) -> bool:
+    def _unnecessary_braking(self, v_ego: float, a_ego: float, j_ego: float, other_vehicles: List[Vehicle],
+                             time_step: int) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly
 
+        :param v_ego: velocity of ego vehicle
         :param a_ego: acceleration of ego vehicle
         :param j_ego: jerk of ego vehicle
         :param other_vehicles: list of other vehicles
@@ -30,21 +32,40 @@ class VehicleStatePredicateCollection(PredicateCollection):
         """
         if a_ego >= 0:
             return False
+        if self.velocity_reduction_necessary(v_ego):
+            return False
 
-        a_min_other = 100
+        a_min_other = None
         for veh in other_vehicles:
             if veh.classification[time_step] == VehicleLocalization.EGO_LANE_FRONT:
-                if veh.states_lon[time_step].a < a_min_other:
+                if a_min_other is None or veh.states_lon[time_step].a < a_min_other:
                     a_min_other = veh.states_lon[time_step].a
 
-        if a_min_other == 100 and j_ego < self._traffic_rule_param.get("j_min_abrupt"):  # no leading vehicle
+        if a_min_other is None and (a_ego < self._traffic_rule_param.get("a_abrupt") or
+                                    j_ego < self._traffic_rule_param.get("j_abrupt")):
+            # no leading vehicle
             return True
-
-        if j_ego < self._traffic_rule_param.get("j_min_abrupt") and \
-                a_ego - a_min_other < self._traffic_rule_param.get("delta_a_abrupt"):
+        elif a_min_other is not None and j_ego < self._traffic_rule_param.get("j_abrupt") and \
+                a_ego - a_min_other < self._traffic_rule_param.get("a_abrupt"):
             return True
+        else:
+            return False
 
-        return False
+    def velocity_reduction_necessary(self, velocity: float):
+        """
+        Predicate to check whether a velocity reduction is necessary caused of safety reasons (currently only maximum
+        velocity based on field of view and road conditions is evaluated, but active emergency maneuver or other
+        information could also be considered)
+
+        :param velocity: velocity of ego vehicle
+        :return: boolean indicating satisfaction
+        """
+        v_max = min(self._ego_vehicle_param.get("road_condition_speed_limit"),
+                    self._ego_vehicle_param.get("fov_speed_limit"))
+        if v_max < velocity:
+            return True
+        else:
+            return False
 
     def _keeps_lane_speed_limit(self, velocity: float, lanelet_ids: Set[int]) -> bool:
         """
@@ -283,7 +304,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
                            "keeps_sign_min_speed_limit": {ego_vehicle.id: {}},
                            "keeps_braking_speed_limit": {ego_vehicle.id: {}},
                            "keeps_road_condition_speed_limit": {ego_vehicle.id: {}},
-                           "brakes_abruptly": {ego_vehicle.id: {}},
+                           "unnecessary_braking": {ego_vehicle.id: {}},
                            "keeps_safe_distance": {}}
 
         for idx in range(len(ego_vehicle.state_list_cr)):
@@ -300,8 +321,9 @@ class VehicleStatePredicateCollection(PredicateCollection):
                 self._preserves_traffic_flow(ego_vehicle, other_vehicles, idx)
             predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
-            predicate_trace["brakes_abruptly"][ego_vehicle.id][time_step] = \
-                self._brakes_abruptly(ego_vehicle.states_lon[idx].a, ego_vehicle.jerk_profile[idx], other_vehicles, idx)
+            predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
+                self._unnecessary_braking(ego_vehicle.states_lon[idx].v, ego_vehicle.states_lon[idx].a,
+                                          ego_vehicle.jerk_profile[idx], other_vehicles, idx)
 
         for other_vehicle in other_vehicles:
             for idx in range(len(other_vehicle.state_list_cr)):

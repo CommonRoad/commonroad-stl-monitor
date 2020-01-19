@@ -133,10 +133,8 @@ and \timeDelay denotes the reaction time of the ego vehicle.
 \subsection{Unnecessary braking}
 \begin{align}
 \begin{split}
-&\mathtt{unnecessary\_braking} \iff \\ 
-& a_\mathrm{ego} < 0 \land j_\mathrm{ego} < j_\mathrm{abrupt} \land \nexists \ V' \in \ \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land \speedLimitLane \neq \emptyset  \\ 
-& \lor \exists V' \in \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt} \\ 
-& \lor  \big(\speedLimitLane \neq \emptyset  \land a_\mathrm{ego}  <  a_\mathrm{abrupt} \land j_\mathrm{ego}  <  j_\mathrm{abrupt}\big)
+&\mathtt{unnecessary\_braking} \iff (\velocityReductionNecessary \land \aEgo < 0) \implies\\
+& \jEgo < \jAbrupt \land \nexists \ V' \in \ \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V'  \\ 
+& \lor \exists V' \in \mathbb{V} : \vehiclesInFrontOfEgoVehicleFunction = V' \land (\aEgo - \aOther) <  \aAbrupt \land \jEgo  <  \jAbrupt \big)
 \end{split}
 \end{align}
-\todo{future traffic signs velocity limits through environmental conditions}
