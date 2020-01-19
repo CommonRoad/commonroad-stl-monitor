@@ -27,24 +27,21 @@ Rules are formalized to account for general situations, e.g. the handling after 
 StVO \S 4 (1)& Der Abstand zu einem vorausfahrenden Fahrzeug muss in der Regel \\ 
 & so groß sein, dass auch dann hinter diesem gehalten werden kann, wenn es plötzlich  \\
 & gebremst wird.\\
-
-StVO English & A person operating a vehicle moving behind another vehicle must, as a rule,\\
+& A person operating a vehicle moving behind another vehicle must, as a rule,\\
 & keep a sufficient distance from that other vehicle so as to be able to pull up safely \\
-& even if it suddenly slows down or stops.\\
-
+& even if it suddenly slows down or stops. \\
+&\\
 VCoRT \S 13 (5) & The  driver  of  a  vehicle  moving  behind  another  vehicle  shall  keep  at \\ 
 & a  sufficient distance from that other vehicle to avoid collision if the vehicle in front \\ 
 & should suddenly slow down or stop. \\
-
+&\\
 Concretization &  A vehicle moving behind other vehicles within a lane must keep a \\ 
 & distance which ensures collision freedom to each of these other vehicles even if one\\ 
 &  or several of them are suddenly slow down or stop.\\
-
-Predicates & $\safeDistanceFrontPredicate$\\ 
-
+&\\
 Comments &  Evaluated for all vehicles for which the following condition is valid: \\
 & $\onSameLaneAsEgoVehiclePredicate \land \frontOfEgoVehiclePredicate$\\
-
+&\\
 LTL & G$(\safeDistanceFrontPredicate)$\\
 MTL & G$(\safeDistanceFrontPredicate)$\\
 STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle) - \frontPositionFunction(\egoVehicle)))$\\
@@ -62,27 +59,22 @@ STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle
 		\midrule
 		StVO \S 2 (2)& Es ist möglichst weit rechts zu fahren, nicht nur bei Gegenverkehr, \\
 		& beim Überholtwerden, an Kuppen, in Kurven oder bei Unübersichtlichkeit. \\ 
-		
-		StVO English & Drivers and riders must always keep as far to the right as possible, not only when \\
+		& Drivers and riders must always keep as far to the right as possible, not only when \\
 		& traffic is approaching from the opposite direction, when being overtaken, \\
 		& when approaching the brow of a hill, on bends or when their view ahead is obstructed.\\
-		
+		&\\
 		VCoRT \S 12 (1) & When passing oncoming traffic, a driver shall leave sufficient lateral space and, \\
 		& if necessary, move close to the edge of the carriageway appropriate to the direction of traffic. \\
 		& If in so doing he finds his progress impeded by an obstruction or by the presence of other \\ 
 		& road-users, he shall slow down and if necessary stop to allow the oncoming road-user \\
 		& or road-users to pass. \\
-		
+		&\\
 		Concretization &  If there exist only one lane on a road and vehicles can drive in both directions on this lane, \\
 		& the ego vehicle should drive as to the right as possible. If there exist at least one lane \\
 		& for each driving direction and the ego vehicle's lane is at least as broad as the ego vehicle \\
 		& or there is no adjacent lane in opposite driving direction, the ego vehicle should \\
 		& drive in the lane center.\\
-				
-		Predicates & \\ 
-		
-		Comments &  \\
-		
+		&\\
 		LTL & G$((\onlyOnLanePredicate \land \noLaneInOppositeDirectionPredicate \implies \drivesFarRightInLanePredicate)   $\\
 		& $ \land (\twoLanesWithDifferentDirectionsPredicate \land \egoLaneBroadEnoughPredicate$ \\
 		& $\implies \drivesOnLaneCenterPredicate))$\\
@@ -100,32 +92,25 @@ STL & G$(\safeDistance(\vEgo, \vOther) \leq (\rearPositionFunction(\otherVehicle
 \toprule
 \textbf{Unnecessary braking} & \\
 \midrule
-StVO \S 4 (1) & Wer vorausfährt, darf nicht ohne zwingenden
-Grund stark bremsen.\\
- & \\
-StVO English & The person operating the vehicle in front must not brake suddenly \\
-& without a compelling reason.\\
-
-
-VCoRT \S 17 (1) &  No driver of a vehicle shall brake abruptly unless it is necessary to do so for\\
-&  safety reasons.\\
-
-Concretization &  A vehicle shall never brake abruptly unless it has a reason to do so. \\
-& A vehicle brakes abruptly if: \\
-& 1. The vehicle brakes although there is no leading vehicle and there is reason caused by \\
-& a traffic regulation to reduce its velocity; \\ 
-& 2. There is an obstacle in front of the vehicle and the acceleration difference and \\
-& jerk difference between the vehicle and the obstacle violate thresholds; \\
-& 3. The maximum allowed speed will change or changed due to traffic \\
-& signs or environmental conditions.\\
-
-Predicates & $\unnecessaryBraking$\\
-
-Comments & \\
-
-LTL & G$(\unnecessaryBraking)$\\
-MTL & G$(\unnecessaryBraking)$\\
-STL & \\
+	StVO \S 4 (1) & Wer vorausfährt, darf nicht ohne zwingenden Grund stark bremsen.\\
+	& The person operating the vehicle in front must not brake suddenly \\
+	& without a compelling reason.\\
+	&\\
+	VCoRT \S 17 (1) &  No driver of a vehicle shall brake abruptly unless it is necessary to do so for\\
+	&  safety reasons.\\
+	&\\
+	Concretization &  A vehicle shall never brake abruptly unless it has a reason to do so. \\
+	& A vehicle brakes abruptly if: \\
+	& 1. The vehicle brakes although there is no leading vehicle and there is reason caused by \\
+	& a traffic regulation to reduce its velocity; \\ 
+	& 2. There is an obstacle in front of the vehicle and the acceleration difference and \\
+	& jerk difference between the vehicle and the obstacle violate thresholds; \\
+	& 3. The maximum allowed speed will change or changed due to traffic \\
+	& signs or environmental conditions.\\
+	&\\
+	LTL & G$(\unnecessaryBraking)$\\
+	MTL & G$(\unnecessaryBraking)$\\
+	STL & \\
 \bottomrule
 \end{tabular}
 \end{table}%
@@ -144,17 +129,11 @@ STL & \\
 		 & flüssigen Verkehr zu gewährleisten, wie die Autobahnen selbst, Zufahrtswege \\
 		 & oder dem Seitenstreifen, ist verboten. \\
 		StVO English & \\
-		
-		
+		&\\
 		VCoRT \S 17 (1) &  \\
-		
+		&\\
 		Concretization & Stopping on the main carriage way, shoulder lane, and ramps is forbidden.  \\
-		
-		Predicates & $\inCongestion$,$\onAccessRampPredicate$, $\onExitRampPredicate$, \\
-		& $\onMainCarriageWayPredicate$, $\onShoulderPredicate$, $\inStandStillPredicate$ \\
-		
-		Comments & \\
-		
+		&\\
 		LTL & G$(\neg \inCongestion \land (\onAccessRampPredicate \lor \onExitRampPredicate $ \\
 		& $\lor \onMainCarriageWayPredicate \lor \onShoulderPredicate) \implies \neg \inStandStillPredicate)$\\
 		MTL & G$(\neg \inCongestion \land (\onAccessRampPredicate \lor \onExitRampPredicate $ \\
@@ -171,37 +150,33 @@ STL & \\
 \toprule
 \textbf{Maximum Speed Limit} &\\
 \midrule
-StVO \S 3 (1), \S 3 (3),  & The legal text is omitted for reasons of space.\\
-\S 18 (1), \S 18 (5), \S 18 (6) & \\
-StVO English & The legal text is omitted for reasons of space.\\
-
-VCoRT \S 13 (2) &  Domestic legislation shall establish maximum speed limits for all roads. \\
-& Domestic legislation shall also determine special speed limits applicable \\ 
-& to certain categories of vehicles presenting a special danger, in particular by reason \\ & of their mass or their  load. They may establish similar provisions \\
-& for certain categories of drivers, in particular for new drivers.\\
-
-Concretization &  A vehicle shall not exceed the allowed speed limit of the lanes it drives on, shall \\
-& not exceed the speed limit which is necessary to ensure collision freedom with \\
-& respect to vehicles outside the field of view, and shall not exceed as speed which \\
-& is necessary to comfortably ensure traffic regulations.\\
-
-Predicates & $\laneSpeedLimitPredicate$, $\fovSpeedLimitPredicate$, \\
-& $\brakingSpeedLimitPredicate$, $\roadConditionSpeedLimitPredicate$\\
-
-Comments &  The traffic laws do not provide concrete information about speed limit, \\ 
-& e.g., the VCoRT passes the task of defining speed limits to national lawmakers. \\
-& The concretization assumes that a mapping of speed limits provided \\ 
-& by traffic signs to lanes is given. If no speed limit is given, \\ 
-& the speed limit caused by the field of view (traffic sign based speed limit set \\ 
-& to infinity) and a speed limit which ensures comfortable braking for traffic regulations \\
-& (e.g., upcoming speed limit) must be considered. The velocity with respect to vehicles \\
-& inside the field of view is considered in the safe distance traffic rule concretization.\\
-
-LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$ \\
-& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
-MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$\\
-& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
-STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo \leq \speedLimitBraking \land \vEgo \leq \speedLimitWeather)$\\ 
+	StVO \S 3 (1), \S 3 (3),  & The legal text is omitted for reasons of space.\\
+	\S 18 (1), \S 18 (5), \S 18 (6) & \\
+	&\\
+	VCoRT \S 13 (2) &  Domestic legislation shall establish maximum speed limits for all roads. \\
+	& Domestic legislation shall also determine special speed limits applicable \\ 
+	& to certain categories of vehicles presenting a special danger, in particular by reason \\ & of their mass or their  load. They may establish similar provisions \\
+	& for certain categories of drivers, in particular for new drivers.\\
+	&\\
+	Concretization &  A vehicle shall not exceed the allowed speed limit of the lanes it drives on, shall \\
+	& not exceed the speed limit which is necessary to ensure collision freedom with \\
+	& respect to vehicles outside the field of view, and shall not exceed as speed which \\
+	& is necessary to comfortably ensure traffic regulations.\\
+	&\\
+	Comments &  The traffic laws do not provide concrete information about speed limit, \\ 
+	& e.g., the VCoRT passes the task of defining speed limits to national lawmakers. \\
+	& The concretization assumes that a mapping of speed limits provided \\ 
+	& by traffic signs to lanes is given. If no speed limit is given, \\ 
+	& the speed limit caused by the field of view (traffic sign based speed limit set \\ 
+	& to infinity) and a speed limit which ensures comfortable braking for traffic regulations \\
+	& (e.g., upcoming speed limit) must be considered. The velocity with respect to vehicles \\
+	& inside the field of view is considered in the safe distance traffic rule concretization.\\
+	&\\
+	LTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$ \\
+	& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
+	MTL & G$(\laneSpeedLimitPredicate \land \fovSpeedLimitPredicate \land$\\
+	& $\brakingSpeedLimitPredicate \land \roadConditionSpeedLimitPredicate)$\\
+	STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo \leq \speedLimitBraking \land \vEgo \leq \speedLimitWeather)$\\ 
 \bottomrule
 \end{tabular}
 \end{table}
@@ -212,39 +187,30 @@ STL & G($\vEgo \leq \speedLimitLane \land \vEgo \leq \speedLimitFOV \land \vEgo 
 		\toprule
 		\textbf{Minimum Speed Limit} &\\
 		\midrule
-		StVO \S 3 (2), sign $275$ & Ohne triftigen Grund dürfen Kraftfahrzeuge nicht so langsam fahren, dass sie\\
+		StVO \S 3 (2)  & Ohne triftigen Grund dürfen Kraftfahrzeuge nicht so langsam fahren, dass sie\\
 		& den Verkehrsfluss behindern.\\
-		& \\
-		& Zeichen 275: Wer ein Fahrzeug führt, darf nicht langsamer als mit der angegebenen \\ 
+		& No motor vehicle must, without good reason, travel so slowly as to impede\\ 
+		& the flow of traffic.\\
+		sign $275$ &  Wer ein Fahrzeug führt, darf nicht langsamer als mit der angegebenen \\ 
 		& Mindestgeschwindigkeit fahren, sofern nicht Straßen-, Verkehrs-, Sicht- oder \\ 
 		& Wetterverhältnisse dazu verpflichten. Es verbietet, mit Fahrzeugen, die nicht so \\
 		& schnell fahren können oder dürfen, einen so gekennzeichneten Fahrstreifen zu benutzen. \\
-		
-		StVO English & No motor vehicle must, without good reason, travel so slowly as to impede\\ 
-		& the flow of traffic.\\
-		& \\
 		& A person operating a vehicle must not do so below the indicated minimum speed \\ 
 		& unless road, traffic, visibility or weather conditions make this necessary.  \\
 		& This sign prohibits vehicles that are unable or not permitted to travel as fast from \\
 		& using a lane marked in this manner. \\
-		
+		&\\
 		VCoRT \S 13 (2) &  Similar to maximum speed limit.\\
-		
-		Concretization &  The relative velocity of a vehicle with respect to leading and following vehicles should \\
-		& not exceed a certain threshold.\\
-		
-		Predicates & $\minSpeedLimitPredicate$, $\preservesTrafficFlowPredicate$\\
-		
-		Comments &  \\
-		
+		&\\
+		Concretization & A vehicle shall consider the minimum speed limit based on a corresponding \\
+		& traffic sign and should not travel so slowly to impede traffic flow. \\
+		&\\
 		LTL & G$(\minSpeedLimitPredicate \land \preservesTrafficFlowPredicate)$\\
 		MTL & G$(\minSpeedLimitPredicate \land \preservesTrafficFlowPredicate)$\\
 		STL & G$()$\\
 		\bottomrule
 	\end{tabular}
 \end{table}
-
-
 
 
 \subsection{Highway Traffic Rules}

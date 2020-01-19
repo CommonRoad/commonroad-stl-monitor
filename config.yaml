@@ -18,7 +18,7 @@
 #    - country: country of scenario
 simulation_param:
     dt: 0.1
-    commonroad_benchmark_id: test_safe_distance
+    commonroad_benchmark_id: test_min_speed_limit
     commonroad_scenario_folder: ./scenarios/test/
     verbose_mode: true
     time_measuring: true
@@ -61,6 +61,7 @@ road_network_param:
 #    - emergency_profile: emergency jerk profile
 #    - emergency_profile_num_steps_fb: number of steps minimum jerk should be attended to emergency profile
 #    - fov_speed_limit: speed limit based on field of view
+#    - braking_speed_limit: speed limit to ensure comfortable braking within field of view
 
 ego_vehicle_param:
     vehicle_number: 2
@@ -78,6 +79,8 @@ ego_vehicle_param:
     emergency_profile: []
     emergency_profile_num_steps_fb: 200
     fov_speed_limit: None
+    braking_speed_limit: None
+    road_condition_speed_limit: 50
 
 # Other vehicle's parameters
 ###
@@ -147,8 +150,8 @@ traffic_rule_monitoring:
     #   - safe_distance: rule which evaluates safe distance
     #   - no_abrupt_braking: rule which evaluates abrupt braking
     traffic_rules:
-        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit)
-        min_speed_limit: G((keeps_flow_min_speed_limit & keeps_sign_min_speed_limit) | close_to_max_velocity)
+        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit)
+        min_speed_limit: G(preserves_traffic_flow & keeps_sign_min_speed_limit)
         safe_distance: G(keeps_safe_distance)
         no_abrupt_braking: G(~(brakes_abruptly))
 
@@ -164,6 +167,7 @@ traffic_rule_monitoring:
     #   - max_congestion_velocity:
     #   - max_velocity_limit_free_driving:
     #   - desired_highway_velocity:
+    traffic_rules_param:
         j_min_abrupt: -2
         delta_a_abrupt: -2
         min_velocity_dif: 10

@@ -408,11 +408,11 @@ def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id
 
 def create_max_speed_limit_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
-                                            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                            1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 34, np.array([3.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 3, 3,
+                                            3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                            3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                            1, 1, 1, 0, 0, 0, 0, 0, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 31.5, np.array([3.0, 1.75]), 1000)
     obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -446,12 +446,12 @@ def create_min_speed_limit_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 5, np.array([3.0, 1.75]), 1000)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([3.0, 1.75]), 1000)
     obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([13.0, 1.75]), 1001)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([13.0, 1.75]), 1001)
     obs3 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -461,32 +461,27 @@ def create_min_speed_limit_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 15, np.array([13.0, 5.25]), 1003)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 10, np.array([13.0, 5.25]), 1003)
     obs5 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 25, np.array([22.0, 5.25]), 1004)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([22.0, 5.25]), 1004)
     obs6 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 8.75]), 1005)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 5, np.array([100.0, 8.75]), 1005)
     obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([13.0, 8.75]), 1006)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 12.25]), 1006)
     obs8 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 12.25]), 1007)
-    obs9 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([13.0, 12.25]), 1008)
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([3.0, 15.75]), 1007)
 
     obstacles.append(obs1)
     obstacles.append(obs2)
@@ -496,14 +491,16 @@ def create_min_speed_limit_scenario():
     obstacles.append(obs6)
     obstacles.append(obs7)
     obstacles.append(obs8)
-    obstacles.append(obs9)
-    scenario = create_straight_scenario("test_min_speed_limit", 0.1, 4, 5, 200, obstacles)
-    traffic_sign_elem_1 = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(22.22)])
+    num_lanes = 5
+    num_lanelets = 5
+    road_length = 200
+    scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+    traffic_sign_elem_1 = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(40)])
     traffic_sign_1 = TrafficSign(201, [traffic_sign_elem_1])
     traffic_sign_elem_2 = TrafficSignElement(TrafficSignIDGermany.MINSPEED.value, [str(30)])
     traffic_sign_2 = TrafficSign(202, [traffic_sign_elem_2])
     scenario.lanelet_network.add_traffic_sign(traffic_sign_1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
-    scenario.lanelet_network.add_traffic_sign(traffic_sign_2, {16, 17, 18, 19, 20})
+    scenario.lanelet_network.add_traffic_sign(traffic_sign_2, {16, 17, 18, 19, 20, 21, 22, 23, 24, 25})
 
     return scenario
 
@@ -554,7 +551,7 @@ def create_safe_distance_scenario():
     obstacles.append(obs7)
     num_lanes = 3
     num_lanelets = 10
-    road_length = 100
+    road_length = 250
     scenario = create_straight_scenario("test_safe_distance", 0.1, num_lanes, num_lanelets, road_length, obstacles)
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(22.22)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem])

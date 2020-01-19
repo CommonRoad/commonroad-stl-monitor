@@ -119,7 +119,7 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict, traffic_
         traffic_rule_param.get("max_velocity_limit_free_driving")
     v_ego = v_max_delta
     a_min = traffic_rule_param.get("delta_a_abrupt")
-    emergency_profile = 200 * [traffic_rule_param.get("j_min_abrupt")]
+    emergency_profile = 2500 * [traffic_rule_param.get("j_min_abrupt")]
     a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance, t_react, v_max, v_min = \
         init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego)
     while dist_offset <= 0 or dist_offset >= 0.5 \

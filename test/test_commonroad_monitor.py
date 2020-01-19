@@ -44,68 +44,91 @@ class TestCommonRoadMonitor(unittest.TestCase):
         return vehicle
 
     def test_keeps_max_lane_speed_limit(self):
-        # trajectory which always violates speed limit
-        # two trajectories which never violate speed limit
-        # trajectory which violates speed limit partially
+        # one vehicle which always violates speed limit (1002)
+        # two vehicles which never violate speed limit (1001, 1003)
+        # one vehicle which violates speed limit partially (1000)
 
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
         self.activated_traffic_rule_sets = [1]
-        exp_result = [(100, {'max_speed_limit': False}), (101, {'max_speed_limit': True}),
-                      (102, {'max_speed_limit': False}), (103, {'max_speed_limit': True})]
+        exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': True}),
+                      (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         result = self.execute_test(scenario)
         print("Max Lane Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
     def test_keeps_fov_speed_limit(self):
-        # two trajectories which always violate speed limit
-        # trajectory which never violates speed limit
-        # trajectory which violates speed limit partially
+        # two vehicles which always violate speed limit (1001, 1002)
+        # one vehicle which never violates speed limit (1003)
+        # one vehicle which violates speed limit partially (1000)
 
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
         self.activated_traffic_rule_sets = [1]
-        exp_result = [(100, {'max_speed_limit': False}), (101, {'max_speed_limit': False}),
-                      (102, {'max_speed_limit': False}), (103, {'max_speed_limit': True})]
-        self.ego_vehicle_param["fov"] = 100
-        self.ego_vehicle_param = create_ego_vehicle_param(self.ego_vehicle_param, self.simulation_param,
-                                                          self.traffic_rules_param)
+        exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
+                      (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
+        self.ego_vehicle_param["fov_speed_limit"] = 32
         result = self.execute_test(scenario)
         print("Max FOV Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
+    def test_keeps_braking_speed_limit(self):
+        # two vehicles which always violate speed limit (1001, 1002)
+        # one vehicle which never violates speed limit (1003)
+        # one vehicle which violates speed limit partially (1000)
+
+        scenario, planning_problem_set = \
+            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
+                                 "/" + "test_max_speed_limit.xml").open()
+        self.activated_traffic_rule_sets = [1]
+        exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
+                      (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
+        self.ego_vehicle_param["fov_speed_limit"] = 32
+        result = self.execute_test(scenario)
+        print("Max Braking Speed Limit Test:")
+        print(result)
+        self.assertEqual(exp_result, result)
+
     def test_keeps_min_speed_limit(self):
-        # three vehicles without leading vehicle
-        # one vehicle which drives to slow compared to second leading vehicle
-        # one vehicle which drives to slow compared to directly leading vehicle
+        # two lanes with minimum speed limit sign
+        # one vehicle which keeps minimum speed limit based on sign (1006)
+        # one vehicle which violates minimum speed limit based on sign (1007)
+        # two vehicles which preserves traffic flow (1001 ,1004)
+        # two vehicles without following vehicle (1000, 1002)
+        # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
+        # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
 
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_min_speed_limit.xml").open()
         self.activated_traffic_rule_sets = [2]
-        exp_result = [(100, {'min_speed_limit': False}), (101, {'min_speed_limit': True}),
-                      (102, {'min_speed_limit': False}), (103, {'min_speed_limit': True}),
-                      (104, {'min_speed_limit': True}), (105, {'min_speed_limit': True}),
-                      (106, {'min_speed_limit': True}), (107, {'min_speed_limit': False}),
-                      (108, {'min_speed_limit': True})]
+        exp_result = [(1000, {'min_speed_limit': True}), (1001, {'min_speed_limit': True}),
+                      (1002, {'min_speed_limit': True}), (1003, {'min_speed_limit': False}),
+                      (1004, {'min_speed_limit': True}), (1005, {'min_speed_limit': False}),
+                      (1006, {'min_speed_limit': False}), (1007, {'min_speed_limit': True})]
         result = self.execute_test(scenario)
         print("Min Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
 
     def test_keeps_safe_distance(self):
+        # three vehicles which have no leading vehicle (1001, 1004, 1006)
+        # one vehicle which violates safe distance to directly leading vehicle (1003)
+        # one vehicle which violates safe distance to two leading vehicles (1002)
+        # one vehicle which violates safe distance partially (1000)
+        # one vehicle which always keeps safe distance (1005)
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_safe_distance.xml").open()
         self.activated_traffic_rule_sets = [3]
-        exp_result = [(100, {'safe_distance_veh_101': False}), (101, {'safe_distance': True}),
-                      (102, {'safe_distance_veh_103': False, 'safe_distance_veh_104': False}),
-                      (103, {'safe_distance_veh_104': False}), (104, {'safe_distance': True}),
-                      (105, {'safe_distance_veh_106': True}), (106, {'safe_distance': True})]
+        exp_result = [(1000, {'safe_distance_veh_1001': False}), (1001, {'safe_distance': True}),
+                      (1002, {'safe_distance_veh_1003': False, 'safe_distance_veh_1004': False}),
+                      (1003, {'safe_distance_veh_1004': False}), (1004, {'safe_distance': True}),
+                      (1005, {'safe_distance_veh_1006': True}), (1006, {'safe_distance': True})]
         result = self.execute_test(scenario)
         print("Safe Distance Test:")
         print(result)
