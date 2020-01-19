@@ -1,0 +1,127 @@
+from common.configuration import *
+from monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
+from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.scenario.obstacle import DynamicObstacle
+from common.vehicle import Vehicle
+from common.road_network import RoadNetwork
+from commonroad.scenario.scenario import Scenario
+from typing import List, Dict, Tuple
+import copy
+import os
+
+
+class CommonRoadObstacleEvaluation:
+    def __init__(self):
+        config = load_yaml("./../config.yaml")
+        self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
+        self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
+        self._traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
+        self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param,
+                                                          self._traffic_rules_param)
+        self._traffic_rule_sets = config.get("traffic_rule_monitoring").get("traffic_rule_sets")
+        self._traffic_rules = config.get("traffic_rule_monitoring").get("traffic_rules")
+        self._activated_traffic_rule_sets = config.get("traffic_rule_monitoring").get("activated_traffic_rule_sets")
+        self._vehicle_dependent_rules = config.get("traffic_rule_monitoring").get("vehicle_dependent_rules")
+        self._road_network_param = config.get("road_network_param")
+        self._road_network = None  # updated in each test case
+
+        self._max_speed_limit_satisfaction = 0
+        self._min_speed_limit_satisfaction = 0
+        self._safe_distance_satisfaction = 0
+        self._no_unnecessary_braking_satisfaction = 0
+        self._num_vehicles = 0
+
+    def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
+        lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, obstacle.initial_state.time_step)
+        state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
+        vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                          obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
+                          obstacle.initial_lanelet_ids, obstacle.initial_signal_state)
+
+        for state in obstacle.prediction.trajectory.state_list:
+            lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, state.time_step)
+            vehicle.append_state_cr(state, state.time_step)
+            state_lon, state_lat = lane.create_curvilinear_states(state)
+            vehicle.append_state_lon(state_lon, state.time_step)
+            vehicle.append_state_lat(state_lat, state.time_step)
+            vehicle.append_lanelet_assignment(obstacle.prediction.lanelet_assignment[state.time_step],
+                                              state.time_step)
+            vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
+
+        return vehicle
+
+    def _execute_evaluation(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
+        self._road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
+        dispatcher = TrafficRuleDispatcher(self._traffic_rules, self._traffic_rule_sets, self._road_network,
+                                           self._simulation_param, self._ego_vehicle_param, self._other_vehicles_param,
+                                           self._traffic_rules_param, self._activated_traffic_rule_sets,
+                                           self._vehicle_dependent_rules)
+        vehicle_evaluation = []
+
+        vehicles = []
+        for obs in scenario.dynamic_obstacles:
+            vehicles.append(self.create_vehicle(obs))
+
+        for idx, ego_veh in enumerate(vehicles):
+            other_vehicles = copy.deepcopy(vehicles)
+            other_vehicles.pop(idx)
+            self.add_acceleration(ego_veh)
+            self.add_jerk(ego_veh)
+            vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
+
+        return vehicle_evaluation
+
+    def add_jerk(self, vehicle: Vehicle):
+        for idx, state in enumerate(vehicle.state_list_cr):
+            if vehicle.jerk_profile.get(state.time_step) is None:
+                if idx + 1 < len(vehicle.state_list_cr):
+                    jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / \
+                           self._simulation_param.get("dt")
+                else:
+                    jerk = 0
+                vehicle.append_jerk(jerk, state.time_step)
+        return vehicle
+
+    def add_acceleration(self, vehicle: Vehicle):
+        for idx, state in enumerate(vehicle.state_list_cr):
+            if hasattr(state, "acceleration") is False:
+                if idx + 1 < len(vehicle.state_list_cr):
+                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
+                           self._simulation_param.get("dt")
+                else:
+                    acceleration = 0
+                vehicle.state_list_cr[idx].acceleration = acceleration
+                vehicle.states_lon[state.time_step].a = acceleration
+        return vehicle
+
+    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
+        self._activated_traffic_rule_sets = activated_traffic_rule_set
+        result = self._execute_evaluation(scenario)
+        print(result)
+
+
+def main():
+    cr_eval = CommonRoadObstacleEvaluation()
+    scenarios = []
+    root_dir = "./../../../../commonroad/scenarios/tum_cps/scenarios"
+
+    for subdir, dirs, files in os.walk(root_dir):
+        for directory in dirs:
+            if directory == "cooperative":
+                continue
+            for filename in os.listdir(subdir + "/" + directory):
+                if not filename.endswith('.xml') or "_S-" in filename:
+                    continue
+                fullname = os.path.join(subdir + "/" + directory, filename)
+                scenario, planning_problem_set = \
+                    CommonRoadFileReader(fullname).open()
+                if "highway" in scenario.tags:
+                    scenarios.append(scenario)
+
+    for sc in scenarios[0:2]:
+        print(sc.benchmark_id)
+        cr_eval.evaluate_scenario(sc, [0])
+
+
+if __name__ == "__main__":
+    main()

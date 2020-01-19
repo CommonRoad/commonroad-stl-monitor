@@ -635,6 +635,7 @@ def create_unnecessary_braking_scenario_2():
 
     return scenario
 
+
 def main():
     config = load_yaml("./../../config.yaml")
     visualization_param = config.get("visualization").get("video")

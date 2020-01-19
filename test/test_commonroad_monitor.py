@@ -51,10 +51,10 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [1]
+        self.activated_traffic_rule_sets = [2]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': True}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Max Lane Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -67,11 +67,11 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [1]
+        self.activated_traffic_rule_sets = [2]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         self.ego_vehicle_param["fov_speed_limit"] = 32
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Max FOV Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -84,11 +84,11 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [1]
+        self.activated_traffic_rule_sets = [2]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         self.ego_vehicle_param["fov_speed_limit"] = 32
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Max Braking Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -105,12 +105,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_min_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [2]
+        self.activated_traffic_rule_sets = [3]
         exp_result = [(1000, {'min_speed_limit': True}), (1001, {'min_speed_limit': True}),
                       (1002, {'min_speed_limit': True}), (1003, {'min_speed_limit': False}),
                       (1004, {'min_speed_limit': True}), (1005, {'min_speed_limit': False}),
                       (1006, {'min_speed_limit': False}), (1007, {'min_speed_limit': True})]
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Min Speed Limit Test:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -124,12 +124,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_safe_distance.xml").open()
-        self.activated_traffic_rule_sets = [3]
+        self.activated_traffic_rule_sets = [4]
         exp_result = [(1000, {'safe_distance_veh_1001': False}), (1001, {'safe_distance': True}),
                       (1002, {'safe_distance_veh_1003': False, 'safe_distance_veh_1004': False}),
                       (1003, {'safe_distance_veh_1004': False}), (1004, {'safe_distance': True}),
                       (1005, {'safe_distance_veh_1006': True}), (1006, {'safe_distance': True})]
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Safe Distance Test:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -145,12 +145,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_unnecessary_braking_1.xml").open()
-        self.activated_traffic_rule_sets = [4]
+        self.activated_traffic_rule_sets = [5]
         exp_result = [(1000, {'no_unnecessary_braking': True}), (1001, {'no_unnecessary_braking': True}),
                       (1002, {'no_unnecessary_braking': False}), (1003, {'no_unnecessary_braking': False}),
                       (1004, {'no_unnecessary_braking': False}), (1005, {'no_unnecessary_braking': True}),
                       (1006, {'no_unnecessary_braking': True}), (1007, {'no_unnecessary_braking': True})]
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Unnecessary Braking Test 1:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -160,10 +160,10 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_unnecessary_braking_2.xml").open()
-        self.activated_traffic_rule_sets = [4]
+        self.activated_traffic_rule_sets = [5]
         self.ego_vehicle_param["fov_speed_limit"] = 5
         exp_result = [(1000, {'no_unnecessary_braking': True})]
-        result = self.execute_test(scenario)
+        result = self.execute_evaluation(scenario)
         print("Unnecessary Braking Test 2:")
         print(result)
         self.assertEqual(exp_result, result)
@@ -191,7 +191,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                 vehicle.states_lon[state.time_step].a = acceleration
         return vehicle
 
-    def execute_test(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
+    def execute_evaluation(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         self.road_network = RoadNetwork(scenario.lanelet_network, self.road_network_param)
         dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, self.road_network,
                                            self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
