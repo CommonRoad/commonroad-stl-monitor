@@ -3,7 +3,7 @@ from commonroad.scenario.trajectory import State
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
 import numpy as np
 from common.vehicle import StateLongitudinal, StateLateral
-from pycrccosy import SegmentCoordinateSystem
+from pycrccosy import CurvilinearCoordinateSystem
 from typing import Tuple, List, Set, Dict
 
 
@@ -34,7 +34,7 @@ class Lane:
         return self._contained_lanelets
 
     @staticmethod
-    def _create_curvilinear_coordinate_system_from_lanelet(ref_path: np.array) -> SegmentCoordinateSystem:
+    def _create_curvilinear_coordinate_system_from_lanelet(ref_path: np.array) -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
 
@@ -46,7 +46,7 @@ class Lane:
             new_ref_path = chaikins_corner_cutting(ref_path)
         new_ref_path = resample_polyline(new_ref_path, 0.1)
 
-        curvilinear_cosy = SegmentCoordinateSystem(new_ref_path)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
         return curvilinear_cosy
 
     def create_curvilinear_states(self, state: State) -> Tuple[StateLongitudinal, StateLateral]:

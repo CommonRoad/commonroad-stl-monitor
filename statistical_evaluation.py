@@ -12,7 +12,7 @@ import os
 
 class CommonRoadObstacleEvaluation:
     def __init__(self):
-        config = load_yaml("./../config.yaml")
+        config = load_yaml("./config.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
@@ -123,7 +123,7 @@ class CommonRoadObstacleEvaluation:
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
     scenarios = []
-    root_dir = "./../../../../commonroad/scenarios/tum_cps/scenarios"
+    root_dir = "./../../../commonroad/scenarios/tum_cps/scenarios"
 
     for subdir, dirs, files in os.walk(root_dir):
         for directory in dirs:
@@ -137,11 +137,11 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
-                    if len(scenarios) > 4:
+                    if len(scenarios) > 19:
                         break
-            if len(scenarios) > 4:
+            if len(scenarios) > 19:
                 break
-        if len(scenarios) > 4:
+        if len(scenarios) > 19:
             break
 
     for sc in scenarios:
