@@ -25,11 +25,11 @@ class CommonRoadObstacleEvaluation:
         self._road_network_param = config.get("road_network_param")
         self._road_network = None  # updated in each test case
 
-        self._max_speed_limit_satisfaction = 0
-        self._min_speed_limit_satisfaction = 0
-        self._safe_distance_satisfaction = 0
-        self._no_unnecessary_braking_satisfaction = 0
-        self._num_vehicles = 0
+        self.max_speed_limit_satisfaction = 0
+        self.min_speed_limit_satisfaction = 0
+        self.safe_distance_satisfaction = 0
+        self.no_unnecessary_braking_satisfaction = 0
+        self.num_vehicles = 0
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
         lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, obstacle.initial_state.time_step)
@@ -97,7 +97,27 @@ class CommonRoadObstacleEvaluation:
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set
         result = self._execute_evaluation(scenario)
-        print(result)
+        self.evaluate_result(result)
+
+    def evaluate_result(self, result):
+        self.num_vehicles += len(result)
+        for vehicle in result:
+            safe_distance_complete = True
+            for rule_name, eval_result in vehicle[1].items():
+                if rule_name == 'max_speed_limit':
+                    if eval_result is True:
+                        self.max_speed_limit_satisfaction += 1
+                elif rule_name == 'min_speed_limit':
+                    if eval_result is True:
+                        self.min_speed_limit_satisfaction += 1
+                elif rule_name == 'no_unnecessary_braking':
+                    if eval_result is True:
+                        self.no_unnecessary_braking_satisfaction += 1
+                elif 'safe_distance' in rule_name :
+                    if eval_result is False:
+                        safe_distance_complete = False
+            if safe_distance_complete is True:
+                self.safe_distance_satisfaction += 1
 
 
 def main():
@@ -117,10 +137,22 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
+                    if len(scenarios) > 4:
+                        break
+            if len(scenarios) > 4:
+                break
+        if len(scenarios) > 4:
+            break
 
-    for sc in scenarios[0:2]:
+    for sc in scenarios:
         print(sc.benchmark_id)
         cr_eval.evaluate_scenario(sc, [0])
+
+    print("number vehicles: " + str(cr_eval.num_vehicles))
+    print("max. speed limit compliance: " + str(cr_eval.max_speed_limit_satisfaction))
+    print("min. speed limit compliance: " + str(cr_eval.min_speed_limit_satisfaction))
+    print("no. unnecessary braking compliance: " + str(cr_eval.no_unnecessary_braking_satisfaction))
+    print("safe distance compliance: " + str(cr_eval.safe_distance_satisfaction))
 
 
 if __name__ == "__main__":
