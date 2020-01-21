@@ -30,6 +30,7 @@ class CommonRoadObstacleEvaluation:
         self.safe_distance_satisfaction = 0
         self.no_unnecessary_braking_satisfaction = 0
         self.num_vehicles = 0
+        self.num_scenarios = 0
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
         lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, obstacle.initial_state.time_step)
@@ -96,11 +97,16 @@ class CommonRoadObstacleEvaluation:
 
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set
-        result = self._execute_evaluation(scenario)
+        try:
+            result = self._execute_evaluation(scenario)
+        except RuntimeError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated")
+            return
         self.evaluate_result(result)
 
     def evaluate_result(self, result):
         self.num_vehicles += len(result)
+        self.num_scenarios += 1
         for vehicle in result:
             safe_distance_complete = True
             for rule_name, eval_result in vehicle[1].items():
@@ -137,17 +143,18 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
-                    if len(scenarios) > 19:
-                        break
-            if len(scenarios) > 19:
-                break
-        if len(scenarios) > 19:
-            break
+        #             if len(scenarios) > 19:
+        #                 break
+        #     if len(scenarios) > 19:
+        #         break
+        # if len(scenarios) > 19:
+        #     break
 
     for sc in scenarios:
         print(sc.benchmark_id)
         cr_eval.evaluate_scenario(sc, [0])
 
+    print("number scenarios:" + str(cr_eval.num_scenarios))
     print("number vehicles: " + str(cr_eval.num_vehicles))
     print("max. speed limit compliance: " + str(cr_eval.max_speed_limit_satisfaction))
     print("min. speed limit compliance: " + str(cr_eval.min_speed_limit_satisfaction))
