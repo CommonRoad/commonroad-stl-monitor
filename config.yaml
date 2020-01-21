@@ -18,7 +18,7 @@
 #    - country: country of scenario
 simulation_param:
     dt: 0.1
-    commonroad_benchmark_id: test_min_speed_limit
+    commonroad_benchmark_id: USA_US101-33_1_T-1
     commonroad_scenario_folder: ./scenarios/test/
     verbose_mode: true
     time_measuring: true
@@ -184,5 +184,5 @@ traffic_rule_monitoring:
         3: [safe_distance]
         4: [no_unnecessary_braking]
 
-    activated_traffic_rule_sets: [1]
+    activated_traffic_rule_sets: [0]
     vehicle_dependent_rules: [safe_distance]

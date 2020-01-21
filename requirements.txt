@@ -1,0 +1,2 @@
+numpy
+metric-temporal-logic >=0.1.4

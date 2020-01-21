@@ -198,13 +198,13 @@ class RoadNetwork:
 
         return lane_ids
 
-    def find_lane_by_obstacle(self, obstacle_id: int, time_step: int) -> Lane:  # TODO return center assignment
+    def find_lane_by_obstacle(self, obs_lanelet: int) -> Lane:
         """
         Finds the lanes an obstacle belongs to
 
-        :param obstacle_id: ID of the obstacle
-        :param time_step: time step of interest
+        :param obs_lanelet: ID of lanelet the obstacle center is on
+        :returns lane the obstacle center is on
         """
         for lane in self.lanes:
-            if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
+            if obs_lanelet in lane.contained_lanelets:
                 return lane

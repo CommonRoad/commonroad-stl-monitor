@@ -33,19 +33,20 @@ class CommonRoadObstacleEvaluation:
         self.num_scenarios = 0
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
-        lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, obstacle.initial_state.time_step)
+        lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids)[0])
         state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
         vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
                           obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
-                          obstacle.initial_lanelet_ids, obstacle.initial_signal_state)
+                          obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state)
 
         for state in obstacle.prediction.trajectory.state_list:
-            lane = self._road_network.find_lane_by_obstacle(obstacle.obstacle_id, state.time_step)
+            lane = self._road_network.find_lane_by_obstacle(
+                list(obstacle.prediction.center_lanelet_assignment[state.time_step])[0])
             vehicle.append_state_cr(state, state.time_step)
             state_lon, state_lat = lane.create_curvilinear_states(state)
             vehicle.append_state_lon(state_lon, state.time_step)
             vehicle.append_state_lat(state_lat, state.time_step)
-            vehicle.append_lanelet_assignment(obstacle.prediction.lanelet_assignment[state.time_step],
+            vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
                                               state.time_step)
             vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
 
@@ -66,29 +67,29 @@ class CommonRoadObstacleEvaluation:
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
             other_vehicles.pop(idx)
-            self.add_acceleration(ego_veh)
-            self.add_jerk(ego_veh)
+            self.add_acceleration(ego_veh, self._simulation_param.get("dt"))
+            self.add_jerk(ego_veh, self._simulation_param.get("dt"))
             vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation
 
-    def add_jerk(self, vehicle: Vehicle):
+    @staticmethod
+    def add_jerk(vehicle: Vehicle, dt: float):
         for idx, state in enumerate(vehicle.state_list_cr):
             if vehicle.jerk_profile.get(state.time_step) is None:
                 if idx + 1 < len(vehicle.state_list_cr):
-                    jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / \
-                           self._simulation_param.get("dt")
+                    jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / dt
                 else:
                     jerk = 0
                 vehicle.append_jerk(jerk, state.time_step)
         return vehicle
 
-    def add_acceleration(self, vehicle: Vehicle):
+    @staticmethod
+    def add_acceleration(vehicle: Vehicle, dt: float):
         for idx, state in enumerate(vehicle.state_list_cr):
             if hasattr(state, "acceleration") is False:
                 if idx + 1 < len(vehicle.state_list_cr):
-                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
-                           self._simulation_param.get("dt")
+                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / dt
                 else:
                     acceleration = 0
                 vehicle.state_list_cr[idx].acceleration = acceleration
@@ -97,11 +98,11 @@ class CommonRoadObstacleEvaluation:
 
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set
-        try:
-            result = self._execute_evaluation(scenario)
-        except (RuntimeError, AttributeError):
-            print("scenario ", scenario.benchmark_id, " could not be evaluated")
-            return
+        #try:
+        result = self._execute_evaluation(scenario)
+        #except (RuntimeError, AttributeError, KeyError, ValueError):
+        #    print("scenario ", scenario.benchmark_id, " could not be evaluated")
+        #    return
         self.evaluate_result(result)
 
     def evaluate_result(self, result):
@@ -143,12 +144,12 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
-        #             if len(scenarios) > 19:
-        #                 break
-        #     if len(scenarios) > 19:
-        #         break
-        # if len(scenarios) > 19:
-        #     break
+                    if len(scenarios) > 2:
+                        break
+            if len(scenarios) > 2:
+                break
+        if len(scenarios) > 2:
+            break
 
     for sc in scenarios:
         print(sc.benchmark_id)

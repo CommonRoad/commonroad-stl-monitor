@@ -79,7 +79,8 @@ draw_params_scenario = {'scenario': {
 config = load_yaml("config.yaml")
 simulation_param = config.get("simulation_param")
 
-filename = simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
+filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "USA_US101-33_1_T-1" + ".xml"
+    #simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 #scenario.translate_rotate(np.array([0, 0]), -0.030)
 #fw = CommonRoadFileWriter(scenario, planning_problem_set, scenario.author, scenario.affiliation, scenario.source, scenario.tags)

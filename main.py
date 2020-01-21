@@ -1,7 +1,5 @@
 from common.configuration import *
-from traffic_rule_dispatcher import TrafficRuleDispatcher
-from typing import List
-from commonroad.scenario.trajectory import State
+from monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
 from commonroad.common.file_reader import CommonRoadFileReader
 
 
