@@ -37,21 +37,31 @@ class CommonRoadObstacleEvaluation:
         lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                         list(obstacle.initial_shape_lanelet_ids))
         state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
-        vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
-                          obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
-                          obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state)
+        vehicle = None
+        if state_lon is not None or state_lat is not None:
+            vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                              obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
+                              obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state)
 
         for state in obstacle.prediction.trajectory.state_list:
             lane = self._road_network.find_lane_by_obstacle(
                 list(obstacle.prediction.center_lanelet_assignment[state.time_step]),
                 list(obstacle.prediction.shape_lanelet_assignment[state.time_step]))
-            vehicle.append_state_cr(state, state.time_step)
             state_lon, state_lat = lane.create_curvilinear_states(state)
-            vehicle.append_state_lon(state_lon, state.time_step)
-            vehicle.append_state_lat(state_lat, state.time_step)
-            vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
+            if state_lon is None or state_lat is None:
+                continue
+            if vehicle is not None:
+                vehicle.append_state_cr(state, state.time_step)
+                vehicle.append_state_lon(state_lon, state.time_step)
+                vehicle.append_state_lat(state_lat, state.time_step)
+                vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
                                               state.time_step)
-            vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
+                vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
+            else:
+                vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                                  state, obstacle.obstacle_id, obstacle.obstacle_type,
+                                  obstacle.prediction.shape_lanelet_assignment[state.time_step],
+                                  obstacle.signal_state_at_time_step(state.time_step))
 
         return vehicle
 

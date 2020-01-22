@@ -4,7 +4,7 @@ from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_pol
 import numpy as np
 from common.vehicle import StateLongitudinal, StateLateral
 from pycrccosy import CurvilinearCoordinateSystem
-from typing import Tuple, List, Set, Dict
+from typing import Tuple, List, Set, Dict, Union
 
 
 class Lane:
@@ -18,12 +18,13 @@ class Lane:
         :param road_network_param: dictionary with parameters for the road network
         """
         self._lanelet = merged_lanelet
+        self._road_network_param = road_network_param
         self._clcs = self._create_curvilinear_coordinate_system_from_lanelet(merged_lanelet.center_vertices)
         self._contained_lanelets = set(contained_lanelets)
         self._orientation = self._compute_orientation_from_polyline(merged_lanelet.center_vertices)
         self._curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
         self._path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
-        self._road_network_param = road_network_param
+
 
     @property
     def lanelet(self) -> Lanelet:
@@ -33,8 +34,7 @@ class Lane:
     def contained_lanelets(self) -> Set[int]:
         return self._contained_lanelets
 
-    @staticmethod
-    def _create_curvilinear_coordinate_system_from_lanelet(ref_path: np.array) -> CurvilinearCoordinateSystem:
+    def _create_curvilinear_coordinate_system_from_lanelet(self, ref_path: np.array) -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
 
@@ -42,21 +42,26 @@ class Lane:
         :returns curvilinear coordinate system for reference path
         """
         new_ref_path = np.array([])
-        for i in range(0, 250):
+        for i in range(0, self._road_network_param.get("num_chankins_corner_cutting")):
             new_ref_path = chaikins_corner_cutting(ref_path)
-        new_ref_path = resample_polyline(new_ref_path, 0.1)
+        new_ref_path = resample_polyline(new_ref_path, self._road_network_param.get("polyline_resampling_step"))
 
         curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
         return curvilinear_cosy
 
-    def create_curvilinear_states(self, state: State) -> Tuple[StateLongitudinal, StateLateral]:
+    def create_curvilinear_states(self, state: State) -> Union[Tuple[StateLongitudinal, StateLateral],
+                                                               Tuple[None, None]]:
         """
         Computes initial state of ego vehicle
 
         :param state: CommonRoad state
         :return: lateral and longitudinal state of vehicle
         """
-        s, d = self._clcs.convert_to_curvilinear_coords(state.position[0], state.position[1])
+        try:
+            s, d = self._clcs.convert_to_curvilinear_coords(state.position[0], state.position[1])
+        except ValueError:
+            #print("Vehicle out of projection domain: State will not be considered")
+            return None, None
         theta_cl = np.interp(s, self._path_length, self._orientation)
         if hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(s, state.velocity, state.acceleration, state.jerk)
