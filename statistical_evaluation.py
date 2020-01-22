@@ -31,6 +31,7 @@ class CommonRoadObstacleEvaluation:
         self.no_unnecessary_braking_satisfaction = 0
         self.num_vehicles = 0
         self.num_scenarios = 0
+        self.num_veh_all_correct = 0
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
         lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
@@ -64,7 +65,8 @@ class CommonRoadObstacleEvaluation:
 
         vehicles = []
         for obs in scenario.dynamic_obstacles:
-            vehicles.append(self.create_vehicle(obs))
+            if obs.prediction is not None:
+                vehicles.append(self.create_vehicle(obs))
 
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
@@ -108,34 +110,41 @@ class CommonRoadObstacleEvaluation:
         except AttributeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
             return
-       # except KeyError:
-       #     print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
-       #     return
-        #except ValueError:
-        #    print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
-         #   return
+        except KeyError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+            return
+        except ValueError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
+            return
         self.evaluate_result(result)
 
     def evaluate_result(self, result):
         self.num_vehicles += len(result)
         self.num_scenarios += 1
+        num_correct_rules = 0
         for vehicle in result:
             safe_distance_complete = True
             for rule_name, eval_result in vehicle[1].items():
                 if rule_name == 'max_speed_limit':
                     if eval_result is True:
                         self.max_speed_limit_satisfaction += 1
+                        num_correct_rules += 1
                 elif rule_name == 'min_speed_limit':
                     if eval_result is True:
                         self.min_speed_limit_satisfaction += 1
+                        num_correct_rules += 1
                 elif rule_name == 'no_unnecessary_braking':
                     if eval_result is True:
                         self.no_unnecessary_braking_satisfaction += 1
+                        num_correct_rules += 1
                 elif 'safe_distance' in rule_name :
                     if eval_result is False:
                         safe_distance_complete = False
             if safe_distance_complete is True:
                 self.safe_distance_satisfaction += 1
+                num_correct_rules += 1
+            if num_correct_rules == 4:
+                self.num_veh_all_correct += 1
 
 
 def main():
@@ -172,6 +181,7 @@ def main():
     print("min. speed limit compliance: " + str(cr_eval.min_speed_limit_satisfaction))
     print("no. unnecessary braking compliance: " + str(cr_eval.no_unnecessary_braking_satisfaction))
     print("safe distance compliance: " + str(cr_eval.safe_distance_satisfaction))
+    print("perfect vehicles: " + str(cr_eval.num_veh_all_correct))
 
 
 if __name__ == "__main__":
