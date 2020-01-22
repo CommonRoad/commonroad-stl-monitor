@@ -33,7 +33,8 @@ class CommonRoadObstacleEvaluation:
         self.num_scenarios = 0
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
-        lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids)[0])
+        lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
+                                                        list(obstacle.initial_shape_lanelet_ids))
         state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
         vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
                           obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
@@ -41,7 +42,8 @@ class CommonRoadObstacleEvaluation:
 
         for state in obstacle.prediction.trajectory.state_list:
             lane = self._road_network.find_lane_by_obstacle(
-                list(obstacle.prediction.center_lanelet_assignment[state.time_step])[0])
+                list(obstacle.prediction.center_lanelet_assignment[state.time_step]),
+                list(obstacle.prediction.shape_lanelet_assignment[state.time_step]))
             vehicle.append_state_cr(state, state.time_step)
             state_lon, state_lat = lane.create_curvilinear_states(state)
             vehicle.append_state_lon(state_lon, state.time_step)
@@ -106,12 +108,12 @@ class CommonRoadObstacleEvaluation:
         except AttributeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
             return
-        except KeyError:
-            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
-            return
-        except ValueError:
-            print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
-            return
+       # except KeyError:
+       #     print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+       #     return
+        #except ValueError:
+        #    print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
+         #   return
         self.evaluate_result(result)
 
     def evaluate_result(self, result):

@@ -152,7 +152,7 @@ traffic_rule_monitoring:
     traffic_rules:
         max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit)
         min_speed_limit: G(preserves_traffic_flow & keeps_sign_min_speed_limit)
-        safe_distance: G(keeps_safe_distance)
+        safe_distance: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance)
         no_unnecessary_braking: G(~(unnecessary_braking))
 
     # Parameters for traffic rules

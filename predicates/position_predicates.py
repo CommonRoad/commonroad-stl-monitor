@@ -53,24 +53,18 @@ class PositionPredicateCollection(PredicateCollection):
             return False
 
     @staticmethod
-    def front_vehicle_same_lane(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[List[Vehicle]]:
+    def in_front_of(s_1: float, s_2: float) -> bool:
         """
-        Searches the vehicles in the same lane and in front of a given vehicle
+        Evaluates if vehicle two is in front of vehicle one
 
-        :param vehicle: vehicle object
-        :param other_vehicles: other vehicles in scenario
-        :param time_step: time step of interest
+        :param s_1: longitudinal position of vehicle one
+        :param s_2: longitudinal position of vehicle two
         :returns boolean indicating satisfaction
         """
-        front_vehicles_all_vehicle_lanes = []
-        for lanelet in vehicle.lanelet_assignment[time_step]:
-            front_vehicles_single_vehicle_lanes = []
-            for veh in other_vehicles:
-                if lanelet in veh.lanelet_assignment[time_step]:
-                    if vehicle.states_lon[time_step].s < veh.states_lon[time_step].s:
-                        front_vehicles_single_vehicle_lanes.append(vehicle)
-            front_vehicles_all_vehicle_lanes.append(front_vehicles_single_vehicle_lanes)
-        return front_vehicles_all_vehicle_lanes
+        if s_1 < s_2:
+            return True
+        else:
+            return False
 
     @staticmethod
     def same_lane(lanelet_ids_ego: Set[int], lanelet_ids_other: Set[int]) -> bool:
@@ -125,4 +119,20 @@ class PositionPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        pass
+        predicate_trace = {"same_lane_as_ego_vehicle": {},
+                           "in_front_of_ego_vehicle": {}}
+
+        for other_vehicle in other_vehicles:
+            predicate_trace["same_lane_as_ego_vehicle"][other_vehicle.id] = {}
+            predicate_trace["in_front_of_ego_vehicle"][other_vehicle.id] = {}
+            for idx in range(len(other_vehicle.state_list_cr)):
+                time_step = other_vehicle.state_list_cr[idx].time_step
+                if idx >= len(ego_vehicle.states_lon):
+                    break
+                predicate_trace["same_lane_as_ego_vehicle"][other_vehicle.id][time_step] = \
+                    self.same_lane(ego_vehicle.lanelet_assignment[time_step],
+                                   other_vehicle.lanelet_assignment[time_step])
+                predicate_trace["in_front_of_ego_vehicle"][other_vehicle.id][time_step] = \
+                    self.in_front_of(ego_vehicle.states_lon[time_step].s,
+                                     other_vehicle.states_lon[time_step].s)
+        return predicate_trace

@@ -1,7 +1,7 @@
 from typing import List, Dict, Set, Union
 from predicates.predicate_collection import PredicateCollection
 from common.road_network import RoadNetwork
-from common.vehicle import Vehicle, VehicleLocalization
+from common.vehicle import Vehicle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
 from predicates.position_predicates import PositionPredicateCollection
 
@@ -19,27 +19,33 @@ class VehicleStatePredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
-    def _unnecessary_braking(self, v_ego: float, a_ego: float, j_ego: float, other_vehicles: List[Vehicle],
-                             time_step: int) -> bool:
+    def _unnecessary_braking(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly
 
-        :param v_ego: velocity of ego vehicle
-        :param a_ego: acceleration of ego vehicle
-        :param j_ego: jerk of ego vehicle
+        :param ego_vehicle: ego vehicle
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
         :return: boolean indicating if vehicle brakes abruptly at current state
         """
+        v_ego = ego_vehicle.states_lon[time_step].v
+        a_ego = ego_vehicle.states_lon[time_step].a
+        j_ego = ego_vehicle.states_lon[time_step].j
         if a_ego >= 0:
             return False
         if self.velocity_reduction_necessary(v_ego):
             return False
+        ego_vehicle_lanelets = ego_vehicle.lanelet_assignment[time_step]
 
         a_min_other = None
-        for veh in other_vehicles:
-            if veh.classification[time_step] == VehicleLocalization.EGO_LANE_FRONT:
-                if a_min_other is None or veh.states_lon[time_step].a < a_min_other:
-                    a_min_other = veh.states_lon[time_step].a
+        for veh_o in other_vehicles:
+            if veh_o.states_lon.get(time_step) is None:
+                continue
+            if PositionPredicateCollection.in_front_of(ego_vehicle.states_lon[time_step].s,
+                                                       veh_o.states_lon[time_step].s) and \
+                    PositionPredicateCollection.same_lane(ego_vehicle_lanelets, veh_o.lanelet_assignment[time_step]) \
+                    and veh_o.states_lon[time_step].v - v_ego < self._traffic_rule_param.get("min_velocity_dif"):
+                if a_min_other is None or veh_o.states_lon[time_step].a < a_min_other:
+                    a_min_other = veh_o.states_lon[time_step].a
 
         if a_min_other is None and (a_ego < self._traffic_rule_param.get("a_abrupt") or
                                     j_ego < self._traffic_rule_param.get("j_abrupt")):
@@ -140,23 +146,38 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns Boolean indicating speed limit satisfaction
         """
-        front_vehicles = PositionPredicateCollection.front_vehicle_same_lane(ego_vehicle, other_vehicles, time_step)
+        pass
+        # for veh_o in other_vehicles:
+        #     if PositionPredicateCollection.in_front_of(s_veh, veh_o.states_lon[time_step].s) and \
+        #             PositionPredicateCollection.same_lane(lanelets_veh, veh_o.lanelet_assignment[time_step]) and \
+        #             veh_o.states_lon[time_step].v - v_veh < self._traffic_rule_param.get("min_velocity_dif"):
+        #         return True
+        #front_vehicles = PositionPredicateCollection.in_front_of(ego_vehicle.states_lon[time_step].s,
+        #                                                         other_vehicles.states_lon[time_step].s,
+        #                                                         time_step)
 
-        return front_vehicles[0]
+        #return front_vehicles[0]
 
-    def slow_leading_vehicle(self, velocity: float, other_vehicles: List[Vehicle], time_step: int):
+    def slow_leading_vehicle(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """
-        Predicate which evaluates if a slow leading vehicle exists
+        Predicate which evaluates if a slow leading vehicle exists if front of a vehicle
 
-        :param velocity: ego vehicle velocity
+        :param vehicle: considered vehicle object
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
         :returns Boolean indicating speed limit satisfaction
         """
-        for veh in other_vehicles:
-            if VehicleLocalization.EGO_LANE_FRONT in veh.classification[time_step]:
-                if veh.states_lon[time_step].v - velocity < self._traffic_rule_param.get("min_velocity_dif"):
-                    return True
+        v_veh = vehicle.states_lon[time_step].v
+        s_veh = vehicle.states_lon[time_step].s
+        lanelets_veh = vehicle.lanelet_assignment[time_step]
+        for veh_o in other_vehicles:
+            if veh_o.states_lon.get(time_step) is None:
+                continue
+            if PositionPredicateCollection.in_front_of(s_veh, veh_o.states_lon[time_step].s) and \
+                    PositionPredicateCollection.same_lane(lanelets_veh, veh_o.lanelet_assignment[time_step]) and \
+                    veh_o.states_lon[time_step].v - v_veh < self._traffic_rule_param.get("min_velocity_dif"):
+                return True
+
         return False
 
     def _preserves_traffic_flow(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
@@ -168,7 +189,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns Boolean indicating speed limit satisfaction
         """
-        if self.slow_leading_vehicle(ego_vehicle.states_lon[time_step].v, other_vehicles, time_step):
+        if self.slow_leading_vehicle(ego_vehicle, other_vehicles, time_step):
             return True
         else:
             v_max_lane = self.active_speed_limit(ego_vehicle.lanelet_assignment[time_step])
@@ -322,19 +343,18 @@ class VehicleStatePredicateCollection(PredicateCollection):
             predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
             predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
-                self._unnecessary_braking(ego_vehicle.states_lon[idx].v, ego_vehicle.states_lon[idx].a,
-                                          ego_vehicle.jerk_profile[idx], other_vehicles, idx)
+                self._unnecessary_braking(ego_vehicle, other_vehicles, idx)
 
         for other_vehicle in other_vehicles:
+            predicate_trace["keeps_safe_distance"][other_vehicle.id] = {}
             for idx in range(len(other_vehicle.state_list_cr)):
                 time_step = other_vehicle.state_list_cr[idx].time_step
-                if VehicleLocalization.EGO_LANE_FRONT in other_vehicle.classification[idx]:
-                    if predicate_trace["keeps_safe_distance"].get(other_vehicle.id) is None:
-                        predicate_trace["keeps_safe_distance"][other_vehicle.id] = {}
-                    predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = \
-                        self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
-                                                  ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
-                                                  self._ego_vehicle_param.get("a_min"),
-                                                  self._other_vehicles_param.get("a_min"),
-                                                  self._ego_vehicle_param.get("t_react"))
+                if idx >= len(ego_vehicle.states_lon):
+                    break
+                predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = \
+                    self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
+                                              ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
+                                              self._ego_vehicle_param.get("a_min"),
+                                              self._other_vehicles_param.get("a_min"),
+                                              self._ego_vehicle_param.get("t_react"))
         return predicate_trace

@@ -198,13 +198,21 @@ class RoadNetwork:
 
         return lane_ids
 
-    def find_lane_by_obstacle(self, obs_lanelet: int) -> Lane:
+    def find_lane_by_obstacle(self, obs_lanelet_center: List[int], obs_lanelet_shape: List[int]) -> Lane:
         """
         Finds the lanes an obstacle belongs to
 
-        :param obs_lanelet: ID of lanelet the obstacle center is on
+        :param obs_lanelet_center: IDs of lanelet the obstacle center is on (use only first one)
+        :param obs_lanelet_shape: IDs of lanelet the obstacle shape is on
         :returns lane the obstacle center is on
         """
-        for lane in self.lanes:
-            if obs_lanelet in lane.contained_lanelets:
-                return lane
+        if len(obs_lanelet_center) > 0:
+            for lane in self.lanes:
+                if obs_lanelet_center[0] in lane.contained_lanelets:
+                    return lane
+        else:
+            # if no lane is found, e.g. center on exterior of polygon usage of shape
+            for lane in self.lanes:
+                for lanelet in obs_lanelet_shape:
+                    if lanelet in lane.contained_lanelets:
+                        return lane

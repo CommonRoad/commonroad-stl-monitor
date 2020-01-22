@@ -32,6 +32,9 @@ class TrafficRuleDispatcher:
         self._safety_predicates = VehicleStatePredicateCollection(road_network, simulation_param,
                                                                   ego_vehicle_param, other_vehicles_param,
                                                                   traffic_rule_param)
+        self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
+                                                                ego_vehicle_param, other_vehicles_param,
+                                                                traffic_rule_param)
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
                                               vehicle_dependent_rules)
 
@@ -66,45 +69,10 @@ class TrafficRuleDispatcher:
         :returns dictionary containing predicate evaluation
         """
         safety_predicates = self._safety_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
+        position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
 
-        return safety_predicates
-
-    def classify_single_vehicle(self, s_ego: float, s_other: float, lane_ids_ego: Set[int],
-                                lane_ids_other: Set[int]) -> Set[VehicleLocalization]:
-        """
-        Classifies single other vehicle according to its localization
-
-        :param s_ego: longitudinal position of ego vehicle
-        :param s_other: longitudinal position of other vehicle
-        :param lane_ids_ego: lanes the ego vehicle is on
-        :param lane_ids_other: lanes the other vehicle is on
-        :returns classified localization of other vehicle
-        """
-        if PositionPredicateCollection.in_fov(s_ego, s_other, self._ego_vehicle_param.get("fov")):
-            if PositionPredicateCollection.same_lane_behind_other(s_ego, s_other, lane_ids_ego, lane_ids_other):
-                return {VehicleLocalization.EGO_LANE_FRONT}
-            else:
-                return {VehicleLocalization.NONE}
-        else:
-            return {VehicleLocalization.NONE}
-
-    def classify_all_vehicles(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]):
-        """
-        Classifies all other vehicles according to their localization
-
-        :param ego_vehicle: ego vehicle object
-        :param other_vehicles: list with other vehicles
-        """
-        for veh in other_vehicles:
-            for state in veh.state_list_cr:
-                veh.append_classification(
-                    self.classify_single_vehicle(ego_vehicle.states_lon[state.time_step].s,
-                                                 veh.states_lon[state.time_step].s,
-                                                 self._road_network.find_lane_ids_by_obstacle(ego_vehicle.id,
-                                                                                              state.time_step),
-                                                 self._road_network.find_lane_ids_by_obstacle(veh.id,
-                                                                                              state.time_step)),
-                    state.time_step)
+        combined_predicates = {**safety_predicates , **position_predicates}
+        return combined_predicates
 
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
@@ -114,7 +82,6 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
-        self.classify_all_vehicles(ego_vehicle, other_vehicles)
         evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors:
