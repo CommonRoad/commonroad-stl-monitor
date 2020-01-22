@@ -98,11 +98,20 @@ class CommonRoadObstacleEvaluation:
 
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set
-        #try:
-        result = self._execute_evaluation(scenario)
-        #except (RuntimeError, AttributeError, KeyError, ValueError):
-        #    print("scenario ", scenario.benchmark_id, " could not be evaluated")
-        #    return
+        try:
+            result = self._execute_evaluation(scenario)
+        except (RuntimeError, AttributeError, KeyError, ValueError):
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
+            return
+        except AttributeError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
+            return
+        except KeyError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+            return
+        except ValueError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
+            return
         self.evaluate_result(result)
 
     def evaluate_result(self, result):
@@ -144,12 +153,12 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
-                    if len(scenarios) > 2:
-                        break
-            if len(scenarios) > 2:
-                break
-        if len(scenarios) > 2:
-            break
+        #             if len(scenarios) > 2:
+        #                 break
+        #     if len(scenarios) > 2:
+        #         break
+        # if len(scenarios) > 2:
+        #     break
 
     for sc in scenarios:
         print(sc.benchmark_id)
