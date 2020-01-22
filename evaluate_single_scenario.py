@@ -5,7 +5,7 @@ import os
 
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
-    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "USA_US101-33_1_T-1" + ".xml"
+    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "USA_US101-6_2_T-1" + ".xml"
     scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 
     cr_eval.evaluate_scenario(scenario, [0])

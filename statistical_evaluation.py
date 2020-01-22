@@ -100,7 +100,7 @@ class CommonRoadObstacleEvaluation:
         self._activated_traffic_rule_sets = activated_traffic_rule_set
         try:
             result = self._execute_evaluation(scenario)
-        except (RuntimeError, AttributeError, KeyError, ValueError):
+        except RuntimeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
             return
         except AttributeError:
