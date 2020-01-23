@@ -174,15 +174,14 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
-        #             if len(scenarios) > 2:
+        #             if len(scenarios) > 4:
         #                 break
-        #     if len(scenarios) > 2:
+        #     if len(scenarios) > 4:
         #         break
-        # if len(scenarios) > 2:
+        # if len(scenarios) > 4:
         #     break
 
     for sc in scenarios:
-        print(sc.benchmark_id)
         cr_eval.evaluate_scenario(sc, [0])
 
     print("number scenarios:" + str(cr_eval.num_scenarios))

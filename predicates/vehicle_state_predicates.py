@@ -105,8 +105,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
                     for elem in traffic_sign.traffic_sign_elements:
                         if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED.value:
                             speed_limits.append(float(elem.additional_values[0]))
-                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED.value:
-                            speed_limits.append(50.0)
+                        # TODO add other country options
         if len(speed_limits) == 0:
             return None
         else:

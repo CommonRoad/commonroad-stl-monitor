@@ -78,8 +78,8 @@ draw_params_scenario = {'scenario': {
 
 config = load_yaml("config.yaml")
 simulation_param = config.get("simulation_param")
-
-filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-4_3_T-1" + ".xml"
+filename = "scenarios/test/test_max_speed_limit.xml"
+#filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-4_3_T-1" + ".xml"
     #simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 #scenario.translate_rotate(np.array([0, 0]), -0.030)
