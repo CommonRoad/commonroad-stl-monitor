@@ -25,7 +25,6 @@ class Lane:
         self._curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
         self._path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
 
-
     @property
     def lanelet(self) -> Lanelet:
         return self._lanelet

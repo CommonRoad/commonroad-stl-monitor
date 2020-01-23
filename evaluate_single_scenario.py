@@ -5,7 +5,7 @@ from statistical_evaluation import CommonRoadObstacleEvaluation
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
     #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-27_2_T-1" + ".xml"
-    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "ESP_Mad-1_9_T-1" + ".xml"
+    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_2_T-1" + ".xml"
     scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 
     cr_eval.evaluate_scenario(scenario, [0])
