@@ -114,15 +114,15 @@ class CommonRoadObstacleEvaluation:
         self._activated_traffic_rule_sets = activated_traffic_rule_set
         try:
             result = self._execute_evaluation(scenario)
-        #except RuntimeError:
-        #    print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
-        #    return
-        #except AttributeError:
-        #    print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
-        #    return
-        #except KeyError:
-        #    print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
-        #    return
+        except RuntimeError:
+           print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
+           return
+        except AttributeError:
+           print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
+           return
+        except KeyError:
+           print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+           return
         except ValueError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
             return
@@ -155,6 +155,7 @@ class CommonRoadObstacleEvaluation:
                 num_correct_rules += 1
             if num_correct_rules == 4:
                 self.num_veh_all_correct += 1
+            num_correct_rules = 0
 
 
 def main():
