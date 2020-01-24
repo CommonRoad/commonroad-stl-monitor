@@ -115,14 +115,14 @@ class CommonRoadObstacleEvaluation:
         try:
             result = self._execute_evaluation(scenario)
         except RuntimeError:
-           print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
-           return
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
+            return
         except AttributeError:
-           print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
-           return
-        except KeyError:
-           print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
-           return
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
+            return
+ #       except KeyError:
+#            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+ #           return
         except ValueError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
             return

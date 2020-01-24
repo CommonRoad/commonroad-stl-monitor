@@ -4,8 +4,9 @@ from statistical_evaluation import CommonRoadObstacleEvaluation
 
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
-    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
+    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
     #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
+    filename = "highD_generator/scenarios/DEU_LocationB-1_1_T-1.xml"
     scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 
     cr_eval.evaluate_scenario(scenario, [0])
