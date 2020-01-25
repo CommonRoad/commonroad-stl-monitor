@@ -92,7 +92,7 @@ class TrafficRuleDispatcher:
                     for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
-                    rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
+                rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
             else:
                 rule_predicates = {}
                 rule_evaluated = False
@@ -112,7 +112,7 @@ class TrafficRuleDispatcher:
                             break
                         rule_predicates[pred] = trace
                         rule_evaluated = True
-                        rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
+                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
                 if rule_evaluated is False:
                     rule_evaluation[rule.name] = True
         return rule_evaluation

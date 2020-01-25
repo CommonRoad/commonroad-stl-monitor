@@ -125,10 +125,9 @@ class PositionPredicateCollection(PredicateCollection):
         for other_vehicle in other_vehicles:
             predicate_trace["same_lane_as_ego_vehicle"][other_vehicle.id] = {}
             predicate_trace["in_front_of_ego_vehicle"][other_vehicle.id] = {}
-            for idx in range(len(other_vehicle.state_list_cr)):
-                time_step = other_vehicle.state_list_cr[idx].time_step
-                if idx >= len(ego_vehicle.states_lon):
-                    break
+            for time_step in ego_vehicle.states_lon.keys():
+                if other_vehicle.states_lon.get(time_step) is None:
+                    continue
                 predicate_trace["same_lane_as_ego_vehicle"][other_vehicle.id][time_step] = \
                     self.same_lane(ego_vehicle.lanelet_assignment[time_step],
                                    other_vehicle.lanelet_assignment[time_step])

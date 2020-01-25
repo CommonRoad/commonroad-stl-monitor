@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.visualization.draw_dispatch_cr import draw_object
+from commonroad.visualization.video import create_scenario_video
 from common.configuration import *
 import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter
@@ -79,7 +80,8 @@ draw_params_scenario = {'scenario': {
 config = load_yaml("config.yaml")
 simulation_param = config.get("simulation_param")
 #filename = "scenarios/test/test_max_speed_limit.xml"
-filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
+#filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
+filename = "highD_generator/scenarios/DEU_LocationB-1_1_T-1.xml"
     #simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 #scenario.translate_rotate(np.array([0, 0]), -0.030)
@@ -97,13 +99,17 @@ x_max = max(x) + 5
 y_max = max(y) + 5
 plot_limits = [x_min, x_max, y_min , y_max]
 
-plt.figure(figsize=(8, 4.5))
-plt.gca().axis('equal')
-draw_params_scenario['scenario']['dynamic_obstacle']['show_label'] = True
-draw_params_scenario['scenario']['lanelet_network']['lanelet']['show_label'] = True
-draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#0070fe'
-draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#0070fe'
-draw_params_scenario['scenario']['dynamic_obstacle']['occupancy']['shape']['polygon']['opacity'] = .1
-draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
-#draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
-plt.show()
+# plt.figure(figsize=(8, 4.5))
+# plt.gca().axis('equal')
+# draw_params_scenario['scenario']['dynamic_obstacle']['show_label'] = True
+# draw_params_scenario['scenario']['lanelet_network']['lanelet']['show_label'] = True
+# draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#0070fe'
+# draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#0070fe'
+# draw_params_scenario['scenario']['dynamic_obstacle']['occupancy']['shape']['polygon']['opacity'] = .1
+# draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
+# #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
+# plt.show()
+
+create_scenario_video(scenario, "videos/test123.mp4", 0,
+                      50,
+                      plot_limits=plot_limits, fps=25)

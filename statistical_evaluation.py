@@ -120,53 +120,76 @@ class CommonRoadObstacleEvaluation:
         except AttributeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
             return
- #       except KeyError:
-#            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
- #           return
+        except KeyError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+            return
         except ValueError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
             return
-        self.evaluate_result(result)
+        self.evaluate_result(result, scenario.benchmark_id)
 
-    def evaluate_result(self, result):
+    def evaluate_result(self, result, scenario_name):
         self.num_vehicles += len(result)
         self.num_scenarios += 1
         num_correct_rules = 0
         for vehicle in result:
+            out_string = scenario_name + " - obs_id: " + str(vehicle[0]) + " - "
             safe_distance_complete = True
             for rule_name, eval_result in vehicle[1].items():
                 if rule_name == 'max_speed_limit':
                     if eval_result is True:
                         self.max_speed_limit_satisfaction += 1
                         num_correct_rules += 1
+                    out_string += rule_name + ": " + str(eval_result) + " - "
                 elif rule_name == 'min_speed_limit':
                     if eval_result is True:
                         self.min_speed_limit_satisfaction += 1
                         num_correct_rules += 1
+                    out_string += rule_name + ": " + str(eval_result) + " - "
                 elif rule_name == 'no_unnecessary_braking':
                     if eval_result is True:
                         self.no_unnecessary_braking_satisfaction += 1
                         num_correct_rules += 1
+                    out_string += rule_name + ": " + str(eval_result) + " - "
                 elif 'safe_distance' in rule_name :
                     if eval_result is False:
                         safe_distance_complete = False
             if safe_distance_complete is True:
                 self.safe_distance_satisfaction += 1
                 num_correct_rules += 1
+                out_string += 'safe_distance' + ": " + "True"
+            else:
+                out_string += 'safe_distance' + ": " + "False"
             if num_correct_rules == 4:
                 self.num_veh_all_correct += 1
             num_correct_rules = 0
-
+            print(out_string)
 
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
     scenarios = []
-    root_dir = "./../../../commonroad/scenarios/tum_cps/scenarios"
+    root_dir_cr = "./../../../commonroad/scenarios/tum_cps/scenarios"
+    root_dir_hd = "./highD_generator/scenarios"
 
-    for subdir, dirs, files in os.walk(root_dir):
+    for subdir, dirs, files in os.walk(root_dir_cr):
         for directory in dirs:
             if directory == "cooperative":
                 continue
+            for filename in os.listdir(subdir + "/" + directory):
+                if not "DEU" in filename:
+                    continue
+                if "Stu" in filename:
+                    continue
+                if not filename.endswith('.xml') or "_S-" in filename:
+                    continue
+                fullname = os.path.join(subdir + "/" + directory, filename)
+                scenario, planning_problem_set = \
+                    CommonRoadFileReader(fullname).open()
+                if "highway" in scenario.tags:
+                    scenarios.append(scenario)
+
+    for subdir, dirs, files in os.walk(root_dir_hd):
+        for directory in dirs:
             for filename in os.listdir(subdir + "/" + directory):
                 if not "DEU" in filename:
                     continue

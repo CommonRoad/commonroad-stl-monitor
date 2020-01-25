@@ -192,7 +192,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
             return True
         else:
             v_max_lane = self.active_speed_limit(ego_vehicle.lanelet_assignment[time_step])
-            if v_max_lane is None:
+            if v_max_lane is None or v_max_lane == float("inf"):
                 v_max = min(self._ego_vehicle_param.get("road_condition_speed_limit"),
                             self._ego_vehicle_param.get("fov_speed_limit"),
                             self._ego_vehicle_param.get("braking_speed_limit"),
@@ -327,32 +327,33 @@ class VehicleStatePredicateCollection(PredicateCollection):
                            "unnecessary_braking": {ego_vehicle.id: {}},
                            "keeps_safe_distance": {}}
 
-        for idx in range(len(ego_vehicle.state_list_cr)):
-            time_step = ego_vehicle.state_list_cr[idx].time_step
+        for time_step in ego_vehicle.states_lon.keys():
             predicate_trace["keeps_lane_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_lane_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
+                self._keeps_lane_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.lanelet_assignment[time_step])
             predicate_trace["keeps_fov_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_fov_speed_limit(ego_vehicle.states_lon[idx].v)
+                self._keeps_fov_speed_limit(ego_vehicle.states_lon[time_step].v)
             predicate_trace["keeps_braking_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_braking_speed_limit(ego_vehicle.states_lon[idx].v)
+                self._keeps_braking_speed_limit(ego_vehicle.states_lon[time_step].v)
             predicate_trace["keeps_road_condition_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_road_condition_speed_limit(ego_vehicle.states_lon[idx].v)
+                self._keeps_road_condition_speed_limit(ego_vehicle.states_lon[time_step].v)
             predicate_trace["preserves_traffic_flow"][ego_vehicle.id][time_step] = \
-                self._preserves_traffic_flow(ego_vehicle, other_vehicles, idx)
+                self._preserves_traffic_flow(ego_vehicle, other_vehicles, time_step)
             predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[idx].v, ego_vehicle.lanelet_assignment[idx])
+                self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.lanelet_assignment[time_step])
             predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
-                self._unnecessary_braking(ego_vehicle, other_vehicles, idx)
+                self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance"][other_vehicle.id] = {}
-            for idx in range(len(other_vehicle.state_list_cr)):
-                time_step = other_vehicle.state_list_cr[idx].time_step
-                if idx >= len(ego_vehicle.states_lon):
-                    break
+            for time_step in ego_vehicle.states_lon.keys():
+                if other_vehicle.states_lon.get(time_step) is None:
+                    predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = True
+                    continue
                 predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = \
-                    self._keeps_safe_distance(ego_vehicle.states_lon[idx].s, other_vehicle.states_lon[idx].s,
-                                              ego_vehicle.states_lon[idx].v, other_vehicle.states_lon[idx].v,
+                    self._keeps_safe_distance(ego_vehicle.states_lon[time_step].s,
+                                              other_vehicle.states_lon[time_step].s,
+                                              ego_vehicle.states_lon[time_step].v,
+                                              other_vehicle.states_lon[time_step].v,
                                               self._ego_vehicle_param.get("a_min"),
                                               self._other_vehicles_param.get("a_min"),
                                               self._ego_vehicle_param.get("t_react"))
