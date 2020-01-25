@@ -195,24 +195,18 @@ def main():
         if len(scenarios) > max_num_scenarios:
             break
 
-    for subdir, dirs, files in os.walk(root_dir_hd):
-        for directory in dirs:
-            for filename in os.listdir(subdir + "/" + directory):
-                if not "DEU" in filename:
-                    continue
-                if "Stu" in filename:
-                    continue
-                if not filename.endswith('.xml') or "_S-" in filename:
-                    continue
-                fullname = os.path.join(subdir + "/" + directory, filename)
-                scenario, planning_problem_set = \
-                    CommonRoadFileReader(fullname).open()
-                if "highway" in scenario.tags:
-                    scenarios.append(scenario)
-                if len(scenarios) > max_num_scenarios:
-                    break
-            if len(scenarios) > max_num_scenarios:
-                break
+    for filename in os.listdir(root_dir_hd):
+        if not "DEU" in filename:
+            continue
+        if "Stu" in filename:
+            continue
+        if not filename.endswith('.xml') or "_S-" in filename:
+            continue
+        fullname = os.path.join(root_dir_hd + "/", filename)
+        scenario, planning_problem_set = \
+            CommonRoadFileReader(fullname).open()
+        if "highway" in scenario.tags:
+            scenarios.append(scenario)
         if len(scenarios) > max_num_scenarios:
             break
 

@@ -88,7 +88,7 @@ scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 #fw = CommonRoadFileWriter(scenario, planning_problem_set, scenario.author, scenario.affiliation, scenario.source, scenario.tags)
 #fw.write_scenario_to_file("DEU_A9-3_1_T-1.xml")
 
-plt.style.use('classic')
+#plt.style.use('classic')
 inch_in_cm = 2.54
 figsize = [20, 8]
 x = [x for lanelet in scenario.lanelet_network.lanelets for x in lanelet.center_vertices[:, 0]]
@@ -110,6 +110,4 @@ plot_limits = [x_min, x_max, y_min , y_max]
 # #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
 # plt.show()
 
-create_scenario_video(scenario, "videos/test123.mp4", 0,
-                      50,
-                      plot_limits=plot_limits, fps=25)
+create_scenario_video(scenario, "videos/test123.mp4", 0, 50, plot_limits=plot_limits, fps=25)
