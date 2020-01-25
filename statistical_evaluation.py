@@ -170,6 +170,7 @@ def main():
     scenarios = []
     root_dir_cr = "./../../../commonroad/scenarios/tum_cps/scenarios"
     root_dir_hd = "./highD_generator/scenarios"
+    max_num_scenarios = 100
 
     for subdir, dirs, files in os.walk(root_dir_cr):
         for directory in dirs:
@@ -187,6 +188,12 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
+                if len(scenarios) > max_num_scenarios:
+                    break
+            if len(scenarios) > max_num_scenarios:
+                break
+        if len(scenarios) > max_num_scenarios:
+            break
 
     for subdir, dirs, files in os.walk(root_dir_hd):
         for directory in dirs:
@@ -202,6 +209,12 @@ def main():
                     CommonRoadFileReader(fullname).open()
                 if "highway" in scenario.tags:
                     scenarios.append(scenario)
+                if len(scenarios) > max_num_scenarios:
+                    break
+            if len(scenarios) > max_num_scenarios:
+                break
+        if len(scenarios) > max_num_scenarios:
+            break
 
     for sc in scenarios:
         cr_eval.evaluate_scenario(sc, [0])
