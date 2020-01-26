@@ -32,6 +32,7 @@ class CommonRoadObstacleEvaluation:
         self.num_vehicles = 0
         self.num_scenarios = 0
         self.num_veh_all_correct = 0
+        self.vehicles_dict = {}
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
         lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
@@ -76,7 +77,9 @@ class CommonRoadObstacleEvaluation:
         vehicles = []
         for obs in scenario.dynamic_obstacles:
             if obs.prediction is not None:
-                vehicles.append(self.create_vehicle(obs))
+                new_vehicle = self.create_vehicle(obs)
+                vehicles.append(new_vehicle)
+                self.vehicles_dict[obs.obstacle_id] = new_vehicle
 
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)

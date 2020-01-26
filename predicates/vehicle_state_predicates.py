@@ -255,8 +255,8 @@ class VehicleStatePredicateCollection(PredicateCollection):
             return False
 
     @staticmethod
-    def _safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
-                       a_min_lead: float, t_react_follow: float) -> float:
+    def safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
+                      a_min_lead: float, t_react_follow: float) -> float:
         """
         Calculates safe distance based on analytic formula
 
@@ -304,7 +304,7 @@ class VehicleStatePredicateCollection(PredicateCollection):
         :param t_react_follow: reaction time of following vehicle
         :returns boolean indicating satisfaction
         """
-        if s_lead - s_follow < self._safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
+        if s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
             return False
         else:
             return True
