@@ -1,8 +1,9 @@
 from monitor.traffic_rule_monitor import TrafficRuleMonitor
-from typing import List, Dict, Set
-from predicates.vehicle_state_predicates import VehicleStatePredicateCollection
+from typing import List, Dict
+from predicates.vehicle_state_predicates import VelocityPredicateCollection
 from predicates.position_predicates import PositionPredicateCollection
-from common.vehicle import Vehicle, VehicleLocalization
+from predicates.braking_predicates import BrakingPredicateCollection
+from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
 
 
@@ -29,10 +30,13 @@ class TrafficRuleDispatcher:
         self._ego_vehicle_param = ego_vehicle_param
         self._other_vehicles_param = other_vehicles_param
         self._road_network = road_network
-        self._safety_predicates = VehicleStatePredicateCollection(road_network, simulation_param,
-                                                                  ego_vehicle_param, other_vehicles_param,
-                                                                  traffic_rule_param)
+        self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
+                                                                ego_vehicle_param, other_vehicles_param,
+                                                                traffic_rule_param)
         self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
+                                                                ego_vehicle_param, other_vehicles_param,
+                                                                traffic_rule_param)
+        self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
                                                                 ego_vehicle_param, other_vehicles_param,
                                                                 traffic_rule_param)
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
@@ -68,10 +72,11 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary containing predicate evaluation
         """
-        safety_predicates = self._safety_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
+        velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
         position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
+        braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
 
-        combined_predicates = {**safety_predicates , **position_predicates}
+        combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates}
         return combined_predicates
 
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:

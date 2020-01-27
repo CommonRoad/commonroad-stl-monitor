@@ -2,6 +2,7 @@ from typing import List, Dict, Set
 from predicates.predicate_collection import PredicateCollection
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
+from commonroad.scenario.lanelet import LaneletType
 
 
 class PositionPredicateCollection(PredicateCollection):
@@ -94,21 +95,37 @@ class PositionPredicateCollection(PredicateCollection):
         else:
             return False
 
-    # def _on_ramp(self, vehicle: Vehicle, time_step: int) -> bool:
-    #     lanelet_ids = vehicle.lanelet_assignment[time_step]
-    #     for l_id in lanelet_ids:
-    #         lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
-    #         if LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type:
-    #             return True
-    #     return False
-    #
-    # def _urban(self, vehicle: Vehicle, time_step: int) -> bool:
-    #     lanelet_ids = vehicle.lanelet_assignment[time_step]
-    #     for l_id in lanelet_ids:
-    #         lanelet = self._lanelet_network.find_lanelet_by_id(l_id)
-    #         if LaneletType.URBAN in lanelet.lanelet_type:
-    #             return True
-    #     return False
+    def _on_access_ramp(self, vehicle: Vehicle, time_step: int) -> bool:
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
+                return True
+        return False
+
+    def _on_exit_ramp(self, vehicle: Vehicle, time_step: int) -> bool:
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.EXIT_RAMP in lanelet.lanelet_type:
+                return True
+        return False
+
+    def _on_shoulder(self, vehicle: Vehicle, time_step: int) -> bool:
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.SHOULDER in lanelet.lanelet_type:
+                return True
+        return False
+
+    def _on_main_carriage_way(self, vehicle: Vehicle, time_step: int) -> bool:
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+                return True
+        return False
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:

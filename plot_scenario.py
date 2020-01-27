@@ -111,4 +111,4 @@ draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
 #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
 plt.show()
 
-#create_scenario_video(scenario, "videos/test123.mp4", 0, 50, plot_limits=plot_limits, fps=25)
+create_scenario_video(scenario, "videos/test123.mp4", 0, 50, plot_limits=plot_limits, fps=25)

@@ -36,7 +36,7 @@ def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
         delta_s.append(vehicle_lead.states_lon[time_step].s - vehicle_follow.states_lon[time_step].s)
         s_safe.append(VehicleStatePredicateCollection.safe_distance(vehicle_follow.states_lon[time_step].v,
                                                                     vehicle_lead.states_lon[time_step].v,
-                                                                    -10, -10.5, 0.0))
+                                                                    -10, -10.5, 0.3))
 
     # Storage related configuration
     width = 3.75
@@ -55,7 +55,7 @@ def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
     time = [i * 0.1 for i in time]
     plt.plot(time, delta_s, color=(0.0, 0.0, 0.5, 1), label=r'$\Delta s$', linewidth=linewidth_plot)
     plt.plot(time, s_safe, "-", color=(0.3, 0.3, 0.3, 0.35), label=r'$d_{safe}$', linewidth=linewidth_plot)
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower right')
     plt.show()
 
 
