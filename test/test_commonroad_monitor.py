@@ -25,21 +25,34 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.road_network = None  # updated in each test case
 
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
-        lane = self.road_network.find_lane_by_obstacle(obstacle.obstacle_id, obstacle.initial_state.time_step)
+        lane = self.road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
+                                                        list(obstacle.initial_shape_lanelet_ids))
         state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
-        vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
-                          obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
-                          obstacle.initial_lanelet_ids, obstacle.initial_signal_state)
+        vehicle = None
+        if state_lon is not None or state_lat is not None:
+            vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                              obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
+                              obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state)
 
         for state in obstacle.prediction.trajectory.state_list:
-            lane = self.road_network.find_lane_by_obstacle(obstacle.obstacle_id, state.time_step)
-            vehicle.append_state_cr(state, state.time_step)
+            lane = self.road_network.find_lane_by_obstacle(
+                list(obstacle.prediction.center_lanelet_assignment[state.time_step]),
+                list(obstacle.prediction.shape_lanelet_assignment[state.time_step]))
             state_lon, state_lat = lane.create_curvilinear_states(state)
-            vehicle.append_state_lon(state_lon, state.time_step)
-            vehicle.append_state_lat(state_lat, state.time_step)
-            vehicle.append_lanelet_assignment(obstacle.prediction.lanelet_assignment[state.time_step],
+            if state_lon is None or state_lat is None:
+                continue
+            if vehicle is not None:
+                vehicle.append_state_cr(state, state.time_step)
+                vehicle.append_state_lon(state_lon, state.time_step)
+                vehicle.append_state_lat(state_lat, state.time_step)
+                vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
                                               state.time_step)
-            vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
+                vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
+            else:
+                vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                                  state, obstacle.obstacle_id, obstacle.obstacle_type,
+                                  obstacle.prediction.shape_lanelet_assignment[state.time_step],
+                                  obstacle.signal_state_at_time_step(state.time_step))
 
         return vehicle
 
@@ -51,7 +64,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [2]
+        self.activated_traffic_rule_sets = [3]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': True}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         result = self.execute_evaluation(scenario)
@@ -67,7 +80,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [2]
+        self.activated_traffic_rule_sets = [3]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         self.ego_vehicle_param["fov_speed_limit"] = 32
@@ -84,7 +97,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_max_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [2]
+        self.activated_traffic_rule_sets = [3]
         exp_result = [(1000, {'max_speed_limit': False}), (1001, {'max_speed_limit': False}),
                       (1002, {'max_speed_limit': False}), (1003, {'max_speed_limit': True})]
         self.ego_vehicle_param["fov_speed_limit"] = 32
@@ -105,7 +118,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_min_speed_limit.xml").open()
-        self.activated_traffic_rule_sets = [3]
+        self.activated_traffic_rule_sets = [4]
         exp_result = [(1000, {'min_speed_limit': True}), (1001, {'min_speed_limit': True}),
                       (1002, {'min_speed_limit': True}), (1003, {'min_speed_limit': False}),
                       (1004, {'min_speed_limit': True}), (1005, {'min_speed_limit': False}),
@@ -124,11 +137,28 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_safe_distance.xml").open()
-        self.activated_traffic_rule_sets = [4]
-        exp_result = [(1000, {'safe_distance_veh_1001': False}), (1001, {'safe_distance': True}),
-                      (1002, {'safe_distance_veh_1003': False, 'safe_distance_veh_1004': False}),
-                      (1003, {'safe_distance_veh_1004': False}), (1004, {'safe_distance': True}),
-                      (1005, {'safe_distance_veh_1006': True}), (1006, {'safe_distance': True})]
+        self.activated_traffic_rule_sets = [1]
+        exp_result = [(1000, {'safe_distance_veh_1001': False, 'safe_distance_veh_1002': True,
+                       'safe_distance_veh_1003': True, 'safe_distance_veh_1004': True,
+                       'safe_distance_veh_1005': True, 'safe_distance_veh_1006': True}),
+                      (1001, {'safe_distance_veh_1000': True, 'safe_distance_veh_1002': True,
+                       'safe_distance_veh_1003': True, 'safe_distance_veh_1004': True,
+                       'safe_distance_veh_1005': True, 'safe_distance_veh_1006': True}),
+                      (1002, {'safe_distance_veh_1000': True, 'safe_distance_veh_1001': True,
+                       'safe_distance_veh_1003': False, 'safe_distance_veh_1004': False,
+                       'safe_distance_veh_1005': True, 'safe_distance_veh_1006': True}),
+                      (1003, {'safe_distance_veh_1000': True, 'safe_distance_veh_1001': True,
+                       'safe_distance_veh_1002': True, 'safe_distance_veh_1004': False,
+                       'safe_distance_veh_1005': True, 'safe_distance_veh_1006': True}),
+                      (1004, {'safe_distance_veh_1000': True, 'safe_distance_veh_1001': True,
+                       'safe_distance_veh_1002': True, 'safe_distance_veh_1003': True,
+                       'safe_distance_veh_1005': True, 'safe_distance_veh_1006': True}),
+                      (1005, {'safe_distance_veh_1000': True, 'safe_distance_veh_1001': True,
+                       'safe_distance_veh_1002': True, 'safe_distance_veh_1003': True,
+                       'safe_distance_veh_1004': True, 'safe_distance_veh_1006': True}),
+                      (1006, {'safe_distance_veh_1000': True, 'safe_distance_veh_1001': True,
+                       'safe_distance_veh_1002': True, 'safe_distance_veh_1003': True,
+                       'safe_distance_veh_1004': True, 'safe_distance_veh_1005': True})]
         result = self.execute_evaluation(scenario)
         print("Safe Distance Test:")
         print(result)
@@ -145,14 +175,13 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_unnecessary_braking_1.xml").open()
-        self.activated_traffic_rule_sets = [5]
+        self.activated_traffic_rule_sets = [2]
         exp_result = [(1000, {'no_unnecessary_braking': True}), (1001, {'no_unnecessary_braking': True}),
                       (1002, {'no_unnecessary_braking': False}), (1003, {'no_unnecessary_braking': False}),
                       (1004, {'no_unnecessary_braking': False}), (1005, {'no_unnecessary_braking': True}),
                       (1006, {'no_unnecessary_braking': True}), (1007, {'no_unnecessary_braking': True})]
         result = self.execute_evaluation(scenario)
         print("Unnecessary Braking Test 1:")
-        print(result)
         self.assertEqual(exp_result, result)
 
     def test_unnecessary_braking_2(self):
@@ -160,7 +189,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = \
             CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
                                  "/" + "test_unnecessary_braking_2.xml").open()
-        self.activated_traffic_rule_sets = [5]
+        self.activated_traffic_rule_sets = [2]
         self.ego_vehicle_param["fov_speed_limit"] = 5
         exp_result = [(1000, {'no_unnecessary_braking': True})]
         result = self.execute_evaluation(scenario)
@@ -170,18 +199,18 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def add_jerk(self, vehicle: Vehicle):
         for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.jerk_profile.get(state.time_step) is None:
+            if vehicle.states_lon[state.time_step].j is None:
                 if idx + 1 < len(vehicle.state_list_cr):
                     jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / \
                            self.simulation_param.get("dt")
                 else:
                     jerk = 0
-                vehicle.append_jerk(jerk, state.time_step)
+                vehicle.states_lon[state.time_step].j = jerk
         return vehicle
 
     def add_acceleration(self, vehicle: Vehicle):
         for idx, state in enumerate(vehicle.state_list_cr):
-            if hasattr(state, "acceleration") is False:
+            if vehicle.states_lon[state.time_step].a is None:
                 if idx + 1 < len(vehicle.state_list_cr):
                     acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
                            self.simulation_param.get("dt")
@@ -211,7 +240,6 @@ class TestCommonRoadMonitor(unittest.TestCase):
             vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation
-
 
 if __name__ == '__main__':
     unittest.main()

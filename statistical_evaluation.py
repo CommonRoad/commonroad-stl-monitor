@@ -93,18 +93,18 @@ class CommonRoadObstacleEvaluation:
     @staticmethod
     def add_jerk(vehicle: Vehicle, dt: float):
         for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.jerk_profile.get(state.time_step) is None:
+            if vehicle.states_lon[state.time_step].j is None:
                 if idx + 1 < len(vehicle.state_list_cr):
                     jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / dt
                 else:
                     jerk = 0
-                vehicle.append_jerk(jerk, state.time_step)
+                vehicle.states_lon[state.time_step].j = jerk
         return vehicle
 
     @staticmethod
     def add_acceleration(vehicle: Vehicle, dt: float):
         for idx, state in enumerate(vehicle.state_list_cr):
-            if hasattr(state, "acceleration") is False:
+            if vehicle.states_lon[state.time_step].a is None:
                 if idx + 1 < len(vehicle.state_list_cr):
                     acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / dt
                 else:
@@ -115,6 +115,7 @@ class CommonRoadObstacleEvaluation:
 
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[int]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set
+        self._simulation_param["dt"] = scenario.dt
         try:
             result = self._execute_evaluation(scenario)
         except RuntimeError:

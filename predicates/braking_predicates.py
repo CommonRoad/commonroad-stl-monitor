@@ -41,7 +41,9 @@ class BrakingPredicateCollection(PredicateCollection):
                 continue
             if PositionPredicateCollection.in_front_of(ego_vehicle.states_lon[time_step].s,
                                                        veh_o.states_lon[time_step].s) and \
-                    PositionPredicateCollection.same_lane(ego_vehicle_lanelets, veh_o.lanelet_assignment[time_step]) \
+                    PositionPredicateCollection.same_lane(
+                        self._road_network.find_lane_ids_by_lanelets(ego_vehicle_lanelets),
+                        self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
                     and veh_o.states_lon[time_step].v - v_ego < self._traffic_rule_param.get("min_velocity_dif"):
                 if a_min_other is None or veh_o.states_lon[time_step].a < a_min_other:
                     a_min_other = veh_o.states_lon[time_step].a

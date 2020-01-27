@@ -1,7 +1,7 @@
 from commonroad.common.file_reader import CommonRoadFileReader
 from statistical_evaluation import CommonRoadObstacleEvaluation
 from common.vehicle import Vehicle
-from predicates.vehicle_state_predicates import VehicleStatePredicateCollection
+from predicates.braking_predicates import BrakingPredicateCollection
 import math
 import matplotlib.pyplot as plt
 import matplotlib as mp
@@ -34,7 +34,7 @@ def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
     for time_step, state in vehicle_follow.states_lon.items():
         time.append(time_step)
         delta_s.append(vehicle_lead.states_lon[time_step].s - vehicle_follow.states_lon[time_step].s)
-        s_safe.append(VehicleStatePredicateCollection.safe_distance(vehicle_follow.states_lon[time_step].v,
+        s_safe.append(BrakingPredicateCollection.safe_distance(vehicle_follow.states_lon[time_step].v,
                                                                     vehicle_lead.states_lon[time_step].v,
                                                                     -10, -10.5, 0.3))
 

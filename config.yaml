@@ -179,10 +179,11 @@ traffic_rule_monitoring:
 
     traffic_rule_sets:
         0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking]
-        1: [max_speed_limit]
-        2: [min_speed_limit]
-        3: [safe_distance]
-        4: [no_unnecessary_braking]
+        1: [safe_distance]
+        2: [no_unnecessary_braking]
+        3: [max_speed_limit]
+        4: [min_speed_limit]
+
 
     activated_traffic_rule_sets: [0]
     vehicle_dependent_rules: [safe_distance]

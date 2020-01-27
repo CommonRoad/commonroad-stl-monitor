@@ -1,6 +1,6 @@
 from monitor.traffic_rule_monitor import TrafficRuleMonitor
 from typing import List, Dict
-from predicates.vehicle_state_predicates import VelocityPredicateCollection
+from predicates.velocity_predicates import VelocityPredicateCollection
 from predicates.position_predicates import PositionPredicateCollection
 from predicates.braking_predicates import BrakingPredicateCollection
 from common.vehicle import Vehicle

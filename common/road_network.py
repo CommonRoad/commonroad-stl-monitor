@@ -65,9 +65,9 @@ class Lane:
         if hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(s, state.velocity, state.acceleration, state.jerk)
         elif hasattr(state, "acceleration"):
-            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, 0)
+            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, None)
         else:
-            x_lon = StateLongitudinal(s, state.velocity, 0, 0)
+            x_lon = StateLongitudinal(s, state.velocity, None, None)
         x_lat = StateLateral(d, theta_cl - state.orientation, 0, 0)
 
         return x_lon, x_lat
@@ -199,6 +199,21 @@ class RoadNetwork:
         for lane in self.lanes:
             if obstacle_id in lane.lanelet.dynamic_obstacle_by_time_step(time_step):
                 lane_ids.add(lane.lanelet.lanelet_id)
+
+        return lane_ids
+
+    def find_lane_ids_by_lanelets(self, lanelets: Set[int]) -> Set[int]:
+        """
+        Finds the lanes an obstacle belongs to and returns their IDs
+
+        :param lanelets: list of lanelet IDs
+        :returns set of lanelet IDs
+        """
+        lane_ids = set()
+        for lane in self.lanes:
+            for lanelet_id in lanelets:
+                if lanelet_id in lane.contained_lanelets:
+                    lane_ids.add(lane.lanelet.lanelet_id)
 
         return lane_ids
 

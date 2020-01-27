@@ -68,16 +68,16 @@ class PositionPredicateCollection(PredicateCollection):
             return False
 
     @staticmethod
-    def same_lane(lanelet_ids_ego: Set[int], lanelet_ids_other: Set[int]) -> bool:
+    def same_lane(lane_ids_ego: Set[int], lane_ids_other: Set[int]) -> bool:
         """
         Evaluates if another vehicle is within the same lane as the ego vehicle
 
-        :param lanelet_ids_ego: lanelet IDs of lanelets the ego vehicle is on
-        :param lanelet_ids_other: lanelet IDs of lanelets the other vehicle is on
+        :param lane_ids_ego: lane IDs of lanes the ego vehicle is on
+        :param lane_ids_other: lane IDs of lanes the other vehicle is on
         :returns boolean indicating satisfaction
         """
-        for lanelet_id in lanelet_ids_ego:
-            if lanelet_id in lanelet_ids_other:
+        for lane_id in lane_ids_ego:
+            if lane_id in lane_ids_other:
                 return True
         return False
 
@@ -146,8 +146,9 @@ class PositionPredicateCollection(PredicateCollection):
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
                 predicate_trace["same_lane_as_ego_vehicle"][other_vehicle.id][time_step] = \
-                    self.same_lane(ego_vehicle.lanelet_assignment[time_step],
-                                   other_vehicle.lanelet_assignment[time_step])
+                    self.same_lane(
+                        self._road_network.find_lane_ids_by_lanelets(ego_vehicle.lanelet_assignment[time_step]),
+                        self._road_network.find_lane_ids_by_lanelets(other_vehicle.lanelet_assignment[time_step]))
                 predicate_trace["in_front_of_ego_vehicle"][other_vehicle.id][time_step] = \
                     self.in_front_of(ego_vehicle.states_lon[time_step].s,
                                      other_vehicle.states_lon[time_step].s)

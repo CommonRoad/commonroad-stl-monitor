@@ -9,7 +9,7 @@ class StateLongitudinal:
     """
     Longitudinal state in curvilinear coordinate system
     """
-    def __init__(self, s: float, v: float, a: float, j: float):
+    def __init__(self, s: float, v: float, a: Union[float, None], j: Union[float, None]):
         """
         :param s: longitudinal position
         :param v: velocity
@@ -46,7 +46,7 @@ class StateLongitudinal:
         self._a = value
 
     @property
-    def j(self) -> float:
+    def j(self) -> Union[float, None]:
         return self._j
 
     @j.setter
@@ -134,7 +134,6 @@ class Vehicle:
         self._states_lon = {cr_state.time_step: state_lon}
         self._states_lat = {cr_state.time_step: state_lat}
         self._states_cr = {cr_state.time_step: cr_state}
-        self._jerk_profile = {}
         self._kappa_dot_dot_profile = {}
         self._shape = shape
         self._id = vehicle_id
@@ -169,10 +168,6 @@ class Vehicle:
         for state in self._states_cr.values():
             state_list.append(state)
         return state_list
-
-    @property
-    def jerk_profile(self) -> Dict[int, float]:
-        return self._jerk_profile
 
     @property
     def obstacle_type(self) -> ObstacleType:
@@ -252,15 +247,6 @@ class Vehicle:
         :param time_step: time step of new data
         """
         self._signal_series[time_step] = signal_state
-
-    def append_jerk(self, jerk: float, time_step: int):
-        """
-        Sets jerk at a specific time step
-
-        :param jerk: jerk of vehicle
-        :param time_step: time step of new data
-        """
-        self._jerk_profile[time_step] = jerk
 
     def append_classification(self, classification: Set[VehicleLocalization], time_step: int):
         """
