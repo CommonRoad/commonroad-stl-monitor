@@ -4,7 +4,7 @@ from common.road_network import RoadNetwork
 from common.vehicle import Vehicle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
 from predicates.position_predicates import PositionPredicateCollection
-
+from commonroad.scenario.obstacle import ObstacleType
 
 class VelocityPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
@@ -134,16 +134,21 @@ class VelocityPredicateCollection(PredicateCollection):
             return True
         else:
             v_max_lane = self.active_speed_limit(ego_vehicle.lanelet_assignment[time_step])
+            if ego_vehicle.obstacle_type is ObstacleType.TRUCK:
+                v_type = 22.22
+            else:
+                v_type = 80
             if v_max_lane is None or v_max_lane == float("inf"):
                 v_max = min(self._ego_vehicle_param.get("road_condition_speed_limit"),
                             self._ego_vehicle_param.get("fov_speed_limit"),
                             self._ego_vehicle_param.get("braking_speed_limit"),
-                            self._traffic_rule_param.get("desired_highway_velocity"))
+                            self._traffic_rule_param.get("desired_highway_velocity"),
+                            v_type)
             else:
                 v_max = min(self._ego_vehicle_param.get("road_condition_speed_limit"),
                             self._ego_vehicle_param.get("fov_speed_limit"),
                             self._ego_vehicle_param.get("braking_speed_limit"),
-                            self.active_speed_limit(ego_vehicle.lanelet_assignment[time_step]))
+                            v_max_lane, v_type)
             if v_max - ego_vehicle.states_lon[time_step].v > self._traffic_rule_param.get("min_velocity_dif"):
                 return False
             else:

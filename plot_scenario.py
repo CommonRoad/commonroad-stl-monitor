@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.visualization.draw_dispatch_cr import draw_object
-from commonroad.visualization.video import create_scenario_video
+#from commonroad.visualization.video import create_scenario_video
 from common.configuration import *
 import numpy as np
+from output.visualization import create_scenario_video
 from commonroad.common.file_writer import CommonRoadFileWriter
 # CommonRoad Visualization Parameters:
 basic_shape_parameters_static = {'opacity': 1.0,
@@ -79,10 +80,12 @@ draw_params_scenario = {'scenario': {
 
 config = load_yaml("config.yaml")
 simulation_param = config.get("simulation_param")
+visualization_param = config.get("visualization").get("video")
+#filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
 #filename = "scenarios/test/test_max_speed_limit.xml"
-#filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
-filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A99-1_2_T-1" + ".xml"
-#filename = "highD_generator/scenarios/DEU_LocationB-2_13_T-1.xml"
+filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
+#filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A9-1_1_T-1" + ".xml"
+#filename = "highD_generator/scenarios/DEU_LocationB-1_17_T-1.xml"
     #simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 #scenario.translate_rotate(np.array([0, 0]), -0.030)
@@ -111,4 +114,4 @@ draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
 #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
 plt.show()
 
-create_scenario_video(scenario, "videos/test123.mp4", 0, 50, plot_limits=plot_limits, fps=25)
+create_scenario_video("videos/", scenario, visualization_param, 384)

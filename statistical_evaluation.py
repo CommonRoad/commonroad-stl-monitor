@@ -78,14 +78,14 @@ class CommonRoadObstacleEvaluation:
         for obs in scenario.dynamic_obstacles:
             if obs.prediction is not None:
                 new_vehicle = self.create_vehicle(obs)
+                self.add_acceleration(new_vehicle, self._simulation_param.get("dt"))
+                self.add_jerk(new_vehicle, self._simulation_param.get("dt"))
                 vehicles.append(new_vehicle)
                 self.vehicles_dict[obs.obstacle_id] = new_vehicle
 
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
             other_vehicles.pop(idx)
-            self.add_acceleration(ego_veh, self._simulation_param.get("dt"))
-            self.add_jerk(ego_veh, self._simulation_param.get("dt"))
             vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation

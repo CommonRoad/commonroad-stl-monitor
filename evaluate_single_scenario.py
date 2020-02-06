@@ -6,12 +6,14 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib as mp
 
+
 def main():
     cr_eval = CommonRoadObstacleEvaluation()
-    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
-    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_A99-1_2_T-1" + ".xml"
-    filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A99-1_1_T-1" + ".xml"
-    #filename = "highD_generator/scenarios/DEU_LocationB-2_13_T-1.xml"
+    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
+    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_A99-1_1_T-1" + ".xml"
+    #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A9-1_1_T-1" + ".xml"
+    #filename = "highD_generator/scenarios/DEU_LocationB-1_17_T-1.xml"
+    filename = "scenarios//test/test_safe_distance.xml"
     scenario, planning_problem_set = CommonRoadFileReader(filename).open()
 
     cr_eval.evaluate_scenario(scenario, [0])
@@ -24,7 +26,7 @@ def main():
     print("safe distance compliance: " + str(cr_eval.safe_distance_satisfaction))
     print("perfect vehicles: " + str(cr_eval.num_veh_all_correct))
 
-    create_safe_distance_plot(cr_eval.vehicles_dict[204], cr_eval.vehicles_dict[202])
+    create_safe_distance_plot(cr_eval.vehicles_dict[1000], cr_eval.vehicles_dict[1001])
 
 
 def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
@@ -32,11 +34,16 @@ def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
     delta_s = []
     s_safe = []
     for time_step, state in vehicle_follow.states_lon.items():
+        if time_step < 0:
+            continue
+        if time_step > 50:
+            break
         time.append(time_step)
         delta_s.append(vehicle_lead.states_lon[time_step].s - vehicle_follow.states_lon[time_step].s)
         s_safe.append(BrakingPredicateCollection.safe_distance(vehicle_follow.states_lon[time_step].v,
-                                                                    vehicle_lead.states_lon[time_step].v,
-                                                                    -10, -10.5, 0.3))
+                                                               vehicle_lead.states_lon[time_step].v,
+                                                               -10, -10.5, 0.3))
+        print(delta_s[-1], s_safe[-1])
 
     # Storage related configuration
     width = 3.75
@@ -54,8 +61,8 @@ def create_safe_distance_plot(vehicle_follow: Vehicle, vehicle_lead: Vehicle):
     plt.xlabel(r'$t~[s]$')
     time = [i * 0.1 for i in time]
     plt.plot(time, delta_s, color=(0.0, 0.0, 0.5, 1), label=r'$\Delta s$', linewidth=linewidth_plot)
-    plt.plot(time, s_safe, "-", color=(0.3, 0.3, 0.3, 0.35), label=r'$d_{safe}$', linewidth=linewidth_plot)
-    plt.legend(loc='lower right')
+    plt.plot(time, s_safe, "-", color=(0.3, 0.3, 0.3, 0.6), label=r'$d_{safe}$', linewidth=linewidth_plot)
+    plt.legend(loc='upper right')
     plt.show()
 
 

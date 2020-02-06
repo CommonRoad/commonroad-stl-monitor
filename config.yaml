@@ -131,7 +131,7 @@ visualization:
     #
     #   - obstacle_label: activate/deactivate visualization of obstacle label (ID) in video
     video:
-        obstacle_label : false
+        obstacle_label : True
 
 # Traffic rule information
 ###
@@ -170,7 +170,7 @@ traffic_rule_monitoring:
     traffic_rules_param:
         j_abrupt: -2
         a_abrupt: -2
-        min_velocity_dif: 10
+        min_velocity_dif: 15
         standstill_error: 0.01
         num_veh_congestion: 4
         max_congestion_velocity: 10

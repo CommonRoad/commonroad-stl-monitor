@@ -231,15 +231,16 @@ class TestCommonRoadMonitor(unittest.TestCase):
         vehicles = []
         for obs in scenario.dynamic_obstacles:
             vehicles.append(self.create_vehicle(obs))
+            self.add_acceleration(vehicles[-1])
+            self.add_jerk(vehicles[-1])
 
         for idx, ego_veh in enumerate(vehicles):
             other_vehicles = copy.deepcopy(vehicles)
             other_vehicles.pop(idx)
-            self.add_acceleration(ego_veh)
-            self.add_jerk(ego_veh)
             vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
 
         return vehicle_evaluation
+
 
 if __name__ == '__main__':
     unittest.main()

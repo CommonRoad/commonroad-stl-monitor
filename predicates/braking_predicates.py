@@ -106,9 +106,9 @@ class BrakingPredicateCollection(PredicateCollection):
             (-2 * abs(a_min_follow)) + v_follow * t_react_follow
 
         if precondition:
-            return d_safe_1
+            return max(0, d_safe_1)
         else:
-            return d_safe_2
+            return max(0, d_safe_2)
 
     def _keeps_safe_distance(self, s_follow: float, s_lead: float, v_follow: float, v_lead: float,
                              a_min_follow: float, a_min_lead: float, t_react_follow: float) -> bool:
@@ -124,7 +124,7 @@ class BrakingPredicateCollection(PredicateCollection):
         :param t_react_follow: reaction time of following vehicle
         :returns boolean indicating satisfaction
         """
-        if s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
+        if 0 < s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
             return False
         else:
             return True
@@ -159,4 +159,6 @@ class BrakingPredicateCollection(PredicateCollection):
                                               self._ego_vehicle_param.get("a_min"),
                                               self._other_vehicles_param.get("a_min"),
                                               self._ego_vehicle_param.get("t_react"))
+                if predicate_trace.get("keeps_safe_distance").get(other_vehicle.id).get(time_step) is False:
+                    print(ego_vehicle.id, other_vehicle.id, time_step)
         return predicate_trace

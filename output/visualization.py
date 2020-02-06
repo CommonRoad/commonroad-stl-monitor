@@ -14,6 +14,7 @@ from typing import List, Dict, Tuple
 from datetime import datetime
 import warnings
 
+
 # CommonRoad Visualization Parameters:
 basic_shape_parameters_static = {'opacity': 1.0,
                                  'facecolor': '#0f55a3',
