@@ -140,17 +140,17 @@ class CommonRoadObstacleEvaluation:
             out_string = scenario_name + " - obs_id: " + str(vehicle[0]) + " - "
             safe_distance_complete = True
             for rule_name, eval_result in vehicle[1].items():
-                if rule_name == 'max_speed_limit':
+                if rule_name == 'R_G3':
                     if eval_result is True:
                         self.max_speed_limit_satisfaction += 1
                         num_correct_rules += 1
                     out_string += rule_name + ": " + str(eval_result) + " - "
-                elif rule_name == 'min_speed_limit':
+                elif rule_name == 'R_G4':
                     if eval_result is True:
                         self.min_speed_limit_satisfaction += 1
                         num_correct_rules += 1
                     out_string += rule_name + ": " + str(eval_result) + " - "
-                elif rule_name == 'no_unnecessary_braking':
+                elif rule_name == 'R_G2':
                     if eval_result is True:
                         self.no_unnecessary_braking_satisfaction += 1
                         num_correct_rules += 1

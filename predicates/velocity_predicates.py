@@ -245,10 +245,10 @@ class VelocityPredicateCollection(PredicateCollection):
                                  self._get_type_speed_limit(vehicle_type),
                                  self._ego_vehicle_param.get("road_condition_speed_limit")):
             return False
-        if required_speed <= velocity:
-            return True
-        else:
+        if required_speed > velocity:
             return False
+        else:
+            return True
 
     def _keeps_fov_speed_limit(self, velocity: float) -> bool:
         """
@@ -335,7 +335,8 @@ class VelocityPredicateCollection(PredicateCollection):
 
         for time_step in ego_vehicle.states_lon.keys():
             predicate_trace["keeps_lane_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_lane_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.lanelet_assignment[time_step])
+                self._keeps_lane_speed_limit(ego_vehicle.states_lon[time_step].v,
+                                             ego_vehicle.lanelet_assignment[time_step])
             predicate_trace["keeps_fov_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_fov_speed_limit(ego_vehicle.states_lon[time_step].v)
             predicate_trace["keeps_braking_speed_limit"][ego_vehicle.id][time_step] = \
@@ -347,6 +348,7 @@ class VelocityPredicateCollection(PredicateCollection):
             predicate_trace["keeps_type_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_type_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.obstacle_type)
             predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
-                self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.lanelet_assignment[time_step])
+                self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[time_step].v,
+                                                 ego_vehicle.lanelet_assignment[time_step], ego_vehicle.obstacle_type)
 
         return predicate_trace

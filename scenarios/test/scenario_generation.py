@@ -446,6 +446,32 @@ def create_min_speed_limit_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([3.0, 5.25]), 1001)
+
+    obstacles.append(obs1)
+    obstacles.append(obs2)
+    num_lanes = 2
+    num_lanelets = 5
+    road_length = 200
+    scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MINSPEED.value, [str(30)])
+    traffic_sign = TrafficSign(202, [traffic_sign_elem])
+    scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+    return scenario
+
+
+def create_preserves_traffic_flow_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([3.0, 1.75]), 1000)
     obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -472,16 +498,6 @@ def create_min_speed_limit_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 5, np.array([100.0, 8.75]), 1005)
-    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 22, np.array([3.0, 12.25]), 1006)
-    obs8 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 35, np.array([3.0, 15.75]), 1007)
 
     obstacles.append(obs1)
     obstacles.append(obs2)
@@ -489,18 +505,14 @@ def create_min_speed_limit_scenario():
     obstacles.append(obs4)
     obstacles.append(obs5)
     obstacles.append(obs6)
-    obstacles.append(obs7)
-    obstacles.append(obs8)
-    num_lanes = 5
+    num_lanes = 3
     num_lanelets = 5
     road_length = 200
-    scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles)
-    traffic_sign_elem_1 = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(40)])
-    traffic_sign_1 = TrafficSign(201, [traffic_sign_elem_1])
-    traffic_sign_elem_2 = TrafficSignElement(TrafficSignIDGermany.MINSPEED.value, [str(30)])
-    traffic_sign_2 = TrafficSign(202, [traffic_sign_elem_2])
-    scenario.lanelet_network.add_traffic_sign(traffic_sign_1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
-    scenario.lanelet_network.add_traffic_sign(traffic_sign_2, {16, 17, 18, 19, 20, 21, 22, 23, 24, 25})
+    scenario = create_straight_scenario("test_preserve_traffic_flow", 0.1, num_lanes, num_lanelets, road_length,
+                                        obstacles)
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED.value, [str(40)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
 
     return scenario
 
@@ -645,6 +657,10 @@ def main():
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_min_speed_limit_scenario()
+    write_to_file(scenario)
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_preserves_traffic_flow_scenario()
     write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 

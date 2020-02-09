@@ -283,5 +283,5 @@ class PositionPredicateCollection(PredicateCollection):
                         self._road_network.find_lane_ids_by_lanelets(ego_vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(other_vehicle.lanelet_assignment[time_step]))
                 predicate_trace["in_front_of_ego_vehicle"][other_vehicle.id][time_step] = \
-                    self.is_in_front_of(ego_vehicle.states_lon[time_step].s, other_vehicle.states_lon[time_step].s)
+                    self.is_in_front_of(ego_vehicle, other_vehicle, time_step)
         return predicate_trace

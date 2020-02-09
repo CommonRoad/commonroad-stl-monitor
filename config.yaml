@@ -150,11 +150,12 @@ traffic_rule_monitoring:
     #   - safe_distance: rule which evaluates safe distance
     #   - no_unnecessary_braking: rule which evaluates unnecessary strong braking
     traffic_rules:
-        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
-        min_speed_limit: G(keeps_sign_min_speed_limit)
-        traffic_flow: G(preserves_traffic_flow)
-        safe_distance: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance_prec)
-        no_unnecessary_braking: G(~(unnecessary_braking))
+        R_G1: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance_prec)
+        R_G2: G(~(unnecessary_braking))
+        R_G3: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
+        R_G4: G(keeps_sign_min_speed_limit)
+        R_G5: G(preserves_traffic_flow)
+        R_I1: G((~(in_congestion) | (~exist_standing_leading_vehicle)) -> ~(in_standstill))
 
     # Parameters for traffic rules
     ###
@@ -183,12 +184,12 @@ traffic_rule_monitoring:
         u_turn: 1.57
 
     traffic_rule_sets:
-        0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking, traffic_flow]
-        1: [safe_distance]
-        2: [no_unnecessary_braking]
-        3: [max_speed_limit]
-        4: [min_speed_limit]
-        5: [traffic_flow]
+        0: [R_G1, R_G2, R_G3, R_G4, R_G5]
+        1: [R_G1]
+        2: [R_G2]
+        3: [R_G3]
+        4: [R_G4]
+        5: [R_G5]
 
 
     activated_traffic_rule_sets: [0]

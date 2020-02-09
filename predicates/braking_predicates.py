@@ -95,7 +95,8 @@ class BrakingPredicateCollection(PredicateCollection):
         return d_safe
 
     def _keeps_safe_distance_prec(self, vehicle_follow: Vehicle, vehicle_lead: Vehicle, a_min_follow: float,
-                                  a_min_lead: float, t_react_follow: float, time_step: int) -> bool:
+                                  a_min_lead: float, a_max_follow: float, t_react_follow: float,
+                                  time_step: int) -> bool:
         """
         Evaluates if safe distance is kept by following vehicle
 
@@ -103,13 +104,14 @@ class BrakingPredicateCollection(PredicateCollection):
         :param vehicle_lead: leading vehicle
         :param a_min_follow: minimum acceleration of following vehicle
         :param a_min_lead: minimum acceleration of leading vehicle
+        :param a_max_follow: maximum acceleration of following vehicle
         :param t_react_follow: reaction time of following vehicle
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
         if 0 < vehicle_lead.rear_position(time_step) - vehicle_follow.front_position(time_step) \
                 < self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
-                                     a_min_follow, a_min_lead, t_react_follow):
+                                     a_min_follow, a_min_lead, a_max_follow, t_react_follow):
             return False
         else:
             return True
@@ -124,26 +126,22 @@ class BrakingPredicateCollection(PredicateCollection):
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"unnecessary_braking": {ego_vehicle.id: {}},
-                           "keeps_safe_distance": {}}
+                           "keeps_safe_distance_prec": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
             predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
                 self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
 
         for other_vehicle in other_vehicles:
-            predicate_trace["keeps_safe_distance"][other_vehicle.id] = {}
+            predicate_trace["keeps_safe_distance_prec"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
-                    predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = True
+                    predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = True
                     continue
                 predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = \
-                    self._keeps_safe_distance_prec(ego_vehicle.states_lon[time_step].s,
-                                                   other_vehicle.states_lon[time_step].s,
-                                                   ego_vehicle.states_lon[time_step].v,
-                                                   other_vehicle.states_lon[time_step].v,
+                    self._keeps_safe_distance_prec(ego_vehicle, other_vehicle,
                                                    self._ego_vehicle_param.get("a_min"),
                                                    self._other_vehicles_param.get("a_min"),
-                                                   self._ego_vehicle_param.get("t_react"))
-                if predicate_trace.get("keeps_safe_distance").get(other_vehicle.id).get(time_step) is False:
-                    print(ego_vehicle.id, other_vehicle.id, time_step)
+                                                   self._ego_vehicle_param.get("a_max"),
+                                                   self._ego_vehicle_param.get("t_react"), time_step)
         return predicate_trace
