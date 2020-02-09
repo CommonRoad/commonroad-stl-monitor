@@ -152,6 +152,61 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return False
 
+    def _exist_standing_leading_vehicle(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
+        """
+        Predicate which checks if a standing leading vehicle exist in front of a vehicle
+
+        :param vehicle: vehicle object
+        :param other_vehicles: list of other vehicles
+        :param time_step: time step of interest
+        :returns Boolean indicating speed limit satisfaction
+        """
+        lanelets_veh = vehicle.lanelet_assignment[time_step]
+        for veh_o in other_vehicles:
+            if veh_o.states_lon.get(time_step) is None:
+                continue
+            if not PositionPredicateCollection.is_in_front_of(vehicle, veh_o, time_step) or \
+                    not PositionPredicateCollection.is_in_same_lane(
+                        self._road_network.find_lane_ids_by_lanelets(lanelets_veh),
+                        self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])):
+                continue
+            if self._in_standstill(veh_o.states_lon[time_step].v):
+                return True
+        return False
+
+    def _drives_with_slightly_higher_speed(self, vehicle_k: Vehicle, vehicle_p: Vehicle, time_step: int) -> bool:
+        """
+        Predicate which checks if the kth vehicle drives maximum with slightly higher speed than the pth vehicle
+
+        :param vehicle_k: vehicle object
+        :param vehicle_p: list of other vehicles
+        :param time_step: time step of interest
+        :returns Boolean indicating speed limit satisfaction (True is default return)
+        """
+        if vehicle_k.states_lon.get(time_step) is None or vehicle_p.states_lon.get(time_step) is None:
+            return True
+        if 0 < vehicle_k.states_lon[time_step].v - vehicle_p.states_lon[time_step].v \
+                < self._traffic_rules_param.get("slightly_higher_speed_difference"):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _drives_faster_than_vehicle_left(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
+        """
+        Predicate which checks if a vehicle drives faster than any vehicle on its left side
+
+        :param vehicle: vehicle object
+        :param other_vehicles: list of other vehicles
+        :param time_step: time step of interest
+        :returns Boolean indicating speed limit satisfaction
+        """
+        vehicles_left = PositionPredicateCollection.vehicles_left(vehicle, other_vehicles, time_step)
+        for veh_l in vehicles_left:
+            if vehicle.states_lon[time_step].v > veh_l.states_lon[time_step].v:
+                return True
+        return False
+
     def _reverses(self, velocity: float):
         """
         Evaluation if a vehicle drives backwards

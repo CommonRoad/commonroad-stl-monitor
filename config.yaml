@@ -179,6 +179,7 @@ traffic_rule_monitoring:
         desired_highway_velocity: 36.11
         min_interstate_width: 7.0
         close_to_lane_border: 0.1
+        slightly_higher_speed_difference: 5.55
 
     traffic_rule_sets:
         0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking, traffic_flow]

@@ -160,7 +160,7 @@ class PositionPredicateCollection(PredicateCollection):
         return left_lanelets
 
     @staticmethod
-    def _vehicles_left(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+    def vehicles_left(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
         """
         Searches for vehicles left of a vehicle
 
