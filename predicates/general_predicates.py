@@ -4,6 +4,7 @@ from predicates.position_predicates import PositionPredicateCollection
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
 from commonroad.scenario.lanelet import Lanelet
+import copy
 
 
 class CongestionPredicateCollection(PredicateCollection):
@@ -19,7 +20,7 @@ class CongestionPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param)
 
-    def _is_vehicle_in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
+    def _in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """
         Evaluates if a vehicles is in a congestion
 
@@ -28,18 +29,37 @@ class CongestionPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        front_vehicles_all_vehicle_lanes = PositionPredicateCollection.front_vehicle_same_lane(vehicle, other_vehicles,
-                                                                                               time_step)
-        if vehicle.states_lon[time_step].v > self._traffic_rules_param.get("max_congestion_velocity"):
+        vehicle_lanelets = vehicle.lanelet_assignment[time_step]
+        num_vehicles = 0
+        for veh_o in other_vehicles:
+            veh_o_lanelets = veh_o.lanelet_assignment[time_step]
+            if PositionPredicateCollection.is_in_front_of(vehicle, veh_o, time_step) and \
+                    PositionPredicateCollection.is_in_same_lane(
+                        self._road_network.find_lane_ids_by_lanelets(vehicle_lanelets),
+                        self._road_network.find_lane_ids_by_lanelets(veh_o_lanelets)) and \
+                    veho.states_lon[time_step].v <= self._traffic_rules_param.get("max_congestion_velocity"):
+                num_vehicles += 1
+        if num_vehicles >= self._traffic_rules_param.get("num_veh_congestion"):
+            return True
+        else:
             return False
 
-        for lane_vehicles in front_vehicles_all_vehicle_lanes:
-            if len(lane_vehicles) < self._traffic_rules_param.get("num_veh_congestion"):
-                return False
-            for veh in lane_vehicles:
-                if veh.states_lon[time_step].v > self._traffic_rules_param.get("max_congestion_velocity"):
-                    return False
-        return True
+    def _congestion_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
+        """
+        Evaluates if a vehicles is in a congestion
+
+        :param vehicle: vehicle object
+        :param other_vehicles: other vehicles in scenario
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        for veh_o in other_vehicles:
+            other_vehicles_updated = copy.deepcopy(other_vehicles)
+            other_vehicles_updated.remove(veh_o)
+            if PositionPredicateCollection.vehicle_is_left(veh_o, vehicle, time_step) and \
+                    self._in_congestion(veh_o, other_vehicles_updated, time_step):
+                return True
+        return False
 
     def _adjacent_lanelets(self, lanelet: Lanelet) -> Set[Lanelet]:
         """
@@ -58,6 +78,21 @@ class CongestionPredicateCollection(PredicateCollection):
             l = self._road_network.lanelet_network.find_lanelet_by_id(l.adj_left)
             lanelets.add(l)
         return lanelets
+
+    def _makes_u_turn(self, vehicle: Vehicle, time_step: int) -> bool:
+        """
+        Predicate which evaluates if vehicle makes U-turn
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        lanes = self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        for la in lanes:
+            if self._traffic_rules_param.get("u_turn") <= \
+                    abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)):
+                return True
+        return False
 
     def _road_width(self, lanelet: Lanelet, position: float) -> float:
         """

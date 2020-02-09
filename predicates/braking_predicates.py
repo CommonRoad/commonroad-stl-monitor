@@ -39,21 +39,20 @@ class BrakingPredicateCollection(PredicateCollection):
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
-            if PositionPredicateCollection.in_front_of(ego_vehicle.states_lon[time_step].s,
-                                                       veh_o.states_lon[time_step].s) and \
-                    PositionPredicateCollection.same_lane(
+            if PositionPredicateCollection.is_in_front_of(ego_vehicle, veh_o, time_step) and \
+                    PositionPredicateCollection.is_in_same_lane(
                         self._road_network.find_lane_ids_by_lanelets(ego_vehicle_lanelets),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
-                    and veh_o.states_lon[time_step].v - v_ego < self._traffic_rule_param.get("min_velocity_dif"):
+                    and veh_o.states_lon[time_step].v - v_ego < self._traffic_rules_param.get("min_velocity_dif"):
                 if a_min_other is None or veh_o.states_lon[time_step].a < a_min_other:
                     a_min_other = veh_o.states_lon[time_step].a
 
-        if a_min_other is None and (a_ego < self._traffic_rule_param.get("a_abrupt") or
-                                    j_ego < self._traffic_rule_param.get("j_abrupt")):
+        if a_min_other is None and (a_ego < self._traffic_rules_param.get("a_abrupt") or
+                                    j_ego < self._traffic_rules_param.get("j_abrupt")):
             # no leading vehicle
             return True
-        elif a_min_other is not None and j_ego < self._traffic_rule_param.get("j_abrupt") and \
-                a_ego - a_min_other < self._traffic_rule_param.get("a_abrupt"):
+        elif a_min_other is not None and j_ego < self._traffic_rules_param.get("j_abrupt") and \
+                a_ego - a_min_other < self._traffic_rules_param.get("a_abrupt"):
             return True
         else:
             return False
@@ -76,55 +75,41 @@ class BrakingPredicateCollection(PredicateCollection):
 
     @staticmethod
     def safe_distance(v_follow: float, v_lead: float, a_min_follow: float,
-                      a_min_lead: float, t_react_follow: float) -> float:
+                      a_min_lead: float, a_max_follow: float, t_react_follow: float) -> float:
         """
-        Calculates safe distance based on analytic formula
+        Calculates safe distance analytically
 
         :param v_follow: velocity of following vehicle
         :param v_lead: velocity of leading vehicle
         :param a_min_follow: minimum acceleration of following vehicle
         :param a_min_lead: minimum acceleration of leading vehicle
+        :param a_max_follow: maximum acceleration of following vehicle
         :param t_react_follow: reaction time of following vehicle
         :returns boolean indicating satisfaction
         """
-        u_max_follow = (v_follow**2) / (2 * abs(a_min_follow)) + v_follow * t_react_follow
-        v_lead_t_react = v_lead + a_min_lead * t_react_follow
-        t_stop_lead_remain = v_lead_t_react / abs(a_min_lead)
-        delta_s_lead = v_lead * t_react_follow + 0.5 * a_min_lead * t_react_follow**2
-        t_stop_ego = v_follow / abs(a_min_follow)
+        v_follow_star = v_follow + a_max_follow * t_react_follow
+        d_safe = \
+            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow_star**2) / (-2 * abs(a_min_follow)) \
+            + v_follow * t_react_follow + 0.5 * a_max_follow * t_react_follow**2
 
-        precondition = (delta_s_lead <= u_max_follow and abs(a_min_lead) < abs(a_min_follow)
-                        and v_lead_t_react < v_follow and t_stop_ego < t_stop_lead_remain)
+        return d_safe
 
-        d_safe_1 = \
-            (v_lead - abs(a_min_lead) * t_react_follow - v_follow) / \
-            (-2 * (abs(a_min_lead) - abs(a_min_follow))) - \
-            v_lead * t_react_follow + 0.5 * abs(a_min_lead) * t_react_follow**2
-
-        d_safe_2 = \
-            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow**2) / \
-            (-2 * abs(a_min_follow)) + v_follow * t_react_follow
-
-        if precondition:
-            return max(0, d_safe_1)
-        else:
-            return max(0, d_safe_2)
-
-    def _keeps_safe_distance(self, s_follow: float, s_lead: float, v_follow: float, v_lead: float,
-                             a_min_follow: float, a_min_lead: float, t_react_follow: float) -> bool:
+    def _keeps_safe_distance_prec(self, vehicle_follow: Vehicle, vehicle_lead: Vehicle, a_min_follow: float,
+                                  a_min_lead: float, t_react_follow: float, time_step: int) -> bool:
         """
         Evaluates if safe distance is kept by following vehicle
 
-        :param s_follow: longitudinal position of following vehicle
-        :param s_lead: longitudinal position of leading vehicle
-        :param v_follow: velocity of following vehicle
-        :param v_lead: velocity of leading vehicle
+        :param vehicle_follow: following vehicle
+        :param vehicle_lead: leading vehicle
         :param a_min_follow: minimum acceleration of following vehicle
         :param a_min_lead: minimum acceleration of leading vehicle
         :param t_react_follow: reaction time of following vehicle
+        :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        if 0 < s_lead - s_follow < self.safe_distance(v_follow, v_lead, a_min_follow, a_min_lead, t_react_follow):
+        if 0 < vehicle_lead.rear_position(time_step) - vehicle_follow.front_position(time_step) \
+                < self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
+                                     a_min_follow, a_min_lead, t_react_follow):
             return False
         else:
             return True
@@ -151,14 +136,14 @@ class BrakingPredicateCollection(PredicateCollection):
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = True
                     continue
-                predicate_trace["keeps_safe_distance"][other_vehicle.id][time_step] = \
-                    self._keeps_safe_distance(ego_vehicle.states_lon[time_step].s,
-                                              other_vehicle.states_lon[time_step].s,
-                                              ego_vehicle.states_lon[time_step].v,
-                                              other_vehicle.states_lon[time_step].v,
-                                              self._ego_vehicle_param.get("a_min"),
-                                              self._other_vehicles_param.get("a_min"),
-                                              self._ego_vehicle_param.get("t_react"))
+                predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = \
+                    self._keeps_safe_distance_prec(ego_vehicle.states_lon[time_step].s,
+                                                   other_vehicle.states_lon[time_step].s,
+                                                   ego_vehicle.states_lon[time_step].v,
+                                                   other_vehicle.states_lon[time_step].v,
+                                                   self._ego_vehicle_param.get("a_min"),
+                                                   self._other_vehicles_param.get("a_min"),
+                                                   self._ego_vehicle_param.get("t_react"))
                 if predicate_trace.get("keeps_safe_distance").get(other_vehicle.id).get(time_step) is False:
                     print(ego_vehicle.id, other_vehicle.id, time_step)
         return predicate_trace

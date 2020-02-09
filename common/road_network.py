@@ -33,6 +33,15 @@ class Lane:
     def contained_lanelets(self) -> Set[int]:
         return self._contained_lanelets
 
+    def orientation(self, position) -> float:
+        """
+        Calculates orientation of lane given a longitudinal position along lane
+
+        :param position: longitudinal position
+        :returns orientation of lane at a given position
+        """
+        return np.interp(position, self._path_length, self._orientation)
+
     def width(self, position: float) -> float:
         """
         Calculates width of lane given a longitudinal position along lane

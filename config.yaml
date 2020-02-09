@@ -153,7 +153,7 @@ traffic_rule_monitoring:
         max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
         min_speed_limit: G(keeps_sign_min_speed_limit)
         traffic_flow: G(preserves_traffic_flow)
-        safe_distance: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance)
+        safe_distance: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance_prec)
         no_unnecessary_braking: G(~(unnecessary_braking))
 
     # Parameters for traffic rules
@@ -180,6 +180,7 @@ traffic_rule_monitoring:
         min_interstate_width: 7.0
         close_to_lane_border: 0.1
         slightly_higher_speed_difference: 5.55
+        u_turn: 1.57
 
     traffic_rule_sets:
         0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking, traffic_flow]

@@ -33,6 +33,21 @@ class PositionPredicateCollection(PredicateCollection):
         else:
             return False
 
+    def exist_leading_vehicle(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
+        """
+        Predicate which evaluates if leading vehicle exists
+
+        :param vehicle: vehicle object
+        :param other_vehicles: other vehicles in scenario
+        :param time_step: time step of interest
+        :returns bool indicating satisfaction
+        """
+        for veh in other_vehicles:
+            if self.is_in_same_lane(vehicle.lanelet_assignment[time_step], veh.lanelet_assignment[time_step]) \
+                    and self.is_in_front_of(vehicle, veh, time_step):
+                return True
+        return False
+
     @staticmethod
     def is_in_same_lane(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
         """
@@ -183,10 +198,10 @@ class PositionPredicateCollection(PredicateCollection):
                 continue
         return vehicles_left
 
-    @staticmethod
-    def _vehicle_is_left(vehicle_k: Vehicle, vehicle_p: Vehicle, time_step: int) -> bool:
+    @classmethod
+    def vehicle_is_left(cls, vehicle_k: Vehicle, vehicle_p: Vehicle, time_step: int) -> bool:
         """
-        Evaluates if the kth vehicle is left of the p^h vehicle
+        Evaluates if the kth vehicle is left of the pth vehicle
 
         :param vehicle_k: the kth vehicle
         :param vehicle_p: the pth vehicle
