@@ -33,6 +33,41 @@ class Lane:
     def contained_lanelets(self) -> Set[int]:
         return self._contained_lanelets
 
+    def width(self, position: float) -> float:
+        """
+        Calculates width of lane given a longitudinal position along lane
+
+        :param position: longitudinal position
+        :returns width of lane at a given position
+        """
+        vertice_idx = []
+        for idx, length in enumerate(self._path_length):
+            if position < length:
+                vertice_idx = [idx - 1, idx]
+                break
+        s_left_1, d_left_1 = self._clcs.convert_to_curvilinear_coords(self._lanelet.left_vertices[vertice_idx[0]][0],
+                                                               self._lanelet.left_vertices[vertice_idx[0]][1])
+        s_left_2, d_left_2 = self._clcs.convert_to_curvilinear_coords(self._lanelet.left_vertices[vertice_idx[1]][0],
+                                                               self._lanelet.left_vertices[vertice_idx[1]][1])
+        s_right_1, d_right_1 = self._clcs.convert_to_curvilinear_coords(self._lanelet.right_vertices[vertice_idx[0]][0],
+                                                               self._lanelet.right_vertices[vertice_idx[0]][1])
+        s_right_2, d_right_2 = self._clcs.convert_to_curvilinear_coords(self._lanelet.right_vertices[vertice_idx[1]][0],
+                                                               self._lanelet.right_vertices[vertice_idx[1]][1])
+
+        points = [(s_left_1, d_left_1), (s_left_2, d_left_2)]
+        x_coords, y_coords = zip(*points)
+        A = np.vstack([x_coords, np.ones(len(x_coords))]).T
+        m_left, c_left = np.linalg.lstsq(A, y_coords)[0]
+        points = [(s_right_1, d_right_1), (s_right_2, d_right_2)]
+        x_coords, y_coords = zip(*points)
+        A = np.vstack([x_coords, np.ones(len(x_coords))]).T
+        m_right, c_right= np.linalg.lstsq(A, y_coords)[0]
+
+        d_left = m_left * position + c_left
+        d_right = m_right * position + c_right
+
+        return abs(d_left - d_right)
+
     def _create_curvilinear_coordinate_system_from_lanelet(self, ref_path: np.array) -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
@@ -204,7 +239,7 @@ class RoadNetwork:
 
     def find_lane_ids_by_lanelets(self, lanelets: Set[int]) -> Set[int]:
         """
-        Finds the lanes an obstacle belongs to and returns their IDs
+        Finds the lanes given set of lanelets belong to and returns their IDs
 
         :param lanelets: list of lanelet IDs
         :returns set of lanelet IDs
@@ -216,6 +251,32 @@ class RoadNetwork:
                     lane_ids.add(lane.lanelet.lanelet_id)
 
         return lane_ids
+
+    def find_lanes_by_lanelets(self, lanelets: Set[int]) -> Set[Lane]:
+        """
+        Finds the lanes to which a given set of lanelets belongs to
+
+        :param lanelets: list of lanelet IDs
+        :returns set of lane objects
+        """
+        lanes = set()
+        for lane in self.lanes:
+            for lanelet_id in lanelets:
+                if lanelet_id in lane.contained_lanelets:
+                    lanes.add(lane)
+
+        return lanes
+
+    def find_lane_by_lanelet(self, lanelet_id: int) -> Lane:
+        """
+        Finds the lane a lanelet belongs to
+
+        :param lanelet: CommonRoad lanelet ID
+        :returns lane object
+        """
+        for lane in self.lanes:
+            if lanelet_id in lane.contained_lanelets:
+                return lane
 
     def find_lane_by_obstacle(self, obs_lanelet_center: List[int], obs_lanelet_shape: List[int]) -> Lane:
         """

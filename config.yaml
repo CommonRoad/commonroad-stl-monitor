@@ -150,8 +150,9 @@ traffic_rule_monitoring:
     #   - safe_distance: rule which evaluates safe distance
     #   - no_unnecessary_braking: rule which evaluates unnecessary strong braking
     traffic_rules:
-        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit)
-        min_speed_limit: G(preserves_traffic_flow & keeps_sign_min_speed_limit)
+        max_speed_limit: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
+        min_speed_limit: G(keeps_sign_min_speed_limit)
+        traffic_flow: G(preserves_traffic_flow)
         safe_distance: G((in_front_of_ego_vehicle & same_lane_as_ego_vehicle) -> keeps_safe_distance)
         no_unnecessary_braking: G(~(unnecessary_braking))
 
@@ -176,13 +177,16 @@ traffic_rule_monitoring:
         max_congestion_velocity: 10
         max_velocity_limit_free_driving: 27.77
         desired_highway_velocity: 36.11
+        min_interstate_width: 7.0
+        close_to_lane_border: 0.1
 
     traffic_rule_sets:
-        0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking]
+        0: [max_speed_limit, max_speed_limit, min_speed_limit, safe_distance, no_unnecessary_braking, traffic_flow]
         1: [safe_distance]
         2: [no_unnecessary_braking]
         3: [max_speed_limit]
         4: [min_speed_limit]
+        5: [traffic_flow]
 
 
     activated_traffic_rule_sets: [0]

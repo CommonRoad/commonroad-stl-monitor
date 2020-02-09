@@ -18,7 +18,7 @@ class PredicateCollection(ABC):
         self._simulation_param = simulation_param
         self._ego_vehicle_param = ego_vehicle_param
         self._other_vehicles_param = other_vehicles_param
-        self._traffic_rule_param = traffic_rules_param
+        self._traffic_rules_param = traffic_rules_param
         self._country = simulation_param.get("country")
 
     @abstractmethod

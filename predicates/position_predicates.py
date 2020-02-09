@@ -115,7 +115,7 @@ class PositionPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        lanelet_ids_occ= vehicle.lanelet_assignment[time_step]
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
             if not (lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or
@@ -226,6 +226,24 @@ class PositionPredicateCollection(PredicateCollection):
             if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right_same_direction is None:
                 return True
         return False
+
+    def _drives_left_most(self, vehicle: Vehicle, time_step: int) -> bool:
+        """
+        Evaluates if a vehicle drives leftmost in its occupied lanelets
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
+        d = vehicle.states_lat[time_step].d
+        s = vehicle.states_lon[time_step].s
+        lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
+        width = vehicle.shape.width
+        for lane in lanes:
+            if 0.5 * lane.width(s) + d - 0.5 * width > self._traffic_rules_param.get("close_to_lane_border"):
+                return False
+        return True
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
