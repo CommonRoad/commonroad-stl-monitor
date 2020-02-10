@@ -291,7 +291,6 @@ class VelocityPredicateCollection(PredicateCollection):
         Predicate for lanelet speed limit evaluation
 
         :param velocity: Velocity of vehicle
-        :param lanelet_ids: IDs of lanelets the vehicle is on
         :param vehicle_type: type of vehicle, e.g. truck
         :returns Boolean indicating speed limit satisfaction
         """
@@ -331,7 +330,12 @@ class VelocityPredicateCollection(PredicateCollection):
                            "keeps_sign_min_speed_limit": {ego_vehicle.id: {}},
                            "keeps_braking_speed_limit": {ego_vehicle.id: {}},
                            "keeps_road_condition_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_type_speed_limit": {ego_vehicle.id: {}}}
+                           "keeps_type_speed_limit": {ego_vehicle.id: {}},
+                           "exist_standing_leading_vehicle": {ego_vehicle.id: {}},
+                           "in_standstill": {ego_vehicle.id: {}},
+                           "drives_with_slightly_higher_speed": {ego_vehicle.id: {}},
+                           "drives_faster_than_vehicle_left": {ego_vehicle.id: {}},
+                           "reverses": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
             predicate_trace["keeps_lane_speed_limit"][ego_vehicle.id][time_step] = \
@@ -350,5 +354,11 @@ class VelocityPredicateCollection(PredicateCollection):
             predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
                 self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[time_step].v,
                                                  ego_vehicle.lanelet_assignment[time_step], ego_vehicle.obstacle_type)
+            predicate_trace["exist_standing_leading_vehicle"][ego_vehicle.id][time_step] = \
+                self._exist_standing_leading_vehicle(ego_vehicle, other_vehicles, time_step)
+            predicate_trace["in_standstill"][ego_vehicle.id][time_step] = \
+                self._in_standstill(ego_vehicle.states_lon[time_step].v)
+            predicate_trace["reverses"][ego_vehicle.id][time_step] = \
+                self._reverses(ego_vehicle.states_lon[time_step].v)
 
         return predicate_trace

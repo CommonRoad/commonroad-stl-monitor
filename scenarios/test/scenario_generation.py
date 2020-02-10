@@ -321,7 +321,13 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
 
             # setting adjecent lanes to correct object ID
             # first lane: no adjecent right lane
-            if lane == 0:
+            if num_straight_lanes == 1:
+                lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
+                                  predecessor=predecessor, successor=successor,
+                                  line_marking_left_vertices=LineMarking.SOLID,
+                                  line_marking_right_vertices=LineMarking.SOLID,
+                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
+            elif lane == 0:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,
                                   adjacent_left=lanelet_id_list[lanelet_id_idx] + num_lanelets_per_lane,
@@ -338,7 +344,6 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
                                   line_marking_left_vertices=LineMarking.SOLID,
                                   line_marking_right_vertices=LineMarking.DASHED,
                                   lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
-
             else:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,

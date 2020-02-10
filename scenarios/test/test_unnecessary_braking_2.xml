@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" tags="highway multiple_lanes no_oncoming_traffic parallel_lanes" benchmarkID="test_unnecessary_braking_2" date="2020-02-09">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" tags="highway multiple_lanes no_oncoming_traffic parallel_lanes" benchmarkID="test_unnecessary_braking_2" date="2020-02-10">
   <lanelet id="1">
     <leftBound>
       <point>
@@ -105,7 +105,7 @@
         <x>25.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -215,7 +215,6 @@
       <lineMarking>solid</lineMarking>
     </rightBound>
     <successor ref="2"/>
-    <adjacentLeft ref="11" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -326,7 +325,7 @@
         <x>50.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -437,7 +436,6 @@
     </rightBound>
     <predecessor ref="1"/>
     <successor ref="3"/>
-    <adjacentLeft ref="12" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -548,7 +546,7 @@
         <x>75.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -659,7 +657,6 @@
     </rightBound>
     <predecessor ref="2"/>
     <successor ref="4"/>
-    <adjacentLeft ref="13" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -770,7 +767,7 @@
         <x>100.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -881,7 +878,6 @@
     </rightBound>
     <predecessor ref="3"/>
     <successor ref="5"/>
-    <adjacentLeft ref="14" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -992,7 +988,7 @@
         <x>125.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -1103,7 +1099,6 @@
     </rightBound>
     <predecessor ref="4"/>
     <successor ref="6"/>
-    <adjacentLeft ref="15" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -1214,7 +1209,7 @@
         <x>150.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -1325,7 +1320,6 @@
     </rightBound>
     <predecessor ref="5"/>
     <successor ref="7"/>
-    <adjacentLeft ref="16" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -1436,7 +1430,7 @@
         <x>175.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -1547,7 +1541,6 @@
     </rightBound>
     <predecessor ref="6"/>
     <successor ref="8"/>
-    <adjacentLeft ref="17" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -1658,7 +1651,7 @@
         <x>200.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -1769,7 +1762,6 @@
     </rightBound>
     <predecessor ref="7"/>
     <successor ref="9"/>
-    <adjacentLeft ref="18" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -1880,7 +1872,7 @@
         <x>225.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -1991,7 +1983,6 @@
     </rightBound>
     <predecessor ref="8"/>
     <successor ref="10"/>
-    <adjacentLeft ref="19" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>
@@ -2102,7 +2093,7 @@
         <x>250.0</x>
         <y>3.5</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -2212,7 +2203,6 @@
       <lineMarking>solid</lineMarking>
     </rightBound>
     <predecessor ref="9"/>
-    <adjacentLeft ref="20" drivingDir="same"/>
     <type>highway</type>
     <type>mainCarriageWay</type>
     <userOneWay>vehicle</userOneWay>

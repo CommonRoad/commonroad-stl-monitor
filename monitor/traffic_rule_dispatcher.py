@@ -3,6 +3,7 @@ from typing import List, Dict
 from predicates.velocity_predicates import VelocityPredicateCollection
 from predicates.position_predicates import PositionPredicateCollection
 from predicates.braking_predicates import BrakingPredicateCollection
+from predicates.general_predicates import GeneralPredicateCollection
 from common.vehicle import Vehicle
 from common.road_network import RoadNetwork
 
@@ -13,7 +14,7 @@ class TrafficRuleDispatcher:
     """
     def __init__(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[int, str], road_network: RoadNetwork,
                  simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict,
-                 activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]):
+                 activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]):
         """
         :param traffic_rules: dictionary with MTL formulas of traffic rules
         :param traffic_rule_sets: dictionary with sets of related traffic rules
@@ -37,14 +38,17 @@ class TrafficRuleDispatcher:
                                                                 ego_vehicle_param, other_vehicles_param,
                                                                 traffic_rule_param)
         self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
-                                                                ego_vehicle_param, other_vehicles_param,
-                                                                traffic_rule_param)
+                                                              ego_vehicle_param, other_vehicles_param,
+                                                              traffic_rule_param)
+        self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
+                                                              ego_vehicle_param, other_vehicles_param,
+                                                              traffic_rule_param)
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
                                               vehicle_dependent_rules)
 
     @staticmethod
     def create_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[int, str],
-                        activated_traffic_rule_sets: List[int], vehicle_dependent_rules: List[str]) \
+                        activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]) \
             -> List[TrafficRuleMonitor]:
         """
         Initialization of monitor for each MTL rule
@@ -75,8 +79,9 @@ class TrafficRuleDispatcher:
         velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
         position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
         braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
+        general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
 
-        combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates}
+        combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates
 
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:

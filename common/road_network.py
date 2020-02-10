@@ -66,11 +66,11 @@ class Lane:
         points = [(s_left_1, d_left_1), (s_left_2, d_left_2)]
         x_coords, y_coords = zip(*points)
         A = np.vstack([x_coords, np.ones(len(x_coords))]).T
-        m_left, c_left = np.linalg.lstsq(A, y_coords)[0]
+        m_left, c_left = np.linalg.lstsq(A, y_coords, rcond=None)[0]
         points = [(s_right_1, d_right_1), (s_right_2, d_right_2)]
         x_coords, y_coords = zip(*points)
         A = np.vstack([x_coords, np.ones(len(x_coords))]).T
-        m_right, c_right= np.linalg.lstsq(A, y_coords)[0]
+        m_right, c_right= np.linalg.lstsq(A, y_coords, rcond=None)[0]
 
         d_left = m_left * position + c_left
         d_right = m_right * position + c_right
