@@ -9,9 +9,9 @@
   </location>
   <scenarioTags>
     <parallel_lanes/>
+    <multi_lane/>
     <highway/>
     <no_oncoming_traffic/>
-    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -350,8 +350,8 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="6" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -693,8 +693,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="7" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -1036,8 +1036,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="8" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -1379,8 +1379,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="9" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -1721,8 +1721,8 @@
     </rightBound>
     <predecessor ref="4"/>
     <adjacentLeft ref="10" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -2064,8 +2064,8 @@
     <successor ref="7"/>
     <adjacentLeft ref="11" drivingDir="same"/>
     <adjacentRight ref="1" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -2408,8 +2408,8 @@
     <successor ref="8"/>
     <adjacentLeft ref="12" drivingDir="same"/>
     <adjacentRight ref="2" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -2752,8 +2752,8 @@
     <successor ref="9"/>
     <adjacentLeft ref="13" drivingDir="same"/>
     <adjacentRight ref="3" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -3096,8 +3096,8 @@
     <successor ref="10"/>
     <adjacentLeft ref="14" drivingDir="same"/>
     <adjacentRight ref="4" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -3439,8 +3439,8 @@
     <predecessor ref="9"/>
     <adjacentLeft ref="15" drivingDir="same"/>
     <adjacentRight ref="5" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -3781,8 +3781,8 @@
     </rightBound>
     <successor ref="12"/>
     <adjacentRight ref="6" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -4124,8 +4124,8 @@
     <predecessor ref="11"/>
     <successor ref="13"/>
     <adjacentRight ref="7" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -4467,8 +4467,8 @@
     <predecessor ref="12"/>
     <successor ref="14"/>
     <adjacentRight ref="8" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -4810,8 +4810,8 @@
     <predecessor ref="13"/>
     <successor ref="15"/>
     <adjacentRight ref="9" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>
@@ -5152,8 +5152,8 @@
     </rightBound>
     <predecessor ref="14"/>
     <adjacentRight ref="10" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="201"/>
   </lanelet>

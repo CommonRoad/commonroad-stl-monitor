@@ -155,7 +155,7 @@ traffic_rule_monitoring:
         R_G3: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
         R_G4: G(keeps_sign_min_speed_limit)
         R_G5: G(preserves_traffic_flow)
-        R_I1: G((~(in_congestion) | (~exist_standing_leading_vehicle)) -> ~(in_standstill))
+        R_I1: G(~((in_congestion) | (exist_standing_leading_vehicle)) -> ~(in_standstill))
         R_I2: G((congestion_left & drives_with_slightly_higher_speed) | (right_of_broad_lane_marking & left_of_broad_lane_marking) | (on_access_ramp & ~(congestion_left)) | ~(drives_faster_than_vehicle_left))
         R_I3: G(~(makes_u_turn) & ~(reverses))
         R_I4: G(in_congestion -> ((interstate_broad_enough -> ((in_leftmost_lane -> drives_leftmost) & (~(in_leftmost_lane) -> drives_rightmost))) & (~(interstate_broad_enough) -> drives_rightmost)))
@@ -194,6 +194,11 @@ traffic_rule_monitoring:
         SRG3: [R_G3]
         SRG4: [R_G4]
         SRG5: [R_G5]
+        SRI1: [R_I1]
+        SRI2: [R_I2]
+        SRI3: [R_I3]
+        SRI4: [R_I4]
+        SRI5: [R_I5]
 
 
     activated_traffic_rule_sets: [0]

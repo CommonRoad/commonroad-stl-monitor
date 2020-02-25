@@ -655,6 +655,83 @@ def create_unnecessary_braking_scenario_2():
     return scenario
 
 
+def create_standstill_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, np.array([3.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, np.array([13.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([23.0, 1.75]), 1002)
+    obs4 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 1, np.array([3.0, 5.25]), 1003)
+    obs5 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 2, np.array([13.0, 5.25]), 1004)
+    obs6 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, np.array([33.0, 5.25]), 1005)
+    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 1, np.array([43.0, 5.25]), 1006)
+    obs8 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 1.5, np.array([53.0, 5.25]), 1007)
+    obs9 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 1, np.array([63.0, 5.25]), 1008)
+    obs10 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 2, np.array([73.0, 5.25]), 1009)
+    obs11 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3, np.array([73.0, 5.25]), 1010)
+
+    obstacles.append(obs1)
+    obstacles.append(obs2)
+    obstacles.append(obs3)
+    obstacles.append(obs4)
+    obstacles.append(obs5)
+    obstacles.append(obs6)
+    obstacles.append(obs7)
+    obstacles.append(obs8)
+    obstacles.append(obs9)
+    obstacles.append(obs10)
+    obstacles.append(obs11)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 250
+    scenario = create_straight_scenario("test_standstill", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+
+    return scenario
+
+
 def main():
     config = load_yaml("../../src/config.yaml")
     visualization_param = config.get("visualization").get("video")
@@ -680,6 +757,10 @@ def main():
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_unnecessary_braking_scenario_2()
+    write_to_file(scenario)
+    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_standstill_scenario()
     write_to_file(scenario)
     create_scenario_video("./../../videos", scenario, visualization_param, 50)
 

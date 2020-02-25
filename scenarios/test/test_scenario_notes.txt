@@ -1,8 +1,5 @@
-*************************************************************
-*                                                           *
-*    This file contains brief notes about the scenarios:    *
-*                                                           *
-*************************************************************
+This file describes the contained test scenarios:
+
 
 -Note that the planning problem in the below scenarios is a dummy one, because we don't care about it in the current COP scope.
 -For the notes related to the turnsignal scenarios (21-27), the duration of the lane change is configured as 5 steps.

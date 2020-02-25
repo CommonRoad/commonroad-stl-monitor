@@ -1,5 +1,4 @@
 from typing import List, Dict, Set
-import copy
 
 from commonroad.scenario.lanelet import Lanelet
 
@@ -54,15 +53,15 @@ class GeneralPredicateCollection(PredicateCollection):
 
     def _congestion_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """
-        Evaluates if a vehicles is in a congestion
+        Evaluates if a congestion exists in the left lane of a vehicle
 
         :param vehicle: vehicle object
         :param other_vehicles: other vehicles in scenario
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        for veh_o in other_vehicles:
-            other_vehicles_updated = copy.deepcopy(other_vehicles)
+        for idx, veh_o in enumerate(other_vehicles):
+            other_vehicles_updated = other_vehicles[:idx] + other_vehicles[idx+1:]
             self.remove_vehicle_from_list(other_vehicles_updated, veh_o.id)
             if PositionPredicateCollection.vehicle_is_left(veh_o, vehicle, time_step) and \
                     self._in_congestion(veh_o, other_vehicles_updated, time_step):
