@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
-from common.road_network import RoadNetwork
-from common.vehicle import Vehicle
+
+from src.common.road_network import RoadNetwork
+from src.common.vehicle import Vehicle
 
 
 class PredicateCollection(ABC):

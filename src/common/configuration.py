@@ -3,9 +3,10 @@ from parameters_vehicle2 import parameters_vehicle2
 from parameters_vehicle3 import parameters_vehicle3
 from typing import Dict, Union, List, Tuple
 import ruamel.yaml
-from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 import math
 from decimal import Decimal
+
+from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> Dict:

@@ -1,8 +1,10 @@
 from typing import List, Dict, Set
-from predicates.predicate_collection import PredicateCollection
-from common.vehicle import Vehicle
-from common.road_network import RoadNetwork
+
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
+
+from src.predicates.predicate_collection import PredicateCollection
+from src.common.vehicle import Vehicle
+from src.common.road_network import RoadNetwork
 
 
 class PositionPredicateCollection(PredicateCollection):

@@ -1,10 +1,12 @@
 from typing import List, Dict, Set, Union
-from predicates.predicate_collection import PredicateCollection
-from common.road_network import RoadNetwork
-from common.vehicle import Vehicle
-from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
-from predicates.position_predicates import PositionPredicateCollection
+
 from commonroad.scenario.obstacle import ObstacleType
+from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
+
+from src.predicates.predicate_collection import PredicateCollection
+from src.common.road_network import RoadNetwork
+from src.common.vehicle import Vehicle
+from src.predicates.position_predicates import PositionPredicateCollection
 
 
 class VelocityPredicateCollection(PredicateCollection):
@@ -50,7 +52,7 @@ class VelocityPredicateCollection(PredicateCollection):
                 traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
                 if self._country == SupportedTrafficSignCountry.GERMANY:
                     for elem in traffic_sign.traffic_sign_elements:
-                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED.value:
+                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED:
                             speed_limits.append(float(elem.additional_values[0]))
                         # TODO add other country options
         if len(speed_limits) == 0:
@@ -134,7 +136,7 @@ class VelocityPredicateCollection(PredicateCollection):
                 traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
                 if self._country == SupportedTrafficSignCountry.GERMANY:
                     for elem in traffic_sign.traffic_sign_elements:
-                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MINSPEED.value:
+                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MINSPEED:
                             speed_limits.append(float(elem.additional_values[0]))
 
         return max(speed_limits)
@@ -219,7 +221,8 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def _get_type_speed_limit(self, vehicle_type: ObstacleType) -> float:
+    @staticmethod
+    def _get_type_speed_limit(vehicle_type: ObstacleType) -> float:
         """
         Evaluates speed limit for a vehicle type
 

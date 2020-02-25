@@ -1,11 +1,12 @@
-from monitor.traffic_rule_monitor import TrafficRuleMonitor
 from typing import List, Dict
-from predicates.velocity_predicates import VelocityPredicateCollection
-from predicates.position_predicates import PositionPredicateCollection
-from predicates.braking_predicates import BrakingPredicateCollection
-from predicates.general_predicates import GeneralPredicateCollection
-from common.vehicle import Vehicle
-from common.road_network import RoadNetwork
+
+from src.monitor.traffic_rule_monitor import TrafficRuleMonitor
+from src.predicates.velocity_predicates import VelocityPredicateCollection
+from src.predicates.position_predicates import PositionPredicateCollection
+from src.predicates.braking_predicates import BrakingPredicateCollection
+from src.predicates.general_predicates import GeneralPredicateCollection
+from src.common.vehicle import Vehicle
+from src.common.road_network import RoadNetwork
 
 
 class TrafficRuleDispatcher:

@@ -1,18 +1,20 @@
 import math
 import matplotlib.pyplot as plt
 import matplotlib as mp
-from commonroad.scenario.scenario import Scenario
-from commonroad.planning.planning_problem import PlanningProblemSet
-import os
-import ntpath
 import matplotlib.animation as animation
 from matplotlib.animation import MovieWriter
-from commonroad.visualization.draw_dispatch_cr import draw_object
-from commonroad.scenario.obstacle import DynamicObstacle
-from common.vehicle import Vehicle
+import os
+import ntpath
 from typing import List, Dict, Tuple
 from datetime import datetime
 import warnings
+
+from commonroad.scenario.scenario import Scenario
+from commonroad.planning.planning_problem import PlanningProblemSet
+from commonroad.visualization.draw_dispatch_cr import draw_object
+from commonroad.scenario.obstacle import DynamicObstacle
+
+from src.common.vehicle import Vehicle
 
 
 # CommonRoad Visualization Parameters:

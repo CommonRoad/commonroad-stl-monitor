@@ -1,4 +1,18 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" tags="highway multiple_lanes no_oncoming_traffic parallel_lanes" benchmarkID="test_unnecessary_braking_2" date="2020-02-10">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_unnecessary_braking_2" date="2020-02-25">
+  <location>
+    <country>DEU</country>
+    <federalState>DE-BY</federalState>
+    <gpsLatitude>48.262728</gpsLatitude>
+    <gpsLongitude>11.668307</gpsLongitude>
+    <zipcode>12345</zipcode>
+    <name>Munich</name>
+  </location>
+  <scenarioTags>
+    <parallel_lanes/>
+    <highway/>
+    <no_oncoming_traffic/>
+    <multi_lane/>
+  </scenarioTags>
   <lanelet id="1">
     <leftBound>
       <point>
@@ -215,8 +229,8 @@
       <lineMarking>solid</lineMarking>
     </rightBound>
     <successor ref="2"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="2">
@@ -436,8 +450,8 @@
     </rightBound>
     <predecessor ref="1"/>
     <successor ref="3"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="3">
@@ -657,8 +671,8 @@
     </rightBound>
     <predecessor ref="2"/>
     <successor ref="4"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="4">
@@ -878,8 +892,8 @@
     </rightBound>
     <predecessor ref="3"/>
     <successor ref="5"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="5">
@@ -1099,8 +1113,8 @@
     </rightBound>
     <predecessor ref="4"/>
     <successor ref="6"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="6">
@@ -1320,8 +1334,8 @@
     </rightBound>
     <predecessor ref="5"/>
     <successor ref="7"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="7">
@@ -1541,8 +1555,8 @@
     </rightBound>
     <predecessor ref="6"/>
     <successor ref="8"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="8">
@@ -1762,8 +1776,8 @@
     </rightBound>
     <predecessor ref="7"/>
     <successor ref="9"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="9">
@@ -1983,8 +1997,8 @@
     </rightBound>
     <predecessor ref="8"/>
     <successor ref="10"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="10">
@@ -2203,8 +2217,8 @@
       <lineMarking>solid</lineMarking>
     </rightBound>
     <predecessor ref="9"/>
-    <type>highway</type>
-    <type>mainCarriageWay</type>
+    <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <dynamicObstacle id="1000">

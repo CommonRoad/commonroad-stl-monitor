@@ -1,8 +1,9 @@
 from typing import List, Dict
-from predicates.predicate_collection import PredicateCollection
-from common.road_network import RoadNetwork
-from common.vehicle import Vehicle
-from predicates.position_predicates import PositionPredicateCollection
+
+from src.predicates.predicate_collection import PredicateCollection
+from src.common.road_network import RoadNetwork
+from src.common.vehicle import Vehicle
+from src.predicates.position_predicates import PositionPredicateCollection
 
 
 class BrakingPredicateCollection(PredicateCollection):
@@ -87,9 +88,9 @@ class BrakingPredicateCollection(PredicateCollection):
         :param t_react_follow: reaction time of following vehicle
         :returns boolean indicating satisfaction
         """
-        v_follow_star = v_follow + a_max_follow * t_react_follow
+        v_r = v_follow + a_max_follow * t_react_follow
         d_safe = \
-            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow_star**2) / (-2 * abs(a_min_follow)) \
+            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_r**2) / (-2 * abs(a_min_follow)) \
             + v_follow * t_react_follow + 0.5 * a_max_follow * t_react_follow**2
 
         return d_safe

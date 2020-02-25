@@ -1,17 +1,19 @@
 import unittest
-from common.configuration import *
-from monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
-from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.obstacle import DynamicObstacle
-from common.vehicle import Vehicle
-from common.road_network import RoadNetwork
 from typing import List, Dict, Tuple
 import copy
+
+from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.scenario.obstacle import DynamicObstacle
+
+from src.common.configuration import *
+from src.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
+from src.common.vehicle import Vehicle
+from src.common.road_network import RoadNetwork
 
 
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
-        config = load_yaml("./../config.yaml")
+        config = load_yaml("../src/config.yaml")
         self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self.other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self.traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
