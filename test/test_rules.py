@@ -1,62 +1,13 @@
 import unittest
-from typing import List, Dict, Tuple
-import copy
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.obstacle import DynamicObstacle
-
-from src.common.configuration import *
-from src.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
-from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork
+from src.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 
 
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
-        config = load_yaml("../src/config.yaml")
-        self.simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
-        self.other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
-        self.traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
-        self.ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self.simulation_param,
-                                                          self.traffic_rules_param)
-        self.traffic_rule_sets = config.get("traffic_rule_monitoring").get("traffic_rule_sets")
-        self.traffic_rules = config.get("traffic_rule_monitoring").get("traffic_rules")
-        self.activated_traffic_rule_sets = config.get("traffic_rule_monitoring").get("activated_traffic_rule_sets")
-        self.vehicle_dependent_rules = config.get("traffic_rule_monitoring").get("vehicle_dependent_rules")
-        self.road_network_param = config.get("road_network_param")
-        self.road_network = None  # updated in each test case
-
-    def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
-        lane = self.road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
-                                                        list(obstacle.initial_shape_lanelet_ids))
-        state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
-        vehicle = None
-        if state_lon is not None or state_lat is not None:
-            vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
-                              obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
-                              obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state)
-
-        for state in obstacle.prediction.trajectory.state_list:
-            lane = self.road_network.find_lane_by_obstacle(
-                list(obstacle.prediction.center_lanelet_assignment[state.time_step]),
-                list(obstacle.prediction.shape_lanelet_assignment[state.time_step]))
-            state_lon, state_lat = lane.create_curvilinear_states(state)
-            if state_lon is None or state_lat is None:
-                continue
-            if vehicle is not None:
-                vehicle.append_state_cr(state, state.time_step)
-                vehicle.append_state_lon(state_lon, state.time_step)
-                vehicle.append_state_lat(state_lat, state.time_step)
-                vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
-                                              state.time_step)
-                vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
-            else:
-                vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
-                                  state, obstacle.obstacle_id, obstacle.obstacle_type,
-                                  obstacle.prediction.shape_lanelet_assignment[state.time_step],
-                                  obstacle.signal_state_at_time_step(state.time_step))
-
-        return vehicle
+        self.cr_eval = CommonRoadObstacleEvaluation("../src/")
+        self.test_scenario_dir = "../scenarios/test/"
 
     # def test_keeps_max_lane_speed_limit(self):
     #     # one vehicle which always violates speed limit (1002)
@@ -208,61 +159,14 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def test_standstill(self):
         # one vehicle which is in standstill (1000)
-        scenario, planning_problem_set = \
-            CommonRoadFileReader("./../" + self.simulation_param.get("commonroad_scenario_folder") +
-                                 "/" + "test_standstill.xml").open()
-        self.activated_traffic_rule_sets = ["SRI1"]
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "test_standstill.xml").open()
         exp_result = [(1000, {'R_I1': True}), (1001, {'R_I1': False}), (1002, {'R_I1': True}), (1003, {'R_I1': True}),
                       (1004, {'R_I1': True}), (1005, {'R_I1': True}), (1006, {'R_I1': True}), (1007, {'R_I1': True}),
                       (1008, {'R_I1': True}), (1009, {'R_I1': True}), (1010, {'R_I1': True})]
-        result = self.execute_evaluation(scenario)
+        result = self.cr_eval.evaluate_scenario(scenario, ["SRI1"])
         print("Standstill:")
         print(result)
         self.assertEqual(exp_result, result)
-
-    def add_jerk(self, vehicle: Vehicle):
-        for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.states_lon[state.time_step].j is None:
-                if idx + 1 < len(vehicle.state_list_cr):
-                    jerk = (state.acceleration - vehicle.state_list_cr[idx - 1].acceleration) / \
-                           self.simulation_param.get("dt")
-                else:
-                    jerk = 0
-                vehicle.states_lon[state.time_step].j = jerk
-        return vehicle
-
-    def add_acceleration(self, vehicle: Vehicle):
-        for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.states_lon[state.time_step].a is None:
-                if idx + 1 < len(vehicle.state_list_cr):
-                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
-                           self.simulation_param.get("dt")
-                else:
-                    acceleration = 0
-                vehicle.state_list_cr[idx].acceleration = acceleration
-                vehicle.states_lon[state.time_step].a = acceleration
-        return vehicle
-
-    def execute_evaluation(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
-        self.road_network = RoadNetwork(scenario.lanelet_network, self.road_network_param)
-        dispatcher = TrafficRuleDispatcher(self.traffic_rules, self.traffic_rule_sets, self.road_network,
-                                           self.simulation_param, self.ego_vehicle_param, self.other_vehicles_param,
-                                           self.traffic_rules_param, self.activated_traffic_rule_sets,
-                                           self.vehicle_dependent_rules)
-        vehicle_evaluation = []
-
-        vehicles = []
-        for obs in scenario.dynamic_obstacles:
-            vehicles.append(self.create_vehicle(obs))
-            self.add_acceleration(vehicles[-1])
-            self.add_jerk(vehicles[-1])
-
-        for idx, ego_veh in enumerate(vehicles):
-            other_vehicles = copy.deepcopy(vehicles)
-            other_vehicles.pop(idx)
-            vehicle_evaluation.append((ego_veh.id, dispatcher.evaluate_trajectory(ego_veh, other_vehicles)))
-
-        return vehicle_evaluation
 
 
 if __name__ == '__main__':
