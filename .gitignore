@@ -1,0 +1,9 @@
+# LaTeX
+*.thm
+*.synctex.gz
+*.ps
+*.out
+*.dvi
+*.blg
+*.bbl
+*.aux
