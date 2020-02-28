@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.road_network import RoadNetwork
@@ -8,16 +8,17 @@ from src.predicates.position_predicates import PositionPredicateCollection
 
 class BrakingPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
+        :param necessary_predicates: set with all predicates which should be evaluated
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param)
+                         traffic_rules_param, necessary_predicates)
 
     def _unnecessary_braking(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly
@@ -130,8 +131,9 @@ class BrakingPredicateCollection(PredicateCollection):
                            "keeps_safe_distance_prec": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
-                self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
+            if "unnecessary_braking" in self._necessary_predicates:
+                predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
+                    self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec"][other_vehicle.id] = {}
@@ -139,10 +141,11 @@ class BrakingPredicateCollection(PredicateCollection):
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = True
                     continue
-                predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = \
-                    self._keeps_safe_distance_prec(ego_vehicle, other_vehicle,
-                                                   self._ego_vehicle_param.get("a_min"),
-                                                   self._other_vehicles_param.get("a_min"),
-                                                   self._ego_vehicle_param.get("a_max"),
-                                                   self._ego_vehicle_param.get("t_react"), time_step)
+                if "keeps_safe_distance_prec" in self._necessary_predicates:
+                    predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = \
+                        self._keeps_safe_distance_prec(ego_vehicle, other_vehicle,
+                                                       self._ego_vehicle_param.get("a_min"),
+                                                       self._other_vehicles_param.get("a_min"),
+                                                       self._ego_vehicle_param.get("a_max"),
+                                                       self._ego_vehicle_param.get("t_react"), time_step)
         return predicate_trace

@@ -9,16 +9,17 @@ from src.common.road_network import RoadNetwork
 
 class PositionPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
+        :param necessary_predicates: set with all predicates which should be evaluated
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param)
+                         traffic_rules_param, necessary_predicates)
 
     @staticmethod
     def is_in_front_of(vehicle_p: Vehicle, vehicle_k: Vehicle, time_step: int) -> bool:
@@ -335,20 +336,27 @@ class PositionPredicateCollection(PredicateCollection):
                            "left_of_broad_lane_marking": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            predicate_trace["on_access_ramp"][ego_vehicle.id][time_step] = \
-                self._on_access_ramp(ego_vehicle, time_step)
-            predicate_trace["on_main_carriage_way"][ego_vehicle.id][time_step] = \
-                self._on_main_carriage_way(ego_vehicle, time_step)
-            predicate_trace["in_rightmost_lane"][ego_vehicle.id][time_step] = \
-                self._in_rightmost_lane(ego_vehicle.lanelet_assignment[time_step])
-            predicate_trace["in_leftmost_lane"][ego_vehicle.id][time_step] = \
-                self._in_leftmost_lane(ego_vehicle.lanelet_assignment[time_step])
-            predicate_trace["right_of_broad_lane_marking"][ego_vehicle.id][time_step] = \
-                self._right_of_broad_lane_marking(ego_vehicle, time_step)
-            predicate_trace["drives_leftmost"][ego_vehicle.id][time_step] = \
-                self._drives_leftmost(ego_vehicle, time_step)
-            predicate_trace["drives_rightmost"][ego_vehicle.id][time_step] = \
-                self._drives_leftmost(ego_vehicle, time_step)
+            if "on_access_ramp" in self._necessary_predicates:
+                predicate_trace["on_access_ramp"][ego_vehicle.id][time_step] = \
+                    self._on_access_ramp(ego_vehicle, time_step)
+            if "on_main_carriage_way" in self._necessary_predicates:
+                predicate_trace["on_main_carriage_way"][ego_vehicle.id][time_step] = \
+                    self._on_main_carriage_way(ego_vehicle, time_step)
+            if "in_rightmost_lane" in self._necessary_predicates:
+                predicate_trace["in_rightmost_lane"][ego_vehicle.id][time_step] = \
+                    self._in_rightmost_lane(ego_vehicle.lanelet_assignment[time_step])
+            if "in_leftmost_lane" in self._necessary_predicates:
+                predicate_trace["in_leftmost_lane"][ego_vehicle.id][time_step] = \
+                    self._in_leftmost_lane(ego_vehicle.lanelet_assignment[time_step])
+            if "right_of_broad_lane_marking" in self._necessary_predicates:
+                predicate_trace["right_of_broad_lane_marking"][ego_vehicle.id][time_step] = \
+                    self._right_of_broad_lane_marking(ego_vehicle, time_step)
+            if "drives_leftmost" in self._necessary_predicates:
+                predicate_trace["drives_leftmost"][ego_vehicle.id][time_step] = \
+                    self._drives_leftmost(ego_vehicle, time_step)
+            if "drives_rightmost" in self._necessary_predicates:
+                predicate_trace["drives_rightmost"][ego_vehicle.id][time_step] = \
+                    self._drives_leftmost(ego_vehicle, time_step)
 
         for other_vehicle in other_vehicles:
             predicate_trace["is_in_same_lane"][other_vehicle.id] = {}
@@ -357,10 +365,12 @@ class PositionPredicateCollection(PredicateCollection):
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
-                predicate_trace["is_in_same_lane"][other_vehicle.id][time_step] = \
-                    self.is_in_same_lane(
-                        self._road_network.find_lane_ids_by_lanelets(ego_vehicle.lanelet_assignment[time_step]),
-                        self._road_network.find_lane_ids_by_lanelets(other_vehicle.lanelet_assignment[time_step]))
-                predicate_trace["left_of_broad_lane_marking"][other_vehicle.id][time_step] = \
-                    self._left_of_broad_lane_marking(ego_vehicle, time_step)
+                if "is_in_same_lane" in self._necessary_predicates:
+                    predicate_trace["is_in_same_lane"][other_vehicle.id][time_step] = \
+                        self.is_in_same_lane(
+                            self._road_network.find_lane_ids_by_lanelets(ego_vehicle.lanelet_assignment[time_step]),
+                            self._road_network.find_lane_ids_by_lanelets(other_vehicle.lanelet_assignment[time_step]))
+                if "left_of_broad_lane_marking" in self._necessary_predicates:
+                    predicate_trace["left_of_broad_lane_marking"][other_vehicle.id][time_step] = \
+                        self._left_of_broad_lane_marking(ego_vehicle, time_step)
         return predicate_trace

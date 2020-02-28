@@ -10,16 +10,17 @@ from src.common.road_network import RoadNetwork
 
 class GeneralPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
+        :param necessary_predicates: set with all predicates which should be evaluated
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param)
+                         traffic_rules_param, necessary_predicates)
 
     def _in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """
@@ -147,13 +148,17 @@ class GeneralPredicateCollection(PredicateCollection):
                            "interstate_broad_enough": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            predicate_trace["in_congestion"][ego_vehicle.id][time_step] = \
-                self._in_congestion(ego_vehicle, other_vehicles, time_step)
-            predicate_trace["congestion_left"][ego_vehicle.id][time_step] = \
-                self._congestion_left(ego_vehicle, other_vehicles, time_step)
-            predicate_trace["makes_u_turn"][ego_vehicle.id][time_step] = \
-                self._makes_u_turn(ego_vehicle, time_step)
-            predicate_trace["interstate_broad_enough"][ego_vehicle.id][time_step] = \
-                self._interstate_broad_enough(ego_vehicle, time_step)
+            if "in_congestion" in self._necessary_predicates:
+                predicate_trace["in_congestion"][ego_vehicle.id][time_step] = \
+                    self._in_congestion(ego_vehicle, other_vehicles, time_step)
+            if "congestion_left" in self._necessary_predicates:
+                predicate_trace["congestion_left"][ego_vehicle.id][time_step] = \
+                    self._congestion_left(ego_vehicle, other_vehicles, time_step)
+            if "makes_u_turn" in self._necessary_predicates:
+                predicate_trace["makes_u_turn"][ego_vehicle.id][time_step] = \
+                    self._makes_u_turn(ego_vehicle, time_step)
+            if "interstate_broad_enough" in self._necessary_predicates:
+                predicate_trace["interstate_broad_enough"][ego_vehicle.id][time_step] = \
+                    self._interstate_broad_enough(ego_vehicle, time_step)
 
         return predicate_trace

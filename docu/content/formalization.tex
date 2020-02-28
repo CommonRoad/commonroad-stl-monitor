@@ -27,7 +27,7 @@ We formalize selected rules from the \stvo, e.g., establishing an emergency lane
 \end{table*} 
 
 \begin{itemize}
-	\item The autonomous mode is deactivated in case of 
+	\item The autonomous mode/monitor is deactivated in case of emergencies
 \end{itemize}
 
 \subsection{General traffic rules}
@@ -77,9 +77,10 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 \subsection{Interstate-specific traffic rules}
 
 \subsubsection{R\_I1 - Stopping}
+\paragraph{Law reference:}
 \begin{itemize}
 	\item \textbf{\stvo \S 12 (1)} Stopping is not permitted: [...] on acceleration and deceleration lanes; [...]
-	\item \textbf{\stvo  \S 18 (8) - English:} Stopping is prohibited, including on verges.
+	\item \textbf{\stvo  \S 18 (8)} Stopping is prohibited, including on verges.
 	\item \textbf{OLG Karlsruhe DAR 02, 34; OLG Frankfurt DAR 01, 504:} Stopping is prohibited on all parts that serve the purpose of smooth traffic.
 	\item \textbf{OLG Hamm VersR 91, 83:} Stopping is prohibited on the emergency lane.
 	\item \textbf{Bay VRS 59, 54 = StVE 23:} Stopping is prohibited on access lanes from and to parking spots. 
@@ -92,14 +93,15 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 
 \paragraph{Concretization:} If the ego vehicle is not part of a congestion or the directly leading vehicle is not standing, then stopping on the main carriage way, shoulder lane, and ramps is forbidden.
 
-\paragraph{Comment:} We allow the ego vehicle to stop if a leading vehicle also stops. Vehicles may stop on the marked parking areas themselves, or at the parking areas at the
+\paragraph{Comment:} \todo{The last two items are currently not considered. What is in case of a congestion? standing leading vehicle? }We allow the ego vehicle to stop if a leading vehicle also stops. Vehicles may stop on the marked parking areas themselves, or at the parking areas at the
 restaurants or gas stations. 
 
 \paragraph{LTL formula:} G$(\neg(\inCongestion \lor \, \leadVehicleStandingPredicate) \implies \neg \inStandStillPredicate)$
 
-\subsubsection{R\_I2 - Driving right faster than left traffic}
+\subsubsection{R\_I2 - Overtaking on the right-hand side}
 \paragraph{Law reference:}
 \begin{itemize}
+	\item \textbf{BGHSt 12, 258, 260:}  Overtaking on the right-hand side is generally prohibited, except for the following cases.
 	\item \textbf{\stvo \S 7~(2):} If the density of traffic has resulted in queues of vehicles in the lanes of one carriageway, traffic on the right (nearside lane, middle lane) may move faster than traffic on the left (offside lane, middle lane).
 	
 	\item \textbf{\stvo \S 7~(2a)h:} If, on a carriageway for one direction of traffic, a vehicle queue has formed and come to a standstill or is moving at low speed in the left-hand lane, vehicles may overtake this queue on the right at a slightly higher speed and with the utmost care.
@@ -109,14 +111,17 @@ restaurants or gas stations.
 	\item \textbf{\stvo \S 7a~(2):} On motorways and other roads outside built-up areas, vehicles may travel faster in  acceleration lanes than traffic on the main carriageway.
 	
 	\item \textbf{\stvo \S 7a~(3):} In deceleration lanes, vehicles must not travel faster than traffic on the main carriageway. If traffic on the main carriageway is moving slowly or is stationary, vehicles in a deceleration lane may overtake at a moderate speed and with great care.
-
+	
+	\item \textbf{\stvo \S OLG Frankfurt/M. VRS 63, 386; OLG Düsseldorf VRS 78, 473:} In the range of guiding signs, e.g. Sign 448, if vehicles turn right and keep their lane when turning.
 \end{itemize}
 
-\paragraph{LTL formula:} G$((\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate) \lor (\rightOfBroadLaneMarkingPredicate \land \leftOfBroadLaneMarkingPredicate) \quad\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate) \lor \neg \drivesFasterThanVehicleLeftPredicate)$
+\paragraph{Concretization:} The ego vehicle is not allowed to drive faster than any vehicle on lanes left of it. An exception is, if a) the vehicle in a left lane is in a congestion; b) the vehicle in the left lane is in a congestion on the main carriage way and the ego vehicle is on an off ramp; c) the left vehicle and the ego vehicle are separated by a broad lane marking;  d) the ego vehicle is within an access ramp; d) the ego vehicle is close to a guiding sign and follows the  guiding sign. For a) and b), the ego vehicle is allowed to drive faster than the vehicle in the left lane with only a slightly higher speed. 
 
-\paragraph{Concretization:} The ego vehicle is not allowed to drive faster than any vehicle on lanes left of it. An exception is, if a) the vehicle in a left lane is in a congestion; b) the vehicle in the left lane is in a congestion on the main carriage way and the ego vehicle is on an off ramp; c) the left vehicle and the ego vehicle are separated by a broad lane marking;  d) the ego vehicle is within an access ramp. For a) and b), the ego vehicle is allowed to drive faster than the vehicle in the left lane with only a slightly higher speed. 
+\paragraph{Comment:} The second case of R\_I2 is covered in the first clause of the following FLTL formula. The fourth case of R\_I2 allows to drive on access ramps with higher speed than on the main carriage way. However, if a congestion is on the left side of the ego vehicle and the ego vehicle is on an access ramp, it is only allowed to drive with slightly higher speed. This rule has to be evaluated with respect to every other vehicle within the sensor range. Low speed means in this context a maximum speed of 60 km/h (comp. Burmann, et al., Straßenverkehrsrecht, \stvo \S (5) , recital 58)and slightly higher speed means 20 km/h faster than vehicles on the left lanes (BGHSt 22, 137; Bay 77, 172 = VRS 54, 212; OLG Köln VRS 61, 45). \todo{We currently do not consider the exception for guiding signs.}
 
-\paragraph{Comment:} The second case of R\_I2 is covered in the first clause of the corresponding FLTL formula in Tab~\ref{tab:overview_traffic_rules}. The fourth case of R\_I2 allows to drive on access ramps with higher speed than on the main carriage way. However, if a congestion is on the left side of the ego vehicle and the ego vehicle is on an access ramp, it is only allowed to drive with slightly higher speed. This rule has to be evaluated with respect to every other vehicle within the sensor range.
+\paragraph{LTL formula:} G$((\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate) \lor (\rightOfBroadLaneMarkingPredicate$ \\
+$\land \leftOfBroadLaneMarkingPredicate) \quad\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate) \lor \neg \drivesFasterThanVehicleLeftPredicate)$
+
 
 \subsubsection{R\_I3 - No reversing and turning}
 \paragraph{Law reference:}
@@ -125,6 +130,9 @@ restaurants or gas stations.
 \end{itemize}
 
 \paragraph{Concretization:} Making U-turns and reversing is prohibited.
+
+
+\paragraph{Comment:} U-turns and reversing is prohibited for all lane types (comp. Bay VM 80, 47; OLG Hamm VRS 59, 458). U-turning can be justified in exceptional circumstances, e.g. colliding with another vehicle at night (BGH VersR 60, 802; VRS 14, 89) or being the safest means of the averting of dangers. Reversing can exceptionally be justified as an emergency measure, e.g., while losing an item of luggage (comp. Burmann, et al., Straßenverkehrsrecht, \stvo \S (18), recital 21).
 
 \paragraph{LTL formula:} G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$
 
