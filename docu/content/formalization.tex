@@ -10,35 +10,12 @@ We formalize selected rules from the \stvo, e.g., establishing an emergency lane
 	\arstretch{1.35}
 	\begin{tabular}{@{}lcl@{}} \toprule
 		\textbf{Rule name} & \multicolumn{1}{c}{\textbf{Law reference}}  & \multicolumn{1}{c}{\textbf{FLTL formula}}  \\
-		\\ 	
-		\textbf{R\_G$\mathbf{2}$} & \stvo \S 4~(1); VCoRT \S 17~(1) &  
-		\multicolumn{1}{l}{G$(\neg \unnecessaryBraking)$} 
-		\\ 
+	
 		\textbf{R\_G$\mathbf{3}$} & \multicolumn{1}{c}{\stvo \S 3~(1), \S 3~(3), \S 18~(1), \S 18~(5),} & \multicolumn{1}{l}{G$(\laneSpeedLimitPredicate  \land \fovSpeedLimitPredicate \land  \brakingSpeedLimitPredicate$}\\  
 		& \S 18~(6), traffic sign $274$ & $\quad \land \roadConditionSpeedLimitPredicate \land \vehicleTypeSpeedLimitPredicate) $
 		\\ 
 		\textbf{R\_G$\mathbf{4}$} & \stvo traffic sign $275$ & 
 		\multicolumn{1}{l}{G$(\minSpeedLimitPredicate$)} 
-		\\
-		\textbf{R\_G$\mathbf{5}$} & \stvo \S 3~(2)& 
-		\multicolumn{1}{l}{G$(\preservesTrafficFlowPredicate$)} 
-		\\
-		\textbf{R\_I$\mathbf{1}$} & \multicolumn{1}{c}{ \stvo \S 12 (1), \S 18 (8);} & \multicolumn{1}{l}{G$(\neg(\inCongestion \lor \, \leadVehicleStandingPredicate) \implies \neg \inStandStillPredicate)$} \\
-		& OLG Karlsruhe DAR 02, 34; & \\
-		& OLG Frankfurt DAR 01, 504; & \\
-		& OLG Hamm VersR 91, 83; & \\
-		& Bay VRS 59, 54 = StVE 23 & 
-		\\
-		\textbf{R\_I$\mathbf{2}$} & \multicolumn{1}{c}{ \stvo \S 7 (2), \S 7 (2a), \S 7a} & \multicolumn{1}{l}{G$((\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate)$} \\
-		&  & $\quad\lor (\rightOfBroadLaneMarkingPredicate \land \leftOfBroadLaneMarkingPredicate)$\\
-		&  & $\quad\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate) \lor \neg \drivesFasterThanVehicleLeftPredicate)$\\
-		\textbf{R\_I$\mathbf{3}$} & \stvo \S 18~(7) &  
-		G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$
-		\\
-		\textbf{R\_I$\mathbf{4}$} & \stvo \S 11~(2) & 
-		\multicolumn{1}{l}{G$(\inCongestion \implies ((\interstateBroadEnoughForEmergencyLanePredicate \implies$} \\ 
-		& & $((\inLeftMostLanePredicate \implies \drivesLeftMostPredicate) \land (\neg \inLeftMostLanePredicate \implies \drivesRightMostPredicate)))$ \\
-		& & $  \land \, (\neg \interstateBroadEnoughForEmergencyLanePredicate \implies \drivesRightMostPredicate)))$ 
 		\\
 		\textbf{R\_I$\mathbf{5}$} & \stvo \S 1~(2), \S 18 recital 11 & 
 		\multicolumn{1}{l}{G$(\onAccessRampPredicate \land$ F$(\onMainCarriageWayPredicate)$} \\ 
@@ -49,13 +26,15 @@ We formalize selected rules from the \stvo, e.g., establishing an emergency lane
 	\label{tab:overview_traffic_rules}
 \end{table*} 
 
+\begin{itemize}
+	\item The autonomous mode is deactivated in case of 
+\end{itemize}
 
 \subsection{General traffic rules}
 \subsubsection{R\_G1 - Safe distance to preceding vehicle} 
 \paragraph{Law reference:} 
 \begin{itemize}
-	\item \textbf{\stvo \S 4~(1) - English:} A person operating a vehicle moving behind another vehicle must, as a rule, keep a sufficient distance from that other vehicle so as to be able to pull up safely even if it suddenly slows down or stops.
-	\item \textbf{\stvo \S 4~(1) - German:} Der Abstand zu einem vorausfahrenden Fahrzeug muss in der Regel so groß sein, dass auch dann hinter diesem gehalten werden kann, wenn es plötzlich gebremst wird.
+	\item \textbf{\stvo \S 4~(1)} A person operating a vehicle moving behind another vehicle must, as a rule, keep a sufficient distance from that other vehicle so as to be able to pull up safely even if it suddenly slows down or stops.
 	\item \textbf{\vcort \S 13~(5):} The  driver  of  a  vehicle  moving  behind  another  vehicle  shall  keep  at a  sufficient distance from that other vehicle to avoid collision if the vehicle in front should suddenly slow down or stop. 
 \end{itemize}
 
@@ -69,8 +48,7 @@ The rule has to be evaluated for every other traffic participant within the sens
 \subsubsection{R\_G2 - Unnecessary braking}
 \paragraph{Law reference:}
 \begin{itemize}
-	\item \textbf{\stvo \S 4~(1) - English:} The person operating the vehicle in front must not brake suddenly without a compelling reason.
-	\item \textbf{\stvo \S 4~(1) - German:} Wer vorausfährt, darf nicht ohne zwingenden Grund stark bremsen.
+	\item \textbf{\stvo \S 4~(1):} The person operating the vehicle in front must not brake suddenly without a compelling reason.
 	\item \textbf{\vcort \S 17~(1):} No driver of a vehicle shall brake abruptly unless it is necessary to do so for safety reasons.
 \end{itemize}
 
@@ -89,35 +67,83 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 \paragraph{Concretization:} The ego vehicle has to consider the minimum speed limit traffic sign.
 
 \subsubsection{R\_G5 - Traffic flow}
-\paragraph{Law reference:}
+\paragraph{Law reference:} \stvo \S 3~(2)
+\begin{itemize}
+	\item \textbf{\stvo \S 3~(2):} No motor vehicle must, without good reason, travel so slowly as to impede the flow of traffic.
+\end{itemize}
 \paragraph{Concretization:} The ego vehicle is not allowed to travel so slowly that it impedes traffic flow.
+\paragraph{LTL formula:} G$(\preservesTrafficFlowPredicate$)
 
 \subsection{Interstate-specific traffic rules}
 
 \subsubsection{R\_I1 - Stopping}
-\paragraph{Law reference:}
+\begin{itemize}
+	\item \textbf{\stvo \S 12 (1)} Stopping is not permitted: [...] on acceleration and deceleration lanes; [...]
+	\item \textbf{\stvo  \S 18 (8) - English:} Stopping is prohibited, including on verges.
+	\item \textbf{OLG Karlsruhe DAR 02, 34; OLG Frankfurt DAR 01, 504:} Stopping is prohibited on all parts that serve the purpose of smooth traffic.
+	\item \textbf{OLG Hamm VersR 91, 83:} Stopping is prohibited on the emergency lane.
+	\item \textbf{Bay VRS 59, 54 = StVE 23:} Stopping is prohibited on access lanes from and to parking spots. 
+	\item \textbf{Burmann, et al., Straßenverkehrsrecht, § 18 StVO, recital 23}: If an accident occurs, the vehicles involved must stop pursuant to \stvo Sec. \S 11 (2)  and the persons
+	involved have to wait in order to ascertain identification.
+	\item \textbf{OLG Köln VM 74:} Stopping on the emergency lane is only allowed temporarily and in emergency cases. Broken down
+	cars must be removed from the emergency lane as fast as possible.
+\end{itemize}
+
+
 \paragraph{Concretization:} If the ego vehicle is not part of a congestion or the directly leading vehicle is not standing, then stopping on the main carriage way, shoulder lane, and ramps is forbidden.
 
-We allow the ego vehicle to stop if a leading vehicle also stops.
+\paragraph{Comment:} We allow the ego vehicle to stop if a leading vehicle also stops. Vehicles may stop on the marked parking areas themselves, or at the parking areas at the
+restaurants or gas stations. 
+
+\paragraph{LTL formula:} G$(\neg(\inCongestion \lor \, \leadVehicleStandingPredicate) \implies \neg \inStandStillPredicate)$
 
 \subsubsection{R\_I2 - Driving right faster than left traffic}
 \paragraph{Law reference:}
+\begin{itemize}
+	\item \textbf{\stvo \S 7~(2):} If the density of traffic has resulted in queues of vehicles in the lanes of one carriageway, traffic on the right (nearside lane, middle lane) may move faster than traffic on the left (offside lane, middle lane).
+	
+	\item \textbf{\stvo \S 7~(2a)h:} If, on a carriageway for one direction of traffic, a vehicle queue has formed and come to a standstill or is moving at low speed in the left-hand lane, vehicles may overtake this queue on the right at a slightly higher speed and with the utmost care.
+	
+	\item \textbf{\stvo \S 7a~(1):} Where lanes diverge from the main carriageway, especially on motorways and motor roads, vehicles turning off may, from the beginning of and to the right of a lane marking with broad lines (sign 340), travel faster than traffic on the main carriageway. 
+	
+	\item \textbf{\stvo \S 7a~(2):} On motorways and other roads outside built-up areas, vehicles may travel faster in  acceleration lanes than traffic on the main carriageway.
+	
+	\item \textbf{\stvo \S 7a~(3):} In deceleration lanes, vehicles must not travel faster than traffic on the main carriageway. If traffic on the main carriageway is moving slowly or is stationary, vehicles in a deceleration lane may overtake at a moderate speed and with great care.
+
+\end{itemize}
+
+\paragraph{LTL formula:} G$((\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate) \lor (\rightOfBroadLaneMarkingPredicate \land \leftOfBroadLaneMarkingPredicate) \quad\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate) \lor \neg \drivesFasterThanVehicleLeftPredicate)$
+
 \paragraph{Concretization:} The ego vehicle is not allowed to drive faster than any vehicle on lanes left of it. An exception is, if a) the vehicle in a left lane is in a congestion; b) the vehicle in the left lane is in a congestion on the main carriage way and the ego vehicle is on an off ramp; c) the left vehicle and the ego vehicle are separated by a broad lane marking;  d) the ego vehicle is within an access ramp. For a) and b), the ego vehicle is allowed to drive faster than the vehicle in the left lane with only a slightly higher speed. 
 
 \paragraph{Comment:} The second case of R\_I2 is covered in the first clause of the corresponding FLTL formula in Tab~\ref{tab:overview_traffic_rules}. The fourth case of R\_I2 allows to drive on access ramps with higher speed than on the main carriage way. However, if a congestion is on the left side of the ego vehicle and the ego vehicle is on an access ramp, it is only allowed to drive with slightly higher speed. This rule has to be evaluated with respect to every other vehicle within the sensor range.
 
 \subsubsection{R\_I3 - No reversing and turning}
 \paragraph{Law reference:}
+\begin{itemize}
+	\item \textbf{\stvo \S 18 (7):} Making U-turns and reversing are prohibited.
+\end{itemize}
+
 \paragraph{Concretization:} Making U-turns and reversing is prohibited.
 
+\paragraph{LTL formula:} G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$
+
 \subsubsection{R\_I4 - Emergency lane}
+
 \paragraph{Law reference:}
+\begin{itemize}
+	\item \textbf{\stvo \S 11 (2) - English:} As soon as vehicles on motorways and roads outside a built-up area with at least two lanes for one direction start to move at walking pace or come to a standstill, these vehicles must leave a gap for one direction between the lane on the far left and the lane immediately adjacent to it on the right to allow police and emergency vehicles to pass.
+	
+	\item \textbf{\stvo \S 11 (2) - German:} Sobald Fahrzeuge auf Autobahnen sowie auf Außerortsstraßen mit mindestens zwei Fahrstreifen für eine Richtung mit Schrittgeschwindigkeit fahren oder sich die Fahrzeuge im Stillstand befinden, müssen diese Fahrzeuge für die Durchfahrt von Polizei- und Hilfsfahrzeugen zwischen dem äußerst linken und dem unmittelbar rechts daneben liegenden Fahrstreifen für eine Richtung eine freie Gasse bilden.
+\end{itemize}
 \paragraph{Concretization:} A vehicle in a congestion has to drive leftmost if it is in the leftmost lane and has to drive rightmost otherwise. If the interstate is not broad enough to create an emergency lane, all vehicles should drive in the rightmost lane.
+
+\paragraph{LTL formula:} G$(\inCongestion \implies ((\interstateBroadEnoughForEmergencyLanePredicate \implies ((\inLeftMostLanePredicate \implies \drivesLeftMostPredicate) \land (\neg \inLeftMostLanePredicate \implies \drivesRightMostPredicate))) \land \, (\neg \interstateBroadEnoughForEmergencyLanePredicate \implies \drivesRightMostPredicate)))$ 
 
 \subsubsection{R\_I5 - Consider entering vehicles}
 \paragraph{Law reference:}
 \paragraph{Concretization:} The ego vehicle is not allowed to move from the main carriage way to the rightmost lane if another vehicle is about to enter the main carriage way from the access ramp.
-
+\paragraph{LTL formula:}
 
 
 
@@ -177,38 +203,8 @@ We allow the ego vehicle to stop if a leading vehicle also stops.
 %		\bottomrule
 %	\end{tabular}
 %\end{table}
-%
-%
-%\subsubsection{Braking}
-%\begin{table}[H]
-%\centering
-%\begin{tabular}[t]{ll}
-%\toprule
-%\textbf{Unnecessary braking} & \\
-%\midrule
-%	StVO \S 4 (1) & Wer vorausfährt, darf nicht ohne zwingenden Grund stark bremsen.\\
-%	& The person operating the vehicle in front must not brake suddenly \\
-%	& without a compelling reason.\\
-%	&\\
-%	VCoRT \S 17 (1) &  No driver of a vehicle shall brake abruptly unless it is necessary to do so for\\
-%	&  safety reasons.\\
-%	&\\
-%	Concretization &  A vehicle shall never brake abruptly unless it has a reason to do so. \\
-%	& A vehicle brakes abruptly if: \\
-%	& 1. The vehicle brakes although there is no leading vehicle and there is no reason caused by \\
-%	& a traffic regulation to reduce the vehicle's velocity; \\ 
-%	& 2. There is an obstacle in front of the vehicle and the acceleration difference and \\
-%	& jerk difference between the vehicle and the obstacle violate thresholds; \\
-%	& 3. The maximum allowed speed will change or changed due to traffic \\
-%	& signs or environmental conditions.\\
-%	&\\
-%	LTL & G$(\unnecessaryBraking)$\\
-%	MTL & G$(\unnecessaryBraking)$\\
-%	STL & \\
-%\bottomrule
-%\end{tabular}
-%\end{table}%
-%
+
+
 %\begin{table}[H]
 %	\centering
 %	\begin{tabular}[t]{ll}
@@ -428,77 +424,5 @@ We allow the ego vehicle to stop if a leading vehicle also stops.
 %		\bottomrule
 %	\end{tabular}
 %\end{table}
-%
-%\begin{table}[H]
-%	\centering
-%	\begin{tabular}[t]{ll}
-%		\toprule
-%		\textbf{No reversing}&\\ 
-%		\textbf{and turning} &\\
-%		\midrule
-%		StVO \S 18 (7) & Wenden und Rückwärtsfahren sind verboten.\\
-%		
-%		StVO English & Making U-turns and reversing are prohibited.\\
-%		
-%		VCoRT  &  \\
-%		
-%		Concretization &  Making U-turns and reversing are prohibited.\\
-%		
-%		Predicates & $\makesUTurnPredicate$, $\reversesPredicate$\\
-%		
-%		Comments &  \\
-%		
-%		LTL & G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$ \\
-%		MTL & G$(\neg \makesUTurnPredicate \land \neg \reversesPredicate)$\\
-%		STL & \\
-%		\bottomrule
-%	\end{tabular}
-%\end{table}
-%
-%\begin{table}[H]
-%	\centering
-%	\begin{tabular}[t]{ll}
-%		\toprule
-%		\textbf{Direction indicator}&\\ 
-%		\midrule
-%		StVO \S 5 (4a) & Das Ausscheren zum Überholen und das Wiedereinordnen sind rechtzeitig und \\
-%		& deutlich  anzukündigen; dabei sind die Fahrtrichtungsanzeiger zu benutzen. \\
-%		& The intention of pulling out to overtake and of moving back to the right-hand side \\
-%		& of the road are to be signalled clearly and in good time, using the vehicle’s \\
-%		& direction indicators to do so.\\
-%		&\\
-%		StVO \S 7 (5) & [...] Jeder Fahrstreifenwechsel ist rechtzeitig und deutlich anzukündigen; \\
-%		& dabei sind die Fahrtrichtungsanzeiger zu benutzen. \\
-%		& [...] Any change of lane must be signalized clearly and in good time, \\
-%		& using the vehicle’s direction indicators to do so. \\
-%		&\\
-%		Burmann, et al., &  Der Fahrtrichtungsanzeiger is rechtzeitig bevor Verlassen der Hauptfahrbahn und\\
-%		Straßenverkehrsrecht,&  dem Befahren des Ausfädelungsstreifen zu benutzen. Sobald der Ausfädelungsstreifen\\
-%		Recital 11  &  befahren wird, soll der Fahrtrichtungsanzeiger deaktiviert werden. \\
-%		
-%		& The direction indicator shall be timely switched on before leaving \\
-%		& the main carriageway and moving to the exit ramp. When the \\
-%		& exit ramp had been entered, the direction indicator should be switched off. \\
-%		&\\
-%		VCoRT  &  \\
-%		&\\
-%		Concretization &  Any change of lane must be signalized clearly and enough time before \\
-%		& entering the new lane, using the vehicle’s direction indicators.\\
-%		& When the new lane had been entered, the direction indicator should be switched off.\\
-%		&\\
-%		Predicates & \\
-%		&\\
-%		Comments & We assume the exit ramp is long enough so that a vehicle can switch off the direction indicator before the vehicle has to turn the indicator on for a possible intersection.  \\
-%		&\\
-%		LTL & G$()$ \\
-%		MTL & G$()$\\
-%		STL & \\
-%		\bottomrule
-%	\end{tabular}
-%\end{table}
-%
-%\subsection{Urban Traffic Rules}
-%\label{sec:urban_rules}
-%
-%\subsection{Cross-Country Road Traffic Rules}
-%\label{sec:cross_country_rules}
+
+
