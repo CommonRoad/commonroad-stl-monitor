@@ -9,8 +9,9 @@
 *.aux
 *.log
 
-# __pycache__
+# PyCharm
 __pycache__
+.idea
 
 # jupyter
 .ipynb_checkpoints
