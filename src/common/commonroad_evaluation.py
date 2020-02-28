@@ -33,6 +33,14 @@ class CommonRoadObstacleEvaluation:
         self.num_veh_all_correct = 0
         self.vehicles_dict = {}
 
+    @property
+    def simulation_param(self) -> Dict:
+        return self._simulation_param
+
+    @property
+    def ego_vehicle_param(self) -> Dict:
+        return self._ego_vehicle_param
+
     def create_vehicle(self, obstacle: DynamicObstacle) -> Vehicle:
         lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                         list(obstacle.initial_shape_lanelet_ids))
@@ -77,8 +85,8 @@ class CommonRoadObstacleEvaluation:
         for obs in scenario.dynamic_obstacles:
             if obs.prediction is not None:
                 new_vehicle = self.create_vehicle(obs)
-                self.add_acceleration(new_vehicle, self._simulation_param.get("dt"))
-                self.add_jerk(new_vehicle, self._simulation_param.get("dt"))
+                self.add_acceleration(new_vehicle)
+                self.add_jerk(new_vehicle)
                 vehicles.append(new_vehicle)
                 self.vehicles_dict[obs.obstacle_id] = new_vehicle
 
@@ -89,23 +97,23 @@ class CommonRoadObstacleEvaluation:
 
         return vehicle_evaluation
 
-    @staticmethod
-    def add_jerk(vehicle: Vehicle, dt: float):
+    def add_jerk(self, vehicle: Vehicle):
         for idx, state in enumerate(vehicle.state_list_cr):
             if vehicle.states_lon[state.time_step].j is None:
                 if idx + 1 < len(vehicle.state_list_cr):
-                    jerk = (vehicle.state_list_cr[idx + 1].acceleration - state.acceleration) / dt
+                    jerk = (state.acceleration - vehicle.state_list_cr[idx - 1].acceleration) / \
+                           self.simulation_param.get("dt")
                 else:
                     jerk = 0
                 vehicle.states_lon[state.time_step].j = jerk
         return vehicle
 
-    @staticmethod
-    def add_acceleration(vehicle: Vehicle, dt: float):
+    def add_acceleration(self, vehicle: Vehicle):
         for idx, state in enumerate(vehicle.state_list_cr):
             if vehicle.states_lon[state.time_step].a is None:
                 if idx + 1 < len(vehicle.state_list_cr):
-                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / dt
+                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
+                           self.simulation_param.get("dt")
                 else:
                     acceleration = 0
                 vehicle.state_list_cr[idx].acceleration = acceleration
