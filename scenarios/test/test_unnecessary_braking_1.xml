@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_unnecessary_braking_1" date="2020-02-25">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_unnecessary_braking_1" date="2020-03-02">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -8,9 +8,9 @@
     <name>Munich</name>
   </location>
   <scenarioTags>
-    <parallel_lanes/>
     <multi_lane/>
     <highway/>
+    <parallel_lanes/>
     <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
@@ -230,8 +230,8 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="11" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="2">
@@ -452,8 +452,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="12" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="3">
@@ -674,8 +674,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="13" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="4">
@@ -896,8 +896,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="14" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="5">
@@ -1118,8 +1118,8 @@
     <predecessor ref="4"/>
     <successor ref="6"/>
     <adjacentLeft ref="15" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="6">
@@ -1340,8 +1340,8 @@
     <predecessor ref="5"/>
     <successor ref="7"/>
     <adjacentLeft ref="16" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="7">
@@ -1562,8 +1562,8 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentLeft ref="17" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="8">
@@ -1784,8 +1784,8 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentLeft ref="18" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="9">
@@ -2006,8 +2006,8 @@
     <predecessor ref="8"/>
     <successor ref="10"/>
     <adjacentLeft ref="19" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="10">
@@ -2227,8 +2227,8 @@
     </rightBound>
     <predecessor ref="9"/>
     <adjacentLeft ref="20" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="11">
@@ -2449,8 +2449,8 @@
     <successor ref="12"/>
     <adjacentLeft ref="21" drivingDir="same"/>
     <adjacentRight ref="1" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="12">
@@ -2672,8 +2672,8 @@
     <successor ref="13"/>
     <adjacentLeft ref="22" drivingDir="same"/>
     <adjacentRight ref="2" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="13">
@@ -2895,8 +2895,8 @@
     <successor ref="14"/>
     <adjacentLeft ref="23" drivingDir="same"/>
     <adjacentRight ref="3" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="14">
@@ -3118,8 +3118,8 @@
     <successor ref="15"/>
     <adjacentLeft ref="24" drivingDir="same"/>
     <adjacentRight ref="4" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="15">
@@ -3341,8 +3341,8 @@
     <successor ref="16"/>
     <adjacentLeft ref="25" drivingDir="same"/>
     <adjacentRight ref="5" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="16">
@@ -3564,8 +3564,8 @@
     <successor ref="17"/>
     <adjacentLeft ref="26" drivingDir="same"/>
     <adjacentRight ref="6" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="17">
@@ -3787,8 +3787,8 @@
     <successor ref="18"/>
     <adjacentLeft ref="27" drivingDir="same"/>
     <adjacentRight ref="7" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="18">
@@ -4010,8 +4010,8 @@
     <successor ref="19"/>
     <adjacentLeft ref="28" drivingDir="same"/>
     <adjacentRight ref="8" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="19">
@@ -4233,8 +4233,8 @@
     <successor ref="20"/>
     <adjacentLeft ref="29" drivingDir="same"/>
     <adjacentRight ref="9" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="20">
@@ -4455,8 +4455,8 @@
     <predecessor ref="19"/>
     <adjacentLeft ref="30" drivingDir="same"/>
     <adjacentRight ref="10" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="21">
@@ -4677,8 +4677,8 @@
     <successor ref="22"/>
     <adjacentLeft ref="31" drivingDir="same"/>
     <adjacentRight ref="11" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="22">
@@ -4900,8 +4900,8 @@
     <successor ref="23"/>
     <adjacentLeft ref="32" drivingDir="same"/>
     <adjacentRight ref="12" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="23">
@@ -5123,8 +5123,8 @@
     <successor ref="24"/>
     <adjacentLeft ref="33" drivingDir="same"/>
     <adjacentRight ref="13" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="24">
@@ -5346,8 +5346,8 @@
     <successor ref="25"/>
     <adjacentLeft ref="34" drivingDir="same"/>
     <adjacentRight ref="14" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="25">
@@ -5569,8 +5569,8 @@
     <successor ref="26"/>
     <adjacentLeft ref="35" drivingDir="same"/>
     <adjacentRight ref="15" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="26">
@@ -5792,8 +5792,8 @@
     <successor ref="27"/>
     <adjacentLeft ref="36" drivingDir="same"/>
     <adjacentRight ref="16" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="27">
@@ -6015,8 +6015,8 @@
     <successor ref="28"/>
     <adjacentLeft ref="37" drivingDir="same"/>
     <adjacentRight ref="17" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="28">
@@ -6238,8 +6238,8 @@
     <successor ref="29"/>
     <adjacentLeft ref="38" drivingDir="same"/>
     <adjacentRight ref="18" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="29">
@@ -6461,8 +6461,8 @@
     <successor ref="30"/>
     <adjacentLeft ref="39" drivingDir="same"/>
     <adjacentRight ref="19" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="30">
@@ -6683,8 +6683,8 @@
     <predecessor ref="29"/>
     <adjacentLeft ref="40" drivingDir="same"/>
     <adjacentRight ref="20" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="31">
@@ -6905,8 +6905,8 @@
     <successor ref="32"/>
     <adjacentLeft ref="41" drivingDir="same"/>
     <adjacentRight ref="21" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="32">
@@ -7128,8 +7128,8 @@
     <successor ref="33"/>
     <adjacentLeft ref="42" drivingDir="same"/>
     <adjacentRight ref="22" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="33">
@@ -7351,8 +7351,8 @@
     <successor ref="34"/>
     <adjacentLeft ref="43" drivingDir="same"/>
     <adjacentRight ref="23" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="34">
@@ -7574,8 +7574,8 @@
     <successor ref="35"/>
     <adjacentLeft ref="44" drivingDir="same"/>
     <adjacentRight ref="24" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="35">
@@ -7797,8 +7797,8 @@
     <successor ref="36"/>
     <adjacentLeft ref="45" drivingDir="same"/>
     <adjacentRight ref="25" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="36">
@@ -8020,8 +8020,8 @@
     <successor ref="37"/>
     <adjacentLeft ref="46" drivingDir="same"/>
     <adjacentRight ref="26" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="37">
@@ -8243,8 +8243,8 @@
     <successor ref="38"/>
     <adjacentLeft ref="47" drivingDir="same"/>
     <adjacentRight ref="27" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="38">
@@ -8466,8 +8466,8 @@
     <successor ref="39"/>
     <adjacentLeft ref="48" drivingDir="same"/>
     <adjacentRight ref="28" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="39">
@@ -8689,8 +8689,8 @@
     <successor ref="40"/>
     <adjacentLeft ref="49" drivingDir="same"/>
     <adjacentRight ref="29" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="40">
@@ -8911,8 +8911,8 @@
     <predecessor ref="39"/>
     <adjacentLeft ref="50" drivingDir="same"/>
     <adjacentRight ref="30" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="41">
@@ -9133,8 +9133,8 @@
     <successor ref="42"/>
     <adjacentLeft ref="51" drivingDir="same"/>
     <adjacentRight ref="31" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="42">
@@ -9356,8 +9356,8 @@
     <successor ref="43"/>
     <adjacentLeft ref="52" drivingDir="same"/>
     <adjacentRight ref="32" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="43">
@@ -9579,8 +9579,8 @@
     <successor ref="44"/>
     <adjacentLeft ref="53" drivingDir="same"/>
     <adjacentRight ref="33" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="44">
@@ -9802,8 +9802,8 @@
     <successor ref="45"/>
     <adjacentLeft ref="54" drivingDir="same"/>
     <adjacentRight ref="34" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="45">
@@ -10025,8 +10025,8 @@
     <successor ref="46"/>
     <adjacentLeft ref="55" drivingDir="same"/>
     <adjacentRight ref="35" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="46">
@@ -10248,8 +10248,8 @@
     <successor ref="47"/>
     <adjacentLeft ref="56" drivingDir="same"/>
     <adjacentRight ref="36" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="47">
@@ -10471,8 +10471,8 @@
     <successor ref="48"/>
     <adjacentLeft ref="57" drivingDir="same"/>
     <adjacentRight ref="37" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="48">
@@ -10694,8 +10694,8 @@
     <successor ref="49"/>
     <adjacentLeft ref="58" drivingDir="same"/>
     <adjacentRight ref="38" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="49">
@@ -10917,8 +10917,8 @@
     <successor ref="50"/>
     <adjacentLeft ref="59" drivingDir="same"/>
     <adjacentRight ref="39" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="50">
@@ -11139,8 +11139,8 @@
     <predecessor ref="49"/>
     <adjacentLeft ref="60" drivingDir="same"/>
     <adjacentRight ref="40" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="51">
@@ -11360,8 +11360,8 @@
     </rightBound>
     <successor ref="52"/>
     <adjacentRight ref="41" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="52">
@@ -11582,8 +11582,8 @@
     <predecessor ref="51"/>
     <successor ref="53"/>
     <adjacentRight ref="42" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="53">
@@ -11804,8 +11804,8 @@
     <predecessor ref="52"/>
     <successor ref="54"/>
     <adjacentRight ref="43" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="54">
@@ -12026,8 +12026,8 @@
     <predecessor ref="53"/>
     <successor ref="55"/>
     <adjacentRight ref="44" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="55">
@@ -12248,8 +12248,8 @@
     <predecessor ref="54"/>
     <successor ref="56"/>
     <adjacentRight ref="45" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="56">
@@ -12470,8 +12470,8 @@
     <predecessor ref="55"/>
     <successor ref="57"/>
     <adjacentRight ref="46" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="57">
@@ -12692,8 +12692,8 @@
     <predecessor ref="56"/>
     <successor ref="58"/>
     <adjacentRight ref="47" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="58">
@@ -12914,8 +12914,8 @@
     <predecessor ref="57"/>
     <successor ref="59"/>
     <adjacentRight ref="48" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="59">
@@ -13136,8 +13136,8 @@
     <predecessor ref="58"/>
     <successor ref="60"/>
     <adjacentRight ref="49" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="60">
@@ -13357,8 +13357,8 @@
     </rightBound>
     <predecessor ref="59"/>
     <adjacentRight ref="50" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <dynamicObstacle id="1000">
@@ -13396,7 +13396,7 @@
       <state>
         <position>
           <point>
-            <x>5.005</x>
+            <x>5.0050000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -13453,7 +13453,7 @@
           <exact>3</exact>
         </time>
         <velocity>
-          <exact>20.300000</exact>
+          <exact>20.3</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -13476,7 +13476,7 @@
           <exact>4</exact>
         </time>
         <velocity>
-          <exact>20.400000</exact>
+          <exact>20.4</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -13499,7 +13499,7 @@
           <exact>5</exact>
         </time>
         <velocity>
-          <exact>20.500000</exact>
+          <exact>20.5</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -13522,7 +13522,7 @@
           <exact>6</exact>
         </time>
         <velocity>
-          <exact>20.600000</exact>
+          <exact>20.6</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -13959,7 +13959,7 @@
           <exact>25</exact>
         </time>
         <velocity>
-          <exact>22.500000</exact>
+          <exact>22.5</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -13982,7 +13982,7 @@
           <exact>26</exact>
         </time>
         <velocity>
-          <exact>22.600000</exact>
+          <exact>22.6</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -14005,7 +14005,7 @@
           <exact>27</exact>
         </time>
         <velocity>
-          <exact>22.700000</exact>
+          <exact>22.7</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -14028,7 +14028,7 @@
           <exact>28</exact>
         </time>
         <velocity>
-          <exact>22.800000</exact>
+          <exact>22.8</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -14097,7 +14097,7 @@
           <exact>31</exact>
         </time>
         <velocity>
-          <exact>23.100000</exact>
+          <exact>23.1</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -14580,7 +14580,7 @@
       <state>
         <position>
           <point>
-            <x>6.0</x>
+            <x>6.0000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14603,7 +14603,7 @@
       <state>
         <position>
           <point>
-            <x>9.0</x>
+            <x>9.0000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14649,7 +14649,7 @@
       <state>
         <position>
           <point>
-            <x>15.0</x>
+            <x>15.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14695,7 +14695,7 @@
       <state>
         <position>
           <point>
-            <x>21.0</x>
+            <x>21.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14718,7 +14718,7 @@
       <state>
         <position>
           <point>
-            <x>24.0</x>
+            <x>24.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14741,7 +14741,7 @@
       <state>
         <position>
           <point>
-            <x>27.0</x>
+            <x>27.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14764,7 +14764,7 @@
       <state>
         <position>
           <point>
-            <x>30.0</x>
+            <x>30.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14787,7 +14787,7 @@
       <state>
         <position>
           <point>
-            <x>33.0</x>
+            <x>33.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14810,7 +14810,7 @@
       <state>
         <position>
           <point>
-            <x>36.0</x>
+            <x>36.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14833,7 +14833,7 @@
       <state>
         <position>
           <point>
-            <x>39.0</x>
+            <x>39.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14856,7 +14856,7 @@
       <state>
         <position>
           <point>
-            <x>42.0</x>
+            <x>42.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14879,7 +14879,7 @@
       <state>
         <position>
           <point>
-            <x>45.0</x>
+            <x>45.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14902,7 +14902,7 @@
       <state>
         <position>
           <point>
-            <x>48.0</x>
+            <x>48.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14925,7 +14925,7 @@
       <state>
         <position>
           <point>
-            <x>51.0</x>
+            <x>51.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14948,7 +14948,7 @@
       <state>
         <position>
           <point>
-            <x>54.0</x>
+            <x>54.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14971,7 +14971,7 @@
       <state>
         <position>
           <point>
-            <x>57.0</x>
+            <x>57.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -14994,7 +14994,7 @@
       <state>
         <position>
           <point>
-            <x>60.0</x>
+            <x>60.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15017,7 +15017,7 @@
       <state>
         <position>
           <point>
-            <x>63.0</x>
+            <x>63.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15040,7 +15040,7 @@
       <state>
         <position>
           <point>
-            <x>66.0</x>
+            <x>66.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15063,7 +15063,7 @@
       <state>
         <position>
           <point>
-            <x>69.0</x>
+            <x>69.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15086,7 +15086,7 @@
       <state>
         <position>
           <point>
-            <x>72.0</x>
+            <x>72.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15109,7 +15109,7 @@
       <state>
         <position>
           <point>
-            <x>75.0</x>
+            <x>75.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15132,7 +15132,7 @@
       <state>
         <position>
           <point>
-            <x>78.0</x>
+            <x>78.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15155,7 +15155,7 @@
       <state>
         <position>
           <point>
-            <x>81.0</x>
+            <x>81.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15178,7 +15178,7 @@
       <state>
         <position>
           <point>
-            <x>84.0</x>
+            <x>84.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15224,7 +15224,7 @@
       <state>
         <position>
           <point>
-            <x>90.0</x>
+            <x>90.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15247,7 +15247,7 @@
       <state>
         <position>
           <point>
-            <x>93.0</x>
+            <x>93.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15270,7 +15270,7 @@
       <state>
         <position>
           <point>
-            <x>96.0</x>
+            <x>96.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15293,7 +15293,7 @@
       <state>
         <position>
           <point>
-            <x>99.0</x>
+            <x>99.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15339,7 +15339,7 @@
       <state>
         <position>
           <point>
-            <x>105.0</x>
+            <x>105.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15362,7 +15362,7 @@
       <state>
         <position>
           <point>
-            <x>108.0</x>
+            <x>108.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15385,7 +15385,7 @@
       <state>
         <position>
           <point>
-            <x>111.0</x>
+            <x>111.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15408,7 +15408,7 @@
       <state>
         <position>
           <point>
-            <x>114.0</x>
+            <x>114.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15431,7 +15431,7 @@
       <state>
         <position>
           <point>
-            <x>117.0</x>
+            <x>117.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15454,7 +15454,7 @@
       <state>
         <position>
           <point>
-            <x>120.0</x>
+            <x>120.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15477,7 +15477,7 @@
       <state>
         <position>
           <point>
-            <x>123.0</x>
+            <x>123.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15500,7 +15500,7 @@
       <state>
         <position>
           <point>
-            <x>126.0</x>
+            <x>126.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15523,7 +15523,7 @@
       <state>
         <position>
           <point>
-            <x>129.0</x>
+            <x>129.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15546,7 +15546,7 @@
       <state>
         <position>
           <point>
-            <x>132.0</x>
+            <x>132.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15569,7 +15569,7 @@
       <state>
         <position>
           <point>
-            <x>135.0</x>
+            <x>135.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15592,7 +15592,7 @@
       <state>
         <position>
           <point>
-            <x>138.0</x>
+            <x>138.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15615,7 +15615,7 @@
       <state>
         <position>
           <point>
-            <x>141.0</x>
+            <x>141.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15638,7 +15638,7 @@
       <state>
         <position>
           <point>
-            <x>144.0</x>
+            <x>144.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15661,7 +15661,7 @@
       <state>
         <position>
           <point>
-            <x>147.0</x>
+            <x>147.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15684,7 +15684,7 @@
       <state>
         <position>
           <point>
-            <x>150.0</x>
+            <x>150.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15707,7 +15707,7 @@
       <state>
         <position>
           <point>
-            <x>153.0</x>
+            <x>153.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -15764,7 +15764,7 @@
       <state>
         <position>
           <point>
-            <x>77.9995</x>
+            <x>77.999500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -15775,7 +15775,7 @@
           <exact>1</exact>
         </time>
         <velocity>
-          <exact>29.99</exact>
+          <exact>29.990000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15798,7 +15798,7 @@
           <exact>2</exact>
         </time>
         <velocity>
-          <exact>29.97</exact>
+          <exact>29.970000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15810,7 +15810,7 @@
       <state>
         <position>
           <point>
-            <x>83.993</x>
+            <x>83.993000</x>
             <y>8.75</y>
           </point>
         </position>
@@ -15833,7 +15833,7 @@
       <state>
         <position>
           <point>
-            <x>86.985</x>
+            <x>86.985000</x>
             <y>8.75</y>
           </point>
         </position>
@@ -15844,7 +15844,7 @@
           <exact>4</exact>
         </time>
         <velocity>
-          <exact>29.9</exact>
+          <exact>29.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15856,7 +15856,7 @@
       <state>
         <position>
           <point>
-            <x>89.9725</x>
+            <x>89.972500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -15879,7 +15879,7 @@
       <state>
         <position>
           <point>
-            <x>92.9545</x>
+            <x>92.954500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -15890,7 +15890,7 @@
           <exact>6</exact>
         </time>
         <velocity>
-          <exact>29.79</exact>
+          <exact>29.790000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15913,7 +15913,7 @@
           <exact>7</exact>
         </time>
         <velocity>
-          <exact>29.72</exact>
+          <exact>29.720000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15936,7 +15936,7 @@
           <exact>8</exact>
         </time>
         <velocity>
-          <exact>29.64</exact>
+          <exact>29.640000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15959,7 +15959,7 @@
           <exact>9</exact>
         </time>
         <velocity>
-          <exact>29.55</exact>
+          <exact>29.550000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15982,7 +15982,7 @@
           <exact>10</exact>
         </time>
         <velocity>
-          <exact>29.45</exact>
+          <exact>29.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -15994,7 +15994,7 @@
       <state>
         <position>
           <point>
-            <x>107.747</x>
+            <x>107.74700</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16005,7 +16005,7 @@
           <exact>11</exact>
         </time>
         <velocity>
-          <exact>29.34</exact>
+          <exact>29.340000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16017,7 +16017,7 @@
       <state>
         <position>
           <point>
-            <x>110.675</x>
+            <x>110.67500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16028,7 +16028,7 @@
           <exact>12</exact>
         </time>
         <velocity>
-          <exact>29.22</exact>
+          <exact>29.220000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16051,7 +16051,7 @@
           <exact>13</exact>
         </time>
         <velocity>
-          <exact>29.09</exact>
+          <exact>29.090000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16074,7 +16074,7 @@
           <exact>14</exact>
         </time>
         <velocity>
-          <exact>28.95</exact>
+          <exact>28.950000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16086,7 +16086,7 @@
       <state>
         <position>
           <point>
-            <x>119.38</x>
+            <x>119.38000</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16097,7 +16097,7 @@
           <exact>15</exact>
         </time>
         <velocity>
-          <exact>28.8</exact>
+          <exact>28.800000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16109,7 +16109,7 @@
       <state>
         <position>
           <point>
-            <x>122.252</x>
+            <x>122.25200</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16120,7 +16120,7 @@
           <exact>16</exact>
         </time>
         <velocity>
-          <exact>28.64</exact>
+          <exact>28.640000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16132,7 +16132,7 @@
       <state>
         <position>
           <point>
-            <x>125.1075</x>
+            <x>125.10750</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16143,7 +16143,7 @@
           <exact>17</exact>
         </time>
         <velocity>
-          <exact>28.47</exact>
+          <exact>28.470000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16155,7 +16155,7 @@
       <state>
         <position>
           <point>
-            <x>127.9455</x>
+            <x>127.94550</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16166,7 +16166,7 @@
           <exact>18</exact>
         </time>
         <velocity>
-          <exact>28.29</exact>
+          <exact>28.290000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16178,7 +16178,7 @@
       <state>
         <position>
           <point>
-            <x>130.765</x>
+            <x>130.76500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16201,7 +16201,7 @@
       <state>
         <position>
           <point>
-            <x>133.565</x>
+            <x>133.56500</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16212,7 +16212,7 @@
           <exact>20</exact>
         </time>
         <velocity>
-          <exact>27.9</exact>
+          <exact>27.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16247,7 +16247,7 @@
       <state>
         <position>
           <point>
-            <x>139.1025</x>
+            <x>139.10250</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16258,7 +16258,7 @@
           <exact>22</exact>
         </time>
         <velocity>
-          <exact>27.47</exact>
+          <exact>27.470000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16281,7 +16281,7 @@
           <exact>23</exact>
         </time>
         <velocity>
-          <exact>27.24</exact>
+          <exact>27.240000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16304,7 +16304,7 @@
           <exact>24</exact>
         </time>
         <velocity>
-          <exact>27.0</exact>
+          <exact>27.000000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16327,7 +16327,7 @@
           <exact>25</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16350,7 +16350,7 @@
           <exact>26</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16373,7 +16373,7 @@
           <exact>27</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16385,7 +16385,7 @@
       <state>
         <position>
           <point>
-            <x>155.2625</x>
+            <x>155.26250</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16396,7 +16396,7 @@
           <exact>28</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16408,7 +16408,7 @@
       <state>
         <position>
           <point>
-            <x>157.9375</x>
+            <x>157.93750</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16419,7 +16419,7 @@
           <exact>29</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16431,7 +16431,7 @@
       <state>
         <position>
           <point>
-            <x>160.6125</x>
+            <x>160.61250</x>
             <y>8.75</y>
           </point>
         </position>
@@ -16442,7 +16442,7 @@
           <exact>30</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16465,7 +16465,7 @@
           <exact>31</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16488,7 +16488,7 @@
           <exact>32</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16511,7 +16511,7 @@
           <exact>33</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16534,7 +16534,7 @@
           <exact>34</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16557,7 +16557,7 @@
           <exact>35</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16580,7 +16580,7 @@
           <exact>36</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16603,7 +16603,7 @@
           <exact>37</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16626,7 +16626,7 @@
           <exact>38</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16649,7 +16649,7 @@
           <exact>39</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16672,7 +16672,7 @@
           <exact>40</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16695,7 +16695,7 @@
           <exact>41</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16718,7 +16718,7 @@
           <exact>42</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16741,7 +16741,7 @@
           <exact>43</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16764,7 +16764,7 @@
           <exact>44</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16787,7 +16787,7 @@
           <exact>45</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16810,7 +16810,7 @@
           <exact>46</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16833,7 +16833,7 @@
           <exact>47</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16856,7 +16856,7 @@
           <exact>48</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16879,7 +16879,7 @@
           <exact>49</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16902,7 +16902,7 @@
           <exact>50</exact>
         </time>
         <velocity>
-          <exact>26.75</exact>
+          <exact>26.750000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -16971,7 +16971,7 @@
       <state>
         <position>
           <point>
-            <x>7.0</x>
+            <x>7.0000000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17040,7 +17040,7 @@
       <state>
         <position>
           <point>
-            <x>12.995</x>
+            <x>12.995000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17051,7 +17051,7 @@
           <exact>5</exact>
         </time>
         <velocity>
-          <exact>19.9</exact>
+          <exact>19.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -17086,7 +17086,7 @@
       <state>
         <position>
           <point>
-            <x>16.955</x>
+            <x>16.955000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17339,7 +17339,7 @@
       <state>
         <position>
           <point>
-            <x>38.415</x>
+            <x>38.415000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17362,7 +17362,7 @@
       <state>
         <position>
           <point>
-            <x>40.365</x>
+            <x>40.365000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17753,7 +17753,7 @@
       <state>
         <position>
           <point>
-            <x>72.76</x>
+            <x>72.760000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17776,7 +17776,7 @@
       <state>
         <position>
           <point>
-            <x>74.64</x>
+            <x>74.640000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -17799,7 +17799,7 @@
       <state>
         <position>
           <point>
-            <x>76.52</x>
+            <x>76.520000</x>
             <y>12.25</y>
           </point>
         </position>
@@ -18155,7 +18155,7 @@
       <state>
         <position>
           <point>
-            <x>7.0</x>
+            <x>7.0000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18224,7 +18224,7 @@
       <state>
         <position>
           <point>
-            <x>13.0</x>
+            <x>13.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18247,7 +18247,7 @@
       <state>
         <position>
           <point>
-            <x>15.0</x>
+            <x>15.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18293,7 +18293,7 @@
       <state>
         <position>
           <point>
-            <x>19.0</x>
+            <x>19.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18316,7 +18316,7 @@
       <state>
         <position>
           <point>
-            <x>21.0</x>
+            <x>21.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18339,7 +18339,7 @@
       <state>
         <position>
           <point>
-            <x>23.0</x>
+            <x>23.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18362,7 +18362,7 @@
       <state>
         <position>
           <point>
-            <x>25.0</x>
+            <x>25.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18385,7 +18385,7 @@
       <state>
         <position>
           <point>
-            <x>26.975</x>
+            <x>26.975000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18396,7 +18396,7 @@
           <exact>12</exact>
         </time>
         <velocity>
-          <exact>19.5</exact>
+          <exact>19.500000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -18419,7 +18419,7 @@
           <exact>13</exact>
         </time>
         <velocity>
-          <exact>19.0</exact>
+          <exact>19.000000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -18454,7 +18454,7 @@
       <state>
         <position>
           <point>
-            <x>32.6</x>
+            <x>32.600000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -18477,7 +18477,7 @@
       <state>
         <position>
           <point>
-            <x>34.4</x>
+            <x>34.400000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19316,7 +19316,7 @@
       <state>
         <position>
           <point>
-            <x>42.0</x>
+            <x>42.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19362,7 +19362,7 @@
       <state>
         <position>
           <point>
-            <x>46.0</x>
+            <x>46.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19385,7 +19385,7 @@
       <state>
         <position>
           <point>
-            <x>48.0</x>
+            <x>48.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19408,7 +19408,7 @@
       <state>
         <position>
           <point>
-            <x>50.0</x>
+            <x>50.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19431,7 +19431,7 @@
       <state>
         <position>
           <point>
-            <x>52.0</x>
+            <x>52.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19454,7 +19454,7 @@
       <state>
         <position>
           <point>
-            <x>54.0</x>
+            <x>54.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19477,7 +19477,7 @@
       <state>
         <position>
           <point>
-            <x>56.0</x>
+            <x>56.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19500,7 +19500,7 @@
       <state>
         <position>
           <point>
-            <x>58.0</x>
+            <x>58.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19523,7 +19523,7 @@
       <state>
         <position>
           <point>
-            <x>60.0</x>
+            <x>60.000000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19546,7 +19546,7 @@
       <state>
         <position>
           <point>
-            <x>61.9995</x>
+            <x>61.999500</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19557,7 +19557,7 @@
           <exact>11</exact>
         </time>
         <velocity>
-          <exact>19.99</exact>
+          <exact>19.990000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -19569,7 +19569,7 @@
       <state>
         <position>
           <point>
-            <x>63.9975</x>
+            <x>63.997500</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19580,7 +19580,7 @@
           <exact>12</exact>
         </time>
         <velocity>
-          <exact>19.97</exact>
+          <exact>19.970000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -19626,7 +19626,7 @@
           <exact>14</exact>
         </time>
         <velocity>
-          <exact>19.9</exact>
+          <exact>19.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -19672,7 +19672,7 @@
           <exact>16</exact>
         </time>
         <velocity>
-          <exact>19.79</exact>
+          <exact>19.790000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -19684,7 +19684,7 @@
       <state>
         <position>
           <point>
-            <x>73.93</x>
+            <x>73.930000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19695,7 +19695,7 @@
           <exact>17</exact>
         </time>
         <velocity>
-          <exact>19.72</exact>
+          <exact>19.720000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -19707,7 +19707,7 @@
       <state>
         <position>
           <point>
-            <x>75.898</x>
+            <x>75.898000</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19730,7 +19730,7 @@
       <state>
         <position>
           <point>
-            <x>77.8575</x>
+            <x>77.857500</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19753,7 +19753,7 @@
       <state>
         <position>
           <point>
-            <x>79.8075</x>
+            <x>79.807500</x>
             <y>15.75</y>
           </point>
         </position>
@@ -19776,7 +19776,7 @@
       <state>
         <position>
           <point>
-            <x>81.7525</x>
+            <x>81.752500</x>
             <y>15.75</y>
           </point>
         </position>
@@ -20523,7 +20523,7 @@
       <state>
         <position>
           <point>
-            <x>7.0</x>
+            <x>7.0000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20592,7 +20592,7 @@
       <state>
         <position>
           <point>
-            <x>13.0</x>
+            <x>13.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20615,7 +20615,7 @@
       <state>
         <position>
           <point>
-            <x>15.0</x>
+            <x>15.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20661,7 +20661,7 @@
       <state>
         <position>
           <point>
-            <x>19.0</x>
+            <x>19.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20684,7 +20684,7 @@
       <state>
         <position>
           <point>
-            <x>21.0</x>
+            <x>21.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20707,7 +20707,7 @@
       <state>
         <position>
           <point>
-            <x>23.0</x>
+            <x>23.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20730,7 +20730,7 @@
       <state>
         <position>
           <point>
-            <x>25.0</x>
+            <x>25.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20753,7 +20753,7 @@
       <state>
         <position>
           <point>
-            <x>26.9995</x>
+            <x>26.999500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20776,7 +20776,7 @@
       <state>
         <position>
           <point>
-            <x>28.9975</x>
+            <x>28.997500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20787,7 +20787,7 @@
           <exact>13</exact>
         </time>
         <velocity>
-          <exact>19.97</exact>
+          <exact>19.970000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20799,7 +20799,7 @@
       <state>
         <position>
           <point>
-            <x>30.993</x>
+            <x>30.993000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20833,7 +20833,7 @@
           <exact>15</exact>
         </time>
         <velocity>
-          <exact>19.9</exact>
+          <exact>19.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20845,7 +20845,7 @@
       <state>
         <position>
           <point>
-            <x>34.9725</x>
+            <x>34.972500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -20879,7 +20879,7 @@
           <exact>17</exact>
         </time>
         <velocity>
-          <exact>19.79</exact>
+          <exact>19.790000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20902,7 +20902,7 @@
           <exact>18</exact>
         </time>
         <velocity>
-          <exact>19.72</exact>
+          <exact>19.720000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20925,7 +20925,7 @@
           <exact>19</exact>
         </time>
         <velocity>
-          <exact>19.64</exact>
+          <exact>19.640000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20948,7 +20948,7 @@
           <exact>20</exact>
         </time>
         <velocity>
-          <exact>19.55</exact>
+          <exact>19.550000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20971,7 +20971,7 @@
           <exact>21</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -20994,7 +20994,7 @@
           <exact>22</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21017,7 +21017,7 @@
           <exact>23</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21040,7 +21040,7 @@
           <exact>24</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21063,7 +21063,7 @@
           <exact>25</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21086,7 +21086,7 @@
           <exact>26</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21109,7 +21109,7 @@
           <exact>27</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21132,7 +21132,7 @@
           <exact>28</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21155,7 +21155,7 @@
           <exact>29</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21178,7 +21178,7 @@
           <exact>30</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21190,7 +21190,7 @@
       <state>
         <position>
           <point>
-            <x>64.2575</x>
+            <x>64.257500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21201,7 +21201,7 @@
           <exact>31</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21224,7 +21224,7 @@
           <exact>32</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21247,7 +21247,7 @@
           <exact>33</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21270,7 +21270,7 @@
           <exact>34</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21293,7 +21293,7 @@
           <exact>35</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21316,7 +21316,7 @@
           <exact>36</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21339,7 +21339,7 @@
           <exact>37</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21362,7 +21362,7 @@
           <exact>38</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21385,7 +21385,7 @@
           <exact>39</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21408,7 +21408,7 @@
           <exact>40</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21431,7 +21431,7 @@
           <exact>41</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21454,7 +21454,7 @@
           <exact>42</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21477,7 +21477,7 @@
           <exact>43</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21500,7 +21500,7 @@
           <exact>44</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21523,7 +21523,7 @@
           <exact>45</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21546,7 +21546,7 @@
           <exact>46</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21569,7 +21569,7 @@
           <exact>47</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21592,7 +21592,7 @@
           <exact>48</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21615,7 +21615,7 @@
           <exact>49</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21638,7 +21638,7 @@
           <exact>50</exact>
         </time>
         <velocity>
-          <exact>19.45</exact>
+          <exact>19.450000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21684,7 +21684,7 @@
       <state>
         <position>
           <point>
-            <x>42.0</x>
+            <x>42.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21730,7 +21730,7 @@
       <state>
         <position>
           <point>
-            <x>46.0</x>
+            <x>46.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21753,7 +21753,7 @@
       <state>
         <position>
           <point>
-            <x>48.0</x>
+            <x>48.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21776,7 +21776,7 @@
       <state>
         <position>
           <point>
-            <x>50.0</x>
+            <x>50.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21799,7 +21799,7 @@
       <state>
         <position>
           <point>
-            <x>52.0</x>
+            <x>52.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21822,7 +21822,7 @@
       <state>
         <position>
           <point>
-            <x>54.0</x>
+            <x>54.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21845,7 +21845,7 @@
       <state>
         <position>
           <point>
-            <x>56.0</x>
+            <x>56.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21868,7 +21868,7 @@
       <state>
         <position>
           <point>
-            <x>58.0</x>
+            <x>58.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21891,7 +21891,7 @@
       <state>
         <position>
           <point>
-            <x>60.0</x>
+            <x>60.000000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21914,7 +21914,7 @@
       <state>
         <position>
           <point>
-            <x>61.9995</x>
+            <x>61.999500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21925,7 +21925,7 @@
           <exact>11</exact>
         </time>
         <velocity>
-          <exact>19.99</exact>
+          <exact>19.990000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21937,7 +21937,7 @@
       <state>
         <position>
           <point>
-            <x>63.9975</x>
+            <x>63.997500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -21948,7 +21948,7 @@
           <exact>12</exact>
         </time>
         <velocity>
-          <exact>19.97</exact>
+          <exact>19.970000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -21994,7 +21994,7 @@
           <exact>14</exact>
         </time>
         <velocity>
-          <exact>19.9</exact>
+          <exact>19.900000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -22040,7 +22040,7 @@
           <exact>16</exact>
         </time>
         <velocity>
-          <exact>19.79</exact>
+          <exact>19.790000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -22052,7 +22052,7 @@
       <state>
         <position>
           <point>
-            <x>73.93</x>
+            <x>73.930000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -22063,7 +22063,7 @@
           <exact>17</exact>
         </time>
         <velocity>
-          <exact>19.72</exact>
+          <exact>19.720000</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -22075,7 +22075,7 @@
       <state>
         <position>
           <point>
-            <x>75.898</x>
+            <x>75.898000</x>
             <y>19.25</y>
           </point>
         </position>
@@ -22098,7 +22098,7 @@
       <state>
         <position>
           <point>
-            <x>77.8575</x>
+            <x>77.857500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -22121,7 +22121,7 @@
       <state>
         <position>
           <point>
-            <x>79.8075</x>
+            <x>79.807500</x>
             <y>19.25</y>
           </point>
         </position>
@@ -22144,7 +22144,7 @@
       <state>
         <position>
           <point>
-            <x>81.7525</x>
+            <x>81.752500</x>
             <y>19.25</y>
           </point>
         </position>

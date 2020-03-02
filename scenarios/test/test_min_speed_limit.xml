@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-02-25">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-03-02">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -8,9 +8,9 @@
     <name>Munich</name>
   </location>
   <scenarioTags>
-    <parallel_lanes/>
     <multi_lane/>
     <highway/>
+    <parallel_lanes/>
     <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
@@ -350,8 +350,8 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="6" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -693,8 +693,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="7" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1036,8 +1036,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="8" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1379,8 +1379,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="9" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1721,8 +1721,8 @@
     </rightBound>
     <predecessor ref="4"/>
     <adjacentLeft ref="10" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2063,8 +2063,8 @@
     </rightBound>
     <successor ref="7"/>
     <adjacentRight ref="1" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2406,8 +2406,8 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentRight ref="2" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2749,8 +2749,8 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentRight ref="3" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -3092,8 +3092,8 @@
     <predecessor ref="8"/>
     <successor ref="10"/>
     <adjacentRight ref="4" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -3434,8 +3434,8 @@
     </rightBound>
     <predecessor ref="9"/>
     <adjacentRight ref="5" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -3550,7 +3550,7 @@
       <state>
         <position>
           <point>
-            <x>11.8</x>
+            <x>11.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3573,7 +3573,7 @@
       <state>
         <position>
           <point>
-            <x>14.0</x>
+            <x>14.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3596,7 +3596,7 @@
       <state>
         <position>
           <point>
-            <x>16.2</x>
+            <x>16.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3619,7 +3619,7 @@
       <state>
         <position>
           <point>
-            <x>18.4</x>
+            <x>18.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3642,7 +3642,7 @@
       <state>
         <position>
           <point>
-            <x>20.600000</x>
+            <x>20.6</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3665,7 +3665,7 @@
       <state>
         <position>
           <point>
-            <x>22.800000</x>
+            <x>22.8</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3688,7 +3688,7 @@
       <state>
         <position>
           <point>
-            <x>25.000000</x>
+            <x>25.0</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3711,7 +3711,7 @@
       <state>
         <position>
           <point>
-            <x>27.200000</x>
+            <x>27.2</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3757,7 +3757,7 @@
       <state>
         <position>
           <point>
-            <x>31.600000</x>
+            <x>31.6</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3780,7 +3780,7 @@
       <state>
         <position>
           <point>
-            <x>33.8</x>
+            <x>33.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3803,7 +3803,7 @@
       <state>
         <position>
           <point>
-            <x>36.0</x>
+            <x>36.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -3826,7 +3826,7 @@
       <state>
         <position>
           <point>
-            <x>38.2</x>
+            <x>38.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -4309,7 +4309,7 @@
       <state>
         <position>
           <point>
-            <x>84.400000</x>
+            <x>84.4</x>
             <y>1.75</y>
           </point>
         </position>
@@ -4355,7 +4355,7 @@
       <state>
         <position>
           <point>
-            <x>88.800000</x>
+            <x>88.8</x>
             <y>1.75</y>
           </point>
         </position>
@@ -4424,7 +4424,7 @@
       <state>
         <position>
           <point>
-            <x>95.400000</x>
+            <x>95.4</x>
             <y>1.75</y>
           </point>
         </position>
@@ -4826,7 +4826,7 @@
       <state>
         <position>
           <point>
-            <x>31.0</x>
+            <x>31.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4849,7 +4849,7 @@
       <state>
         <position>
           <point>
-            <x>34.5</x>
+            <x>34.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4895,7 +4895,7 @@
       <state>
         <position>
           <point>
-            <x>41.5</x>
+            <x>41.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4918,7 +4918,7 @@
       <state>
         <position>
           <point>
-            <x>45.0</x>
+            <x>45.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4941,7 +4941,7 @@
       <state>
         <position>
           <point>
-            <x>48.5</x>
+            <x>48.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4964,7 +4964,7 @@
       <state>
         <position>
           <point>
-            <x>52.0</x>
+            <x>52.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -4987,7 +4987,7 @@
       <state>
         <position>
           <point>
-            <x>55.5</x>
+            <x>55.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5010,7 +5010,7 @@
       <state>
         <position>
           <point>
-            <x>59.0</x>
+            <x>59.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5033,7 +5033,7 @@
       <state>
         <position>
           <point>
-            <x>62.5</x>
+            <x>62.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5056,7 +5056,7 @@
       <state>
         <position>
           <point>
-            <x>66.0</x>
+            <x>66.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5079,7 +5079,7 @@
       <state>
         <position>
           <point>
-            <x>69.5</x>
+            <x>69.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5102,7 +5102,7 @@
       <state>
         <position>
           <point>
-            <x>73.0</x>
+            <x>73.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5125,7 +5125,7 @@
       <state>
         <position>
           <point>
-            <x>76.5</x>
+            <x>76.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5148,7 +5148,7 @@
       <state>
         <position>
           <point>
-            <x>80.0</x>
+            <x>80.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5171,7 +5171,7 @@
       <state>
         <position>
           <point>
-            <x>83.5</x>
+            <x>83.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5194,7 +5194,7 @@
       <state>
         <position>
           <point>
-            <x>87.0</x>
+            <x>87.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5217,7 +5217,7 @@
       <state>
         <position>
           <point>
-            <x>90.5</x>
+            <x>90.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5240,7 +5240,7 @@
       <state>
         <position>
           <point>
-            <x>94.0</x>
+            <x>94.000000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5263,7 +5263,7 @@
       <state>
         <position>
           <point>
-            <x>97.5</x>
+            <x>97.500000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5286,7 +5286,7 @@
       <state>
         <position>
           <point>
-            <x>101.0</x>
+            <x>101.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5309,7 +5309,7 @@
       <state>
         <position>
           <point>
-            <x>104.5</x>
+            <x>104.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5332,7 +5332,7 @@
       <state>
         <position>
           <point>
-            <x>108.0</x>
+            <x>108.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5355,7 +5355,7 @@
       <state>
         <position>
           <point>
-            <x>111.5</x>
+            <x>111.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5378,7 +5378,7 @@
       <state>
         <position>
           <point>
-            <x>115.0</x>
+            <x>115.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5401,7 +5401,7 @@
       <state>
         <position>
           <point>
-            <x>118.5</x>
+            <x>118.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5424,7 +5424,7 @@
       <state>
         <position>
           <point>
-            <x>122.0</x>
+            <x>122.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5447,7 +5447,7 @@
       <state>
         <position>
           <point>
-            <x>125.5</x>
+            <x>125.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5470,7 +5470,7 @@
       <state>
         <position>
           <point>
-            <x>129.0</x>
+            <x>129.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5493,7 +5493,7 @@
       <state>
         <position>
           <point>
-            <x>132.5</x>
+            <x>132.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5516,7 +5516,7 @@
       <state>
         <position>
           <point>
-            <x>136.0</x>
+            <x>136.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5539,7 +5539,7 @@
       <state>
         <position>
           <point>
-            <x>139.5</x>
+            <x>139.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5562,7 +5562,7 @@
       <state>
         <position>
           <point>
-            <x>143.0</x>
+            <x>143.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5585,7 +5585,7 @@
       <state>
         <position>
           <point>
-            <x>146.5</x>
+            <x>146.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5608,7 +5608,7 @@
       <state>
         <position>
           <point>
-            <x>150.0</x>
+            <x>150.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5631,7 +5631,7 @@
       <state>
         <position>
           <point>
-            <x>153.5</x>
+            <x>153.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5654,7 +5654,7 @@
       <state>
         <position>
           <point>
-            <x>157.0</x>
+            <x>157.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5677,7 +5677,7 @@
       <state>
         <position>
           <point>
-            <x>160.5</x>
+            <x>160.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5700,7 +5700,7 @@
       <state>
         <position>
           <point>
-            <x>164.0</x>
+            <x>164.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5723,7 +5723,7 @@
       <state>
         <position>
           <point>
-            <x>167.5</x>
+            <x>167.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5746,7 +5746,7 @@
       <state>
         <position>
           <point>
-            <x>171.0</x>
+            <x>171.00000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5769,7 +5769,7 @@
       <state>
         <position>
           <point>
-            <x>174.5</x>
+            <x>174.50000</x>
             <y>5.25</y>
           </point>
         </position>
@@ -5792,7 +5792,7 @@
       <state>
         <position>
           <point>
-            <x>178.0</x>
+            <x>178.00000</x>
             <y>5.25</y>
           </point>
         </position>

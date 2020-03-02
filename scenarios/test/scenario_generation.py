@@ -12,8 +12,10 @@ from commonroad.scenario.traffic_sign import TrafficSign, TrafficSignElement, Tr
 from commonroad.scenario.scenario import Scenario, Tag, Location
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
+from vehicleDynamics_ST import vehicleDynamics_ST
+from parameters_vehicle2 import parameters_vehicle2
+from scipy.integrate import odeint
 
-from src.output.visualization import create_scenario_video
 from src.common.configuration import *
 
 
@@ -389,20 +391,31 @@ def write_to_file(scenario):
     fw.write_to_file(filename, OverwriteExistingFile.ALWAYS)
 
 
-def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id):
+def func_st(x, t, u, p):
+    f = vehicleDynamics_ST(x, u, p)
+    return f
+
+
+def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id, steering_velocity_profile=None):
     initial_state = State(position=p_init, velocity=v_init, orientation=0, yaw_rate=0, slip_angle=0, time_step=0)
-    y = p_init[1]
-    x = p_init[0]
-    v = v_init
-    v_max = 50
-    v_min = 0
     dt = 0.1
     state_list = []
     time_step = 1
-    for a in acceleration_profile:
-        x, v = vehicle_dynamics_acc(x, v, a, v_min, v_max, dt)
-        state_list.append(State(position=np.array([x, y]), velocity=v, orientation=0, yaw_rate=0, slip_angle=0,
-                                time_step=time_step))
+    x = [p_init[0], p_init[1], 0, v_init, 0, 0, 0]
+    p = parameters_vehicle2()
+    t = np.arange(0, 2*dt, dt)
+    for idx in range(len(acceleration_profile)):
+        a = acceleration_profile[idx]
+        if steering_velocity_profile is not None:
+            v_s = steering_velocity_profile[idx]
+        else:
+            v_s = 0
+
+        u = [v_s, a]
+        x = odeint(func_st, x, t, args=(u, p))
+        x = x[1]
+        state_list.append(State(position=np.array([x[0], x[1]]), velocity=x[3], orientation=x[4],
+                                yaw_rate=x[5], slip_angle=x[6], time_step=time_step))
         time_step += 1
     obstacle_lenght = 4.508
     obstacle_width = 1.610
@@ -732,37 +745,67 @@ def create_standstill_scenario():
     return scenario
 
 
+def create_reverse_and_u_turn_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 2, np.array([50.0, 1.75]), 1000,
+                                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0.00000001, 0.00000001, 0.00000001, 0.00000001, 0, 0, 0, 0, 0,  0]
+                                           )
+    obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, -5, -5, -5, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -10, np.array([100.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 10, np.array([125.0, 1.75]), 1002)
+    obstacles.append(obs1)
+    obstacles.append(obs2)
+    obstacles.append(obs3)
+    num_lanes = 3
+    num_lanelets = 10
+    road_length = 250
+    scenario = create_straight_scenario("test_reversing_and_u_turn", 0.1, num_lanes, num_lanelets, road_length,
+                                        obstacles)
+
+    return scenario
+
+
 def main():
     config = load_yaml("../../src/config.yaml")
-    visualization_param = config.get("visualization").get("video")
 
     scenario = create_max_speed_limit_scenario()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_min_speed_limit_scenario()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_preserves_traffic_flow_scenario()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_safe_distance_scenario()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_unnecessary_braking_scenario_1()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_unnecessary_braking_scenario_2()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
 
     scenario = create_standstill_scenario()
     write_to_file(scenario)
-    create_scenario_video("./../../videos", scenario, visualization_param, 50)
+
+    scenario = create_reverse_and_u_turn_scenario()
+    write_to_file(scenario)
 
 
 if __name__ == "__main__":

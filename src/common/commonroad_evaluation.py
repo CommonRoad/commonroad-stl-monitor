@@ -157,8 +157,7 @@ class CommonRoadObstacleEvaluation:
         num_correct_rules = 0
         self.eval_dict, eval_vehicle_dependent_rules = self._init_eval_dict(result[0])
         for vehicle in result:
-            out_string = "scenario: " + scenario_name + " - evaluated obs-id: " + str(vehicle[0]) \
-                         + " - evaluation of rule "
+            out_string = "scenario: " + scenario_name + " - evaluated obs-id: " + str(vehicle[0])
             for rule_name, eval_result in vehicle[1].items():
                 if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules:
                     if eval_result is False:
@@ -166,12 +165,14 @@ class CommonRoadObstacleEvaluation:
                 elif eval_result is True:
                     self.eval_dict[rule_name] += 1
                     num_correct_rules += 1
-                    out_string += rule_name + ": " + str(eval_result) + " - "
+                    out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
+                elif eval_result is False:
+                    out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
             for rule_name, eval_result in eval_vehicle_dependent_rules.items():
                 if eval_result is True:
                     self.eval_dict["_".join(rule_name.split("_", 2)[:2])] += 1
                     num_correct_rules += 1
-                out_string += rule_name + ": " + str(eval_result) + " - "
+                out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
             if num_correct_rules == len(self.eval_dict.keys()):
                 self.num_veh_all_correct += 1
             num_correct_rules = 0

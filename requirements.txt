@@ -1,4 +1,4 @@
 numpy >=1.16.4
-metric-temporal-logic >=0.1.4
+metric-temporal-logic >= 0.1.4
 commonroad-io >= 2020.1
 matplotlib >= 2.5.0
