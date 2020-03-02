@@ -8,10 +8,10 @@
     <name>Munich</name>
   </location>
   <scenarioTags>
-    <multi_lane/>
-    <highway/>
     <parallel_lanes/>
     <no_oncoming_traffic/>
+    <highway/>
+    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
