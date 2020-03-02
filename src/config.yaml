@@ -202,4 +202,4 @@ traffic_rule_monitoring:
 
 
     activated_traffic_rule_sets: [0]
-    vehicle_dependent_rules: [R_G1, R_I2]
+    vehicle_dependent_rules: [R_G1]

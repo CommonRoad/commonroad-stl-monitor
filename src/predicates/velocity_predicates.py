@@ -375,5 +375,8 @@ class VelocityPredicateCollection(PredicateCollection):
             if "reverses" in self._necessary_predicates:
                 predicate_trace["reverses"][ego_vehicle.id][time_step] = \
                     self._reverses(ego_vehicle.states_lon[time_step].v)
+            if "drives_faster_than_vehicle_left" in self._necessary_predicates:
+                predicate_trace["drives_faster_than_vehicle_left"][ego_vehicle.id][time_step] = \
+                    self._drives_faster_than_vehicle_left(ego_vehicle, other_vehicles, time_step)
 
         return predicate_trace
