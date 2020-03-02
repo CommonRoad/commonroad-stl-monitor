@@ -2,13 +2,8 @@
 
 \section{Traffic rule formalization}
 \label{sec:formalization}
-We formalize selected rules from the \stvo, e.g., establishing an emergency lane or keeping a safe distance, which are necessary to drive on German interstates and also provide their textual concretization as well as additional comments. The temporal logic formula and the related laws and traffic signs for each rule are listed in Tab.~\ref{tab:overview_traffic_rules}\footnote{The terms \textit{OLG} and \textit{Bay VRS}  are abbreviations for German types of courts.}. Predicates and functions required for the FLTL formulas are introduced in Sec.~\ref{sec:predicates}. We first present general rules and afterward interstate-specific rules. The rules are written from the viewpoint of the autonomous ego vehicle.
+We formalize selected rules from the \stvo, e.g., establishing an emergency lane or keeping a safe distance, which are necessary to drive on German interstates and also provide their textual concretization as well as additional comments\footnote{The terms \textit{OLG} and \textit{Bay VRS}  are abbreviations for German types of courts.}. Predicates and functions required for the FLTL formulas are introduced in Sec.~\ref{sec:predicates}. We first present general rules and afterward interstate-specific rules. The rules are written from the viewpoint of the autonomous ego vehicle.
 
-\begin{itemize}
-	\item The autonomous mode/monitor is deactivated in case of emergencies
-	\item \todo{maybe consider only trucks and cars}
-	\item rules for interstates are activated as soon as sign 330.1 is passed
-\end{itemize}
 
 \subsection{General traffic rules}
 \subsubsection{R\_G1 - Safe distance to preceding vehicle} 
@@ -23,7 +18,7 @@ We formalize selected rules from the \stvo, e.g., establishing an emergency lane
 \paragraph{LTL formula:} G$(\inSameLaneAsEgoVehiclePredicate \land \inFrontOfEgoVehiclePredicate \implies \safeDistanceFrontPredicate)$
 
 \paragraph{Comment:}
-The rule has to be evaluated for every other traffic participant within the sensor range. Vehicles outside are taken care of by the allowed velocity in rule R\_G3.
+The rule has to be evaluated for every other traffic participant within the sensor range. Vehicles outside are taken care of by the allowed velocity in rule R\_G3. \todo{TODO: Consider cut-in vehicles!!!}
 
 \subsubsection{R\_G2 - Unnecessary braking}
 \paragraph{Law reference:}
@@ -34,9 +29,10 @@ The rule has to be evaluated for every other traffic participant within the sens
 
 
 \paragraph{Concretization:} The ego vehicle is not allowed to brake abruptly without reason. 
-The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is no leading vehicle and there is no reason caused by a traffic regulation to reduce the velocity. b) There is an obstacle in front of the vehicle and the acceleration difference and jerk difference do not violate predefined thresholds. c) The maximum allowed speed will change or has changed due to unrecognized traffic signs or environmental conditions. All possible braking situations which are not covered by the three cases are unnecessary.
+The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is no leading vehicle and there is no reason caused by a traffic regulation to reduce the velocity. b) There is an obstacle in front of the vehicle and the acceleration difference and jerk difference do not violate predefined thresholds. c) The maximum allowed speed will change or has changed due to unrecognized traffic signs or environmental conditions. All possible braking situations which are not covered by the three cases are unnecessary. 
 
 \paragraph{LTL formula:} G$(\neg \unnecessaryBraking)$
+\todo{TODO: add different cases directly in LTL formula}
 
 \subsubsection{R\_G3 - Maximum speed limit}
 \paragraph{Law reference:}
@@ -142,9 +138,21 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 \paragraph{Law reference:}
 
 \begin{itemize}
-	\item law 1
+	\item \textbf{\vcort \S 10 (3):} Without prejudice to the provisions to the contrary of Article 7, paragraph 1, Article 11,
+	paragraph 6, and to other provisions of this Convention to the contrary, every driver of a vehicle
+	shall, to the extent permitted by circumstances, keep his vehicle near the edge of the carriageway
+	appropriate to the direction of traffic. However, Contracting Parties or subdivisions thereof may
+	lay down more precise rules concerning the position of goods vehicles on the carriageway.
 	
-	\item law 2
+	\item \textbf{\vcort \S 10 (4):} Drivers shall take care that their vehicles do not inconvenience road-users or the occupants
+	of properties bordering on the road, for example, by causing noise or raising dust or smoke where
+	they can avoid doing so.
+	
+	\item \textbf{\vcort \S 10 (5):} The wearing of safety belts is compulsory for drivers and passengers of motor vehicles,
+	occupying seats equipped with such belts, save where exceptions are granted by domestic
+	legislation.
+	
+	\item \textbf{\vcort \S 10 (6):}
 \end{itemize}
 
 \paragraph{Concretization:}
@@ -187,6 +195,8 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 	danger might occur (OLG Karlsruhe VRS 78, 322).
 	Par. 5 is not applicable when vehicles change lanes in order to overtake or to make a turn to a
 	property.
+	
+	\item See VCoRT article 11
 \end{itemize}
 
 \paragraph{Concretization:}
@@ -198,7 +208,7 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 
 
 \subsection{Interstate-specific traffic rules}
-
+In the following rules for interstates which corresponds to the German Autobahn. The evaluation of the rules is activated when the traffic sign 330.1 is past and stops when the traffic sign 330.2 is past.  
 \subsubsection{R\_I1 - Stopping}
 \paragraph{Law reference:}
 \begin{itemize}
@@ -565,4 +575,15 @@ the accident site without obstruction (comp. König, et al., Straßenverkehrsrec
 %	\end{tabular}
 %\end{table}
 
-
+%interesting vienna convetino rules:
+%10(4): Where a road comprises two or three carriageways, no driver shall take the carriageway
+%situated on the side opposite to that appropriate to the direction of traffic.
+%
+%10(5): On two-way carriageways having four or more lanes, no driver shall take the lanes
+%situated entirely on the half of the carriageway opposite to the side appropriate to the direction of
+%traffic.
+%10(6): On two-way carriageways having three lanes, no driver shall take the lane situated at
+%the edge of the carriageway opposite to that appropriate to the direction of traffic.
+%
+%10(6): Without prejudice to the provisions of Article 11 and when an additional lane is indicated by
+%a sign, drivers of vehicles moving slowly shall use that lane.
