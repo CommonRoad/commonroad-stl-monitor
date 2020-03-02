@@ -24,14 +24,11 @@ class CommonRoadObstacleEvaluation:
         self._road_network_param = config.get("road_network_param")
         self._road_network = None  # updated in each test case
 
-        self.max_speed_limit_satisfaction = 0
-        self.min_speed_limit_satisfaction = 0
-        self.safe_distance_satisfaction = 0
-        self.no_unnecessary_braking_satisfaction = 0
         self.num_vehicles = 0
         self.num_scenarios = 0
         self.num_veh_all_correct = 0
         self.vehicles_dict = {}
+        self.eval_dict = {}
 
     @property
     def simulation_param(self) -> Dict:
@@ -141,39 +138,41 @@ class CommonRoadObstacleEvaluation:
 
         return result
 
+    def _init_eval_dict(self, vehicle):
+        eval_dict = {}
+        eval_vehicle_dependent_rules = {}
+        for rule_name, eval_result in vehicle[1].items():
+            if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules \
+                    and eval_vehicle_dependent_rules.get(rule_name) is None:
+                eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
+                eval_dict["_".join(rule_name.split("_", 2)[:2])] = 0
+            elif eval_dict.get(rule_name) is None and "_".join(rule_name.split("_", 2)[:2]):
+                eval_dict[rule_name] = 0
+
+        return eval_dict, eval_vehicle_dependent_rules
+
     def evaluate_result(self, result, scenario_name):
         self.num_vehicles += len(result)
         self.num_scenarios += 1
         num_correct_rules = 0
+        self.eval_dict, eval_vehicle_dependent_rules = self._init_eval_dict(result[0])
         for vehicle in result:
-            out_string = scenario_name + " - obs_id: " + str(vehicle[0]) + " - "
-            safe_distance_complete = True
+            out_string = "scenario: " + scenario_name + " - evaluated obs-id: " + str(vehicle[0]) \
+                         + " - evaluation of rule "
             for rule_name, eval_result in vehicle[1].items():
-                if rule_name == 'R_G3':
-                    if eval_result is True:
-                        self.max_speed_limit_satisfaction += 1
-                        num_correct_rules += 1
-                    out_string += rule_name + ": " + str(eval_result) + " - "
-                elif rule_name == 'R_G4':
-                    if eval_result is True:
-                        self.min_speed_limit_satisfaction += 1
-                        num_correct_rules += 1
-                    out_string += rule_name + ": " + str(eval_result) + " - "
-                elif rule_name == 'R_G2':
-                    if eval_result is True:
-                        self.no_unnecessary_braking_satisfaction += 1
-                        num_correct_rules += 1
-                    out_string += rule_name + ": " + str(eval_result) + " - "
-                elif 'safe_distance' in rule_name :
+                if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules:
                     if eval_result is False:
-                        safe_distance_complete = False
-            if safe_distance_complete is True:
-                self.safe_distance_satisfaction += 1
-                num_correct_rules += 1
-                out_string += 'safe_distance' + ": " + "True"
-            else:
-                out_string += 'safe_distance' + ": " + "False"
-            if num_correct_rules == 4:
+                        eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = False
+                elif eval_result is True:
+                    self.eval_dict[rule_name] += 1
+                    num_correct_rules += 1
+                    out_string += rule_name + ": " + str(eval_result) + " - "
+            for rule_name, eval_result in eval_vehicle_dependent_rules.items():
+                if eval_result is True:
+                    self.eval_dict["_".join(rule_name.split("_", 2)[:2])] += 1
+                    num_correct_rules += 1
+                out_string += rule_name + ": " + str(eval_result) + " - "
+            if num_correct_rules == len(self.eval_dict.keys()):
                 self.num_veh_all_correct += 1
             num_correct_rules = 0
             print(out_string)
