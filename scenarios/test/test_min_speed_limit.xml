@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-03-02">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-03-04">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -9,9 +9,9 @@
   </location>
   <scenarioTags>
     <highway/>
-    <no_oncoming_traffic/>
     <multi_lane/>
     <parallel_lanes/>
+    <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

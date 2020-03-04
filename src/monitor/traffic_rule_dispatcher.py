@@ -1,5 +1,7 @@
 from typing import List, Dict, Set
 
+from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+
 from src.monitor.traffic_rule_monitor import TrafficRuleMonitor
 from src.predicates.velocity_predicates import VelocityPredicateCollection
 from src.predicates.position_predicates import PositionPredicateCollection
@@ -37,18 +39,24 @@ class TrafficRuleDispatcher:
         self._monitors = self.create_monitors(traffic_rules, traffic_rule_sets, activated_traffic_rule_sets,
                                               vehicle_dependent_rules)
         necessary_predicates = self.extract_necessary_predicates()
+        traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
+                                                         road_network.lanelet_network)
         self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
                                                                 ego_vehicle_param, other_vehicles_param,
-                                                                traffic_rule_param, necessary_predicates)
+                                                                traffic_rule_param, necessary_predicates,
+                                                                traffic_sign_interpreter)
         self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
                                                                 ego_vehicle_param, other_vehicles_param,
-                                                                traffic_rule_param, necessary_predicates)
+                                                                traffic_rule_param, necessary_predicates,
+                                                                traffic_sign_interpreter)
         self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
                                                               ego_vehicle_param, other_vehicles_param,
-                                                              traffic_rule_param, necessary_predicates)
+                                                              traffic_rule_param, necessary_predicates,
+                                                              traffic_sign_interpreter)
         self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
                                                               ego_vehicle_param, other_vehicles_param,
-                                                              traffic_rule_param, necessary_predicates)
+                                                              traffic_rule_param, necessary_predicates,
+                                                              traffic_sign_interpreter)
 
     def extract_necessary_predicates(self) -> Set[str]:
         """

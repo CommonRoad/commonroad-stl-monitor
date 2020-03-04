@@ -9,7 +9,8 @@ from src.common.road_network import RoadNetwork
 
 class PositionPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
+                 traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
@@ -17,9 +18,10 @@ class PositionPredicateCollection(PredicateCollection):
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
+        :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates)
+                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
     @staticmethod
     def is_in_front_of(vehicle_p: Vehicle, vehicle_k: Vehicle, time_step: int) -> bool:
@@ -310,8 +312,9 @@ class PositionPredicateCollection(PredicateCollection):
         s = vehicle.states_lon[time_step].s
         lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
         width = vehicle.shape.width
+        # TODO consider orientation
         for lane in lanes:
-            if 0.5 * lane.width(s) + d - 0.5 * width > self._traffic_rules_param.get("close_to_lane_border"):
+            if 0.5 * lane.width(s) - (d + 0.5 * width) > self._traffic_rules_param.get("close_to_lane_border"):
                 return False
         return True
 

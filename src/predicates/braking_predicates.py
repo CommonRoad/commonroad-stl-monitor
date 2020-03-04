@@ -8,7 +8,8 @@ from src.predicates.position_predicates import PositionPredicateCollection
 
 class BrakingPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
+                 traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
@@ -16,9 +17,10 @@ class BrakingPredicateCollection(PredicateCollection):
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
+        :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates)
+                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
     def _unnecessary_braking(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly

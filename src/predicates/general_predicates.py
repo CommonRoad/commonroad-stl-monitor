@@ -10,7 +10,8 @@ from src.common.road_network import RoadNetwork
 
 class GeneralPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
+                 traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
@@ -18,9 +19,10 @@ class GeneralPredicateCollection(PredicateCollection):
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
+        :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates)
+                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
     def _in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """
@@ -76,7 +78,7 @@ class GeneralPredicateCollection(PredicateCollection):
         :param lanelet: CommonRoad lanelet
         :returns set of adjacent lanelets
         """
-        lanelets = set()
+        lanelets = {lanelet}
         l = lanelet
         while l is not None and l.adj_left is not None:
             l = self._road_network.lanelet_network.find_lanelet_by_id(l.adj_left)
@@ -127,8 +129,8 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
         s = vehicle.states_lon[time_step].s
-        for id in occupied_lanelet_ids:
-            if self._road_width(self._road_network.lanelet_network.find_lanelet_by_id(id), s) \
+        for l_id in occupied_lanelet_ids:
+            if self._road_width(self._road_network.lanelet_network.find_lanelet_by_id(l_id), s) \
                     <= self._traffic_rules_param.get("min_interstate_width"):
                 return False
         return True

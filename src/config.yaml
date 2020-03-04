@@ -178,11 +178,11 @@ traffic_rule_monitoring:
         a_abrupt: -2
         min_velocity_dif: 15
         standstill_error: 0.01
-        num_veh_congestion: 4
-        max_congestion_velocity: 10
+        num_veh_congestion: 2
+        max_congestion_velocity: 2.77
         max_velocity_limit_free_driving: 27.77
         desired_highway_velocity: 36.11
-        min_interstate_width: 7.0
+        min_interstate_width: 6.75
         close_to_lane_border: 0.1
         slightly_higher_speed_difference: 5.55
         u_turn: 1.57
@@ -202,4 +202,4 @@ traffic_rule_monitoring:
 
 
     activated_traffic_rule_sets: [0]
-    vehicle_dependent_rules: [R_G1]
+    vehicle_dependent_rules: [R_G1, R_I2]

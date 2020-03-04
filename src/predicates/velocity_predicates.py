@@ -1,7 +1,6 @@
-from typing import List, Dict, Set, Union
+from typing import List, Dict, Set
 
 from commonroad.scenario.obstacle import ObstacleType
-from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry, TrafficSignIDGermany
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.road_network import RoadNetwork
@@ -11,7 +10,8 @@ from src.predicates.position_predicates import PositionPredicateCollection
 
 class VelocityPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str]):
+                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
+                 traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
@@ -19,9 +19,10 @@ class VelocityPredicateCollection(PredicateCollection):
         :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
+        :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates)
+                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
     def velocity_reduction_necessary(self, velocity: float):
         """
@@ -39,28 +40,6 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def _speed_limit_max(self, lanelet_ids: Set[int]) -> Union[float, None]:
-        """
-        Finds minimum speed limit on provided lanelets
-
-        :param lanelet_ids: set of lanelets which should be considered
-        :returns speed limit of lanelets vehicle occupies or None if no speed limit exists
-        """
-        speed_limits = []
-        for lanelet_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            for traffic_sign_id in lanelet.traffic_signs:
-                traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
-                if self._country == SupportedTrafficSignCountry.GERMANY:
-                    for elem in traffic_sign.traffic_sign_elements:
-                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MAXSPEED:
-                            speed_limits.append(float(elem.additional_values[0]))
-                        # TODO add other country options
-        if len(speed_limits) == 0:
-            return None
-        else:
-            return min(speed_limits)
-
     def _speed_limit_suggested(self, vehicle: Vehicle, time_step: int) -> float:
         """
         Speed limit considering suggested speed
@@ -69,7 +48,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns speed limit
         """
-        v_max_lane = self._speed_limit_max(vehicle.lanelet_assignment[time_step])
+        v_max_lane = self._traffic_sign_interpreter.speed_limit(vehicle.lanelet_assignment[time_step])
         if v_max_lane is None or v_max_lane == float("inf"):
             return self._traffic_rules_param.get("desired_highway_velocity")
         else:
@@ -122,25 +101,6 @@ class VelocityPredicateCollection(PredicateCollection):
                 return False
             else:
                 return True
-
-    def _speed_min(self, lanelet_ids: Set[int]) -> float:
-        """
-        Extracts the maximum required speed a vehicle has to drive on a set of occupied lanelets
-
-        :param lanelet_ids: IDs of lanelets the vehicle is on
-        :returns minimum required speed of occupied lanelets
-        """
-        speed_limits = [0]
-        for lanelet_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            for traffic_sign_id in lanelet.traffic_signs:
-                traffic_sign = self._road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
-                if self._country == SupportedTrafficSignCountry.GERMANY:
-                    for elem in traffic_sign.traffic_sign_elements:
-                        if elem.traffic_sign_element_id == TrafficSignIDGermany.MINSPEED:
-                            speed_limits.append(float(elem.additional_values[0]))
-
-        return max(speed_limits)
 
     def _in_standstill(self, velocity: float):
         """
@@ -244,7 +204,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle_type: type of vehicle, e.g, truck
         :returns Boolean indicating satisfaction
         """
-        required_speed = self._speed_min(lanelet_ids)
+        required_speed = self._traffic_sign_interpreter.required_speed(lanelet_ids)
         if required_speed >= min(self._ego_vehicle_param.get("fov_speed_limit"),
                                  self._get_type_speed_limit(vehicle_type),
                                  self._ego_vehicle_param.get("road_condition_speed_limit")):
@@ -311,7 +271,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param lanelet_ids: IDs of lanelets the vehicle is on
         :returns Boolean indicating speed limit satisfaction
         """
-        speed_limit = self._speed_limit_max(lanelet_ids)
+        speed_limit = self._traffic_sign_interpreter.speed_limit(lanelet_ids)
         if speed_limit is None:
             return True
         elif speed_limit < velocity:
