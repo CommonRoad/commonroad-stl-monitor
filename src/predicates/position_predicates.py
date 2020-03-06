@@ -318,6 +318,25 @@ class PositionPredicateCollection(PredicateCollection):
                 return False
         return True
 
+    def _drives_rightmost(self, vehicle: Vehicle, time_step: int) -> bool:
+        """
+        Evaluates if a vehicle drives leftmost in its occupied lanelets
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
+        d = vehicle.states_lat[time_step].d
+        s = vehicle.states_lon[time_step].s
+        lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
+        width = vehicle.shape.width
+        # TODO consider orientation
+        for lane in lanes:
+            if 0.5 * lane.width(s) + (d - 0.5 * width) > self._traffic_rules_param.get("close_to_lane_border"):
+                return False
+        return True
+
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
         """
@@ -359,7 +378,7 @@ class PositionPredicateCollection(PredicateCollection):
                     self._drives_leftmost(ego_vehicle, time_step)
             if "drives_rightmost" in self._necessary_predicates:
                 predicate_trace["drives_rightmost"][ego_vehicle.id][time_step] = \
-                    self._drives_leftmost(ego_vehicle, time_step)
+                    self._drives_rightmost(ego_vehicle, time_step)
 
         for other_vehicle in other_vehicles:
             predicate_trace["is_in_same_lane"][other_vehicle.id] = {}

@@ -1,4 +1,5 @@
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-03-04">
+<?xml version="1.0" encoding="utf-8"?>
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_min_speed_limit" date="2020-03-06">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -8,9 +9,9 @@
     <name>Munich</name>
   </location>
   <scenarioTags>
+    <parallel_lanes/>
     <highway/>
     <multi_lane/>
-    <parallel_lanes/>
     <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
