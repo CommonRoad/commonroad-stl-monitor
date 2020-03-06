@@ -14,8 +14,8 @@ from vehicleDynamics_ST import vehicleDynamics_ST
 from src.common.configuration import *
 from scenarios.test.road_network_generation import *
 
-CONSTANT_DRIVING_50 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+CONSTANT_DRIVING_50 = [0] * 50
+CONSTANT_DRIVING_200 = [0] * 200
 
 
 def write_to_file(scenario):
@@ -82,7 +82,13 @@ def create_max_speed_limit_scenario():
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
-    scenario = create_straight_scenario("test_max_speed_limit", 0.1, 3, 5, 200, obstacles)
+    num_lanes = 3
+    num_lanelets = 5
+    road_length = 200
+    scenario = create_straight_scenario("test_max_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles,
+                                        [(LineMarking.DASHED, LineMarking.SOLID),
+                                         (LineMarking.DASHED, LineMarking.DASHED),
+                                         (LineMarking.SOLID, LineMarking.DASHED)])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(35)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem])
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 2, 13, 14, 15})
@@ -100,7 +106,9 @@ def create_min_speed_limit_scenario():
     num_lanes = 2
     num_lanelets = 5
     road_length = 200
-    scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+    scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles,
+                                        [(LineMarking.DASHED, LineMarking.SOLID),
+                                         (LineMarking.SOLID, LineMarking.DASHED)])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MINSPEED, [str(30)])
     traffic_sign = TrafficSign(202, [traffic_sign_elem])
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
@@ -124,7 +132,9 @@ def create_preserves_traffic_flow_scenario():
     num_lanelets = 5
     road_length = 200
     scenario = create_straight_scenario("test_preserve_traffic_flow", 0.1, num_lanes, num_lanelets, road_length,
-                                        obstacles)
+                                        obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.SOLID, LineMarking.DASHED)])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(40)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem])
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
@@ -156,7 +166,10 @@ def create_safe_distance_scenario():
     num_lanes = 3
     num_lanelets = 10
     road_length = 250
-    scenario = create_straight_scenario("test_safe_distance", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+    scenario = create_straight_scenario("test_safe_distance", 0.1, num_lanes, num_lanelets, road_length, obstacles,
+                                        [(LineMarking.DASHED, LineMarking.SOLID),
+                                         (LineMarking.DASHED, LineMarking.DASHED),
+                                         (LineMarking.SOLID, LineMarking.DASHED)])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(22.22)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem])
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
@@ -210,7 +223,12 @@ def create_unnecessary_braking_scenario_1():
     num_lanelets = 10
     road_length = 250
     scenario = create_straight_scenario("test_unnecessary_braking_1", 0.1, num_lanes, num_lanelets, road_length,
-                                        obstacles)
+                                        obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.SOLID, LineMarking.DASHED)])
 
     write_to_file(scenario)
 
@@ -227,7 +245,7 @@ def create_unnecessary_braking_scenario_2():
     num_lanelets = 10
     road_length = 250
     scenario = create_straight_scenario("test_unnecessary_braking_2", 0.1, num_lanes, num_lanelets, road_length,
-                                        obstacles)
+                                        obstacles, [(LineMarking.SOLID, LineMarking.SOLID)])
 
     write_to_file(scenario)
 
@@ -252,7 +270,9 @@ def create_standstill_scenario():
     num_lanes = 2
     num_lanelets = 10
     road_length = 250
-    scenario = create_straight_scenario("test_standstill", 0.1, num_lanes, num_lanelets, road_length, obstacles)
+    scenario = create_straight_scenario("test_standstill", 0.1, num_lanes, num_lanelets, road_length, obstacles,
+                                        [(LineMarking.DASHED, LineMarking.SOLID),
+                                         (LineMarking.SOLID, LineMarking.DASHED)])
 
     write_to_file(scenario)
 
@@ -284,7 +304,10 @@ def create_reverse_and_u_turn_scenario():
     num_lanelets = 10
     road_length = 250
     scenario = create_straight_scenario("test_reversing_and_u_turn", 0.1, num_lanes, num_lanelets, road_length,
-                                        obstacles)
+                                        obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.DASHED, LineMarking.DASHED),
+                                                    (LineMarking.SOLID, LineMarking.DASHED)])
 
     write_to_file(scenario)
 
@@ -308,7 +331,74 @@ def create_overtaking_right_congestion_scenario():
     num_lanelets = 10
     road_length = 250
     scenario = create_straight_scenario("test_overtaking_right_congestion", 0.1, num_lanes, num_lanelets,
-                                        road_length, obstacles)
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)])
+
+    write_to_file(scenario)
+
+
+def create_overtaking_exit_ramp_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([3.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([13.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1002)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1003)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1004)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1005)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1006)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1007)
+    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1008)
+    for i in range(9):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_exit_ramp_scenario("test_overtaking_exit_ramp", 0.1, num_lanes, num_lanelets,
+                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.DASHED),
+                                                                  (LineMarking.SOLID, LineMarking.DASHED)])
+
+    write_to_file(scenario)
+
+
+def create_overtaking_access_ramp_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([6.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([16.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([6.0, 5.25]), 1002)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([19.0, 5.25]), 1003)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([31.0, 5.25]), 1004)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([49.0, 5.25]), 1005)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([59.0, 5.25]), 1006)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([69.0, 5.25]), 1007)
+    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([79.0, 5.25]), 1008)
+    obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([28.0, 1.75]), 1009)
+    obs11 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([38.0, 1.75]), 1013)
+    obs12 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([50.0, 1.75]), 1010)
+    obs13 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([81.0, 5.25]), 1011)
+    obs14 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([89.0, 5.25]), 1012)
+    obs15 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([100.0, 5.25]), 1014)
+    obs16 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([110.0, 5.25]), 1015)
+    obs17 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([120.0, 5.25]), 101)
+    obs18 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([130.0, 5.25]), 1017)
+    obs19 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([50.0, 1.75]), 1018)
+    obs20 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([60.0, 1.75]), 1019)
+    obs21 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([70.0, 1.75]), 1020)
+    obs22 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([80.0, 1.75]), 1021)
+    obs23 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([90.0, 1.75]), 1022)
+
+    obs24 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 4, np.array([25.0, -1.75]), 1023)
+    for i in range(25):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_access_ramp_scenario("test_overtaking_access_ramp", 0.1, num_lanes, num_lanelets,
+                                           road_length, obstacles, [(LineMarking.DASHED, LineMarking.DASHED),
+                                                                    (LineMarking.SOLID, LineMarking.DASHED)])
 
     write_to_file(scenario)
 
@@ -344,7 +434,9 @@ def create_emergency_three_lanes_broad_scenario():
     num_lanelets = 10
     road_length = 100
     scenario = create_straight_scenario("test_emergency_three_lanes_broad", 0.1, num_lanes, num_lanelets,
-                                        road_length, obstacles)
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)])
 
     write_to_file(scenario)
 
@@ -360,6 +452,8 @@ def main():
     create_reverse_and_u_turn_scenario()
     create_overtaking_right_congestion_scenario()
     create_emergency_three_lanes_broad_scenario()
+    create_overtaking_exit_ramp_scenario()
+    create_overtaking_access_ramp_scenario()
 
 
 if __name__ == "__main__":

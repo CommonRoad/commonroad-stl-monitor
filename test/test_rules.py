@@ -186,17 +186,33 @@ class TestCommonRoadMonitor(unittest.TestCase):
     #     print(result)
     #     self.assertEqual(exp_result, result)
 
-    def test_overtaking_right_congestion(self):
+    # def test_overtaking_right_congestion(self):
+    #     # one vehicle which
+    #     scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
+    #                                                           "test_emergency_three_lanes_broad.xml").open()
+    #     exp_result = [(1000, {'R_I4': True}), (1001, {'R_I4': False}), (1002, {'R_I4': False}), (1003, {'R_I4': False}),
+    #                   (1004, {'R_I4': True}), (1005, {'R_I4': True}), (1006, {'R_I4': True}), (1007, {'R_I4': False}),
+    #                   (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}),
+    #                   (1011, {'R_I4': True}), (1012, {'R_I4': True}), (1013, {'R_I4': False}), (1014, {'R_I4': False}),
+    #                   (1015, {'R_I4': False}), (1016, {'R_I4': False}), (1017, {'R_I4': True}),
+    #                   (1018, {'R_I4': True})]
+    #     result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+    #     print("Emergency lane:")
+    #     print(result)
+    #     self.assertEqual(exp_result, result)
+
+    def test_overtaking_access_ramp(self):
         # one vehicle which
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_emergency_three_lanes_broad.xml").open()
-        exp_result = [(1000, {'R_I4': True}), (1001, {'R_I4': False}), (1002, {'R_I4': False}), (1003, {'R_I4': False}),
-                      (1004, {'R_I4': True}), (1005, {'R_I4': True}), (1006, {'R_I4': True}), (1007, {'R_I4': False}),
-                      (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}),
-                      (1011, {'R_I4': True}), (1012, {'R_I4': True}), (1013, {'R_I4': False}), (1014, {'R_I4': False}),
-                      (1015, {'R_I4': False}), (1016, {'R_I4': False}), (1017, {'R_I4': True}),
-                      (1018, {'R_I4': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI4"])
+                                                              "test_overtaking_access_ramp.xml").open()
+        exp_result = [(1000, {'R_I2': True}), (1001, {'R_I2': False}), (1002, {'R_I2': False}), (1003, {'R_I2': False}),
+                      (1004, {'R_I2': True}), (1005, {'R_I2': True}), (1006, {'R_I2': True}), (1007, {'R_I2': False}),
+                      (1008, {'R_I2': False}), (1009, {'R_I2': False}), (1010, {'R_I2': False}),
+                      (1011, {'R_I2': True}), (1012, {'R_I2': True}), (1013, {'R_I2': False}), (1014, {'R_I2': False}),
+                      (1015, {'R_I2': False}), (1016, {'R_I2': False}), (1017, {'R_I2': True}),
+                      (1018, {'R_I2': True}), (1019, {'R_I2': True}), (1020, {'R_I2': True}), (1021, {'R_I2': True}),
+                      (1022, {'R_I2': True}), (1023, {'R_I2': True})]
+        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
         print("Emergency lane:")
         print(result)
         self.assertEqual(exp_result, result)
