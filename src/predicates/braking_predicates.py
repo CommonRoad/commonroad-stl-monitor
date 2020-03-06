@@ -129,22 +129,22 @@ class BrakingPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        predicate_trace = {"unnecessary_braking": {ego_vehicle.id: {}},
-                           "keeps_safe_distance_prec": {}}
+        predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
+                           "keeps_safe_distance_prec__x_ego__x_o": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            if "unnecessary_braking" in self._necessary_predicates:
-                predicate_trace["unnecessary_braking"][ego_vehicle.id][time_step] = \
+            if "unnecessary_braking__x_ego" in self._necessary_predicates:
+                predicate_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
                     self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
 
         for other_vehicle in other_vehicles:
-            predicate_trace["keeps_safe_distance_prec"][other_vehicle.id] = {}
+            predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
-                    predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = True
+                    predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
                     continue
-                if "keeps_safe_distance_prec" in self._necessary_predicates:
-                    predicate_trace["keeps_safe_distance_prec"][other_vehicle.id][time_step] = \
+                if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self._keeps_safe_distance_prec(ego_vehicle, other_vehicle,
                                                        self._ego_vehicle_param.get("a_min"),
                                                        self._other_vehicles_param.get("a_min"),

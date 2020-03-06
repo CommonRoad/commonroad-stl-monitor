@@ -48,7 +48,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns speed limit
         """
-        v_max_lane = self._traffic_sign_interpreter.speed_limit(vehicle.lanelet_assignment[time_step])
+        v_max_lane = self._traffic_sign_interpreter.speed_limit(frozenset(vehicle.lanelet_assignment[time_step]))
         if v_max_lane is None or v_max_lane == float("inf"):
             return self._traffic_rules_param.get("desired_highway_velocity")
         else:
@@ -204,7 +204,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle_type: type of vehicle, e.g, truck
         :returns Boolean indicating satisfaction
         """
-        required_speed = self._traffic_sign_interpreter.required_speed(lanelet_ids)
+        required_speed = self._traffic_sign_interpreter.required_speed(frozenset(lanelet_ids))
         if required_speed >= min(self._ego_vehicle_param.get("fov_speed_limit"),
                                  self._get_type_speed_limit(vehicle_type),
                                  self._ego_vehicle_param.get("road_condition_speed_limit")):
@@ -271,7 +271,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param lanelet_ids: IDs of lanelets the vehicle is on
         :returns Boolean indicating speed limit satisfaction
         """
-        speed_limit = self._traffic_sign_interpreter.speed_limit(lanelet_ids)
+        speed_limit = self._traffic_sign_interpreter.speed_limit(frozenset(lanelet_ids))
         if speed_limit is None:
             return True
         elif speed_limit < velocity:
@@ -288,55 +288,64 @@ class VelocityPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        predicate_trace = {"keeps_lane_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_fov_speed_limit": {ego_vehicle.id: {}},
-                           "preserves_traffic_flow": {ego_vehicle.id: {}},
-                           "keeps_sign_min_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_braking_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_road_condition_speed_limit": {ego_vehicle.id: {}},
-                           "keeps_type_speed_limit": {ego_vehicle.id: {}},
-                           "exist_standing_leading_vehicle": {ego_vehicle.id: {}},
-                           "in_standstill": {ego_vehicle.id: {}},
-                           "drives_with_slightly_higher_speed": {ego_vehicle.id: {}},
-                           "drives_faster_than_vehicle_left": {ego_vehicle.id: {}},
-                           "reverses": {ego_vehicle.id: {}}}
+        predicate_trace = {"keeps_lane_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "keeps_fov_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "preserves_traffic_flow__x_ego": {ego_vehicle.id: {}},
+                           "keeps_sign_min_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "keeps_braking_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "keeps_road_condition_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "keeps_type_speed_limit__x_ego": {ego_vehicle.id: {}},
+                           "exist_standing_leading_vehicle__x_ego": {ego_vehicle.id: {}},
+                           "in_standstill__x_ego": {ego_vehicle.id: {}},
+                           "drives_with_slightly_higher_speed__x_ego__x_o": {},
+                           "drives_faster_than_vehicle_left__x_ego__x_o": {},
+                           "reverses__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            if "keeps_lane_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_lane_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_lane_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_lane_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_lane_speed_limit(ego_vehicle.states_lon[time_step].v,
                                                  ego_vehicle.lanelet_assignment[time_step])
-            if "keeps_fov_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_fov_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_fov_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_fov_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_fov_speed_limit(ego_vehicle.states_lon[time_step].v)
-            if "keeps_braking_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_braking_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_braking_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_braking_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_braking_speed_limit(ego_vehicle.states_lon[time_step].v)
-            if "keeps_road_condition_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_road_condition_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_road_condition_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_road_condition_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_road_condition_speed_limit(ego_vehicle.states_lon[time_step].v)
-            if "preserves_traffic_flow" in self._necessary_predicates:
-                predicate_trace["preserves_traffic_flow"][ego_vehicle.id][time_step] = \
+            if "preserves_traffic_flow__x_ego" in self._necessary_predicates:
+                predicate_trace["preserves_traffic_flow__x_ego"][ego_vehicle.id][time_step] = \
                     self._preserves_traffic_flow(ego_vehicle, other_vehicles, time_step)
-            if "keeps_type_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_type_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_type_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_type_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_type_speed_limit(ego_vehicle.states_lon[time_step].v, ego_vehicle.obstacle_type)
-            if "keeps_sign_min_speed_limit" in self._necessary_predicates:
-                predicate_trace["keeps_sign_min_speed_limit"][ego_vehicle.id][time_step] = \
+            if "keeps_sign_min_speed_limit__x_ego" in self._necessary_predicates:
+                predicate_trace["keeps_sign_min_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self._keeps_sign_min_speed_limit(ego_vehicle.states_lon[time_step].v,
                                                      ego_vehicle.lanelet_assignment[time_step],
                                                      ego_vehicle.obstacle_type)
-            if "exist_standing_leading_vehicle" in self._necessary_predicates:
-                predicate_trace["exist_standing_leading_vehicle"][ego_vehicle.id][time_step] = \
+            if "exist_standing_leading_vehicle__x_ego" in self._necessary_predicates:
+                predicate_trace["exist_standing_leading_vehicle__x_ego"][ego_vehicle.id][time_step] = \
                     self._exist_standing_leading_vehicle(ego_vehicle, other_vehicles, time_step)
-            if "in_standstill" in self._necessary_predicates:
-                predicate_trace["in_standstill"][ego_vehicle.id][time_step] = \
+            if "in_standstill__x_ego" in self._necessary_predicates:
+                predicate_trace["in_standstill__x_ego"][ego_vehicle.id][time_step] = \
                     self._in_standstill(ego_vehicle.states_lon[time_step].v)
-            if "reverses" in self._necessary_predicates:
-                predicate_trace["reverses"][ego_vehicle.id][time_step] = \
+            if "reverses__x_ego" in self._necessary_predicates:
+                predicate_trace["reverses__x_ego"][ego_vehicle.id][time_step] = \
                     self._reverses(ego_vehicle.states_lon[time_step].v)
-            if "drives_faster_than_vehicle_left" in self._necessary_predicates:
-                predicate_trace["drives_faster_than_vehicle_left"][ego_vehicle.id][time_step] = \
-                    self._drives_faster_than_vehicle_left(ego_vehicle, other_vehicles, time_step)
 
+        for other_vehicle in other_vehicles:
+            predicate_trace["drives_faster_than_vehicle_left__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id] = {}
+            for time_step in ego_vehicle.states_lon.keys():
+                if other_vehicle.states_lon.get(time_step) is None:
+                    continue
+                if "drives_faster_than_vehicle_left__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["drives_faster_than_vehicle_left__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self._drives_faster_than_vehicle_left(ego_vehicle, other_vehicles, time_step)
+                if "drives_with_slightly_higher_speed__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self._drives_with_slightly_higher_speed(ego_vehicle, other_vehicle, time_step)
         return predicate_trace

@@ -144,23 +144,33 @@ class GeneralPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        predicate_trace = {"in_congestion": {ego_vehicle.id: {}},
+        predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
+                           "in_congestion__x_o": {},
                            "congestion_left": {ego_vehicle.id: {}},
-                           "makes_u_turn": {ego_vehicle.id: {}},
-                           "interstate_broad_enough": {ego_vehicle.id: {}}}
+                           "makes_u_turn__x_ego": {ego_vehicle.id: {}},
+                           "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
-            if "in_congestion" in self._necessary_predicates:
-                predicate_trace["in_congestion"][ego_vehicle.id][time_step] = \
+            if "in_congestion__x_ego" in self._necessary_predicates:
+                predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
                     self._in_congestion(ego_vehicle, other_vehicles, time_step)
             if "congestion_left" in self._necessary_predicates:
                 predicate_trace["congestion_left"][ego_vehicle.id][time_step] = \
                     self._congestion_left(ego_vehicle, other_vehicles, time_step)
-            if "makes_u_turn" in self._necessary_predicates:
-                predicate_trace["makes_u_turn"][ego_vehicle.id][time_step] = \
+            if "makes_u_turn__x_ego" in self._necessary_predicates:
+                predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
                     self._makes_u_turn(ego_vehicle, time_step)
-            if "interstate_broad_enough" in self._necessary_predicates:
-                predicate_trace["interstate_broad_enough"][ego_vehicle.id][time_step] = \
+            if "interstate_broad_enough__x_ego" in self._necessary_predicates:
+                predicate_trace["interstate_broad_enough__x_ego"][ego_vehicle.id][time_step] = \
                     self._interstate_broad_enough(ego_vehicle, time_step)
+
+        for other_vehicle in other_vehicles:
+            predicate_trace["in_congestion__x_o"][other_vehicle.id] = {}
+            for time_step in ego_vehicle.states_lon.keys():
+                if other_vehicle.states_lon.get(time_step) is None:
+                    continue
+                if "in_congestion__x_o" in self._necessary_predicates:
+                    predicate_trace["in_congestion__x_o"][other_vehicle.id][time_step] = \
+                        self._in_congestion(other_vehicle, other_vehicles, time_step)
 
         return predicate_trace

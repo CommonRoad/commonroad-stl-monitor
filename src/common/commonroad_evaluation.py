@@ -1,4 +1,5 @@
 import copy
+import traceback
 
 from src.common.configuration import *
 from src.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
@@ -124,15 +125,19 @@ class CommonRoadObstacleEvaluation:
             result = self._execute_evaluation(scenario)
         except RuntimeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Runtime Error")
+            traceback.print_exc()
             return
         except AttributeError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Attribute Error")
+            traceback.print_exc()
             return
         except KeyError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Key Error")
+            traceback.print_exc()
             return
         except ValueError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
+            traceback.print_exc()
             return
         self.evaluate_result(result, scenario.benchmark_id)
 

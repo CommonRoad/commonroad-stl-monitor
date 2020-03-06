@@ -145,21 +145,27 @@ traffic_rule_monitoring:
     ###
     # .. code-block:: yaml
     #
-    #   - max_speed_limit: rule which evaluates maximum speed limit
-    #   - min_speed_limit: rule which evaluates minimum speed limit
-    #   - safe_distance: rule which evaluates safe distance
-    #   - no_unnecessary_braking: rule which evaluates unnecessary strong braking
+    #   - R_G1:
+    #   - R_G2:
+    #   - R_G3:
+    #   - R_G4:
+    #   - R_G5:
+    #   - R_I1:
+    #   - R_I2:
+    #   - R_I3:
+    #   - R_I4:
+    #   - R_I5:
     traffic_rules:
-        R_G1: G((is_in_front_of & is_in_same_lane) -> keeps_safe_distance_prec)
-        R_G2: G(~(unnecessary_braking))
-        R_G3: G(keeps_lane_speed_limit & keeps_fov_speed_limit & keeps_braking_speed_limit & keeps_road_condition_speed_limit & keeps_type_speed_limit)
-        R_G4: G(keeps_sign_min_speed_limit)
-        R_G5: G(preserves_traffic_flow)
-        R_I1: G(~((in_congestion) | (exist_standing_leading_vehicle)) -> ~(in_standstill))
-        R_I2: G((congestion_left & drives_with_slightly_higher_speed) | (right_of_broad_lane_marking & left_of_broad_lane_marking) | (on_access_ramp & ~(congestion_left)) | ~(drives_faster_than_vehicle_left))
-        R_I3: G(~(makes_u_turn) & ~(reverses))
-        R_I4: G(in_congestion -> ((interstate_broad_enough -> ((in_leftmost_lane -> drives_leftmost) & (~(in_leftmost_lane) -> drives_rightmost))) & (~(interstate_broad_enough) -> drives_rightmost)))
-        R_I5: G((on_access_ramp & F(on_main_carriage_way)) -> ~(~(in_rightmost_lane) & F(in_rightmost_lane)))
+        R_G1: G((is_in_front_of__x_ego__x_o & is_in_same_lane__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
+        R_G2: G(~(unnecessary_braking__x_ego))
+        R_G3: G(keeps_lane_speed_limit__x_ego & keeps_fov_speed_limit__x_ego & keeps_braking_speed_limit__x_ego & keeps_road_condition_speed_limit__x_ego & keeps_type_speed_limit__x_ego)
+        R_G4: G(keeps_sign_min_speed_limit__x_ego)
+        R_G5: G(preserves_traffic_flow__x_ego)
+        R_I1: G(~((in_congestion__x_ego) | (exist_standing_leading_vehicle__x_ego)) -> ~(in_standstill__x_ego))
+        R_I2: G((in_congestion__x_o & drives_with_slightly_higher_speed__x_ego__x_o) | (right_of_broad_lane_marking__x_ego & left_of_broad_lane_marking__x_o) | (on_access_ramp__x_ego & ~(in_congestion__x_o)) | ~(drives_faster_than_vehicle_left__x_ego__x_o))
+        R_I3: G(~(makes_u_turn__x_ego) & ~(reverses__x_ego))
+        R_I4: G(in_congestion__x_ego -> ((interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_rightmost__x_ego)))
+        R_I5: G((on_access_ramp__x_ego & F(on_main_carriage_way__x_ego)) -> ~(~(in_rightmost_lane__x_ego) & F(in_rightmost_lane__x_ego)))
 
     # Parameters for traffic rules
     ###

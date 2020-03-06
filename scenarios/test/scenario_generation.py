@@ -70,14 +70,14 @@ def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id
 
 def create_max_speed_limit_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 3, 3,
+    obs0 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 3, 3,
                                             3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                             3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                             1, 1, 1, 0, 0, 0, 0, 0, -5, -5,
                                             -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 31.5, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([10.0, 5.25]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 36, np.array([3.0, 8.75]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1003)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([10.0, 5.25]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 36, np.array([3.0, 8.75]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1003)
     for i in range(4):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -118,12 +118,12 @@ def create_min_speed_limit_scenario():
 
 def create_preserves_traffic_flow_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([13.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 10, np.array([3.0, 5.25]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 10, np.array([13.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([22.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([100.0, 8.75]), 1005)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([3.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([13.0, 1.75]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 10, np.array([3.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 10, np.array([13.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 35, np.array([22.0, 5.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([100.0, 8.75]), 1005)
     for i in range(6):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -144,21 +144,21 @@ def create_preserves_traffic_flow_scenario():
 
 def create_safe_distance_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration([0, 0, 0, -2, 0, 0, -2, 0, -2, 0,
+    obs0 = create_obstacle_by_acceleration([0, 0, 0, -2, 0, 0, -2, 0, -2, 0,
                                             0, 0, 0, -5, 0, 0, -5, 0, -2, 0,
                                             -5.9, -3.1, 0.1, -2, -5, -4.4, 0, -10, -1, 0,
                                             -2, -0, -5.1, -2, -0.5, -2, -2.8, -8, -8.3, -2,
                                             0, 0, 0, -6, 0, -1, 0, -8, -1, -2], 40, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, -2.3, 2, -4, -3, 0, 0, 0, 0,
                                             0, 0, 0, 2.2, -2, 0, 0, 0.8, 0, 0,
                                             1.1, 1.5, 0, 1, 0, 2.2, 1, 0.4, 1, 1,
                                             0, 0, 0, 0, 0, 2, 0, 0, 0, 0], 30, np.array([61.50, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([13.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([75.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([3.0, 8.75]), 1005)
-    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([40.0, 8.75]), 1006)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([13.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([75.0, 5.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([3.0, 8.75]), 1005)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([40.0, 8.75]), 1006)
     for i in range(7):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -179,38 +179,38 @@ def create_safe_distance_scenario():
 
 def create_unnecessary_braking_scenario_1():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration([1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    obs0 = create_obstacle_by_acceleration([1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 20, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1001)
-    obs3 = create_obstacle_by_acceleration([-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0,
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 5.25]), 1001)
+    obs2 = create_obstacle_by_acceleration([-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0,
                                             -1.1, -1.2, -1.3, -1.4, -1.5, -1.6, -1.7, -1.8, -1.9, -2.0,
                                             -2.1, -2.2, -2.3, -2.4, -2.5, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 30, np.array([75.0, 8.75]), 1002)
-    obs4 = create_obstacle_by_acceleration([0, 0, 0, 0, -1, -1, -1, -2, 0, 0,
+    obs3 = create_obstacle_by_acceleration([0, 0, 0, 0, -1, -1, -1, -2, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, -1, -2, -2, -2, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([3.0, 12.25]), 1003)
-    obs5 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs4 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, -5, -5, -5, -5, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([3.0, 15.75]), 1004)
-    obs6 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs5 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([40.0, 15.75]), 1005)
-    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs6 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9,
                                             -1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 20, np.array([3.0, 19.25]), 1006)
-    obs8 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -252,18 +252,18 @@ def create_unnecessary_braking_scenario_2():
 
 def create_standstill_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([13.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([23.0, 1.75]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1005)
-    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1006)
-    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1007)
-    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1008)
-    obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1009)
-    obs11 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 3, np.array([73.0, 5.25]), 1010)
-    for i in range(1121):
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([3.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([13.0, 1.75]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([23.0, 1.75]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1005)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1006)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1007)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1008)
+    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1009)
+    obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 3, np.array([73.0, 5.25]), 1010)
+    for i in range(11):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
@@ -279,23 +279,23 @@ def create_standstill_scenario():
 
 def create_reverse_and_u_turn_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs0 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, -5, -5, -5, -5, -5, -5, -5, -5,
                                             -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
                                             -5, -5, -5, -5, -5, -5, -5, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 2, np.array([50.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, -5, -5, -5, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -10, np.array([100.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([125.0, 1.75]), 1002,
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([125.0, 1.75]), 1002,
                                            [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
                                             0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
                                             -0.1, -0.1, -0.1, -0.1, -0.1, -0.4, -0.4, -0.4, -0.4, -0.4,
                                             -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4,
                                             -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4])
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([140.0, 1.75]), 1003)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([140.0, 1.75]), 1003)
     for i in range(4):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -314,15 +314,15 @@ def create_reverse_and_u_turn_scenario():
 
 def create_overtaking_right_congestion_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([13.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1005)
-    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1006)
-    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1007)
-    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1008)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([3.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([13.0, 1.75]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1005)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1006)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1007)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1008)
     for i in range(9):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -339,15 +339,15 @@ def create_overtaking_right_congestion_scenario():
 
 def create_overtaking_exit_ramp_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([3.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([13.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1005)
-    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1006)
-    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1007)
-    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1008)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([3.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([13.0, 1.75]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([3.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([13.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([33.0, 5.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 5.25]), 1005)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 5.25]), 1006)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 5.25]), 1007)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 5.25]), 1008)
     for i in range(9):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -386,10 +386,10 @@ def create_overtaking_access_ramp_scenario():
     obs20 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([60.0, 1.75]), 1019)
     obs21 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([70.0, 1.75]), 1020)
     obs22 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([80.0, 1.75]), 1021)
-    obs23 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([90.0, 1.75]), 1022)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([90.0, 1.75]), 1022)
 
     obs24 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 4, np.array([25.0, -1.75]), 1023)
-    for i in range(25):
+    for i in range(23):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
@@ -425,8 +425,8 @@ def create_emergency_three_lanes_broad_scenario():
     obs16 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([43.0, 9.65]), 1015)
     obs17 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([53.0, 8.75]), 1016)
     obs18 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([63.0, 8.75]), 1017)
-    obs19 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 8.75]), 1018)
-    for i in range(21):
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([73.0, 8.75]), 1018)
+    for i in range(22):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
