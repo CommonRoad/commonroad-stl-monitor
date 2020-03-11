@@ -329,7 +329,7 @@ def create_overtaking_right_congestion_scenario():
             obstacles.append(obs)
     num_lanes = 2
     num_lanelets = 10
-    road_length = 250
+    road_length = 150
     scenario = create_straight_scenario("test_overtaking_right_congestion", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)])
@@ -364,32 +364,10 @@ def create_overtaking_exit_ramp_scenario():
 
 def create_overtaking_access_ramp_scenario():
     obstacles = []
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([6.0, 1.75]), 1000)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([16.0, 1.75]), 1001)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([6.0, 5.25]), 1002)
-    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([19.0, 5.25]), 1003)
-    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([31.0, 5.25]), 1004)
-    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([49.0, 5.25]), 1005)
-    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([59.0, 5.25]), 1006)
-    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([69.0, 5.25]), 1007)
-    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([79.0, 5.25]), 1008)
-    obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([28.0, 1.75]), 1009)
-    obs11 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([38.0, 1.75]), 1013)
-    obs12 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([50.0, 1.75]), 1010)
-    obs13 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([81.0, 5.25]), 1011)
-    obs14 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([89.0, 5.25]), 1012)
-    obs15 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([100.0, 5.25]), 1014)
-    obs16 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([110.0, 5.25]), 1015)
-    obs17 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([120.0, 5.25]), 101)
-    obs18 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([130.0, 5.25]), 1017)
-    obs19 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([50.0, 1.75]), 1018)
-    obs20 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([60.0, 1.75]), 1019)
-    obs21 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([70.0, 1.75]), 1020)
-    obs22 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([80.0, 1.75]), 1021)
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([90.0, 1.75]), 1022)
-
-    obs24 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 4, np.array([25.0, -1.75]), 1023)
-    for i in range(23):
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([40.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, -1.75]), 1002)
+    for i in range(4):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)

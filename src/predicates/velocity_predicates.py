@@ -155,20 +155,19 @@ class VelocityPredicateCollection(PredicateCollection):
             return False
 
     @staticmethod
-    def _drives_faster_than_vehicle_left(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
+    def _drives_faster(vehicle_k: Vehicle, vehicle_p: Vehicle, time_step: int) -> bool:
         """
-        Predicate which checks if a vehicle drives faster than any vehicle on its left side
+        Predicate which checks if the kth vehicle drives faster than the pth vehicle
 
-        :param vehicle: vehicle object
-        :param other_vehicles: list of other vehicles
+        :param vehicle_p: the pth vehicle
+        :param vehicle_k: the kth vehicle
         :param time_step: time step of interest
         :returns Boolean indicating speed limit satisfaction
         """
-        vehicles_left = PositionPredicateCollection.vehicles_left(vehicle, other_vehicles, time_step)
-        for veh_l in vehicles_left:
-            if vehicle.states_lon[time_step].v > veh_l.states_lon[time_step].v:
-                return True
-        return False
+        if vehicle_p.states_lon[time_step].v < vehicle_k.states_lon[time_step].v:
+            return True
+        else:
+            return False
 
     def _reverses(self, velocity: float):
         """
@@ -298,7 +297,7 @@ class VelocityPredicateCollection(PredicateCollection):
                            "exist_standing_leading_vehicle__x_ego": {ego_vehicle.id: {}},
                            "in_standstill__x_ego": {ego_vehicle.id: {}},
                            "drives_with_slightly_higher_speed__x_ego__x_o": {},
-                           "drives_faster_than_vehicle_left__x_ego__x_o": {},
+                           "drives_faster__x_ego__x_o": {},
                            "reverses__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
@@ -337,14 +336,14 @@ class VelocityPredicateCollection(PredicateCollection):
                     self._reverses(ego_vehicle.states_lon[time_step].v)
 
         for other_vehicle in other_vehicles:
-            predicate_trace["drives_faster_than_vehicle_left__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
-                if "drives_faster_than_vehicle_left__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["drives_faster_than_vehicle_left__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self._drives_faster_than_vehicle_left(ego_vehicle, other_vehicles, time_step)
+                if "drives_faster__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self._drives_faster(ego_vehicle, other_vehicle, time_step)
                 if "drives_with_slightly_higher_speed__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self._drives_with_slightly_higher_speed(ego_vehicle, other_vehicle, time_step)

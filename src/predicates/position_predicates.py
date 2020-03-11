@@ -38,6 +38,46 @@ class PositionPredicateCollection(PredicateCollection):
         else:
             return False
 
+    def is_left_of(self, vehicle_p: Vehicle, vehicle_k: Vehicle, time_step: int) -> bool:
+        """
+        Evaluates if the kth vehicle is left of the pth vehicle
+
+        :param vehicle_p: pth vehicle
+        :param vehicle_k: kth vehicle
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        if not self._in_left_lane(vehicle_p, vehicle_k, time_step):
+            return False
+        else:
+            if vehicle_p.rear_position(time_step) <= vehicle_k.front_position(time_step) <= \
+                    vehicle_p.front_position(time_step):
+                return True
+            if vehicle_p.rear_position(time_step) < vehicle_k.rear_position(time_step) < \
+                    vehicle_p.front_position(time_step):
+                return True
+            if vehicle_k.rear_position(time_step) < vehicle_p.rear_position(time_step) \
+                    and vehicle_p.front_position(time_step) < vehicle_k.front_position(time_step):
+                return True
+            else:
+                return False
+
+    def _in_left_lane(self, vehicle_p: Vehicle, vehicle_k: Vehicle, time_step: int) -> bool:
+        """
+        Evaluates if the kth vehicle is in any lane left of the pth vehicle
+
+        :param vehicle_p: pth vehicle
+        :param vehicle_k: kth vehicle
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        lanelets_k = vehicle_k.lanelet_assignment[time_step]
+        lanelets_left_of_p = self._ids_lanelets_left_of_vehicle(vehicle_p, time_step)
+        if any(lanelet_id in lanelets_left_of_p for lanelet_id in lanelets_k):
+            return True
+        else:
+            return False
+
     def exist_leading_vehicle(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
         """
         Predicate which evaluates if leading vehicle exists
@@ -184,6 +224,23 @@ class PositionPredicateCollection(PredicateCollection):
 
         return left_lanelets
 
+    def _ids_lanelets_left_of_vehicle(self, vehicle: Vehicle, time_step: int) -> Set[int]:
+        """
+        Extracts all IDs of lanelets left of a vehicle
+
+        :param vehicle: vehicle of interest
+        :param time_step: time step of interest
+        :returns set of lanelet objects
+        """
+        left_lanelets = set()
+        occupied_lanelets = vehicle.lanelet_assignment[time_step]
+        for occ_l in occupied_lanelets:
+            new_lanelets = self._lanelets_left_of_lanelet(self._road_network.lanelet_network.find_lanelet_by_id(occ_l))
+            for l in new_lanelets:
+                left_lanelets.add(l.lanelet_id)
+
+        return left_lanelets
+
     def _lanelets_right_of_vehicle(self, vehicle: Vehicle, time_step: int) -> Set[Lanelet]:
         """
         Extracts all lanelets right of a vehicle
@@ -254,26 +311,6 @@ class PositionPredicateCollection(PredicateCollection):
                 vehicles_left.append(veh)
                 continue
         return vehicles_left
-
-    @classmethod
-    def vehicle_is_left(cls, vehicle_k: Vehicle, vehicle_p: Vehicle, time_step: int) -> bool:
-        """
-        Evaluates if the kth vehicle is left of the pth vehicle
-
-        :param vehicle_k: the kth vehicle
-        :param vehicle_p: the pth vehicle
-        :param time_step: time step of interest
-        :returns boolean indicating satisfaction
-        """
-        if (vehicle_p.rear_position(time_step) <= vehicle_k.rear_position(time_step) <=
-            vehicle_p.front_position(time_step)) or \
-                (vehicle_p.rear_position(time_step) <= vehicle_k.front_position(time_step) <=
-                 vehicle_p.front_position(time_step)) or \
-                (vehicle_p.front_position(time_step) < vehicle_k.front_position(time_step) and
-                 vehicle_k.rear_position(time_step) < vehicle_p.rear_position(time_step)):
-            return True
-        else:
-            return False
 
     def _in_leftmost_lane(self, lanelet_ids: Set[int]):
         """
@@ -348,6 +385,7 @@ class PositionPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"is_in_same_lane__x_ego__x_o": {},
                            "is_in_front_of__x_ego__x_o": {},
+                           "is_left_of__x_ego__x_o": {},
                            "in_rightmost_lane": {ego_vehicle.id: {}},
                            "in_leftmost_lane": {ego_vehicle.id: {}},
                            "on_access_ramp__x_ego": {ego_vehicle.id: {}},
@@ -384,6 +422,7 @@ class PositionPredicateCollection(PredicateCollection):
             predicate_trace["is_in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["is_in_front_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id] = {}
+            predicate_trace["is_left_of__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
@@ -395,7 +434,10 @@ class PositionPredicateCollection(PredicateCollection):
                 if "is_in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["is_in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.is_in_front_of(ego_vehicle, other_vehicle, time_step)
-                if "left_of_broad_lane_marking" in self._necessary_predicates:
+                if "is_left_of__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["is_left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.is_left_of(ego_vehicle, other_vehicle, time_step)
+                if "left_of_broad_lane_marking__x_o" in self._necessary_predicates:
                     predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id][time_step] = \
                         self._left_of_broad_lane_marking(other_vehicle, time_step)
         return predicate_trace
