@@ -173,55 +173,87 @@ class TestCommonRoadMonitor(unittest.TestCase):
     #     print("Reversing and U-turn:")
     #     print(result)
     #     self.assertEqual(exp_result, result)
-
+    #
     # def test_overtaking_right_congestion(self):
-    #     # one vehicle which
+    #     # one vehicle which overtakes a congestion slightly faster (1000)
+    #     # one vehicle which overtakes a congestion too fast (1001)
+    #     # all other vehicles a part of a congestion
     #     scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
     #                                                           "test_overtaking_right_congestion.xml").open()
-    #     exp_result = [(1000, {'R_I2': True}), (1001, {'R_I2': False}), (1002, {'R_I2': True}), (1003, {'R_I2': True}),
-    #                   (1004, {'R_I2': True}), (1005, {'R_I2': True}), (1006, {'R_I2': True}), (1007, {'R_I2': True}),
-    #                   (1008, {'R_I2': True})]
+    #     exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
+    #                           'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': False,
+    #                           'R_I2_veh_1004': False, 'R_I2_veh_1005': False, 'R_I2_veh_1006': False,
+    #                           'R_I2_veh_1007': False, 'R_I2_veh_1008': False}),
+    #                   (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True,
+    #                           'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1003, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1004, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1003': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1005, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1006': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1006, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
+    #                           'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+    #                   (1007, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
+    #                           'R_I2_veh_1006': True, 'R_I2_veh_1008': True}),
+    #                   (1008, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
+    #                           'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
+    #                           'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
+    #                   ]
     #     result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
-    #     print("Overtaking right:")
+    #     print("Overtaking right congestion:")
     #     print(result)
     #     self.assertEqual(exp_result, result)
 
-    def test_overtaking_right_congestion(self):
-        # one vehicle which
+    def test_overtaking_right_broad_lane_marking(self):
+        # one vehicle right of a broad lane marking which overtakes on the right side one vehicle left of a broad
+        # lane marking and one vehicle right of a broad lane marking (1001)
+        # three vehicle overtaking a vehicle left of a broad lane marking (1000, 1002, 1003)
+        # one vehicle left of a broad lane marking which overtakes on the right side another vehicle also left
+        # of a broad lane marking (1004)
+        # one vehicle driving on the leftmost lane (1005)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_right_congestion.xml").open()
+                                                              "test_overtaking_right_broad_lane_marking.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
-                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True}),
                       (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': False,
-                              'R_I2_veh_1004': False, 'R_I2_veh_1005': False, 'R_I2_veh_1006': False,
-                              'R_I2_veh_1007': False, 'R_I2_veh_1008': False}),
+                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True}),
                       (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True,
-                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True}),
                       (1003, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+                              'R_I2_veh_1004': True, 'R_I2_veh_1005': True}),
                       (1004, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1003': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
+                              'R_I2_veh_1003': True, 'R_I2_veh_1005': False}),
                       (1005, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1006': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
-                      (1006, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
-                              'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
-                      (1007, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
-                              'R_I2_veh_1006': True, 'R_I2_veh_1008': True}),
-                      (1008, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
-                              'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
-                              'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
-                      ]
+                              'R_I2_veh_1003': True, 'R_I2_veh_1004': True})]
         result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
-        print("Overtaking right congestion:")
+        print("Overtaking right broad lane marking:")
         print(result)
         self.assertEqual(exp_result, result)
+    #
+    # def test_overtaking_right_normal_street(self):
+    #     # one vehicle right of a broad lane marking which overtakes (1001)
+    #     # one vehicle right of a broad lane marking which does not overtake (1000)
+    #     # two vehicles driving on the left (1002, 1003)
+    #     scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
+    #                                                           "test_overtaking_right_normal.xml").open()
+    #     exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True}),
+    #                   (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': False}),
+    #                   (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True}),
+    #                   (1003, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True}),
+    #                   ]
+    #     result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+    #     print("Overtaking right normal road:")
+    #     print(result)
+    #     self.assertEqual(exp_result, result)
 
     # def test_overtaking_access_ramp(self):
     #     # one vehicle which

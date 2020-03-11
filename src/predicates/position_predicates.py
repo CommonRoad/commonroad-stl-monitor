@@ -178,14 +178,16 @@ class PositionPredicateCollection(PredicateCollection):
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if not (lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or
-                    lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID):
+            if lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or \
+                    lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID:
                 return False
 
         lanelets_left_of_veh = self._lanelets_left_of_vehicle(vehicle, time_step)
         for lanelet in lanelets_left_of_veh:
-            if lanelet.adj_left_same_direction is True:
+            if lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or \
+                    lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID:
                 return True
+        return False
 
     def _left_of_broad_lane_marking(self, vehicle: Vehicle, time_step: int) -> bool:
         """
@@ -198,14 +200,16 @@ class PositionPredicateCollection(PredicateCollection):
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if not (lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or
-                    lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID):
+            if lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or \
+                    lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
                 return False
 
         lanelets_right_of_veh = self._lanelets_right_of_vehicle(vehicle, time_step)
         for lanelet in lanelets_right_of_veh:
-            if lanelet.adj_right_same_direction is True:
+            if lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or \
+                    lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
                 return True
+        return False
 
     def _lanelets_left_of_vehicle(self, vehicle: Vehicle, time_step: int) -> Set[Lanelet]:
         """

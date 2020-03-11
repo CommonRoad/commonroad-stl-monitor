@@ -381,6 +381,50 @@ def create_overtaking_access_ramp_scenario():
     write_to_file(scenario)
 
 
+def create_overtaking_broad_lane_marking_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([20.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 5.25]), 1002)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([40.0, 5.25]), 1003)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 28.5, np.array([5.0, 8.75]), 1004)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 10, np.array([50.0, 12.25]), 1005)
+    for i in range(7):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 4
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_straight_scenario("test_overtaking_right_broad_lane_marking", 0.1, num_lanes, num_lanelets,
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.BROAD_DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.BROAD_DASHED),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)])
+
+    write_to_file(scenario)
+
+
+def create_overtaking_normal_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([25.0, 1.75]), 1000)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([40.0, 1.75]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([25.0, 5.25]), 1002)
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([60.0, 5.25]), 1003)
+    for i in range(5):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_straight_scenario("test_overtaking_right_normal", 0.1, num_lanes, num_lanelets,
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)])
+
+    write_to_file(scenario)
+
+
 def create_emergency_three_lanes_broad_scenario():
     obstacles = []
     obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([3.0, 0.85]), 1000)
@@ -432,6 +476,8 @@ def main():
     create_emergency_three_lanes_broad_scenario()
     create_overtaking_exit_ramp_scenario()
     create_overtaking_access_ramp_scenario()
+    create_overtaking_broad_lane_marking_scenario()
+    create_overtaking_normal_scenario()
 
 
 if __name__ == "__main__":

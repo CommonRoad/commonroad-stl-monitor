@@ -1,4 +1,5 @@
 from typing import List, Dict, Set
+import warnings
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
@@ -117,6 +118,7 @@ class TrafficRuleDispatcher:
         evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors:
+            # evaluate rules which only depend on the ego vehicle and the environment
             if rule.vehicle_dependency is False:
                 rule_predicates = {}
                 for pred in rule.predicates:
@@ -125,7 +127,7 @@ class TrafficRuleDispatcher:
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
                 rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
-            else:
+            else: # evaluate rules which depend on other vehicles, e.g., safe distance
                 rule_predicates = {}
                 rule_evaluated = False
                 for vehicle in other_vehicles:
@@ -136,11 +138,11 @@ class TrafficRuleDispatcher:
                             for idx, value in enumerate(evaluated_predicates[pred][vehicle.id].values()):
                                 trace.append((idx * self._dt, value))
                         elif len(evaluated_predicates[pred]) > 0 \
-                                and evaluated_predicates[pred].get(ego_vehicle.id) is not None and \
-                                rule_predicates.get(pred) is None:
+                                and evaluated_predicates[pred].get(ego_vehicle.id) is not None:
                             for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
                                 trace.append((idx * self._dt, value))
                         else:
+                            warnings.warn("Predicate cannot be found!")
                             break
                         rule_predicates[pred] = trace
                         rule_evaluated = True
