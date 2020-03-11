@@ -32,7 +32,7 @@ class BrakingPredicateCollection(PredicateCollection):
         """
         v_ego = ego_vehicle.states_lon[time_step].v
         a_ego = ego_vehicle.states_lon[time_step].a
-        j_ego = ego_vehicle.states_lon[time_step].j
+
         if a_ego >= 0:
             return False
         if self.velocity_reduction_necessary(v_ego):
@@ -51,12 +51,10 @@ class BrakingPredicateCollection(PredicateCollection):
                 if a_min_other is None or veh_o.states_lon[time_step].a < a_min_other:
                     a_min_other = veh_o.states_lon[time_step].a
 
-        if a_min_other is None and (a_ego < self._traffic_rules_param.get("a_abrupt") or
-                                    j_ego < self._traffic_rules_param.get("j_abrupt")):
+        if a_min_other is None and a_ego < self._traffic_rules_param.get("a_abrupt"):
             # no leading vehicle
             return True
-        elif a_min_other is not None and j_ego < self._traffic_rules_param.get("j_abrupt") and \
-                a_ego - a_min_other < self._traffic_rules_param.get("a_abrupt"):
+        elif a_min_other is not None and a_ego - a_min_other < self._traffic_rules_param.get("a_abrupt"):
             return True
         else:
             return False

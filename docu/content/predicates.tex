@@ -266,15 +266,13 @@ The safe distance is kept if the relative distance between the vehicles is large
 Unnecessary braking is defined based on the ego vehicle's acceleration and jerk:
 \begin{align*}
 \begin{split}
-&\unnecessaryBraking(\egoState, \aEgo, \jEgo) \iff \\
-&\qquad (\neg \velocityReductionNecessary \land \, \aEgo < 0) \implies\\
-&\qquad \quad \big(\nexists \text{o} \in \{1 ... N\} : \inFrontOfEgoVehiclePredicate(\kState, \otherState)  \\
-&\qquad \quad \land \aEgo < \aAbrupt \land \jEgo < \jAbrupt \big)\\
-&\qquad \quad \lor \big(\exists \text{o} \in \{1 ... N\} : \inFrontOfEgoVehiclePredicate(\kState, \otherState) \\
-&\qquad \quad \land (\aEgo - \aOther) <  \aAbrupt \land \jEgo  <  \jAbrupt \big),
+&\unnecessaryBraking(\egoState, \aEgo) \iff \\
+&\qquad \aEgo < 0 \implies \big(\nexists \text{o} \in \{1 ... N\} : \inFrontOfEgoVehiclePredicate(\kState, \otherState)  \\
+&\qquad \quad \land \aEgo < \aAbrupt \big) \lor \big(\exists \text{o} \in \{1 ... N\} : \\
+&\qquad \quad \inFrontOfEgoVehiclePredicate(\kState, \otherState)  \land (\aEgo - \aOther) <  \aAbrupt \big),
 \end{split}
 \end{align*}
-where $\velocityReductionNecessary$ indicates if a braking maneuver is necessary due to an externally reason, e.g., another vehicle violates traffic rules so that the ego vehicle has to react to prevent a collision. We assume this information is provided by another system.
+We assume this information is provided by another system.
 
 \subsection{General Elements}
 The $\text{k}^\text{th}$ vehicle is part of a congestion if there is a predefined number of slow driving vehicles in front of it:

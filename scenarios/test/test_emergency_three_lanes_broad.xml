@@ -9,9 +9,9 @@
     <name>Munich</name>
   </location>
   <scenarioTags>
+    <no_oncoming_traffic/>
     <multi_lane/>
     <highway/>
-    <no_oncoming_traffic/>
     <parallel_lanes/>
   </scenarioTags>
   <lanelet id="1">
