@@ -463,6 +463,35 @@ def create_emergency_three_lanes_broad_scenario():
     write_to_file(scenario)
 
 
+def create_consider_entering_vehicles_scenario():
+    obstacles = []
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000,
+                                           [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 5.25]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([50.0, -1.75]), 1002,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    for i in range(4):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_access_ramp_scenario("test_consider_entering_vehicles", 0.1, num_lanes, num_lanelets,
+                                           road_length, obstacles, [(LineMarking.DASHED, LineMarking.DASHED),
+                                                                    (LineMarking.SOLID, LineMarking.DASHED)])
+
+    write_to_file(scenario)
+
+
 def main():
     create_max_speed_limit_scenario()
     create_min_speed_limit_scenario()
@@ -478,6 +507,7 @@ def main():
     create_overtaking_access_ramp_scenario()
     create_overtaking_broad_lane_marking_scenario()
     create_overtaking_normal_scenario()
+    create_consider_entering_vehicles_scenario()
 
 
 if __name__ == "__main__":

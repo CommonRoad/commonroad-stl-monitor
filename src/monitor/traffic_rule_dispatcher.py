@@ -127,7 +127,7 @@ class TrafficRuleDispatcher:
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
                 rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
-            else: # evaluate rules which depend on other vehicles, e.g., safe distance
+            else:  # evaluate rules which depend on other vehicles, e.g., safe distance
                 rule_predicates = {}
                 rule_evaluated = False
                 for vehicle in other_vehicles:

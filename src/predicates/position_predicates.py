@@ -390,12 +390,14 @@ class PositionPredicateCollection(PredicateCollection):
         predicate_trace = {"is_in_same_lane__x_ego__x_o": {},
                            "is_in_front_of__x_ego__x_o": {},
                            "is_left_of__x_ego__x_o": {},
-                           "in_rightmost_lane": {ego_vehicle.id: {}},
-                           "in_leftmost_lane": {ego_vehicle.id: {}},
+                           "on_access_ramp__x_o": {},
+                           "on_main_carriage_way__x_o": {},
+                           "in_rightmost_lane__x_ego": {ego_vehicle.id: {}},
+                           "in_leftmost_lane__x_ego": {ego_vehicle.id: {}},
                            "on_access_ramp__x_ego": {ego_vehicle.id: {}},
-                           "drives_leftmost": {ego_vehicle.id: {}},
-                           "drives_rightmost": {ego_vehicle.id: {}},
-                           "on_main_carriage_way": {ego_vehicle.id: {}},
+                           "drives_leftmost__x_ego": {ego_vehicle.id: {}},
+                           "drives_rightmost__x_ego": {ego_vehicle.id: {}},
+                           "on_main_carriage_way__x_ego": {ego_vehicle.id: {}},
                            "right_of_broad_lane_marking__x_ego": {ego_vehicle.id: {}},
                            "left_of_broad_lane_marking__x_o": {}}
 
@@ -406,8 +408,8 @@ class PositionPredicateCollection(PredicateCollection):
             if "on_main_carriage_way" in self._necessary_predicates:
                 predicate_trace["on_main_carriage_way"][ego_vehicle.id][time_step] = \
                     self._on_main_carriage_way(ego_vehicle, time_step)
-            if "in_rightmost_lane" in self._necessary_predicates:
-                predicate_trace["in_rightmost_lane"][ego_vehicle.id][time_step] = \
+            if "in_rightmost_lane__x_ego" in self._necessary_predicates:
+                predicate_trace["in_rightmost_lane__x_ego"][ego_vehicle.id][time_step] = \
                     self._in_rightmost_lane(ego_vehicle.lanelet_assignment[time_step])
             if "in_leftmost_lane" in self._necessary_predicates:
                 predicate_trace["in_leftmost_lane"][ego_vehicle.id][time_step] = \
@@ -427,6 +429,8 @@ class PositionPredicateCollection(PredicateCollection):
             predicate_trace["is_in_front_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id] = {}
             predicate_trace["is_left_of__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["on_access_ramp__x_o"][other_vehicle.id] = {}
+            predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
@@ -444,4 +448,13 @@ class PositionPredicateCollection(PredicateCollection):
                 if "left_of_broad_lane_marking__x_o" in self._necessary_predicates:
                     predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id][time_step] = \
                         self._left_of_broad_lane_marking(other_vehicle, time_step)
+                if "on_access_ramp__x_o" in self._necessary_predicates:
+                    predicate_trace["on_access_ramp__x_o"][other_vehicle.id][time_step] = \
+                        self._on_access_ramp(other_vehicle, time_step)
+                if "on_access_ramp__x_o" in self._necessary_predicates:
+                    predicate_trace["on_access_ramp__x_o"][other_vehicle.id][time_step] = \
+                        self._on_access_ramp(other_vehicle, time_step)
+                if "on_main_carriage_way__x_o" in self._necessary_predicates:
+                    predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id][time_step] = \
+                        self._on_main_carriage_way(other_vehicle, time_step)
         return predicate_trace
