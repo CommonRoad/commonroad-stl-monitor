@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.visualization.draw_dispatch_cr import draw_object
-#from commonroad.visualization.video import create_scenario_video
-from common.configuration import *
-import numpy as np
-from output.visualization import create_scenario_video
-from commonroad.common.file_writer import CommonRoadFileWriter
+from src.common.configuration import *
+#from src.output.visualization import create_scenario_video
+from commonroad.visualization.video import create_scenario_video
+
 # CommonRoad Visualization Parameters:
 basic_shape_parameters_static = {'opacity': 1.0,
                                  'facecolor': '#0f55a3',
@@ -106,30 +105,27 @@ draw_params_scenario = {'scenario': {
 }
 }
 
-config = load_yaml("config.yaml")
+config = load_yaml("../config.yaml")
 simulation_param = config.get("simulation_param")
 visualization_param = config.get("visualization").get("video")
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
-filename = "scenarios/XML_commonRoad_minimalExample.xml"
+filename = "../../scenarios/DEU_Muc-2_2_T-1.xml"
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A9-1_1_T-1" + ".xml"
 #filename = "highD_generator/scenarios/DEU_LocationB-1_17_T-1.xml"
     #simulation_param.get("commonroad_scenario_folder") + simulation_param.get("commonroad_benchmark_id") + ".xml"
 scenario, planning_problem_set = CommonRoadFileReader(filename).open()
-#scenario.translate_rotate(np.array([0, 0]), -0.030)
-#fw = CommonRoadFileWriter(scenario, planning_problem_set, scenario.author, scenario.affiliation, scenario.source, scenario.tags)
-#fw.write_scenario_to_file("DEU_A9-3_1_T-1.xml")
 
 #plt.style.use('classic')
 inch_in_cm = 2.54
 figsize = [20, 8]
-x = [x for lanelet in scenario.lanelet_network.lanelets for x in lanelet.center_vertices[:, 0]]
-y = [y for lanelet in scenario.lanelet_network.lanelets for y in lanelet.center_vertices[:, 1]]
+x = [state.position[0] for obstacle in scenario.dynamic_obstacles for state in obstacle.prediction.trajectory.state_list]
+y = [state.position[1] for obstacle in scenario.dynamic_obstacles for state in obstacle.prediction.trajectory.state_list]
 x_min = min(x) - 10
 y_min = min(y) - 10
 x_max = max(x) + 5
 y_max = max(y) + 5
-plot_limits = [x_min, x_max, y_min , y_max]
+plot_limits = [x_min, x_max, y_min, y_max]
 
 plt.figure(figsize=(8, 4.5))
 plt.gca().axis('equal')
@@ -141,6 +137,7 @@ draw_params_scenario['scenario']['dynamic_obstacle']['occupancy']['shape']['poly
 draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
 draw_object(list(planning_problem_set.planning_problem_dict.values())[0])
 #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
-plt.show()
+#plt.show()
 
-#create_scenario_video("videos/", scenario, visualization_param, 384)
+#create_scenario_video("videos/", scenario, visualization_param, 20)
+create_scenario_video(scenario, "test.mp4", 0, 30, 0, plot_limits)

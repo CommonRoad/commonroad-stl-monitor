@@ -2,116 +2,94 @@ from commonroad.geometry.shape import Shape, Rectangle
 from typing import Union, Set, Dict, List
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
-from enum import Enum
 
 
 class StateLongitudinal:
     """
     Longitudinal state in curvilinear coordinate system
     """
-    def __init__(self, s: float, v: float, a: Union[float, None], j: Union[float, None]):
+    __slots__ = ['s', 'v', 'a', 'j']
+
+    def __init__(self, **kwargs):
+        """ Elements of state vector are determined during runtime."""
+        for (field, value) in kwargs.items():
+            setattr(self, field, value)
+
+    @property
+    def attributes(self) -> List[str]:
+        """ Returns all dynamically set attributes of an instance of State.
+
+        :return: subset of slots which are dynamically assigned to the object.
         """
-        :param s: longitudinal position
-        :param v: velocity
-        :param a: acceleration
-        :param j: jerk
-        """
-        self._s = s
-        self._v = v
-        self._a = a
-        self._j = j
+        attributes = list()
+        for slot in self.__slots__:
+            if hasattr(self, slot):
+                attributes.append(slot)
+        return attributes
 
-    @property
-    def s(self) -> float:
-        return self._s
-
-    @s.setter
-    def s(self, value: float):
-        self._s = value
-
-    @property
-    def v(self) -> float:
-        return self._v
-
-    @v.setter
-    def v(self, value: float):
-        self._v = value
-
-    @property
-    def a(self) -> float:
-        return self._a
-
-    @a.setter
-    def a(self, value: float):
-        self._a = value
-
-    @property
-    def j(self) -> Union[float, None]:
-        return self._j
-
-    @j.setter
-    def j(self, value: float):
-        self._j = value
+    def __str__(self):
+        state = '\n'
+        for attr in self.attributes:
+            state += attr
+            state += '= {}\n'.format(self.__getattribute__(attr))
+        return state
 
 
 class StateLateral:
     """
     Lateral state in curvilinear coordinate system
     """
-    def __init__(self, d: float, theta: float, kappa: float, kappa_dot: float):
+    __slots__ = ['d', 'theta', 'kappa', 'kappa_dot']
+
+    def __init__(self, **kwargs):
+        """ Elements of state vector are determined during runtime."""
+        for (field, value) in kwargs.items():
+            setattr(self, field, value)
+
+    @property
+    def attributes(self) -> List[str]:
+        """ Returns all dynamically set attributes of an instance of State.
+
+        :return: subset of slots which are dynamically assigned to the object.
         """
-        :param d: lateral position in curvilinear coordinates
-        :param theta: orientation of vehicle
-        :param kappa: curvature of vehicle
-        :param kappa_dot: change of curvature of vehicle
+        attributes = list()
+        for slot in self.__slots__:
+            if hasattr(self, slot):
+                attributes.append(slot)
+        return attributes
+
+    def __str__(self):
+        state = '\n'
+        for attr in self.attributes:
+            state += attr
+            state += '= {}\n'.format(self.__getattribute__(attr))
+        return state
+
+
+class Input:
+    """
+    Lateral and longitudinal vehicle input
+    """
+    __slots__ = ['a', 'kappa_dot_dot']
+
+    @property
+    def attributes(self) -> List[str]:
+        """ Returns all dynamically set attributes of an instance of State.
+
+        :return: subset of slots which are dynamically assigned to the object.
         """
-        self._d = d
-        self._theta = theta
-        self._kappa = kappa
-        self._kappa_dot = kappa_dot
+        attributes = list()
+        for slot in self.__slots__:
+            if hasattr(self, slot):
+                attributes.append(slot)
+        return attributes
 
-    @property
-    def d(self) -> float:
-        return self._d
-
-    @d.setter
-    def d(self, value: float):
-        self._d = value
-
-    @property
-    def theta(self) -> float:
-        return self._theta
-
-    @theta.setter
-    def theta(self, value: float):
-        self._theta = value
-
-    @property
-    def kappa(self) -> float:
-        return self._kappa
-
-    @kappa.setter
-    def kappa(self, value: float):
-        self._kappa = value
-
-    @property
-    def kappa_dot(self) -> float:
-        return self._kappa_dot
-
-    @kappa_dot.setter
-    def kappa_dot(self, value: float):
-        self._kappa_dot = value
-
-
-class VehicleLocalization(Enum):
-    LEFT_LANE = 1
-    RIGHT_LANE = 2
-    RIGHT = 3
-    LEFT = 4
-    EGO_LANE_FRONT = 5
-    EGO_LANE_REAR = 6
-    EGO_VEHICLE = 7
-    NONE = 8
+    def __str__(self):
+        state = '\n'
+        for attr in self.attributes:
+            state += attr
+            state += '= {}\n'.format(self.__getattribute__(attr))
+        return state
 
 
 class Vehicle:
@@ -134,13 +112,12 @@ class Vehicle:
         self._states_lon = {cr_state.time_step: state_lon}
         self._states_lat = {cr_state.time_step: state_lat}
         self._states_cr = {cr_state.time_step: cr_state}
-        self._kappa_dot_dot_profile = {}
+        self._lanelet_assignment = {cr_state.time_step: lanelet_assignment}
+        self._signal_series = {cr_state.time_step: signal_state}
         self._shape = shape
         self._id = vehicle_id
         self._obstacle_type = obstacle_type
-        self._lanelet_assignment = {cr_state.time_step: lanelet_assignment}
-        self._signal_series = {cr_state.time_step: signal_state}
-        self._classification = {}
+        #self._coordinate_system
 
     @property
     def shape(self) -> Rectangle:
@@ -180,10 +157,6 @@ class Vehicle:
     @property
     def signal_series(self) -> Dict[int, SignalState]:
         return self._signal_series
-
-    @property
-    def classification(self) -> Dict[int, Set[Union[VehicleLocalization]]]:
-        return self._classification
 
     def rear_position(self, time_step: int) -> float:
         """
@@ -247,12 +220,3 @@ class Vehicle:
         :param time_step: time step of new data
         """
         self._signal_series[time_step] = signal_state
-
-    def append_classification(self, classification: Set[VehicleLocalization], time_step: int):
-        """
-        Sets classification at a specific time step
-
-        :param classification: classification of vehicle
-        :param time_step: time step of new data
-        """
-        self._classification[time_step] = classification

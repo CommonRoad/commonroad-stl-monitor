@@ -3,7 +3,6 @@ from typing import Tuple, List, Set, Dict, Union
 import numpy as np
 
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad.scenario.trajectory import State
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
 
 from src.common.vehicle import StateLongitudinal, StateLateral
@@ -44,16 +43,16 @@ class Lane:
         """
         return np.interp(position, self._path_length, self._orientation)
 
-    def width(self, position: float) -> float:
+    def width(self, s_position: float) -> float:
         """
         Calculates width of lane given a longitudinal position along lane
 
-        :param position: longitudinal position
+        :param s_position: longitudinal position
         :returns width of lane at a given position
         """
         vertice_idx = []
         for idx, length in enumerate(self._path_length):
-            if position < length:
+            if s_position < length:
                 vertice_idx = [idx - 1, idx]
                 break
         s_left_1, d_left_1 = self._clcs.convert_to_curvilinear_coords(self._lanelet.left_vertices[vertice_idx[0]][0],
@@ -74,8 +73,8 @@ class Lane:
         A = np.vstack([x_coords, np.ones(len(x_coords))]).T
         m_right, c_right= np.linalg.lstsq(A, y_coords, rcond=None)[0]
 
-        d_left = m_left * position + c_left
-        d_right = m_right * position + c_right
+        d_left = m_left * s_position + c_left
+        d_right = m_right * s_position + c_right
 
         return abs(d_left - d_right)
 
@@ -94,8 +93,9 @@ class Lane:
         curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
         return curvilinear_cosy
 
-    def create_curvilinear_states(self, state: State) -> Union[Tuple[StateLongitudinal, StateLateral],
-                                                               Tuple[None, None]]:
+    def create_curvilinear_states(self, position: List[float], velocity:float, acceleration: float, jerk: float,
+                                  orientation: float) -> Union[Tuple[StateLongitudinal,
+                                                                     StateLateral], Tuple[None, None]]:
         """
         Computes initial state of ego vehicle
 
@@ -103,18 +103,18 @@ class Lane:
         :return: lateral and longitudinal state of vehicle
         """
         try:
-            s, d = self._clcs.convert_to_curvilinear_coords(state.position[0], state.position[1])
+            s, d = self._clcs.convert_to_curvilinear_coords(position[0], position[1])
         except ValueError:
-            #print("Vehicle out of projection domain: State will not be considered")
+            print("Vehicle out of projection domain: State will not be considered")
             return None, None
         theta_cl = np.interp(s, self._path_length, self._orientation)
-        if hasattr(state, "acceleration") and hasattr(state, "jerk"):
-            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, state.jerk)
-        elif hasattr(state, "acceleration"):
-            x_lon = StateLongitudinal(s, state.velocity, state.acceleration, None)
+        if acceleration is not None and jerk is not None:
+            x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration, j=jerk)
+        elif acceleration is not None:
+            x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
         else:
-            x_lon = StateLongitudinal(s, state.velocity, None, None)
-        x_lat = StateLateral(d, theta_cl - state.orientation, 0, 0)
+            x_lon = StateLongitudinal(s=s, v=velocity)
+        x_lat = StateLateral(d=d, theta=(theta_cl - orientation))
 
         return x_lon, x_lat
 
@@ -200,16 +200,10 @@ class RoadNetwork:
         for lanelet in self.lanelet_network.lanelets:
             if len(lanelet.predecessor) == 0:
                 start_lanelets.append(lanelet)
-            for pred in lanelet.predecessor:
-                if len(self.lanelet_network.find_lanelet_by_id(pred).successor) > 1:
-                    if lanelet.adj_left_same_direction is None and lanelet.adj_right_same_direction is None:
-                        start_lanelets.append(lanelet)
-                    if self.lanelet_network.find_lanelet_by_id(pred).adj_left_same_direction and lanelet.adj_left not \
-                            in self.lanelet_network.find_lanelet_by_id(
-                               self.lanelet_network.find_lanelet_by_id(pred).adj_left).successor and \
-                            self.lanelet_network.find_lanelet_by_id(pred).adj_right_same_direction and \
-                            lanelet.adj_right not in self.lanelet_network.find_lanelet_by_id(
-                               self.lanelet_network.find_lanelet_by_id(pred).adj_right).successor:
+            else:
+                predecessors = [self.lanelet_network.find_lanelet_by_id(pred_id) for pred_id in lanelet.predecessor]
+                for pred in predecessors:
+                    if not lanelet.lanelet_type == pred.lanelet_type:
                         start_lanelets.append(lanelet)
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
@@ -291,19 +285,51 @@ class RoadNetwork:
 
     def find_lane_by_obstacle(self, obs_lanelet_center: List[int], obs_lanelet_shape: List[int]) -> Lane:
         """
-        Finds the lanes an obstacle belongs to
+        Finds the lanes an obstacle occupies
 
         :param obs_lanelet_center: IDs of lanelet the obstacle center is on (use only first one)
         :param obs_lanelet_shape: IDs of lanelet the obstacle shape is on
         :returns lane the obstacle center is on
         """
+
+        occupied_lanes = set()
+        lanelets_center_updated = obs_lanelet_center#set()
+        obs_lanelet_shape_updated = obs_lanelet_shape#set()
         if len(obs_lanelet_center) > 0:
+            # lanelets adjacent to exit or access ramp are considered as occupied lanelet
+            # for lanelet_id in obs_lanelet_center:
+            #     lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
+            #     if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+            #         lanelets_center_updated.add(lanelet)
+            #     elif LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type \
+            #             and lanelet.adj_left_same_direction is not None \
+            #             and LaneletType.MAIN_CARRIAGE_WAY in \
+            #             self.lanelet_network.find_lanelet_by_id(lanelet.adj_left).lanelet_type:
+            #         lanelets_center_updated.add(self.lanelet_network.find_lanelet_by_id(lanelet.adj_left))
             for lane in self.lanes:
-                if obs_lanelet_center[0] in lane.contained_lanelets:
-                    return lane
+                for lanelet in lanelets_center_updated:
+                    if lanelet in lane.contained_lanelets:
+                        occupied_lanes.add(lane)
         else:
             # if no lane is found, e.g. center on exterior of polygon usage of shape
+            # lanelets adjacent to exit or access ramp are considered as occupied lanelet
+            # for lanelet_id in obs_lanelet_shape:
+            #     lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
+            #     if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+            #         obs_lanelet_shape_updated.add(lanelet)
+            #     elif LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type \
+            #          and lanelet.adj_left_same_direction is not None \
+            #          and LaneletType.MAIN_CARRIAGE_WAY in \
+            #          self.lanelet_network.find_lanelet_by_id(lanelet.adj_left).lanelet_type:
+            #         obs_lanelet_shape_updated.add(self.lanelet_network.find_lanelet_by_id(lanelet.adj_left))
             for lane in self.lanes:
-                for lanelet in obs_lanelet_shape:
+                for lanelet in obs_lanelet_shape_updated:
                     if lanelet in lane.contained_lanelets:
-                        return lane
+                        occupied_lanes.add(lane)
+        if len(occupied_lanes) == 1:
+            return list(occupied_lanes)[0]
+        for lane in occupied_lanes:
+            for lanelet_id in lane.contained_lanelets:
+                if LaneletType.MAIN_CARRIAGE_WAY in self.lanelet_network.find_lanelet_by_id(lanelet_id).lanelet_type:
+                    return lane
+        return list(occupied_lanes)[0]

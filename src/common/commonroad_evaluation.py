@@ -43,7 +43,12 @@ class CommonRoadObstacleEvaluation:
         lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                         list(obstacle.initial_shape_lanelet_ids))
 
-        state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state)
+        acceleration = self.compute_acceleration(obstacle.initial_state.velocity,
+                                                 obstacle.prediction.trajectory.state_list[0].velocity)
+        jerk = self.compute_jerk(acceleration, 0)
+        state_lon, state_lat = lane.create_curvilinear_states(obstacle.initial_state.position,
+                                                              obstacle.initial_state.velocity, acceleration, jerk,
+                                                              obstacle.initial_state.orientation)
         vehicle = None
         if state_lon is not None or state_lat is not None:
             vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
@@ -54,7 +59,10 @@ class CommonRoadObstacleEvaluation:
             lane = self._road_network.find_lane_by_obstacle(
                 list(obstacle.prediction.center_lanelet_assignment[state.time_step]),
                 list(obstacle.prediction.shape_lanelet_assignment[state.time_step]))
-            state_lon, state_lat = lane.create_curvilinear_states(state)
+            acceleration = self.compute_acceleration(state_lon.v, state.velocity)
+            jerk = self.compute_jerk(acceleration, 0)
+            state_lon, state_lat = lane.create_curvilinear_states(state.position, state.velocity, acceleration, jerk,
+                                                                  state.orientation)
             if state_lon is None or state_lat is None:
                 continue
             if vehicle is not None:
@@ -84,8 +92,6 @@ class CommonRoadObstacleEvaluation:
         for obs in scenario.dynamic_obstacles:
             if obs.prediction is not None:
                 new_vehicle = self.create_vehicle(obs)
-                self.add_acceleration(new_vehicle)
-                self.add_jerk(new_vehicle)
                 vehicles.append(new_vehicle)
                 self.vehicles_dict[obs.obstacle_id] = new_vehicle
 
@@ -96,28 +102,13 @@ class CommonRoadObstacleEvaluation:
 
         return vehicle_evaluation
 
-    def add_jerk(self, vehicle: Vehicle):
-        for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.states_lon[state.time_step].j is None:
-                if idx + 1 < len(vehicle.state_list_cr):
-                    jerk = (state.acceleration - vehicle.state_list_cr[idx - 1].acceleration) / \
-                           self.simulation_param.get("dt")
-                else:
-                    jerk = 0
-                vehicle.states_lon[state.time_step].j = jerk
-        return vehicle
+    def compute_jerk(self, current_acceleration: float, previous_acceleration: float):
+        jerk = (current_acceleration - previous_acceleration) / self.simulation_param.get("dt")
+        return jerk
 
-    def add_acceleration(self, vehicle: Vehicle):
-        for idx, state in enumerate(vehicle.state_list_cr):
-            if vehicle.states_lon[state.time_step].a is None:
-                if idx + 1 < len(vehicle.state_list_cr):
-                    acceleration = (vehicle.state_list_cr[idx + 1].velocity - state.velocity) / \
-                           self.simulation_param.get("dt")
-                else:
-                    acceleration = 0
-                vehicle.state_list_cr[idx].acceleration = acceleration
-                vehicle.states_lon[state.time_step].a = acceleration
-        return vehicle
+    def compute_acceleration(self, current_velocity: float, next_velocity: float):
+        acceleration = (next_velocity - current_velocity) / self.simulation_param.get("dt")
+        return acceleration
 
     def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[str]):
         self._activated_traffic_rule_sets = activated_traffic_rule_set

@@ -152,7 +152,7 @@ def create_access_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_len
         lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
                           right_vertices=right_vertices, lanelet_id=lanelet_idx, predecessor=predecessor,
                           successor=successor, adjacent_left=adj_left, adjacent_left_same_direction=True,
-                          line_marking_left_vertices=None,
+                          line_marking_left_vertices=LineMarking.DASHED,
                           line_marking_right_vertices=LineMarking.SOLID,
                           lanelet_type={LaneletType.HIGHWAY, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
         lanelets.append(lanelet)
@@ -169,7 +169,7 @@ def create_access_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_len
     return lanelets
 
 
-def create_exit_ramp_start(x_start, l_id: int) -> Lanelet:
+def create_exit_ramp_start(x_start, l_id: int, num_lanelets_per_lane: int) -> Lanelet:
     right = np.asfortranarray([[x_start, x_start + 2.5, x_start + 5, x_start + 7.5, x_start + 9.0,
                                 x_start + 10.0],
                                [0.0, -1, -3, -3.25, -3.5, -3.5]])
@@ -205,9 +205,9 @@ def create_exit_ramp_start(x_start, l_id: int) -> Lanelet:
     center_vertices = np.array(point_list)
 
     lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
-                      right_vertices=right_vertices, lanelet_id=l_id, predecessor=[1], successor=[l_id+1],
-                      adjacent_left=None, adjacent_left_same_direction=None,
-                      line_marking_left_vertices=LineMarking.DASHED,
+                      right_vertices=right_vertices, lanelet_id=l_id, predecessor=[num_lanelets_per_lane +1],
+                      successor=[l_id+1], adjacent_left=None, adjacent_left_same_direction=None,
+                      line_marking_left_vertices=None,
                       line_marking_right_vertices=LineMarking.SOLID,
                       lanelet_type= {LaneletType.HIGHWAY, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
     return lanelet
@@ -262,24 +262,40 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
     lane_width = 3.5
 
     # create straight lanelets
-    lanelet = create_exit_ramp_start(lanelet_length - 10, 1)
+    lanelet = create_exit_ramp_start(lanelet_length, 1, num_lanelets_per_lane)
     lanelets.append(lanelet)
 
-    l_id_start = 1
-    predecessor = [l_id_start]
-    successor = [l_id_start + 2]
+    left_vertices_point_list = []
+    center_vertices_point_list = []
+    right_vertices_point_list = []
+
+    for i in range(int(0.5 * lanelet_length) + 1):
+        left_vertices_point_list.append(np.array([0.5 * lanelet_length + i + lanelet_length, 0]))
+        center_vertices_point_list.append(np.array([0.5 * lanelet_length + i + lanelet_length, -0.5 * lane_width]))
+        right_vertices_point_list.append(np.array([0.5 * lanelet_length + i + lanelet_length, -lane_width]))
+    left_vertices = np.array(left_vertices_point_list)
+    center_vertices = np.array(center_vertices_point_list)
+    right_vertices = np.array(right_vertices_point_list)
+    lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
+                      right_vertices=right_vertices, lanelet_id=2, predecessor=[1],
+                      successor=[3], adjacent_left=12, adjacent_left_same_direction=True,
+                      line_marking_left_vertices=LineMarking.DASHED,
+                      line_marking_right_vertices=LineMarking.SOLID,
+                      lanelet_type={LaneletType.HIGHWAY, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
+    lanelets.append(lanelet)
+
+    l_id_start = 3
+    predecessor = [l_id_start - 1]
+    successor = [l_id_start + 1]
     adj_left = num_lanelets_per_lane + 1
-    for lanelet_idx in range(l_id_start + 1, num_lanelets_per_lane):
+    for lanelet_idx in range(l_id_start, num_lanelets_per_lane):
         left_vertices_point_list = []
         center_vertices_point_list = []
         right_vertices_point_list = []
-
         for i in range(lanelet_length + 1):
-            left_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - l_id_start), 0]))
-            center_vertices_point_list.append(np.array([i + lanelet_length *
-                                                        (lanelet_idx - l_id_start),  -0.5 * lane_width]))
-            right_vertices_point_list.append(np.array([i + lanelet_length *
-                                                       (lanelet_idx - l_id_start), -lane_width]))
+            left_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1), 0]))
+            center_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1),  -0.5 * lane_width]))
+            right_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1), - lane_width]))
 
         left_vertices = np.array(left_vertices_point_list)
         center_vertices = np.array(center_vertices_point_list)
@@ -295,15 +311,13 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
         adj_left += 1
         predecessor = [lanelet_idx]
         if lanelet_idx % num_lanelets_per_lane != 0.0:
-            successor = [lanelet_idx + 1]
+            successor = [successor[0] + 1]
         else:
             successor = None
-    lanelet = create_exit_ramp_end(road_length-lanelet_length, l_id_start + num_lanelets_per_lane - 1)
+    lanelet = create_exit_ramp_end(road_length-lanelet_length, num_lanelets_per_lane)
     lanelets.append(lanelet)
 
     return lanelets
-
-
 
 
 def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straight_lanes: int,
@@ -399,12 +413,12 @@ def create_exit_ramp_scenario(commonroad_benchmark_id: str, dt: float, num_strai
     lanelet_id_list = range(1, (num_straight_lanes + 1) * num_lanelets_per_lane + 1)
     lanelet_id_idx = num_lanelets_per_lane
 
-    access_ramp_lanelets = create_exit_ramp(road_length, num_lanelets_per_lane, lanelet_length)
-    for lanelet in access_ramp_lanelets:
+    exit_ramp_lanelets = create_exit_ramp(road_length, num_lanelets_per_lane, lanelet_length)
+    for lanelet in exit_ramp_lanelets:
         scenario.lanelet_network.add_lanelet(lanelet)
 
     for lane in range(num_straight_lanes):
-        predecessor = None
+        predecessor = []
         successor = [lanelet_id_list[lanelet_id_idx + 1]]
         for lanelet_idx in range(1, num_lanelets_per_lane + 1):
             left_vertices_point_list = []
@@ -431,12 +445,17 @@ def create_exit_ramp_scenario(commonroad_benchmark_id: str, dt: float, num_strai
                                   line_marking_right_vertices=markings[lane][1],
                                   lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
             elif lane == 0:
+                if lanelet_id_list[lanelet_id_idx] == 1 + num_lanelets_per_lane \
+                        or lanelet_id_list[lanelet_id_idx] == 2 * num_lanelets_per_lane:
+                    line_marking_right = LineMarking.SOLID
+                else:
+                    line_marking_right = LineMarking.DASHED
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,
                                   adjacent_left=lanelet_id_list[lanelet_id_idx] + num_lanelets_per_lane,
                                   adjacent_left_same_direction=True,
                                   line_marking_left_vertices=markings[lane][0],
-                                  line_marking_right_vertices=markings[lane][1],
+                                  line_marking_right_vertices=line_marking_right,
                                   lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
             # last lane: no adjecent left lane
             elif lane == num_straight_lanes - 1:

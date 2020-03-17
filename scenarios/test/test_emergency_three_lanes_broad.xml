@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_emergency_three_lanes_broad" date="2020-03-11">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_emergency_three_lanes_broad" date="2020-03-17">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -11,8 +11,8 @@
   <scenarioTags>
     <no_oncoming_traffic/>
     <multi_lane/>
-    <highway/>
     <parallel_lanes/>
+    <highway/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

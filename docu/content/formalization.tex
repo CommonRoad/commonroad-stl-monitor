@@ -32,7 +32,6 @@ The rule has to be evaluated for every other traffic participant within the sens
 The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is no leading vehicle and there is no reason caused by a traffic regulation to reduce the velocity. b) There is an obstacle in front of the vehicle and the acceleration difference and jerk difference do not violate predefined thresholds. c) The maximum allowed speed will change or has changed due to unrecognized traffic signs or environmental conditions. All possible braking situations which are not covered by the three cases are unnecessary. 
 
 \paragraph{LTL formula:} G$(\neg \unnecessaryBraking)$
-\todo{TODO: add different cases directly in LTL formula}
 
 \subsubsection{R\_G3 - Maximum speed limit}
 \paragraph{Law reference:}
@@ -74,7 +73,7 @@ The ego vehicle brakes abruptly if: a) The ego vehicle brakes although there is 
 
 \paragraph{Concretization:} The ego vehicle is not allowed to exceed the speed limit of the lanes it drives on, the speed limit which is necessary to ensure collision freedom with respect to vehicles outside the field of view, the speed which is necessary to comfortably react to traffic regulations, the speed limit based on road conditions, and the maximum velocity which is allowed for its vehicle type.
 
-\paragraph{LTL formula:} G$(\laneSpeedLimitPredicate  \land \fovSpeedLimitPredicate \land  \brakingSpeedLimitPredicate \roadConditionSpeedLimitPredicate \land \vehicleTypeSpeedLimitPredicate) $
+\paragraph{LTL formula:} G$(\laneSpeedLimitPredicate  \land \fovSpeedLimitPredicate \land \\ \brakingSpeedLimitPredicate \roadConditionSpeedLimitPredicate \land \vehicleTypeSpeedLimitPredicate) $
 
 \subsubsection{R\_G4 - Minimum speed limit}
 \paragraph{Law reference:}
@@ -245,17 +244,17 @@ restaurants or gas stations.
 	
 	\item \textbf{\stvo \S 7a~(3):} In deceleration lanes, vehicles must not travel faster than traffic on the main carriageway. If traffic on the main carriageway is moving slowly or is stationary, vehicles in a deceleration lane may overtake at a moderate speed and with great care.
 	
-	\item \textbf{\stvo \S OLG Frankfurt/M. VRS 63, 386; OLG Düsseldorf VRS 78, 473:} In the range of guiding signs, e.g. Sign 448, if vehicles turn right and keep their lane when turning.
+	\item \textbf{OLG Frankfurt/M. VRS 63, 386; OLG Düsseldorf VRS 78, 473:} In the range of guiding signs, e.g. sign 448, if vehicles turn right and keep their lane when turning.
 \end{itemize}
 
 \paragraph{Concretization:} The ego vehicle is not allowed to drive faster than any vehicle on lanes left of it. An exception is, if a) the vehicle in a left lane is in a congestion; b) the vehicle in the left lane is in a congestion on the main carriage way and the ego vehicle is on an off ramp; c) the left vehicle and the ego vehicle are separated by a broad lane marking;  d) the ego vehicle is within an access ramp; d) the ego vehicle is close to a guiding sign and follows the  guiding sign. For a) and b), the ego vehicle is allowed to drive faster than the vehicle in the left lane with only a slightly higher speed. 
 
-\paragraph{Comment:} The second case of R\_I2 is covered in the first clause of the following FLTL formula. The fourth case of R\_I2 allows to drive on access ramps with higher speed than on the main carriage way. However, if a congestion is on the left side of the ego vehicle and the ego vehicle is on an access ramp, it is only allowed to drive with slightly higher speed. This rule has to be evaluated with respect to every other vehicle within the sensor range. Low speed means in this context a maximum speed of 60 km/h (comp. Burmann, et al., Straßenverkehrsrecht, \stvo \S (5) , recital 58)and slightly higher speed means 20 km/h faster than vehicles on the left lanes (BGHSt 22, 137; Bay 77, 172 = VRS 54, 212; OLG Köln VRS 61, 45). \todo{We currently do not consider the exception for guiding signs.}
+\paragraph{Comment:} The second case of R\_I2 is covered in the first clause of the following FLTL formula. The fourth case of R\_I2 allows to drive on access ramps with higher speed than on the main carriage way. However, if a congestion is on the left side of the ego vehicle and the ego vehicle is on an access ramp, it is only allowed to drive with slightly higher speed. This rule has to be evaluated with respect to every other vehicle within the sensor range. Low speed means in this context a maximum speed of 60 km/h (comp. Burmann, et al., Straßenverkehrsrecht, \stvo \S (5) , recital 58)and slightly higher speed means 20 km/h faster than vehicles on the left lanes (BGHSt 22, 137; Bay 77, 172 = VRS 54, 212; OLG Köln VRS 61, 45). \todo{We currently do not consider the exception for guiding signs.} The rule has to be evaluated for every other traffic participant within the sensor range.
 
-\paragraph{LTL formula:} G$((\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate) \lor (\rightOfBroadLaneMarkingPredicate$ \\
-$\land \leftOfBroadLaneMarkingPredicate) \quad\lor (\onAccessRampPredicate \land \neg \congestionLeftPredicate) \lor \neg \drivesFasterThanVehicleLeftPredicate)$
+\paragraph{LTL formula:} G$((\leftOfVehiclePredicate \land \drivesFasterThanVehicleLeftPredicate) \\ \implies (\congestionLeftPredicate \land \drivesMaxWithSlightlyHigherSpeedPredicate) \lor (\rightOfBroadLaneMarkingPredicate$ \\
+$\land \leftOfBroadLaneMarkingPredicate) \lor (\onAccessRampPredicate \land \neg \inCongestion))$
 
-\todo{maybe evaluation for every left vehicle?}
+
 
 \subsubsection{R\_I3 - No reversing and turning}
 \paragraph{Law reference:}
@@ -276,17 +275,17 @@ $\land \leftOfBroadLaneMarkingPredicate) \quad\lor (\onAccessRampPredicate \land
 \begin{itemize}
 	\item \textbf{\stvo \S 11 (2) - English:} As soon as vehicles on motorways and roads outside a built-up area with at least two lanes for one direction start to move at walking pace or come to a standstill, these vehicles must leave a gap for one direction between the lane on the far left and the lane immediately adjacent to it on the right to allow police and emergency vehicles to pass.
 	
-	\item \textbf{\stvo \S 11 (2) - German:} Sobald Fahrzeuge auf Autobahnen sowie auf Außerortsstraßen mit mindestens zwei Fahrstreifen für eine Richtung mit Schrittgeschwindigkeit fahren oder sich die Fahrzeuge im Stillstand befinden, müssen diese Fahrzeuge für die Durchfahrt von Polizei- und Hilfsfahrzeugen zwischen dem äußerst linken und dem unmittelbar rechts daneben liegenden Fahrstreifen für eine Richtung eine freie Gasse bilden.
+
 \end{itemize}
 \paragraph{Concretization:} A vehicle in a congestion has to drive leftmost if it is in the leftmost lane and has to drive rightmost otherwise. If the interstate is not broad enough to create an emergency lane, all vehicles should drive in the rightmost lane.
 
 \paragraph{LTL formula:} G$(\inCongestion \implies ((\interstateBroadEnoughForEmergencyLanePredicate \implies ((\inLeftMostLanePredicate \implies \drivesLeftMostPredicate) \land (\neg \inLeftMostLanePredicate \implies \drivesRightMostPredicate))) \land \, (\neg \interstateBroadEnoughForEmergencyLanePredicate \implies \drivesRightMostPredicate)))$ 
 
-\paragraph{Comment:}\todo{A situation on motorways or roads outside build-up areas, where vehicles move at walking pace with less than 10 km/h / come to a standstill for at least one minute and
+\paragraph{Comment:} A situation on motorways or roads outside build-up areas, where vehicles move at walking pace with less than 10 km/h / come to a standstill for at least one minute and
 such standstill occurs frequently shall be referred to hereinafter as traffic jam.  . A situation on motorways or roads outside build-up areas, where vehicles move slowly with less than 30 kilometres per hour 6 or stand still and such standstill occurs merely occasionally shall be referred to hereinafter as Slow-Moving Traffic (https://www.astra.admin.ch/astra/de/home/themen/nationalstrassen/verkehrsfluss-
 stauaufkommen/definitionen.html). Slow-moving traffic implies no emergency lane creation, only stillstand and driving in walking pace (comp. Burmann, et al., Straßenverkehrsrecht,
 § 11 StVO, recital 3; König, et al., Straßenverkehrsrecht, § 11 StVO , recital 9). The space created has to be sufficient to allow police and emergency vehicles to pass and arrive at
-the accident site without obstruction (comp. König, et al., Straßenverkehrsrecht, § 11 StVO, recital 9). Using the hard shoulder (Standstreifen) is prohibited, see Sec. 18 Par. 8 StVO} 
+the accident site without obstruction (comp. König, et al., Straßenverkehrsrecht, § 11 StVO, recital 9). Using the hard shoulder (Standstreifen) is prohibited, see Sec. 18 Par. 8 StVO.
 
 \subsubsection{R\_I5 - Consider entering vehicles}
 \paragraph{Law reference:}
