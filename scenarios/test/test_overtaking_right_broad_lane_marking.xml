@@ -11,8 +11,8 @@
   <scenarioTags>
     <no_oncoming_traffic/>
     <multi_lane/>
-    <parallel_lanes/>
     <highway/>
+    <parallel_lanes/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

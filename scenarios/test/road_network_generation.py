@@ -1,6 +1,6 @@
 import bezier
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Set
 from commonroad.scenario.obstacle import DynamicObstacle
 
 from commonroad.scenario.lanelet import Lanelet, LineMarking, LaneletType, RoadUser
@@ -322,11 +322,10 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
 
 def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straight_lanes: int,
                              num_lanelets_per_lane: int, road_length: int, obstacles: List[DynamicObstacle],
-                             markings: List[Tuple[LineMarking, LineMarking]]):
+                             markings: List[Tuple[LineMarking, LineMarking]], lanelet_types: List[Set[LaneletType]]):
 
     # desired number of lanes and parameters
     lane_width = 3.5
-    lanelet_types = {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}
     lanelet_length = int(road_length/num_lanelets_per_lane)
     scenario = create_scenario(commonroad_benchmark_id, dt)
 
@@ -359,7 +358,7 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
                                   predecessor=predecessor, successor=successor,
                                   line_marking_left_vertices=markings[lane][0],
                                   line_marking_right_vertices=markings[lane][1],
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
+                                  lanelet_type=lanelet_types[lane], user_one_way={RoadUser.VEHICLE})
             elif lane == 0:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,
@@ -367,7 +366,7 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
                                   adjacent_left_same_direction=True,
                                   line_marking_left_vertices=markings[lane][0],
                                   line_marking_right_vertices=markings[lane][1],
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
+                                  lanelet_type=lanelet_types[lane], user_one_way={RoadUser.VEHICLE})
             # last lane: no adjecent left lane
             elif lane == num_straight_lanes - 1:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
@@ -376,7 +375,7 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
                                   adjacent_right_same_direction=True,
                                   line_marking_left_vertices=markings[lane][0],
                                   line_marking_right_vertices=markings[lane][1],
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
+                                  lanelet_type=lanelet_types[lane], user_one_way={RoadUser.VEHICLE})
             else:
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,
@@ -386,7 +385,7 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
                                   adjacent_right_same_direction=True,
                                   line_marking_left_vertices=markings[lane][0],
                                   line_marking_right_vertices=markings[lane][1],
-                                  lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})
+                                  lanelet_type=lanelet_types[lane], user_one_way={RoadUser.VEHICLE})
             predecessor = [lanelet_id_list[lanelet_id_idx]]
             lanelet_id_idx += 1
             if lanelet_id_idx + 1 < len(lanelet_id_list) and (lanelet_id_idx + 1) % num_lanelets_per_lane != 0.0:

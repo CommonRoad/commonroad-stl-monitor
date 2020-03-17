@@ -164,7 +164,7 @@ traffic_rule_monitoring:
         R_I1: G(~((in_congestion__x_ego) | (exist_standing_leading_vehicle__x_ego)) -> ~(in_standstill__x_ego))
         R_I2: G((is_left_of__x_ego__x_o & drives_faster__x_ego__x_o) -> ((in_congestion__x_o & drives_with_slightly_higher_speed__x_ego__x_o) | (right_of_broad_lane_marking__x_ego & left_of_broad_lane_marking__x_o) | (on_access_ramp__x_ego & ~(in_congestion__x_o))))
         R_I3: G(~(makes_u_turn__x_ego) & ~(reverses__x_ego))
-        R_I4: G(in_congestion__x_ego -> ((interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_rightmost__x_ego)))
+        R_I4: G(in_congestion__x_ego -> ((~on_shoulder__x_ego) & (interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_rightmost__x_ego)))
         R_I5: G((on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> ~(~(in_rightmost_lane__x_ego) & F(in_rightmost_lane__x_ego)))
 
     # Parameters for traffic rules
