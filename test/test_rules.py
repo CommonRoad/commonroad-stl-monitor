@@ -328,7 +328,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def test_emergency_lane(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_emergency_three_lanes_broad.xml").open()
+                                                              "test_emergency_three_lanes_with_shoulder.xml").open()
         exp_result = [(1000, {'R_I4': True}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': True}), (1007, {'R_I4': True}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': True}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),

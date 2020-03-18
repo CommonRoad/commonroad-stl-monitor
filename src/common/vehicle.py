@@ -158,23 +158,41 @@ class Vehicle:
     def signal_series(self) -> Dict[int, SignalState]:
         return self._signal_series
 
-    def rear_position(self, time_step: int) -> float:
+    def rear_s(self, time_step: int) -> float:
         """
-        Calculates rear position of vehicle based on longitudinal curvilinear state
+        Calculates rear s-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns rear position [m]
+        :returns rear s-coordinate [m]
         """
         return self._states_lon[time_step].s - self.shape.length/2
 
-    def front_position(self, time_step: int) -> float:
+    def front_s(self, time_step: int) -> float:
         """
-        Calculates front position of vehicle based on longitudinal curvilinear state
+        Calculates front s-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns front position [m]
+        :returns front s-coordinate [m]
         """
         return self._states_lon[time_step].s + self.shape.length/2
+
+    def right_position(self, time_step: int) -> float:
+        """
+        Calculates right d-coordinate of vehicle
+
+        :param time_step: time step to consider
+        :returns front s-coordinate [m]
+        """
+        return self._states_lat[time_step].d - self.shape.width/2
+
+    def left_position(self, time_step: int) -> float:
+        """
+        Calculates left d-coordinate of vehicle
+
+        :param time_step: time step to consider
+        :returns front d-coordinate [m]
+        """
+        return self._states_lat[time_step].d + self.shape.width/2
 
     def append_state_lon(self, state: StateLongitudinal, time_step: int):
         """

@@ -481,7 +481,7 @@ def create_emergency_three_lanes_with_shoulder_scenario():
     num_lanes = 4
     num_lanelets = 10
     road_length = 100
-    scenario = create_straight_scenario("test_emergency_three_lanes_broad", 0.1, num_lanes, num_lanelets,
+    scenario = create_straight_scenario("test_emergency_three_lanes_with_shoulder", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.SOLID, LineMarking.SOLID),
                                                                  (LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.DASHED, LineMarking.DASHED),

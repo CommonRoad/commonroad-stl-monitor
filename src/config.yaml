@@ -190,6 +190,7 @@ traffic_rule_monitoring:
         desired_highway_velocity: 36.11
         min_interstate_width: 6.75
         close_to_lane_border: 0.1
+        close_to_other_vehicle: 1.0
         slightly_higher_speed_difference: 5.55
         u_turn: 1.57
 

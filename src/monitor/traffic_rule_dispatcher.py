@@ -115,8 +115,6 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
-        if ego_vehicle.id == 1000:
-            print("stop")
         evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors:

@@ -213,7 +213,7 @@ def create_lead_profiles(ego_vehicle: Vehicle, vehicles: Dict, time: List[int], 
                 else:
                     veh_velocity_profile.append(0)
                 if vehicle.states_lon.get(time_step) is not None:
-                    veh_distance_profile.append(vehicle.rear_position(time_step) - ego_vehicle.front_position(time_step))
+                    veh_distance_profile.append(vehicle.rear_s(time_step) - ego_vehicle.front_s(time_step))
                 else:
                     veh_distance_profile.append(0)
                 if vehicle.states_lon.get(time_step) is not None:

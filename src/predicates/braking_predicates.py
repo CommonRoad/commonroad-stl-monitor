@@ -111,7 +111,7 @@ class BrakingPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        if 0 < vehicle_lead.rear_position(time_step) - vehicle_follow.front_position(time_step) \
+        if 0 < vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step) \
                 < self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
                                      a_min_follow, a_min_lead, a_max_follow, t_react_follow):
             return False
