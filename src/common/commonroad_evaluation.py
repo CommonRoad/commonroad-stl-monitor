@@ -14,15 +14,16 @@ from commonroad.scenario.lanelet import Lanelet, LaneletType
 class CommonRoadObstacleEvaluation:
     def __init__(self, config_path: str):
         config = load_yaml(config_path + "config.yaml")
+        traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
-        self._traffic_rules_param = config.get("traffic_rule_monitoring").get("traffic_rules_param")
+        self._traffic_rules_param = traffic_rules.get("traffic_rules_param")
         self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param,
                                                           self._traffic_rules_param)
-        self._traffic_rule_sets = config.get("traffic_rule_monitoring").get("traffic_rule_sets")
-        self._traffic_rules = config.get("traffic_rule_monitoring").get("traffic_rules")
-        self._activated_traffic_rule_sets = config.get("traffic_rule_monitoring").get("activated_traffic_rule_sets")
-        self._vehicle_dependent_rules = config.get("traffic_rule_monitoring").get("vehicle_dependent_rules")
+        self._traffic_rule_sets = traffic_rules.get("traffic_rule_sets")
+        self._traffic_rules = traffic_rules.get("traffic_rules")
+        self._activated_traffic_rule_sets = traffic_rules.get("activated_traffic_rule_sets")
+        self._vehicle_dependent_rules = traffic_rules.get("vehicle_dependent_rules")
         self._road_network_param = config.get("road_network_param")
         self._road_network: RoadNetwork  # updated in each test case
 
@@ -56,7 +57,8 @@ class CommonRoadObstacleEvaluation:
                 lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                                 list(obstacle.initial_shape_lanelet_ids))
             reference_lane = lane
-        elif self._adjacent_to_ego(list(ego_vehicle.lanelet_assignment[0])[0], list(obstacle.initial_center_lanelet_ids)[0]):
+        elif self._adjacent_to_ego(list(ego_vehicle.lanelet_assignment[0])[0],
+                                   list(obstacle.initial_center_lanelet_ids)[0]):
             vehicle_classification = VehicleClassification.ADJACENT_VEHICLE
             lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                             list(obstacle.initial_shape_lanelet_ids))
@@ -81,9 +83,11 @@ class CommonRoadObstacleEvaluation:
         for state in obstacle.prediction.trajectory.state_list:
             acceleration = self.compute_acceleration(state_lon.v, state.velocity)
             jerk = self.compute_jerk(acceleration, 0)
-            state_lon, state_lat = CommonRoadObstacleEvaluation.create_curvilinear_states(state.position, state.velocity,
+            state_lon, state_lat = CommonRoadObstacleEvaluation.create_curvilinear_states(state.position,
+                                                                                          state.velocity,
                                                                                           acceleration, jerk,
-                                                                                          state.orientation, reference_lane)
+                                                                                          state.orientation,
+                                                                                          reference_lane)
             if state_lon is None or state_lat is None:
                 continue
             vehicle.append_state_cr(state, state.time_step)

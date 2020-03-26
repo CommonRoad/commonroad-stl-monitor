@@ -158,6 +158,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print("Standstill:")
         print(result)
         self.assertEqual(exp_result, result)
+        print(self.cr_eval.eval_dict)
 
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)

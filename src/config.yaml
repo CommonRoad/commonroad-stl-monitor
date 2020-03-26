@@ -18,8 +18,11 @@
 #    - country: country of scenario
 simulation_param:
     dt: 0.1
-    commonroad_benchmark_id: USA_US101-33_1_T-1
-    commonroad_scenario_folder: ./scenarios/test/
+    single_scenario: false
+    benchmark_id: test_standstill
+    scenario_folder: test/
+    rule_set: ["SRI1"]
+    evaluation_folders: ["/../../../commonroad/scenarios/highD-dataset/scenarios"]
     verbose_mode: true
     time_measuring: true
     c_profile: false
@@ -29,7 +32,6 @@ simulation_param:
     other_vehicle_plots: [140]
     store_profiles: false
     video_output_folder: ./videos
-    country: "DEU"
 
 # road network and curvilinear coordinate system parameters
 ###
@@ -132,81 +134,3 @@ visualization:
     #   - obstacle_label: activate/deactivate visualization of obstacle label (ID) in video
     video:
         obstacle_label : True
-
-# Traffic rule information
-###
-#    - traffic rules formalized in temporal logic
-#    - traffic rule parameters
-#    - supported traffic rule sets
-#    - activated traffic rule set
-#    - list of traffic rules which must be evaluated with respect to several other vehicles
-traffic_rule_monitoring:
-    # Traffic rules formalized in metric temporal logic (MTL)
-    ###
-    # .. code-block:: yaml
-    #
-    #   - R_G1:
-    #   - R_G2:
-    #   - R_G3:
-    #   - R_G4:
-    #   - R_G5:
-    #   - R_I1:
-    #   - R_I2:
-    #   - R_I3:
-    #   - R_I4:
-    #   - R_I5:
-    traffic_rules:
-        R_G1: G((is_in_front_of__x_ego__x_o & is_in_same_lane__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
-        R_G2: G(~(unnecessary_braking__x_ego))
-        R_G3: G(keeps_lane_speed_limit__x_ego & keeps_fov_speed_limit__x_ego & keeps_braking_speed_limit__x_ego & keeps_road_condition_speed_limit__x_ego & keeps_type_speed_limit__x_ego)
-        R_G4: G(keeps_sign_min_speed_limit__x_ego)
-        R_G5: G(preserves_traffic_flow__x_ego)
-        R_I1: G(~((in_congestion__x_ego) | (exist_standing_leading_vehicle__x_ego)) -> ~(in_standstill__x_ego))
-        R_I2: G((is_left_of__x_ego__x_o & drives_faster__x_ego__x_o) -> ((in_congestion__x_o & drives_with_slightly_higher_speed__x_ego__x_o) | (right_of_broad_lane_marking__x_ego & left_of_broad_lane_marking__x_o) | (on_access_ramp__x_ego & ~(in_congestion__x_o))))
-        R_I3: G(~(makes_u_turn__x_ego) & ~(reverses__x_ego))
-        R_I4: G(in_congestion__x_ego -> ((~on_shoulder__x_ego) & (interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_right_lane_rightmost__x_ego)))
-        R_I5: G((on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> ~(~(in_rightmost_lane__x_ego) & F(in_rightmost_lane__x_ego)))
-
-    # Parameters for traffic rules
-    ###
-    # .. code-block:: yaml
-    #
-    #   - j_min_abrupt:
-    #   - delta_a_abrupt:
-    #   - min_velocity_dif:
-    #   - standstill_error:
-    #   - num_veh_congestion:
-    #   - max_congestion_velocity:
-    #   - max_velocity_limit_free_driving:
-    #   - desired_highway_velocity:
-    traffic_rules_param:
-        j_abrupt: -2
-        a_abrupt: -2
-        min_velocity_dif: 15
-        standstill_error: 0.01
-        num_veh_congestion: 2
-        max_congestion_velocity: 2.77
-        max_velocity_limit_free_driving: 27.77
-        desired_highway_velocity: 36.11
-        min_interstate_width: 6.75
-        close_to_lane_border: 0.4
-        close_to_other_vehicle: 1.0
-        slightly_higher_speed_difference: 5.55
-        u_turn: 1.57
-
-    traffic_rule_sets:
-        S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I5]
-        SRG1: [R_G1]
-        SRG2: [R_G2]
-        SRG3: [R_G3]
-        SRG4: [R_G4]
-        SRG5: [R_G5]
-        SRI1: [R_I1]
-        SRI2: [R_I2]
-        SRI3: [R_I3]
-        SRI4: [R_I4]
-        SRI5: [R_I5]
-
-
-    activated_traffic_rule_sets: [0]
-    vehicle_dependent_rules: [R_G1, R_I2, R_I5]
