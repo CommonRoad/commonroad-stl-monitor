@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.visualization.draw_dispatch_cr import draw_object
-from src.common.configuration import *
+from src.common.helper import *
 #from src.output.visualization import create_scenario_video
 from commonroad.visualization.video import create_scenario_video
 
@@ -109,7 +109,7 @@ config = load_yaml("../config.yaml")
 simulation_param = config.get("simulation_param")
 visualization_param = config.get("visualization").get("video")
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "NGSIM/" + "US101/USA_US101-25_2_T-1" + ".xml"
-filename = "../../scenarios/DEU_Muc-2_2_T-1.xml"
+filename = "../../scenarios/USA_Lanker-1_16_T-1.xml"
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "SUMO/" + "DEU_Stu-1_4_T-1" + ".xml"
 #filename = "./../../../commonroad/scenarios/tum_cps/scenarios/" + "hand-crafted/" + "DEU_A9-1_1_T-1" + ".xml"
 #filename = "highD_generator/scenarios/DEU_LocationB-1_17_T-1.xml"
@@ -121,23 +121,24 @@ inch_in_cm = 2.54
 figsize = [20, 8]
 x = [state.position[0] for obstacle in scenario.dynamic_obstacles for state in obstacle.prediction.trajectory.state_list]
 y = [state.position[1] for obstacle in scenario.dynamic_obstacles for state in obstacle.prediction.trajectory.state_list]
-x_min = min(x) - 10
-y_min = min(y) - 10
+x_min = min(x) - 5
+y_min = min(y) - 5
 x_max = max(x) + 5
 y_max = max(y) + 5
 plot_limits = [x_min, x_max, y_min, y_max]
 
 plt.figure(figsize=(8, 4.5))
 plt.gca().axis('equal')
-draw_params_scenario['scenario']['dynamic_obstacle']['show_label'] = True
-draw_params_scenario['scenario']['lanelet_network']['lanelet']['show_label'] = True
+draw_params_scenario['scenario']['dynamic_obstacle']['show_label'] = False
+draw_params_scenario['scenario']['lanelet_network']['lanelet']['show_label'] = False
 draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#0070fe'
 draw_params_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#0070fe'
 draw_params_scenario['scenario']['dynamic_obstacle']['occupancy']['shape']['polygon']['opacity'] = .1
 draw_object(scenario, draw_params=draw_params_scenario, plot_limits=plot_limits)
-draw_object(list(planning_problem_set.planning_problem_dict.values())[0])
+#draw_object(list(planning_problem_set.planning_problem_dict.values())[0])
 #draw_object(planning_problem_set, draw_params=draw_params_scenario, plot_limits=plot_limits)
-#plt.show()
+plt.axis('off')
+plt.show()
 
 #create_scenario_video("videos/", scenario, visualization_param, 20)
-create_scenario_video(scenario, "test.mp4", 0, 30, 0, plot_limits)
+#create_scenario_video(scenario, "test.mp4", 0, 30, 0, plot_limits)

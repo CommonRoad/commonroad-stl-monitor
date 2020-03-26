@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_emergency_three_lanes_with_shoulder" date="2020-03-18">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_emergency_three_lanes_with_shoulder" date="2020-03-26">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -10,9 +10,9 @@
   </location>
   <scenarioTags>
     <multi_lane/>
-    <parallel_lanes/>
     <no_oncoming_traffic/>
     <highway/>
+    <parallel_lanes/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -111,8 +111,8 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="11" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="2">
@@ -213,8 +213,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="12" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="3">
@@ -315,8 +315,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="13" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="4">
@@ -417,8 +417,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="14" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="5">
@@ -519,8 +519,8 @@
     <predecessor ref="4"/>
     <successor ref="6"/>
     <adjacentLeft ref="15" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="6">
@@ -621,8 +621,8 @@
     <predecessor ref="5"/>
     <successor ref="7"/>
     <adjacentLeft ref="16" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="7">
@@ -723,8 +723,8 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentLeft ref="17" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="8">
@@ -825,8 +825,8 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentLeft ref="18" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="9">
@@ -927,8 +927,8 @@
     <predecessor ref="8"/>
     <successor ref="10"/>
     <adjacentLeft ref="19" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="10">
@@ -1028,8 +1028,8 @@
     </rightBound>
     <predecessor ref="9"/>
     <adjacentLeft ref="20" drivingDir="same"/>
-    <laneletType>highway</laneletType>
     <laneletType>shoulder</laneletType>
+    <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="11">
@@ -12406,7 +12406,7 @@
       <position>
         <point>
           <x>23.0</x>
-          <y>7.0</y>
+          <y>6.8</y>
         </point>
       </position>
       <orientation>
@@ -12430,7 +12430,7 @@
         <position>
           <point>
             <x>23.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12453,7 +12453,7 @@
         <position>
           <point>
             <x>23.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12476,7 +12476,7 @@
         <position>
           <point>
             <x>23.600000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12499,7 +12499,7 @@
         <position>
           <point>
             <x>23.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12522,7 +12522,7 @@
         <position>
           <point>
             <x>24.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12545,7 +12545,7 @@
         <position>
           <point>
             <x>24.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12568,7 +12568,7 @@
         <position>
           <point>
             <x>24.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12591,7 +12591,7 @@
         <position>
           <point>
             <x>24.600000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12614,7 +12614,7 @@
         <position>
           <point>
             <x>24.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12637,7 +12637,7 @@
         <position>
           <point>
             <x>25.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12660,7 +12660,7 @@
         <position>
           <point>
             <x>25.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12683,7 +12683,7 @@
         <position>
           <point>
             <x>25.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12706,7 +12706,7 @@
         <position>
           <point>
             <x>25.600000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12729,7 +12729,7 @@
         <position>
           <point>
             <x>25.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12752,7 +12752,7 @@
         <position>
           <point>
             <x>26.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12775,7 +12775,7 @@
         <position>
           <point>
             <x>26.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12798,7 +12798,7 @@
         <position>
           <point>
             <x>26.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12821,7 +12821,7 @@
         <position>
           <point>
             <x>26.6</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12844,7 +12844,7 @@
         <position>
           <point>
             <x>26.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12867,7 +12867,7 @@
         <position>
           <point>
             <x>27.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12890,7 +12890,7 @@
         <position>
           <point>
             <x>27.2</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12913,7 +12913,7 @@
         <position>
           <point>
             <x>27.4</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12936,7 +12936,7 @@
         <position>
           <point>
             <x>27.600000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12959,7 +12959,7 @@
         <position>
           <point>
             <x>27.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -12982,7 +12982,7 @@
         <position>
           <point>
             <x>28.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13005,7 +13005,7 @@
         <position>
           <point>
             <x>28.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13028,7 +13028,7 @@
         <position>
           <point>
             <x>28.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13051,7 +13051,7 @@
         <position>
           <point>
             <x>28.600000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13074,7 +13074,7 @@
         <position>
           <point>
             <x>28.8</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13097,7 +13097,7 @@
         <position>
           <point>
             <x>29.0</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13120,7 +13120,7 @@
         <position>
           <point>
             <x>29.200000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13143,7 +13143,7 @@
         <position>
           <point>
             <x>29.4</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13166,7 +13166,7 @@
         <position>
           <point>
             <x>29.6</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13189,7 +13189,7 @@
         <position>
           <point>
             <x>29.8</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13212,7 +13212,7 @@
         <position>
           <point>
             <x>30.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13235,7 +13235,7 @@
         <position>
           <point>
             <x>30.2</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13258,7 +13258,7 @@
         <position>
           <point>
             <x>30.4</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13281,7 +13281,7 @@
         <position>
           <point>
             <x>30.6</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13304,7 +13304,7 @@
         <position>
           <point>
             <x>30.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13327,7 +13327,7 @@
         <position>
           <point>
             <x>31.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13350,7 +13350,7 @@
         <position>
           <point>
             <x>31.2</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13373,7 +13373,7 @@
         <position>
           <point>
             <x>31.400000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13396,7 +13396,7 @@
         <position>
           <point>
             <x>31.6</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13419,7 +13419,7 @@
         <position>
           <point>
             <x>31.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13442,7 +13442,7 @@
         <position>
           <point>
             <x>32.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13465,7 +13465,7 @@
         <position>
           <point>
             <x>32.2</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13488,7 +13488,7 @@
         <position>
           <point>
             <x>32.4</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13511,7 +13511,7 @@
         <position>
           <point>
             <x>32.6</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13534,7 +13534,7 @@
         <position>
           <point>
             <x>32.800000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -13557,7 +13557,7 @@
         <position>
           <point>
             <x>33.000000</x>
-            <y>7.0</y>
+            <y>6.8</y>
           </point>
         </position>
         <orientation>
@@ -17142,7 +17142,7 @@
       <position>
         <point>
           <x>73.0</x>
-          <y>7.0</y>
+          <y>6.9</y>
         </point>
       </position>
       <orientation>
@@ -17166,7 +17166,7 @@
         <position>
           <point>
             <x>73.1</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17189,7 +17189,7 @@
         <position>
           <point>
             <x>73.200000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17212,7 +17212,7 @@
         <position>
           <point>
             <x>73.300000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17235,7 +17235,7 @@
         <position>
           <point>
             <x>73.400000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17258,7 +17258,7 @@
         <position>
           <point>
             <x>73.500000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17281,7 +17281,7 @@
         <position>
           <point>
             <x>73.600000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17304,7 +17304,7 @@
         <position>
           <point>
             <x>73.700000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17327,7 +17327,7 @@
         <position>
           <point>
             <x>73.800000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17350,7 +17350,7 @@
         <position>
           <point>
             <x>73.900000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17373,7 +17373,7 @@
         <position>
           <point>
             <x>74.000000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17396,7 +17396,7 @@
         <position>
           <point>
             <x>74.100000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17419,7 +17419,7 @@
         <position>
           <point>
             <x>74.200000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17442,7 +17442,7 @@
         <position>
           <point>
             <x>74.300000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17465,7 +17465,7 @@
         <position>
           <point>
             <x>74.4</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17488,7 +17488,7 @@
         <position>
           <point>
             <x>74.5</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17511,7 +17511,7 @@
         <position>
           <point>
             <x>74.6</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17534,7 +17534,7 @@
         <position>
           <point>
             <x>74.700000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17557,7 +17557,7 @@
         <position>
           <point>
             <x>74.800000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17580,7 +17580,7 @@
         <position>
           <point>
             <x>74.900000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17603,7 +17603,7 @@
         <position>
           <point>
             <x>75.000000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17626,7 +17626,7 @@
         <position>
           <point>
             <x>75.100000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17649,7 +17649,7 @@
         <position>
           <point>
             <x>75.200000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17672,7 +17672,7 @@
         <position>
           <point>
             <x>75.300000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17695,7 +17695,7 @@
         <position>
           <point>
             <x>75.400000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17718,7 +17718,7 @@
         <position>
           <point>
             <x>75.500000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17741,7 +17741,7 @@
         <position>
           <point>
             <x>75.6</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17764,7 +17764,7 @@
         <position>
           <point>
             <x>75.7</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17787,7 +17787,7 @@
         <position>
           <point>
             <x>75.800000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17810,7 +17810,7 @@
         <position>
           <point>
             <x>75.900000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17833,7 +17833,7 @@
         <position>
           <point>
             <x>76.000000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17856,7 +17856,7 @@
         <position>
           <point>
             <x>76.100000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17879,7 +17879,7 @@
         <position>
           <point>
             <x>76.200000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17902,7 +17902,7 @@
         <position>
           <point>
             <x>76.300000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17925,7 +17925,7 @@
         <position>
           <point>
             <x>76.400000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17948,7 +17948,7 @@
         <position>
           <point>
             <x>76.500000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17971,7 +17971,7 @@
         <position>
           <point>
             <x>76.600000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -17994,7 +17994,7 @@
         <position>
           <point>
             <x>76.700000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18017,7 +18017,7 @@
         <position>
           <point>
             <x>76.800000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18040,7 +18040,7 @@
         <position>
           <point>
             <x>76.900000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18063,7 +18063,7 @@
         <position>
           <point>
             <x>77.000000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18086,7 +18086,7 @@
         <position>
           <point>
             <x>77.100000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18109,7 +18109,7 @@
         <position>
           <point>
             <x>77.200000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18132,7 +18132,7 @@
         <position>
           <point>
             <x>77.300000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18155,7 +18155,7 @@
         <position>
           <point>
             <x>77.400000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18178,7 +18178,7 @@
         <position>
           <point>
             <x>77.500000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18201,7 +18201,7 @@
         <position>
           <point>
             <x>77.600000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18224,7 +18224,7 @@
         <position>
           <point>
             <x>77.700000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18247,7 +18247,7 @@
         <position>
           <point>
             <x>77.800000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18270,7 +18270,7 @@
         <position>
           <point>
             <x>77.900000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>
@@ -18293,7 +18293,7 @@
         <position>
           <point>
             <x>78.000000</x>
-            <y>7.0</y>
+            <y>6.9</y>
           </point>
         </position>
         <orientation>

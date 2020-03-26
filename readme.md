@@ -14,7 +14,7 @@ The usage of the Anaconda Python distribution is recommended. \
 You can install the required Python packages with the provided *requirements.txt* file (*pip install -r requirements.txt*). 
 
 Additionally, you need the following software:
-* *[commonroad-io](https://gitlab.lrz.de/cps/commonroad-io/tree/feature_traffic_rules)* 
+* *[commonroad-io](https://gitlab.lrz.de/cps/commonroad-io/tree/develop)* 
 which has to be installed by executing **python setup.py install** within the linked directory. 
 * *[commonroad-curvilinear-coordinate-system](https://gitlab.lrz.de/manzinger/commonroad-curvilinear-coordinate-system-fork/tree/development)* 
 which has to be installed according to the readme inside the linked directory.

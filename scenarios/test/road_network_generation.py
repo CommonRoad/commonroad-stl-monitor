@@ -287,7 +287,7 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
     l_id_start = 3
     predecessor = [l_id_start - 1]
     successor = [l_id_start + 1]
-    adj_left = num_lanelets_per_lane + 1
+    adj_left = num_lanelets_per_lane + 3
     for lanelet_idx in range(l_id_start, num_lanelets_per_lane):
         left_vertices_point_list = []
         center_vertices_point_list = []
@@ -322,10 +322,10 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
 
 def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straight_lanes: int,
                              num_lanelets_per_lane: int, road_length: int, obstacles: List[DynamicObstacle],
-                             markings: List[Tuple[LineMarking, LineMarking]], lanelet_types: List[Set[LaneletType]]):
+                             markings: List[Tuple[LineMarking, LineMarking]], lanelet_types: List[Set[LaneletType]],
+                             lane_width: List[float]):
 
     # desired number of lanes and parameters
-    lane_width = 3.5
     lanelet_length = int(road_length/num_lanelets_per_lane)
     scenario = create_scenario(commonroad_benchmark_id, dt)
 
@@ -342,10 +342,11 @@ def create_straight_scenario(commonroad_benchmark_id: str, dt: float, num_straig
 
             for i in range(lanelet_length + 1):
                 left_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1),
-                                                          (lane + 1) * lane_width]))
+                                                          (lane + 1) * lane_width[lane]]))
                 center_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1),
-                                                            (lane + 0.5) * lane_width]))
-                right_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1), lane * lane_width]))
+                                                            (lane + 0.5) * lane_width[lane]]))
+                right_vertices_point_list.append(np.array([i + lanelet_length * (lanelet_idx - 1),
+                                                           lane * lane_width[lane]]))
 
             left_vertices = np.array(left_vertices_point_list)
             center_vertices = np.array(center_vertices_point_list)
@@ -447,12 +448,18 @@ def create_exit_ramp_scenario(commonroad_benchmark_id: str, dt: float, num_strai
                 if lanelet_id_list[lanelet_id_idx] == 1 + num_lanelets_per_lane \
                         or lanelet_id_list[lanelet_id_idx] == 2 * num_lanelets_per_lane:
                     line_marking_right = LineMarking.SOLID
+                    adjacent_right = None
+                    adjacent_right_same_direction = False
                 else:
                     line_marking_right = LineMarking.DASHED
+                    adjacent_right = None
+                    adjacent_right_same_direction = True
                 lanelet = Lanelet(left_vertices, center_vertices, right_vertices, lanelet_id_list[lanelet_id_idx],
                                   predecessor=predecessor, successor=successor,
                                   adjacent_left=lanelet_id_list[lanelet_id_idx] + num_lanelets_per_lane,
                                   adjacent_left_same_direction=True,
+                                  adjacent_right=adjacent_right,
+                                  adjacent_right_same_direction=adjacent_right_same_direction,
                                   line_marking_left_vertices=markings[lane][0],
                                   line_marking_right_vertices=line_marking_right,
                                   lanelet_type=lanelet_types, user_one_way={RoadUser.VEHICLE})

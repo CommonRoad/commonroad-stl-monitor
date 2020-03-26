@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_overtaking_exit_ramp" date="2020-03-18">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_overtaking_exit_ramp" date="2020-03-26">
   <location>
     <country>DEU</country>
     <federalState>DE-BY</federalState>
@@ -10,9 +10,9 @@
   </location>
   <scenarioTags>
     <multi_lane/>
-    <parallel_lanes/>
     <no_oncoming_traffic/>
     <highway/>
+    <parallel_lanes/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -705,7 +705,7 @@
     </rightBound>
     <predecessor ref="2"/>
     <successor ref="4"/>
-    <adjacentLeft ref="11" drivingDir="same"/>
+    <adjacentLeft ref="13" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -887,7 +887,7 @@
     </rightBound>
     <predecessor ref="3"/>
     <successor ref="5"/>
-    <adjacentLeft ref="12" drivingDir="same"/>
+    <adjacentLeft ref="14" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -1069,7 +1069,7 @@
     </rightBound>
     <predecessor ref="4"/>
     <successor ref="6"/>
-    <adjacentLeft ref="13" drivingDir="same"/>
+    <adjacentLeft ref="15" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -1251,7 +1251,7 @@
     </rightBound>
     <predecessor ref="5"/>
     <successor ref="7"/>
-    <adjacentLeft ref="14" drivingDir="same"/>
+    <adjacentLeft ref="16" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -1433,7 +1433,7 @@
     </rightBound>
     <predecessor ref="6"/>
     <successor ref="8"/>
-    <adjacentLeft ref="15" drivingDir="same"/>
+    <adjacentLeft ref="17" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -1615,7 +1615,7 @@
     </rightBound>
     <predecessor ref="7"/>
     <successor ref="9"/>
-    <adjacentLeft ref="16" drivingDir="same"/>
+    <adjacentLeft ref="18" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
@@ -1797,7 +1797,7 @@
     </rightBound>
     <predecessor ref="8"/>
     <successor ref="10"/>
-    <adjacentLeft ref="17" drivingDir="same"/>
+    <adjacentLeft ref="19" drivingDir="same"/>
     <laneletType>exitRamp</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>

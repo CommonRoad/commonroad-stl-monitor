@@ -277,6 +277,9 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result)
 
     def test_overtaking_exit_ramp(self):
+        # one vehicle overtaking on exit ramp with high velocity (1001)
+        # one vehicle overtaking on access ramp with appropriate velocity (1000)
+        # all other vehicles are part of a traffic jam
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "test_overtaking_exit_ramp.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
@@ -326,15 +329,27 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result)
         self.assertEqual(exp_result, result)
 
-    def test_emergency_lane(self):
+    def test_emergency_lane_broad_enough_with_shoulder(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "test_emergency_three_lanes_with_shoulder.xml").open()
-        exp_result = [(1000, {'R_I4': True}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
+        exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': True}), (1007, {'R_I4': True}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': True}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),
                       (1012, {'R_I4': True}), (1013, {'R_I4': True}), (1014, {'R_I4': True}), (1015, {'R_I4': True}),
                       (1016, {'R_I4': False}), (1017, {'R_I4': True}), (1018, {'R_I4': True}), (1019, {'R_I4': True}),
-                      (1020, {'R_I4': False}), (1021, {'R_I4': False}), (1022, {'R_I4': False}), (1023, {'R_I4': True})]
+                      (1020, {'R_I4': True}), (1021, {'R_I4': False}), (1022, {'R_I4': False}), (1023, {'R_I4': True})]
+        result = self.cr_eval.evaluate_scenario(scenario, ["SRI4"])
+        print("Test emergency lane:")
+        print(result)
+        self.assertEqual(exp_result, result)
+
+    def test_emergency_lane_not_broad_enough(self):
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
+                                                              "test_emergency_two_lanes_not_broad_enough.xml").open()
+        exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
+                      (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': False}), (1007, {'R_I4': False}),
+                      (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),
+                      (1012, {'R_I4': False}), (1013, {'R_I4': True}), (1014, {'R_I4': False})]
         result = self.cr_eval.evaluate_scenario(scenario, ["SRI4"])
         print("Test emergency lane:")
         print(result)

@@ -1,7 +1,11 @@
-from commonroad.geometry.shape import Shape, Rectangle
 from typing import Union, Set, Dict, List
+import enum
+
+from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
+
+from src.common.road_network import Lane
 
 
 class StateLongitudinal:
@@ -92,13 +96,20 @@ class Input:
         return state
 
 
+@enum.unique
+class VehicleClassification(enum.Enum):
+    EGO_VEHICLE = 0
+    CROSSING_VEHICLE = 1
+    ADJACENT_VEHICLE = 2
+
+
 class Vehicle:
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
     def __init__(self, state_lon: StateLongitudinal, state_lat: StateLateral, shape: Union[Shape, Rectangle],
                  cr_state: State, vehicle_id: int, obstacle_type: ObstacleType, lanelet_assignment: Set[int],
-                 signal_state: SignalState):
+                 signal_state: SignalState, vehicle_classification: VehicleClassification, lane: Lane):
         """
         :param state_lon: initial longitudinal state of vehicle
         :param state_lat: initial lateral state of vehicle
@@ -117,7 +128,8 @@ class Vehicle:
         self._shape = shape
         self._id = vehicle_id
         self._obstacle_type = obstacle_type
-        #self._coordinate_system
+        self._vehicle_classification = vehicle_classification
+        self._lane = lane
 
     @property
     def shape(self) -> Rectangle:
@@ -157,6 +169,10 @@ class Vehicle:
     @property
     def signal_series(self) -> Dict[int, SignalState]:
         return self._signal_series
+
+    @property
+    def lane(self) -> Lane:
+        return self._lane
 
     def rear_s(self, time_step: int) -> float:
         """

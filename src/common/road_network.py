@@ -1,11 +1,9 @@
-from pycrccosy import CurvilinearCoordinateSystem
-from typing import Tuple, List, Set, Dict, Union
+from typing import List, Set, Dict
 import numpy as np
 
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
-
-from src.common.vehicle import StateLongitudinal, StateLateral
+from pycrccosy import CurvilinearCoordinateSystem
 
 
 class Lane:
@@ -19,12 +17,14 @@ class Lane:
         :param road_network_param: dictionary with parameters for the road network
         """
         self._lanelet = merged_lanelet
-        self._road_network_param = road_network_param
-        self._clcs = self._create_curvilinear_coordinate_system_from_lanelet(merged_lanelet.center_vertices)
         self._contained_lanelets = set(contained_lanelets)
+        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(merged_lanelet.center_vertices,
+                                                                              road_network_param)
         self._orientation = self._compute_orientation_from_polyline(merged_lanelet.center_vertices)
         self._curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
         self._path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
+        self._width = self._compute_witdh_from_lanalet_boundary(merged_lanelet.left_vertices,
+                                                                merged_lanelet.right_vertices)
 
     @property
     def lanelet(self) -> Lanelet:
@@ -33,6 +33,10 @@ class Lane:
     @property
     def contained_lanelets(self) -> Set[int]:
         return self._contained_lanelets
+
+    @property
+    def clcs(self) -> CurvilinearCoordinateSystem:
+        return self._clcs
 
     def orientation(self, position) -> float:
         """
@@ -50,73 +54,7 @@ class Lane:
         :param s_position: longitudinal position
         :returns width of lane at a given position
         """
-        vertice_idx = []
-        for idx, length in enumerate(self._path_length):
-            if s_position < length:
-                vertice_idx = [idx - 1, idx]
-                break
-        s_left_1, d_left_1 = self._clcs.convert_to_curvilinear_coords(self._lanelet.left_vertices[vertice_idx[0]][0],
-                                                               self._lanelet.left_vertices[vertice_idx[0]][1])
-        s_left_2, d_left_2 = self._clcs.convert_to_curvilinear_coords(self._lanelet.left_vertices[vertice_idx[1]][0],
-                                                               self._lanelet.left_vertices[vertice_idx[1]][1])
-        s_right_1, d_right_1 = self._clcs.convert_to_curvilinear_coords(self._lanelet.right_vertices[vertice_idx[0]][0],
-                                                               self._lanelet.right_vertices[vertice_idx[0]][1])
-        s_right_2, d_right_2 = self._clcs.convert_to_curvilinear_coords(self._lanelet.right_vertices[vertice_idx[1]][0],
-                                                               self._lanelet.right_vertices[vertice_idx[1]][1])
-
-        points = [(s_left_1, d_left_1), (s_left_2, d_left_2)]
-        x_coords, y_coords = zip(*points)
-        A = np.vstack([x_coords, np.ones(len(x_coords))]).T
-        m_left, c_left = np.linalg.lstsq(A, y_coords, rcond=None)[0]
-        points = [(s_right_1, d_right_1), (s_right_2, d_right_2)]
-        x_coords, y_coords = zip(*points)
-        A = np.vstack([x_coords, np.ones(len(x_coords))]).T
-        m_right, c_right= np.linalg.lstsq(A, y_coords, rcond=None)[0]
-
-        d_left = m_left * s_position + c_left
-        d_right = m_right * s_position + c_right
-
-        return abs(d_left - d_right)
-
-    def _create_curvilinear_coordinate_system_from_lanelet(self, ref_path: np.array) -> CurvilinearCoordinateSystem:
-        """
-        Generates curvilinear coordinate system for a reference path
-
-        :param ref_path: reference path (polyline)
-        :returns curvilinear coordinate system for reference path
-        """
-        new_ref_path = np.array([])
-        for i in range(0, self._road_network_param.get("num_chankins_corner_cutting")):
-            new_ref_path = chaikins_corner_cutting(ref_path)
-        new_ref_path = resample_polyline(new_ref_path, self._road_network_param.get("polyline_resampling_step"))
-
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
-        return curvilinear_cosy
-
-    def create_curvilinear_states(self, position: List[float], velocity:float, acceleration: float, jerk: float,
-                                  orientation: float) -> Union[Tuple[StateLongitudinal,
-                                                                     StateLateral], Tuple[None, None]]:
-        """
-        Computes initial state of ego vehicle
-
-        :param state: CommonRoad state
-        :return: lateral and longitudinal state of vehicle
-        """
-        try:
-            s, d = self._clcs.convert_to_curvilinear_coords(position[0], position[1])
-        except ValueError:
-            print("Vehicle out of projection domain: State will not be considered")
-            return None, None
-        theta_cl = np.interp(s, self._path_length, self._orientation)
-        if acceleration is not None and jerk is not None:
-            x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration, j=jerk)
-        elif acceleration is not None:
-            x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
-        else:
-            x_lon = StateLongitudinal(s=s, v=velocity)
-        x_lat = StateLateral(d=d, theta=(theta_cl - orientation))
-
-        return x_lon, x_lat
+        return np.interp(s_position, self._path_length, self._width)
 
     @staticmethod
     def _compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
@@ -174,6 +112,37 @@ class Lane:
             distance[i] = distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1])
 
         return np.array(distance)
+
+    @staticmethod
+    def _compute_witdh_from_lanalet_boundary(left_polyline: np.ndarray, right_polyline: np.ndarray) -> np.ndarray:
+        """
+        Computes the width of a lanelet
+
+        :param left_polyline: left boundary of lanelet
+        :param right_polyline: right boundary of lanelet
+        :return: width along lanelet
+        """
+        width_along_lanelet = np.zeros((len(left_polyline),))
+        for i in range(len(left_polyline)):
+            width_along_lanelet[i] = np.linalg.norm(left_polyline[i]-right_polyline[i])
+        return width_along_lanelet
+
+    @staticmethod
+    def create_curvilinear_coordinate_system_from_reference(ref_path: np.array, road_network_param: Dict) \
+            -> CurvilinearCoordinateSystem:
+        """
+        Generates curvilinear coordinate system for a reference path
+
+        :param ref_path: reference path (polyline)
+        :returns curvilinear coordinate system for reference path
+        """
+        new_ref_path = np.array([])
+        for i in range(0, road_network_param.get("num_chankins_corner_cutting")):
+            new_ref_path = chaikins_corner_cutting(ref_path)
+        new_ref_path = resample_polyline(new_ref_path, road_network_param.get("polyline_resampling_step"))
+
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+        return curvilinear_cosy
 
 
 class RoadNetwork:
