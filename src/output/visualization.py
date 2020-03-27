@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Tuple
 
 
 from commonroad.scenario.scenario import Scenario
@@ -8,18 +8,20 @@ from commonroad.visualization.draw_dispatch_cr import draw_object
 from commonroad.visualization.scenario import create_default_draw_params as create_default_draw_params_scenario
 from commonroad.visualization.planning import create_default_draw_params as create_default_draw_params_planning
 from commonroad.scenario.obstacle import Obstacle
-from commonroad.visualization.video import create_scenario_video
 
 
 class Visualization:
-    def __init__(self, ego_vehicle_ids: List[int], ego_vehicle_color: str):
+    def __init__(self, ego_vehicle_ids: List[int] = None, ego_vehicle_color: str = '#1d7eea',
+                 figsize: Tuple[float, float]=(8, 4.5)):
         self._default_parameters_scenario = create_default_draw_params_scenario()
         self._default_parameters_planning = create_default_draw_params_planning()
         self._ego_vehicle_ids = ego_vehicle_ids
         self._ego_vehicle_color = ego_vehicle_color
+        self._figsize = figsize
+        plt.figure(figsize=self._figsize)
 
-    def plot_scenario(self, scenario: Scenario, planning_problem_set: PlanningProblemSet = None,
-                      obstacle_label: bool = False):
+    def plot_scenario(self, scenario: Scenario, planning_problem_set: PlanningProblemSet = None, time_begin: int = 0,
+                      obstacle_label: bool = False, draw_trajectory: bool = False, lanelet_label: bool = False):
         x_lanelet_left = [point[0] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
         y_lanelet_left = [point[1] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
         x_lanelet_right = [point[0] for lanelet in scenario.lanelet_network.lanelets
@@ -32,31 +34,43 @@ class Visualization:
         x_max = max(x_lanelet_left + x_lanelet_right) + 5
         y_max = max(y_lanelet_left + y_lanelet_right) + 5
         plot_limits = [x_min, x_max, y_min, y_max]
-        plt.style.use('classic')
-        plt.figure(figsize=(8, 4.5))
+
+        plt.clf()
+        plt.gca().set_aspect('equal')
+        plt.gca().set_axis_off()
+        plt.margins(0, 0.1)
         plt.gca().axis('equal')
 
         draw_object(scenario.lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
         if planning_problem_set is not None:
             draw_object(planning_problem_set, draw_params=self._default_parameters_planning, plot_limits=plot_limits)
         for obs in scenario.obstacles:
-            if obs.obstacle_id in self._ego_vehicle_ids:
-                self._draw_ego_obstacle(obs, obstacle_label)
+            if self._ego_vehicle_ids is not None and obs.obstacle_id in self._ego_vehicle_ids:
+                self._draw_ego_obstacle(obs, time_begin, obstacle_label, draw_trajectory)
             else:
-                self._draw_standard_obstacle(obs, obstacle_label)
+                self._draw_standard_obstacle(obs, time_begin, obstacle_label, draw_trajectory)
         plt.axis('off')
         plt.show()
 
-    def _draw_ego_obstacle(self, obstacle: Obstacle, obstacle_label: bool = False):
+    def _draw_ego_obstacle(self, obstacle: Obstacle, time_begin: int = 0, obstacle_label: bool = False,
+                           draw_trajectory: bool = False):
+        self._default_parameters_scenario['time_begin'] = time_begin
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = \
             self._ego_vehicle_color
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = \
             self._ego_vehicle_color
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
+            draw_trajectory
         draw_object(obstacle, draw_params=self._default_parameters_scenario)
 
-    def _draw_standard_obstacle(self, obstacle: Obstacle, obstacle_label: bool = False):
+    def _draw_standard_obstacle(self, obstacle: Obstacle, time_begin: int = 0, obstacle_label: bool = False,
+                                draw_trajectory: bool = False):
+        self._default_parameters_scenario['time_begin'] = time_begin
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#1d7eea'
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
+            draw_trajectory
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         draw_object(obstacle, draw_params=self._default_parameters_scenario)
 
