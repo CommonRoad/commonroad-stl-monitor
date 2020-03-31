@@ -18,10 +18,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "test_max_speed_limit.xml").open()
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': True}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG3"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
         print("Max Lane Speed Limit Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_keeps_fov_speed_limit(self):
         # two vehicles which always violate speed limit (1001, 1002)
@@ -34,10 +36,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 32
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG3"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
         print("Max FOV Speed Limit Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 60
 
     def test_keeps_braking_speed_limit(self):
@@ -50,10 +54,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 32
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG3"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
         print("Max Braking Speed Limit Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 60
 
     def test_keeps_min_speed_limit(self):
@@ -68,10 +74,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "test_min_speed_limit.xml").open()
         exp_result = [(1000, {'R_G4': False}), (1001, {'R_G4': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG4"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG4"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG4"])
         print("Min Speed Limit Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_preserve_traffic_flow(self):
         # two vehicles which preserves traffic flow (1001 ,1004)
@@ -83,10 +91,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G5': True}), (1001, {'R_G5': True}),
                       (1002, {'R_G5': True}), (1003, {'R_G5': False}),
                       (1004, {'R_G5': True}), (1005, {'R_G5': False})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG5"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG5"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG5"])
         print("Traffic Flow Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_keeps_safe_distance(self):
         # three vehicles which have no leading vehicle (1001, 1004, 1006)
@@ -109,10 +119,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1006': True}),
                       (1006, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
                               'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG1"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG1"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG1"])
         print("Safe Distance Test:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_unnecessary_braking_1(self):
         # one vehicle accelerates (1000)
@@ -124,10 +136,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "test_unnecessary_braking_1.xml").open()
         exp_result = [(1000, {'R_G2': True}), (1001, {'R_G2': True}), (1002, {'R_G2': False}),
                       (1005, {'R_G2': True}), (1006, {'R_G2': True}), (1007, {'R_G2': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG2"])
         print("Unnecessary Braking Test 1:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_unnecessary_braking_2(self):
         # one vehicle which without leading vehicle which brakes very strong, because it is necessary (1000)
@@ -135,10 +149,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "test_unnecessary_braking_2.xml").open()
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 5
         exp_result = [(1000, {'R_G2': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRG2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG2"])
         print("Unnecessary Braking Test 2:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 60
 
     def test_standstill(self):
@@ -154,10 +170,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_I1': True}), (1001, {'R_I1': False}), (1002, {'R_I1': True}), (1003, {'R_I1': True}),
                       (1004, {'R_I1': True}), (1005, {'R_I1': True}), (1006, {'R_I1': True}), (1007, {'R_I1': True}),
                       (1008, {'R_I1': True}), (1009, {'R_I1': True}), (1010, {'R_I1': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI1"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI1"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI1"])
         print("Standstill:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
         print(self.cr_eval.eval_dict)
 
     def test_reversing_and_u_turn(self):
@@ -168,10 +186,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "test_reversing_and_u_turn.xml").open()
         exp_result = [(1000, {'R_I3': False}), (1001, {'R_I3': False}), (1002, {'R_I3': False}), (1003, {'R_I3': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI3"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI3"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI3"])
         print("Reversing and U-turn:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_overtaking_right_congestion(self):
         # one vehicle which overtakes a congestion slightly faster (1000)
@@ -207,10 +227,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
                               'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
                       ]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
         print("Overtaking right congestion:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_overtaking_right_broad_lane_marking(self):
         # one vehicle right of a broad lane marking which overtakes on the right side one vehicle left of a broad
@@ -233,10 +255,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1005': False}),
                       (1005, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
         print("Overtaking right broad lane marking:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_overtaking_right_normal_street(self):
         # one vehicle right of a broad lane marking which overtakes (1001)
@@ -249,10 +273,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True}),
                       (1003, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True}),
                       ]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
         print("Overtaking right normal road:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_overtaking_access_ramp(self):
         # one vehicle overtaking on access ramp (1002)
@@ -272,10 +298,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1002': True, 'R_I2_veh_1004': False}),
                       (1004, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True,
                               'R_I2_veh_1002': True, 'R_I2_veh_1003': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
         print("Overtaking right access ramp:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_overtaking_exit_ramp(self):
         # one vehicle overtaking on exit ramp with high velocity (1001)
@@ -311,10 +339,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
                               'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
                       ]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI2"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
         print("Overtaking right exit ramp:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_forward)
 
     def test_consider_entering_vehicles(self):
         # one vehicle driving always in the left most lane (1001)
@@ -325,10 +355,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_I5_veh_1001': True, 'R_I5_veh_1002': False}),
                       (1001, {'R_I5_veh_1000': True, 'R_I5_veh_1002': True}),
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI5"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI5"])
+        #result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI5"])
         print("Considering entering vehicles:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+        #self.assertEqual(exp_result, result_backward)
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
@@ -339,10 +371,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1012, {'R_I4': True}), (1013, {'R_I4': True}), (1014, {'R_I4': True}), (1015, {'R_I4': True}),
                       (1016, {'R_I4': False}), (1017, {'R_I4': True}), (1018, {'R_I4': True}), (1019, {'R_I4': True}),
                       (1020, {'R_I4': True}), (1021, {'R_I4': False}), (1022, {'R_I4': False}), (1023, {'R_I4': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI4"])
         print("Test emergency lane:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_emergency_lane_not_broad_enough(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
@@ -351,10 +385,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': False}), (1007, {'R_I4': False}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),
                       (1012, {'R_I4': False}), (1013, {'R_I4': True}), (1014, {'R_I4': False})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI4"])
+        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
+        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI4"])
         print("Test emergency lane:")
-        print(result)
-        self.assertEqual(exp_result, result)
+        print(result_backward)
+        self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
 
 if __name__ == '__main__':

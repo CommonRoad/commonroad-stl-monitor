@@ -42,7 +42,7 @@ class CommonRoadObstacleEvaluation:
     def ego_vehicle_param(self) -> Dict:
         return self._ego_vehicle_param
 
-    def create_vehicle(self, obstacle: DynamicObstacle, ego_vehicle: Vehicle = None) -> Vehicle:
+    def create_vehicle(self, obstacle: DynamicObstacle, vehicle_param: Dict, ego_vehicle: Vehicle = None) -> Vehicle:
         acceleration = self.compute_acceleration(obstacle.initial_state.velocity,
                                                  obstacle.prediction.trajectory.state_list[0].velocity)
         jerk = self.compute_jerk(acceleration, 0)
@@ -79,7 +79,7 @@ class CommonRoadObstacleEvaluation:
             vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
                               obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
                               obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state, vehicle_classification,
-                              lane)
+                              lane, vehicle_param)
 
         for state in obstacle.prediction.trajectory.state_list:
             acceleration = self.compute_acceleration(state_lon.v, state.velocity)
@@ -127,18 +127,17 @@ class CommonRoadObstacleEvaluation:
         self._road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
         dispatcher = TrafficRuleDispatcher(self._traffic_rules_forward, self._traffic_rules_backward,
                                            self._traffic_rule_sets, self._road_network,
-                                           self._simulation_param, self._ego_vehicle_param, self._other_vehicles_param,
-                                           self._traffic_rules_param, self._activated_traffic_rule_sets,
-                                           self._vehicle_dependent_rules)
+                                           self._simulation_param, self._traffic_rules_param,
+                                           self._activated_traffic_rule_sets, self._vehicle_dependent_rules)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
             other_vehicles = []
             if ego.prediction is not None:
-                ego_vehicle = self.create_vehicle(ego)
+                ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
                 for obs in scenario.dynamic_obstacles:
                     if obs.obstacle_id == ego.obstacle_id:
                         continue
-                    vehicle = self.create_vehicle(obs, ego_vehicle)
+                    vehicle = self.create_vehicle(obs, self._other_vehicles_param, ego_vehicle)
                     other_vehicles.append(vehicle)
                 vehicle_evaluation.append((ego_vehicle.id, dispatcher.evaluate_trajectory(ego_vehicle, other_vehicles)))
 

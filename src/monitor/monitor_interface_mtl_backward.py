@@ -56,7 +56,7 @@ class TrafficRuleMonitorBackward:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
-        replacements = ['always', 'since', 'once', 'pre', '&&', '->', '(', ')', '!', '||', 'ego_vehicle',
+        replacements = ['always', 'since', 'once', 'pre(', '&&', '->', '(', ')', '!', '||', 'ego_vehicle',
                         'other_vehicles', 'time_step', 'other_vehicle', ',']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")

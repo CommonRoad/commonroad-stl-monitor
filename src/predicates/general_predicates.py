@@ -9,19 +9,16 @@ from src.common.road_network import RoadNetwork
 
 
 class GeneralPredicateCollection(PredicateCollection):
-    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
-                 traffic_sign_interpreter):
+    def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
-        :param simulation_param: dictionary with parameters of the simulation environment
-        :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-        :param other_vehicles_param: dictionary with general parameters of the other vehicles
+        :param simulation_param: dictionary with parameters of the simulation environments
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
-        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
+        super().__init__(road_network, simulation_param,
                          traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
     def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
@@ -61,14 +58,14 @@ class GeneralPredicateCollection(PredicateCollection):
         :returns set of adjacent lanelets
         """
         lanelets = {lanelet}
-        l = lanelet
-        while l is not None and l.adj_left is not None:
-            l = self._road_network.lanelet_network.find_lanelet_by_id(l.adj_left)
-            lanelets.add(l)
-        l = lanelet
-        while l is not None and l.adj_right is not None:
-            l = self._road_network.lanelet_network.find_lanelet_by_id(l.adj_right)
-            lanelets.add(l)
+        la = lanelet
+        while la is not None and la.adj_left is not None:
+            la = self._road_network.lanelet_network.find_lanelet_by_id(la.adj_left)
+            lanelets.add(la)
+        la = lanelet
+        while la is not None and la.adj_right is not None:
+            la = self._road_network.lanelet_network.find_lanelet_by_id(la.adj_right)
+            lanelets.add(la)
         return lanelets
 
     def makes_u_turn(self, time_step: int, vehicle: Vehicle) -> bool:
@@ -91,7 +88,6 @@ class GeneralPredicateCollection(PredicateCollection):
         Calculates width of road given a lanelet and a longitudinal position
 
         :param lanelet: CommonRoad lanelet
-        :param lane: lane lanelet belongs to
         :param position: longitudinal position
         :returns road witdh
         """
@@ -101,7 +97,7 @@ class GeneralPredicateCollection(PredicateCollection):
             road_width += self._road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
         return road_width
 
-    def interstate_broad_enough(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def interstate_broad_enough(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a interstate is broad enough to build a standard emergency lane
 

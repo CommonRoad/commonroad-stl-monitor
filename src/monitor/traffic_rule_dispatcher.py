@@ -19,8 +19,8 @@ class TrafficRuleDispatcher:
     """
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
-                 simulation_param: Dict, ego_vehicle_param: Dict, other_vehicles_param: Dict, traffic_rule_param: Dict,
-                 activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]):
+                 simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
+                 vehicle_dependent_rules: List[str]):
         """
         Constructor
 
@@ -36,8 +36,6 @@ class TrafficRuleDispatcher:
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
-        self._ego_vehicle_param = ego_vehicle_param
-        self._other_vehicles_param = other_vehicles_param
         self._road_network = road_network
         self._monitors_forward = self.create_forward_monitors(traffic_rules_forward, traffic_rule_sets,
                                                               activated_traffic_rule_sets,
@@ -46,19 +44,15 @@ class TrafficRuleDispatcher:
         traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
                                                          road_network.lanelet_network)
         self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
-                                                                ego_vehicle_param, other_vehicles_param,
                                                                 traffic_rule_param, necessary_predicates,
                                                                 traffic_sign_interpreter)
         self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
-                                                                ego_vehicle_param, other_vehicles_param,
                                                                 traffic_rule_param, necessary_predicates,
                                                                 traffic_sign_interpreter)
         self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
-                                                              ego_vehicle_param, other_vehicles_param,
                                                               traffic_rule_param, necessary_predicates,
                                                               traffic_sign_interpreter)
         self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
-                                                              ego_vehicle_param, other_vehicles_param,
                                                               traffic_rule_param, necessary_predicates,
                                                               traffic_sign_interpreter)
 
@@ -119,7 +113,7 @@ class TrafficRuleDispatcher:
                 vehicle_dependency = rule in vehicle_dependent_rules
                 monitors.append(TrafficRuleMonitorBackward((rule, traffic_rules.get(rule)), vehicle_dependency,
                                                            [self._general_predicates, self._position_predicates,
-                                                            self._position_predicates, self._velocity_predicates]))
+                                                            self._braking_predicates, self._velocity_predicates]))
 
         return monitors
 
@@ -205,40 +199,30 @@ class TrafficRuleDispatcher:
         :returns each rule with boolean indicating satisfaction
         """
         rule_evaluation = {}
-        self._reset_backward_monitors()
         time_steps = list(ego_vehicle.states_lon.keys())
         time_steps.reverse()
         for rule in self._monitors_backward:
-            for time_step in time_steps:
-                if rule.vehicle_dependency is False:
+            if rule.vehicle_dependency is False:
+                self._reset_backward_monitors()
+                rule_evaluation[rule.name] = True
+                for time_step in time_steps:
                     predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle, 'other_vehicles': other_vehicles}
                     result = rule.evaluate_monitor(predicates)
                     if result is False:
                         rule_evaluation[rule.name] = False
                         break
-                # else:  # evaluate rules which depend on other vehicles, e.g., safe distance
-                    # rule_predicates = {}
-                    # rule_evaluated = False
-                    # for vehicle in other_vehicles:
-                    #     for pred in rule.predicates:
-                    #         trace = []
-                    #         if len(evaluated_predicates[pred]) > 0 \
-                    #                 and evaluated_predicates[pred].get(vehicle.id) is not None:
-                    #             for idx, value in enumerate(evaluated_predicates[pred][vehicle.id].values()):
-                    #                 trace.append((idx * self._dt, value))
-                    #         elif len(evaluated_predicates[pred]) > 0 \
-                    #                 and evaluated_predicates[pred].get(ego_vehicle.id) is not None:
-                    #             for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
-                    #                 trace.append((idx * self._dt, value))
-                    #         else:
-                    #             warnings.warn("Predicate cannot be found!")
-                    #             break
-                    #         rule_predicates[pred] = trace
-                    #         rule_evaluated = True
-                    #     rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
-                    # if rule_evaluated is False:
-                    #     rule_evaluation[rule.name] = True
 
-            rule_evaluation[rule.name] = True
+            else:  # evaluate rules which depend on other vehicles, e.g., safe distance
+                for vehicle in other_vehicles:
+                    self._reset_backward_monitors()
+                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = True
+                    for time_step in time_steps:
+                        predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle,
+                                      'other_vehicles': other_vehicles,
+                                      'other_vehicle': vehicle}
+                        result = rule.evaluate_monitor(predicates)
+                        if result is False:
+                            rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = False
+                            break
         return rule_evaluation
 

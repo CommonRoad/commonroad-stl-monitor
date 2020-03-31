@@ -8,20 +8,17 @@ from src.common.road_network import RoadNetwork
 
 
 class PositionPredicateCollection(PredicateCollection):
-    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
-                 traffic_sign_interpreter):
+    def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
-        :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-        :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
-        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
+        super().__init__(road_network, simulation_param, traffic_rules_param,
+                         necessary_predicates, traffic_sign_interpreter)
 
     @staticmethod
     def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
@@ -122,7 +119,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def on_access_ramp(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def on_access_ramp(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is on an access ramp
 
@@ -137,7 +134,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def on_exit_ramp(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def on_exit_ramp(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is on an exit ramp
 
@@ -152,7 +149,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def on_shoulder(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def on_shoulder(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is on an shoulder lane
 
@@ -167,7 +164,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def on_main_carriage_way(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def on_main_carriage_way(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is on an main carriage way
 
@@ -182,7 +179,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is right of a broad lane marking
 
@@ -204,7 +201,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def left_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def left_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is left of a broad lane marking
 
@@ -359,7 +356,7 @@ class PositionPredicateCollection(PredicateCollection):
                 continue
         return vehicles_adj
 
-    def in_leftmost_lane(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def in_leftmost_lane(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is in the leftmost lane
 
@@ -373,7 +370,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def in_rightmost_lane(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def in_rightmost_lane(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is in the rightmost lane (excluding shoulder lane)
 
@@ -417,7 +414,7 @@ class PositionPredicateCollection(PredicateCollection):
                     vehicle_directly_left = veh
             return vehicle_directly_left
 
-    def drives_right_lane_rightmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
+    def drives_right_lane_rightmost(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle drives in right lane rightmost
 
@@ -521,9 +518,9 @@ class PositionPredicateCollection(PredicateCollection):
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary with trace of bool values for each predicate
         """
-        predicate_trace = {"is_in_same_lane__x_ego__x_o": {},
-                           "is_in_front_of__x_ego__x_o": {},
-                           "is_left_of__x_ego__x_o": {},
+        predicate_trace = {"in_same_lane__x_ego__x_o": {},
+                           "in_front_of__x_ego__x_o": {},
+                           "left_of__x_ego__x_o": {},
                            "on_access_ramp__x_o": {},
                            "on_main_carriage_way__x_o": {},
                            "in_rightmost_lane__x_ego": {ego_vehicle.id: {}},
@@ -567,25 +564,23 @@ class PositionPredicateCollection(PredicateCollection):
                     self.drives_right_lane_rightmost(time_step, ego_vehicle)
 
         for other_vehicle in other_vehicles:
-            predicate_trace["is_in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
-            predicate_trace["is_in_front_of__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id] = {}
-            predicate_trace["is_left_of__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["left_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["on_access_ramp__x_o"][other_vehicle.id] = {}
             predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
-                if "is_in_same_lane__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["is_in_same_lane__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.in_same_lane(time_step,
-                                          self._road_network.find_lane_ids_by_lanelets(time_step, ego_vehicle),
-                                          self._road_network.find_lane_ids_by_lanelets(time_step, other_vehicle))
-                if "is_in_front_of__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["is_in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
+                if "in_same_lane__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.in_same_lane(time_step, ego_vehicle, other_vehicle)
+                if "in_front_of__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.in_front_of(time_step, ego_vehicle, other_vehicle)
-                if "is_left_of__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["is_left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
+                if "left_of__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.left_of(time_step, ego_vehicle, other_vehicle)
                 if "left_of_broad_lane_marking__x_o" in self._necessary_predicates:
                     predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id][time_step] = \

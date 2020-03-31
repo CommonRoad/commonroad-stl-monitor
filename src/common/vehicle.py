@@ -109,7 +109,8 @@ class Vehicle:
     """
     def __init__(self, state_lon: StateLongitudinal, state_lat: StateLateral, shape: Union[Shape, Rectangle],
                  cr_state: State, vehicle_id: int, obstacle_type: ObstacleType, lanelet_assignment: Set[int],
-                 signal_state: SignalState, vehicle_classification: VehicleClassification, lane: Lane):
+                 signal_state: SignalState, vehicle_classification: VehicleClassification, lane: Lane,
+                 vehicle_param: Dict):
         """
         :param state_lon: initial longitudinal state of vehicle
         :param state_lat: initial lateral state of vehicle
@@ -130,6 +131,7 @@ class Vehicle:
         self._obstacle_type = obstacle_type
         self._vehicle_classification = vehicle_classification
         self._lane = lane
+        self._vehicle_param = vehicle_param
 
     @property
     def shape(self) -> Rectangle:
@@ -173,6 +175,10 @@ class Vehicle:
     @property
     def lane(self) -> Lane:
         return self._lane
+
+    @property
+    def vehicle_param(self) -> Dict:
+        return self._vehicle_param
 
     def rear_s(self, time_step: int) -> float:
         """

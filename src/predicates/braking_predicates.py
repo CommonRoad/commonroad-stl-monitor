@@ -7,22 +7,19 @@ from src.predicates.position_predicates import PositionPredicateCollection
 
 
 class BrakingPredicateCollection(PredicateCollection):
-    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, ego_vehicle_param: Dict,
-                 other_vehicles_param: Dict, traffic_rules_param: Dict, necessary_predicates: Set[str],
-                 traffic_sign_interpreter):
+    def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
-        :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-        :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
-        super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
-                         traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
+        super().__init__(road_network, simulation_param,  traffic_rules_param,
+                         necessary_predicates, traffic_sign_interpreter)
 
-    def _unnecessary_braking(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> bool:
+    def unnecessary_braking(self, time_step: int, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly
 
         :param ego_vehicle: ego vehicle
@@ -35,7 +32,7 @@ class BrakingPredicateCollection(PredicateCollection):
 
         if a_ego >= 0:
             return False
-        if self.velocity_reduction_necessary(v_ego):
+        if self._velocity_reduction_necessary(time_step, ego_vehicle):
             return False
         ego_vehicle_lanelets = ego_vehicle.lanelet_assignment[time_step]
 
@@ -43,8 +40,8 @@ class BrakingPredicateCollection(PredicateCollection):
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
-            if PositionPredicateCollection.is_in_front_of(ego_vehicle, veh_o, time_step) and \
-                    PositionPredicateCollection.is_in_same_lane(
+            if PositionPredicateCollection.in_front_of(time_step, ego_vehicle, veh_o) and \
+                    PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(ego_vehicle_lanelets),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
                     and veh_o.states_lon[time_step].v - v_ego < self._traffic_rules_param.get("min_velocity_dif"):
@@ -59,18 +56,20 @@ class BrakingPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def velocity_reduction_necessary(self, velocity: float):
+    @staticmethod
+    def _velocity_reduction_necessary(time_step: int, vehicle: Vehicle):
         """
         Predicate to check whether a velocity reduction is necessary caused of safety reasons (currently only maximum
         velocity based on field of view and road conditions is evaluated, but active emergency maneuver or other
         information could also be considered)
 
-        :param velocity: velocity of ego vehicle
+        :param time_step: time step of interest
+        :param vehicle: vehicle of interest
         :return: boolean indicating satisfaction
         """
-        v_max = min(self._ego_vehicle_param.get("road_condition_speed_limit"),
-                    self._ego_vehicle_param.get("fov_speed_limit"))
-        if v_max < velocity:
+        v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"),
+                    vehicle.vehicle_param.get("fov_speed_limit"))
+        if v_max < vehicle.states_lon[time_step].v:
             return True
         else:
             return False
@@ -96,21 +95,19 @@ class BrakingPredicateCollection(PredicateCollection):
 
         return d_safe
 
-    def _keeps_safe_distance_prec(self, vehicle_follow: Vehicle, vehicle_lead: Vehicle, a_min_follow: float,
-                                  a_min_lead: float, a_max_follow: float, t_react_follow: float,
-                                  time_step: int) -> bool:
+    def keeps_safe_distance_prec(self, time_step: int, vehicle_follow: Vehicle, vehicle_lead: Vehicle) -> bool:
         """
         Evaluates if safe distance is kept by following vehicle
 
         :param vehicle_follow: following vehicle
         :param vehicle_lead: leading vehicle
-        :param a_min_follow: minimum acceleration of following vehicle
-        :param a_min_lead: minimum acceleration of leading vehicle
-        :param a_max_follow: maximum acceleration of following vehicle
-        :param t_react_follow: reaction time of following vehicle
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
+        a_min_follow = vehicle_follow.vehicle_param.get("a_min")
+        a_min_lead = vehicle_lead.vehicle_param.get("a_min")
+        a_max_follow = vehicle_follow.vehicle_param.get("a_max")
+        t_react_follow = vehicle_follow.vehicle_param.get("t_react")
         if 0 < vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step) \
                 < self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
                                      a_min_follow, a_min_lead, a_max_follow, t_react_follow):
@@ -133,7 +130,7 @@ class BrakingPredicateCollection(PredicateCollection):
         for time_step in ego_vehicle.states_lon.keys():
             if "unnecessary_braking__x_ego" in self._necessary_predicates:
                 predicate_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
-                    self._unnecessary_braking(ego_vehicle, other_vehicles, time_step)
+                    self.unnecessary_braking(time_step, ego_vehicle, other_vehicles)
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
@@ -143,9 +140,6 @@ class BrakingPredicateCollection(PredicateCollection):
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self._keeps_safe_distance_prec(ego_vehicle, other_vehicle,
-                                                       self._ego_vehicle_param.get("a_min"),
-                                                       self._other_vehicles_param.get("a_min"),
-                                                       self._ego_vehicle_param.get("a_max"),
-                                                       self._ego_vehicle_param.get("t_react"), time_step)
+                        self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle)
+
         return predicate_trace
