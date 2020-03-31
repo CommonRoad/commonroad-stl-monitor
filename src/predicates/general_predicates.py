@@ -24,7 +24,7 @@ class GeneralPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, ego_vehicle_param, other_vehicles_param,
                          traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
-    def _in_congestion(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
+    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
         """
         Evaluates if a vehicles is in a congestion
 
@@ -33,14 +33,12 @@ class GeneralPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        vehicle_lanelets = vehicle.lanelet_assignment[time_step]
         num_vehicles = 0
         for veh_o in other_vehicles:
-            veh_o_lanelets = veh_o.lanelet_assignment[time_step]
-            if PositionPredicateCollection.is_in_front_of(vehicle, veh_o, time_step) and \
-                    PositionPredicateCollection.is_in_same_lane(
-                        self._road_network.find_lane_ids_by_lanelets(vehicle_lanelets),
-                        self._road_network.find_lane_ids_by_lanelets(veh_o_lanelets)) and \
+            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
+                    PositionPredicateCollection.in_same_lane_classmethod(
+                        self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step]),
+                        self._road_network.find_lanes_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
                     veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_congestion_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_congestion"):
@@ -48,28 +46,12 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def remove_vehicle_from_list(self, vehicle_list: List[Vehicle], id: int):
+    @staticmethod
+    def remove_vehicle_from_list(vehicle_list: List[Vehicle], vehicle_id: int):
         for veh in vehicle_list:
-            if veh.id == id:
+            if veh.id == vehicle_id:
                 vehicle_list.remove(veh)
                 return
-
-    def _congestion_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
-        """
-        Evaluates if a congestion exists in the left lane of a vehicle
-
-        :param vehicle: vehicle object
-        :param other_vehicles: other vehicles in scenario
-        :param time_step: time step of interest
-        :returns boolean indicating satisfaction
-        """
-        for idx, veh_o in enumerate(other_vehicles):
-            other_vehicles_updated = other_vehicles[:idx] + other_vehicles[idx+1:]
-            self.remove_vehicle_from_list(other_vehicles_updated, veh_o.id)
-            if PositionPredicateCollection.vehicle_is_left(veh_o, vehicle, time_step) and \
-                    self._in_congestion(veh_o, other_vehicles_updated, time_step):
-                return True
-        return False
 
     def _adjacent_lanelets(self, lanelet: Lanelet) -> Set[Lanelet]:
         """
@@ -89,7 +71,7 @@ class GeneralPredicateCollection(PredicateCollection):
             lanelets.add(l)
         return lanelets
 
-    def _makes_u_turn(self, vehicle: Vehicle, time_step: int) -> bool:
+    def makes_u_turn(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Predicate which evaluates if vehicle makes U-turn
 
@@ -119,7 +101,7 @@ class GeneralPredicateCollection(PredicateCollection):
             road_width += self._road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
         return road_width
 
-    def _interstate_broad_enough(self, vehicle: Vehicle, time_step: int) -> bool:
+    def interstate_broad_enough(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle] = None) -> bool:
         """
         Evaluates if a interstate is broad enough to build a standard emergency lane
 
@@ -146,23 +128,19 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
                            "in_congestion__x_o": {},
-                           "congestion_left": {ego_vehicle.id: {}},
                            "makes_u_turn__x_ego": {ego_vehicle.id: {}},
                            "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
             if "in_congestion__x_ego" in self._necessary_predicates:
                 predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
-                    self._in_congestion(ego_vehicle, other_vehicles, time_step)
-            if "congestion_left" in self._necessary_predicates:
-                predicate_trace["congestion_left"][ego_vehicle.id][time_step] = \
-                    self._congestion_left(ego_vehicle, other_vehicles, time_step)
+                    self.in_congestion(time_step, ego_vehicle, other_vehicles)
             if "makes_u_turn__x_ego" in self._necessary_predicates:
                 predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
-                    self._makes_u_turn(ego_vehicle, time_step)
+                    self.makes_u_turn(time_step, ego_vehicle)
             if "interstate_broad_enough__x_ego" in self._necessary_predicates:
                 predicate_trace["interstate_broad_enough__x_ego"][ego_vehicle.id][time_step] = \
-                    self._interstate_broad_enough(ego_vehicle, time_step)
+                    self.interstate_broad_enough(time_step, ego_vehicle)
 
         for other_vehicle in other_vehicles:
             predicate_trace["in_congestion__x_o"][other_vehicle.id] = {}
@@ -171,6 +149,6 @@ class GeneralPredicateCollection(PredicateCollection):
                     continue
                 if "in_congestion__x_o" in self._necessary_predicates:
                     predicate_trace["in_congestion__x_o"][other_vehicle.id][time_step] = \
-                        self._in_congestion(other_vehicle, other_vehicles, time_step)
+                        self.in_congestion(time_step, other_vehicle, other_vehicles)
 
         return predicate_trace

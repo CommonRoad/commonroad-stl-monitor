@@ -339,7 +339,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1012, {'R_I4': True}), (1013, {'R_I4': True}), (1014, {'R_I4': True}), (1015, {'R_I4': True}),
                       (1016, {'R_I4': False}), (1017, {'R_I4': True}), (1018, {'R_I4': True}), (1019, {'R_I4': True}),
                       (1020, {'R_I4': True}), (1021, {'R_I4': False}), (1022, {'R_I4': False}), (1023, {'R_I4': True})]
-        result = self.cr_eval.evaluate_scenario(scenario, ["SRI4"])
+        result = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
         print("Test emergency lane:")
         print(result)
         self.assertEqual(exp_result, result)

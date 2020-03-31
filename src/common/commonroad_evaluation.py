@@ -21,7 +21,8 @@ class CommonRoadObstacleEvaluation:
         self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param,
                                                           self._traffic_rules_param)
         self._traffic_rule_sets = traffic_rules.get("traffic_rule_sets")
-        self._traffic_rules = traffic_rules.get("traffic_rules")
+        self._traffic_rules_forward = traffic_rules.get("traffic_rules_forward")
+        self._traffic_rules_backward = traffic_rules.get("traffic_rules_backward")
         self._activated_traffic_rule_sets = traffic_rules.get("activated_traffic_rule_sets")
         self._vehicle_dependent_rules = traffic_rules.get("vehicle_dependent_rules")
         self._road_network_param = config.get("road_network_param")
@@ -124,7 +125,8 @@ class CommonRoadObstacleEvaluation:
 
     def _execute_evaluation(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
         self._road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
-        dispatcher = TrafficRuleDispatcher(self._traffic_rules, self._traffic_rule_sets, self._road_network,
+        dispatcher = TrafficRuleDispatcher(self._traffic_rules_forward, self._traffic_rules_backward,
+                                           self._traffic_rule_sets, self._road_network,
                                            self._simulation_param, self._ego_vehicle_param, self._other_vehicles_param,
                                            self._traffic_rules_param, self._activated_traffic_rule_sets,
                                            self._vehicle_dependent_rules)
@@ -150,8 +152,8 @@ class CommonRoadObstacleEvaluation:
         acceleration = (next_velocity - current_velocity) / self.simulation_param.get("dt")
         return acceleration
 
-    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_set: List[str]):
-        self._activated_traffic_rule_sets = activated_traffic_rule_set
+    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_sets: List[str]):
+        self._activated_traffic_rule_sets = activated_traffic_rule_sets
         self._simulation_param["dt"] = scenario.dt
         try:
             result = self._execute_evaluation(scenario)

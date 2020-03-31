@@ -1,8 +1,8 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set
 import mtl
 
 
-class TrafficRuleMonitor:
+class TrafficRuleMonitorForward:
     """
     Represents single formalized traffic rule
     """
@@ -22,7 +22,7 @@ class TrafficRuleMonitor:
         return self._name
 
     @property
-    def predicates(self) -> List[str]:
+    def predicates(self) -> Set[str]:
         return self._predicates
 
     @property
@@ -30,7 +30,7 @@ class TrafficRuleMonitor:
         return self._vehicle_dependency
 
     @staticmethod
-    def _extract_predicates(logic_formula: str) -> List[str]:
+    def _extract_predicates(logic_formula: str) -> Set[str]:
         """
         Extracts all predicates from temporal logic formula given as string
 
@@ -42,7 +42,7 @@ class TrafficRuleMonitor:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
         predicates = [x for x in predicates_tmp if x != ""]
-        return predicates
+        return set(predicates)
 
     def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]]) -> bool:
         """
