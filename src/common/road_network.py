@@ -134,6 +134,7 @@ class Lane:
         Generates curvilinear coordinate system for a reference path
 
         :param ref_path: reference path (polyline)
+        :param road_network_param: dictionary containing parameters of the road network
         :returns curvilinear coordinate system for reference path
         """
         new_ref_path = np.array([])
@@ -245,7 +246,7 @@ class RoadNetwork:
         """
         Finds the lane a lanelet belongs to
 
-        :param lanelet: CommonRoad lanelet ID
+        :param lanelet_id: CommonRoad lanelet ID
         :returns lane object
         """
         for lane in self.lanes:
@@ -262,35 +263,14 @@ class RoadNetwork:
         """
 
         occupied_lanes = set()
-        lanelets_center_updated = obs_lanelet_center#set()
-        obs_lanelet_shape_updated = obs_lanelet_shape#set()
+        lanelets_center_updated = obs_lanelet_center
+        obs_lanelet_shape_updated = obs_lanelet_shape
         if len(obs_lanelet_center) > 0:
-            # lanelets adjacent to exit or access ramp are considered as occupied lanelet
-            # for lanelet_id in obs_lanelet_center:
-            #     lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
-            #     if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
-            #         lanelets_center_updated.add(lanelet)
-            #     elif LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type \
-            #             and lanelet.adj_left_same_direction is not None \
-            #             and LaneletType.MAIN_CARRIAGE_WAY in \
-            #             self.lanelet_network.find_lanelet_by_id(lanelet.adj_left).lanelet_type:
-            #         lanelets_center_updated.add(self.lanelet_network.find_lanelet_by_id(lanelet.adj_left))
             for lane in self.lanes:
                 for lanelet in lanelets_center_updated:
                     if lanelet in lane.contained_lanelets:
                         occupied_lanes.add(lane)
         else:
-            # if no lane is found, e.g. center on exterior of polygon usage of shape
-            # lanelets adjacent to exit or access ramp are considered as occupied lanelet
-            # for lanelet_id in obs_lanelet_shape:
-            #     lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
-            #     if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
-            #         obs_lanelet_shape_updated.add(lanelet)
-            #     elif LaneletType.ACCESS_RAMP in lanelet.lanelet_type or LaneletType.EXIT_RAMP in lanelet.lanelet_type \
-            #          and lanelet.adj_left_same_direction is not None \
-            #          and LaneletType.MAIN_CARRIAGE_WAY in \
-            #          self.lanelet_network.find_lanelet_by_id(lanelet.adj_left).lanelet_type:
-            #         obs_lanelet_shape_updated.add(self.lanelet_network.find_lanelet_by_id(lanelet.adj_left))
             for lane in self.lanes:
                 for lanelet in obs_lanelet_shape_updated:
                     if lanelet in lane.contained_lanelets:

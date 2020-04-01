@@ -24,12 +24,11 @@ class TrafficRuleDispatcher:
         """
         Constructor
 
-        :param traffic_rules: dictionary with MTL formulas of traffic rules
+        :param traffic_rules_forward: dictionary with MTL formulas of traffic rules for forward MTL framework
+        :param traffic_rules_backward: dictionary with MTL formulas of traffic rules for backward MTL framework
         :param traffic_rule_sets: dictionary with sets of related traffic rules
         :param road_network: road network with lanes based on CommonRoad scenario
         :param simulation_param: dictionary with parameters of the simulation environment
-        :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-        :param other_vehicles_param: dictionary with general parameters of the other vehicles
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
         :param activated_traffic_rule_sets: set of rules which are activated
         :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
@@ -120,7 +119,7 @@ class TrafficRuleDispatcher:
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
         """
-        Calls different predicate classes for predicate evaluation
+        Calls different predicate classes for evaluation predicate of all predicates
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
@@ -135,6 +134,13 @@ class TrafficRuleDispatcher:
         return combined_predicates
 
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
+        """
+        Evaluates trajectory using forward and backward framework
+
+        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
+        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :returns dictionary containing predicate evaluation
+        """
         results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
         results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
         result = {}
@@ -144,7 +150,7 @@ class TrafficRuleDispatcher:
 
     def evaluate_trajectory_forward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
-        Evaluates trajectory for traffic rule compliance
+        Evaluates trajectory for traffic rule compliance with forward MTL framework
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
@@ -192,7 +198,7 @@ class TrafficRuleDispatcher:
 
     def evaluate_trajectory_backward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
-        Evaluates trajectory for traffic rule compliance
+        Evaluates trajectory for traffic rule compliance with backward MTL framework
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
@@ -211,7 +217,6 @@ class TrafficRuleDispatcher:
                     if result is False:
                         rule_evaluation[rule.name] = False
                         break
-
             else:  # evaluate rules which depend on other vehicles, e.g., safe distance
                 for vehicle in other_vehicles:
                     self._reset_backward_monitors()
@@ -225,4 +230,3 @@ class TrafficRuleDispatcher:
                             rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = False
                             break
         return rule_evaluation
-

@@ -11,7 +11,7 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> Dict:
     """
-    Update ACC vehicle parameters
+    Update ego vehicle parameters
 
     :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
     :param simulation_param: dictionary with parameters of the simulation environment

@@ -12,6 +12,7 @@ from commonroad.scenario.lanelet import Lanelet, LaneletType
 
 
 class CommonRoadObstacleEvaluation:
+    """Class for the traffic rule evaluation of CommonRoad scenarios"""
     def __init__(self, config_path: str):
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
@@ -19,7 +20,7 @@ class CommonRoadObstacleEvaluation:
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._traffic_rules_param = traffic_rules.get("traffic_rules_param")
         self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param,
-                                                          self._traffic_rules_param)
+                                                           self._traffic_rules_param)
         self._traffic_rule_sets = traffic_rules.get("traffic_rule_sets")
         self._traffic_rules_forward = traffic_rules.get("traffic_rules_forward")
         self._traffic_rules_backward = traffic_rules.get("traffic_rules_backward")
@@ -43,16 +44,24 @@ class CommonRoadObstacleEvaluation:
         return self._ego_vehicle_param
 
     def create_vehicle(self, obstacle: DynamicObstacle, vehicle_param: Dict, ego_vehicle: Vehicle = None) -> Vehicle:
-        acceleration = self.compute_acceleration(obstacle.initial_state.velocity,
-                                                 obstacle.prediction.trajectory.state_list[0].velocity)
-        jerk = self.compute_jerk(acceleration, 0)
+        """
+        Transforms a CommonRoad obstacle to a vehicle object
+
+        :param obstacle: CommonRoad obstacle
+        :param vehicle_param: dictionary with vehicle parameters
+        :param ego_vehicle: ego vehicle object (if it exist already) for reference generation
+        :return: vehicle object
+        """
+        acceleration = self._compute_acceleration(obstacle.initial_state.velocity,
+                                                  obstacle.prediction.trajectory.state_list[0].velocity)
+        jerk = self._compute_jerk(acceleration, 0)
 
         if ego_vehicle is None:
             vehicle_classification = VehicleClassification.EGO_VEHICLE
             initial_lanelets = [self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
                                 for lanelet_id in obstacle.initial_center_lanelet_ids]
             if LaneletType.ACCESS_RAMP in initial_lanelets[0].lanelet_type:
-                main_carriage_way_lanelet_id = self.find_main_carriage_way_lanelet_id(initial_lanelets[0])
+                main_carriage_way_lanelet_id = self._find_main_carriage_way_lanelet_id(initial_lanelets[0])
                 lane = self._road_network.find_lane_by_obstacle([main_carriage_way_lanelet_id], [])
             else:
                 lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
@@ -82,8 +91,8 @@ class CommonRoadObstacleEvaluation:
                               lane, vehicle_param)
 
         for state in obstacle.prediction.trajectory.state_list:
-            acceleration = self.compute_acceleration(state_lon.v, state.velocity)
-            jerk = self.compute_jerk(acceleration, 0)
+            acceleration = self._compute_acceleration(state_lon.v, state.velocity)
+            jerk = self._compute_jerk(acceleration, 0)
             state_lon, state_lat = CommonRoadObstacleEvaluation.create_curvilinear_states(state.position,
                                                                                           state.velocity,
                                                                                           acceleration, jerk,
@@ -100,15 +109,22 @@ class CommonRoadObstacleEvaluation:
 
         return vehicle
 
-    def _adjacent_to_ego(self, ego_lanelet_id: int, obs_lanelet_id: int):
+    def _adjacent_to_ego(self, ego_lanelet_id: int, obs_lanelet_id: int) -> bool:
+        """
+        Evaluates if a vehicle is in a to the ego vehicle adjacent lane
+
+        :param ego_lanelet_id: IDs of lanelets the ego vehicle is on
+        :param obs_lanelet_id: IDs of lanelets the other vehicle is on
+        :return: boolean indicating if the vehicle is in an adjacent lane
+        """
         adjacent_lanelet_ids = {ego_lanelet_id}
         ego_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(ego_lanelet_id)
         current_lanelet = ego_lanelet
         while current_lanelet.adj_left_same_direction is not None:
-            current_lanelet =  self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
+            current_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
             adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
         while current_lanelet.adj_right_same_direction is not None:
-            current_lanelet =  self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
+            current_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
             adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
         for lanelet_id in list(adjacent_lanelet_ids):
             lane = self._road_network.find_lane_by_lanelet(lanelet_id)
@@ -116,14 +132,28 @@ class CommonRoadObstacleEvaluation:
                 return True
         return False
 
-    def find_main_carriage_way_lanelet_id(self, lanelet: Lanelet) -> int:
+    def _find_main_carriage_way_lanelet_id(self, lanelet: Lanelet) -> int:
+        """
+        Searches for an adjacent lanelet part of the main carriageway
+
+        :param lanelet: start lanelet
+        :return: ID of a lanelet which is part of the main carriageway
+        """
         current_lanelet = lanelet
+        if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
+            return current_lanelet.lanelet_id
         while current_lanelet.adj_left_same_direction is not None:
             current_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
             if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
                 return current_lanelet.lanelet_id
 
-    def _execute_evaluation(self, scenario) -> List[Tuple[int, Dict[str, bool]]]:
+    def _execute_evaluation(self, scenario: Scenario) -> List[Tuple[int, Dict[str, bool]]]:
+        """
+        Traffic rule evaluation of each vehicle in a CommonRoad scenario
+
+        :param scenario: CommonRoad scenario
+        :return: evaluation results for each vehicle
+        """
         self._road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
         dispatcher = TrafficRuleDispatcher(self._traffic_rules_forward, self._traffic_rules_backward,
                                            self._traffic_rule_sets, self._road_network,
@@ -143,15 +173,37 @@ class CommonRoadObstacleEvaluation:
 
         return vehicle_evaluation
 
-    def compute_jerk(self, current_acceleration: float, previous_acceleration: float):
+    def _compute_jerk(self, current_acceleration: float, previous_acceleration: float) -> float:
+        """
+        Computes jerk given acceleration
+
+        :param current_acceleration: acceleration of current time step
+        :param previous_acceleration: acceleration of previous time step
+        :return: jerk
+        """
         jerk = (current_acceleration - previous_acceleration) / self.simulation_param.get("dt")
         return jerk
 
-    def compute_acceleration(self, current_velocity: float, next_velocity: float):
-        acceleration = (next_velocity - current_velocity) / self.simulation_param.get("dt")
+    def _compute_acceleration(self, previous_velocity: float, current_velocity: float):
+        """
+        Computes acceleration given velocity
+
+        :param current_velocity: velocity of current time step
+        :param previous_velocity: velocity of previous time step
+        :return: acceleration
+        """
+        acceleration = (current_velocity - previous_velocity) / self.simulation_param.get("dt")
         return acceleration
 
-    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_sets: List[str]):
+    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_sets: List[str]) \
+            -> Union[List[Tuple[int, Dict[str, bool]]], None]:
+        """
+        Evaluates CommonRoad scenario
+
+        :param scenario: CommonRoad scenario
+        :param activated_traffic_rule_sets: set of rules which should be evaluated
+        :return: evaluation results
+        """
         self._activated_traffic_rule_sets = activated_traffic_rule_sets
         self._simulation_param["dt"] = scenario.dt
         try:
@@ -176,10 +228,16 @@ class CommonRoadObstacleEvaluation:
 
         return result
 
-    def _init_eval_dict(self, vehicle):
+    def _init_eval_dict(self, vehicle_result: Tuple[int, Dict[str, bool]]) -> Tuple[Dict[str, int], Dict[str, bool]]:
+        """
+        Prepares and creates evaluation dictionaries
+
+        :param vehicle_result: result of single vehicle
+        :return: evaluation results
+        """
         eval_dict = {}
         eval_vehicle_dependent_rules = {}
-        for rule_name, eval_result in vehicle[1].items():
+        for rule_name, eval_result in vehicle_result[1].items():
             if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules \
                     and eval_vehicle_dependent_rules.get(rule_name) is None:
                 eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
@@ -190,6 +248,12 @@ class CommonRoadObstacleEvaluation:
         return eval_dict, eval_vehicle_dependent_rules
 
     def evaluate_result(self, result, scenario_name):
+        """
+        Statistical evaluation of results
+
+        :param result: evaluation results
+        :param scenario_name: CommonRoad scenario name
+        """
         self.num_vehicles += len(result)
         self.num_scenarios += 1
         num_correct_rules = 0
@@ -224,7 +288,12 @@ class CommonRoadObstacleEvaluation:
         """
         Computes initial state of ego vehicle
 
-        :param state: CommonRoad state
+        :param position: position of vehicle in cartesian coordinates
+        :param velocity: velocity of vehicle
+        :param acceleration: acceleration of vehicle
+        :param jerk: jerk of vehicle
+        :param orientation: orientation of vehicle
+        :param lane: reference lane of the vehicle
         :return: lateral and longitudinal state of vehicle
         """
         try:

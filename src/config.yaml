@@ -4,6 +4,7 @@
 # .. code-block:: yaml
 #
 #    - dt: time step size
+#    - single_scenario: time step size
 #    - commonroad_benchmark_id: CommonRoad solution file name
 #    - commonroad_scenario_folder: folder in which CommonRoad scenarios are located
 #    - verbose_mode: activate/deactivate status output of algorithms and simulation

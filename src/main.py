@@ -7,6 +7,13 @@ from commonroad.common.file_reader import CommonRoadFileReader
 
 
 def create_scenarios_from_directory(directories: List[str], max_num_scenarios: int = 100):
+    """
+    Creation of CommonRoad scenarios from CommonRoad XML-files which are located in provided directories
+
+    :param directories: directories where XML files are located
+    :param max_num_scenarios: maximum number of scenarios which should be created
+    :returns list of CommonRoad scenarios
+    """
     scenarios = []
     for scenario_dir in directories:
         abs_path = os.path.abspath(os.getcwd() + scenario_dir)
