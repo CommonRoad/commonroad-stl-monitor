@@ -41,13 +41,14 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 def main():
     cr_eval = CommonRoadObstacleEvaluation("")
     if cr_eval.simulation_param.get("single_scenario"):
-        scenario, planning_problem_set = CommonRoadFileReader("./../scenarios/" + cr_eval.simulation_param.get("scenario_folder") +
-                                                              cr_eval.simulation_param.get("benchmark_id") +
-                                                              ".xml").open()
+        scenario, planning_problem_set = CommonRoadFileReader("./../scenarios/"
+                                                              + cr_eval.simulation_param.get("scenario_dir")
+                                                              + cr_eval.simulation_param.get("benchmark_id")
+                                                              + ".xml").open()
         result = cr_eval.evaluate_scenario(scenario, cr_eval.simulation_param.get("rule_set"))
         print(result)
     else:
-        scenarios = create_scenarios_from_directory(cr_eval.simulation_param.get("evaluation_folders"), 10)
+        scenarios = create_scenarios_from_directory(cr_eval.simulation_param.get("evaluation_dirs"), 10)
         for sc in scenarios:
             result = cr_eval.evaluate_scenario(sc, cr_eval.simulation_param.get("rule_set"))
             print(result)

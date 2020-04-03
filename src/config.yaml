@@ -4,33 +4,32 @@
 # .. code-block:: yaml
 #
 #    - dt: time step size
-#    - single_scenario: time step size
-#    - commonroad_benchmark_id: CommonRoad solution file name
-#    - commonroad_scenario_folder: folder in which CommonRoad scenarios are located
+#    - single_scenario: boolean indicating if only a specific scenario should be evaluated or all scenarios within the directories defined by evaluation_folders
+#    - scenario_dir: folder in which CommonRoad scenarios are located
+#    - benchmark_id: CommonRoad solution file name
+#    - evaluation_dirs: list of directories which contain scenarios which should be evaluated
+#    - rule_set: set of traffic rules which should be evaluated (see traffic_rules.yaml)
 #    - verbose_mode: activate/deactivate status output of algorithms and simulation
 #    - time_measuring: activate/deactivate computation time measuring
-#    - c_profile: activate/deactivate storing of computation time by using cProfile package
 #    - commonroad_video_creation: activate/deactivate video creation of CommonRoad scenario
 #    - profile_video_creation: activate/deactivate video creation of profiles
 #    - plotting: activate/deactivate plotting of state profiles
 #    - other_vehicle_plots: list with CommonRoad obstacle IDs which should be considered for plotting
 #    - store_profiles: activate/deactivate storage of profiles
 #    - video_output_folder: folder in which the created videos are stored
-#    - country: country of scenario
 simulation_param:
     dt: 0.1
     single_scenario: false
+    scenario_dir: test/
     benchmark_id: test_standstill
-    scenario_folder: test/
+    evaluation_dirs: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     rule_set: ["SRI1"]
-    evaluation_folders: ["/../../../commonroad/scenarios/highD-dataset/scenarios"]
-    verbose_mode: true
-    time_measuring: true
-    c_profile: false
+    verbose_mode: false
+    time_measuring: false
     commonroad_video_creation: false
     profile_video_creation: false
     plotting: false
-    other_vehicle_plots: [140]
+    other_vehicle_plots: []
     store_profiles: false
     video_output_folder: ./videos
 
@@ -65,6 +64,7 @@ road_network_param:
 #    - emergency_profile_num_steps_fb: number of steps minimum jerk should be attended to emergency profile
 #    - fov_speed_limit: speed limit based on field of view
 #    - braking_speed_limit: speed limit to ensure comfortable braking within field of view
+#    - road_condition_speed_limit: speed limit based on road conditions
 
 ego_vehicle_param:
     vehicle_number: 2
@@ -120,7 +120,7 @@ visualization:
     #   - line_width: line width of profiles
     #   - font_size: font size of text within the plot
     #   - axes_line_width: line width of the axes
-    #   - type of figure which should be stored
+    #   - figure_type: type of figure which should be stored
     plot:
         width: 3.75
         line_width: 0.75

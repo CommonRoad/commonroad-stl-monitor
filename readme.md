@@ -16,8 +16,15 @@ You can install the required Python packages with the provided *requirements.txt
 Additionally, you need the following software:
 * *[commonroad-io](https://gitlab.lrz.de/cps/commonroad-io/tree/develop)* 
 which has to be installed by executing **python setup.py install** within the linked directory. 
-* *[commonroad-curvilinear-coordinate-system](https://gitlab.lrz.de/manzinger/commonroad-curvilinear-coordinate-system-fork/tree/development)* 
+* *[commonroad-curvilinear-coordinate-system](./external/curvilinear_coordinate_system)* 
 which has to be installed according to the readme inside the linked directory.
 
 ## Running the CommonRoad Traffic Rule Monitor
-TODO
+There exist several options to run the CommonRoad traffic rule monitor:
+* *[Jupyter notebook](./jupyter/scenario_evaluation.ipynb)* : Test scenarios can be visualized and every vehicle within the scenario 
+is evaluated based on a selected set of traffic rules.
+* *[Test cases](./test/run_test.py)* : Run all test cases which evaluate the formalized rules in different scenarios.
+* *[main.py](./src/main.py)* : Traffic rule evaluation for a single scenario or all scenarios which are located within predefined directories.
+
+The temporal logic formulas of the rules and the rule specific parametrization can be found in the file *[traffic_rules.yaml](./src/traffic_rules.yaml)*.  
+Simulation and vehicle parameters can be set in the file *[config.yaml](./src/config.yaml)*.
