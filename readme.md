@@ -9,6 +9,7 @@ For the monitor you need at least Python 3.6 and the following packages:
 * *matplotlib* >= 2.5.0
 * *numpy* >= 3.1.0
 * *metric-temporal-logic* == 0.1.4
+* *python-monitors* >= 0.1.1
 
 The usage of the Anaconda Python distribution is recommended. \
 You can install the required Python packages with the provided *requirements.txt* file (*pip install -r requirements.txt*). 
