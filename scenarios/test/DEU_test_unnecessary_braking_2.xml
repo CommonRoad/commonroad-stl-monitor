@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_unnecessary_braking_2" date="2020-03-26">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_unnecessary_braking_2" date="2020-04-08">
   <location>
-    <country>DEU</country>
-    <federalState>DE-BY</federalState>
-    <gpsLatitude>48.262728</gpsLatitude>
-    <gpsLongitude>11.668307</gpsLongitude>
-    <zipcode>12345</zipcode>
-    <name>Munich</name>
+    <geoNameId>-999</geoNameId>
+    <gpsLatitude>0</gpsLatitude>
+    <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
-    <multi_lane/>
     <no_oncoming_traffic/>
     <highway/>
     <parallel_lanes/>
+    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

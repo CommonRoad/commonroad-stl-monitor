@@ -589,6 +589,6 @@ def create_scenario(commonroad_benchmark_id, dt):
     affiliation = 'Technical University of Munich, Germany'
     source = 'CommonRoad Monitor'
     tags = {Tag.HIGHWAY, Tag.MULTI_LANE, Tag.NO_ONCOMING_TRAFFIC, Tag.PARALLEL_LANES}
-    location = Location("DEU", "DE-BY", 48.262728, 11.668307, "12345", "Munich")
-    scenario = Scenario(dt, commonroad_benchmark_id, author, tags, affiliation, source, location)
+    location = Location(-999, 0, 0)
+    scenario = Scenario(dt, "DEU_" + commonroad_benchmark_id, author, tags, affiliation, source, location)
     return scenario

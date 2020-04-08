@@ -92,8 +92,8 @@ def create_max_speed_limit_scenario():
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
-    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(35)])
-    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(35)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11})
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 2, 13, 14, 15})
 
     write_to_file(scenario)
@@ -114,8 +114,8 @@ def create_min_speed_limit_scenario():
                                          (LineMarking.SOLID, LineMarking.DASHED)],
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
-    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MINSPEED, [str(30)])
-    traffic_sign = TrafficSign(202, [traffic_sign_elem])
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MIN_SPEED, [str(30)])
+    traffic_sign = TrafficSign(202, [traffic_sign_elem], {1, 6})
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 
     write_to_file(scenario)
@@ -143,8 +143,8 @@ def create_preserves_traffic_flow_scenario():
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
-    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(40)])
-    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(40)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11})
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
 
     write_to_file(scenario)
@@ -181,8 +181,8 @@ def create_safe_distance_scenario():
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
-    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAXSPEED, [str(22.22)])
-    traffic_sign = TrafficSign(201, [traffic_sign_elem])
+    traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(22.22)])
+    traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11})
     scenario.lanelet_network.add_traffic_sign(traffic_sign, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
 
     write_to_file(scenario)

@@ -15,7 +15,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which violates speed limit partially (1000)
 
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_max_speed_limit.xml").open()
+                                                              "DEU_test_max_speed_limit.xml").open()
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': True}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
@@ -31,7 +31,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which violates speed limit partially (1000)
 
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_max_speed_limit.xml").open()
+                                                              "DEU_test_max_speed_limit.xml").open()
         self.activated_traffic_rule_sets = ["SRG3"]
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
@@ -50,7 +50,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which violates speed limit partially (1000)
 
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_max_speed_limit.xml").open()
+                                                              "DEU_test_max_speed_limit.xml").open()
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 32
@@ -72,7 +72,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
 
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_min_speed_limit.xml").open()
+                                                              "DEU_test_min_speed_limit.xml").open()
         exp_result = [(1000, {'R_G4': False}), (1001, {'R_G4': True})]
         result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG4"])
         result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG4"])
@@ -87,7 +87,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
         # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_preserve_traffic_flow.xml").open()
+                                                              "DEU_test_preserve_traffic_flow.xml").open()
         exp_result = [(1000, {'R_G5': True}), (1001, {'R_G5': True}),
                       (1002, {'R_G5': True}), (1003, {'R_G5': False}),
                       (1004, {'R_G5': True}), (1005, {'R_G5': False})]
@@ -104,7 +104,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which violates safe distance to two leading vehicles (1002)
         # one vehicle which violates safe distance partially (1000)
         # one vehicle which always keeps safe distance (1005)
-        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "test_safe_distance.xml").open()
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml").open()
         exp_result = [(1000, {'R_G1_veh_1001': False, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
                               'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
                       (1001, {'R_G1_veh_1000': True, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
@@ -133,7 +133,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle following another vehicle which brakes normal (1006)
         # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_unnecessary_braking_1.xml").open()
+                                                              "DEU_test_unnecessary_braking_1.xml").open()
         exp_result = [(1000, {'R_G2': True}), (1001, {'R_G2': True}), (1002, {'R_G2': False}),
                       (1005, {'R_G2': True}), (1006, {'R_G2': True}), (1007, {'R_G2': True})]
         result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
@@ -146,7 +146,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
     def test_unnecessary_braking_2(self):
         # one vehicle which without leading vehicle which brakes very strong, because it is necessary (1000)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_unnecessary_braking_2.xml").open()
+                                                              "DEU_test_unnecessary_braking_2.xml").open()
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 5
         exp_result = [(1000, {'R_G2': True})]
         result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
@@ -166,7 +166,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # 1010)
         # one vehicle which is in standstill and part of a congestion (1005)
 
-        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "test_standstill.xml").open()
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_standstill.xml").open()
         exp_result = [(1000, {'R_I1': True}), (1001, {'R_I1': False}), (1002, {'R_I1': True}), (1003, {'R_I1': True}),
                       (1004, {'R_I1': True}), (1005, {'R_I1': True}), (1006, {'R_I1': True}), (1007, {'R_I1': True}),
                       (1008, {'R_I1': True}), (1009, {'R_I1': True}), (1010, {'R_I1': True})]
@@ -184,7 +184,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which drives always in correct direction (1002)
         # one vehicle which makes a u-turn (1003)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_reversing_and_u_turn.xml").open()
+                                                              "DEU_test_reversing_and_u_turn.xml").open()
         exp_result = [(1000, {'R_I3': False}), (1001, {'R_I3': False}), (1002, {'R_I3': False}), (1003, {'R_I3': True})]
         result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI3"])
         result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI3"])
@@ -198,7 +198,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which overtakes a congestion too fast (1001)
         # all other vehicles a part of a congestion
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_right_congestion.xml").open()
+                                                              "DEU_test_overtaking_right_congestion.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
                               'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
                               'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
@@ -242,7 +242,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # of a broad lane marking (1004)
         # one vehicle driving on the leftmost lane (1005)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_right_broad_lane_marking.xml").open()
+                                                              "DEU_test_overtaking_right_broad_lane_marking.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
                               'R_I2_veh_1004': True, 'R_I2_veh_1005': True}),
                       (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': False,
@@ -267,7 +267,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle right of a broad lane marking which does not overtake (1000)
         # two vehicles driving on the left (1002, 1003)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_right_normal.xml").open()
+                                                              "DEU_test_overtaking_right_normal.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True}),
                       (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': False}),
                       (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True}),
@@ -287,7 +287,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle on main carriage way overtaking vehicle on leftmost lane (1003)
         # one vehicle which is overtaken by vehicle on access ramp (1001)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_access_ramp.xml").open()
+                                                              "DEU_test_overtaking_access_ramp.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True}),
                       (1001, {'R_I2_veh_1000': True, 'R_I2_veh_1002': True,
@@ -310,7 +310,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle overtaking on access ramp with appropriate velocity (1000)
         # all other vehicles are part of a traffic jam
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_overtaking_exit_ramp.xml").open()
+                                                              "DEU_test_overtaking_exit_ramp.xml").open()
         exp_result = [(1000, {'R_I2_veh_1001': True, 'R_I2_veh_1002': True, 'R_I2_veh_1003': True,
                               'R_I2_veh_1004': True, 'R_I2_veh_1005': True, 'R_I2_veh_1006': True,
                               'R_I2_veh_1007': True, 'R_I2_veh_1008': True}),
@@ -351,7 +351,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle changing to rightmost main carriage way lane (1000)
         # one vehicle entering main carriage way (1002)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_consider_entering_vehicles.xml").open()
+                                                              "DEU_test_consider_entering_vehicles.xml").open()
         exp_result = [(1000, {'R_I5_veh_1001': True, 'R_I5_veh_1002': False}),
                       (1001, {'R_I5_veh_1000': True, 'R_I5_veh_1002': True}),
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]
@@ -364,7 +364,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_emergency_three_lanes_with_shoulder.xml").open()
+                                                              "DEU_test_emergency_three_lanes_with_shoulder.xml").open()
         exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': True}), (1007, {'R_I4': True}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': True}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),
@@ -380,7 +380,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
 
     def test_emergency_lane_not_broad_enough(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "test_emergency_two_lanes_not_broad_enough.xml").open()
+                                                              "DEU_test_emergency_two_lanes_not_broad_enough.xml").open()
         exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': False}), (1007, {'R_I4': False}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),

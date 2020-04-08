@@ -225,6 +225,8 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     :param dt: time step size
     :return: new position, velocity, acceleration
     """
+    if j_input is None:
+        print("stoj")
     a_new = a_0 + j_input * dt
     if a_new > a_max:
         t_a = abs((a_max - a_0) / j_input)  # time until a_max is reached

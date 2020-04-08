@@ -49,9 +49,9 @@ class VelocityPredicateCollection(PredicateCollection):
         """
         v_max_lane = self._traffic_sign_interpreter.speed_limit(frozenset(vehicle.lanelet_assignment[time_step]))
         if v_max_lane is None or v_max_lane == float("inf"):
-            return self._traffic_rules_param.get("desired_highway_velocity")
+            return self._traffic_rules_param.get("desired_interstate_velocity")
         else:
-            return min(self._traffic_rules_param.get("desired_highway_velocity"), v_max_lane)
+            return min(self._traffic_rules_param.get("desired_interstate_velocity"), v_max_lane)
 
     def _slow_leading_vehicle(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int):
         """

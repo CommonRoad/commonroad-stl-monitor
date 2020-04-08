@@ -73,6 +73,7 @@ traffic_rules_backward:
 #   - u_turn: angle [rad] indicating u-turn
 #   - country: countries where traffic rules are applied
 traffic_rules_param:
+    j_abrupt: -2 # for ego vehicle emergency profile calculation
     a_abrupt: -2
     min_velocity_dif: 15
     standstill_error: 0.01

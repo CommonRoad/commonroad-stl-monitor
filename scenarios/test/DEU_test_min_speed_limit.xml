@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="test_max_speed_limit" date="2020-03-26">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_min_speed_limit" date="2020-04-08">
   <location>
-    <country>DEU</country>
-    <federalState>DE-BY</federalState>
-    <gpsLatitude>48.262728</gpsLatitude>
-    <gpsLongitude>11.668307</gpsLongitude>
-    <zipcode>12345</zipcode>
-    <name>Munich</name>
+    <geoNameId>-999</geoNameId>
+    <gpsLatitude>0</gpsLatitude>
+    <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
-    <multi_lane/>
     <no_oncoming_traffic/>
     <highway/>
     <parallel_lanes/>
+    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -354,7 +351,7 @@
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="2">
     <leftBound>
@@ -697,7 +694,7 @@
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="3">
     <leftBound>
@@ -1040,7 +1037,7 @@
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="4">
     <leftBound>
@@ -1383,7 +1380,7 @@
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="5">
     <leftBound>
@@ -1725,7 +1722,7 @@
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="6">
     <leftBound>
@@ -1893,7 +1890,7 @@
         <x>40.0</x>
         <y>7.0</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -2063,12 +2060,11 @@
       <lineMarking>dashed</lineMarking>
     </rightBound>
     <successor ref="7"/>
-    <adjacentLeft ref="11" drivingDir="same"/>
     <adjacentRight ref="1" drivingDir="same"/>
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="7">
     <leftBound>
@@ -2236,7 +2232,7 @@
         <x>80.0</x>
         <y>7.0</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -2407,12 +2403,11 @@
     </rightBound>
     <predecessor ref="6"/>
     <successor ref="8"/>
-    <adjacentLeft ref="12" drivingDir="same"/>
     <adjacentRight ref="2" drivingDir="same"/>
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="8">
     <leftBound>
@@ -2580,7 +2575,7 @@
         <x>120.0</x>
         <y>7.0</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -2751,12 +2746,11 @@
     </rightBound>
     <predecessor ref="7"/>
     <successor ref="9"/>
-    <adjacentLeft ref="13" drivingDir="same"/>
     <adjacentRight ref="3" drivingDir="same"/>
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="9">
     <leftBound>
@@ -2924,7 +2918,7 @@
         <x>160.0</x>
         <y>7.0</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -3095,12 +3089,11 @@
     </rightBound>
     <predecessor ref="8"/>
     <successor ref="10"/>
-    <adjacentLeft ref="14" drivingDir="same"/>
     <adjacentRight ref="4" drivingDir="same"/>
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
   <lanelet id="10">
     <leftBound>
@@ -3268,7 +3261,7 @@
         <x>200.0</x>
         <y>7.0</y>
       </point>
-      <lineMarking>dashed</lineMarking>
+      <lineMarking>solid</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -3438,1729 +3431,16 @@
       <lineMarking>dashed</lineMarking>
     </rightBound>
     <predecessor ref="9"/>
-    <adjacentLeft ref="15" drivingDir="same"/>
     <adjacentRight ref="5" drivingDir="same"/>
     <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
+    <trafficSignRef ref="202"/>
   </lanelet>
-  <lanelet id="11">
-    <leftBound>
-      <point>
-        <x>0.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>1.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>2.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>3.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>4.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>5.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>6.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>7.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>8.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>9.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>10.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>11.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>12.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>13.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>14.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>15.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>16.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>17.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>18.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>19.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>20.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>21.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>22.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>23.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>24.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>25.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>26.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>27.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>28.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>29.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>30.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>31.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>32.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>33.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>34.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>35.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>36.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>37.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>38.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>39.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>40.0</x>
-        <y>10.5</y>
-      </point>
-      <lineMarking>solid</lineMarking>
-    </leftBound>
-    <rightBound>
-      <point>
-        <x>0.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>1.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>2.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>3.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>4.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>5.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>6.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>7.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>8.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>9.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>10.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>11.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>12.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>13.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>14.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>15.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>16.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>17.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>18.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>19.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>20.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>21.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>22.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>23.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>24.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>25.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>26.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>27.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>28.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>29.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>30.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>31.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>32.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>33.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>34.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>35.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>36.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>37.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>38.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>39.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>40.0</x>
-        <y>7.0</y>
-      </point>
-      <lineMarking>dashed</lineMarking>
-    </rightBound>
-    <successor ref="12"/>
-    <adjacentRight ref="6" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
-    <laneletType>highway</laneletType>
-    <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
-  </lanelet>
-  <lanelet id="12">
-    <leftBound>
-      <point>
-        <x>40.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>41.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>42.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>43.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>44.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>45.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>46.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>47.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>48.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>49.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>50.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>51.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>52.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>53.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>54.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>55.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>56.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>57.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>58.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>59.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>60.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>61.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>62.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>63.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>64.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>65.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>66.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>67.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>68.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>69.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>70.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>71.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>72.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>73.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>74.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>75.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>76.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>77.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>78.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>79.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>80.0</x>
-        <y>10.5</y>
-      </point>
-      <lineMarking>solid</lineMarking>
-    </leftBound>
-    <rightBound>
-      <point>
-        <x>40.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>41.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>42.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>43.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>44.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>45.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>46.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>47.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>48.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>49.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>50.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>51.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>52.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>53.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>54.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>55.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>56.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>57.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>58.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>59.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>60.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>61.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>62.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>63.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>64.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>65.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>66.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>67.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>68.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>69.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>70.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>71.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>72.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>73.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>74.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>75.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>76.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>77.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>78.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>79.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>80.0</x>
-        <y>7.0</y>
-      </point>
-      <lineMarking>dashed</lineMarking>
-    </rightBound>
-    <predecessor ref="11"/>
-    <successor ref="13"/>
-    <adjacentRight ref="7" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
-    <laneletType>highway</laneletType>
-    <userOneWay>vehicle</userOneWay>
-  </lanelet>
-  <lanelet id="13">
-    <leftBound>
-      <point>
-        <x>80.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>81.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>82.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>83.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>84.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>85.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>86.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>87.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>88.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>89.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>90.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>91.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>92.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>93.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>94.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>95.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>96.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>97.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>98.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>99.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>100.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>101.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>102.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>103.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>104.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>105.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>106.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>107.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>108.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>109.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>110.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>111.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>112.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>113.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>114.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>115.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>116.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>117.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>118.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>119.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>120.0</x>
-        <y>10.5</y>
-      </point>
-      <lineMarking>solid</lineMarking>
-    </leftBound>
-    <rightBound>
-      <point>
-        <x>80.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>81.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>82.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>83.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>84.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>85.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>86.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>87.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>88.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>89.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>90.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>91.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>92.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>93.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>94.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>95.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>96.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>97.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>98.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>99.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>100.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>101.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>102.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>103.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>104.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>105.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>106.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>107.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>108.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>109.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>110.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>111.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>112.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>113.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>114.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>115.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>116.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>117.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>118.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>119.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>120.0</x>
-        <y>7.0</y>
-      </point>
-      <lineMarking>dashed</lineMarking>
-    </rightBound>
-    <predecessor ref="12"/>
-    <successor ref="14"/>
-    <adjacentRight ref="8" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
-    <laneletType>highway</laneletType>
-    <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
-  </lanelet>
-  <lanelet id="14">
-    <leftBound>
-      <point>
-        <x>120.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>121.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>122.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>123.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>124.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>125.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>126.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>127.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>128.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>129.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>130.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>131.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>132.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>133.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>134.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>135.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>136.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>137.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>138.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>139.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>140.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>141.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>142.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>143.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>144.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>145.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>146.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>147.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>148.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>149.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>150.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>151.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>152.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>153.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>154.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>155.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>156.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>157.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>158.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>159.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>160.0</x>
-        <y>10.5</y>
-      </point>
-      <lineMarking>solid</lineMarking>
-    </leftBound>
-    <rightBound>
-      <point>
-        <x>120.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>121.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>122.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>123.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>124.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>125.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>126.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>127.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>128.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>129.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>130.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>131.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>132.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>133.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>134.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>135.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>136.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>137.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>138.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>139.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>140.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>141.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>142.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>143.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>144.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>145.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>146.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>147.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>148.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>149.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>150.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>151.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>152.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>153.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>154.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>155.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>156.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>157.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>158.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>159.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>160.0</x>
-        <y>7.0</y>
-      </point>
-      <lineMarking>dashed</lineMarking>
-    </rightBound>
-    <predecessor ref="13"/>
-    <successor ref="15"/>
-    <adjacentRight ref="9" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
-    <laneletType>highway</laneletType>
-    <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
-  </lanelet>
-  <lanelet id="15">
-    <leftBound>
-      <point>
-        <x>160.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>161.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>162.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>163.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>164.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>165.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>166.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>167.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>168.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>169.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>170.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>171.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>172.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>173.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>174.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>175.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>176.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>177.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>178.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>179.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>180.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>181.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>182.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>183.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>184.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>185.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>186.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>187.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>188.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>189.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>190.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>191.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>192.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>193.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>194.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>195.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>196.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>197.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>198.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>199.0</x>
-        <y>10.5</y>
-      </point>
-      <point>
-        <x>200.0</x>
-        <y>10.5</y>
-      </point>
-      <lineMarking>solid</lineMarking>
-    </leftBound>
-    <rightBound>
-      <point>
-        <x>160.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>161.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>162.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>163.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>164.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>165.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>166.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>167.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>168.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>169.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>170.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>171.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>172.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>173.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>174.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>175.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>176.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>177.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>178.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>179.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>180.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>181.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>182.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>183.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>184.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>185.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>186.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>187.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>188.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>189.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>190.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>191.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>192.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>193.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>194.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>195.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>196.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>197.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>198.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>199.0</x>
-        <y>7.0</y>
-      </point>
-      <point>
-        <x>200.0</x>
-        <y>7.0</y>
-      </point>
-      <lineMarking>dashed</lineMarking>
-    </rightBound>
-    <predecessor ref="14"/>
-    <adjacentRight ref="10" drivingDir="same"/>
-    <laneletType>mainCarriageWay</laneletType>
-    <laneletType>highway</laneletType>
-    <userOneWay>vehicle</userOneWay>
-    <trafficSignRef ref="201"/>
-  </lanelet>
-  <trafficSign id="201">
+  <trafficSign id="202">
     <trafficSignElement>
-      <trafficSignID>274</trafficSignID>
-      <additionalValue>35</additionalValue>
+      <trafficSignID>275</trafficSignID>
+      <additionalValue>30</additionalValue>
     </trafficSignElement>
     <virtual>false</virtual>
   </trafficSign>
@@ -5186,7 +3466,7 @@
         <exact>0</exact>
       </time>
       <velocity>
-        <exact>31.5</exact>
+        <exact>22.0</exact>
       </velocity>
       <yawRate>
         <exact>0.0</exact>
@@ -5199,7 +3479,7 @@
       <state>
         <position>
           <point>
-            <x>6.1500000</x>
+            <x>5.2</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5210,7 +3490,7 @@
           <exact>1</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5222,7 +3502,7 @@
       <state>
         <position>
           <point>
-            <x>9.3</x>
+            <x>7.4</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5233,7 +3513,7 @@
           <exact>2</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5245,7 +3525,7 @@
       <state>
         <position>
           <point>
-            <x>12.450000</x>
+            <x>9.6000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5256,7 +3536,7 @@
           <exact>3</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5268,7 +3548,7 @@
       <state>
         <position>
           <point>
-            <x>15.600000</x>
+            <x>11.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5279,7 +3559,7 @@
           <exact>4</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5291,7 +3571,7 @@
       <state>
         <position>
           <point>
-            <x>18.750000</x>
+            <x>14.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5302,7 +3582,7 @@
           <exact>5</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5314,7 +3594,7 @@
       <state>
         <position>
           <point>
-            <x>21.9</x>
+            <x>16.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5325,7 +3605,7 @@
           <exact>6</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5337,7 +3617,7 @@
       <state>
         <position>
           <point>
-            <x>25.05</x>
+            <x>18.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5348,7 +3628,7 @@
           <exact>7</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5360,7 +3640,7 @@
       <state>
         <position>
           <point>
-            <x>28.200000</x>
+            <x>20.6</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5371,7 +3651,7 @@
           <exact>8</exact>
         </time>
         <velocity>
-          <exact>31.5</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5383,7 +3663,7 @@
       <state>
         <position>
           <point>
-            <x>31.363323</x>
+            <x>22.8</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5394,7 +3674,7 @@
           <exact>9</exact>
         </time>
         <velocity>
-          <exact>31.766078</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5406,7 +3686,7 @@
       <state>
         <position>
           <point>
-            <x>34.553142</x>
+            <x>25.0</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5417,7 +3697,7 @@
           <exact>10</exact>
         </time>
         <velocity>
-          <exact>32.029945</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5429,7 +3709,7 @@
       <state>
         <position>
           <point>
-            <x>37.769240</x>
+            <x>27.2</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5440,7 +3720,7 @@
           <exact>11</exact>
         </time>
         <velocity>
-          <exact>32.291657</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5452,7 +3732,7 @@
       <state>
         <position>
           <point>
-            <x>41.011403</x>
+            <x>29.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5463,7 +3743,7 @@
           <exact>12</exact>
         </time>
         <velocity>
-          <exact>32.551264</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5475,7 +3755,7 @@
       <state>
         <position>
           <point>
-            <x>44.279424</x>
+            <x>31.6</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5486,7 +3766,7 @@
           <exact>13</exact>
         </time>
         <velocity>
-          <exact>32.808818</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5498,7 +3778,7 @@
       <state>
         <position>
           <point>
-            <x>47.573099</x>
+            <x>33.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5509,7 +3789,7 @@
           <exact>14</exact>
         </time>
         <velocity>
-          <exact>33.064365</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5521,7 +3801,7 @@
       <state>
         <position>
           <point>
-            <x>50.892230</x>
+            <x>36.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5532,7 +3812,7 @@
           <exact>15</exact>
         </time>
         <velocity>
-          <exact>33.317952</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5544,7 +3824,7 @@
       <state>
         <position>
           <point>
-            <x>54.236624</x>
+            <x>38.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5555,7 +3835,7 @@
           <exact>16</exact>
         </time>
         <velocity>
-          <exact>33.569624</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5567,7 +3847,7 @@
       <state>
         <position>
           <point>
-            <x>57.606091</x>
+            <x>40.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5578,7 +3858,7 @@
           <exact>17</exact>
         </time>
         <velocity>
-          <exact>33.819422</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5590,7 +3870,7 @@
       <state>
         <position>
           <point>
-            <x>61.000446</x>
+            <x>42.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5601,7 +3881,7 @@
           <exact>18</exact>
         </time>
         <velocity>
-          <exact>34.067390</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5613,7 +3893,7 @@
       <state>
         <position>
           <point>
-            <x>64.419508</x>
+            <x>44.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5624,7 +3904,7 @@
           <exact>19</exact>
         </time>
         <velocity>
-          <exact>34.313565</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5636,7 +3916,7 @@
       <state>
         <position>
           <point>
-            <x>67.863099</x>
+            <x>47.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5647,7 +3927,7 @@
           <exact>20</exact>
         </time>
         <velocity>
-          <exact>34.557987</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5659,7 +3939,7 @@
       <state>
         <position>
           <point>
-            <x>71.331046</x>
+            <x>49.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5670,7 +3950,7 @@
           <exact>21</exact>
         </time>
         <velocity>
-          <exact>34.800692</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5682,7 +3962,7 @@
       <state>
         <position>
           <point>
-            <x>74.823180</x>
+            <x>51.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5693,7 +3973,7 @@
           <exact>22</exact>
         </time>
         <velocity>
-          <exact>35.041717</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5705,7 +3985,7 @@
       <state>
         <position>
           <point>
-            <x>78.339333</x>
+            <x>53.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5716,7 +3996,7 @@
           <exact>23</exact>
         </time>
         <velocity>
-          <exact>35.281094</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5728,7 +4008,7 @@
       <state>
         <position>
           <point>
-            <x>81.879342</x>
+            <x>55.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5739,7 +4019,7 @@
           <exact>24</exact>
         </time>
         <velocity>
-          <exact>35.518859</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5751,7 +4031,7 @@
       <state>
         <position>
           <point>
-            <x>85.443049</x>
+            <x>58.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5762,7 +4042,7 @@
           <exact>25</exact>
         </time>
         <velocity>
-          <exact>35.755042</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5774,7 +4054,7 @@
       <state>
         <position>
           <point>
-            <x>89.030296</x>
+            <x>60.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5785,7 +4065,7 @@
           <exact>26</exact>
         </time>
         <velocity>
-          <exact>35.989676</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5797,7 +4077,7 @@
       <state>
         <position>
           <point>
-            <x>92.640931</x>
+            <x>62.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5808,7 +4088,7 @@
           <exact>27</exact>
         </time>
         <velocity>
-          <exact>36.222790</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5820,7 +4100,7 @@
       <state>
         <position>
           <point>
-            <x>96.274802</x>
+            <x>64.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5831,7 +4111,7 @@
           <exact>28</exact>
         </time>
         <velocity>
-          <exact>36.454413</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5843,7 +4123,7 @@
       <state>
         <position>
           <point>
-            <x>99.931762</x>
+            <x>66.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5854,7 +4134,7 @@
           <exact>29</exact>
         </time>
         <velocity>
-          <exact>36.684574</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5866,7 +4146,7 @@
       <state>
         <position>
           <point>
-            <x>103.61167</x>
+            <x>69.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5877,7 +4157,7 @@
           <exact>30</exact>
         </time>
         <velocity>
-          <exact>36.913299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5889,7 +4169,7 @@
       <state>
         <position>
           <point>
-            <x>107.30800</x>
+            <x>71.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5900,7 +4180,7 @@
           <exact>31</exact>
         </time>
         <velocity>
-          <exact>37.013299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5912,7 +4192,7 @@
       <state>
         <position>
           <point>
-            <x>111.01433</x>
+            <x>73.400000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5923,7 +4203,7 @@
           <exact>32</exact>
         </time>
         <velocity>
-          <exact>37.113299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5935,7 +4215,7 @@
       <state>
         <position>
           <point>
-            <x>114.73066</x>
+            <x>75.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5946,7 +4226,7 @@
           <exact>33</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5958,7 +4238,7 @@
       <state>
         <position>
           <point>
-            <x>118.45199</x>
+            <x>77.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5969,7 +4249,7 @@
           <exact>34</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -5981,7 +4261,7 @@
       <state>
         <position>
           <point>
-            <x>122.17332</x>
+            <x>80.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -5992,7 +4272,7 @@
           <exact>35</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6004,7 +4284,7 @@
       <state>
         <position>
           <point>
-            <x>125.89465</x>
+            <x>82.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6015,7 +4295,7 @@
           <exact>36</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6027,7 +4307,7 @@
       <state>
         <position>
           <point>
-            <x>129.61598</x>
+            <x>84.4</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6038,7 +4318,7 @@
           <exact>37</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6050,7 +4330,7 @@
       <state>
         <position>
           <point>
-            <x>133.33730</x>
+            <x>86.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6061,7 +4341,7 @@
           <exact>38</exact>
         </time>
         <velocity>
-          <exact>37.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6073,7 +4353,7 @@
       <state>
         <position>
           <point>
-            <x>137.03363</x>
+            <x>88.8</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6084,7 +4364,7 @@
           <exact>39</exact>
         </time>
         <velocity>
-          <exact>36.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6096,7 +4376,7 @@
       <state>
         <position>
           <point>
-            <x>140.67996</x>
+            <x>91.000000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6107,7 +4387,7 @@
           <exact>40</exact>
         </time>
         <velocity>
-          <exact>36.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6119,7 +4399,7 @@
       <state>
         <position>
           <point>
-            <x>144.27629</x>
+            <x>93.200000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6130,7 +4410,7 @@
           <exact>41</exact>
         </time>
         <velocity>
-          <exact>35.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6142,7 +4422,7 @@
       <state>
         <position>
           <point>
-            <x>147.82262</x>
+            <x>95.4</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6153,7 +4433,7 @@
           <exact>42</exact>
         </time>
         <velocity>
-          <exact>35.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6165,7 +4445,7 @@
       <state>
         <position>
           <point>
-            <x>151.31895</x>
+            <x>97.600000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6176,7 +4456,7 @@
           <exact>43</exact>
         </time>
         <velocity>
-          <exact>34.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6188,7 +4468,7 @@
       <state>
         <position>
           <point>
-            <x>154.76528</x>
+            <x>99.800000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6199,7 +4479,7 @@
           <exact>44</exact>
         </time>
         <velocity>
-          <exact>34.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6211,7 +4491,7 @@
       <state>
         <position>
           <point>
-            <x>158.16161</x>
+            <x>102.00000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6222,7 +4502,7 @@
           <exact>45</exact>
         </time>
         <velocity>
-          <exact>33.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6234,7 +4514,7 @@
       <state>
         <position>
           <point>
-            <x>161.50794</x>
+            <x>104.20000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6245,7 +4525,7 @@
           <exact>46</exact>
         </time>
         <velocity>
-          <exact>33.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6257,7 +4537,7 @@
       <state>
         <position>
           <point>
-            <x>164.80427</x>
+            <x>106.40000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6268,7 +4548,7 @@
           <exact>47</exact>
         </time>
         <velocity>
-          <exact>32.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6280,7 +4560,7 @@
       <state>
         <position>
           <point>
-            <x>168.05060</x>
+            <x>108.60000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6291,7 +4571,7 @@
           <exact>48</exact>
         </time>
         <velocity>
-          <exact>32.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6303,7 +4583,7 @@
       <state>
         <position>
           <point>
-            <x>171.24693</x>
+            <x>110.80000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6314,7 +4594,7 @@
           <exact>49</exact>
         </time>
         <velocity>
-          <exact>31.713299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6326,7 +4606,7 @@
       <state>
         <position>
           <point>
-            <x>174.39326</x>
+            <x>113.00000</x>
             <y>1.75</y>
           </point>
         </position>
@@ -6337,7 +4617,7 @@
           <exact>50</exact>
         </time>
         <velocity>
-          <exact>31.213299</exact>
+          <exact>22.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
@@ -6359,7 +4639,7 @@
     <initialState>
       <position>
         <point>
-          <x>10.0</x>
+          <x>3.0</x>
           <y>5.25</y>
         </point>
       </position>
@@ -6383,7 +4663,7 @@
       <state>
         <position>
           <point>
-            <x>13.5</x>
+            <x>6.5</x>
             <y>5.25</y>
           </point>
         </position>
@@ -6392,6 +4672,52 @@
         </orientation>
         <time>
           <exact>1</exact>
+        </time>
+        <velocity>
+          <exact>35.0</exact>
+        </velocity>
+        <yawRate>
+          <exact>0.0</exact>
+        </yawRate>
+        <slipAngle>
+          <exact>0.0</exact>
+        </slipAngle>
+      </state>
+      <state>
+        <position>
+          <point>
+            <x>10.0</x>
+            <y>5.25</y>
+          </point>
+        </position>
+        <orientation>
+          <exact>0.0</exact>
+        </orientation>
+        <time>
+          <exact>2</exact>
+        </time>
+        <velocity>
+          <exact>35.0</exact>
+        </velocity>
+        <yawRate>
+          <exact>0.0</exact>
+        </yawRate>
+        <slipAngle>
+          <exact>0.0</exact>
+        </slipAngle>
+      </state>
+      <state>
+        <position>
+          <point>
+            <x>13.5</x>
+            <y>5.25</y>
+          </point>
+        </position>
+        <orientation>
+          <exact>0.0</exact>
+        </orientation>
+        <time>
+          <exact>3</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6414,7 +4740,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>2</exact>
+          <exact>4</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6437,7 +4763,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>3</exact>
+          <exact>5</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6460,7 +4786,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>4</exact>
+          <exact>6</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6483,7 +4809,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>5</exact>
+          <exact>7</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6506,7 +4832,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>6</exact>
+          <exact>8</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6529,7 +4855,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>7</exact>
+          <exact>9</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6552,7 +4878,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>8</exact>
+          <exact>10</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6575,7 +4901,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>9</exact>
+          <exact>11</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6598,7 +4924,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>10</exact>
+          <exact>12</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6621,7 +4947,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>11</exact>
+          <exact>13</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6644,7 +4970,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>12</exact>
+          <exact>14</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6667,7 +4993,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>13</exact>
+          <exact>15</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6690,7 +5016,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>14</exact>
+          <exact>16</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6713,7 +5039,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>15</exact>
+          <exact>17</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6736,7 +5062,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>16</exact>
+          <exact>18</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6759,7 +5085,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>17</exact>
+          <exact>19</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6782,7 +5108,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>18</exact>
+          <exact>20</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6805,7 +5131,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>19</exact>
+          <exact>21</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6828,7 +5154,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>20</exact>
+          <exact>22</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6851,7 +5177,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>21</exact>
+          <exact>23</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6874,7 +5200,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>22</exact>
+          <exact>24</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6897,7 +5223,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>23</exact>
+          <exact>25</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6920,7 +5246,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>24</exact>
+          <exact>26</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6943,7 +5269,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>25</exact>
+          <exact>27</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6966,7 +5292,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>26</exact>
+          <exact>28</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -6989,7 +5315,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>27</exact>
+          <exact>29</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7012,7 +5338,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>28</exact>
+          <exact>30</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7035,7 +5361,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>29</exact>
+          <exact>31</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7058,7 +5384,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>30</exact>
+          <exact>32</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7081,7 +5407,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>31</exact>
+          <exact>33</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7104,7 +5430,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>32</exact>
+          <exact>34</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7127,7 +5453,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>33</exact>
+          <exact>35</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7150,7 +5476,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>34</exact>
+          <exact>36</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7173,7 +5499,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>35</exact>
+          <exact>37</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7196,7 +5522,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>36</exact>
+          <exact>38</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7219,7 +5545,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>37</exact>
+          <exact>39</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7242,7 +5568,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>38</exact>
+          <exact>40</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7265,7 +5591,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>39</exact>
+          <exact>41</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7288,7 +5614,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>40</exact>
+          <exact>42</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7311,7 +5637,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>41</exact>
+          <exact>43</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7334,7 +5660,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>42</exact>
+          <exact>44</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7357,7 +5683,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>43</exact>
+          <exact>45</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7380,7 +5706,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>44</exact>
+          <exact>46</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7403,7 +5729,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>45</exact>
+          <exact>47</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7426,7 +5752,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>46</exact>
+          <exact>48</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7449,7 +5775,7 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>47</exact>
+          <exact>49</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
@@ -7472,2424 +5798,10 @@
           <exact>0.0</exact>
         </orientation>
         <time>
-          <exact>48</exact>
-        </time>
-        <velocity>
-          <exact>35.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>181.50000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>49</exact>
-        </time>
-        <velocity>
-          <exact>35.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>185.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
           <exact>50</exact>
         </time>
         <velocity>
           <exact>35.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-    </trajectory>
-  </dynamicObstacle>
-  <dynamicObstacle id="1002">
-    <type>car</type>
-    <shape>
-      <rectangle>
-        <length>4.508</length>
-        <width>1.61</width>
-      </rectangle>
-    </shape>
-    <initialState>
-      <position>
-        <point>
-          <x>3.0</x>
-          <y>8.75</y>
-        </point>
-      </position>
-      <orientation>
-        <exact>0.0</exact>
-      </orientation>
-      <time>
-        <exact>0</exact>
-      </time>
-      <velocity>
-        <exact>36.0</exact>
-      </velocity>
-      <yawRate>
-        <exact>0.0</exact>
-      </yawRate>
-      <slipAngle>
-        <exact>0.0</exact>
-      </slipAngle>
-    </initialState>
-    <trajectory>
-      <state>
-        <position>
-          <point>
-            <x>6.6</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>1</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>10.2</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>2</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>13.800000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>3</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>17.400000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>4</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>21.0</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>5</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>24.600000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>6</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>28.200000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>7</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>31.800000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>8</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>35.400000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>9</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>39.0</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>10</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>42.6</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>11</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>46.200000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>12</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>49.800000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>13</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>53.400000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>14</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>57.000000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>15</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>60.600000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>16</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>64.200000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>17</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>67.800000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>18</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>71.400000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>19</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>75.000000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>20</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>78.600000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>21</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>82.200000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>22</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>85.8</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>23</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>89.4</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>24</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>93.000000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>25</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>96.600000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>26</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>100.20000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>27</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>103.80000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>28</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>107.40000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>29</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>111.00000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>30</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>114.60000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>31</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>118.20000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>32</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>121.80000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>33</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>125.40000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>34</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>129.00000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>35</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>132.60000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>36</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>136.20000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>37</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>139.80000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>38</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>143.40000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>39</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>147.00000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>40</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>150.60000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>41</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>154.20000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>42</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>157.80000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>43</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>161.4</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>44</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>165.0</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>45</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>168.60000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>46</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>172.20000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>47</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>175.80000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>48</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>179.40000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>49</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>183.00000</x>
-            <y>8.75</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>50</exact>
-        </time>
-        <velocity>
-          <exact>36.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-    </trajectory>
-  </dynamicObstacle>
-  <dynamicObstacle id="1003">
-    <type>car</type>
-    <shape>
-      <rectangle>
-        <length>4.508</length>
-        <width>1.61</width>
-      </rectangle>
-    </shape>
-    <initialState>
-      <position>
-        <point>
-          <x>3.0</x>
-          <y>5.25</y>
-        </point>
-      </position>
-      <orientation>
-        <exact>0.0</exact>
-      </orientation>
-      <time>
-        <exact>0</exact>
-      </time>
-      <velocity>
-        <exact>30.0</exact>
-      </velocity>
-      <yawRate>
-        <exact>0.0</exact>
-      </yawRate>
-      <slipAngle>
-        <exact>0.0</exact>
-      </slipAngle>
-    </initialState>
-    <trajectory>
-      <state>
-        <position>
-          <point>
-            <x>6.0000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>1</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>9.0000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>2</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>12.0</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>3</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>15.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>4</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>18.0</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>5</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>21.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>6</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>24.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>7</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>27.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>8</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>30.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>9</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>33.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>10</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>36.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>11</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>39.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>12</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>42.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>13</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>45.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>14</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>48.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>15</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>51.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>16</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>54.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>17</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>57.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>18</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>60.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>19</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>63.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>20</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>66.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>21</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>69.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>22</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>72.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>23</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>75.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>24</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>78.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>25</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>81.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>26</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>84.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>27</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>87.0</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>28</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>90.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>29</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>93.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>30</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>96.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>31</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>99.000000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>32</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>102.0</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>33</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>105.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>34</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>108.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>35</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>111.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>36</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>114.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>37</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>117.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>38</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>120.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>39</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>123.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>40</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>126.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>41</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>129.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>42</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>132.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>43</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>135.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>44</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>138.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>45</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>141.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>46</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>144.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>47</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>147.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>48</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>150.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>49</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
-        </velocity>
-        <yawRate>
-          <exact>0.0</exact>
-        </yawRate>
-        <slipAngle>
-          <exact>0.0</exact>
-        </slipAngle>
-      </state>
-      <state>
-        <position>
-          <point>
-            <x>153.00000</x>
-            <y>5.25</y>
-          </point>
-        </position>
-        <orientation>
-          <exact>0.0</exact>
-        </orientation>
-        <time>
-          <exact>50</exact>
-        </time>
-        <velocity>
-          <exact>30.0</exact>
         </velocity>
         <yawRate>
           <exact>0.0</exact>
