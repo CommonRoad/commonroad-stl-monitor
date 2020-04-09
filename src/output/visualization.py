@@ -58,7 +58,6 @@ class Visualization:
         plt.gca().set_aspect('equal')
         plt.gca().set_axis_off()
         plt.margins(0, 0.1)
-        plt.gca().axis('equal')
 
         self._draw_lanelet_network(scenario.lanelet_network, lanelet_label)
         if planning_problem_set is not None:
