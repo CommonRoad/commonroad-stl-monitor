@@ -17,8 +17,6 @@ You can install the required Python packages with the provided *requirements.txt
 Additionally, you need the *[CommonRoad vehicle models](https://gitlab.lrz.de/tum-cps/commonroad-vehicle-models/tree/master/Python)* which must be added to your Python interpreter path.
 
 Additionally, you need the following software:
-* *[commonroad-io](https://gitlab.lrz.de/cps/commonroad-io/tree/develop)* 
-which has to be installed by executing **python setup.py install** within the linked directory. 
 * *[commonroad-curvilinear-coordinate-system](./external/curvilinear_coordinate_system)* 
 which has to be installed according to the readme inside the linked directory.
 
