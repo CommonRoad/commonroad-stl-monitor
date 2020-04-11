@@ -85,6 +85,8 @@ class PositionPredicateCollection(PredicateCollection):
         :returns bool indicating satisfaction
         """
         for veh in other_vehicles:
+            if veh.states_lon[time_step] is None:
+                continue
             if self.in_same_lane(time_step, vehicle, veh) and self.in_front_of(time_step, vehicle, veh):
                 return True
         return False
@@ -344,6 +346,8 @@ class PositionPredicateCollection(PredicateCollection):
         """
         vehicles_adj = []
         for veh in other_vehicles:
+            if veh.states_lon[time_step] is None:
+                continue
             if veh.rear_s(time_step) < vehicle.front_s(time_step) < veh.front_s(time_step):
                 vehicles_adj.append(veh)
                 continue
