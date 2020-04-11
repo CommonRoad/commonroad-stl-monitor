@@ -55,7 +55,9 @@ traffic_rules_backward:
                       -> drives_rightmost(time_step, ego_vehicle, other_vehicles))))
                   && (!(interstate_broad_enough(time_step, ego_vehicle))
                       -> drives_right_lane_rightmost(time_step, ego_vehicle))))
-  #  R_I5: once(on_access_ramp(time_step, other_vehicle)) && on_main_carriage_way(time_step, other_vehicle))
+   # R_I5: always((once(on_access_ramp(time_step, other_vehicle)) && on_main_carriage_way(time_step, other_vehicle)) -> (!(once(!(in_rightmost_lane(time_step, ego_vehicle))) && in_rightmost_lane(time_step, ego_vehicle))))
+   # R_I5: (!(once(!(in_rightmost_lane(time_step, ego_vehicle))) && in_rightmost_lane(time_step, ego_vehicle)))
+
 
 
 

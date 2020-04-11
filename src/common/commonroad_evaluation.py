@@ -170,6 +170,8 @@ class CommonRoadObstacleEvaluation:
                                            self._activated_traffic_rule_sets, self._vehicle_dependent_rules)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
+            if ego.obstacle_id != 1000:
+                continue
             other_vehicles = []
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
@@ -229,6 +231,10 @@ class CommonRoadObstacleEvaluation:
             return
         except ValueError:
             print("scenario ", scenario.benchmark_id, " could not be evaluated: Value Error")
+            traceback.print_exc()
+            return
+        except IndexError:
+            print("scenario ", scenario.benchmark_id, " could not be evaluated: Index Error")
             traceback.print_exc()
             return
         self.evaluate_result(result, scenario.benchmark_id)
