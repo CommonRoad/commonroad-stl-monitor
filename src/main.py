@@ -52,7 +52,7 @@ def get_args():
 
 
 def main():
-    print("start time:" + str(time.time()))
+    start_time = time.time()
 
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
     if cr_eval.simulation_param.get("single_scenario"):
@@ -81,7 +81,11 @@ def main():
             result = cr_eval.evaluate_scenario(sc, cr_eval.simulation_param.get("rule_set"))
             print(result)
 
-    print("end time:" + str(time.time()))
+    print(cr_eval.eval_dict)
+    print("Num. scenarios: " + str(cr_eval.num_scenarios))
+    print("Num. vehicles: " + str(cr_eval.num_vehicles))
+    print("Num. all correct: " + str(cr_eval.num_veh_all_correct))
+    print("comp. time:" + str(time.time() - start_time))
 
 
 if __name__ == "__main__":
