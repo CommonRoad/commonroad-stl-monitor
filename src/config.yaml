@@ -5,7 +5,8 @@
 #
 #    - dt: time step size
 #    - single_scenario: boolean indicating if only a specific scenario should be evaluated or all scenarios within the directories defined by evaluation_folders
-#    - scenario_dir: folder in which CommonRoad scenarios are located
+#    - scenario_directories: directories in which CommonRoad scenarios are located
+#    - max_num_scenarios: maximum number of scenarios which should be evaluated
 #    - benchmark_id: CommonRoad solution file name
 #    - evaluation_dirs: list of directories which contain scenarios which should be evaluated
 #    - rule_set: set of traffic rules which should be evaluated (see traffic_rules.yaml)
@@ -18,12 +19,13 @@
 #    - store_profiles: activate/deactivate storage of profiles
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
-    dt: 0.1
+    dt: 0.04
     single_scenario: false
     scenario_dir: test/
     benchmark_id: test_standstill
-    evaluation_dirs: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
-    rule_set: ["SRI1"]
+    scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
+    max_num_scenarios: 2
+    rule_set: ["F_SRG1"]
     verbose_mode: false
     time_measuring: false
     commonroad_video_creation: false

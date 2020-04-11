@@ -67,7 +67,7 @@ class CommonRoadObstacleEvaluation:
                 lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                                 list(obstacle.initial_shape_lanelet_ids))
             reference_lane = lane
-        elif self._adjacent_to_ego(list(ego_vehicle.lanelet_assignment[0])[0],
+        elif self._adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
                                    list(obstacle.initial_center_lanelet_ids)[0]):
             vehicle_classification = VehicleClassification.ADJACENT_VEHICLE
             lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
@@ -93,6 +93,7 @@ class CommonRoadObstacleEvaluation:
         for state in obstacle.prediction.trajectory.state_list:
             acceleration = self._compute_acceleration(state_lon.v, state.velocity)
             jerk = self._compute_jerk(acceleration, 0)
+
             state_lon, state_lat = CommonRoadObstacleEvaluation.create_curvilinear_states(state.position,
                                                                                           state.velocity,
                                                                                           acceleration, jerk,

@@ -32,6 +32,8 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         num_vehicles = 0
         for veh_o in other_vehicles:
+            if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not start at the first time step
+                continue
             if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step]),
