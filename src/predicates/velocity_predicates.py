@@ -205,11 +205,13 @@ class VelocityPredicateCollection(PredicateCollection):
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
         required_speed = self._traffic_sign_interpreter.required_speed(frozenset(lanelet_ids))
-        if required_speed >= min(vehicle.vehicle_param.get("fov_speed_limit"),
-                                 self._get_type_speed_limit(vehicle.obstacle_type),
-                                 vehicle.vehicle_param.get("road_condition_speed_limit")):
+        if required_speed is None:
+            return True
+        elif required_speed >= min(vehicle.vehicle_param.get("fov_speed_limit"),
+                                   self._get_type_speed_limit(vehicle.obstacle_type),
+                                   vehicle.vehicle_param.get("road_condition_speed_limit")):
             return False
-        if required_speed > vehicle.states_lon[time_step].v:
+        elif required_speed > vehicle.states_lon[time_step].v:
             return False
         else:
             return True
