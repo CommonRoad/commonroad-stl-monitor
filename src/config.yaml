@@ -20,9 +20,9 @@
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
     dt: 0.04
-    single_scenario: false
+    single_scenario: true
     scenario_dir: test/
-    benchmark_id: test_standstill
+    benchmark_id: DEU_test_standstill
     scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
     rule_set: ["F_SRG1"]
