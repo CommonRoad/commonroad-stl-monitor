@@ -187,8 +187,6 @@ class Vehicle:
         :param time_step: time step to consider
         :returns rear s-coordinate [m]
         """
-        if self._states_lon.get(time_step) is None:
-            print("stop")
         return self._states_lon[time_step].s - self.shape.length/2
 
     def front_s(self, time_step: int) -> float:

@@ -59,19 +59,19 @@ class Visualization:
         plt.gca().set_axis_off()
         plt.margins(0, 0.1)
 
-        self._draw_lanelet_network(scenario.lanelet_network, lanelet_label)
+        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label)
         if planning_problem_set is not None:
             draw_object(planning_problem_set, draw_params=self._default_parameters_planning, plot_limits=plot_limits)
         for obs in scenario.obstacles:
             if self._ego_vehicle_ids is not None and obs.obstacle_id in self._ego_vehicle_ids:
-                self._draw_ego_obstacle(obs, time_begin, obstacle_label, draw_trajectory)
+                self._draw_ego_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
             else:
-                self._draw_standard_obstacle(obs, time_begin, obstacle_label, draw_trajectory)
+                self._draw_standard_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
         plt.axis('off')
         plt.show()
 
-    def _draw_ego_obstacle(self, obstacle: Obstacle, time_begin: int = 0, obstacle_label: bool = False,
-                           draw_trajectory: bool = False):
+    def _draw_ego_obstacle(self, obstacle: Obstacle, plot_limits: List[float], time_begin: int = 0,
+                           obstacle_label: bool = False, draw_trajectory: bool = False):
         """
         Visualization of ego vehicle obstacle
 
@@ -88,10 +88,10 @@ class Visualization:
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
-        draw_object(obstacle, draw_params=self._default_parameters_scenario)
+        draw_object(obstacle, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 
-    def _draw_standard_obstacle(self, obstacle: Obstacle, time_begin: int = 0, obstacle_label: bool = False,
-                                draw_trajectory: bool = False):
+    def _draw_standard_obstacle(self, obstacle: Obstacle, plot_limits: List[float], time_begin: int = 0,
+                                obstacle_label: bool = False, draw_trajectory: bool = False):
         """
         Visualization of non-ego vehicle obstacle
 
@@ -106,9 +106,10 @@ class Visualization:
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
-        draw_object(obstacle, draw_params=self._default_parameters_scenario)
+        draw_object(obstacle, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 
-    def _draw_lanelet_network(self, lanelet_network: LaneletNetwork, lanelet_label: bool = False):
+    def _draw_lanelet_network(self, plot_limits: List[float], lanelet_network: LaneletNetwork,
+                              lanelet_label: bool = False):
         """
         Visualization of lanelet network
 
@@ -116,7 +117,7 @@ class Visualization:
         :param lanelet_label: boolean indicating if lanelet label should be shown
         """
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
-        draw_object(lanelet_network, draw_params=self._default_parameters_scenario)
+        draw_object(lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 
     # def _plot_scenario_at_time_idx(self, time_idx: int, scenario: Scenario, obstacle_label: bool):
     #     """

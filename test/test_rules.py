@@ -18,8 +18,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "DEU_test_max_speed_limit.xml").open()
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': True}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Max Lane Speed Limit Test:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -36,8 +40,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 32
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Max FOV Speed Limit Test:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -54,8 +62,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G3': False}), (1001, {'R_G3': False}),
                       (1002, {'R_G3': False}), (1003, {'R_G3': True})]
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 32
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG3"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG3"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG3"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Max Braking Speed Limit Test:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -74,8 +86,14 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_min_speed_limit.xml").open()
         exp_result = [(1000, {'R_G4': False}), (1001, {'R_G4': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG4"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG4"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG4"]
+        self.cr_eval.update_eval_dict()
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG4"]
+        self.cr_eval.update_eval_dict()
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Min Speed Limit Test:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -91,8 +109,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_G5': True}), (1001, {'R_G5': True}),
                       (1002, {'R_G5': True}), (1003, {'R_G5': False}),
                       (1004, {'R_G5': True}), (1005, {'R_G5': False})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG5"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG5"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG5"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG5"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Traffic Flow Test:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -119,8 +141,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1006': True}),
                       (1006, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
                               'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True})]
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG1"])
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG1"])
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG1"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG1"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Safe Distance Test:")
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
@@ -136,8 +162,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "DEU_test_unnecessary_braking_1.xml").open()
         exp_result = [(1000, {'R_G2': True}), (1001, {'R_G2': True}), (1002, {'R_G2': False}),
                       (1005, {'R_G2': True}), (1006, {'R_G2': True}), (1007, {'R_G2': True})]
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG2"])
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Unnecessary Braking Test 1:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -149,8 +179,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                                                               "DEU_test_unnecessary_braking_2.xml").open()
         self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 5
         exp_result = [(1000, {'R_G2': True})]
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRG2"])
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRG2"])
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Unnecessary Braking Test 2:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -170,8 +204,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_I1': True}), (1001, {'R_I1': False}), (1002, {'R_I1': True}), (1003, {'R_I1': True}),
                       (1004, {'R_I1': True}), (1005, {'R_I1': True}), (1006, {'R_I1': True}), (1007, {'R_I1': True}),
                       (1008, {'R_I1': True}), (1009, {'R_I1': True}), (1010, {'R_I1': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI1"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI1"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI1"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI1"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Standstill:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -186,8 +224,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_reversing_and_u_turn.xml").open()
         exp_result = [(1000, {'R_I3': False}), (1001, {'R_I3': False}), (1002, {'R_I3': False}), (1003, {'R_I3': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI3"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI3"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI3"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI3"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Reversing and U-turn:")
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
@@ -227,8 +269,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
                               'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
                       ]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Overtaking right congestion:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -255,8 +301,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1005': False}),
                       (1005, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True,
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Overtaking right broad lane marking:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -273,8 +323,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1002, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1003': True}),
                       (1003, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True, 'R_I2_veh_1002': True}),
                       ]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Overtaking right normal road:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -298,8 +352,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1002': True, 'R_I2_veh_1004': False}),
                       (1004, {'R_I2_veh_1000': True, 'R_I2_veh_1001': True,
                               'R_I2_veh_1002': True, 'R_I2_veh_1003': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Overtaking right access ramp:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -339,8 +397,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_I2_veh_1003': True, 'R_I2_veh_1004': True, 'R_I2_veh_1005': True,
                               'R_I2_veh_1006': True, 'R_I2_veh_1007': True}),
                       ]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI2"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI2"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI2"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Overtaking right exit ramp:")
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
@@ -355,12 +417,16 @@ class TestCommonRoadMonitor(unittest.TestCase):
         exp_result = [(1000, {'R_I5_veh_1001': True, 'R_I5_veh_1002': False}),
                       (1001, {'R_I5_veh_1000': True, 'R_I5_veh_1002': True}),
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI5"])
-        #result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI5"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI5"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI5"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Considering entering vehicles:")
-        print(result_forward)
+        print(result_backward)
         self.assertEqual(exp_result, result_forward)
-        #self.assertEqual(exp_result, result_backward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
@@ -371,8 +437,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1012, {'R_I4': True}), (1013, {'R_I4': True}), (1014, {'R_I4': True}), (1015, {'R_I4': True}),
                       (1016, {'R_I4': False}), (1017, {'R_I4': True}), (1018, {'R_I4': True}), (1019, {'R_I4': True}),
                       (1020, {'R_I4': True}), (1021, {'R_I4': False}), (1022, {'R_I4': False}), (1023, {'R_I4': True})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI4"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI4"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI4"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario,)
         print("Test emergency lane:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)
@@ -385,8 +455,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1004, {'R_I4': False}), (1005, {'R_I4': False}), (1006, {'R_I4': False}), (1007, {'R_I4': False}),
                       (1008, {'R_I4': False}), (1009, {'R_I4': False}), (1010, {'R_I4': False}), (1011, {'R_I4': True}),
                       (1012, {'R_I4': False}), (1013, {'R_I4': True}), (1014, {'R_I4': False})]
-        result_forward = self.cr_eval.evaluate_scenario(scenario, ["F_SRI4"])
-        result_backward = self.cr_eval.evaluate_scenario(scenario, ["B_SRI4"])
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI4"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRI4"]
+        self.cr_eval.update_eval_dict()
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Test emergency lane:")
         print(result_backward)
         self.assertEqual(exp_result, result_forward)

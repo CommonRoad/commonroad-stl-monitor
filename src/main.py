@@ -61,7 +61,7 @@ def main():
                                                               + cr_eval.simulation_param.get("scenario_dir")
                                                               + cr_eval.simulation_param.get("benchmark_id")
                                                               + ".xml").open()
-        result = cr_eval.evaluate_scenario(scenario, cr_eval.simulation_param.get("rule_set"))
+        result = cr_eval.evaluate_scenario(scenario)
         print(result)
     else:
         args = get_args()
@@ -78,7 +78,7 @@ def main():
 
         scenarios = create_scenarios_from_directory(scenario_directories, max_num_scenarios)
         for sc in scenarios:
-            result = cr_eval.evaluate_scenario(sc, cr_eval.simulation_param.get("rule_set"))
+            result = cr_eval.evaluate_scenario(sc)
             print(result)
 
     print(cr_eval.eval_dict)

@@ -33,7 +33,7 @@ class CommonRoadObstacleEvaluation:
         self.num_scenarios = 0
         self.num_veh_all_correct = 0
         self.vehicles_dict = {}
-        self.eval_dict = {}
+        self.eval_dict, self.eval_vehicle_dependent_rules = self._init_eval_dict()
 
     @property
     def simulation_param(self) -> Dict:
@@ -42,6 +42,14 @@ class CommonRoadObstacleEvaluation:
     @property
     def ego_vehicle_param(self) -> Dict:
         return self._ego_vehicle_param
+
+    @property
+    def activated_traffic_rule_sets(self) -> List[str]:
+        return self._activated_traffic_rule_sets
+
+    @activated_traffic_rule_sets.setter
+    def activated_traffic_rule_sets(self, activated_traffic_rule_sets: List[str]):
+        self._activated_traffic_rule_sets = activated_traffic_rule_sets
 
     def create_vehicle(self, obstacle: DynamicObstacle, vehicle_param: Dict, ego_vehicle: Vehicle = None) -> Vehicle:
         """
@@ -196,16 +204,14 @@ class CommonRoadObstacleEvaluation:
         acceleration = (current_velocity - previous_velocity) / self.simulation_param.get("dt")
         return acceleration
 
-    def evaluate_scenario(self, scenario: Scenario, activated_traffic_rule_sets: List[str]) \
+    def evaluate_scenario(self, scenario: Scenario) \
             -> Union[List[Tuple[int, Dict[str, bool]]], None]:
         """
         Evaluates CommonRoad scenario
 
         :param scenario: CommonRoad scenario
-        :param activated_traffic_rule_sets: set of rules which should be evaluated
         :return: evaluation results
         """
-        self._activated_traffic_rule_sets = activated_traffic_rule_sets
         self._simulation_param["dt"] = scenario.dt
         try:
             result = self._execute_evaluation(scenario)
@@ -229,7 +235,10 @@ class CommonRoadObstacleEvaluation:
 
         return result
 
-    def _init_eval_dict(self, vehicle_result: Tuple[int, Dict[str, bool]]) -> Tuple[Dict[str, int], Dict[str, bool]]:
+    def update_eval_dict(self):
+        self.eval_dict, self.eval_vehicle_dependent_rules = self._init_eval_dict()
+
+    def _init_eval_dict(self) -> Tuple[Dict[str, int], Dict[str, bool]]:
         """
         Prepares and creates evaluation dictionaries
 
@@ -238,13 +247,14 @@ class CommonRoadObstacleEvaluation:
         """
         eval_dict = {}
         eval_vehicle_dependent_rules = {}
-        for rule_name, eval_result in vehicle_result[1].items():
-            if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules \
-                    and eval_vehicle_dependent_rules.get(rule_name) is None:
-                eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
-                eval_dict["_".join(rule_name.split("_", 2)[:2])] = 0
-            elif eval_dict.get(rule_name) is None and "_".join(rule_name.split("_", 2)[:2]):
-                eval_dict[rule_name] = 0
+        for traffic_rule_set_id in self._activated_traffic_rule_sets:
+            for rule_name in self._traffic_rule_sets.get(traffic_rule_set_id):
+                if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules \
+                        and eval_vehicle_dependent_rules.get(rule_name) is None:
+                    eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
+                    eval_dict["_".join(rule_name.split("_", 2)[:2])] = 0
+                elif eval_dict.get(rule_name) is None and "_".join(rule_name.split("_", 2)[:2]):
+                    eval_dict[rule_name] = 0
 
         return eval_dict, eval_vehicle_dependent_rules
 
@@ -258,25 +268,24 @@ class CommonRoadObstacleEvaluation:
         self.num_vehicles += len(result)
         self.num_scenarios += 1
         num_correct_rules = 0
-        self.eval_dict, eval_vehicle_dependent_rules = self._init_eval_dict(result[0])
         for vehicle in result:
             out_string = "scenario: " + scenario_name + " - evaluated obs-id: " + str(vehicle[0])
             for rule_name, eval_result in vehicle[1].items():
                 if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules:
                     if eval_result is False:
-                        eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = False
+                        self.eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = False
                 elif eval_result is True:
                     self.eval_dict[rule_name] += 1
                     num_correct_rules += 1
                     out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
                 elif eval_result is False:
                     out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
-            for rule_name, eval_result in eval_vehicle_dependent_rules.items():
+            for rule_name, eval_result in self.eval_vehicle_dependent_rules.items():
                 if eval_result is True:
                     self.eval_dict["_".join(rule_name.split("_", 2)[:2])] += 1
                     num_correct_rules += 1
                 out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
-                eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
+                self.eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = True
             if num_correct_rules == len(self.eval_dict.keys()):
                 self.num_veh_all_correct += 1
             num_correct_rules = 0

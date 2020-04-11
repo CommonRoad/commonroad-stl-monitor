@@ -25,7 +25,6 @@ simulation_param:
     benchmark_id: DEU_test_standstill
     scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
-    rule_set: ["F_S0"]
     verbose_mode: false
     time_measuring: false
     commonroad_video_creation: false

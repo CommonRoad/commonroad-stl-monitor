@@ -222,6 +222,8 @@ class TrafficRuleDispatcher:
                     self._reset_backward_monitors()
                     rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = True
                     for time_step in time_steps:
+                        if vehicle.states_lon.get(time_step) is None:
+                            continue
                         predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle,
                                       'other_vehicles': other_vehicles,
                                       'other_vehicle': vehicle}
