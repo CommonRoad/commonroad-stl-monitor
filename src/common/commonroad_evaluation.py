@@ -170,8 +170,6 @@ class CommonRoadObstacleEvaluation:
                                            self._activated_traffic_rule_sets, self._vehicle_dependent_rules)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
-            if ego.obstacle_id != 1000:
-                continue
             other_vehicles = []
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
