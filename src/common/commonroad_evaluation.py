@@ -63,11 +63,10 @@ class CommonRoadObstacleEvaluation:
         acceleration = self._compute_acceleration(obstacle.initial_state.velocity,
                                                   obstacle.prediction.trajectory.state_list[0].velocity)
         jerk = self._compute_jerk(acceleration, 0)
-
         if ego_vehicle is None:
             vehicle_classification = VehicleClassification.EGO_VEHICLE
             initial_lanelets = [self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-                                for lanelet_id in obstacle.initial_center_lanelet_ids]
+                                for lanelet_id in obstacle.initial_shape_lanelet_ids]
             if LaneletType.ACCESS_RAMP in initial_lanelets[0].lanelet_type:
                 main_carriage_way_lanelet_id = self._find_main_carriage_way_lanelet_id(initial_lanelets[0])
                 lane = self._road_network.find_lane_by_obstacle([main_carriage_way_lanelet_id], [])
@@ -76,7 +75,7 @@ class CommonRoadObstacleEvaluation:
                                                                 list(obstacle.initial_shape_lanelet_ids))
             reference_lane = lane
         elif self._adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
-                                   list(obstacle.initial_center_lanelet_ids)[0]):
+                                   list(obstacle.initial_shape_lanelet_ids)[0]):
             vehicle_classification = VehicleClassification.ADJACENT_VEHICLE
             lane = self._road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
                                                             list(obstacle.initial_shape_lanelet_ids))
@@ -171,10 +170,14 @@ class CommonRoadObstacleEvaluation:
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
             other_vehicles = []
+            if self.simulation_param.get("single_vehicle") is True \
+                    and self.simulation_param.get("single_scenario") is True\
+                    and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id:
+                continue
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
                 for obs in scenario.dynamic_obstacles:
-                    if obs.obstacle_id == ego.obstacle_id:
+                    if obs.obstacle_id == ego.obstacle_id or obs.prediction is None:
                         continue
                     vehicle = self.create_vehicle(obs, self._other_vehicles_param, ego_vehicle)
                     other_vehicles.append(vehicle)

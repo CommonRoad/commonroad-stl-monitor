@@ -1,15 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Make a fake dataset
-num_vehicles = 2366
-max_speed_limit = 2365
-min_speed_limit = 1994
-no_unnecessary_braking = 2366
-safe_distance = 1532
-all = 1194
-height = [safe_distance, no_unnecessary_braking, max_speed_limit, min_speed_limit, all]
-bars = ('R_G1', 'R_G2', 'R_G3', 'R_G4', 'R_G0')
+num_vehicles = 1678
+R_G1 = 1024
+R_G2 = 1673
+R_G3 = 1677
+R_G4 = 1678
+R_G5 = 1662
+R_I1 = 1678
+R_I2 = 1652
+R_I3 = 1678
+R_I4 = 1678
+R_I5 = 1663
+R_0 = 982
+height = [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I5, R_0]
+bars = ('R_G1', 'R_G2', 'R_G3', 'R_G4', 'R_G5', 'R_I1', 'R_I2', 'R_I3', 'R_I4', 'R_I5', 'R_G0')
 y_pos = np.arange(len(bars))
 plt.rcParams['svg.fonttype'] = 'none'
 ax = plt.bar(y_pos, height, color=(0.2, 0.4, 0.6, 0.4))

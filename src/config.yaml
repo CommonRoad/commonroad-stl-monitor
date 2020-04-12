@@ -5,6 +5,8 @@
 #
 #    - dt: time step size
 #    - single_scenario: boolean indicating if only a specific scenario should be evaluated or all scenarios within the directories defined by evaluation_folders
+#    - single_vehicle: only single vehicle specified by ego vehicle ID should be evaluated
+#    - ego_vehicle_id: ego vehicle ID
 #    - scenario_directories: directories in which CommonRoad scenarios are located
 #    - max_num_scenarios: maximum number of scenarios which should be evaluated
 #    - benchmark_id: CommonRoad solution file name
@@ -20,9 +22,11 @@
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
     dt: 0.04
-    single_scenario: false
-    scenario_dir: test/
-    benchmark_id: DEU_test_standstill
+    single_scenario: true
+    single_vehicle: true
+    ego_vehicle_id: 21
+    scenario_dir: /../../../commonroad/scenarios/highD-dataset/cr_scenarios #test/
+    benchmark_id: DEU_LocationF-60_21_T-1
     scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
     verbose_mode: false

@@ -57,8 +57,7 @@ def main():
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
     if cr_eval.simulation_param.get("single_scenario"):
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
-                                                              + "/../scenarios/"
-                                                              + cr_eval.simulation_param.get("scenario_dir")
+                                                              + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")
                                                               + ".xml").open()
         result = cr_eval.evaluate_scenario(scenario)
