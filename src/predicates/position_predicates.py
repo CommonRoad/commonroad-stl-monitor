@@ -374,9 +374,9 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def in_rightmost_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+    def in_rightmost_lane_of_same_type(self, time_step: int, vehicle: Vehicle) -> bool:
         """
-        Evaluates if a vehicle is in the rightmost lane (excluding shoulder lane)
+        Evaluates if a vehicle is in the rightmost lane of with the same type
 
         :param time_step: time step of interest
         :param vehicle: vehicle of interest
@@ -385,8 +385,11 @@ class PositionPredicateCollection(PredicateCollection):
         lanelet_ids = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if lanelet.adj_right_same_direction is None or LaneletType.SHOULDER in \
-                    self._road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type:
+            if lanelet.adj_right_same_direction is None:
+                return True
+            if any(lanelet_type not in
+                   self._road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type
+                   for lanelet_type in lanelet.lanelet_type):
                 return True
         return False
 
@@ -428,7 +431,7 @@ class PositionPredicateCollection(PredicateCollection):
         """
         # TODO consider orientation
         occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
-        if self.in_rightmost_lane(time_step, vehicle) is False:
+        if self.in_rightmost_lane_of_same_type(time_step, vehicle) is False:
             return False
         else:
             right_position = vehicle.right_position(time_step)
@@ -465,7 +468,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
             else:
                 return False
-        elif self.in_rightmost_lane(time_step, vehicle) is False:
+        elif self.in_rightmost_lane_of_same_type(time_step, vehicle) is False:
             return False
         else:
             right_position = vehicle.right_position(time_step)
@@ -527,7 +530,7 @@ class PositionPredicateCollection(PredicateCollection):
                            "left_of__x_ego__x_o": {},
                            "on_access_ramp__x_o": {},
                            "on_main_carriage_way__x_o": {},
-                           "in_rightmost_lane__x_ego": {ego_vehicle.id: {}},
+                           "in_rightmost_lane_of_same_type__x_ego": {ego_vehicle.id: {}},
                            "in_leftmost_lane__x_ego": {ego_vehicle.id: {}},
                            "on_access_ramp__x_ego": {ego_vehicle.id: {}},
                            "drives_leftmost__x_ego": {ego_vehicle.id: {}},
@@ -548,9 +551,9 @@ class PositionPredicateCollection(PredicateCollection):
             if "on_shoulder__x_ego" in self._necessary_predicates:
                 predicate_trace["on_shoulder__x_ego"][ego_vehicle.id][time_step] = \
                     self.on_shoulder(time_step, ego_vehicle)
-            if "in_rightmost_lane__x_ego" in self._necessary_predicates:
-                predicate_trace["in_rightmost_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_rightmost_lane(time_step, ego_vehicle)
+            if "in_rightmost_lane_of_same_type__x_ego" in self._necessary_predicates:
+                predicate_trace["in_rightmost_lane_of_same_type__x_ego"][ego_vehicle.id][time_step] = \
+                    self.in_rightmost_lane_of_same_type(time_step, ego_vehicle)
             if "in_leftmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_leftmost_lane__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_leftmost_lane(time_step, ego_vehicle)

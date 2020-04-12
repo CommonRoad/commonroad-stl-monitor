@@ -419,14 +419,14 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]
         self.cr_eval.activated_traffic_rule_sets = ["F_SRI5"]
         self.cr_eval.update_eval_dict()
-       # result_forward = self.cr_eval.evaluate_scenario(scenario)
-        self.cr_eval.activated_traffic_rule_sets = ["B_SRI5"]
-        self.cr_eval.update_eval_dict()
-        result_backward = self.cr_eval.evaluate_scenario(scenario)
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        #self.cr_eval.activated_traffic_rule_sets = ["B_SRI5"]
+        #self.cr_eval.update_eval_dict()
+        #result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Considering entering vehicles:")
-        print(result_backward)
-      #  self.assertEqual(exp_result, result_forward)
-        self.assertEqual(exp_result, result_backward)
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+       # self.assertEqual(exp_result, result_backward)
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +

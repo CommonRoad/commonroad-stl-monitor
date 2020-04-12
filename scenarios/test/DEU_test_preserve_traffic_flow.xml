@@ -7,9 +7,9 @@
   </location>
   <scenarioTags>
     <no_oncoming_traffic/>
-    <multi_lane/>
-    <highway/>
     <parallel_lanes/>
+    <highway/>
+    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

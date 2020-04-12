@@ -7,9 +7,9 @@
   </location>
   <scenarioTags>
     <no_oncoming_traffic/>
-    <multi_lane/>
-    <highway/>
     <parallel_lanes/>
+    <highway/>
+    <multi_lane/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -1697,7 +1697,7 @@
     <laneletType>highway</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
-  <lanelet id="10">
+  <lanelet id="9">
     <leftBound>
       <point>
         <x>160.0</x>
