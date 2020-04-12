@@ -1,5 +1,6 @@
 from typing import Union, Set, Dict, List
 import enum
+import math
 
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
@@ -187,7 +188,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns rear s-coordinate [m]
         """
-        return self._states_lon[time_step].s - self.shape.length/2
+        return self._states_lon[time_step].s - self.shape.length/2 * math.cos(self.states_lat[time_step].theta)
 
     def front_s(self, time_step: int) -> float:
         """
@@ -196,7 +197,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front s-coordinate [m]
         """
-        return self._states_lon[time_step].s + self.shape.length/2
+        return self._states_lon[time_step].s + self.shape.length/2 * math.cos(self.states_lat[time_step].theta)
 
     def right_position(self, time_step: int) -> float:
         """
@@ -205,7 +206,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front s-coordinate [m]
         """
-        return self._states_lat[time_step].d - self.shape.width/2
+        return self._states_lat[time_step].d - self.shape.width/2 * math.sin(self.states_lat[time_step].theta + 0.5 * math.pi)
 
     def left_position(self, time_step: int) -> float:
         """
@@ -214,7 +215,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front d-coordinate [m]
         """
-        return self._states_lat[time_step].d + self.shape.width/2
+        return self._states_lat[time_step].d + self.shape.width/2 * math.sin(self.states_lat[time_step].theta + 0.5 * math.pi)
 
     def append_state_lon(self, state: StateLongitudinal, time_step: int):
         """
