@@ -22,11 +22,11 @@
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
     dt: 0.04
-    single_scenario: true
-    single_vehicle: true
+    single_scenario: false
+    single_vehicle: false
     ego_vehicle_id: 21
     scenario_dir: /../../../commonroad/scenarios/highD-dataset/cr_scenarios #test/
-    benchmark_id: DEU_LocationF-60_21_T-1
+    benchmark_id: DEU_LocationB-1_1_T-1
     scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
     verbose_mode: false

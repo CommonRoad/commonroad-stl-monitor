@@ -13,8 +13,8 @@ R_I3 = 1678
 R_I4 = 1678
 R_I5 = 1663
 R_0 = 982
-height = [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I5, R_0]
-bars = ('R_G1', 'R_G2', 'R_G3', 'R_G4', 'R_G5', 'R_I1', 'R_I2', 'R_I3', 'R_I4', 'R_I5', 'R_G0')
+height = [R_G1, R_G2, R_G3, R_G5, R_I1, R_I2, R_I3, R_I4, R_0]
+bars = ('R_G1', 'R_G2', 'R_G3', 'R_G5', 'R_I1', 'R_I2', 'R_I3', 'R_I4', 'R_G0')
 y_pos = np.arange(len(bars))
 plt.rcParams['svg.fonttype'] = 'none'
 ax = plt.bar(y_pos, height, color=(0.2, 0.4, 0.6, 0.4))

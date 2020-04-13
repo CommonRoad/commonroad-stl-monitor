@@ -32,7 +32,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
                 continue
             fullname = os.path.join(abs_path, filename)
             scenario, planning_problem_set = CommonRoadFileReader(fullname).open()
-            if Tag.HIGHWAY in scenario.tags:
+            if Tag.HIGHWAY in scenario.tags or Tag.INTERSTATE in scenario.tags:
                 scenarios.append(scenario)
             if len(scenarios) == max_num_scenarios:
                 break
