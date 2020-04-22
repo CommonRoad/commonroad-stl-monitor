@@ -32,8 +32,6 @@ class BrakingPredicateCollection(PredicateCollection):
 
         if a_ego >= 0:
             return False
-        if self._velocity_reduction_necessary(time_step, ego_vehicle):
-            return False
         ego_vehicle_lanelets = ego_vehicle.lanelet_assignment[time_step]
 
         a_min_other = None
@@ -52,24 +50,6 @@ class BrakingPredicateCollection(PredicateCollection):
             # no leading vehicle
             return True
         elif a_min_other is not None and a_ego - a_min_other < self._traffic_rules_param.get("a_abrupt"):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _velocity_reduction_necessary(time_step: int, vehicle: Vehicle):
-        """
-        Predicate to check whether a velocity reduction is necessary caused of safety reasons (currently only maximum
-        velocity based on field of view and road conditions is evaluated, but active emergency maneuver or other
-        information could also be considered)
-
-        :param time_step: time step of interest
-        :param vehicle: vehicle of interest
-        :return: boolean indicating satisfaction
-        """
-        v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"),
-                    vehicle.vehicle_param.get("fov_speed_limit"))
-        if v_max < vehicle.states_lon[time_step].v:
             return True
         else:
             return False

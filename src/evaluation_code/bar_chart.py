@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-num_vehicles = 1678
-R_G1 = 1024
-R_G2 = 1673
-R_G3 = 1677
-R_G4 = 1678
-R_G5 = 1662
-R_I1 = 1678
-R_I2 = 1652
-R_I3 = 1678
-R_I4 = 1678
-R_I5 = 1663
+num_vehicles = 3605
+R_G1 = 2161
+R_G2 = 3539
+R_G3 = 2046
+R_G4 = 0
+R_G5 = 3579
+R_I1 = 3605
+R_I2 = 3521
+R_I3 = 3605
+R_I4 = 3605
+R_I5 = 0
 R_0 = 982
 height = [R_G1, R_G2, R_G3, R_G5, R_I1, R_I2, R_I3, R_I4, R_0]
 bars = ('R_G1', 'R_G2', 'R_G3', 'R_G5', 'R_I1', 'R_I2', 'R_I3', 'R_I4', 'R_G0')
