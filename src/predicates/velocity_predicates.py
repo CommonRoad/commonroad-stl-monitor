@@ -305,6 +305,7 @@ class VelocityPredicateCollection(PredicateCollection):
                            "in_standstill__x_ego": {ego_vehicle.id: {}},
                            "drives_with_slightly_higher_speed__x_ego__x_o": {},
                            "drives_faster__x_ego__x_o": {},
+                           "drives_faster__x_o__x_ego": {},
                            "reverses__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
@@ -344,6 +345,7 @@ class VelocityPredicateCollection(PredicateCollection):
 
         for other_vehicle in other_vehicles:
             predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["drives_faster__x_o__x_ego"][other_vehicle.id] = {}
             predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
@@ -351,6 +353,9 @@ class VelocityPredicateCollection(PredicateCollection):
                 if "drives_faster__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.drives_faster(time_step, ego_vehicle, other_vehicle)
+                if "drives_faster__x_o__x_ego" in self._necessary_predicates:
+                    predicate_trace["drives_faster__x_o__x_ego"][other_vehicle.id][time_step] = \
+                        self.drives_faster(time_step, other_vehicle, ego_vehicle)
                 if "drives_with_slightly_higher_speed__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle)

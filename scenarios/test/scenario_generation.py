@@ -546,14 +546,19 @@ def create_consider_entering_vehicles_for_lane_change_scenario():
 
 def create_consider_entering_vehicles_for_distance_scenario_1():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 1.75]), 1000)
+    obs0 = create_obstacle_by_acceleration([2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 13.5, np.array([5.0, 1.75]), 1000)
     obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([50.0, -1.75]), 1001,
                                            [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    for i in range(2):
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 16, np.array([38.0, 1.75]), 1002)
+    for i in range(3):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
@@ -570,18 +575,19 @@ def create_consider_entering_vehicles_for_distance_scenario_1():
 
 def create_consider_entering_vehicles_for_distance_scenario_2():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 5, np.array([5.0, 1.75]), 1000)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([5.0, 1.75]), 1000)
     obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([50.0, -1.75]), 1001,
                                            [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    for i in range(2):
+    obs2 = create_obstacle_by_acceleration([-2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2], 15, np.array([40.0, 1.75]), 1002)
+    for i in range(3):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)

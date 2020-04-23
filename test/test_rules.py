@@ -450,6 +450,47 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_forward)
         self.assertEqual(exp_result, result_backward)
 
+    def test_gap_for_entering_vehicles_1(self):
+        # one vehicle driving in rightmost lane always violates safe distance and does not increase distance (1002)
+        # one vehicle driving in rightmost lane always violates safe distance only at end of trajectory (1000)
+        # one vehicle entering main carriage way (1001)
+        scenario, planning_problem_set = \
+            CommonRoadFileReader(self.test_scenario_dir +
+                                 "DEU_test_consider_entering_vehicles_for_distance_1.xml").open()
+        exp_result = [(1000, {'R_I6_veh_1001': False, 'R_I6_veh_1002': True}),
+                      (1001, {'R_I6_veh_1000': True, 'R_I6_veh_1002': True}),
+                      (1002, {'R_I6_veh_1000': True, 'R_I6_veh_1001': False})]
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI6"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        #self.cr_eval.activated_traffic_rule_sets = ["B_SRI6"]
+        #self.cr_eval.update_eval_dict()
+        #result_backward = self.cr_eval.evaluate_scenario(scenario)
+        print("Gap for entering vehicles:")
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+       # self.assertEqual(exp_result, result_backward)
+
+    def test_gap_for_entering_vehicles_2(self):
+        # one vehicle driving in rightmost lane never violates safe distance (1000)
+        # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
+        # one vehicle entering main carriage way (1001)
+        scenario, planning_problem_set = \
+            CommonRoadFileReader(self.test_scenario_dir +
+                                 "DEU_test_consider_entering_vehicles_for_distance_2.xml").open()
+        exp_result = [(1000, {'R_I6_veh_1001': True, 'R_I6_veh_1002': True}),
+                      (1001, {'R_I6_veh_1000': True, 'R_I6_veh_1002': True}),
+                      (1002, {'R_I6_veh_1000': True, 'R_I6_veh_1001': True})]
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI6"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        #self.cr_eval.activated_traffic_rule_sets = ["B_SRI6"]
+        #self.cr_eval.update_eval_dict()
+        #result_backward = self.cr_eval.evaluate_scenario(scenario)
+        print("Gap for entering vehicles:")
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+       # self.assertEqual(exp_result, result_backward)
 
 if __name__ == '__main__':
     unittest.main()

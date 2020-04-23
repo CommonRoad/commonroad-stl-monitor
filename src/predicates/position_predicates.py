@@ -39,14 +39,14 @@ class PositionPredicateCollection(PredicateCollection):
     @staticmethod
     def behind(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
         """
-        Evaluates if the kth vehicle is behind the pth vehicle
+        Evaluates if the pth vehicle is behind the kth vehicle
 
         :param vehicle_p: pth vehicle
         :param vehicle_k: kth vehicle
         :param time_step: time step of interest
         :returns boolean indicating satisfaction
         """
-        if vehicle_p.rear_s(time_step) > vehicle_k.front_s(time_step):
+        if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
             return True
         else:
             return False
@@ -541,6 +541,7 @@ class PositionPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"in_same_lane__x_ego__x_o": {},
                            "in_front_of__x_ego__x_o": {},
+                           "behind__x_ego__x_o": {},
                            "left_of__x_ego__x_o": {},
                            "on_access_ramp__x_o": {},
                            "on_main_carriage_way__x_o": {},
@@ -587,6 +588,7 @@ class PositionPredicateCollection(PredicateCollection):
         for other_vehicle in other_vehicles:
             predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["behind__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id] = {}
             predicate_trace["left_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["on_access_ramp__x_o"][other_vehicle.id] = {}
@@ -600,6 +602,9 @@ class PositionPredicateCollection(PredicateCollection):
                 if "in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.in_front_of(time_step, ego_vehicle, other_vehicle)
+                if "behind__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["behind__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.behind(time_step, ego_vehicle, other_vehicle)
                 if "left_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.left_of(time_step, ego_vehicle, other_vehicle)

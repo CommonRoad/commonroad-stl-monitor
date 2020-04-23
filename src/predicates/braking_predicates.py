@@ -95,7 +95,8 @@ class BrakingPredicateCollection(PredicateCollection):
         else:
             return True
 
-    def brakes_stronger(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
+    @staticmethod
+    def brakes_stronger(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
         """
         Evaluates if the kth vehicle brakes stronger (lower acceleration) as the pth vehicle
 
@@ -119,7 +120,8 @@ class BrakingPredicateCollection(PredicateCollection):
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
-                           "keeps_safe_distance_prec__x_ego__x_o": {}}
+                           "keeps_safe_distance_prec__x_ego__x_o": {},
+                           "brakes_stronger__x_ego__x_o": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
             if "unnecessary_braking__x_ego" in self._necessary_predicates:
@@ -128,12 +130,17 @@ class BrakingPredicateCollection(PredicateCollection):
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
+                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle)
+                if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle)
 
         return predicate_trace
