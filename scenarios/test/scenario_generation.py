@@ -192,7 +192,7 @@ def create_safe_distance_scenario():
     write_to_file(scenario)
 
 
-def create_unnecessary_braking_scenario_1():
+def create_unnecessary_braking_scenario():
     obstacles = []
     obs0 = create_obstacle_by_acceleration([1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -227,7 +227,7 @@ def create_unnecessary_braking_scenario_1():
     num_lanes = 5
     num_lanelets = 10
     road_length = 250
-    scenario = create_straight_scenario("test_unnecessary_braking_1", 0.1, num_lanes, num_lanelets, road_length,
+    scenario = create_straight_scenario("test_unnecessary_braking", 0.1, num_lanes, num_lanelets, road_length,
                                         obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.DASHED, LineMarking.DASHED),
@@ -242,25 +242,6 @@ def create_unnecessary_braking_scenario_1():
                                         [3.5, 3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
-
-
-def create_unnecessary_braking_scenario_2():
-    obstacles = []
-    obs1 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, -5, -5, -5, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 30, np.array([3.0, 1.75]), 1000)
-    obstacles.append(obs1)
-    num_lanes = 1
-    num_lanelets = 10
-    road_length = 250
-    scenario = create_straight_scenario("test_unnecessary_braking_2", 0.1, num_lanes, num_lanelets, road_length,
-                                        obstacles, [(LineMarking.SOLID, LineMarking.SOLID)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5])
-
-    write_to_file(scenario)
-
 
 def create_standstill_scenario():
     obstacles = []
@@ -464,7 +445,7 @@ def create_emergency_three_lanes_with_shoulder_scenario():
     obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([13.0, 13.15]), 1006)
     obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([23.0, 6.8]), 1007)
     obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 0, np.array([43.0, 7.75]), 1008)
-    obs19 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([53.0, 7.75]), 1009)
+    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([53.0, 7.75]), 1009)
     obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1.5, np.array([63.0, 8.75]), 1010)
     obs11 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 1, np.array([73.0, 6.9]), 1011)
     obs12 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([83.0, 7.0]), 1012)
@@ -620,8 +601,7 @@ def main():
     create_min_speed_limit_scenario()
     create_preserves_traffic_flow_scenario()
     create_safe_distance_scenario()
-    create_unnecessary_braking_scenario_1()
-    create_unnecessary_braking_scenario_2()
+    create_unnecessary_braking_scenario()
     create_standstill_scenario()
     create_reverse_and_u_turn_scenario()
     create_overtaking_right_congestion_scenario()

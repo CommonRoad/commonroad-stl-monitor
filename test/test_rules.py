@@ -7,6 +7,7 @@ from src.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
         self.cr_eval = CommonRoadObstacleEvaluation("../src/")
+        self.cr_eval.simulation_param["operating_mode"] = "test"
         self.test_scenario_dir = "../scenarios/test/"
 
     def test_keeps_max_lane_speed_limit(self):
@@ -159,7 +160,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle following another vehicle which brakes normal (1006)
         # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "DEU_test_unnecessary_braking_1.xml").open()
+                                                              "DEU_test_unnecessary_braking.xml").open()
         exp_result = [(1000, {'R_G2': True}), (1001, {'R_G2': True}), (1002, {'R_G2': False}),
                       (1005, {'R_G2': True}), (1006, {'R_G2': True}), (1007, {'R_G2': True})]
         self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
@@ -172,24 +173,6 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
         self.assertEqual(exp_result, result_forward)
-
-    def test_unnecessary_braking_2(self):
-        # one vehicle which without leading vehicle which brakes very strong, because it is necessary (1000)
-        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "DEU_test_unnecessary_braking_2.xml").open()
-        self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 5
-        exp_result = [(1000, {'R_G2': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
-        self.cr_eval.update_eval_dict()
-        result_backward = self.cr_eval.evaluate_scenario(scenario)
-        self.cr_eval.activated_traffic_rule_sets = ["F_SRG2"]
-        self.cr_eval.update_eval_dict()
-        result_forward = self.cr_eval.evaluate_scenario(scenario)
-        print("Unnecessary Braking Test 2:")
-        print(result_backward)
-        self.assertEqual(exp_result, result_forward)
-        self.assertEqual(exp_result, result_backward)
-        self.cr_eval.ego_vehicle_param["fov_speed_limit"] = 60
 
     def test_standstill(self):
         # one vehicle which is in standstill with a leading vehicle in standstill(1000)
@@ -412,8 +395,9 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle driving always in the left most lane (1001)
         # one vehicle changing to rightmost main carriage way lane (1000)
         # one vehicle entering main carriage way (1002)
-        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
-                                                              "DEU_test_consider_entering_vehicles.xml").open()
+        scenario, planning_problem_set = \
+            CommonRoadFileReader(self.test_scenario_dir +
+                                 "DEU_test_consider_entering_vehicles_for_lane_change.xml").open()
         exp_result = [(1000, {'R_I5_veh_1001': True, 'R_I5_veh_1002': False}),
                       (1001, {'R_I5_veh_1000': True, 'R_I5_veh_1002': True}),
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]

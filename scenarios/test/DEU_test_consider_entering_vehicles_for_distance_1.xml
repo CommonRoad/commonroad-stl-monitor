@@ -7,9 +7,9 @@
   </location>
   <scenarioTags>
     <parallel_lanes/>
+    <no_oncoming_traffic/>
     <multi_lane/>
     <highway/>
-    <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -2125,8 +2125,8 @@
       <lineMarking>dashed</lineMarking>
     </rightBound>
     <successor ref="12"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="12">
@@ -2306,8 +2306,8 @@
     </rightBound>
     <predecessor ref="11"/>
     <successor ref="13"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="13">
@@ -2487,8 +2487,8 @@
     </rightBound>
     <predecessor ref="12"/>
     <successor ref="14"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="14">
@@ -2668,8 +2668,8 @@
     </rightBound>
     <predecessor ref="13"/>
     <successor ref="15"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="15">
@@ -2849,8 +2849,8 @@
     </rightBound>
     <predecessor ref="14"/>
     <successor ref="16"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="16">
@@ -3030,8 +3030,8 @@
     </rightBound>
     <predecessor ref="15"/>
     <successor ref="17"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="17">
@@ -3211,8 +3211,8 @@
     </rightBound>
     <predecessor ref="16"/>
     <successor ref="18"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="18">
@@ -3392,8 +3392,8 @@
     </rightBound>
     <predecessor ref="17"/>
     <successor ref="19"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="19">
@@ -3573,8 +3573,8 @@
     </rightBound>
     <predecessor ref="18"/>
     <successor ref="20"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="20">
@@ -3753,8 +3753,8 @@
       <lineMarking>dashed</lineMarking>
     </rightBound>
     <predecessor ref="19"/>
-    <laneletType>mainCarriageWay</laneletType>
     <laneletType>highway</laneletType>
+    <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <dynamicObstacle id="1000">

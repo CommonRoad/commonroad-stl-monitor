@@ -170,9 +170,10 @@ class CommonRoadObstacleEvaluation:
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
             other_vehicles = []
-            if self.simulation_param.get("single_vehicle") is True \
-                    and self.simulation_param.get("single_scenario") is True\
-                    and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id:
+            if not (self.simulation_param.get("operating_mode") == "test"
+                    or self.simulation_param.get("operating_mode") == "single_scenario"
+                    or (self.simulation_param.get("operating_mode") == "single_vehicle"
+                        and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id)):
                 continue
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)

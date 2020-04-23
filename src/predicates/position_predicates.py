@@ -3,6 +3,7 @@ from typing import List, Dict, Set, Union
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
 from src.predicates.predicate_collection import PredicateCollection
+#from src.predicates.general_predicates import GeneralPredicateCollection
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
 
@@ -500,6 +501,22 @@ class PositionPredicateCollection(PredicateCollection):
                 if 0.5 * lane.width(s_ego) - left_position > self._traffic_rules_param.get("close_to_lane_border"):
                     return False
             return True
+
+    # def lane_change(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    #     """
+    #     Evaluates if a vehicle performs a lane change
+    #
+    #     :param vehicle: vehicle object
+    #     :param time_step: time step of interest
+    #     :param other_vehicles: list of other vehicles
+    #     :returns boolean indicating satisfaction
+    #     """
+    #     if not GeneralPredicateCollection.in_congestion(time_step, vehicle, other_vehicles) \
+    #             and len(vehicle.lanelet_assignment[time_step]) > 1:
+    #         return True
+    #     else:
+    #         return False
+
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
