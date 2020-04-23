@@ -24,7 +24,7 @@ traffic_rules_forward:
     R_I3: G(~(makes_u_turn__x_ego) & ~(reverses__x_ego))
     R_I4: G(in_congestion__x_ego -> ((~on_shoulder__x_ego) & (interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_right_lane_rightmost__x_ego)))
     R_I5: G((on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (on_main_carriage_way__x_ego & ~(~(in_rightmost_lane_of_same_type__x_ego) & F(in_rightmost_lane_of_same_type__x_ego))))
-    R_I6: ((on_access_ramp__x_o & F(on_main_carriage_way__x_o) & behind__x_ego__x_o & ~G(keeps_safe_distance_prec__x_ego__x_o)) -> ((brakes_stronger__x_ego__x_o & drives_faster__x_o__x_ego) | (brakes_stronger__x_ego__x_o & F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
+    R_I6: ((on_access_ramp__x_o & F(on_main_carriage_way__x_o) & G(behind__x_ego__x_o) & ~G(keeps_safe_distance_prec__x_ego__x_o)) -> G((brakes_stronger__x_ego__x_o & drives_faster__x_o__x_ego) | (brakes_stronger__x_ego__x_o & F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
 
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle)
