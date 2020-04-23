@@ -32,7 +32,8 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         num_vehicles = 0
         for veh_o in other_vehicles:
-            if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not start at the first time step
+            if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not
+                # start at the first time step
                 continue
             if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
@@ -114,6 +115,21 @@ class GeneralPredicateCollection(PredicateCollection):
                     <= self._traffic_rules_param.get("min_interstate_width"):
                 return False
         return True
+
+    def lane_change(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+        """
+        Evaluates if a vehicle performs a lane change
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :param other_vehicles: list of other vehicles
+        :returns boolean indicating satisfaction
+        """
+        if not self.in_congestion(time_step, vehicle, other_vehicles) \
+                and len(vehicle.lanelet_assignment[time_step]) > 1:
+            return True
+        else:
+            return False
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:

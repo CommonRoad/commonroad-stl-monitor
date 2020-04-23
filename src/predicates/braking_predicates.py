@@ -95,6 +95,20 @@ class BrakingPredicateCollection(PredicateCollection):
         else:
             return True
 
+    def brakes_stronger(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
+        """
+        Evaluates if the kth vehicle brakes stronger (lower acceleration) as the pth vehicle
+
+        :param vehicle_k: kth vehicle
+        :param vehicle_p: pth vehicle
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        if vehicle_k.states_lon[time_step].a < vehicle_p.states_lon[time_step].a:
+            return True
+        else:
+            return False
+
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
         """

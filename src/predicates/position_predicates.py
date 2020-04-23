@@ -36,6 +36,21 @@ class PositionPredicateCollection(PredicateCollection):
         else:
             return False
 
+    @staticmethod
+    def behind(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+        """
+        Evaluates if the kth vehicle is behind the pth vehicle
+
+        :param vehicle_p: pth vehicle
+        :param vehicle_k: kth vehicle
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        if vehicle_p.rear_s(time_step) > vehicle_k.front_s(time_step):
+            return True
+        else:
+            return False
+
     def left_of(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
         """
         Evaluates if the kth vehicle is left of the pth vehicle
@@ -75,6 +90,19 @@ class PositionPredicateCollection(PredicateCollection):
             return True
         else:
             return False
+
+    @staticmethod
+    def exact_same_lanes(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+        """
+        Evaluates if the kth vehicle is on exact the same lanes as the pth vehicle
+
+        :param vehicle_p: pth vehicle
+        :param vehicle_k: kth vehicle
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        if vehicle_k.lanelet_assignment[time_step] == vehicle_p.lanelet_assignment[time_step]:
+            return True
 
     def exist_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
@@ -501,22 +529,6 @@ class PositionPredicateCollection(PredicateCollection):
                 if 0.5 * lane.width(s_ego) - left_position > self._traffic_rules_param.get("close_to_lane_border"):
                     return False
             return True
-
-    # def lane_change(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
-    #     """
-    #     Evaluates if a vehicle performs a lane change
-    #
-    #     :param vehicle: vehicle object
-    #     :param time_step: time step of interest
-    #     :param other_vehicles: list of other vehicles
-    #     :returns boolean indicating satisfaction
-    #     """
-    #     if not GeneralPredicateCollection.in_congestion(time_step, vehicle, other_vehicles) \
-    #             and len(vehicle.lanelet_assignment[time_step]) > 1:
-    #         return True
-    #     else:
-    #         return False
-
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
