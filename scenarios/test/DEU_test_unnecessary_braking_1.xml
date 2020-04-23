@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_unnecessary_braking_1" date="2020-04-12">
+<?xml version='1.0' encoding='UTF-8'?>
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_unnecessary_braking_1" date="2020-04-23">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>0</gpsLatitude>
     <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
-    <no_oncoming_traffic/>
     <parallel_lanes/>
-    <highway/>
     <multi_lane/>
+    <highway/>
+    <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

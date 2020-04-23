@@ -1,8 +1,9 @@
 import bezier
 import numpy as np
 from typing import List, Tuple, Set
-from commonroad.scenario.obstacle import DynamicObstacle
+import matplotlib.pyplot as plt
 
+from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.lanelet import Lanelet, LineMarking, LaneletType, RoadUser
 from commonroad.scenario.scenario import Scenario, Tag, Location
 
@@ -41,12 +42,15 @@ def create_access_ramp_start(x_start, l_id: int) -> Lanelet:
         point_list.append(point)
     center_vertices = np.array(point_list)
 
+    plt.close()
+
     lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
                       right_vertices=right_vertices, lanelet_id=l_id, successor=[l_id+1],
                       adjacent_left=None, adjacent_left_same_direction=None,
                       line_marking_left_vertices=LineMarking.SOLID,
                       line_marking_right_vertices=LineMarking.SOLID,
                       lanelet_type= {LaneletType.HIGHWAY, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
+
     return lanelet
 
 
@@ -97,6 +101,8 @@ def create_access_ramp_end(x_start:int, l_id: int, lanelet_length: int, number_l
         point = np.array([x_center[idx], y_center[idx]])
         point_list.append(point)
     center_vertices = np.array(point_list)
+
+    plt.close()
 
     lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
                       right_vertices=right_vertices, lanelet_id=l_id, predecessor=[l_id-1], successor=None,
@@ -201,6 +207,8 @@ def create_exit_ramp_start(lanelet_lenght: int, l_id: int, num_lanelets_per_lane
         point_list.append(point)
     center_vertices = np.array(point_list)
 
+    plt.close()
+
     lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
                       right_vertices=right_vertices, lanelet_id=l_id, predecessor=[num_lanelets_per_lane + 1],
                       successor=[l_id + 1], adjacent_left=l_id + num_lanelets_per_lane + 1,
@@ -244,6 +252,8 @@ def create_exit_ramp_end(x_start, l_id: int) -> Lanelet:
         point = np.array([x_center[idx], y_center[idx]])
         point_list.append(point)
     center_vertices = np.array(point_list)
+
+    plt.close()
 
     lanelet = Lanelet(left_vertices=left_vertices, center_vertices=center_vertices,
                       right_vertices=right_vertices, lanelet_id=l_id, predecessor=[l_id-1], successor=None,

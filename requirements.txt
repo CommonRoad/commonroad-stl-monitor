@@ -5,3 +5,4 @@ metric-temporal-logic >= 0.1.4
 commonroad-io >= 2020.1
 matplotlib >= 2.5.0
 ruamel.yaml >= 0.16.10
+bezier >= 2020.2.3
