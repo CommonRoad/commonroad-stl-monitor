@@ -24,7 +24,8 @@ traffic_rules_forward:
     R_I3: G(~(makes_u_turn__x_ego) & ~(reverses__x_ego))
     R_I4: G(in_congestion__x_ego -> ((~on_shoulder__x_ego) & (interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_right_lane_rightmost__x_ego)))
     R_I5: G((on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (on_main_carriage_way__x_ego & ~(~(in_rightmost_lane_of_same_type__x_ego) & F(in_rightmost_lane_of_same_type__x_ego))))
-    R_I6: ((on_access_ramp__x_o & F(on_main_carriage_way__x_o) & G(behind__x_ego__x_o) & ~G(keeps_safe_distance_prec__x_ego__x_o)) -> G((brakes_stronger__x_ego__x_o & drives_faster__x_o__x_ego) | (brakes_stronger__x_ego__x_o & F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
+    R_I6: ((on_access_ramp__x_o & F(on_main_carriage_way__x_o) & G(in_front_of__x_ego__x_o) & ~G(keeps_safe_distance_prec__x_ego__x_o)) -> G((brakes_stronger__x_ego__x_o & drives_faster__x_o__x_ego) | (brakes_stronger__x_ego__x_o & F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
+    R_I7: G((~(in_same_lane__x_ego__x_o) &  F(in_front_of__x_o__x_ego & in_same_lane__x_ego__x_o)) -> F(G(in_same_lane__x_ego__x_o & keeps_safe_distance_prec__x_o__x_ego)))
 
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle)
@@ -97,7 +98,7 @@ traffic_rules_param:
 
 
 traffic_rule_sets:
-    F_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I5, R_I6]
+    F_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I5, R_I6, R_I7]
     F_SRG1: [R_G1]
     F_SRG2: [R_G2]
     F_SRG3: [R_G3]
@@ -109,7 +110,8 @@ traffic_rule_sets:
     F_SRI4: [R_I4]
     F_SRI5: [R_I5]
     F_SRI6: [R_I6]
-    B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4]
+    F_SRI7: [R_I7]
+    B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4, R_I7]
     B_S1: [R_G1, R_G2, R_G3, R_G5, R_I1, R_I2, R_I3, R_I4]
     B_SRG1: [R_G1]
     B_SRG2: [R_G2]
@@ -122,5 +124,6 @@ traffic_rule_sets:
     B_SRI4: [R_I4]
     B_SRI5: [R_I5]
     B_SRI6: [R_I6]
+    B_SRI7: [R_I7]
 activated_traffic_rule_sets: [B_S1]
-vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_I6]
+vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_I6, R_I7]

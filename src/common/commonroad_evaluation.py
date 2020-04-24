@@ -108,13 +108,9 @@ class CommonRoadObstacleEvaluation:
                                                                                           reference_lane)
             if state_lon is None or state_lat is None:
                 continue
-            vehicle.append_state_cr(state, state.time_step)
-            vehicle.append_state_lon(state_lon, state.time_step)
-            vehicle.append_state_lat(state_lat, state.time_step)
-            vehicle.append_lanelet_assignment(obstacle.prediction.shape_lanelet_assignment[state.time_step],
-                                              state.time_step)
-            vehicle.append_signal_state(obstacle.signal_state_at_time_step(state.time_step), state.time_step)
-
+            vehicle.append_time_step(state.time_step, state_lon, state_lat, state,
+                                     obstacle.prediction.shape_lanelet_assignment[state.time_step],
+                                     obstacle.signal_state_at_time_step(state.time_step))
         return vehicle
 
     def _adjacent_to_ego(self, ego_lanelet_id: int, obs_lanelet_id: int) -> bool:

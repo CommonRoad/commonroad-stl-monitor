@@ -1,10 +1,12 @@
 from typing import Union, Set, Dict, List
 import enum
 import math
+import numpy as np
 
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
+from commonroad.geometry.transform import rotate_translate
 
 from src.common.road_network import Lane
 
@@ -188,7 +190,10 @@ class Vehicle:
         :param time_step: time step to consider
         :returns rear s-coordinate [m]
         """
-        return self._states_lon[time_step].s - self.shape.length/2 * math.cos(self.states_lat[time_step].theta)
+        return min((self._states_lon[time_step].s - self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
+                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
+                   (self._states_lon[time_step].s - self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
+                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
 
     def front_s(self, time_step: int) -> float:
         """
@@ -197,67 +202,49 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front s-coordinate [m]
         """
-        return self._states_lon[time_step].s + self.shape.length/2 * math.cos(self.states_lat[time_step].theta)
+        return max((self._states_lon[time_step].s + self.shape.length/2) * math.cos(self.states_lat[time_step].theta)
+                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width/2),
+                   (self._states_lon[time_step].s + self.shape.length/2) * math.cos(self.states_lat[time_step].theta)
+                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width/2))
 
-    def right_position(self, time_step: int) -> float:
+    def right_d(self, time_step: int) -> float:
         """
         Calculates right d-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns front s-coordinate [m]
+        :returns right d-coordinate [m]
         """
-        return self._states_lat[time_step].d - self.shape.width/2 * math.sin(self.states_lat[time_step].theta + 0.5 * math.pi)
+        return min((self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
+                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
+                   (self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
+                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
 
-    def left_position(self, time_step: int) -> float:
+    def left_d(self, time_step: int) -> float:
         """
         Calculates left d-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns front d-coordinate [m]
+        :returns left d-coordinate [m]
         """
-        return self._states_lat[time_step].d + self.shape.width/2 * math.sin(self.states_lat[time_step].theta + 0.5 * math.pi)
+        return max((self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
+                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
+                   (self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
+                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
 
-    def append_state_lon(self, state: StateLongitudinal, time_step: int):
+    def append_time_step(self, time_step: int, state_lon: StateLongitudinal, state_lat: StateLateral, state_cr: State,
+                         lanelet_assignment: Set[int], signal_state: State = None):
         """
-        Appends a state to the longitudinal curvilinear state list
+        Adds information for a specific time step to vehicle
 
-        :param state: state to append
         :param time_step: time step of new data
+        :param state_lon: longitudinal state to append
+        :param state_lat: lateral state to append
+        :param state_cr: CommonRoad state to append
+        :param lanelet_assignment: lanelet assignment to append
+        :param signal_state: signal state to append
         """
-        self._states_lon[time_step] = state
-
-    def append_state_lat(self, state: StateLateral, time_step: int):
-        """
-        Appends a state to the lateral curvilinear state list
-
-        :param state: state to append
-        :param time_step: time step of new data
-        """
-        self._states_lat[time_step] = state
-
-    def append_state_cr(self, state: State, time_step: int):
-        """
-        Appends a state to the CommonRoad state list
-
-        :param state: state to append
-        :param time_step: time step of new data
-        """
-        self._states_cr[time_step] = state
-
-    def append_lanelet_assignment(self, lanelets: Set[int], time_step: int):
-        """
-        Sets lanelets at a specific time step
-
-        :param lanelets: lanelet IDs to append
-        :param time_step: time step of new data
-        """
-        self._lanelet_assignment[time_step] = lanelets
-
-    def append_signal_state(self, signal_state: SignalState, time_step: int):
-        """
-        Sets signal state at a specific time step
-
-        :param signal_state: the CommonRaod signal state to append
-        :param time_step: time step of new data
-        """
+        self._states_lon[time_step] = state_lon
+        self._states_lat[time_step] = state_lat
+        self._states_cr[time_step] = state_cr
+        self._lanelet_assignment[time_step] = lanelet_assignment
         self._signal_series[time_step] = signal_state

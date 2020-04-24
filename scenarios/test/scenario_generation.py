@@ -602,6 +602,31 @@ def create_consider_entering_vehicles_for_distance_scenario_2():
     write_to_file(scenario)
 
 
+def create_safe_distance_lane_change_scenario():
+    obstacles = []
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([5.0, 5.25]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([100.0, 1.75]), 1001,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22.5, np.array([40.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 27.5, np.array([40.0, 1.75]), 1003)
+    for i in range(4):
+        obs = locals().get('obs' + str(i))
+        if obs is not None:
+            obstacles.append(obs)
+    num_lanes = 2
+    num_lanelets = 10
+    road_length = 200
+    scenario = create_straight_scenario("test_safe_distance_lane_change", 0.1, num_lanes, num_lanelets,
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)],
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+
+    write_to_file(scenario)
 def main():
     create_max_speed_limit_scenario()
     create_min_speed_limit_scenario()
@@ -620,6 +645,7 @@ def main():
     create_emergency_two_lanes_not_broad_enough_scenario()
     create_consider_entering_vehicles_for_distance_scenario_1()
     create_consider_entering_vehicles_for_distance_scenario_2()
+    create_safe_distance_lane_change_scenario()
 
 
 if __name__ == "__main__":

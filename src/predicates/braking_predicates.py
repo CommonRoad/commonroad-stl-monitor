@@ -121,6 +121,7 @@ class BrakingPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
                            "keeps_safe_distance_prec__x_ego__x_o": {},
+                           "keeps_safe_distance_prec__x_o__x_ego": {},
                            "brakes_stronger__x_ego__x_o": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
@@ -131,14 +132,19 @@ class BrakingPredicateCollection(PredicateCollection):
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
+                    predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
                     predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle)
+                if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
+                    predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
+                        self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle)
                 if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.brakes_stronger(time_step, ego_vehicle, other_vehicle)

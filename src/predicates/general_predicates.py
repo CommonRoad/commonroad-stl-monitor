@@ -116,17 +116,28 @@ class GeneralPredicateCollection(PredicateCollection):
                 return False
         return True
 
-    def lane_change(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def lane_change(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle performs a lane change
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
-        :param other_vehicles: list of other vehicles
         :returns boolean indicating satisfaction
         """
-        if not self.in_congestion(time_step, vehicle, other_vehicles) \
-                and len(vehicle.lanelet_assignment[time_step]) > 1:
+        if len(self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])) > 1:
+            return True
+        else:
+            return False
+
+    def lane_following(self, time_step: int, vehicle: Vehicle) -> bool:
+        """
+        Evaluates if a vehicle is within a lane
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        if len(self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])) == 1:
             return True
         else:
             return False
@@ -142,6 +153,7 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
                            "in_congestion__x_o": {},
+                           "lane_change__x_ego": {ego_vehicle.id: {}},
                            "makes_u_turn__x_ego": {ego_vehicle.id: {}},
                            "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
@@ -149,6 +161,9 @@ class GeneralPredicateCollection(PredicateCollection):
             if "in_congestion__x_ego" in self._necessary_predicates:
                 predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_congestion(time_step, ego_vehicle, other_vehicles)
+            if "lane_change__x_ego" in self._necessary_predicates:
+                predicate_trace["lane_change__x_ego"][ego_vehicle.id][time_step] = \
+                    self.lane_change(time_step, ego_vehicle)
             if "makes_u_turn__x_ego" in self._necessary_predicates:
                 predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
                     self.makes_u_turn(time_step, ego_vehicle)

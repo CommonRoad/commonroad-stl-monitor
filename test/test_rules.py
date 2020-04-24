@@ -492,5 +492,26 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_forward)
        # self.assertEqual(exp_result, result_backward)
 
+    def test_safe_distance_lane_change(self):
+        # one vehicle driving in rightmost lane never violates safe distance (1000)
+        # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
+        # one vehicle entering main carriage way (1001)
+        scenario, planning_problem_set = \
+            CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change.xml").open()
+        exp_result = [(1000, {'R_I7_veh_1001': True, 'R_I7_veh_1002': True, 'R_I7_veh_1003': True}),
+                      (1001, {'R_I7_veh_1000': True, 'R_I7_veh_1002': False, 'R_I7_veh_1003': True}),
+                      (1002, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1003': True}),
+                      (1003, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1002': True})]
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRI7"]
+        self.cr_eval.update_eval_dict()
+        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        #self.cr_eval.activated_traffic_rule_sets = ["B_SRI6"]
+        #self.cr_eval.update_eval_dict()
+        #result_backward = self.cr_eval.evaluate_scenario(scenario)
+        print("Safe distance to following vehicles during lane change:")
+        print(result_forward)
+        self.assertEqual(exp_result, result_forward)
+       # self.assertEqual(exp_result, result_backward)
+
 if __name__ == '__main__':
     unittest.main()
