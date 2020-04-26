@@ -129,29 +129,60 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which always keeps safe distance (1005)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml").open()
         exp_result = [(1000, {'R_G1_veh_1001': False, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
-                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1001, {'R_G1_veh_1000': True, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
-                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1002, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1003': False,
-                              'R_G1_veh_1004': False, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1004': False, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': False, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1003, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
-                              'R_G1_veh_1004': False, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1004': False, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': False, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1004, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
-                              'R_G1_veh_1003': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1003': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': False, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1005, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
-                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1006': True}),
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
                       (1006, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
-                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["B_SRG1"]
-        self.cr_eval.update_eval_dict()
-        result_backward = self.cr_eval.evaluate_scenario(scenario)
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
+                      (1007, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True, 'R_G1_veh_1008': True, 'R_G1_veh_1009': True,
+                              'R_G1_veh_1010': True}),
+                      (1008, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True, 'R_G1_veh_1007': True, 'R_G1_veh_1009': False,
+                              'R_G1_veh_1010': True}),
+                      (1009, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True, 'R_G1_veh_1007': True, 'R_G1_veh_1008': True,
+                              'R_G1_veh_1010': True}),
+                      (1010, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True, 'R_G1_veh_1007': True, 'R_G1_veh_1008': True,
+                              'R_G1_veh_1009': True})
+                      ]
+     #   self.cr_eval.activated_traffic_rule_sets = ["B_SRG1"]
+     #   self.cr_eval.update_eval_dict()
+       # result_backward = self.cr_eval.evaluate_scenario(scenario)
         self.cr_eval.activated_traffic_rule_sets = ["F_SRG1"]
         self.cr_eval.update_eval_dict()
         result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Safe Distance Test:")
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
-        self.assertEqual(exp_result, result_backward)
+      #  self.assertEqual(exp_result, result_backward)
 
     def test_unnecessary_braking_1(self):
         # one vehicle accelerates (1000)
@@ -161,17 +192,28 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_unnecessary_braking.xml").open()
-        exp_result = [(1000, {'R_G2': True}), (1001, {'R_G2': True}), (1002, {'R_G2': False}),
-                      (1005, {'R_G2': True}), (1006, {'R_G2': True}), (1007, {'R_G2': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
-        self.cr_eval.update_eval_dict()
-        result_backward = self.cr_eval.evaluate_scenario(scenario)
+        exp_result = [(1000, {'R_G2_veh_1001': True, 'R_G2_veh_1002': True, 'R_G2_veh_1005': True,
+                              'R_G2_veh_1006': True, 'R_G2_veh_1007': True}),
+                      (1001, {'R_G2_veh_1000': True, 'R_G2_veh_1002': True, 'R_G2_veh_1005': True,
+                              'R_G2_veh_1006': True, 'R_G2_veh_1007': True}),
+                      (1002, {'R_G2_veh_1000': False, 'R_G2_veh_1001': False, 'R_G2_veh_1005': False,
+                              'R_G2_veh_1006': False, 'R_G2_veh_1007': False}),
+                      (1005, {'R_G2_veh_1000': True, 'R_G2_veh_1001': True, 'R_G2_veh_1002': True,
+                              'R_G2_veh_1006': True, 'R_G2_veh_1007': True}),
+                      (1006, {'R_G2_veh_1000': True, 'R_G2_veh_1001': True, 'R_G2_veh_1002': True,
+                              'R_G2_veh_1005': True, 'R_G2_veh_1007': True}),
+                      (1007, {'R_G2_veh_1000': True, 'R_G2_veh_1001': True, 'R_G2_veh_1002': True,
+                              'R_G2_veh_1005': True,'R_G2_veh_1006': True})]
+       # self.cr_eval.activated_traffic_rule_sets = ["B_SRG2"]
+       # self.cr_eval.update_eval_dict()
+      #  result_backward = self.cr_eval.evaluate_scenario(scenario)
         self.cr_eval.activated_traffic_rule_sets = ["F_SRG2"]
         self.cr_eval.update_eval_dict()
         result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Unnecessary Braking Test 1:")
-        print(result_backward)
-        self.assertEqual(exp_result, result_backward)
+      #  print(result_backward)
+        print(result_forward)
+     #   self.assertEqual(exp_result, result_backward)
         self.assertEqual(exp_result, result_forward)
 
     def test_standstill(self):
@@ -492,26 +534,26 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_forward)
        # self.assertEqual(exp_result, result_backward)
 
-    def test_safe_distance_lane_change(self):
-        # one vehicle driving in rightmost lane never violates safe distance (1000)
-        # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
-        # one vehicle entering main carriage way (1001)
-        scenario, planning_problem_set = \
-            CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change.xml").open()
-        exp_result = [(1000, {'R_I7_veh_1001': True, 'R_I7_veh_1002': True, 'R_I7_veh_1003': True}),
-                      (1001, {'R_I7_veh_1000': True, 'R_I7_veh_1002': False, 'R_I7_veh_1003': True}),
-                      (1002, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1003': True}),
-                      (1003, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1002': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["F_SRI7"]
-        self.cr_eval.update_eval_dict()
-        result_forward = self.cr_eval.evaluate_scenario(scenario)
-        #self.cr_eval.activated_traffic_rule_sets = ["B_SRI6"]
-        #self.cr_eval.update_eval_dict()
-        #result_backward = self.cr_eval.evaluate_scenario(scenario)
-        print("Safe distance to following vehicles during lane change:")
-        print(result_forward)
-        self.assertEqual(exp_result, result_forward)
-       # self.assertEqual(exp_result, result_backward)
+    # def test_safe_distance_lane_change(self):
+    #     # one vehicle driving in rightmost lane never violates safe distance (1000)
+    #     # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
+    #     # one vehicle entering main carriage way (1001)
+    #     scenario, planning_problem_set = \
+    #         CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change.xml").open()
+    #     exp_result = [(1000, {'R_I7_veh_1001': True, 'R_I7_veh_1002': True, 'R_I7_veh_1003': True}),
+    #                   (1001, {'R_I7_veh_1000': True, 'R_I7_veh_1002': False, 'R_I7_veh_1003': True}),
+    #                   (1002, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1003': True}),
+    #                   (1003, {'R_I7_veh_1000': True, 'R_I7_veh_1001': True, 'R_I7_veh_1002': True})]
+    #     self.cr_eval.activated_traffic_rule_sets = ["F_SRI7"]
+    #     self.cr_eval.update_eval_dict()
+    #     result_forward = self.cr_eval.evaluate_scenario(scenario)
+    #     #self.cr_eval.activated_traffic_rule_sets = ["B_SRI6"]
+    #     #self.cr_eval.update_eval_dict()
+    #     #result_backward = self.cr_eval.evaluate_scenario(scenario)
+    #     print("Safe distance to following vehicles during lane change:")
+    #     print(result_forward)
+    #     self.assertEqual(exp_result, result_forward)
+    #    # self.assertEqual(exp_result, result_backward)
 
 if __name__ == '__main__':
     unittest.main()

@@ -116,20 +116,7 @@ class GeneralPredicateCollection(PredicateCollection):
                 return False
         return True
 
-    def lane_change(self, time_step: int, vehicle: Vehicle) -> bool:
-        """
-        Evaluates if a vehicle performs a lane change
-
-        :param vehicle: vehicle object
-        :param time_step: time step of interest
-        :returns boolean indicating satisfaction
-        """
-        if len(self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])) > 1:
-            return True
-        else:
-            return False
-
-    def lane_following(self, time_step: int, vehicle: Vehicle) -> bool:
+    def single_lane(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is within a lane
 
@@ -138,6 +125,25 @@ class GeneralPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction
         """
         if len(self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])) == 1:
+            return True
+        else:
+            return False
+
+    def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
+        """
+        Predicate which checks if the kth vehicle performs a cut-in into the pth vehicles lane
+
+        :param vehicle_p: the pth vehicle
+        :param vehicle_k: the kth vehicle
+        :param time_step: time step of interest
+        :returns Boolean indicating satisfaction
+        """
+        if len(self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])) == 1:
+            return False
+        if not PositionPredicateCollection.in_same_lane_classmethod(vehicle_k.lanelet_assignment[time_step], vehicle_p.lanelet_assignment[time_step]):
+            return False
+        if vehicle_k.states_lat[time_step].d < vehicle_p.states_lat[time_step].d and vehicle_k.states_lat[time_step].theta < 0 or \
+                vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d and vehicle_k.states_lat[time_step].theta > 0:
             return True
         else:
             return False
@@ -153,7 +159,8 @@ class GeneralPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
                            "in_congestion__x_o": {},
-                           "lane_change__x_ego": {ego_vehicle.id: {}},
+                           "cut_in__x_o__x_ego": {},
+                           "single_lane__x_ego": {ego_vehicle.id: {}},
                            "makes_u_turn__x_ego": {ego_vehicle.id: {}},
                            "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
@@ -161,9 +168,9 @@ class GeneralPredicateCollection(PredicateCollection):
             if "in_congestion__x_ego" in self._necessary_predicates:
                 predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_congestion(time_step, ego_vehicle, other_vehicles)
-            if "lane_change__x_ego" in self._necessary_predicates:
-                predicate_trace["lane_change__x_ego"][ego_vehicle.id][time_step] = \
-                    self.lane_change(time_step, ego_vehicle)
+            if "single_lane__x_ego" in self._necessary_predicates:
+                predicate_trace["single_lane__x_ego"][ego_vehicle.id][time_step] = \
+                    self.single_lane(time_step, ego_vehicle)
             if "makes_u_turn__x_ego" in self._necessary_predicates:
                 predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
                     self.makes_u_turn(time_step, ego_vehicle)
@@ -173,11 +180,15 @@ class GeneralPredicateCollection(PredicateCollection):
 
         for other_vehicle in other_vehicles:
             predicate_trace["in_congestion__x_o"][other_vehicle.id] = {}
+            predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
                 if "in_congestion__x_o" in self._necessary_predicates:
                     predicate_trace["in_congestion__x_o"][other_vehicle.id][time_step] = \
                         self.in_congestion(time_step, other_vehicle, other_vehicles)
+                if "cut_in__x_o__x_ego" in self._necessary_predicates:
+                    predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id][time_step] = \
+                        self.cut_in(time_step, other_vehicle, ego_vehicle)
 
         return predicate_trace

@@ -170,20 +170,39 @@ def create_safe_distance_scenario():
     obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([75.0, 5.25]), 1004)
     obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([3.0, 8.75]), 1005)
     obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([40.0, 8.75]), 1006)
-    for i in range(7):
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([85.0, 6.25]), 1007)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 30, np.array([3.0, 12.25]), 1008)
+    obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([30.0, 12.25]), 1009,
+                                           [0.05, 0.05, 0.05, 0, 0, 0, 0, -0.05, -0.05, -0.05,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([45.0, 15.75]), 1010,
+                                            [-0.05, -0.05, -0.05, 0, 0, 0, 0, 0.05, 0.05, 0.05,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    for i in range(11):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
-    num_lanes = 3
+    num_lanes = 5
     num_lanelets = 10
     road_length = 250
     scenario = create_straight_scenario("test_safe_distance", 0.1, num_lanes, num_lanelets, road_length, obstacles,
                                         [(LineMarking.DASHED, LineMarking.SOLID),
                                          (LineMarking.DASHED, LineMarking.DASHED),
+                                         (LineMarking.DASHED, LineMarking.DASHED),
+                                         (LineMarking.DASHED, LineMarking.DASHED),
                                          (LineMarking.SOLID, LineMarking.DASHED)],
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
                                          {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}],
+                                        [3.5, 3.5, 3.5, 3.5, 3.5])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(22.22)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11},
                                scenario.lanelet_network.find_lanelet_by_id(1).right_vertices[0])

@@ -60,7 +60,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle: considered vehicle object
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
-        :returns Boolean indicating speed limit satisfaction
+        :returns Boolean indicating satisfaction
         """
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
@@ -85,7 +85,7 @@ class VelocityPredicateCollection(PredicateCollection):
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
-        :returns Boolean indicating speed limit satisfaction
+        :returns Boolean indicating satisfaction
         """
         v_max_lane = self._speed_limit_suggested(vehicle, time_step)
         v_type = self._get_type_speed_limit(vehicle.obstacle_type)
@@ -118,7 +118,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle: vehicle object
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
-        :returns Boolean indicating speed limit satisfaction
+        :returns Boolean indicating satisfaction
         """
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
@@ -140,7 +140,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle_k: vehicle object
         :param vehicle_p: list of other vehicles
         :param time_step: time step of interest
-        :returns Boolean indicating speed limit satisfaction (True is default return)
+        :returns Boolean indicating satisfaction (True is default return)
         """
         if vehicle_k.states_lon.get(time_step) is None or vehicle_p.states_lon.get(time_step) is None:
             return True
@@ -158,7 +158,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param vehicle_p: the pth vehicle
         :param vehicle_k: the kth vehicle
         :param time_step: time step of interest
-        :returns Boolean indicating speed limit satisfaction
+        :returns Boolean indicating satisfaction
         """
         if vehicle_p.states_lon[time_step].v < vehicle_k.states_lon[time_step].v:
             return True

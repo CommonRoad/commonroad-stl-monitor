@@ -107,6 +107,24 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
+    def exact_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+        """
+        Evaluates if the kth vehicle has the exact same lane occupancy as the pth vehicle
+
+        :param time_step: time step of interest
+        :param vehicle_k: kth vehicle
+        :param vehicle_p: pth vehicle
+        :returns boolean indicating satisfaction
+        """
+        lane_ids_k = self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])
+        lane_ids_p = self._road_network.find_lanes_by_lanelets(vehicle_p.lanelet_assignment[time_step])
+        if len(lane_ids_k) != len(lane_ids_p):
+            return False
+        for lane_id in lane_ids_k:
+            if lane_id not in lane_ids_p:
+                return False
+        return True
+
     @staticmethod
     def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
         """
@@ -511,6 +529,7 @@ class PositionPredicateCollection(PredicateCollection):
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_same_lane__x_ego__x_o": {},
+                           "exact_same_lane__x_ego__x_o": {},
                            "in_front_of__x_ego__x_o": {},
                            "in_front_of__x_o__x_ego": {},
                            "left_of__x_ego__x_o": {},
@@ -558,6 +577,7 @@ class PositionPredicateCollection(PredicateCollection):
 
         for other_vehicle in other_vehicles:
             predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
+            predicate_trace["exact_same_lane__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["in_front_of__x_o__x_ego"][other_vehicle.id] = {}
             predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id] = {}
@@ -570,6 +590,9 @@ class PositionPredicateCollection(PredicateCollection):
                 if "in_same_lane__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.in_same_lane(time_step, ego_vehicle, other_vehicle)
+                if "exact_same_lane__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["exact_same_lane__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.exact_same_lane(time_step, ego_vehicle, other_vehicle)
                 if "in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.in_front_of(time_step, ego_vehicle, other_vehicle)

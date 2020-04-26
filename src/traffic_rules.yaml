@@ -2,8 +2,8 @@
 ###
 # .. code-block:: yaml
 #
-#   - R_G1: safe distance preceding
-#   - R_G2: unnecessary braking
+#   - R_G1: safe distance preceding, neglecting cut-in vehicles
+#   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
 #   - R_G4: required speed
 #   - R_G5: preserves traffic flow
@@ -14,8 +14,8 @@
 #   - R_I5: consider entering vehicles
 #   - R_I6: gap for entering vehicles
 traffic_rules_forward:
-    R_G1: G((in_front_of__x_ego__x_o & in_same_lane__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
-    R_G2: G(~(unnecessary_braking__x_ego))
+    R_G1: (G(~(cut_in__x_o__x_ego)) -> G((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o))
+    R_G2: (G(keeps_safe_distance_prec__x_ego__x_o) -> G(~(unnecessary_braking__x_ego)))
     R_G3: G(keeps_lane_speed_limit__x_ego & keeps_fov_speed_limit__x_ego & keeps_braking_speed_limit__x_ego & keeps_road_condition_speed_limit__x_ego & keeps_type_speed_limit__x_ego)
     R_G4: G(keeps_sign_min_speed_limit__x_ego)
     R_G5: G(~(slow_leading_vehicle__x_ego) -> preserves_traffic_flow__x_ego)
@@ -25,7 +25,9 @@ traffic_rules_forward:
     R_I4: G(in_congestion__x_ego -> ((~on_shoulder__x_ego) & (interstate_broad_enough__x_ego -> ((in_leftmost_lane__x_ego -> drives_leftmost__x_ego) & (~(in_leftmost_lane__x_ego) -> drives_rightmost__x_ego))) & (~(interstate_broad_enough__x_ego) -> drives_right_lane_rightmost__x_ego)))
     R_I5: G((on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (on_main_carriage_way__x_ego & ~(~(in_rightmost_lane_of_same_type__x_ego) & F(in_rightmost_lane_of_same_type__x_ego))))
     R_I6: ((on_access_ramp__x_o & F(on_main_carriage_way__x_o) & G(in_front_of__x_ego__x_o) & ~G(keeps_safe_distance_prec__x_ego__x_o)) -> G((brakes_stronger__x_ego__x_o & drives_faster__x_o__x_ego) | (brakes_stronger__x_ego__x_o & F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
-    R_I7: G((~(in_same_lane__x_ego__x_o) &  F(in_front_of__x_o__x_ego & in_same_lane__x_ego__x_o)) -> F(G(in_same_lane__x_ego__x_o & keeps_safe_distance_prec__x_o__x_ego)))
+
+  #  R_I7: G((~(in_same_lane__x_ego__x_o) &  F(in_front_of__x_o__x_ego & in_same_lane__x_ego__x_o)) -> F(G(in_same_lane__x_ego__x_o & keeps_safe_distance_prec__x_o__x_ego)))
+  #  R_I8: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F(in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o & (drives_faster__x_o__x_ego | F(G(drives_faster__x_o__x_ego))) | F(G(keeps_safe_distance_prec__x_ego__x_o))))
 
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle)
@@ -126,4 +128,4 @@ traffic_rule_sets:
     B_SRI6: [R_I6]
     B_SRI7: [R_I7]
 activated_traffic_rule_sets: [B_S1]
-vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_I6, R_I7]
+vehicle_dependent_rules: [R_G1, R_G2, R_I2, R_I5, R_I6, R_I7]
