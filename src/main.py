@@ -55,7 +55,8 @@ def main():
     start_time = time.time()
 
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
-    if cr_eval.simulation_param.get("single_scenario"):
+    if cr_eval.simulation_param.get("operating_mode") == "single_scenario" \
+            or cr_eval.simulation_param.get("operating_mode") == "single_vehicle":
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
                                                               + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")

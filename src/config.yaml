@@ -21,10 +21,10 @@
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
     dt: 0.04
-    operating_mode: single_vehicle # single_scenario, single_vehicle, test, evaluation
-    ego_vehicle_id: 47
-    scenario_dir: /../../../commonroad/scenarios/highD-dataset/cr_scenarios #test/
-    benchmark_id: DEU_LocationA-46_10_T-1
+    operating_mode: evaluation # single_scenario, single_vehicle, test, evaluation
+    ego_vehicle_id: 7
+    scenario_dir: /../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
+    benchmark_id: DEU_test_safe_distance
     scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
     verbose_mode: false
