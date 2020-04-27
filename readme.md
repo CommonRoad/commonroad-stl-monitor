@@ -28,5 +28,15 @@ is evaluated based on a selected set of traffic rules.
 * *[Test cases](./test/run_test.py)* : Run all test cases which evaluate the formalized rules in different scenarios.
 * *[main.py](./src/main.py)* : Traffic rule evaluation for a single scenario or all scenarios which are located within predefined directories.
 
+The main file can be started from the commonroad_monitor directory via commandline by executing  
+`python -m src.main --max_num_scenarios #Scenarios --scenario_directories /directory_1 /../directory_2`.  
+This should be used for the sequential evaluation of scenarios.
+
+In the following the different parameters are explained:
+* **max_num_scenarios**: The maximum number scenarios which should be evaluated. The default number is *10*.
+* **scenario_directories**: List of scenario directories.
+
+You can list the different parameters by executing `python main.py -h`.
+
 The temporal logic formulas of the rules and the rule specific parametrization can be found in the file *[traffic_rules.yaml](./src/traffic_rules.yaml)*.  
 Simulation and vehicle parameters can be set in the file *[config.yaml](./src/config.yaml)*.

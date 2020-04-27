@@ -45,7 +45,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 def get_args():
 
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
-    parser.add_argument('--max_num_scenarios', type=int, help='Maximum number of scenarios to evaluate.')
+    parser.add_argument('--max_num_scenarios', default=10, type=int, help='Maximum number of scenarios to evaluate.')
     parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
 
     return parser.parse_args()
