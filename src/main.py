@@ -45,7 +45,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 def get_args():
 
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
-    parser.add_argument('--max_num_scenarios', default=10, type=int, help='Maximum number of scenarios to evaluate.')
+    parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')
     parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
 
     return parser.parse_args()
@@ -66,12 +66,14 @@ def main():
     else:
         args = get_args()
         if args.scenario_directories is None:
-            scenario_directories = cr_eval.simulation_param.get("scenario_dir")
+            scenario_directories = cr_eval.simulation_param.get("scenario_directories")
         else:
+            cr_eval.simulation_param["operating_mode"] = "evaluation"
             scenario_directories = args.scenario_directories
         if args.max_num_scenarios is None:
             max_num_scenarios = cr_eval.simulation_param.get("max_num_scenarios")
         else:
+            cr_eval.simulation_param["operating_mode"] = "evaluation"
             max_num_scenarios = args.max_num_scenarios
         if max_num_scenarios < 0:
             max_num_scenarios = sys.maxsize

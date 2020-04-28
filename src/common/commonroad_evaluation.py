@@ -167,6 +167,7 @@ class CommonRoadObstacleEvaluation:
         for ego in scenario.dynamic_obstacles:
             other_vehicles = []
             if not (self.simulation_param.get("operating_mode") == "test"
+                    or self.simulation_param.get("operating_mode") == "evaluation"
                     or self.simulation_param.get("operating_mode") == "single_scenario"
                     or (self.simulation_param.get("operating_mode") == "single_vehicle"
                         and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id)):

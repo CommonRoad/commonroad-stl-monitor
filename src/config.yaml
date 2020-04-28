@@ -25,7 +25,7 @@ simulation_param:
     ego_vehicle_id: 7
     scenario_dir: /../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
     benchmark_id: DEU_test_safe_distance
-    scenario_directories: ["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
+    scenario_directories:  ["/../scenarios/test"] #["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     max_num_scenarios: 2
     verbose_mode: false
     time_measuring: false
