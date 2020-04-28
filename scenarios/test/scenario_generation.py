@@ -19,7 +19,7 @@ CONSTANT_DRIVING_200 = [0] * 200
 
 
 def write_to_file(scenario):
-    # create planing problem set (goal state is abitrarily chosen, since it is not needed for this purpose)
+    # create planing problem set (goal state is arbitrarily chosen, since it is not needed for this purpose)
     goal_position_shape = Rectangle(10, 3.5, np.array([50, 1.75]))
     goal_state = State(position=goal_position_shape, velocity=Interval(0, 50),
                        orientation=AngleInterval(-0.01, 0.01), time_step=Interval(0, 100))
@@ -536,17 +536,17 @@ def create_emergency_two_lanes_not_broad_enough_scenario():
 
 def create_consider_entering_vehicles_for_lane_change_scenario():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000,
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([110.0, 5.25]), 1000,
                                            [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 5.25]), 1001)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([50.0, -1.75]), 1002,
-                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([100.0, 5.25]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([130.0, -1.75]), 1002,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, -0.05, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     for i in range(3):

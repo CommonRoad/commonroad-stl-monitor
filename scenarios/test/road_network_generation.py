@@ -8,9 +8,9 @@ from commonroad.scenario.lanelet import Lanelet, LineMarking, LaneletType, RoadU
 from commonroad.scenario.scenario import Scenario, Tag, Location
 
 
-def create_access_ramp_start(x_start, l_id: int) -> Lanelet:
-    x = [0, 5, 10, 15, 20]
-    right = np.asfortranarray([x, [-5,  -4.5, -4.25,  -3.5, -3.5]])
+def create_access_ramp_start(lanelet_length: int, l_id: int) -> Lanelet:
+    x = [0, lanelet_length//4, lanelet_length//2, lanelet_length//(4/3), lanelet_length]
+    right = np.asfortranarray([x, [-5,  -4.25, -3.75,  -3.5, -3.5]])
     right_curve = bezier.Curve(right, degree=4)
     ax = right_curve.plot(num_pts=50)
     x_right, y_right = ax.lines[0].get_data()
@@ -20,7 +20,7 @@ def create_access_ramp_start(x_start, l_id: int) -> Lanelet:
         point_list.append(point)
     right_vertices = np.array(point_list)
 
-    left = np.asfortranarray([x, [-1.5, -1.0, -0.75, 0.0, 0.0]])
+    left = np.asfortranarray([x, [-1.5, -0.5, -0.25, 0.0, 0.0]])
     left_curve = bezier.Curve(left, degree=4)
     ax = left_curve.plot(num_pts=50)
     x_left, y_left = ax.lines[0].get_data()
@@ -30,7 +30,7 @@ def create_access_ramp_start(x_start, l_id: int) -> Lanelet:
         point_list.append(point)
     left_vertices = np.array(point_list)
 
-    center = np.asfortranarray([x, [-3.25, -2.75, -2.5, -1.75, -1.75]])
+    center = np.asfortranarray([x, [-3.25, -2.5, -2.9, -1.75, -1.75]])
     center_curve = bezier.Curve(center, degree=4)
     ax = center_curve.plot(num_pts=50)
     x_center, y_center = ax.lines[0].get_data()

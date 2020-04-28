@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
 from commonroad.scenario.scenario import Scenario
@@ -13,7 +13,7 @@ from commonroad.scenario.obstacle import Obstacle
 
 class Visualization:
     """Visualization class as interface to CommonRoad visualization"""
-    def __init__(self, ego_vehicle_ids: List[int] = None, ego_vehicle_color: str = '#1d7eea',
+    def __init__(self, ego_vehicle_ids: List[int] = None, ego_vehicle_color: Dict[int, str] = None,
                  figsize: Tuple[float, float] = (8, 4.5)):
         """
         Constructor
@@ -22,6 +22,8 @@ class Visualization:
         :param ego_vehicle_color: color for ego vehicles
         :param figsize: matplotlib figure size
         """
+        assert(len(ego_vehicle_ids) == len(ego_vehicle_color.items()),
+               "Number of colors does not correspond to number of ego vehicle IDs.")
         self._default_parameters_scenario = create_default_draw_params_scenario()
         self._default_parameters_planning = create_default_draw_params_planning()
         self._ego_vehicle_ids = ego_vehicle_ids
@@ -59,7 +61,7 @@ class Visualization:
         plt.gca().set_axis_off()
         plt.margins(0, 0.1)
 
-        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label)
+
         if planning_problem_set is not None:
             draw_object(planning_problem_set, draw_params=self._default_parameters_planning, plot_limits=plot_limits)
         for obs in scenario.obstacles:
@@ -67,6 +69,7 @@ class Visualization:
                 self._draw_ego_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
             else:
                 self._draw_standard_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
+        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label)
         plt.axis('off')
         plt.show()
 
@@ -82,9 +85,9 @@ class Visualization:
         """
         self._default_parameters_scenario['time_begin'] = time_begin
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = \
-            self._ego_vehicle_color
+            self._ego_vehicle_color[obstacle.obstacle_id]
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = \
-            self._ego_vehicle_color
+            self._ego_vehicle_color[obstacle.obstacle_id]
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
@@ -101,7 +104,8 @@ class Visualization:
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         """
         self._default_parameters_scenario['time_begin'] = time_begin
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#1d7eea'
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#c3c3c3ff'
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#c3c3c3ff'
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
@@ -116,6 +120,9 @@ class Visualization:
         :param lanelet_network: CommonRoad lanelet network
         :param lanelet_label: boolean indicating if lanelet label should be shown
         """
+        self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
+        self._default_parameters_scenario['lanelet_network']['lanelet']['fill_lanelet'] = False
+        self._default_parameters_scenario['lanelet_network']['lanelet']['draw_start_and_direction'] = False
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
         draw_object(lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 

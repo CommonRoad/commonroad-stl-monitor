@@ -206,7 +206,7 @@ class TrafficRuleDispatcher:
         """
         rule_evaluation = {}
         time_steps = list(ego_vehicle.states_lon.keys())
-        time_steps.reverse()
+        # time_steps.reverse()
         for rule in self._monitors_backward:
             if rule.vehicle_dependency is False:
                 self._reset_backward_monitors()

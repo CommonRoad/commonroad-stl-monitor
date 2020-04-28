@@ -138,9 +138,13 @@ class GeneralPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns Boolean indicating satisfaction
         """
+        if vehicle_k.id == 1010 and vehicle_p.id == 1008:
+            print("stop")
         if len(self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])) == 1:
             return False
-        if not PositionPredicateCollection.in_same_lane_classmethod(vehicle_k.lanelet_assignment[time_step], vehicle_p.lanelet_assignment[time_step]):
+        if not PositionPredicateCollection.in_same_lane_classmethod(
+                self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step]),
+                self._road_network.find_lanes_by_lanelets(vehicle_p.lanelet_assignment[time_step])):
             return False
         if vehicle_k.states_lat[time_step].d < vehicle_p.states_lat[time_step].d and vehicle_k.states_lat[time_step].theta < 0 or \
                 vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d and vehicle_k.states_lat[time_step].theta > 0:

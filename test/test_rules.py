@@ -173,16 +173,16 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_G1_veh_1006': True, 'R_G1_veh_1007': True, 'R_G1_veh_1008': True,
                               'R_G1_veh_1009': True})
                       ]
-     #   self.cr_eval.activated_traffic_rule_sets = ["B_SRG1"]
-     #   self.cr_eval.update_eval_dict()
-       # result_backward = self.cr_eval.evaluate_scenario(scenario)
-        self.cr_eval.activated_traffic_rule_sets = ["F_SRG1"]
+        self.cr_eval.activated_traffic_rule_sets = ["B_SRG1"]
         self.cr_eval.update_eval_dict()
-        result_forward = self.cr_eval.evaluate_scenario(scenario)
+        result_backward = self.cr_eval.evaluate_scenario(scenario)
+   #     self.cr_eval.activated_traffic_rule_sets = ["F_SRG1"]
+   #     self.cr_eval.update_eval_dict()
+   #     result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Safe Distance Test:")
-        print(result_forward)
-        self.assertEqual(exp_result, result_forward)
-      #  self.assertEqual(exp_result, result_backward)
+        print(result_backward)
+     #   self.assertEqual(exp_result, result_forward)
+        self.assertEqual(exp_result, result_backward)
 
     def test_unnecessary_braking_1(self):
         # one vehicle accelerates (1000)

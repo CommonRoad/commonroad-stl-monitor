@@ -4,7 +4,7 @@ from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork
+from src.common.road_network import RoadNetwork, Lane
 
 
 class PositionPredicateCollection(PredicateCollection):
@@ -126,7 +126,7 @@ class PositionPredicateCollection(PredicateCollection):
         return True
 
     @staticmethod
-    def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
+    def in_same_lane_classmethod(lane_ids_k: Set[Lane], lane_ids_p: Set[Lane]) -> bool:
         """
         Evaluates if the kth vehicle is in the same lane as the pth vehicle
 
