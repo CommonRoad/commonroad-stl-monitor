@@ -126,7 +126,7 @@ class PositionPredicateCollection(PredicateCollection):
         return True
 
     @staticmethod
-    def in_same_lane_classmethod(lane_ids_k: Set[Lane], lane_ids_p: Set[Lane]) -> bool:
+    def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
         """
         Evaluates if the kth vehicle is in the same lane as the pth vehicle
 

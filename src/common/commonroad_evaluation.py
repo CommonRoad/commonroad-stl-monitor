@@ -172,6 +172,9 @@ class CommonRoadObstacleEvaluation:
                     or (self.simulation_param.get("operating_mode") == "single_vehicle"
                         and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id)):
                 continue
+            if self.simulation_param.get("operating_mode") == "evaluation" \
+                    and self.simulation_param.get("num_vehicles") <= self.num_vehicles + len(vehicle_evaluation):
+                break
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
                 for obs in scenario.dynamic_obstacles:

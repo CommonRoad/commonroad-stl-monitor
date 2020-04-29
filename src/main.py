@@ -46,6 +46,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
     parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')
+    parser.add_argument('--num_vehicles', default=1, type=int, help='Number of vehicles to evaluate.')
     parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
 
     return parser.parse_args()
@@ -77,11 +78,18 @@ def main():
             max_num_scenarios = args.max_num_scenarios
         if max_num_scenarios < 0:
             max_num_scenarios = sys.maxsize
+        if args.num_vehicles is not None:
+            if args.num_vehicles < 0:
+                cr_eval.simulation_param["num_vehicles"] = sys.maxsize
+            else:
+                cr_eval.simulation_param["num_vehicles"] = args.num_vehicles
 
         scenarios = create_scenarios_from_directory(scenario_directories, max_num_scenarios)
         for sc in scenarios:
             result = cr_eval.evaluate_scenario(sc)
             print(result)
+            if cr_eval.simulation_param.get("num_vehicles") <= cr_eval.num_vehicles:
+                break
 
     print(cr_eval.eval_dict)
     print("Num. scenarios: " + str(cr_eval.num_scenarios))

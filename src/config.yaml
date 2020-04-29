@@ -7,7 +7,7 @@
 #    - operating_mode: specifies operating mode: either single_scenario, single_vehicle, test, or evaluation
 #    - ego_vehicle_id: ego vehicle ID
 #    - scenario_directories: directories in which CommonRoad scenarios are located
-#    - max_num_scenarios: maximum number of scenarios which should be evaluated
+#    - num_vehicles: number of vehicles which should be evaluated
 #    - benchmark_id: CommonRoad solution file name
 #    - evaluation_dirs: list of directories which contain scenarios which should be evaluated
 #    - rule_set: set of traffic rules which should be evaluated (see traffic_rules.yaml)
@@ -21,12 +21,12 @@
 #    - video_output_folder: folder in which the created videos are stored
 simulation_param:
     dt: 0.04
-    operating_mode: single_scenario # single_scenario, single_vehicle, test, evaluation
+    operating_mode: evaluation # single_scenario, single_vehicle, test, evaluation
     ego_vehicle_id: 7
     scenario_dir: /../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
     benchmark_id: DEU_test_safe_distance
     scenario_directories:  ["/../scenarios/test"] #["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
-    max_num_scenarios: 2
+    num_vehicles: 2
     verbose_mode: false
     time_measuring: false
     commonroad_video_creation: false
