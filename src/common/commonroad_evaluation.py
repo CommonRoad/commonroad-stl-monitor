@@ -169,10 +169,12 @@ class CommonRoadObstacleEvaluation:
             if not (self.simulation_param.get("operating_mode") == "test"
                     or self.simulation_param.get("operating_mode") == "evaluation"
                     or self.simulation_param.get("operating_mode") == "single_scenario"
+                    or self.simulation_param.get("operating_mode") == "single_scenario_limited"
                     or (self.simulation_param.get("operating_mode") == "single_vehicle"
                         and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id)):
                 continue
-            if self.simulation_param.get("operating_mode") == "evaluation" \
+            if (self.simulation_param.get("operating_mode") == "evaluation"
+                or self.simulation_param.get("operating_mode") == "single_scenario_limited") \
                     and self.simulation_param.get("num_vehicles") <= self.num_vehicles + len(vehicle_evaluation):
                 break
             if ego.prediction is not None:

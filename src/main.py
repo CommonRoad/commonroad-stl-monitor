@@ -57,7 +57,9 @@ def main():
 
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
     if cr_eval.simulation_param.get("operating_mode") == "single_scenario" \
-            or cr_eval.simulation_param.get("operating_mode") == "single_vehicle":
+            or cr_eval.simulation_param.get("operating_mode") == "single_scenario_limited" \
+            or cr_eval.simulation_param.get("operating_mode") == "single_vehicle" \
+            or cr_eval.simulation_param.get("operating_mode") == "":
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
                                                               + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")
