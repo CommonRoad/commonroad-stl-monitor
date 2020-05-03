@@ -104,8 +104,8 @@ class Visualization:
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         """
         self._default_parameters_scenario['time_begin'] = time_begin
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#c3c3c3ff'
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#c3c3c3ff'
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#ffa500'
+        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#ffa500'
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
@@ -121,8 +121,8 @@ class Visualization:
         :param lanelet_label: boolean indicating if lanelet label should be shown
         """
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
-        self._default_parameters_scenario['lanelet_network']['lanelet']['fill_lanelet'] = False
-        self._default_parameters_scenario['lanelet_network']['lanelet']['draw_start_and_direction'] = False
+        #self._default_parameters_scenario['lanelet_network']['lanelet']['fill_lanelet'] = False
+        #self._default_parameters_scenario['lanelet_network']['lanelet']['draw_start_and_direction'] = False
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
         draw_object(lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 

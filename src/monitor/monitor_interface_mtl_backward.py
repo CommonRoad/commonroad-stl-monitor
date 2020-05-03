@@ -57,7 +57,7 @@ class TrafficRuleMonitorBackward:
         :returns list of predicates
         """
         replacements = ['always', 'since', 'once', 'pre(', '&&', '->', '(', ')', '!', '||', 'ego_vehicle',
-                        'other_vehicles', 'time_step', 'other_vehicle', ',']
+                        'other_vehicles', 'time_step', 'other_vehicle', ',', '[', ']', '150', '0']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))

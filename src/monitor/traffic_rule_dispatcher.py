@@ -156,6 +156,8 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
+        if ego_vehicle.id == 1009:
+            print("sf")
         evaluated_predicates = self.evaluate_predicates(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors_forward:
@@ -206,7 +208,6 @@ class TrafficRuleDispatcher:
         """
         rule_evaluation = {}
         time_steps = list(ego_vehicle.states_lon.keys())
-        # time_steps.reverse()
         for rule in self._monitors_backward:
             if rule.vehicle_dependency is False:
                 self._reset_backward_monitors()

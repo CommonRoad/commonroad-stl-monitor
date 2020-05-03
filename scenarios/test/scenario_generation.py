@@ -517,6 +517,7 @@ def create_emergency_two_lanes_not_broad_enough_scenario():
     obs13 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([76.0, 1.75]), 1013)
     obs14 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 2, np.array([5.0, 4.25]), 1014)
 
+
     for i in range(16):
         obs = locals().get('obs' + str(i))
         if obs is not None:
