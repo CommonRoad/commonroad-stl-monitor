@@ -171,7 +171,7 @@ class CommonRoadObstacleEvaluation:
                     or self.simulation_param.get("operating_mode") == "single_scenario"
                     or self.simulation_param.get("operating_mode") == "single_scenario_limited"
                     or (self.simulation_param.get("operating_mode") == "single_vehicle"
-                        and self.simulation_param.get("ego_vehicle_id") != ego.obstacle_id)):
+                        and self.simulation_param.get("ego_vehicle_id") == ego.obstacle_id)):
                 continue
             if (self.simulation_param.get("operating_mode") == "evaluation"
                 or self.simulation_param.get("operating_mode") == "single_scenario_limited") \
@@ -180,7 +180,9 @@ class CommonRoadObstacleEvaluation:
             if ego.prediction is not None:
                 ego_vehicle = self.create_vehicle(ego, self.ego_vehicle_param)
                 for obs in scenario.dynamic_obstacles:
-                    if obs.obstacle_id == ego.obstacle_id or obs.prediction is None:
+                    if obs.obstacle_id == ego.obstacle_id or obs.prediction is None \
+                            or obs.initial_state.time_step > ego.prediction.trajectory.state_list[-1].time_step \
+                            or ego.initial_state.time_step > obs.prediction.trajectory.state_list[-1].time_step:
                         continue
                     vehicle = self.create_vehicle(obs, self._other_vehicles_param, ego_vehicle)
                     other_vehicles.append(vehicle)

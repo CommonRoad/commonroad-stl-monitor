@@ -79,7 +79,7 @@ traffic_rules_param:
     j_abrupt: -2 # for ego vehicle emergency profile calculation
     a_abrupt: -2
     standstill_error: 0.01
-    min_velocity_dif: 27.77
+    min_velocity_dif: 15
     num_veh_congestion: 2
     max_congestion_velocity: 2.78
     num_veh_slow_moving_traffic: 3
@@ -100,7 +100,7 @@ traffic_rule_sets:
     F_S0: [R_I5]
     F_SRI5: [R_I5]
     B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_I1, R_I2, R_I3, R_I4]
-    B_S1: [R_G1, R_G3, R_G4, R_I1, R_I2, R_I4]
+    B_S1: [R_G1, R_G2, R_G3, R_G4, R_I1, R_I2, R_I4]
     B_SRG1: [R_G1]
     B_SRG2: [R_G2]
     B_SRG3: [R_G3]
