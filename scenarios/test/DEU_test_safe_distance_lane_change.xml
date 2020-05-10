@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_safe_distance_lane_change" date="2020-04-28">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_safe_distance_lane_change" date="2020-05-10">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>0</gpsLatitude>
     <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
-    <multi_lane/>
-    <no_oncoming_traffic/>
     <highway/>
     <parallel_lanes/>
+    <multi_lane/>
+    <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

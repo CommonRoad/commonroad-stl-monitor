@@ -96,13 +96,6 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    @staticmethod
-    def remove_vehicle_from_list(vehicle_list: List[Vehicle], vehicle_id: int):
-        for veh in vehicle_list:
-            if veh.id == vehicle_id:
-                vehicle_list.remove(veh)
-                return
-
     def _adjacent_lanelets(self, lanelet: Lanelet) -> Set[Lanelet]:
         """
         Returns all lanelet which are adjacent to a lanelet and the lanelet itself
@@ -166,19 +159,6 @@ class GeneralPredicateCollection(PredicateCollection):
                 return False
         return True
 
-    def single_lane(self, time_step: int, vehicle: Vehicle) -> bool:
-        """
-        Evaluates if a vehicle is within a lane
-
-        :param vehicle: vehicle object
-        :param time_step: time step of interest
-        :returns boolean indicating satisfaction
-        """
-        if len(self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])) == 1:
-            return True
-        else:
-            return False
-
     def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
         """
         Predicate which checks if the kth vehicle performs a cut-in into the pth vehicles lane
@@ -218,7 +198,6 @@ class GeneralPredicateCollection(PredicateCollection):
                            "in_queue_of_vehicles__x_ego": {ego_vehicle.id: {}},
                            "in_queue_of_vehicles__x_o": {},
                            "cut_in__x_o__x_ego": {},
-                           "single_lane__x_ego": {ego_vehicle.id: {}},
                            "makes_u_turn__x_ego": {ego_vehicle.id: {}},
                            "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
@@ -232,9 +211,6 @@ class GeneralPredicateCollection(PredicateCollection):
             if "in_queue_of_vehicles__x_ego" in self._necessary_predicates:
                 predicate_trace["in_queue_of_vehicles__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles)
-            if "single_lane__x_ego" in self._necessary_predicates:
-                predicate_trace["single_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.single_lane(time_step, ego_vehicle)
             if "makes_u_turn__x_ego" in self._necessary_predicates:
                 predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
                     self.makes_u_turn(time_step, ego_vehicle)

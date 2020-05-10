@@ -21,24 +21,6 @@ class VelocityPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param,
                          traffic_rules_param, necessary_predicates, traffic_sign_interpreter)
 
-    @staticmethod
-    def velocity_reduction_necessary(velocity: float, vehicle: Vehicle):
-        """
-        Predicate to check whether a velocity reduction is necessary caused of safety reasons (currently only maximum
-        velocity based on field of view and road conditions is evaluated, but active emergency maneuver or other
-        information could also be considered)
-
-        :param velocity: velocity of ego vehicle
-        :param vehicle: vehicle object
-        :return: boolean indicating satisfaction
-        """
-        v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"),
-                    vehicle.vehicle_param.get("fov_speed_limit"))
-        if v_max < velocity:
-            return True
-        else:
-            return False
-
     def _speed_limit_suggested(self, vehicle: Vehicle, time_step: int) -> float:
         """
         Speed limit considering suggested speed
@@ -62,6 +44,8 @@ class VelocityPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns Boolean indicating satisfaction
         """
+        if vehicle.id == 1003:
+            print("sklf")
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
@@ -74,7 +58,7 @@ class VelocityPredicateCollection(PredicateCollection):
             v_max_lane = self._speed_limit_suggested(veh_o, time_step)
             v_type = self._get_type_speed_limit(veh_o.obstacle_type)
             v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"), v_max_lane, v_type)
-            if v_max - veh_o.states_lon[time_step].v > self._traffic_rules_param.get("min_velocity_dif"):
+            if v_max - veh_o.states_lon[time_step].v >= self._traffic_rules_param.get("min_velocity_dif"):
                 return True
 
         return False
@@ -92,10 +76,10 @@ class VelocityPredicateCollection(PredicateCollection):
         v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"),
                     vehicle.vehicle_param.get("fov_speed_limit"),
                     vehicle.vehicle_param.get("braking_speed_limit"), v_max_lane, v_type)
-        if v_max - vehicle.states_lon[time_step].v > self._traffic_rules_param.get("min_velocity_dif"):
-            return False
-        else:
+        if v_max - vehicle.states_lon[time_step].v < self._traffic_rules_param.get("min_velocity_dif"):
             return True
+        else:
+            return False
 
     def in_standstill(self, time_step: int, vehicle: Vehicle) -> bool:
         """
@@ -240,20 +224,6 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return True
 
-    @staticmethod
-    def keeps_road_condition_speed_limit(time_step: int, vehicle: Vehicle) -> bool:
-        """
-        Predicate for road condition speed limit evaluation
-
-        :param time_step: time step of interest
-        :param vehicle: vehicle of interest
-        :returns boolean indicating satisfaction
-        """
-        if vehicle.vehicle_param.get("road_condition_speed_limit") < vehicle.states_lon[time_step].v:
-            return False
-        else:
-            return True
-
     def keeps_type_speed_limit(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Predicate for lanelet speed limit evaluation
@@ -299,7 +269,6 @@ class VelocityPredicateCollection(PredicateCollection):
                            "slow_leading_vehicle__x_ego": {ego_vehicle.id: {}},
                            "keeps_sign_min_speed_limit__x_ego": {ego_vehicle.id: {}},
                            "keeps_braking_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "keeps_road_condition_speed_limit__x_ego": {ego_vehicle.id: {}},
                            "keeps_type_speed_limit__x_ego": {ego_vehicle.id: {}},
                            "exist_standing_leading_vehicle__x_ego": {ego_vehicle.id: {}},
                            "in_standstill__x_ego": {ego_vehicle.id: {}},
@@ -318,9 +287,6 @@ class VelocityPredicateCollection(PredicateCollection):
             if "keeps_braking_speed_limit__x_ego" in self._necessary_predicates:
                 predicate_trace["keeps_braking_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self.keeps_braking_speed_limit(time_step, ego_vehicle)
-            if "keeps_road_condition_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_road_condition_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_road_condition_speed_limit(time_step, ego_vehicle)
             if "preserves_traffic_flow__x_ego" in self._necessary_predicates:
                 predicate_trace["preserves_traffic_flow__x_ego"][ego_vehicle.id][time_step] = \
                     self.preserves_traffic_flow(time_step, ego_vehicle)

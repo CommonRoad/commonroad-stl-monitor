@@ -27,14 +27,12 @@ class BrakingPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :return: boolean indicating if vehicle brakes abruptly at current state
         """
-        v_ego = ego_vehicle.states_lon[time_step].v
         a_ego = ego_vehicle.states_lon[time_step].a
-
         if a_ego >= 0:
             return False
         ego_vehicle_lanelets = ego_vehicle.lanelet_assignment[time_step]
 
-        a_min_other = None
+        same_lane_front_vehicle = False
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
@@ -42,14 +40,13 @@ class BrakingPredicateCollection(PredicateCollection):
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(ego_vehicle_lanelets),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
-                    and veh_o.states_lon[time_step].v - v_ego < self._traffic_rules_param.get("min_velocity_dif"):
-                if a_min_other is None or veh_o.states_lon[time_step].a < a_min_other:
-                    a_min_other = veh_o.states_lon[time_step].a
+                    and self.keeps_safe_distance_prec(time_step, ego_vehicle, veh_o):
+                same_lane_front_vehicle = True
+                if (a_ego - veh_o.states_lon[time_step].a) < self._traffic_rules_param.get("a_abrupt"):
+                    return True
 
-        if a_min_other is None and a_ego < self._traffic_rules_param.get("a_abrupt"):
+        if same_lane_front_vehicle is False and a_ego < self._traffic_rules_param.get("a_abrupt"):
             # no leading vehicle
-            return True
-        elif a_min_other is not None and a_ego - a_min_other < self._traffic_rules_param.get("a_abrupt"):
             return True
         else:
             return False
@@ -95,21 +92,6 @@ class BrakingPredicateCollection(PredicateCollection):
         else:
             return True
 
-    @staticmethod
-    def brakes_stronger(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
-        """
-        Evaluates if the kth vehicle brakes stronger (lower acceleration) as the pth vehicle
-
-        :param vehicle_k: kth vehicle
-        :param vehicle_p: pth vehicle
-        :param time_step: time step of interest
-        :returns boolean indicating satisfaction
-        """
-        if vehicle_k.states_lon[time_step].a < vehicle_p.states_lon[time_step].a:
-            return True
-        else:
-            return False
-
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
             Dict[str, Dict[int, Dict[int, bool]]]:
         """
@@ -121,8 +103,7 @@ class BrakingPredicateCollection(PredicateCollection):
         """
         predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
                            "keeps_safe_distance_prec__x_ego__x_o": {},
-                           "keeps_safe_distance_prec__x_o__x_ego": {},
-                           "brakes_stronger__x_ego__x_o": {}}
+                           "keeps_safe_distance_prec__x_o__x_ego": {}}
 
         for time_step in ego_vehicle.states_lon.keys():
             if "unnecessary_braking__x_ego" in self._necessary_predicates:
@@ -131,13 +112,11 @@ class BrakingPredicateCollection(PredicateCollection):
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
-            predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
                     predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
-                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
@@ -145,8 +124,5 @@ class BrakingPredicateCollection(PredicateCollection):
                 if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
                         self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle)
-                if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle)
 
         return predicate_trace
