@@ -23,7 +23,7 @@ simulation_param:
     dt: 0.04
     operating_mode: single_scenario # single_scenario, single_vehicle, test, evaluation, single_scenario_limited
     ego_vehicle_id: 6
-    scenario_dir:  /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #/../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
+    scenario_dir:  /../../../commonroad/scenarios/datasets/highD/commonroad-scenarios #/../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
     benchmark_id: DEU_LocationELower-17_1_T-1
     scenario_directories:  ["/../scenarios/test"] #["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     num_vehicles: 2
@@ -55,11 +55,11 @@ road_network_param:
 #    - vehicle_number: CommonRoad vehicle number; possible options are 1, 2 or 3 (see CommonRoad vehicle models)
 #    - a_max: maximum acceleration of egovehicle
 #    - a_min: minimum acceleration of egovehicle
-#    - j_max: maximum jerk of egovehicle
-#    - j_min: minimum jerk of egovehicle
-#    - v_des: desired velocity of egovehicle
-#    - t_react: reaction time of egovehicle
-#    - dynamics_param: physical parameters of egovehicle; will be initialized during runtime
+#    - j_max: maximum jerk of ego vehicle
+#    - j_min: minimum jerk of ego vehicle
+#    - v_des: desired velocity of ego vehicle
+#    - t_react: reaction time of ego vehicle
+#    - dynamics_param: physical parameters of ego vehicle; will be initialized during runtime
 #    - fov: field of view (sensor range)
 #    - v_min: minimum allowed velocity considering vehicle dynamics
 #    - const_dist_offset: minimum distance at standstill

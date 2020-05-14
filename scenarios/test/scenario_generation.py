@@ -539,32 +539,32 @@ def create_emergency_two_lanes_not_broad_enough_scenario():
 def create_consider_entering_vehicles_for_lane_change_scenario():
     obstacles = []
     #comment for paper version
-    # obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([110.0, 5.25]), 1000,
-    #                                        [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    # obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([100.0, 5.25]), 1001)
-    # obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([130.0, -1.75]), 1002,
-    #                                        [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05,
-    #                                         -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         -0.05, -0.05, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000,
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([110.0, 5.25]), 1000,
                                            [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 5.25]), 1001)
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([50.0, -1.75]), 1002,
-                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([100.0, 5.25]), 1001)
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([130.0, -1.75]), 1002,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, -0.05, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000,
+    #                                        [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([5.0, 5.25]), 1001)
+    # obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([50.0, -1.75]), 1002,
+    #                                        [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     for i in range(3):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -664,26 +664,29 @@ def create_safe_distance_lane_change_scenario():
     write_to_file(scenario)
 
 
-def main():
-    create_max_speed_limit_scenario()
-    create_min_speed_limit_scenario()
-    create_preserves_traffic_flow_scenario()
-    create_safe_distance_scenario()
-    create_unnecessary_braking_scenario()
-    create_standstill_scenario()
-    create_reverse_and_u_turn_scenario()
-    create_overtaking_right_congestion_scenario()
-    create_emergency_three_lanes_with_shoulder_scenario()
-    create_overtaking_exit_ramp_scenario()
-    create_overtaking_access_ramp_scenario()
-    create_overtaking_broad_lane_marking_scenario()
-    create_overtaking_normal_scenario()
-    create_consider_entering_vehicles_for_lane_change_scenario()
-    create_emergency_two_lanes_not_broad_enough_scenario()
-    create_consider_entering_vehicles_for_distance_scenario_1()
-    create_consider_entering_vehicles_for_distance_scenario_2()
-    create_safe_distance_lane_change_scenario()
 
+
+
+def main():
+    # create_max_speed_limit_scenario()
+    # create_min_speed_limit_scenario()
+    # create_preserves_traffic_flow_scenario()
+    # create_safe_distance_scenario()
+    # create_unnecessary_braking_scenario()
+    # create_standstill_scenario()
+    # create_reverse_and_u_turn_scenario()
+    # create_overtaking_right_congestion_scenario()
+    # create_emergency_three_lanes_with_shoulder_scenario()
+    # create_overtaking_exit_ramp_scenario()
+    # create_overtaking_access_ramp_scenario()
+    # create_overtaking_broad_lane_marking_scenario()
+    # create_overtaking_normal_scenario()
+    # create_consider_entering_vehicles_for_lane_change_scenario()
+    # create_emergency_two_lanes_not_broad_enough_scenario()
+    # create_consider_entering_vehicles_for_distance_scenario_1()
+    # create_consider_entering_vehicles_for_distance_scenario_2()
+    # create_safe_distance_lane_change_scenario()
+    create_consider_entering_vehicles_for_lane_change_scenario()
 
 if __name__ == "__main__":
     main()
