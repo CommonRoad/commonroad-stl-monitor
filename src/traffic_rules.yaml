@@ -80,7 +80,7 @@ traffic_rules_param:
     a_abrupt: -2
     standstill_error: 0.01
     min_velocity_dif: 15
-    num_veh_congestion: 2
+    num_veh_congestion: 3
     max_congestion_velocity: 2.78
     num_veh_slow_moving_traffic: 3
     max_slow_moving_traffic_velocity: 8.33
