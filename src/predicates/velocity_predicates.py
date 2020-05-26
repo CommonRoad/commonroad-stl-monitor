@@ -44,8 +44,6 @@ class VelocityPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns Boolean indicating satisfaction
         """
-        if vehicle.id == 1003:
-            print("sklf")
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:

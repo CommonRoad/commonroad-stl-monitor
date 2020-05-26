@@ -13,28 +13,16 @@
 #    - rule_set: set of traffic rules which should be evaluated (see traffic_rules.yaml)
 #    - verbose_mode: activate/deactivate status output of algorithms and simulation
 #    - time_measuring: activate/deactivate computation time measuring
-#    - commonroad_video_creation: activate/deactivate video creation of CommonRoad scenario
-#    - profile_video_creation: activate/deactivate video creation of profiles
-#    - plotting: activate/deactivate plotting of state profiles
-#    - other_vehicle_plots: list with CommonRoad obstacle IDs which should be considered for plotting
-#    - store_profiles: activate/deactivate storage of profiles
-#    - video_output_folder: folder in which the created videos are stored
 simulation_param:
-    dt: 0.04
-    operating_mode: single_scenario # single_scenario, single_vehicle, test, evaluation, single_scenario_limited
-    ego_vehicle_id: 6
-    scenario_dir:  /../../../commonroad/scenarios/datasets/highD/commonroad-scenarios #/../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/
-    benchmark_id: DEU_LocationELower-17_1_T-1
+    dt: 0.1
+    operating_mode: single_vehicle # single_scenario, single_vehicle, test, evaluation, single_scenario_limited
+    ego_vehicle_id: 1008
+    scenario_dir: /../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/  /../../../commonroad/scenarios/datasets/highD/commonroad-scenarios
+    benchmark_id: DEU_test_safe_distance
     scenario_directories:  ["/../scenarios/test"] #["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
     num_vehicles: 2
     verbose_mode: false
     time_measuring: false
-    commonroad_video_creation: false
-    profile_video_creation: false
-    plotting: false
-    other_vehicle_plots: []
-    store_profiles: false
-    video_output_folder: ./videos
 
 # road network and curvilinear coordinate system parameters
 ###
@@ -109,7 +97,7 @@ other_vehicles_param:
     a_min: -10.5
     j_max: 10
     j_min: -10
-    t_react: 0.0
+    t_react: 0.3 # for safe distance calculation of preceding vehicles
     dynamics_param: None  # TODO replace dynamics parameter with worst case behavior
 
 # Visualization parameters

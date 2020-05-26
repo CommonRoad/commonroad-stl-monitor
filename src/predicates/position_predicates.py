@@ -405,6 +405,13 @@ class PositionPredicateCollection(PredicateCollection):
             return True
 
     def main_carriageway_right_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+        """
+        Evaluates if a vehicle occupies the rightmost main carriageway lane
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
         lanelets = vehicle.lanelet_assignment[time_step]
         for lanelet_id in lanelets:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
@@ -417,6 +424,13 @@ class PositionPredicateCollection(PredicateCollection):
         return False
 
     def single_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+        """
+        Evaluates if a vehicle occupies a single lane
+
+        :param vehicle: vehicle object
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
         lanelets = vehicle.lanelet_assignment[time_step]
         for lanelet_id in lanelets:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
