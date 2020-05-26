@@ -67,10 +67,6 @@ class TestCommonRoadMonitor(unittest.TestCase):
         # two lanes with minimum speed limit sign
         # one vehicle which keeps minimum speed limit based on sign (1000)
         # one vehicle which violates minimum speed limit based on sign (1001)
-        # two vehicles which preserves traffic flow (1001 ,1004)
-        # two vehicles without following vehicle (1000, 1002)
-        # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
-        # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
 
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_min_speed_limit.xml").open()
@@ -100,11 +96,17 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_backward)
 
     def test_keeps_safe_distance(self):
-        # three vehicles which have no leading vehicle (1001, 1004, 1006)
-        # one vehicle which violates safe distance to directly leading vehicle (1003)
+        # one vehicles which has no leading vehicle (1001)
+        # two vehicles which violate safe distance to directly leading vehicle (1003, 1004)
         # one vehicle which violates safe distance to two leading vehicles (1002)
         # one vehicle which violates safe distance partially (1000)
         # one vehicle which always keeps safe distance (1005)
+        # one vehicle which keeps safe distance to vehicle which minimally occupies lane (1006)
+        # one vehicle which has no leading vehicles and drives in two lanes (1007)
+        # one vehicle which leaves lane (1009)
+        # one vehicle which violates safe distance to leading vehicle which leaves lane and
+        #   recaptures safe distance to vehicle which enters lane (1008)
+        # one vehicle which performs illegal cut-in (1010)
         scenario, planning_problem_set = \
             CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml").open()
         exp_result = [(1000, {'R_G1_veh_1001': False, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
@@ -387,6 +389,11 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_forward)
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
+        # several vehicles which drive not leftmost (e.g., 1024, 1016)
+        # several vehicles which drive not rightmost (e.g., 1008, 1004)
+        # several vehicles which drive leftmost (e.g., 1023, 1006)
+        # several vehicles which drive rightmost(e.g., 1002, 1018)
+        # one vehicle which drives on shoulder (1021)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_emergency_three_lanes_with_shoulder.xml").open()
         exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
@@ -404,6 +411,9 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_backward)
 
     def test_emergency_lane_not_broad_enough(self):
+        # several vehicles which drive in right lane not rightmost (e.g., 1013, 1012)
+        # several vehicles which drive not right lane (e.g., 1009, 1014)
+        # several vehicles which drive rightmost in right lane(e.g., 1001, 1002)
         scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir +
                                                               "DEU_test_emergency_two_lanes_not_broad_enough.xml").open()
         exp_result = [(1000, {'R_I4': False}), (1001, {'R_I4': True}), (1002, {'R_I4': True}), (1003, {'R_I4': True}),
@@ -418,9 +428,12 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_backward)
 
     def test_recapture_safe_distance(self):
-        # one vehicle driving in rightmost lane always violates safe distance and does not increase distance (1002)
-        # one vehicle driving in rightmost lane always violates safe distance only at end of trajectory (1000)
-        # one vehicle entering main carriage way (1001)
+        # two leading vehicles which keep safe distance to their leading vehicle (1005, 1002)
+        # several cut-in vehicles (1001, 1006, 1008)
+        # one vehicle which does not recapture safe distance (1000)
+        # one vehicle which recaptures safe distance (1004)
+        # one vehicle which does not recapture safe distance to cut-in vehicle (1003)
+        # two vehicles which recapture safe distance to cut-in vehicle (1007, 1009)
         scenario, planning_problem_set = \
             CommonRoadFileReader(self.test_scenario_dir +
                                  "DEU_test_recapture_safe_distance.xml").open()
@@ -463,9 +476,11 @@ class TestCommonRoadMonitor(unittest.TestCase):
         self.assertEqual(exp_result, result_forward)
 
     def test_safe_distance_lane_change(self):
-        # one vehicle driving in rightmost lane never violates safe distance (1000)
-        # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
-        # one vehicle entering main carriage way (1001)
+        # one vehicle which always keeps safe distance (1001, 1004, 1006, 1008)
+        # one vehicle which does not keep safe distance to lane leaving vehicle (1003)
+        # one vehicle which does not keep safe distance to cut-in vehicle (1002)
+        # two vehicle which perform a illegal lane change (1002, 1005)
+        # one vehicle which performs a legal lane change into gap of two vehicles
         scenario, planning_problem_set = \
             CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change.xml").open()
         exp_result = [(1000, {'R_G1_veh_1001': True, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,

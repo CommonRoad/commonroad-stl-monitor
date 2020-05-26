@@ -39,4 +39,5 @@ In the following the different parameters are explained:
 You can list the different parameters by executing `python main.py -h`.
 
 The temporal logic formulas of the rules and the rule specific parametrization can be found in the file *[traffic_rules.yaml](./src/traffic_rules.yaml)*.  
-Simulation and vehicle parameters can be set in the file *[config.yaml](./src/config.yaml)*.
+Simulation and vehicle parameters can be set in the file *[config.yaml](./src/config.yaml)*.  
+The test scenarios (*[./scenarios/test](./scenarios/test)*) are described in the test script as comment in each test (*[./test/test_rules.py](./test/test_rules.py)*).
