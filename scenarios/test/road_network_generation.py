@@ -47,7 +47,7 @@ def create_access_ramp_start(lanelet_length: int, l_id: int) -> Lanelet:
                       adjacent_left=None, adjacent_left_same_direction=None,
                       line_marking_left_vertices=LineMarking.SOLID,
                       line_marking_right_vertices=LineMarking.SOLID,
-                      lanelet_type= {LaneletType.HIGHWAY, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
+                      lanelet_type= {LaneletType.INTERSTATE, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
 
     return lanelet
 
@@ -92,7 +92,7 @@ def create_access_ramp_end(x_start: int, l_id: int, lanelet_length: int, number_
                       adjacent_left=number_lanelets_lane + l_id + 1, adjacent_left_same_direction=True,
                       line_marking_left_vertices=None,
                       line_marking_right_vertices=LineMarking.SOLID,
-                      lanelet_type= {LaneletType.HIGHWAY, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
+                      lanelet_type= {LaneletType.INTERSTATE, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
 
     return lanelet
 
@@ -130,7 +130,7 @@ def create_access_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_len
                           successor=successor, adjacent_left=adj_left, adjacent_left_same_direction=True,
                           line_marking_left_vertices=LineMarking.DASHED,
                           line_marking_right_vertices=LineMarking.SOLID,
-                          lanelet_type={LaneletType.HIGHWAY, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
+                          lanelet_type={LaneletType.INTERSTATE, LaneletType.ACCESS_RAMP}, user_one_way={RoadUser.VEHICLE})
         lanelets.append(lanelet)
         adj_left += 1
         predecessor = [lanelet_idx]
@@ -197,7 +197,7 @@ def create_exit_ramp_start(lanelet_lenght: int, l_id: int, num_lanelets_per_lane
                       successor=[l_id + 1], adjacent_left=l_id + num_lanelets_per_lane + 1,
                       adjacent_left_same_direction=True, line_marking_left_vertices=None,
                       line_marking_right_vertices=LineMarking.SOLID,
-                      lanelet_type= {LaneletType.HIGHWAY, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
+                      lanelet_type= {LaneletType.INTERSTATE, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
     return lanelet
 
 
@@ -243,7 +243,7 @@ def create_exit_ramp_end(x_start, l_id: int) -> Lanelet:
                       adjacent_left=None, adjacent_left_same_direction=None,
                       line_marking_left_vertices=LineMarking.SOLID,
                       line_marking_right_vertices=LineMarking.SOLID,
-                      lanelet_type={LaneletType.HIGHWAY, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
+                      lanelet_type={LaneletType.INTERSTATE, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
     return lanelet
 
 
@@ -277,7 +277,7 @@ def create_exit_ramp(road_length: int, num_lanelets_per_lane: int, lanelet_lengt
                           successor=successor, adjacent_left=adj_left, adjacent_left_same_direction=True,
                           line_marking_left_vertices=LineMarking.DASHED,
                           line_marking_right_vertices=LineMarking.SOLID,
-                          lanelet_type={LaneletType.HIGHWAY, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
+                          lanelet_type={LaneletType.INTERSTATE, LaneletType.EXIT_RAMP}, user_one_way={RoadUser.VEHICLE})
         lanelets.append(lanelet)
         adj_left += 1
         predecessor = [lanelet_idx]
@@ -376,7 +376,7 @@ def create_exit_ramp_scenario(commonroad_benchmark_id: str, dt: float, num_strai
                                 markings: List[Tuple[LineMarking, LineMarking]]):
     # desired number of lanes and parameters
     lane_width = 3.5
-    lanelet_types = {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}
+    lanelet_types = {LaneletType.INTERSTATE, LaneletType.MAIN_CARRIAGE_WAY}
     lanelet_length = int(road_length/num_lanelets_per_lane)
     scenario = create_scenario(commonroad_benchmark_id, dt)
 
@@ -470,7 +470,7 @@ def create_access_ramp_scenario(commonroad_benchmark_id: str, dt: float, num_str
                                 markings: List[Tuple[LineMarking, LineMarking]]):
     # desired number of lanes and parameters
     lane_width = 3.5
-    lanelet_types = {LaneletType.HIGHWAY, LaneletType.MAIN_CARRIAGE_WAY}
+    lanelet_types = {LaneletType.INTERSTATE, LaneletType.MAIN_CARRIAGE_WAY}
     lanelet_length = int(road_length/num_lanelets_per_lane)
     scenario = create_scenario(commonroad_benchmark_id, dt)
 
@@ -563,7 +563,7 @@ def create_scenario(commonroad_benchmark_id, dt):
     author = "Sebastian Maierhofer"
     affiliation = 'Technical University of Munich, Germany'
     source = 'CommonRoad Monitor'
-    tags = {Tag.HIGHWAY, Tag.MULTI_LANE, Tag.NO_ONCOMING_TRAFFIC, Tag.PARALLEL_LANES}
+    tags = {Tag.INTERSTATE, Tag.MULTI_LANE, Tag.NO_ONCOMING_TRAFFIC, Tag.PARALLEL_LANES}
     location = Location(-999, 0, 0)
     scenario = Scenario(dt, "DEU_" + commonroad_benchmark_id, author, tags, affiliation, source, location)
     return scenario

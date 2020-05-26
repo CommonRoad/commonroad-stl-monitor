@@ -6,10 +6,10 @@
     <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
+    <interstate/>
     <no_oncoming_traffic/>
     <multi_lane/>
     <parallel_lanes/>
-    <highway/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -188,7 +188,7 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="11" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -370,7 +370,7 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="12" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -552,7 +552,7 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="13" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -734,7 +734,7 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="14" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -916,7 +916,7 @@
     <predecessor ref="4"/>
     <successor ref="6"/>
     <adjacentLeft ref="15" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -1098,7 +1098,7 @@
     <predecessor ref="5"/>
     <successor ref="7"/>
     <adjacentLeft ref="16" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -1280,7 +1280,7 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentLeft ref="17" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -1462,7 +1462,7 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentLeft ref="18" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -1644,7 +1644,7 @@
     <predecessor ref="8"/>
     <successor ref="10"/>
     <adjacentLeft ref="19" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -1825,7 +1825,7 @@
     </rightBound>
     <predecessor ref="9"/>
     <adjacentLeft ref="20" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2007,7 +2007,7 @@
     <successor ref="12"/>
     <adjacentLeft ref="21" drivingDir="same"/>
     <adjacentRight ref="1" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2190,7 +2190,7 @@
     <successor ref="13"/>
     <adjacentLeft ref="22" drivingDir="same"/>
     <adjacentRight ref="2" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2373,7 +2373,7 @@
     <successor ref="14"/>
     <adjacentLeft ref="23" drivingDir="same"/>
     <adjacentRight ref="3" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2556,7 +2556,7 @@
     <successor ref="15"/>
     <adjacentLeft ref="24" drivingDir="same"/>
     <adjacentRight ref="4" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2739,7 +2739,7 @@
     <successor ref="16"/>
     <adjacentLeft ref="25" drivingDir="same"/>
     <adjacentRight ref="5" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -2922,7 +2922,7 @@
     <successor ref="17"/>
     <adjacentLeft ref="26" drivingDir="same"/>
     <adjacentRight ref="6" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -3105,7 +3105,7 @@
     <successor ref="18"/>
     <adjacentLeft ref="27" drivingDir="same"/>
     <adjacentRight ref="7" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -3288,7 +3288,7 @@
     <successor ref="19"/>
     <adjacentLeft ref="28" drivingDir="same"/>
     <adjacentRight ref="8" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -3471,7 +3471,7 @@
     <successor ref="20"/>
     <adjacentLeft ref="29" drivingDir="same"/>
     <adjacentRight ref="9" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -3653,7 +3653,7 @@
     <predecessor ref="19"/>
     <adjacentLeft ref="30" drivingDir="same"/>
     <adjacentRight ref="10" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -3835,7 +3835,7 @@
     <successor ref="22"/>
     <adjacentLeft ref="31" drivingDir="same"/>
     <adjacentRight ref="11" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4018,7 +4018,7 @@
     <successor ref="23"/>
     <adjacentLeft ref="32" drivingDir="same"/>
     <adjacentRight ref="12" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4201,7 +4201,7 @@
     <successor ref="24"/>
     <adjacentLeft ref="33" drivingDir="same"/>
     <adjacentRight ref="13" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4384,7 +4384,7 @@
     <successor ref="25"/>
     <adjacentLeft ref="34" drivingDir="same"/>
     <adjacentRight ref="14" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4567,7 +4567,7 @@
     <successor ref="26"/>
     <adjacentLeft ref="35" drivingDir="same"/>
     <adjacentRight ref="15" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4750,7 +4750,7 @@
     <successor ref="27"/>
     <adjacentLeft ref="36" drivingDir="same"/>
     <adjacentRight ref="16" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -4933,7 +4933,7 @@
     <successor ref="28"/>
     <adjacentLeft ref="37" drivingDir="same"/>
     <adjacentRight ref="17" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -5116,7 +5116,7 @@
     <successor ref="29"/>
     <adjacentLeft ref="38" drivingDir="same"/>
     <adjacentRight ref="18" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -5299,7 +5299,7 @@
     <successor ref="30"/>
     <adjacentLeft ref="39" drivingDir="same"/>
     <adjacentRight ref="19" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -5481,7 +5481,7 @@
     <predecessor ref="29"/>
     <adjacentLeft ref="40" drivingDir="same"/>
     <adjacentRight ref="20" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -5662,7 +5662,7 @@
     </rightBound>
     <successor ref="32"/>
     <adjacentRight ref="21" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -5844,7 +5844,7 @@
     <predecessor ref="31"/>
     <successor ref="33"/>
     <adjacentRight ref="22" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6026,7 +6026,7 @@
     <predecessor ref="32"/>
     <successor ref="34"/>
     <adjacentRight ref="23" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6208,7 +6208,7 @@
     <predecessor ref="33"/>
     <successor ref="35"/>
     <adjacentRight ref="24" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6390,7 +6390,7 @@
     <predecessor ref="34"/>
     <successor ref="36"/>
     <adjacentRight ref="25" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6572,7 +6572,7 @@
     <predecessor ref="35"/>
     <successor ref="37"/>
     <adjacentRight ref="26" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6754,7 +6754,7 @@
     <predecessor ref="36"/>
     <successor ref="38"/>
     <adjacentRight ref="27" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -6936,7 +6936,7 @@
     <predecessor ref="37"/>
     <successor ref="39"/>
     <adjacentRight ref="28" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -7118,7 +7118,7 @@
     <predecessor ref="38"/>
     <successor ref="40"/>
     <adjacentRight ref="29" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
@@ -7299,7 +7299,7 @@
     </rightBound>
     <predecessor ref="39"/>
     <adjacentRight ref="30" drivingDir="same"/>
-    <laneletType>highway</laneletType>
+    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>

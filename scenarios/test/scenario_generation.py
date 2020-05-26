@@ -89,9 +89,9 @@ def create_max_speed_limit_scenario():
                                         [(LineMarking.DASHED, LineMarking.SOLID),
                                          (LineMarking.DASHED, LineMarking.DASHED),
                                          (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(35)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11},
                                scenario.lanelet_network.find_lanelet_by_id(1).right_vertices[0])
@@ -113,8 +113,8 @@ def create_min_speed_limit_scenario():
     scenario = create_straight_scenario("test_min_speed_limit", 0.1, num_lanes, num_lanelets, road_length, obstacles,
                                         [(LineMarking.DASHED, LineMarking.SOLID),
                                          (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MIN_SPEED, [str(30)])
     traffic_sign = TrafficSign(202, [traffic_sign_elem], {1, 6},
                                scenario.lanelet_network.find_lanelet_by_id(1).right_vertices[0])
@@ -142,9 +142,9 @@ def create_preserves_traffic_flow_scenario():
                                         obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(40)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11},
                                scenario.lanelet_network.find_lanelet_by_id(1).right_vertices[0])
@@ -201,11 +201,11 @@ def create_safe_distance_scenario():
                                          (LineMarking.DASHED, LineMarking.DASHED),
                                          (LineMarking.DASHED, LineMarking.DASHED),
                                          (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}],
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}],
                                         [3.5, 3.5, 3.5, 3.5, 3.5])
     traffic_sign_elem = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, [str(22.22)])
     traffic_sign = TrafficSign(201, [traffic_sign_elem], {1, 6, 11},
@@ -257,11 +257,11 @@ def create_unnecessary_braking_scenario():
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}],
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}],
                                         [3.5, 3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
@@ -289,8 +289,8 @@ def create_standstill_scenario():
     scenario = create_straight_scenario("test_standstill", 0.1, num_lanes, num_lanelets, road_length, obstacles,
                                         [(LineMarking.DASHED, LineMarking.SOLID),
                                          (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -326,10 +326,10 @@ def create_reverse_and_u_turn_scenario():
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.DASHED, LineMarking.DASHED),
                                                     (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -355,8 +355,8 @@ def create_overtaking_right_congestion_scenario():
     scenario = create_straight_scenario("test_overtaking_right_congestion", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -427,10 +427,10 @@ def create_overtaking_broad_lane_marking_scenario():
                                                                  (LineMarking.BROAD_DASHED, LineMarking.DASHED),
                                                                  (LineMarking.DASHED, LineMarking.BROAD_DASHED),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -451,8 +451,8 @@ def create_overtaking_normal_scenario():
     scenario = create_straight_scenario("test_overtaking_right_normal", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -498,10 +498,10 @@ def create_emergency_three_lanes_with_shoulder_scenario():
                                                                  (LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.DASHED, LineMarking.DASHED),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.SHOULDER, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5, 3.5, 3.5])
+                                        [{LaneletType.SHOULDER, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
@@ -535,29 +535,15 @@ def create_emergency_two_lanes_not_broad_enough_scenario():
     scenario = create_straight_scenario("test_emergency_two_lanes_not_broad_enough", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3, 3])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3, 3])
 
     write_to_file(scenario)
 
 
 def create_consider_entering_vehicles_for_lane_change_scenario():
     obstacles = []
-    #comment for paper version
-    # obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([110.0, 5.25]), 1000,
-    #                                        [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    # obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([100.0, 5.25]), 1001)
-    # obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11, np.array([130.0, -1.75]), 1002,
-    #                                        [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05,
-    #                                         -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         -0.05, -0.05, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    #                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([25.0, 5.25]), 1000,
                                            [-0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.0275, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -585,67 +571,73 @@ def create_consider_entering_vehicles_for_lane_change_scenario():
     write_to_file(scenario)
 
 
-def create_consider_entering_vehicles_for_distance_scenario_1():
+def create_recapture_safe_distance():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration([2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                            2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 13.5, np.array([5.0, 1.75]), 1000)
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([50.0, -1.75]), 1001,
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22.5, np.array([5.0, 5.25]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([100.0, 1.75]), 1001,
                                            [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 16, np.array([38.0, 1.75]), 1002)
-    for i in range(3):
-        obs = locals().get('obs' + str(i))
-        if obs is not None:
-            obstacles.append(obs)
-    num_lanes = 1
-    num_lanelets = 10
-    road_length = 200
-    scenario = create_access_ramp_scenario("test_consider_entering_vehicles_for_distance_1", 0.1, num_lanes,
-                                           num_lanelets, road_length, obstacles,
-                                           [(LineMarking.DASHED, LineMarking.DASHED),
-                                            (LineMarking.SOLID, LineMarking.DASHED)])
-
-    write_to_file(scenario)
-
-
-def create_consider_entering_vehicles_for_distance_scenario_2():
-    obstacles = []
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([5.0, 1.75]), 1000)
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([50.0, -1.75]), 1001,
+    obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22.5, np.array([12.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22, np.array([40.0, 5.25]), 1003)
+    obs4 = create_obstacle_by_acceleration([-5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 22.6, np.array([5.0, 1.75]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22.5, np.array([12.0, 1.75]), 1005)
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([60.0, 8.75]), 1006,
                                            [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    obs2 = create_obstacle_by_acceleration([-2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
-                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
-                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
-                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
-                                            -2, -2, -2, -2, -2, -2, -2, -2, -2, -2], 15, np.array([40.0, 1.75]), 1002)
-    for i in range(3):
+    obs7 = create_obstacle_by_acceleration([0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 25, np.array([10.0, 12.25]), 1007)
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([60.0, 15.75]), 1008,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs9 = create_obstacle_by_acceleration([-2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5,
+                                            -5, -5, -5, -5, -5, -5, -5, -5, -5, -5], 25, np.array([10.0, 19.25]), 1009)
+    for i in range(10):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
-    num_lanes = 1
+    num_lanes = 6
     num_lanelets = 10
     road_length = 200
-    scenario = create_access_ramp_scenario("test_consider_entering_vehicles_for_distance_2", 0.1, num_lanes,
-                                           num_lanelets, road_length, obstacles,
-                                           [(LineMarking.DASHED, LineMarking.DASHED),
-                                            (LineMarking.SOLID, LineMarking.DASHED)])
+    scenario = create_straight_scenario("test_recapture_safe_distance", 0.1, num_lanes, num_lanelets,
+                                        road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.SOLID, LineMarking.DASHED)],
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}],
+                                        [3.5, 3.5, 3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
 
-def create_safe_distance_lane_change_scenario_1():
+def create_safe_distance_lane_change_scenario():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 5, np.array([5.0, 5.25]), 1000)
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([5.0, 5.25]), 1000)
     obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([100.0, 1.75]), 1001,
                                            [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -653,33 +645,51 @@ def create_safe_distance_lane_change_scenario_1():
                                             -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     obs2 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 22.5, np.array([40.0, 5.25]), 1002)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([40.0, 1.75]), 1003)
     obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 28, np.array([40.0, 1.75]), 1003)
-    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 28, np.array([40.0, 1.75]), 1003)
-    for i in range(4):
+    obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11.5, np.array([30.0, 12.25]), 1004)
+    obs5 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([20.0, 8.75]), 1005,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs6 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11.5, np.array([100.0, 19.25]), 1006)
+    obs7 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([50.0, 15.75]), 1007,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    obs8 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11.5, np.array([10.0, 19.25]), 1008)
+    for i in range(9):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
-    num_lanes = 2
+    num_lanes = 6
     num_lanelets = 10
     road_length = 200
-    scenario = create_straight_scenario("test_safe_distance_lane_change_1", 0.1, num_lanes, num_lanelets,
+    scenario = create_straight_scenario("test_safe_distance_lane_change", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
+                                                                 (LineMarking.DASHED, LineMarking.DASHED),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}],
+                                        [3.5, 3.5, 3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
 
 
 def create_safe_distance_lane_change_scenario_2():
     obstacles = []
-    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 11.5, np.array([30.0, 5.25]), 1000)
-    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([20.0, 1.75]), 1001,
-                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
     for i in range(2):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -690,10 +700,11 @@ def create_safe_distance_lane_change_scenario_2():
     scenario = create_straight_scenario("test_safe_distance_lane_change_2", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
-                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY},
-                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.HIGHWAY}], [3.5, 3.5])
+                                        [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
+                                         {LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE}], [3.5, 3.5])
 
     write_to_file(scenario)
+
 
 def main():
     create_max_speed_limit_scenario()
@@ -709,13 +720,10 @@ def main():
     create_overtaking_access_ramp_scenario()
     create_overtaking_broad_lane_marking_scenario()
     create_overtaking_normal_scenario()
-    create_consider_entering_vehicles_for_lane_change_scenario()
     create_emergency_two_lanes_not_broad_enough_scenario()
-    create_safe_distance_lane_change_scenario_1()
-    create_safe_distance_lane_change_scenario_2()
-    #create_consider_entering_vehicles_for_distance_scenario_1()
-   # create_consider_entering_vehicles_for_distance_scenario_2()
-   # create_consider_entering_vehicles_for_lane_change_scenario()
+    create_safe_distance_lane_change_scenario()
+    create_recapture_safe_distance()
+    create_consider_entering_vehicles_for_lane_change_scenario()
 
 
 if __name__ == "__main__":

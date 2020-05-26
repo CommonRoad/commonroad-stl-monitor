@@ -417,69 +417,116 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
 
-    # def test_gap_for_entering_vehicles_1(self):
-    #     # one vehicle driving in rightmost lane always violates safe distance and does not increase distance (1002)
-    #     # one vehicle driving in rightmost lane always violates safe distance only at end of trajectory (1000)
-    #     # one vehicle entering main carriage way (1001)
-    #     scenario, planning_problem_set = \
-    #         CommonRoadFileReader(self.test_scenario_dir +
-    #                              "DEU_test_consider_entering_vehicles_for_distance_1.xml").open()
-    #     exp_result = [(1000, {'R_I6_veh_1001': False, 'R_I6_veh_1002': True}),
-    #                   (1001, {'R_I6_veh_1000': True, 'R_I6_veh_1002': True}),
-    #                   (1002, {'R_I6_veh_1000': True, 'R_I6_veh_1001': False})]
-    #     self.cr_eval.activated_traffic_rule_sets = ["F_SRI6"]
-    #     self.cr_eval.update_eval_dict()
-    #     result_forward = self.cr_eval.evaluate_scenario(scenario)
-    #     print("Gap for entering vehicles:")
-    #     print(result_forward)
-    #     self.assertEqual(exp_result, result_forward)
-    #
-    # def test_gap_for_entering_vehicles_2(self):
-    #     # one vehicle driving in rightmost lane never violates safe distance (1000)
-    #     # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
-    #     # one vehicle entering main carriage way (1001)
-    #     scenario, planning_problem_set = \
-    #         CommonRoadFileReader(self.test_scenario_dir +
-    #                              "DEU_test_consider_entering_vehicles_for_distance_2.xml").open()
-    #     exp_result = [(1000, {'R_I6_veh_1001': True, 'R_I6_veh_1002': True}),
-    #                   (1001, {'R_I6_veh_1000': True, 'R_I6_veh_1002': True}),
-    #                   (1002, {'R_I6_veh_1000': True, 'R_I6_veh_1001': True})]
-    #     self.cr_eval.activated_traffic_rule_sets = ["F_SRI6"]
-    #     self.cr_eval.update_eval_dict()
-    #     result_forward = self.cr_eval.evaluate_scenario(scenario)
-    #     print("Gap for entering vehicles:")
-    #     print(result_forward)
-    #     self.assertEqual(exp_result, result_forward)
-    #
-    def test_safe_distance_lane_change_1(self):
-        # one vehicle driving in rightmost lane never violates safe distance (1000)
-        # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
+    def test_recapture_safe_distance(self):
+        # one vehicle driving in rightmost lane always violates safe distance and does not increase distance (1002)
+        # one vehicle driving in rightmost lane always violates safe distance only at end of trajectory (1000)
         # one vehicle entering main carriage way (1001)
         scenario, planning_problem_set = \
-            CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change_1.xml").open()
-        exp_result = [(1000, {'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True}),
-                      (1001, {'R_G6_veh_1000': True, 'R_G6_veh_1002': False, 'R_G6_veh_1003': True}),
-                      (1002, {'R_G6_veh_1000': True, 'R_G6_veh_1001': True, 'R_G6_veh_1003': True}),
-                      (1003, {'R_G6_veh_1000': True, 'R_G6_veh_1001': True, 'R_G6_veh_1002': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["B_SRG6"]
+            CommonRoadFileReader(self.test_scenario_dir +
+                                 "DEU_test_recapture_safe_distance.xml").open()
+        exp_result = [(1000, {'R_G7_veh_1001': True, 'R_G7_veh_1002': False, 'R_G7_veh_1003': True,
+                              'R_G7_veh_1004': True, 'R_G7_veh_1005': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1001, {'R_G7_veh_1000': True, 'R_G7_veh_1002': True, 'R_G7_veh_1003': True,
+                              'R_G7_veh_1004': True, 'R_G7_veh_1005': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1002, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1003': True,
+                              'R_G7_veh_1004': True, 'R_G7_veh_1005': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1003, {'R_G7_veh_1000': True, 'R_G7_veh_1001': False, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1004': True, 'R_G7_veh_1005': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1004, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1005': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1005, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1004': True, 'R_G7_veh_1006': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1006, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1004': True, 'R_G7_veh_1005': True,
+                              'R_G7_veh_1007': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1007, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1004': True, 'R_G7_veh_1005': True,
+                              'R_G7_veh_1006': True, 'R_G7_veh_1008': True, 'R_G7_veh_1009': True}),
+                      (1008, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1004': True, 'R_G7_veh_1005': True,
+                              'R_G7_veh_1006': True, 'R_G7_veh_1007': True, 'R_G7_veh_1009': True}),
+                      (1009, {'R_G7_veh_1000': True, 'R_G7_veh_1001': True, 'R_G7_veh_1002': True,
+                              'R_G7_veh_1003': True, 'R_G7_veh_1004': True, 'R_G7_veh_1005': True,
+                              'R_G7_veh_1006': True, 'R_G7_veh_1007': True, 'R_G7_veh_1008': True})
+                      ]
+        self.cr_eval.activated_traffic_rule_sets = ["F_SRG7"]
         self.cr_eval.update_eval_dict()
         result_forward = self.cr_eval.evaluate_scenario(scenario)
-        print("Safe distance to following vehicles during lane change:")
+        print("Recapture safe distance:")
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
 
-    def test_safe_distance_lane_change_2(self):
+    def test_safe_distance_lane_change(self):
         # one vehicle driving in rightmost lane never violates safe distance (1000)
         # one vehicle driving in rightmost lane violates safe distance only at beginning of trajectory (1002)
         # one vehicle entering main carriage way (1001)
         scenario, planning_problem_set = \
-            CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change_2.xml").open()
-        exp_result = [(1000, {'R_G1_veh_1001': True, 'R_G6_veh_1001': True}),
-                      (1001, {'R_G1_veh_1000': False, 'R_G6_veh_1000': True})]
+            CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance_lane_change.xml").open()
+        exp_result = [(1000, {'R_G1_veh_1001': True, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1001': True,
+                              'R_G6_veh_1002': True, 'R_G6_veh_1003': True, 'R_G6_veh_1004': True,
+                              'R_G6_veh_1005': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1001, {'R_G1_veh_1000': True, 'R_G1_veh_1002': True, 'R_G1_veh_1003': True,
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1002': False, 'R_G6_veh_1003': True, 'R_G6_veh_1004': True,
+                              'R_G6_veh_1005': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1002, {'R_G1_veh_1000': True, 'R_G1_veh_1001': False, 'R_G1_veh_1003': True,
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True,  'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1003': True, 'R_G6_veh_1004': True,
+                              'R_G6_veh_1005': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1003, {'R_G1_veh_1000': True, 'R_G1_veh_1001': False, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1004': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1004': True,
+                              'R_G6_veh_1005': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1004, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1005': True, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True,
+                              'R_G6_veh_1005': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1005, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': False, 'R_G1_veh_1006': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True,
+                              'R_G6_veh_1004': True, 'R_G6_veh_1006': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1006, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1007': True, 'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True,
+                              'R_G6_veh_1004': True, 'R_G6_veh_1005': True, 'R_G6_veh_1007': True,
+                              'R_G6_veh_1008': True}),
+                      (1007, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True,  'R_G1_veh_1008': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True,
+                              'R_G6_veh_1004': True, 'R_G6_veh_1005': True, 'R_G6_veh_1006': True,
+                              'R_G6_veh_1008': True}),
+                      (1008, {'R_G1_veh_1000': True, 'R_G1_veh_1001': True, 'R_G1_veh_1002': True,
+                              'R_G1_veh_1003': True, 'R_G1_veh_1004': True, 'R_G1_veh_1005': True,
+                              'R_G1_veh_1006': True, 'R_G1_veh_1007': True, 'R_G6_veh_1000': True,
+                              'R_G6_veh_1001': True, 'R_G6_veh_1002': True, 'R_G6_veh_1003': True,
+                              'R_G6_veh_1004': True, 'R_G6_veh_1005': True, 'R_G6_veh_1006': True,
+                              'R_G6_veh_1007': True})
+                       ]
         self.cr_eval.activated_traffic_rule_sets = ["B_SRG1", "B_SRG6"]
         self.cr_eval.update_eval_dict()
         result_forward = self.cr_eval.evaluate_scenario(scenario)
-        print("Safe distance to following vehicles during lane change:")
+        print("Safe distance to following and leading vehicles during lane change:")
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
 
