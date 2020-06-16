@@ -11,6 +11,7 @@ from src.predicates.braking_predicates import BrakingPredicateCollection
 from src.predicates.general_predicates import GeneralPredicateCollection
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
+from src.common.helper import OperatingMode
 
 
 class TrafficRuleDispatcher:
@@ -20,7 +21,7 @@ class TrafficRuleDispatcher:
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str]):
+                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode):
         """
         Constructor
 
@@ -32,6 +33,7 @@ class TrafficRuleDispatcher:
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
         :param activated_traffic_rule_sets: set of rules which are activated
         :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
@@ -44,16 +46,16 @@ class TrafficRuleDispatcher:
                                                          road_network.lanelet_network)
         self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
                                                                 traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter)
+                                                                traffic_sign_interpreter, operating_mode)
         self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
                                                                 traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter)
+                                                                traffic_sign_interpreter, operating_mode)
         self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
                                                               traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter)
+                                                              traffic_sign_interpreter, operating_mode)
         self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
                                                               traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter)
+                                                              traffic_sign_interpreter, operating_mode)
 
         self._monitors_backward = self.create_backward_monitors(traffic_rules_backward, traffic_rule_sets,
                                                                 activated_traffic_rule_sets,

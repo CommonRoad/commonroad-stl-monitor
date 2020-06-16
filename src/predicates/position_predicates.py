@@ -4,21 +4,24 @@ from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork, Lane
+from src.common.road_network import RoadNetwork
+from src.common.helper import OperatingMode
 
 
 class PositionPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
-                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter,
+                 operating_mode: OperatingMode):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
-        super().__init__(road_network, simulation_param, traffic_rules_param,
-                         necessary_predicates, traffic_sign_interpreter)
+        super().__init__(road_network, simulation_param,  traffic_rules_param,
+                         necessary_predicates, traffic_sign_interpreter, operating_mode)
 
     @staticmethod
     def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:

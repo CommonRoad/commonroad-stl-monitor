@@ -4,9 +4,17 @@ from parameters_vehicle3 import parameters_vehicle3
 from typing import Dict, Union, List, Tuple
 import ruamel.yaml
 import math
+import enum
 from decimal import Decimal
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
+
+
+@enum.unique
+class OperatingMode(enum.Enum):
+    MONITOR = "monitor"
+    CONSTRAINT = "constraint"
+    ROBUSTNESS = "robustness"
 
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> Dict:

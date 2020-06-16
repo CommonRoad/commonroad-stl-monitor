@@ -23,6 +23,7 @@ simulation_param:
     num_vehicles: 2
     verbose_mode: false
     time_measuring: false
+    mode : monitor # one of monitor/constraint/robustness
 
 # road network and curvilinear coordinate system parameters
 ###

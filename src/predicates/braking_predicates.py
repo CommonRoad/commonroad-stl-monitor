@@ -1,23 +1,26 @@
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Union
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.road_network import RoadNetwork
 from src.common.vehicle import Vehicle
 from src.predicates.position_predicates import PositionPredicateCollection
+from src.common.helper import OperatingMode
 
 
 class BrakingPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
-                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter,
+                 operating_mode: OperatingMode):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         super().__init__(road_network, simulation_param,  traffic_rules_param,
-                         necessary_predicates, traffic_sign_interpreter)
+                         necessary_predicates, traffic_sign_interpreter, operating_mode)
 
     def unnecessary_braking(self, time_step: int, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """ Predicate to check whether an obstacle brakes abruptly
@@ -72,7 +75,8 @@ class BrakingPredicateCollection(PredicateCollection):
 
         return d_safe
 
-    def keeps_safe_distance_prec(self, time_step: int, vehicle_follow: Vehicle, vehicle_lead: Vehicle) -> bool:
+    def keeps_safe_distance_prec(self, time_step: int, vehicle_follow: Vehicle, vehicle_lead: Vehicle) \
+            -> Union[bool, float, float]:
         """
         Evaluates if safe distance is kept by following vehicle
 
@@ -85,12 +89,19 @@ class BrakingPredicateCollection(PredicateCollection):
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         a_max_follow = vehicle_follow.vehicle_param.get("a_max")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
-        if 0 < vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step) \
-                < self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
-                                     a_min_follow, a_min_lead, a_max_follow, t_react_follow):
-            return False
-        else:
-            return True
+        safe_distance = self.safe_distance(vehicle_follow.states_lon[time_step].v, vehicle_lead.states_lon[time_step].v,
+                                           a_min_follow, a_min_lead, a_max_follow, t_react_follow)
+        if self._operating_mode is OperatingMode.CONSTRAINT:
+            return safe_distance
+
+        delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
+        if self._operating_mode is OperatingMode.MONITOR:
+            if 0 < delta_s < safe_distance:
+                return False
+            else:
+                return True
+        elif self._operating_mode is OperatingMode.ROBUSTNESS:
+            return delta_s - safe_distance
 
     @staticmethod
     def brakes_stronger(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
