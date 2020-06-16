@@ -27,7 +27,8 @@ class Visualization:
         plt.figure(figsize=self._figsize)
 
     def plot_scenario(self, scenario: Scenario, planning_problem_set: PlanningProblemSet = None, time_begin: int = 0,
-                      obstacle_label: bool = False, draw_trajectory: bool = False, lanelet_label: bool = False):
+                      obstacle_label: bool = False, draw_trajectory: bool = False, lanelet_label: bool = False,
+                      draw_planning_problem: bool = True, draw_traffic_signs: bool = False):
         """
         Management of visualization for complete CommonRoad scenario
 
@@ -37,33 +38,23 @@ class Visualization:
         :param obstacle_label: boolean indicating if obstacle label should be shown
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         :param lanelet_label: boolean indicating if lanelet label should be drawn
+        :param draw_planning_problem: boolean indicating if planning problem should be drawn
+        :param draw_traffic_signs: boolean indicating if traffic signs should be drawn
         """
-        x_lanelet_left = [point[0] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
-        y_lanelet_left = [point[1] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
-        x_lanelet_right = [point[0] for lanelet in scenario.lanelet_network.lanelets
-                           for point in lanelet.right_vertices]
-        y_lanelet_right = [point[1] for lanelet in scenario.lanelet_network.lanelets
-                           for point in lanelet.right_vertices]
-
-        x_min = min(x_lanelet_left + x_lanelet_right) - 5
-        y_min = min(y_lanelet_left + y_lanelet_right) - 5
-        x_max = max(x_lanelet_left + x_lanelet_right) + 5
-        y_max = max(y_lanelet_left + y_lanelet_right) + 5
-        plot_limits = [x_min, x_max, y_min, y_max]
-
+        plot_limits = get_plot_limits(scenario)
         plt.clf()
         plt.gca().set_aspect('equal')
         plt.gca().set_axis_off()
         plt.margins(0, 0.1)
 
-        if planning_problem_set is not None:
+        if planning_problem_set is not None and draw_planning_problem is not False:
             draw_object(planning_problem_set, draw_params=self._default_parameters_planning, plot_limits=plot_limits)
         for obs in scenario.obstacles:
             if self._ego_vehicle_color is not None and obs.obstacle_id in self._ego_vehicle_color.keys():
                 self._draw_ego_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
             else:
                 self._draw_standard_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
-        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label)
+        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label, draw_traffic_signs)
         plt.axis('off')
         plt.show()
 
@@ -98,8 +89,6 @@ class Visualization:
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         """
         self._default_parameters_scenario['time_begin'] = time_begin
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = '#ffa500'
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = '#ffa500'
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
         self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
             draw_trajectory
@@ -107,15 +96,53 @@ class Visualization:
         draw_object(obstacle, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
 
     def _draw_lanelet_network(self, plot_limits: List[float], lanelet_network: LaneletNetwork,
-                              lanelet_label: bool = False):
+                              lanelet_label: bool = False, draw_traffic_signs: bool = False):
         """
         Visualization of lanelet network
 
         :param lanelet_network: CommonRoad lanelet network
         :param lanelet_label: boolean indicating if lanelet label should be shown
+        :param draw_traffic_signs: boolean indicating if traffic signs should be drawn
         """
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
         self._default_parameters_scenario['lanelet_network']['lanelet']['draw_start_and_direction'] = False
         self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
-        self._default_parameters_scenario['lanelet_network']['traffic_sign']['draw_traffic_signs'] = True
         draw_object(lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
+
+
+def get_plot_limits(scenario: Scenario) -> List[float]:
+    """
+    Extracts plot limits of a scenario by searching for smalles/largest x-, y-value of lanelets
+    and adds small margin to limits
+
+    :param scenario: CommonRoad scenario
+    :returns x/y min/max plot limits
+    """
+    x_lanelet_left = [point[0] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
+    y_lanelet_left = [point[1] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
+    x_lanelet_right = [point[0] for lanelet in scenario.lanelet_network.lanelets
+                       for point in lanelet.right_vertices]
+    y_lanelet_right = [point[1] for lanelet in scenario.lanelet_network.lanelets
+                       for point in lanelet.right_vertices]
+
+    x_min = min(x_lanelet_left + x_lanelet_right) - 5
+    y_min = min(y_lanelet_left + y_lanelet_right) - 5
+    x_max = max(x_lanelet_left + x_lanelet_right) + 5
+    y_max = max(y_lanelet_left + y_lanelet_right) + 5
+    plot_limits = [x_min, x_max, y_min, y_max]
+
+    return plot_limits
+
+
+def get_scenario_duration(scenario: Scenario) -> int:
+    """
+    Extracts maximum time step of all obstacles
+
+    :param scenario: CommonRoad scenario
+    :returns maximum time step of all obstacles
+    """
+    duration = 0
+    for obs in scenario.dynamic_obstacles:
+        if duration < obs.prediction.trajectory.state_list[-1].time_step:
+            duration = obs.prediction.trajectory.state_list[-1].time_step
+    return duration

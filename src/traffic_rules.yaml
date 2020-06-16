@@ -5,10 +5,10 @@
 #   - R_G1: safe distance preceding, neglecting cut-in vehicles
 #   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
-#   - R_G4: required speed
-#   - R_G5: preserves traffic flow
+#   - R_G4: preserves traffic flow
+#   - R_G5: required speed
 #   - R_G6: safe distance to rear vehicle during lane change
-#   - R_G7: recapturing safe distance (also for future cut-in)
+#   - R_G7: recapturing safe distance (also for future cut-in) -> optional, indirectly covered by R_G1
 #   - R_I1: no standing on interstates
 #   - R_I2: overtaking right-hand side on interstates
 #   - R_I3: prevent u-turn and reversing on interstates
