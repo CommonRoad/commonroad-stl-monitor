@@ -31,7 +31,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
             elif not filename.endswith('.xml'):
                 continue
             fullname = os.path.join(abs_path, filename)
-            scenario, planning_problem_set = CommonRoadFileReader(fullname).open()
+            scenario, planning_problem_set = CommonRoadFileReader(fullname).open(lanelet_assignment=True)
             if Tag.INTERSTATE in scenario.tags or Tag.INTERSTATE in scenario.tags:
                 scenarios.append(scenario)
             if len(scenarios) == max_num_scenarios:
@@ -63,7 +63,7 @@ def main():
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
                                                               + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")
-                                                              + ".xml").open()
+                                                              + ".xml").open(lanelet_assignment=True)
         result = cr_eval.evaluate_scenario(scenario)
         print(result)
     else:

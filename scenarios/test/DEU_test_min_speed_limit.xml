@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_min_speed_limit" date="2020-05-26">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_min_speed_limit" date="2020-06-23">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>0</gpsLatitude>
     <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
+    <parallel_lanes/>
+    <multi_lane/>
     <interstate/>
     <no_oncoming_traffic/>
-    <multi_lane/>
-    <parallel_lanes/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>
@@ -348,8 +348,8 @@
     </rightBound>
     <successor ref="2"/>
     <adjacentLeft ref="6" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -691,8 +691,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="7" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1034,8 +1034,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="8" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1377,8 +1377,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="9" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -1719,8 +1719,8 @@
     </rightBound>
     <predecessor ref="4"/>
     <adjacentLeft ref="10" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2061,8 +2061,8 @@
     </rightBound>
     <successor ref="7"/>
     <adjacentRight ref="1" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2404,8 +2404,8 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentRight ref="2" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -2747,8 +2747,8 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentRight ref="3" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -3090,8 +3090,8 @@
     <predecessor ref="8"/>
     <successor ref="10"/>
     <adjacentRight ref="4" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>
@@ -3432,8 +3432,8 @@
     </rightBound>
     <predecessor ref="9"/>
     <adjacentRight ref="5" drivingDir="same"/>
-    <laneletType>interstate</laneletType>
     <laneletType>mainCarriageWay</laneletType>
+    <laneletType>interstate</laneletType>
     <userOneWay>vehicle</userOneWay>
     <trafficSignRef ref="202"/>
   </lanelet>

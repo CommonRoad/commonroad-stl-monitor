@@ -687,17 +687,30 @@ def create_safe_distance_lane_change_scenario():
     write_to_file(scenario)
 
 
-def create_safe_distance_lane_change_scenario_2():
+def create_driving_rightmost_scenario():
     obstacles = []
-
-    for i in range(2):
+    obs0 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([100.0, 1.75]), 1000)
+    obs1 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 15, np.array([110.0, 3.5]), 1001)
+    obs3 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 12, np.array([5.0, 1.75]), 1002,
+                                           [0.05, 0.05, 0.05, 0.05, 0.05, -0.05, -0.05, -0.05, -0.05, -0.035,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            -0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # obs4 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 25, np.array([10.0, 1.75]), 1003,
+    #                                        [0.1, 0.075, 0.05, 0.025, 0.0, -0.1, -0.075, -0.05, -0.025, -0.0,
+    #                                         -0.1, -0.075, -0.05, -0.025, 0.0, -0.1, -0.075, -0.05, -0.025, -0.0,
+    #                                         0.1, 0.075, 0.05, 0.025, 0.0, -0.1, -0.075, -0.05, -0.025, -0.0,
+    #                                         -0.1, -0.075, -0.05, -0.025, 0.0, -0.1, -0.075, -0.05, -0.025, -0.0,
+    #                                         0.1, 0.075, 0.05, 0.025, 0.0, -0.1, -0.075, -0.05, -0.025, -0.0])
+    for i in range(5):
         obs = locals().get('obs' + str(i))
         if obs is not None:
             obstacles.append(obs)
     num_lanes = 2
     num_lanelets = 10
     road_length = 200
-    scenario = create_straight_scenario("test_safe_distance_lane_change_2", 0.1, num_lanes, num_lanelets,
+    scenario = create_straight_scenario("test_driving_rightmost", 0.1, num_lanes, num_lanelets,
                                         road_length, obstacles, [(LineMarking.DASHED, LineMarking.SOLID),
                                                                  (LineMarking.SOLID, LineMarking.DASHED)],
                                         [{LaneletType.MAIN_CARRIAGE_WAY, LaneletType.INTERSTATE},
@@ -724,6 +737,7 @@ def main():
     create_safe_distance_lane_change_scenario()
     create_recapture_safe_distance()
     create_consider_entering_vehicles_for_lane_change_scenario()
+    create_driving_rightmost_scenario()
 
 
 if __name__ == "__main__":

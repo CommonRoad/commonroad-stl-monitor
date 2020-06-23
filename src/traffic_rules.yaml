@@ -2,13 +2,14 @@
 ###
 # .. code-block:: yaml
 #
-#   - R_G1: safe distance preceding, neglecting cut-in vehicles
+#   - R_G1: safe distance preceding, considering cut-in vehicles
 #   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
 #   - R_G4: preserves traffic flow
 #   - R_G5: required speed
 #   - R_G6: safe distance to rear vehicle during lane change
 #   - R_G7: recapturing safe distance (also for future cut-in) -> optional, indirectly covered by R_G1
+#   - R_G8: driving rightmost as possible
 #   - R_I1: no standing on interstates
 #   - R_I2: overtaking right-hand side on interstates
 #   - R_I3: prevent u-turn and reversing on interstates
@@ -17,6 +18,7 @@
 traffic_rules_forward:
     R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
     R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
+    R_G8: G(~(single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))) -> drives_rightmost_general__x_ego)
 
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle) && in_same_lane(time_step, ego_vehicle, other_vehicle) && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle)
@@ -85,12 +87,13 @@ traffic_rules_param:
     slightly_higher_speed_difference: 5.55
     u_turn: 1.57
     country: "DEU"
-
+    above_centerline_th: 0.1
 
 traffic_rule_sets:
     F_S0: [R_I5]
     F_SRI5: [R_I5]
     F_SRG7: [R_G7]
+    F_SRG8: [R_G8]
     B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_G6, R_I1, R_I2, R_I3, R_I4]
     B_SRG1: [R_G1]
     B_SRG2: [R_G2]
