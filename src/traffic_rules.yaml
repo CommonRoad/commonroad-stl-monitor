@@ -18,7 +18,7 @@
 traffic_rules_forward:
     R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
     R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
-    R_G8: G(~(single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))) -> drives_rightmost_general__x_ego)
+    R_G8: G(~(single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))) -> drives_rightmost_general__x_ego) #only when no lane change -> drive rightmost
 
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle) && in_same_lane(time_step, ego_vehicle, other_vehicle) && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle)
