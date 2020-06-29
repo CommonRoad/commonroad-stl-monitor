@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import List, Dict, Set
 
 from commonroad.scenario.lanelet import Lanelet
@@ -6,23 +7,20 @@ from src.predicates.predicate_collection import PredicateCollection
 from src.predicates.position_predicates import PositionPredicateCollection
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
-from src.common.helper import OperatingMode
 
 
 class GeneralPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
-                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter,
-                 operating_mode: OperatingMode):
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         super().__init__(road_network, simulation_param,  traffic_rules_param,
-                         necessary_predicates, traffic_sign_interpreter, operating_mode)
+                         necessary_predicates, traffic_sign_interpreter)
 
     def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
         """
@@ -243,3 +241,11 @@ class GeneralPredicateCollection(PredicateCollection):
                         self.cut_in(time_step, other_vehicle, ego_vehicle)
 
         return predicate_trace
+
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass
+
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass

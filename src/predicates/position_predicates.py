@@ -10,18 +10,16 @@ from src.common.helper import OperatingMode
 
 class PositionPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
-                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter,
-                 operating_mode: OperatingMode):
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         super().__init__(road_network, simulation_param,  traffic_rules_param,
-                         necessary_predicates, traffic_sign_interpreter, operating_mode)
+                         necessary_predicates, traffic_sign_interpreter)
 
     @staticmethod
     def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
@@ -399,25 +397,9 @@ class PositionPredicateCollection(PredicateCollection):
             else:
                 return False
         else:
-            occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
-            lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
-            s_ego = vehicle.states_lon[time_step].s
-            if len(lanes) > 1:
-                return True
-            if list(lanes)[0].lanelet.lanelet_id == vehicle.lane.lanelet.lanelet_id and vehicle.states_lat[time_step].d > self._traffic_rules_param.get("above_centerline_th"):
+            if vehicle.states_lat[time_step].d > self._traffic_rules_param.get("above_centerline_th"):
                 return False
-            elif list(lanes)[0].lanelet.lanelet_id != vehicle.lane.lanelet.lanelet_id and vehicle.states_lat[
-                time_step].d > 0 and vehicle.states_lat[time_step].d - 0.5 * (
-                    list(lanes)[0].width(s_ego) + vehicle.lane.width(s_ego)) > self._traffic_rules_param.get(
-                "above_centerline_th"):
-                return False
-            elif list(lanes)[0].lanelet.lanelet_id != vehicle.lane.lanelet.lanelet_id and vehicle.states_lat[
-                time_step].d < 0 and vehicle.states_lat[time_step].d + 0.5 * (
-                    list(lanes)[0].width(s_ego) + vehicle.lane.width(s_ego)) > self._traffic_rules_param.get(
-                    "above_centerline_th"):
-                return False
-            else:
-                return True
+            return True
 
     def drives_leftmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
@@ -580,3 +562,11 @@ class PositionPredicateCollection(PredicateCollection):
                     predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id][time_step] = \
                         self.on_main_carriage_way(time_step, other_vehicle)
         return predicate_trace
+
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass
+
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass

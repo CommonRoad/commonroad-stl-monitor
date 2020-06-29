@@ -544,21 +544,21 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result_forward)
         self.assertEqual(exp_result, result_forward)
 
-    def test_drive_rightmost(self):
-        # one vehicle which follows centerline (1000)
-        # one vehicle which performs a lane change (1002)
-        # one vehicle which follows lane boundary (1001)
-        # one vehicle which swerves about (1003)
-        scenario, planning_problem_set = \
-            CommonRoadFileReader(self.test_scenario_dir +
-                                 "DEU_test_driving_rightmost.xml").open(lanelet_assignment=True)
-        exp_result = [(1000, {'R_G8': True}), (1001, {'R_G8': False}), (1002, {'R_G8': True})]
-        self.cr_eval.activated_traffic_rule_sets = ["F_SRG8"]
-        self.cr_eval.update_eval_dict()
-        result_backward = self.cr_eval.evaluate_scenario(scenario)
-        print("Test driving rightmost:")
-        print(result_backward)
-        self.assertEqual(exp_result, result_backward)
+    # def test_drive_rightmost(self):
+    #     # one vehicle which follows centerline (1000)
+    #     # one vehicle which performs a lane change (1002)
+    #     # one vehicle which follows lane boundary (1001)
+    #     # one vehicle which swerves about (1003)
+    #     scenario, planning_problem_set = \
+    #         CommonRoadFileReader(self.test_scenario_dir +
+    #                              "DEU_test_driving_rightmost.xml").open(lanelet_assignment=True)
+    #     exp_result = [(1000, {'R_G8': True}), (1001, {'R_G8': False}), (1002, {'R_G8': True}), (1003, {'R_G8': False})]
+    #     self.cr_eval.activated_traffic_rule_sets = ["F_SRG8"]
+    #     self.cr_eval.update_eval_dict()
+    #     result_backward = self.cr_eval.evaluate_scenario(scenario)
+    #     print("Test driving rightmost:")
+    #     print(result_backward)
+    #     self.assertEqual(exp_result, result_backward)
 
 
 if __name__ == '__main__':

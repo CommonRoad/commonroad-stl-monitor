@@ -8,6 +8,12 @@ import enum
 from decimal import Decimal
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
+from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.scenario.lanelet import Lanelet, LaneletType
+
+from src.common.vehicle import Vehicle, VehicleClassification
+from src.common.road_network import RoadNetwork, Lane
+from src.common.vehicle import StateLongitudinal, StateLateral
 
 
 @enum.unique
@@ -287,6 +293,165 @@ def calculate_tv(a_0, j_input, v_0, v_max):
     t_v = min(abs(t_1), abs(t_2))
 
     return t_v
+
+
+def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network: RoadNetwork, dt: float,
+                   ego_vehicle: Vehicle = None) -> Vehicle:
+    """
+    Transforms a CommonRoad obstacle to a vehicle object
+
+    :param obstacle: CommonRoad obstacle
+    :param vehicle_param: dictionary with vehicle parameters
+    :param ego_vehicle: ego vehicle object (if it exist already) for reference generation
+    :param road_network: CommonRoad lanelet network
+    :param dt: time step size
+    :return: vehicle object
+    """
+    acceleration = _compute_acceleration(obstacle.initial_state.velocity,
+                                         obstacle.prediction.trajectory.state_list[0].velocity, dt)
+    jerk = _compute_jerk(acceleration, 0, dt)
+    if ego_vehicle is None:
+        vehicle_classification = VehicleClassification.EGO_VEHICLE
+        initial_lanelets = [road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+                            for lanelet_id in obstacle.initial_shape_lanelet_ids]
+        if LaneletType.ACCESS_RAMP in initial_lanelets[0].lanelet_type:
+            main_carriage_way_lanelet_id = _find_main_carriage_way_lanelet_id(initial_lanelets[0], road_network)
+            lane = road_network.find_lane_by_obstacle([main_carriage_way_lanelet_id], [])
+        else:
+            lane = road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
+                                                      list(obstacle.initial_shape_lanelet_ids))
+        reference_lane = lane
+    elif _adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
+                          list(obstacle.initial_shape_lanelet_ids)[0], road_network):
+        vehicle_classification = VehicleClassification.ADJACENT_VEHICLE
+        lane = road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
+                                                  list(obstacle.initial_shape_lanelet_ids))
+        reference_lane = ego_vehicle.lane
+    else:
+        vehicle_classification = VehicleClassification.CROSSING_VEHICLE
+        lane = road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
+                                                  list(obstacle.initial_shape_lanelet_ids))
+        reference_lane = ego_vehicle.lane
+    state_lon, state_lat = \
+        create_curvilinear_states(obstacle.initial_state.position, obstacle.initial_state.velocity, acceleration, jerk,
+                                  obstacle.initial_state.orientation, reference_lane)
+    vehicle = None
+    if state_lon is not None or state_lat is not None:
+        vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
+                          obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
+                          obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state, vehicle_classification,
+                          lane, vehicle_param)
+
+    for state in obstacle.prediction.trajectory.state_list:
+        acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
+        jerk = _compute_jerk(acceleration, 0, dt)
+
+        state_lon, state_lat = create_curvilinear_states(state.position, state.velocity, acceleration, jerk,
+                                                         state.orientation, reference_lane)
+        if state_lon is None or state_lat is None:
+            continue
+        vehicle.append_time_step(state.time_step, state_lon, state_lat, state,
+                                 obstacle.prediction.shape_lanelet_assignment[state.time_step],
+                                 obstacle.signal_state_at_time_step(state.time_step))
+    return vehicle
+
+
+def create_curvilinear_states(position: List[float], velocity: float,
+                              acceleration: float, jerk: float, orientation: float, lane: Lane) \
+        -> Union[Tuple[StateLongitudinal, StateLateral], Tuple[None, None]]:
+    """
+    Computes initial state of ego vehicle
+
+    :param position: position of vehicle in cartesian coordinates
+    :param velocity: velocity of vehicle
+    :param acceleration: acceleration of vehicle
+    :param jerk: jerk of vehicle
+    :param orientation: orientation of vehicle
+    :param lane: reference lane of the vehicle
+    :return: lateral and longitudinal state of vehicle
+    """
+    try:
+        s, d = lane.clcs.convert_to_curvilinear_coords(position[0], position[1])
+    except ValueError:
+        print("Vehicle out of projection domain: State will not be considered")
+        return None, None
+    theta_cl = lane.orientation(s)
+    if acceleration is not None and jerk is not None:
+        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration, j=jerk)
+    elif acceleration is not None:
+        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
+    else:
+        x_lon = StateLongitudinal(s=s, v=velocity)
+    x_lat = StateLateral(d=d, theta=(theta_cl - orientation))
+
+    return x_lon, x_lat
+
+
+def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int, road_network: RoadNetwork) -> bool:
+    """
+    Evaluates if a vehicle is in a to the ego vehicle adjacent lane
+
+    :param ego_lanelet_id: IDs of lanelets the ego vehicle is on
+    :param obs_lanelet_id: IDs of lanelets the other vehicle is on
+    :param road_network: CommonRoad lanelet network
+    :return: boolean indicating if the vehicle is in an adjacent lane
+    """
+    adjacent_lanelet_ids = {ego_lanelet_id}
+    ego_lanelet = road_network.lanelet_network.find_lanelet_by_id(ego_lanelet_id)
+    current_lanelet = ego_lanelet
+    while current_lanelet.adj_left_same_direction is not None:
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
+        adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
+    while current_lanelet.adj_right_same_direction is not None:
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
+        adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
+    for lanelet_id in list(adjacent_lanelet_ids):
+        lane = road_network.find_lane_by_lanelet(lanelet_id)
+        if obs_lanelet_id in lane.contained_lanelets:
+            return True
+    return False
+
+
+def _find_main_carriage_way_lanelet_id(lanelet: Lanelet, road_network) -> int:
+    """
+    Searches for an adjacent lanelet part of the main carriageway
+
+    :param lanelet: start lanelet
+    :return: ID of a lanelet which is part of the main carriageway
+    """
+    current_lanelet = lanelet
+    if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
+        return current_lanelet.lanelet_id
+    while current_lanelet.adj_left_same_direction is not None:
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
+        if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
+            return current_lanelet.lanelet_id
+
+
+def _compute_jerk(current_acceleration: float, previous_acceleration: float, dt: float) -> float:
+    """
+    Computes jerk given acceleration
+
+    :param current_acceleration: acceleration of current time step
+    :param previous_acceleration: acceleration of previous time step
+    :param dt: time step size
+    :return: jerk
+    """
+    jerk = (current_acceleration - previous_acceleration) / dt
+    return jerk
+
+
+def _compute_acceleration(previous_velocity: float, current_velocity: float, dt: float):
+    """
+    Computes acceleration given velocity
+
+    :param current_velocity: velocity of current time step
+    :param previous_velocity: velocity of previous time step
+    :param dt: time step size
+    :return: acceleration
+    """
+    acceleration = (current_velocity - previous_velocity) / dt
+    return acceleration
 
 
 def load_yaml(file_name: str) -> Union[Dict, None]:

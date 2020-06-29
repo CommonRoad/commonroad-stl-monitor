@@ -18,13 +18,15 @@
 traffic_rules_forward:
     R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
     R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
-    R_G8: G(~(single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))) -> drives_rightmost_general__x_ego) #only when no lane change -> drive rightmost
-
+   # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
+   # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) | ~(~single_lane__x_ego U G(single_lane__x_ego)) | ~(single_lane__x_ego U (~single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))))) # -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
+    # assumption: vehicle follows lane
+    # new rule lane change has to be finished
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle) && in_same_lane(time_step, ego_vehicle, other_vehicle) && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle)
-                 && pre(!cut_in(time_step, other_vehicle, ego_vehicle)))) -> keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle))
+                 && pre(!cut_in(time_step, other_vehicle, ego_vehicle)))) -> keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode))
 
-    R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles))
+    R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode))
 
     R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle) && keeps_fov_speed_limit(time_step, ego_vehicle)
                  && keeps_braking_speed_limit(time_step, ego_vehicle) && keeps_type_speed_limit(time_step, ego_vehicle))
@@ -33,7 +35,7 @@ traffic_rules_backward:
 
     R_G5: always(keeps_sign_min_speed_limit(time_step, ego_vehicle))
 
-    R_G6: always(cut_in(time_step, ego_vehicle, other_vehicle) && in_front_of(time_step, other_vehicle, ego_vehicle) -> keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle))
+    R_G6: always(cut_in(time_step, ego_vehicle, other_vehicle) && in_front_of(time_step, other_vehicle, ego_vehicle) -> keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode))
 
     R_I1: always(!(in_congestion(time_step, ego_vehicle, other_vehicles) || exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles))
                  -> !in_standstill(time_step, ego_vehicle))

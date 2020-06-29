@@ -11,18 +11,16 @@ from src.common.helper import OperatingMode
 
 class VelocityPredicateCollection(PredicateCollection):
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict,
-                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter,
-                 operating_mode: OperatingMode):
+                 traffic_rules_param: Dict, necessary_predicates: Set[str], traffic_sign_interpreter):
         """
         :param road_network: CommonRoad lanelet network
         :param simulation_param: dictionary with parameters of the simulation environment
         :param traffic_rules_param: dictionary with parameters of traffic rule parameters
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         super().__init__(road_network, simulation_param,  traffic_rules_param,
-                         necessary_predicates, traffic_sign_interpreter, operating_mode)
+                         necessary_predicates, traffic_sign_interpreter)
 
     def _speed_limit_suggested(self, vehicle: Vehicle, time_step: int) -> float:
         """
@@ -327,3 +325,11 @@ class VelocityPredicateCollection(PredicateCollection):
                     predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle)
         return predicate_trace
+
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass
+
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+            Dict[str, Dict[int, Dict[int, float]]]:
+        pass

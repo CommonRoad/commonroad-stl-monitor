@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_overtaking_exit_ramp" date="2020-06-23">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Sebastian Maierhofer" affiliation="Technical University of Munich, Germany" source="CommonRoad Monitor" benchmarkID="DEU_test_overtaking_exit_ramp" date="2020-06-25">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>0</gpsLatitude>
     <gpsLongitude>0</gpsLongitude>
   </location>
   <scenarioTags>
-    <parallel_lanes/>
-    <multi_lane/>
     <interstate/>
+    <multi_lane/>
+    <parallel_lanes/>
     <no_oncoming_traffic/>
   </scenarioTags>
   <lanelet id="1">
@@ -500,8 +500,8 @@
     <predecessor ref="11"/>
     <successor ref="2"/>
     <adjacentLeft ref="12" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="2">
@@ -682,8 +682,8 @@
     <predecessor ref="1"/>
     <successor ref="3"/>
     <adjacentLeft ref="13" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="3">
@@ -864,8 +864,8 @@
     <predecessor ref="2"/>
     <successor ref="4"/>
     <adjacentLeft ref="14" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="4">
@@ -1046,8 +1046,8 @@
     <predecessor ref="3"/>
     <successor ref="5"/>
     <adjacentLeft ref="15" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="5">
@@ -1228,8 +1228,8 @@
     <predecessor ref="4"/>
     <successor ref="6"/>
     <adjacentLeft ref="16" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="6">
@@ -1410,8 +1410,8 @@
     <predecessor ref="5"/>
     <successor ref="7"/>
     <adjacentLeft ref="17" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="7">
@@ -1592,8 +1592,8 @@
     <predecessor ref="6"/>
     <successor ref="8"/>
     <adjacentLeft ref="18" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="8">
@@ -1774,8 +1774,8 @@
     <predecessor ref="7"/>
     <successor ref="9"/>
     <adjacentLeft ref="19" drivingDir="same"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="9">
@@ -1946,8 +1946,8 @@
       <lineMarking>solid</lineMarking>
     </rightBound>
     <predecessor ref="8"/>
-    <laneletType>exitRamp</laneletType>
     <laneletType>interstate</laneletType>
+    <laneletType>exitRamp</laneletType>
     <userOneWay>vehicle</userOneWay>
   </lanelet>
   <lanelet id="11">

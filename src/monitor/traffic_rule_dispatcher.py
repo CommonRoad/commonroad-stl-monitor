@@ -46,16 +46,16 @@ class TrafficRuleDispatcher:
                                                          road_network.lanelet_network)
         self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
                                                                 traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter, operating_mode)
+                                                                traffic_sign_interpreter)
         self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
                                                                 traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter, operating_mode)
+                                                                traffic_sign_interpreter)
         self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
                                                               traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter, operating_mode)
+                                                              traffic_sign_interpreter)
         self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
                                                               traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter, operating_mode)
+                                                              traffic_sign_interpreter)
 
         self._monitors_backward = self.create_backward_monitors(traffic_rules_backward, traffic_rule_sets,
                                                                 activated_traffic_rule_sets,
@@ -213,7 +213,8 @@ class TrafficRuleDispatcher:
                 self._reset_backward_monitors()
                 rule_evaluation[rule.name] = True
                 for time_step in time_steps:
-                    predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle, 'other_vehicles': other_vehicles}
+                    predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle, 'other_vehicles': other_vehicles,
+                                  'operating_mode': OperatingMode.MONITOR}
                     result = rule.evaluate_monitor(predicates)
                     if result is False:
                         rule_evaluation[rule.name] = False
@@ -227,7 +228,7 @@ class TrafficRuleDispatcher:
                             continue
                         predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle,
                                       'other_vehicles': other_vehicles,
-                                      'other_vehicle': vehicle}
+                                      'other_vehicle': vehicle, 'operating_mode': OperatingMode.MONITOR}
                         result = rule.evaluate_monitor(predicates)
                         if result is False:
                             rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = False
