@@ -63,7 +63,6 @@ class CommonRoadObstacleEvaluation:
                                            self._operating_mode)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
-            other_vehicles = []
             if not (self.simulation_param.get("operating_mode") == "test"
                     or self.simulation_param.get("operating_mode") == "evaluation"
                     or self.simulation_param.get("operating_mode") == "single_scenario"
@@ -75,18 +74,12 @@ class CommonRoadObstacleEvaluation:
                 or self.simulation_param.get("operating_mode") == "single_scenario_limited") \
                     and self.simulation_param.get("num_vehicles") <= self.num_vehicles + len(vehicle_evaluation):
                 break
-            if ego.prediction is not None:
-                ego_vehicle = create_vehicle(ego, self.ego_vehicle_param, self._road_network,
-                                             self._simulation_param.get("dt"))
-                for obs in scenario.dynamic_obstacles:
-                    if obs.obstacle_id == ego.obstacle_id or obs.prediction is None \
-                            or obs.initial_state.time_step > ego.prediction.trajectory.state_list[-1].time_step \
-                            or ego.initial_state.time_step > obs.prediction.trajectory.state_list[-1].time_step:
-                        continue
-                    vehicle = create_vehicle(obs, self._other_vehicles_param, self._road_network,
-                                             self._simulation_param.get("dt"), ego_vehicle)
-                    other_vehicles.append(vehicle)
-                vehicle_evaluation.append((ego_vehicle.id, dispatcher.evaluate_trajectory(ego_vehicle, other_vehicles)))
+
+            ego_vehicle, other_vehicles = create_scenario_vehicles(self._simulation_param.get("dt"),
+                                                                   scenario.obstacle_by_id(ego.obstacle_id),
+                                                                   self._ego_vehicle_param, self._other_vehicles_param,
+                                                                   self._road_network, scenario.dynamic_obstacles)
+            vehicle_evaluation.append((ego_vehicle.id, dispatcher.evaluate_trajectory(ego_vehicle, other_vehicles)))
 
         return vehicle_evaluation
 

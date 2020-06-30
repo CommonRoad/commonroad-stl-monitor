@@ -68,10 +68,11 @@ class BrakingPredicateCollection(PredicateCollection):
         :param t_react_follow: reaction time of following vehicle
         :returns boolean indicating satisfaction
         """
-        v_r = v_follow + a_max_follow * t_react_follow
+        assert a_min_lead < 0 < a_max_follow and a_min_follow < 0, \
+            '<BrakingPredicateCollection/safe_distance>: acceleration is not valid'
         d_safe = \
-            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_r**2) / (-2 * abs(a_min_follow)) \
-            + v_follow * t_react_follow + 0.5 * a_max_follow * t_react_follow**2
+            (v_lead**2) / (-2 * abs(a_min_lead)) - (v_follow**2) / (-2 * abs(a_min_follow)) \
+            + v_follow * t_react_follow
 
         return d_safe
 

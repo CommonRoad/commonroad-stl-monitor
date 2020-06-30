@@ -6,6 +6,7 @@ import ruamel.yaml
 import math
 import enum
 from decimal import Decimal
+import warnings
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -452,6 +453,33 @@ def _compute_acceleration(previous_velocity: float, current_velocity: float, dt:
     """
     acceleration = (current_velocity - previous_velocity) / dt
     return acceleration
+
+
+def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle, ego_vehicle_param: Dict,
+                             other_vehicles_param: Dict, road_network: RoadNetwork,
+                             dynamic_obstacles: List[DynamicObstacle]) -> Tuple[Vehicle, List[Vehicle]]:
+    """
+    Creates vehicles object for all obstacles within a CommonRoad scenario given
+
+    :param ego_obstacle: CommonRoad obstacle of ego vehicle
+    :param dt: time step size
+    :param ego_vehicle_param: :param vehicle_param: dictionary with vehicle ego parameters
+    :param other_vehicles_param: :param vehicle_param: dictionary with vehicle parameters of other traffic participants
+    :param road_network: road network
+    :param dynamic_obstacles: list containing dynamic obstacles of CommonRoad scenario
+
+    :return: ego vehicle object and list of vehicle objects containing other traffic participants
+    """
+    other_vehicles = []
+    ego_vehicle = create_vehicle(ego_obstacle, ego_vehicle_param, road_network, dt)
+    for obs in dynamic_obstacles:
+        if obs.obstacle_id == ego_obstacle.obstacle_id or obs.prediction is None \
+                or obs.initial_state.time_step > ego_obstacle.prediction.trajectory.state_list[-1].time_step \
+                or ego_obstacle.initial_state.time_step > obs.prediction.trajectory.state_list[-1].time_step:
+            continue
+        vehicle = create_vehicle(obs, other_vehicles_param, road_network, dt, ego_vehicle)
+        other_vehicles.append(vehicle)
+    return ego_vehicle, other_vehicles
 
 
 def load_yaml(file_name: str) -> Union[Dict, None]:
