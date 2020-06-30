@@ -110,25 +110,26 @@ class Vehicle:
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
-    def __init__(self, state_lon: StateLongitudinal, state_lat: StateLateral, shape: Union[Shape, Rectangle],
-                 cr_state: State, vehicle_id: int, obstacle_type: ObstacleType, lanelet_assignment: Set[int],
-                 signal_state: SignalState, vehicle_classification: VehicleClassification, lane: Lane,
-                 vehicle_param: Dict):
+    def __init__(self, states_lon: Dict[int, StateLongitudinal],
+                 states_lat: Dict[int, StateLateral], shape: Union[Shape, Rectangle],
+                 cr_states: Dict[int, State], vehicle_id: int, obstacle_type: ObstacleType, vehicle_param: Dict,
+                 lanelet_assignments: Dict[int, Set[int]], signal_states: Dict[int, SignalState] = None,
+                 vehicle_classification: Dict[int, VehicleClassification] = None,  lane: Union[Lane, List[Lane]] = None):
         """
-        :param state_lon: initial longitudinal state of vehicle
-        :param state_lat: initial lateral state of vehicle
+        :param states_lon: list of longitudinal states for initialization
+        :param states_lat: list of lateral states for initialization
         :param shape: CommonRoad shape of vehicle
-        :param cr_state: initial CommonRoad state of vehicle
+        :param cr_states: initial CommonRoad state of vehicle
         :param vehicle_id: id of vehicle
         :param obstacle_type: type of the vehicle, e.g. parked car, car, bus, ...
-        :param lanelet_assignment: initial lanelet assignment
-        :param signal_state: initial signal state of vehicle
+        :param lanelet_assignments: initial lanelet assignment
+        :param signal_states: initial signal state of vehicle
         """
-        self._states_lon = {cr_state.time_step: state_lon}
-        self._states_lat = {cr_state.time_step: state_lat}
-        self._states_cr = {cr_state.time_step: cr_state}
-        self._lanelet_assignment = {cr_state.time_step: lanelet_assignment}
-        self._signal_series = {cr_state.time_step: signal_state}
+        self._states_lon = states_lon
+        self._states_lat = states_lat
+        self._states_cr = cr_states
+        self._lanelet_assignment = lanelet_assignments
+        self._signal_series = signal_states
         self._shape = shape
         self._id = vehicle_id
         self._obstacle_type = obstacle_type

@@ -161,7 +161,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
         print(result_backward)
         self.assertEqual(exp_result, result_backward)
 
-    def test_unnecessary_braking_1(self):
+    def test_unnecessary_braking(self):
         # one vehicle accelerates (1000)
         # one vehicle drives with constant velocity (1001)
         # two leading vehicle which brake only minimal (1005, 1007)

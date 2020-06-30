@@ -336,13 +336,13 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network:
     state_lon, state_lat = \
         create_curvilinear_states(obstacle.initial_state.position, obstacle.initial_state.velocity, acceleration, jerk,
                                   obstacle.initial_state.orientation, reference_lane)
-    vehicle = None
-    if state_lon is not None or state_lat is not None:
-        vehicle = Vehicle(state_lon, state_lat, obstacle.obstacle_shape,
-                          obstacle.initial_state, obstacle.obstacle_id, obstacle.obstacle_type,
-                          obstacle.initial_shape_lanelet_ids, obstacle.initial_signal_state, vehicle_classification,
-                          lane, vehicle_param)
 
+    state_list_lon = {0: state_lon}
+    state_list_lat = {0: state_lat}
+    state_list_cr = {0: obstacle.initial_state}
+    signal_series = {0: obstacle.initial_signal_state}
+    lanelet_assignments = {0: obstacle.initial_shape_lanelet_ids}
+    vehicle_classifications = {0: vehicle_classification}
     for state in obstacle.prediction.trajectory.state_list:
         acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
         jerk = _compute_jerk(acceleration, 0, dt)
@@ -351,9 +351,16 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network:
                                                          state.orientation, reference_lane)
         if state_lon is None or state_lat is None:
             continue
-        vehicle.append_time_step(state.time_step, state_lon, state_lat, state,
-                                 obstacle.prediction.shape_lanelet_assignment[state.time_step],
-                                 obstacle.signal_state_at_time_step(state.time_step))
+        state_list_lon[state.time_step] = state_lon
+        state_list_lat[state.time_step] = state_lat
+        state_list_cr[state.time_step] = state
+        signal_series[state.time_step] = obstacle.signal_state_at_time_step(state.time_step)
+        lanelet_assignments[state.time_step] = obstacle.prediction.shape_lanelet_assignment[state.time_step]
+        vehicle_classifications[state.time_step] = vehicle_classification
+
+    vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape,
+                      state_list_cr, obstacle.obstacle_id, obstacle.obstacle_type, vehicle_param,
+                      lanelet_assignments, signal_series, vehicle_classifications, lane)
     return vehicle
 
 
