@@ -117,7 +117,7 @@ class TestBrakingPredicates(unittest.TestCase):
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                               2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
         cr_state_list_ego = {0: State(acceleration=-1, time_step=0), 1: State(acceleration=0, time_step=1),
-                             2: State(acceleration=0, time_step=1), 3: State(acceleration=0, time_step=1)}
+                             2: State(acceleration=0, time_step=2), 3: State(acceleration=0, time_step=3)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
 
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
@@ -128,7 +128,7 @@ class TestBrakingPredicates(unittest.TestCase):
         state_list_lat_other = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                                 2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
         cr_state_list_other = {0: State(acceleration=-1, time_step=0), 1: State(acceleration=0, time_step=1),
-                               2: State(acceleration=0, time_step=1), 3: State(acceleration=0, time_step=1)}
+                               2: State(acceleration=0, time_step=2), 3: State(acceleration=0, time_step=3)}
         lanelet_assignments_other = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         other_vehicle = Vehicle(state_list_lon_other, state_list_lat_other, Rectangle(5, 2), cr_state_list_other, 0,
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_other, None, None, None)
@@ -220,19 +220,19 @@ class TestBrakingPredicates(unittest.TestCase):
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                               2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
-                             2: State(position=20, time_step=1), 3: State(position=30, time_step=1),
-                             4: State(position=40, time_step=1), 5: State(position=50, time_step=1)}
+                             2: State(position=20, time_step=2), 3: State(position=30, time_step=3),
+                             4: State(position=40, time_step=4), 5: State(position=50, time_step=5)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}, 5: {1}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # other vehicle 1
         state_list_lon_other_1 = {0: StateLongitudinal(s=10, v=10, a=1), 1: StateLongitudinal(s=20, v=10, a=-4),
-                                2: StateLongitudinal(s=30, v=10, a=-2), 3: StateLongitudinal(s=40, v=10, a=-1.5)}
+                                  2: StateLongitudinal(s=30, v=10, a=-2), 3: StateLongitudinal(s=40, v=10, a=-1.5)}
         state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
-                                2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
+                                  2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
         cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=20, time_step=1),
-                               2: State(position=30, time_step=1), 3: State(position=40, time_step=1)}
+                                 2: State(position=30, time_step=1), 3: State(position=40, time_step=1)}
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         other_vehicle_1 = Vehicle(state_list_lon_other_1, state_list_lat_other_1, Rectangle(5, 2),
                                   cr_state_list_other_1, 0, ObstacleType.CAR, self._ego_vehicle_param,
