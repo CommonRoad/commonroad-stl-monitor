@@ -415,21 +415,22 @@ class TestGeneralPredicates(unittest.TestCase):
         sol_2 = general_predicates.interstate_broad_enough(1, ego_vehicle)
         sol_3 = general_predicates.interstate_broad_enough(2, ego_vehicle)
 
-
         self.assertEqual(exp_sol_1, sol_1)
         self.assertEqual(exp_sol_2, sol_2)
         self.assertEqual(exp_sol_3, sol_3)
 
     def test_cut_in(self):
         # expected solutions
-        exp_sol_monitor_mode_1 = False
-        exp_sol_monitor_mode_2 = True
-        exp_sol_monitor_mode_3 = False
-        exp_sol_monitor_mode_4 = False
+        exp_sol_monitor_mode_1 = False  # before cut-in -> ego vehicle occupies only single lane
+        exp_sol_monitor_mode_2 = True  # during cut-in
+        exp_sol_monitor_mode_3 = False  # after cut-in
+        exp_sol_monitor_mode_4 = False  # driving back to initial lane
+        exp_sol_monitor_mode_5 = False  # during cut-in -> but other vehicles is in another lane
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
         lanelet_network.add_lanelet(self._lanelet_2)
+        lanelet_network.add_lanelet(self._lanelet_3)
         road_network = RoadNetwork(lanelet_network, self._road_network_param)
         traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
                                                          road_network.lanelet_network)
@@ -448,27 +449,38 @@ class TestGeneralPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # other vehicle 1
-        state_list_lon_other_1 = {1: StateLongitudinal(s=0, v=10), 2: StateLongitudinal(s=10, v=10),
-                                  3: StateLongitudinal(s=20, v=10), 4: StateLongitudinal(s=30, v=10)}
-        state_list_lat_other_1 = {1: StateLateral(d=0, theta=0), 2: StateLateral(d=0, theta=0),
-                                  3: StateLateral(d=0, theta=0), 4: StateLateral(d=0, theta=0)}
-        cr_state_list_other_1 = {1: State(position=10, time_step=0), 2: State(position=20, time_step=1),
-                                 3: State(position=30, time_step=2), 4: State(position=40, time_step=3)}
-        lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}, 4: {2}}
+        state_list_lon_other_1 = {0: StateLongitudinal(s=0, v=10), 1: StateLongitudinal(s=10, v=10),
+                                  2: StateLongitudinal(s=20, v=10), 3: StateLongitudinal(s=30, v=10)}
+        state_list_lat_other_1 = {0: StateLateral(d=4, theta=0), 1: StateLateral(d=4, theta=0),
+                                  2: StateLateral(d=4, theta=0), 3: StateLateral(d=4, theta=0)}
+        cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=20, time_step=1),
+                                 2: State(position=30, time_step=2), 3: State(position=40, time_step=3)}
+        lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}}
         other_vehicle_1 = Vehicle(state_list_lon_other_1, state_list_lat_other_1, Rectangle(5, 2),
                                   cr_state_list_other_1, 0, ObstacleType.CAR, self._ego_vehicle_param,
                                   lanelet_assignments_other_1, None, None, None)
+
+        # other vehicle 2
+        state_list_lon_other_2 = {1: StateLongitudinal(s=0, v=10)}
+        state_list_lat_other_2 = {1: StateLateral(d=10, theta=0)}
+        cr_state_list_other_2 = {1: State(position=10, time_step=1)}
+        lanelet_assignments_other_2 = {1: {3}}
+        other_vehicle_2 = Vehicle(state_list_lon_other_2, state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 0, ObstacleType.CAR, self._ego_vehicle_param,
+                                  lanelet_assignments_other_2, None, None, None)
 
         # Monitor-Mode
         sol_monitor_mode_1 = general_predicates.cut_in(0, ego_vehicle, other_vehicle_1)
         sol_monitor_mode_2 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_1)
         sol_monitor_mode_3 = general_predicates.cut_in(2, ego_vehicle, other_vehicle_1)
         sol_monitor_mode_4 = general_predicates.cut_in(3, ego_vehicle, other_vehicle_1)
+        sol_monitor_mode_5 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_2)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
 
     def test_road_width(self):
         # expected solutions

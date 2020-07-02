@@ -196,9 +196,9 @@ class GeneralPredicateCollection(PredicateCollection):
                 self._road_network.find_lane_ids_by_lanelets(vehicle_p.lanelet_assignment[time_step])):
             return False
         if vehicle_k.states_lat[time_step].d < vehicle_p.states_lat[time_step].d \
-                and vehicle_k.states_lat[time_step].theta < 0 or \
+                and vehicle_k.states_lat[time_step].theta > 0 or \
                 vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d \
-                and vehicle_k.states_lat[time_step].theta > 0:
+                and vehicle_k.states_lat[time_step].theta < 0:
             return True
         else:
             return False
