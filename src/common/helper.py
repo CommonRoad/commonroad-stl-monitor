@@ -390,7 +390,7 @@ def create_curvilinear_states(position: List[float], velocity: float,
         x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
     else:
         x_lon = StateLongitudinal(s=s, v=velocity)
-    x_lat = StateLateral(d=d, theta=(theta_cl - orientation))
+    x_lat = StateLateral(d=d, theta=(orientation - theta_cl))
 
     return x_lon, x_lat
 
