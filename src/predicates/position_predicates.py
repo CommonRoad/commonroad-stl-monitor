@@ -1,4 +1,4 @@
-from typing import List, Dict, Set, Union
+from typing import List, Dict, Set, Union, Tuple
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
@@ -463,13 +463,14 @@ class PositionPredicateCollection(PredicateCollection):
                 return False
         return True
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_same_lane__x_ego__x_o": {},
@@ -563,10 +564,12 @@ class PositionPredicateCollection(PredicateCollection):
                         self.on_main_carriage_way(time_step, other_vehicle)
         return predicate_trace
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> \
             Dict[str, Dict[int, Dict[int, float]]]:
         pass
 
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> \
             Dict[str, Dict[int, Dict[int, float]]]:
         pass

@@ -1,4 +1,4 @@
-from typing import List, Dict, Set, Union
+from typing import List, Dict, Set, Union, Tuple
 
 from src.predicates.predicate_collection import PredicateCollection
 from src.common.road_network import RoadNetwork
@@ -152,13 +152,14 @@ class BrakingPredicateCollection(PredicateCollection):
         elif operating_mode is OperatingMode.ROBUSTNESS:  # returns difference to upper bound defined by constraint
             return min(vehicle_p.states_lon[time_step].a, 0) - vehicle_k.states_lon[time_step].a
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
@@ -175,7 +176,7 @@ class BrakingPredicateCollection(PredicateCollection):
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
             predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
             predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in ego_vehicle.states_lon.keys():
+            for time_step in range(time_interval[0], time_interval[1]+1):
                 if other_vehicle.states_lon.get(time_step) is None:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
                     predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
@@ -193,13 +194,14 @@ class BrakingPredicateCollection(PredicateCollection):
 
         return predicate_trace
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         """
         Extracts constraints for a vehicle
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of bool values for each predicate
         """
         constraint_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
@@ -216,7 +218,7 @@ class BrakingPredicateCollection(PredicateCollection):
             constraint_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
             constraint_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
             constraint_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in ego_vehicle.states_lon.keys():
+            for time_step in range(time_interval[0], time_interval[1]+1):
                 if other_vehicle.states_lon.get(time_step) is None:
                     constraint_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
                     constraint_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
@@ -234,13 +236,14 @@ class BrakingPredicateCollection(PredicateCollection):
 
         return constraint_trace
 
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         """
         Extracts constraints for a vehicle
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of bool values for each predicate
         """
         robustness_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
@@ -257,7 +260,7 @@ class BrakingPredicateCollection(PredicateCollection):
             robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
             robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
             robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in ego_vehicle.states_lon.keys():
+            for time_step in range(time_interval[0], time_interval[1]+1):
                 if other_vehicle.states_lon.get(time_step) is None:
                     robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
                     robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True

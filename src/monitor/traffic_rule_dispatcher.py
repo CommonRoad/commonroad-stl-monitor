@@ -127,10 +127,18 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary containing predicate evaluation
         """
-        velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
-        position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
-        braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
-        general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles)
+        velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
+                                                                            (min(ego_vehicle.states_lon.keys()),
+                                                                             max(ego_vehicle.states_lon.keys())))
+        position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
+                                                                            (min(ego_vehicle.states_lon.keys()),
+                                                                             max(ego_vehicle.states_lon.keys())))
+        braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
+                                                                          (min(ego_vehicle.states_lon.keys()),
+                                                                           max(ego_vehicle.states_lon.keys())))
+        general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
+                                                                          (min(ego_vehicle.states_lon.keys()),
+                                                                           max(ego_vehicle.states_lon.keys())))
 
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates
