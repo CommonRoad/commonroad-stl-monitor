@@ -1,4 +1,4 @@
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Union
 
 from commonroad.scenario.lanelet import Lanelet
 
@@ -6,6 +6,7 @@ from src.predicates.predicate_collection import PredicateCollection
 from src.predicates.position_predicates import PositionPredicateCollection
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
+from src.common.helper import OperatingMode
 
 
 class GeneralPredicateCollection(PredicateCollection):
@@ -114,20 +115,40 @@ class GeneralPredicateCollection(PredicateCollection):
             lanelets.add(la)
         return lanelets
 
-    def makes_u_turn(self, time_step: int, vehicle: Vehicle) -> bool:
+    def makes_u_turn(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Predicate which evaluates if vehicle makes U-turn
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
+        robustness_values = []
+        constraint_values_min = []
+        constraint_values_max = []
         lanes = self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
         for la in lanes:
-            if self._traffic_rules_param.get("u_turn") <= \
-                    abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)):
-                return True
-        return False
+            if operating_mode is OperatingMode.MONITOR:
+                if self._traffic_rules_param.get("u_turn") <= \
+                        abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)):
+                        return True
+            elif operating_mode is OperatingMode.CONSTRAINT:
+                constraint_values_min.append(
+                    la.orientation(vehicle.states_lon[time_step].s) - self._traffic_rules_param.get("u_turn"))
+                constraint_values_max.append(
+                    self._traffic_rules_param.get("u_turn") + la.orientation(vehicle.states_lon[time_step].s))
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                robustness_values.append(
+                    self._traffic_rules_param.get("u_turn")
+                    - abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)))
+        if operating_mode is OperatingMode.MONITOR:
+            return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return (max(constraint_values_min), min(constraint_values_max))
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return min(robustness_values)
 
     def _road_width(self, lanelet: Lanelet, position: float) -> float:
         """

@@ -178,6 +178,8 @@ class TestBrakingPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
 
     def test_unnecessary_braking(self):
+        self._traffic_rule_param["a_abrupt"] = -2
+
         # expected solutions
         exp_sol_monitor_mode_1 = False  # a_ego > 0
         exp_sol_monitor_mode_2 = True  # a_ego < a_lead - |a_abrupt| for single leading vehicle
@@ -185,21 +187,20 @@ class TestBrakingPredicates(unittest.TestCase):
         exp_sol_monitor_mode_4 = False  # a_ego > a_lead - |a_abrupt| for all leading vehicles
         exp_sol_monitor_mode_5 = True  # a_ego < a_abrupt; no leading vehicle
         exp_sol_monitor_mode_6 = False  # a_ego > a_abrupt; no leading vehicle
-        exp_sol_constraint_mode_1 = -1
-        exp_sol_constraint_mode_2 = -3
-        exp_sol_constraint_mode_3 = -4
-        exp_sol_constraint_mode_4 = -3.5
-        exp_sol_constraint_mode_5 = -2
-        exp_sol_constraint_mode_6 = -2
-        exp_sol_robustness_mode_1 = 2
-        exp_sol_robustness_mode_2 = -2
-        exp_sol_robustness_mode_3 = -3
-        exp_sol_robustness_mode_4 = 0.5
-        exp_sol_robustness_mode_5 = -6
-        exp_sol_robustness_mode_6 = 4
+        exp_sol_constraint_mode_1 = 1 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_constraint_mode_2 = -1 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_constraint_mode_3 = -2 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_constraint_mode_4 = -1.5 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_constraint_mode_5 = self._traffic_rule_param["a_abrupt"]
+        exp_sol_constraint_mode_6 = self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_1 = -self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_2 = -4 - self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_3 = -5 - self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_4 = 2.5 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_5 = -4 + self._traffic_rule_param["a_abrupt"]
+        exp_sol_robustness_mode_6 = 2 - self._traffic_rule_param["a_abrupt"]
 
-        self._traffic_rule_param["a_abrupt"] = -2
-        right_vertices = np.array([[0, 0], [10, 0], [20, 0], [30, .5], [40, 1], [50, 1], [60, 1], [70, 0], [80, 0]])
+        right_vertices = np.array([[0, 0], [10, 0], [20, 0], [30, 0], [40, 0], [50, 0], [60, 0], [70, 0], [80, 0]])
         left_vertices = np.array([[0, 4], [10, 4], [20, 4], [30, 4], [40, 4], [50, 4], [60, 4], [70, 4], [80, 4]])
         center_vertices = np.array([[0, 2], [10, 2], [20, 2], [30, 2], [40, 2], [50, 2], [60, 2], [70, 2], [80, 2]])
         lanelet_id = 1
