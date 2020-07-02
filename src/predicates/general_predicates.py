@@ -90,7 +90,7 @@ class GeneralPredicateCollection(PredicateCollection):
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
-                    veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_slow_moving_traffic_velocity"):
+                    veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_queue_of_vehicles_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_queue_of_vehicles"):
             return True
