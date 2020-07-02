@@ -56,9 +56,9 @@ class TestBrakingPredicates(unittest.TestCase):
 
         # Constraint-Mode
         sol_constraint_mode_1 = BrakingPredicateCollection.keeps_safe_distance_prec(0, ego_vehicle, other_vehicle,
-                                                                            OperatingMode.CONSTRAINT)
+                                                                                    OperatingMode.CONSTRAINT)
         sol_constraint_mode_2 = BrakingPredicateCollection.keeps_safe_distance_prec(1, ego_vehicle, other_vehicle,
-                                                                            OperatingMode.CONSTRAINT)
+                                                                                    OperatingMode.CONSTRAINT)
 
         self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
         self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
@@ -186,13 +186,17 @@ class TestBrakingPredicates(unittest.TestCase):
         exp_sol_monitor_mode_5 = True  # a_ego < a_abrupt; no leading vehicle
         exp_sol_monitor_mode_6 = False  # a_ego > a_abrupt; no leading vehicle
         exp_sol_constraint_mode_1 = -1
-        exp_sol_constraint_mode_2 = -2
-        exp_sol_constraint_mode_3 = 0
-        exp_sol_constraint_mode_4 = 0
-        exp_sol_robustness_mode_1 = 1
-        exp_sol_robustness_mode_2 = -1
-        exp_sol_robustness_mode_3 = -1
-        exp_sol_robustness_mode_4 = -2
+        exp_sol_constraint_mode_2 = -3
+        exp_sol_constraint_mode_3 = -4
+        exp_sol_constraint_mode_4 = -3.5
+        exp_sol_constraint_mode_5 = -2
+        exp_sol_constraint_mode_6 = -2
+        exp_sol_robustness_mode_1 = 2
+        exp_sol_robustness_mode_2 = -2
+        exp_sol_robustness_mode_3 = -3
+        exp_sol_robustness_mode_4 = 0.5
+        exp_sol_robustness_mode_5 = -6
+        exp_sol_robustness_mode_6 = 4
 
         self._traffic_rule_param["a_abrupt"] = -2
         right_vertices = np.array([[0, 0], [10, 0], [20, 0], [30, .5], [40, 1], [50, 1], [60, 1], [70, 0], [80, 0]])
@@ -266,3 +270,43 @@ class TestBrakingPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6)
+
+        # Constraint-Mode
+        sol_constraint_mode_1 = braking_predicates.unnecessary_braking(0, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        sol_constraint_mode_2 = braking_predicates.unnecessary_braking(1, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        sol_constraint_mode_3 = braking_predicates.unnecessary_braking(2, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        sol_constraint_mode_4 = braking_predicates.unnecessary_braking(3, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        sol_constraint_mode_5 = braking_predicates.unnecessary_braking(4, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        sol_constraint_mode_6 = braking_predicates.unnecessary_braking(5, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.CONSTRAINT)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6)
+
+        # Robustness-Mode
+        sol_robustness_mode_1 = braking_predicates.unnecessary_braking(0, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_2 = braking_predicates.unnecessary_braking(1, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_3 = braking_predicates.unnecessary_braking(2, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_4 = braking_predicates.unnecessary_braking(3, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_5 = braking_predicates.unnecessary_braking(4, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_6 = braking_predicates.unnecessary_braking(5, ego_vehicle, other_vehicles,
+                                                                       OperatingMode.ROBUSTNESS)
+        self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
+        self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
+        self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
+        self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
+        self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode_5)
+        self.assertEqual(exp_sol_robustness_mode_6, sol_robustness_mode_6)

@@ -31,11 +31,13 @@ class BrakingPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction, constraint value, or robustness value
         """
         a_ego = ego_vehicle.states_lon[time_step].a
-        if a_ego >= 0 and operating_mode.MONITOR:
+        if a_ego >= 0 and operating_mode is operating_mode.MONITOR:
             return False
 
         ego_vehicle_lanelets = ego_vehicle.lanelet_assignment[time_step]
         same_lane_front_vehicle = False
+        robustness_values = []
+        constraint_values = []
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
@@ -45,14 +47,33 @@ class BrakingPredicateCollection(PredicateCollection):
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
                     and self.keeps_safe_distance_prec(time_step, ego_vehicle, veh_o, operating_mode):
                 same_lane_front_vehicle = True
-                if (a_ego - veh_o.states_lon[time_step].a) < self._traffic_rules_param.get("a_abrupt"):
-                    return True
 
-        if same_lane_front_vehicle is False and a_ego < self._traffic_rules_param.get("a_abrupt"):
-            # no leading vehicle
-            return True
-        else:
-            return False
+                if operating_mode is operating_mode.CONSTRAINT:
+                    constraint_values.append(veh_o.states_lon[time_step].a
+                                             - abs(self._traffic_rules_param.get("a_abrupt")))
+                elif operating_mode is operating_mode.MONITOR:
+                    if (a_ego - veh_o.states_lon[time_step].a) < self._traffic_rules_param.get("a_abrupt"):
+                        return True
+                elif operating_mode is operating_mode.ROBUSTNESS:
+                    robustness_values.append((a_ego - veh_o.states_lon[time_step].a)
+                                             + abs(self._traffic_rules_param.get("a_abrupt")))
+
+        if operating_mode is operating_mode.MONITOR:
+            if same_lane_front_vehicle is False and a_ego < self._traffic_rules_param.get("a_abrupt"):
+                # no leading vehicle
+                return True
+            else:
+                return False
+        elif operating_mode is operating_mode.CONSTRAINT:
+            if same_lane_front_vehicle is False:
+                return self._traffic_rules_param.get("a_abrupt")
+            else:
+                return max(constraint_values)
+        elif operating_mode is operating_mode.ROBUSTNESS:
+            if same_lane_front_vehicle is False:
+                return a_ego + abs(self._traffic_rules_param.get("a_abrupt"))
+            else:
+                return min(robustness_values)
 
     @staticmethod
     def safe_distance(v_follow: float, v_lead: float, a_min_follow: float, a_min_lead: float,
