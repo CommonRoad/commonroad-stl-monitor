@@ -1,4 +1,4 @@
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Union
 
 from commonroad.scenario.obstacle import ObstacleType
 
@@ -116,22 +116,29 @@ class VelocityPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def drives_with_slightly_higher_speed(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
+    def drives_with_slightly_higher_speed(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle,
+                                          operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
         """
         Predicate which checks if the kth vehicle drives maximum with slightly higher speed than the pth vehicle
 
         :param vehicle_k: vehicle object
         :param vehicle_p: list of other vehicles
         :param time_step: time step of interest
-        :returns Boolean indicating satisfaction (True is default return)
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle_k.states_lon.get(time_step) is None or vehicle_p.states_lon.get(time_step) is None:
-            return True
-        if 0 < vehicle_k.states_lon[time_step].v - vehicle_p.states_lon[time_step].v \
-                < self._traffic_rules_param.get("slightly_higher_speed_difference"):
-            return True
-        else:
-            return False
+        if operating_mode is OperatingMode.MONITOR:
+            if 0 < vehicle_k.states_lon[time_step].v - vehicle_p.states_lon[time_step].v \
+                    < self._traffic_rules_param.get("slightly_higher_speed_difference"):
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return vehicle_p.states_lon[time_step].v + self._traffic_rules_param.get("slightly_higher_speed_difference")
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return vehicle_p.states_lon[time_step].v \
+                   + self._traffic_rules_param.get("slightly_higher_speed_difference") \
+                   - vehicle_k.states_lon[time_step].v
 
     @staticmethod
     def drives_faster(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
