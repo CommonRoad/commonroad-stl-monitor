@@ -1,4 +1,5 @@
 from typing import List, Dict, Set, Tuple, Union
+import math
 
 from commonroad.scenario.obstacle import ObstacleType
 
@@ -181,26 +182,35 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return 80.0
 
-    def keeps_sign_min_speed_limit(self, time_step: int, vehicle: Vehicle) -> bool:
+    def keeps_sign_min_speed_limit(self, time_step: int, vehicle: Vehicle,
+                                   operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
         """
         Predicate for lanelet speed limit evaluation
 
         :param time_step: time step of interest
         :param vehicle: vehicle of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
         required_speed = self._traffic_sign_interpreter.required_speed(frozenset(lanelet_ids))
-        if required_speed is None:
-            return True
-        elif required_speed >= min(vehicle.vehicle_param.get("fov_speed_limit"),
-                                   self._get_type_speed_limit(vehicle.obstacle_type),
-                                   vehicle.vehicle_param.get("road_condition_speed_limit")):
-            return False
-        elif required_speed > vehicle.states_lon[time_step].v:
-            return False
-        else:
-            return True
+        if operating_mode is OperatingMode.MONITOR:
+            if required_speed is None:
+                return True
+            if required_speed <= vehicle.states_lon[time_step].v:
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            if required_speed is None:
+                return 0
+            else:
+                return required_speed
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            if required_speed is None:
+                return abs(vehicle.states_lon[time_step].v)
+            else:
+                return vehicle.states_lon[time_step].v - required_speed
 
     @staticmethod
     def keeps_fov_speed_limit(time_step: int, vehicle: Vehicle) -> bool:
