@@ -433,3 +433,33 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertAlmostEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
         self.assertAlmostEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
         self.assertAlmostEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
+
+    def test_speed_limit_suggested(self):
+        self._traffic_rule_param["desired_interstate_velocity"] = 36.11
+        # expected solutions
+        exp_sol_1 = 10  # speed limit exists
+        exp_sol_2 = 36.11  # there exists no speed limit
+
+        lanelet_network = LaneletNetwork()
+        lanelet_network.add_lanelet(self._lanelet_1)
+        lanelet_network.add_traffic_sign(self._traffic_sign_2, {1})
+        lanelet_network.add_lanelet(self._lanelet_2)
+        road_network = RoadNetwork(lanelet_network, self._road_network_param)
+        traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
+                                                         road_network.lanelet_network)
+        general_predicates = VelocityPredicateCollection(road_network, self._simulation_param, self._traffic_rule_param,
+                                                         set(), traffic_sign_interpreter)
+
+        # ego vehicle
+        state_list_lon_ego = {0: StateLongitudinal(s=0, v=5), 1: StateLongitudinal(s=5, v=10)}
+        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0)}
+        cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1)}
+        lanelet_assignments_ego = {0: {1}, 1: {2}}
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+
+        sol_1 = general_predicates._speed_limit_suggested(0, ego_vehicle)
+        sol_2 = general_predicates._speed_limit_suggested(1, ego_vehicle)
+
+        self.assertEqual(exp_sol_1, sol_1)
+        self.assertEqual(exp_sol_2, sol_2)
