@@ -17,7 +17,7 @@ class TestBrakingPredicates(unittest.TestCase):
         config_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
-        self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
+        self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._ego_vehicle_param = create_other_vehicles_param(config.get("ego_vehicle_param"))
         self._traffic_rule_param = traffic_rules.get("traffic_rules_param")

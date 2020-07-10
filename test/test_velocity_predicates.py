@@ -18,7 +18,8 @@ class TestGeneralPredicates(unittest.TestCase):
         config_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
-        self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
+        self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
+
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._ego_vehicle_param = create_other_vehicles_param(config.get("ego_vehicle_param"))
         self._traffic_rule_param = traffic_rules.get("traffic_rules_param")
@@ -309,23 +310,23 @@ class TestGeneralPredicates(unittest.TestCase):
                                                          set(), traffic_sign_interpreter)
 
         # ego vehicle
-        state_list_lon_ego = {0: StateLongitudinal(s=0, v=5), 1: StateLongitudinal(s=0.5, v=20),
-                              2: StateLongitudinal(s=2.5, v=35)}
+        state_list_lon_ego = {0: StateLongitudinal(s=0, v=5), 1: StateLongitudinal(s=5, v=20),
+                              2: StateLongitudinal(s=25, v=35)}
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                               2: StateLateral(d=0, theta=0)}
-        cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
+        cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=5, time_step=1),
                              2: State(position=25, time_step=2)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # other vehicle 1
-        state_list_lon_other_1 = {0: StateLongitudinal(s=10, v=10), 1: StateLongitudinal(s=11, v=20),
-                                  2: StateLongitudinal(s=13, v=30)}
+        state_list_lon_other_1 = {0: StateLongitudinal(s=10, v=10), 1: StateLongitudinal(s=20, v=20),
+                                  2: StateLongitudinal(s=40, v=30)}
         state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                                   2: StateLateral(d=0, theta=0)}
-        cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=11, time_step=1),
-                                 2: State(position=13, time_step=2)}
+        cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=20, time_step=1),
+                                 2: State(position=40, time_step=2)}
         lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}}
         other_vehicle_1 = Vehicle(state_list_lon_other_1, state_list_lat_other_1, Rectangle(5, 2),
                                   cr_state_list_other_1, 0, ObstacleType.CAR, self._ego_vehicle_param,
