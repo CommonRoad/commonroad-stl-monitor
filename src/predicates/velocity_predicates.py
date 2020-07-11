@@ -37,16 +37,14 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return min(self._traffic_rules_param.get("desired_interstate_velocity"), v_max_lane)
 
-    def slow_leading_vehicle(self, time_step: int,  vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             operating_mode: OperatingMode):
+    def slow_leading_vehicle(self, time_step: int,  vehicle: Vehicle, other_vehicles: List[Vehicle]):
         """
         Predicate which evaluates if a slow leading vehicle exists if front of a vehicle
 
         :param vehicle: considered vehicle object
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
-        :returns boolean indicating satisfaction, constraint values, or robustness value
+        :returns boolean indicating satisfaction
         """
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
@@ -79,10 +77,15 @@ class VelocityPredicateCollection(PredicateCollection):
         v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"),
                     vehicle.vehicle_param.get("fov_speed_limit"),
                     vehicle.vehicle_param.get("braking_speed_limit"), v_max_lane, v_type)
-        if v_max - vehicle.states_lon[time_step].v < self._traffic_rules_param.get("min_velocity_dif"):
-            return True
-        else:
-            return False
+        if operating_mode is OperatingMode.MONITOR:
+            if v_max - vehicle.states_lon[time_step].v < self._traffic_rules_param.get("min_velocity_dif"):
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return v_max - self._traffic_rules_param.get("min_velocity_dif")
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return vehicle.states_lon[time_step].v - v_max + self._traffic_rules_param.get("min_velocity_dif") - 1e-17
 
     def in_standstill(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
             -> Union[bool, float, Tuple[float, float]]:
@@ -106,16 +109,14 @@ class VelocityPredicateCollection(PredicateCollection):
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return abs(self._traffic_rules_param.get("standstill_error")) - abs(vehicle.states_lon[time_step].v)
 
-    def exist_standing_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
-                                       operating_mode: OperatingMode) -> bool:
+    def exist_standing_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Predicate which checks if a standing leading vehicle exist in front of a vehicle
 
         :param vehicle: vehicle object
         :param other_vehicles: list of other vehicles
         :param time_step: time step of interest
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
-        :returns boolean indicating satisfaction, constraint values, or robustness value
+        :returns boolean indicating satisfaction
         """
         lanelets_veh = vehicle.lanelet_assignment[time_step]
         for veh_o in other_vehicles:
@@ -186,10 +187,15 @@ class VelocityPredicateCollection(PredicateCollection):
         :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle.states_lon[time_step].v < -self._traffic_rules_param.get("standstill_error"):
-            return True
-        else:
-            return False
+        if operating_mode is OperatingMode.MONITOR:
+            if vehicle.states_lon[time_step].v < -self._traffic_rules_param.get("standstill_error"):
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return -self._traffic_rules_param.get("standstill_error")
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return -self._traffic_rules_param.get("standstill_error") - vehicle.states_lon[time_step].v - -1e-17
 
     @staticmethod
     def _get_type_speed_limit(vehicle_type: ObstacleType) -> float:
@@ -202,7 +208,7 @@ class VelocityPredicateCollection(PredicateCollection):
         if vehicle_type is ObstacleType.TRUCK:
             return 22.22
         else:
-            return 80.0
+            return math.inf
 
     def keeps_sign_min_speed_limit(self, time_step: int, vehicle: Vehicle,
                                    operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
@@ -246,10 +252,15 @@ class VelocityPredicateCollection(PredicateCollection):
         :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle.vehicle_param.get("fov_speed_limit") < vehicle.states_lon[time_step].v:
-            return False
-        else:
-            return True
+        if operating_mode is OperatingMode.MONITOR:
+            if vehicle.vehicle_param.get("fov_speed_limit") < vehicle.states_lon[time_step].v:
+                return False
+            else:
+                return True
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return vehicle.vehicle_param.get("fov_speed_limit")
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return vehicle.vehicle_param.get("fov_speed_limit") - vehicle.states_lon[time_step].v
 
     @staticmethod
     def keeps_braking_speed_limit(time_step: int, vehicle: Vehicle,
@@ -263,10 +274,15 @@ class VelocityPredicateCollection(PredicateCollection):
         :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle.vehicle_param.get("braking_speed_limit") < vehicle.states_lon[time_step].v:
-            return False
-        else:
-            return True
+        if operating_mode is OperatingMode.MONITOR:
+            if vehicle.vehicle_param.get("braking_speed_limit") < vehicle.states_lon[time_step].v:
+                return False
+            else:
+                return True
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return vehicle.vehicle_param.get("braking_speed_limit")
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return vehicle.vehicle_param.get("braking_speed_limit") - vehicle.states_lon[time_step].v
 
     def keeps_type_speed_limit(self, time_step: int, vehicle: Vehicle,
                                operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
@@ -278,10 +294,15 @@ class VelocityPredicateCollection(PredicateCollection):
         :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle.states_lon[time_step].v <= self._get_type_speed_limit(vehicle.obstacle_type):
-            return True
-        else:
-            return False
+        if operating_mode is OperatingMode.MONITOR:
+            if vehicle.states_lon[time_step].v <= self._get_type_speed_limit(vehicle.obstacle_type):
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return self._get_type_speed_limit(vehicle.obstacle_type)
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return self._get_type_speed_limit(vehicle.obstacle_type) - vehicle.states_lon[time_step].v
 
     def keeps_lane_speed_limit(self, time_step: int, vehicle: Vehicle,
                                operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
