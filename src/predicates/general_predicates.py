@@ -1,5 +1,4 @@
-from abc import ABC
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple, Union
 
 from commonroad.scenario.lanelet import Lanelet
 
@@ -7,6 +6,7 @@ from src.predicates.predicate_collection import PredicateCollection
 from src.predicates.position_predicates import PositionPredicateCollection
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
+from src.common.helper import OperatingMode
 
 
 class GeneralPredicateCollection(PredicateCollection):
@@ -90,7 +90,7 @@ class GeneralPredicateCollection(PredicateCollection):
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
-                    veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_slow_moving_traffic_velocity"):
+                    veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_queue_of_vehicles_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_queue_of_vehicles"):
             return True
@@ -115,20 +115,40 @@ class GeneralPredicateCollection(PredicateCollection):
             lanelets.add(la)
         return lanelets
 
-    def makes_u_turn(self, time_step: int, vehicle: Vehicle) -> bool:
+    def makes_u_turn(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Predicate which evaluates if vehicle makes U-turn
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
+        robustness_values = []
+        constraint_values_min = []
+        constraint_values_max = []
         lanes = self._road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
         for la in lanes:
-            if self._traffic_rules_param.get("u_turn") <= \
-                    abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)):
-                return True
-        return False
+            if operating_mode is OperatingMode.MONITOR:
+                if self._traffic_rules_param.get("u_turn") <= \
+                        abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)):
+                        return True
+            elif operating_mode is OperatingMode.CONSTRAINT:
+                constraint_values_min.append(
+                    la.orientation(vehicle.states_lon[time_step].s) - self._traffic_rules_param.get("u_turn"))
+                constraint_values_max.append(
+                    self._traffic_rules_param.get("u_turn") + la.orientation(vehicle.states_lon[time_step].s))
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                robustness_values.append(
+                    self._traffic_rules_param.get("u_turn")
+                    - abs(vehicle.states_lat[time_step].theta - la.orientation(vehicle.states_lon[time_step].s)))
+        if operating_mode is OperatingMode.MONITOR:
+            return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return (max(constraint_values_min), min(constraint_values_max))
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return min(robustness_values)
 
     def _road_width(self, lanelet: Lanelet, position: float) -> float:
         """
@@ -176,20 +196,21 @@ class GeneralPredicateCollection(PredicateCollection):
                 self._road_network.find_lane_ids_by_lanelets(vehicle_p.lanelet_assignment[time_step])):
             return False
         if vehicle_k.states_lat[time_step].d < vehicle_p.states_lat[time_step].d \
-                and vehicle_k.states_lat[time_step].theta < 0 or \
+                and vehicle_k.states_lat[time_step].theta > 0 or \
                 vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d \
-                and vehicle_k.states_lat[time_step].theta > 0:
+                and vehicle_k.states_lat[time_step].theta < 0:
             return True
         else:
             return False
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
@@ -242,10 +263,10 @@ class GeneralPredicateCollection(PredicateCollection):
 
         return predicate_trace
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         pass
 
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         pass

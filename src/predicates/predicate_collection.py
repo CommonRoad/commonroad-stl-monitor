@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
@@ -27,38 +27,40 @@ class PredicateCollection(ABC):
         self._traffic_sign_interpreter = traffic_sign_interpreter
 
     @abstractmethod
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with traces of bool values for each predicate
         """
         pass
 
     @abstractmethod
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         """
         Extracts constraints for a vehicle
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with traces of constraints for each predicate
         """
         pass
 
     @abstractmethod
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
+    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
         """
         Extracts robustness values for a vehicle
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
+        :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with traces of robustness values for each predicate
         """
         pass
-

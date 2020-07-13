@@ -28,25 +28,25 @@ traffic_rules_backward:
 
     R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode))
 
-    R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle) && keeps_fov_speed_limit(time_step, ego_vehicle)
-                 && keeps_braking_speed_limit(time_step, ego_vehicle) && keeps_type_speed_limit(time_step, ego_vehicle))
+    R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_fov_speed_limit(time_step, ego_vehicle, operating_mode)
+                 && keeps_braking_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_type_speed_limit(time_step, ego_vehicle, operating_mode))
 
-    R_G4: always(!slow_leading_vehicle(time_step, ego_vehicle, other_vehicles) -> preserves_traffic_flow(time_step, ego_vehicle))
+    R_G4: always(!slow_leading_vehicle(time_step, ego_vehicle, other_vehicles) -> preserves_traffic_flow(time_step, ego_vehicle, operating_mode))
 
-    R_G5: always(keeps_sign_min_speed_limit(time_step, ego_vehicle))
+    R_G5: always(keeps_sign_min_speed_limit(time_step, ego_vehicle, operating_mode))
 
     R_G6: always(cut_in(time_step, ego_vehicle, other_vehicle) && in_front_of(time_step, other_vehicle, ego_vehicle) -> keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode))
 
     R_I1: always(!(in_congestion(time_step, ego_vehicle, other_vehicles) || exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles))
-                 -> !in_standstill(time_step, ego_vehicle))
+                 -> !in_standstill(time_step, ego_vehicle, operating_mode))
 
-    R_I2: always(left_of(time_step, ego_vehicle, other_vehicle) && drives_faster(time_step, ego_vehicle, other_vehicle) -> ((in_congestion(time_step, other_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
-                 || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)) && drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle))
+    R_I2: always(left_of(time_step, ego_vehicle, other_vehicle) && drives_faster(time_step, ego_vehicle, other_vehicle, operating_mode) -> ((in_congestion(time_step, other_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
+                 || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)) && drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle, operating_mode))
                  || (right_of_broad_lane_marking(time_step, ego_vehicle) && left_of_broad_lane_marking(time_step, other_vehicle))
                  || (on_access_ramp(time_step, ego_vehicle) && !(in_congestion(time_step, other_vehicle, other_vehicles)
                  || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles) || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)))))
 
-    R_I3: always(!makes_u_turn(time_step, ego_vehicle) && !reverses(time_step, ego_vehicle))
+    R_I3: always(!makes_u_turn(time_step, ego_vehicle, operating_mode) && !reverses(time_step, ego_vehicle, operating_mode))
 
     R_I4: always(in_congestion(time_step, ego_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
             -> (interstate_broad_enough(time_step, ego_vehicle) -> !on_shoulder(time_step, ego_vehicle) &&  (in_leftmost_lane(time_step, ego_vehicle)
