@@ -143,6 +143,21 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
+    def on_exit_ramp(self, time_step: int, vehicle: Vehicle) -> bool:
+        """
+        Evaluates if a vehicle is on an exit ramp
+
+        :param vehicle: vehicle of interest
+        :param time_step: time step of interest
+        :returns boolean indicating satisfaction
+        """
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids:
+            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.EXIT_RAMP in lanelet.lanelet_type:
+                return True
+        return False
+
     def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
         """
         Evaluates if a vehicle is right of a broad lane marking
