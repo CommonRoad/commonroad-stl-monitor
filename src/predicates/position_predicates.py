@@ -550,10 +550,10 @@ class PositionPredicateCollection(PredicateCollection):
                         self.in_same_lane(time_step, ego_vehicle, other_vehicle)
                 if "in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.in_front_of(time_step, ego_vehicle, other_vehicle)
+                        self.in_front_of(time_step, ego_vehicle, other_vehicle, OperatingMode.MONITOR)
                 if "in_front_of__x_o__x_ego" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.in_front_of(time_step, other_vehicle, ego_vehicle)
+                        self.in_front_of(time_step, other_vehicle, ego_vehicle, OperatingMode.MONITOR)
                 if "left_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.left_of(time_step, ego_vehicle, other_vehicle)

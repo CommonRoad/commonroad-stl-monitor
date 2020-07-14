@@ -50,7 +50,7 @@ class VelocityPredicateCollection(PredicateCollection):
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
-            if not PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) or \
+            if not PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o, OperatingMode.MONITOR) or \
                     not PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(lanelets_veh),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])):
@@ -122,7 +122,7 @@ class VelocityPredicateCollection(PredicateCollection):
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
-            if not PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) or \
+            if not PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o, OperatingMode.MONITOR) or \
                     not PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(lanelets_veh),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])):

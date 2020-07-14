@@ -41,11 +41,11 @@ class BrakingPredicateCollection(PredicateCollection):
         for veh_o in other_vehicles:
             if veh_o.states_lon.get(time_step) is None:
                 continue
-            if PositionPredicateCollection.in_front_of(time_step, ego_vehicle, veh_o) and \
+            if PositionPredicateCollection.in_front_of(time_step, ego_vehicle, veh_o, OperatingMode.MONITOR) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(ego_vehicle_lanelets),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) \
-                    and self.keeps_safe_distance_prec(time_step, ego_vehicle, veh_o, operating_mode):
+                    and self.keeps_safe_distance_prec(time_step, ego_vehicle, veh_o, OperatingMode.MONITOR):
                 same_lane_front_vehicle = True
 
                 if operating_mode is operating_mode.CONSTRAINT:

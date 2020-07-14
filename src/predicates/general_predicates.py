@@ -36,7 +36,7 @@ class GeneralPredicateCollection(PredicateCollection):
             if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not
                 # start at the first time step
                 continue
-            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
+            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o, OperatingMode.MONITOR) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
@@ -61,7 +61,7 @@ class GeneralPredicateCollection(PredicateCollection):
             if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not
                 # start at the first time step
                 continue
-            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
+            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o, OperatingMode.MONITOR) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
@@ -86,7 +86,7 @@ class GeneralPredicateCollection(PredicateCollection):
             if veh_o.states_lon.get(time_step) is None:  # in some datasets trajectories do not
                 # start at the first time step
                 continue
-            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o) and \
+            if PositionPredicateCollection.in_front_of(time_step, vehicle, veh_o, OperatingMode.MONITOR) and \
                     PositionPredicateCollection.in_same_lane_classmethod(
                         self._road_network.find_lane_ids_by_lanelets(vehicle.lanelet_assignment[time_step]),
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])) and \
