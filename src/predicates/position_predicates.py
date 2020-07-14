@@ -22,22 +22,29 @@ class PositionPredicateCollection(PredicateCollection):
                          necessary_predicates, traffic_sign_interpreter)
 
     @staticmethod
-    def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+    def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle, operating_mode: OperatingMode) \
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Evaluates if the kth vehicle is in front of the pth vehicle
 
         :param vehicle_p: pth vehicle
         :param vehicle_k: kth vehicle
         :param time_step: time step of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
-            return True
-        else:
-            return False
+        if operating_mode is OperatingMode.MONITOR:
+            if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
+                return True
+            else:
+                return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            return vehicle_p.front_s(time_step)
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
 
     @staticmethod
-    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle):
         """
         Evaluates if the kth vehicle is left of the pth vehicle
 

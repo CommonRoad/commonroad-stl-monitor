@@ -6,15 +6,13 @@ import ruamel.yaml
 import math
 import enum
 from decimal import Decimal
-import warnings
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 
-from src.common.vehicle import Vehicle, VehicleClassification
+from src.common.vehicle import Vehicle, VehicleClassification, StateLongitudinal, StateLateral
 from src.common.road_network import RoadNetwork, Lane
-from src.common.vehicle import StateLongitudinal, StateLateral
 
 
 @enum.unique

@@ -13,7 +13,7 @@ from src.common.helper import *
 from src.common.road_network import RoadNetwork
 
 
-class TestGeneralPredicates(unittest.TestCase):
+class TestVelocityPredicates(unittest.TestCase):
     def setUp(self):
         config_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
         config = load_yaml(config_path + "config.yaml")
@@ -45,18 +45,8 @@ class TestGeneralPredicates(unittest.TestCase):
                                          [80, 8], [90, 8]])
         center_vertices_lane_2 = np.array([[0, 12], [10, 12], [20, 12], [30, 12], [40, 12], [50, 12], [60, 12],
                                            [70, 12], [80, 12], [90, 12]])
-        self._lanelet_2 =  Lanelet(left_vertices_lane_2, center_vertices_lane_2, right_vertices_lane_2, lanelet_id=2,
-                                   adjacent_left=3, adjacent_left_same_direction=True,
-                                   adjacent_right=1, adjacent_right_same_direction=True)
-
-        right_vertices_lane_3 = np.array([[0, 8], [10, 8], [20, 8], [30, 8], [40, 8], [50, 8], [60, 8], [70, 8],
-                                          [80, 8], [90, 8]])
-        left_vertices_lane_3 = np.array([[0, 12], [10, 12], [20, 12], [30, 12], [40, 12], [50, 12], [60, 12], [70, 12],
-                                         [80, 12], [90, 12]])
-        center_vertices_lane_3 = np.array([[0, 10], [10, 10], [20, 10], [30, 10], [40, 10], [50, 10], [60, 10],
-                                           [70, 10], [80, 10], [90, 10]])
-        self._lanelet_3 = Lanelet(left_vertices_lane_3, center_vertices_lane_3, right_vertices_lane_3, lanelet_id=3,
-                                  adjacent_right=2, adjacent_right_same_direction=True)
+        self._lanelet_2 = Lanelet(left_vertices_lane_2, center_vertices_lane_2, right_vertices_lane_2, lanelet_id=2,
+                                  adjacent_right=1, adjacent_right_same_direction=True)
 
     def test_in_standstill(self):
         self._traffic_rules_param["standstill_error"] = 0.01
@@ -177,13 +167,13 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # Monitor-Mode
         sol_monitor_mode_1 = velocity_predicates.drives_with_slightly_higher_speed(0, ego_vehicle, other_vehicle_1,
-                                                                                  OperatingMode.MONITOR)
+                                                                                   OperatingMode.MONITOR)
         sol_monitor_mode_2 = velocity_predicates.drives_with_slightly_higher_speed(1, ego_vehicle, other_vehicle_1,
-                                                                                  OperatingMode.MONITOR)
+                                                                                   OperatingMode.MONITOR)
         sol_monitor_mode_3 = velocity_predicates.drives_with_slightly_higher_speed(2, ego_vehicle, other_vehicle_1,
-                                                                                  OperatingMode.MONITOR)
+                                                                                   OperatingMode.MONITOR)
         sol_monitor_mode_4 = velocity_predicates.drives_with_slightly_higher_speed(3, ego_vehicle, other_vehicle_1,
-                                                                                  OperatingMode.MONITOR)
+                                                                                   OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -192,13 +182,13 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # Constraint-Mode
         sol_constraint_mode_1 = velocity_predicates.drives_with_slightly_higher_speed(0, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.CONSTRAINT)
+                                                                                      OperatingMode.CONSTRAINT)
         sol_constraint_mode_2 = velocity_predicates.drives_with_slightly_higher_speed(1, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.CONSTRAINT)
+                                                                                      OperatingMode.CONSTRAINT)
         sol_constraint_mode_3 = velocity_predicates.drives_with_slightly_higher_speed(2, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.CONSTRAINT)
+                                                                                      OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.drives_with_slightly_higher_speed(3, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.CONSTRAINT)
+                                                                                      OperatingMode.CONSTRAINT)
 
         self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
         self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
@@ -207,13 +197,13 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.drives_with_slightly_higher_speed(0, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.ROBUSTNESS)
+                                                                                      OperatingMode.ROBUSTNESS)
         sol_robustness_mode_2 = velocity_predicates.drives_with_slightly_higher_speed(1, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.ROBUSTNESS)
+                                                                                      OperatingMode.ROBUSTNESS)
         sol_robustness_mode_3 = velocity_predicates.drives_with_slightly_higher_speed(2, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.ROBUSTNESS)
+                                                                                      OperatingMode.ROBUSTNESS)
         sol_robustness_mode_4 = velocity_predicates.drives_with_slightly_higher_speed(3, ego_vehicle, other_vehicle_1,
-                                                                                     OperatingMode.ROBUSTNESS)
+                                                                                      OperatingMode.ROBUSTNESS)
 
         self.assertAlmostEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         self.assertAlmostEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
@@ -343,11 +333,11 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # Constraint-Mode
         sol_constraint_mode_1 = velocity_predicates.drives_faster(0, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.CONSTRAINT)
+                                                                  OperatingMode.CONSTRAINT)
         sol_constraint_mode_2 = velocity_predicates.drives_faster(1, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.CONSTRAINT)
+                                                                  OperatingMode.CONSTRAINT)
         sol_constraint_mode_3 = velocity_predicates.drives_faster(2, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.CONSTRAINT)
+                                                                  OperatingMode.CONSTRAINT)
 
         self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
         self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
@@ -355,11 +345,11 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.drives_faster(0, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.ROBUSTNESS)
+                                                                  OperatingMode.ROBUSTNESS)
         sol_robustness_mode_2 = velocity_predicates.drives_faster(1, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.ROBUSTNESS)
+                                                                  OperatingMode.ROBUSTNESS)
         sol_robustness_mode_3 = velocity_predicates.drives_faster(2, ego_vehicle, other_vehicle_1,
-                                                                 OperatingMode.ROBUSTNESS)
+                                                                  OperatingMode.ROBUSTNESS)
 
         self.assertAlmostEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         self.assertAlmostEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
@@ -497,7 +487,7 @@ class TestGeneralPredicates(unittest.TestCase):
                              2: State(position=42.22, time_step=2), 3: State(position=72.22, time_step=3)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {2}}
         ego_vehicle_1 = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
-                              ObstacleType.TRUCK, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+                                ObstacleType.TRUCK, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
         ego_vehicle_2 = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
                                 ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 

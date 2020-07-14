@@ -1,0 +1,160 @@
+import unittest
+import os
+import numpy as np
+
+from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.lanelet import LaneletNetwork
+from commonroad.scenario.traffic_sign import TrafficSignElement, TrafficSign, TrafficSignIDGermany
+
+from src.predicates.position_predicates import PositionPredicateCollection
+from src.common.helper import *
+from src.common.road_network import RoadNetwork
+
+
+class TestPositionPredicates(unittest.TestCase):
+    def setUp(self):
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
+        config = load_yaml(config_path + "config.yaml")
+        traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
+        self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
+
+        self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
+        self._ego_vehicle_param = create_other_vehicles_param(config.get("ego_vehicle_param"))
+        self._traffic_rules_param = traffic_rules.get("traffic_rules_param")
+        self._road_network_param = config.get("road_network_param")
+
+        right_vertices_lane_1 = np.array([[0, 0], [10, 0], [20, 0], [30, 0], [40, 0], [50, 0], [60, 0], [70, 0],
+                                          [80, 1], [90, 0]])
+        left_vertices_lane_1 = np.array([[0, 4], [10, 4], [20, 4], [30, 4], [40, 4], [50, 4], [60, 4], [70, 4],
+                                         [80, 1], [90, 0]])
+        center_vertices_lane_1 = np.array([[0, 2], [10, 2], [20, 2], [30, 2], [40, 2], [50, 2], [60, 2], [70, 2],
+                                           [80, 1], [90, 0]])
+        self._lanelet_1 = Lanelet(left_vertices_lane_1, center_vertices_lane_1, right_vertices_lane_1, lanelet_id=1,
+                                  adjacent_left=2, adjacent_left_same_direction=True, traffic_signs={111})
+
+        right_vertices_lane_2 = np.array([[0, 4], [10, 4], [20, 4], [30, 4], [40, 4], [50, 4], [60, 4], [70, 4],
+                                          [80, 4], [90, 4]])
+        left_vertices_lane_2 = np.array([[0, 8], [10, 8], [20, 8], [30, 8], [40, 8], [50, 8], [60, 8], [70, 8],
+                                         [80, 8], [90, 8]])
+        center_vertices_lane_2 = np.array([[0, 12], [10, 12], [20, 12], [30, 12], [40, 12], [50, 12], [60, 12],
+                                           [70, 12], [80, 12], [90, 12]])
+        self._lanelet_2 = Lanelet(left_vertices_lane_2, center_vertices_lane_2, right_vertices_lane_2, lanelet_id=2,
+                                  adjacent_right=1, adjacent_right_same_direction=True)
+
+    def test_in_front_of(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = False  # ego vehicle behind
+        exp_sol_monitor_mode_2 = False  # ego vehicle and other vehicle have same occupancy
+        exp_sol_monitor_mode_3 = False   # ego vehicle is not completely in front
+        exp_sol_monitor_mode_4 = True  # ego vehicle is in front in same lane
+        exp_sol_monitor_mode_5 = True  # ego vehicle is in front in another lane
+        exp_sol_constraint_mode_1 = 10.5
+        exp_sol_constraint_mode_2 = 12.5
+        exp_sol_constraint_mode_3 = 14.5
+        exp_sol_constraint_mode_4 = 16.5
+        exp_sol_constraint_mode_5 = 12.5
+        exp_sol_robustness_mode_1 = -13.0
+        exp_sol_robustness_mode_2 = -5.0
+        exp_sol_robustness_mode_3 = -3.0
+        exp_sol_robustness_mode_4 = 5.0
+        exp_sol_robustness_mode_5 = 14.0
+
+        lanelet_network = LaneletNetwork()
+        lanelet_network.add_lanelet(self._lanelet_1)
+        lanelet_network.add_lanelet(self._lanelet_2)
+        road_network = RoadNetwork(lanelet_network, self._road_network_param)
+        traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
+                                                         road_network.lanelet_network)
+        velocity_predicates = PositionPredicateCollection(road_network, self._simulation_param,
+                                                          self._traffic_rules_param, set(), traffic_sign_interpreter)
+
+        # ego vehicle
+        state_list_lon_ego = {0: StateLongitudinal(s=0, v=10), 1: StateLongitudinal(s=10, v=4),
+                              2: StateLongitudinal(s=14, v=10), 3: StateLongitudinal(s=24, v=5),
+                              4: StateLongitudinal(s=29, v=5)}
+        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
+                              2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0),
+                              4: StateLateral(d=0, theta=0)}
+        cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
+                             2: State(position=20, time_step=2), 3: State(position=30, time_step=3),
+                             4: State(position=29, time_step=4)}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+
+        # other vehicle 1
+        state_list_lon_other_1 = {0: StateLongitudinal(s=8, v=2),  1: StateLongitudinal(s=10, v=2),
+                                  2: StateLongitudinal(s=12, v=2), 3: StateLongitudinal(s=14, v=2)}
+        state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
+                                  2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
+        cr_state_list_other_1 = {0: State(position=10, time_step=1), 1: State(position=10, time_step=1),
+                                 2: State(position=20, time_step=2), 3: State(position=30, time_step=3)}
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        other_vehicle_1 = Vehicle(state_list_lon_other_1, state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 41, ObstacleType.CAR, self._ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None, None)
+
+        # other vehicle 2
+        state_list_lon_other_2 = {4: StateLongitudinal(s=10, v=10)}
+        state_list_lat_other_2 = {4: StateLateral(d=3.5, theta=0)}
+        cr_state_list_other_2 = {4: State(position=10, time_step=4)}
+        lanelet_assignments_other_2 = {4: {2}}
+        other_vehicle_2 = Vehicle(state_list_lon_other_2, state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 42, ObstacleType.CAR, self._ego_vehicle_param,
+                                  lanelet_assignments_other_2, None, None, None)
+
+        # Monitor-Mode
+        sol_monitor_mode_1 = velocity_predicates.in_front_of(0, other_vehicle_1, ego_vehicle,
+                                                             OperatingMode.MONITOR)
+        sol_monitor_mode_2 = velocity_predicates.in_front_of(1, other_vehicle_1, ego_vehicle,
+                                                             OperatingMode.MONITOR)
+        sol_monitor_mode_3 = velocity_predicates.in_front_of(2, other_vehicle_1, ego_vehicle,
+                                                             OperatingMode.MONITOR)
+        sol_monitor_mode_4 = velocity_predicates.in_front_of(3, other_vehicle_1, ego_vehicle,
+                                                             OperatingMode.MONITOR)
+        sol_monitor_mode_5 = velocity_predicates.in_front_of(4, other_vehicle_2, ego_vehicle,
+                                                             OperatingMode.MONITOR)
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
+
+        # Constraint-Mode
+        sol_constraint_mode_1 = velocity_predicates.in_front_of(0, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.CONSTRAINT)
+        sol_constraint_mode_2 = velocity_predicates.in_front_of(1, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.CONSTRAINT)
+        sol_constraint_mode_3 = velocity_predicates.in_front_of(2, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.CONSTRAINT)
+        sol_constraint_mode_4 = velocity_predicates.in_front_of(3, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.CONSTRAINT)
+        sol_constraint_mode_5 = velocity_predicates.in_front_of(4, other_vehicle_2, ego_vehicle,
+                                                                OperatingMode.CONSTRAINT)
+
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+
+        # Robustness-Mode
+        sol_robustness_mode_1 = velocity_predicates.in_front_of(0, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_2 = velocity_predicates.in_front_of(1, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_3 = velocity_predicates.in_front_of(2, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_4 = velocity_predicates.in_front_of(3, other_vehicle_1, ego_vehicle,
+                                                                OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_5 = velocity_predicates.in_front_of(4, other_vehicle_2, ego_vehicle,
+                                                                OperatingMode.ROBUSTNESS)
+
+        self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
+        self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
+        self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
+        self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
+        self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode_5)
