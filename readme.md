@@ -1,5 +1,10 @@
 # CommonRoad Traffic Rule Monitor
 
+**Note:** Currently, major changes are being made, so runtime errors may occur. 
+In addition, not all of the options listed below to execute the software work. 
+We try to finish the changes as soon as possible. The test cases should work.
+The Develop branch is always most up-to-date
+
 ## Getting Started
 This introduction will give you an overview how to install, parametrize, 
 and execute the CommonRoad Traffic Rule Monitor.
