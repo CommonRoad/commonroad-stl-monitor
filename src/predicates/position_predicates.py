@@ -195,7 +195,7 @@ class PositionPredicateCollection(PredicateCollection):
                     lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
                 return False
 
-        lanelets_right_of_veh = self._lanelets_right_of_vehicle(vehicle, time_step)
+        lanelets_right_of_veh = self._lanelets_right_of_vehicle(time_step, vehicle)
         for lanelet in lanelets_right_of_veh:
             if lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or \
                     lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
@@ -219,7 +219,7 @@ class PositionPredicateCollection(PredicateCollection):
 
         return left_lanelets
 
-    def _lanelets_right_of_vehicle(self, vehicle: Vehicle, time_step: int) -> Set[Lanelet]:
+    def _lanelets_right_of_vehicle(self, time_step: int, vehicle: Vehicle) -> Set[Lanelet]:
         """
         Extracts all lanelets right of a vehicle
 
