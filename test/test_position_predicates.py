@@ -636,7 +636,7 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_num_lanelets_5, sol_num_lanelets_5)
         self.assertEqual(exp_sol_lanelet_ids_5, sol_lanelet_ids_5)
 
-    def test_in_leftmost_lane(self):  # TODO: add constraint and robustness mode
+    def test_in_leftmost_lane(self):
         # expected solutions
         exp_sol_monitor_mode_1 = False
         exp_sol_monitor_mode_2 = False
@@ -645,6 +645,20 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_5 = True
         exp_sol_monitor_mode_6 = True
         exp_sol_monitor_mode_7 = False
+        exp_sol_constraint_mode_1 = 14.0
+        exp_sol_constraint_mode_2 = 14.0
+        exp_sol_constraint_mode_3 = 14.0
+        exp_sol_constraint_mode_4 = 14.0
+        exp_sol_constraint_mode_5 = 14.0
+        exp_sol_constraint_mode_6 = 14.0
+        exp_sol_constraint_mode_7 = 6.0
+        exp_sol_robustness_mode_1 = -13.0
+        exp_sol_robustness_mode_2 = -9.0
+        exp_sol_robustness_mode_3 = -5.0
+        exp_sol_robustness_mode_4 = -1.0
+        exp_sol_robustness_mode_5 = 3.0
+        exp_sol_robustness_mode_6 = 1.0
+        exp_sol_robustness_mode_7 = -3.0
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -666,23 +680,26 @@ class TestPositionPredicates(unittest.TestCase):
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=4, theta=0),
                               2: StateLateral(d=8, theta=0), 3: StateLateral(d=12, theta=0),
                               4: StateLateral(d=16, theta=0), 5: StateLateral(d=14, theta=0),
-                              6: StateLateral(d=6, theta=0)}
+                              6: StateLateral(d=2, theta=0)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
                              2: State(position=20, time_step=2), 3: State(position=30, time_step=3),
                              4: State(position=40, time_step=4), 5: State(position=50, time_step=5),
                              6: State(position=60, time_step=6)}
         lanelet_assignments_ego = {0: {1}, 1: {2}, 2: {3}, 3: {4}, 4: {5}, 5: {4, 5}, 6: {2, 3}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
-                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None,
+                              road_network.lanes[0])
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.in_leftmost_lane(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.in_leftmost_lane(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.in_leftmost_lane(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.in_leftmost_lane(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.in_leftmost_lane(4, ego_vehicle)
-        sol_monitor_mode_6 = position_predicates.in_leftmost_lane(5, ego_vehicle)
-        sol_monitor_mode_7 = position_predicates.in_leftmost_lane(6, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.in_leftmost_lane(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.in_leftmost_lane(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.in_leftmost_lane(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.in_leftmost_lane(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.in_leftmost_lane(4, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_6 = position_predicates.in_leftmost_lane(5, ego_vehicle, OperatingMode.MONITOR)
+        ego_vehicle.lane = road_network.lanes[2]
+        sol_monitor_mode_7 = position_predicates.in_leftmost_lane(6, ego_vehicle, OperatingMode.MONITOR)
+        ego_vehicle.lane = road_network.lanes[0]
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -692,7 +709,44 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6)
         self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode_7)
 
-    def test_in_rightmost_lane(self):  # TODO: add constraint and robustness mode
+        # Constraint-Mode
+        sol_constraint_mode_1 = position_predicates.in_leftmost_lane(0, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_2 = position_predicates.in_leftmost_lane(1, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_3 = position_predicates.in_leftmost_lane(2, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_4 = position_predicates.in_leftmost_lane(3, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_5 = position_predicates.in_leftmost_lane(4, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_6 = position_predicates.in_leftmost_lane(5, ego_vehicle, OperatingMode.CONSTRAINT)
+        ego_vehicle.lane = road_network.lanes[2]
+        sol_constraint_mode_7 = position_predicates.in_leftmost_lane(6, ego_vehicle, OperatingMode.CONSTRAINT)
+        ego_vehicle.lane = road_network.lanes[0]
+
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6)
+        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7)
+
+        # Robustness-Mode
+        sol_robustness_mode_1 = position_predicates.in_leftmost_lane(0, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_2 = position_predicates.in_leftmost_lane(1, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_3 = position_predicates.in_leftmost_lane(2, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_4 = position_predicates.in_leftmost_lane(3, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_5 = position_predicates.in_leftmost_lane(4, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_6 = position_predicates.in_leftmost_lane(5, ego_vehicle, OperatingMode.ROBUSTNESS)
+        ego_vehicle.lane = road_network.lanes[2]
+        sol_robustness_mode_7 = position_predicates.in_leftmost_lane(6, ego_vehicle, OperatingMode.ROBUSTNESS)
+
+        self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
+        self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
+        self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
+        self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
+        self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode_5)
+        self.assertEqual(exp_sol_robustness_mode_6, sol_robustness_mode_6)
+        self.assertEqual(exp_sol_robustness_mode_7, sol_robustness_mode_7)
+
+    def test_in_rightmost_lane(self):
         # expected solutions
         exp_sol_monitor_mode_1 = True
         exp_sol_monitor_mode_2 = False
@@ -701,6 +755,20 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_5 = False
         exp_sol_monitor_mode_6 = False
         exp_sol_monitor_mode_7 = True
+        exp_sol_constraint_mode_1 = 2.0
+        exp_sol_constraint_mode_2 = 2.0
+        exp_sol_constraint_mode_3 = 2.0
+        exp_sol_constraint_mode_4 = 2.0
+        exp_sol_constraint_mode_5 = 2.0
+        exp_sol_constraint_mode_6 = -10.0
+        exp_sol_constraint_mode_7 = 2.0
+        exp_sol_robustness_mode_1 = 3.0
+        exp_sol_robustness_mode_2 = -1.0
+        exp_sol_robustness_mode_3 = -5.0
+        exp_sol_robustness_mode_4 = -9.0
+        exp_sol_robustness_mode_5 = -13.0
+        exp_sol_robustness_mode_6 = -7.0
+        exp_sol_robustness_mode_7 = 1.0
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -721,7 +789,7 @@ class TestPositionPredicates(unittest.TestCase):
                               6: StateLongitudinal(s=60, v=10)}
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=4, theta=0),
                               2: StateLateral(d=8, theta=0), 3: StateLateral(d=12, theta=0),
-                              4: StateLateral(d=16, theta=0), 5: StateLateral(d=10, theta=0),
+                              4: StateLateral(d=16, theta=0), 5: StateLateral(d=-2, theta=0),
                               6: StateLateral(d=2, theta=0)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
                              2: State(position=20, time_step=2), 3: State(position=30, time_step=3),
@@ -729,16 +797,19 @@ class TestPositionPredicates(unittest.TestCase):
                              6: State(position=60, time_step=6)}
         lanelet_assignments_ego = {0: {1}, 1: {2}, 2: {3}, 3: {4}, 4: {5}, 5: {3, 4}, 6: {1, 2}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
-                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None,
+                              road_network.lanes[0])
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.in_rightmost_lane(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.in_rightmost_lane(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.in_rightmost_lane(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.in_rightmost_lane(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.in_rightmost_lane(4, ego_vehicle)
-        sol_monitor_mode_6 = position_predicates.in_rightmost_lane(5, ego_vehicle)
-        sol_monitor_mode_7 = position_predicates.in_rightmost_lane(6, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.in_rightmost_lane(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.in_rightmost_lane(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.in_rightmost_lane(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.in_rightmost_lane(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.in_rightmost_lane(4, ego_vehicle, OperatingMode.MONITOR)
+        ego_vehicle.lane = road_network.lanes[3]
+        sol_monitor_mode_6 = position_predicates.in_rightmost_lane(5, ego_vehicle, OperatingMode.MONITOR)
+        ego_vehicle.lane = road_network.lanes[0]
+        sol_monitor_mode_7 = position_predicates.in_rightmost_lane(6, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -747,3 +818,41 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6)
         self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode_7)
+
+        # Constraint-Mode
+        sol_constraint_mode_1 = position_predicates.in_rightmost_lane(0, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_2 = position_predicates.in_rightmost_lane(1, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_3 = position_predicates.in_rightmost_lane(2, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_4 = position_predicates.in_rightmost_lane(3, ego_vehicle, OperatingMode.CONSTRAINT)
+        sol_constraint_mode_5 = position_predicates.in_rightmost_lane(4, ego_vehicle, OperatingMode.CONSTRAINT)
+        ego_vehicle.lane = road_network.lanes[3]
+        sol_constraint_mode_6 = position_predicates.in_rightmost_lane(5, ego_vehicle, OperatingMode.CONSTRAINT)
+        ego_vehicle.lane = road_network.lanes[0]
+        sol_constraint_mode_7 = position_predicates.in_rightmost_lane(6, ego_vehicle, OperatingMode.CONSTRAINT)
+
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6)
+        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7)
+
+        # Robustness-Mode
+        sol_robustness_mode_1 = position_predicates.in_rightmost_lane(0, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_2 = position_predicates.in_rightmost_lane(1, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_3 = position_predicates.in_rightmost_lane(2, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_4 = position_predicates.in_rightmost_lane(3, ego_vehicle, OperatingMode.ROBUSTNESS)
+        sol_robustness_mode_5 = position_predicates.in_rightmost_lane(4, ego_vehicle, OperatingMode.ROBUSTNESS)
+        ego_vehicle.lane = road_network.lanes[3]
+        sol_robustness_mode_6 = position_predicates.in_rightmost_lane(5, ego_vehicle, OperatingMode.ROBUSTNESS)
+        ego_vehicle.lane = road_network.lanes[0]
+        sol_robustness_mode_7 = position_predicates.in_rightmost_lane(6, ego_vehicle, OperatingMode.ROBUSTNESS)
+
+        self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
+        self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
+        self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
+        self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode_4)
+        self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode_5)
+        self.assertEqual(exp_sol_robustness_mode_6, sol_robustness_mode_6)
+        self.assertEqual(exp_sol_robustness_mode_7, sol_robustness_mode_7)

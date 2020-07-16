@@ -320,33 +320,70 @@ class PositionPredicateCollection(PredicateCollection):
                 continue
         return vehicles_adj
 
-    def in_leftmost_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+    def in_leftmost_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Evaluates if a vehicle is in the leftmost lane
 
         :param time_step: time step of interest
         :param vehicle: vehicle of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left_same_direction is None:
-                return True
-        return False
+        if operating_mode is OperatingMode.MONITOR:
+            for l_id in lanelet_ids:
+                if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left_same_direction is None:
+                    return True
+            return False
+        elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
+            constraint_value = vehicle.lane.width(vehicle.states_lon[time_step].s) / 2
+            current_lanelet = list(vehicle.lane.contained_lanelets)[0]
+            while self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet).adj_left_same_direction \
+                    is not None:
+                current_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet).adj_left
+                constraint_value += self._road_network.find_lane_by_lanelet(current_lanelet).width(
+                    vehicle.states_lon[time_step].s)
 
-    def in_rightmost_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+            constraint_value -= self._road_network.find_lane_by_lanelet(current_lanelet).width(
+                vehicle.states_lon[time_step].s)
+            if operating_mode is OperatingMode.CONSTRAINT:
+                return constraint_value
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                return vehicle.left_d(time_step) - constraint_value
+
+    def in_rightmost_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Evaluates if a vehicle is in the rightmost lane
 
         :param time_step: time step of interest
         :param vehicle: vehicle of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
+
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right_same_direction is None:
-                return True
-        return False
+        if operating_mode is OperatingMode.MONITOR:
+            for l_id in lanelet_ids:
+                if self._road_network.lanelet_network.find_lanelet_by_id(l_id).adj_right_same_direction is None:
+                    return True
+            return False
+        elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
+            constraint_value = -vehicle.lane.width(vehicle.states_lon[time_step].s) / 2
+            current_lanelet = list(vehicle.lane.contained_lanelets)[0]
+            while self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet).adj_right_same_direction \
+                    is not None:
+                current_lanelet = self._road_network.lanelet_network.find_lanelet_by_id(current_lanelet).adj_right
+                constraint_value -= self._road_network.find_lane_by_lanelet(current_lanelet).width(
+                    vehicle.states_lon[time_step].s)
+
+            constraint_value += self._road_network.find_lane_by_lanelet(current_lanelet).width(
+                vehicle.states_lon[time_step].s)
+            if operating_mode is OperatingMode.CONSTRAINT:
+                return constraint_value
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                return constraint_value - vehicle.right_d(time_step)
 
     def _vehicle_directly_right(self, vehicle: Vehicle, other_vehicles: List[Vehicle],
                                 time_step: int) -> Union[Vehicle, None]:
@@ -526,10 +563,10 @@ class PositionPredicateCollection(PredicateCollection):
                     self.on_shoulder(time_step, ego_vehicle)
             if "in_leftmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_leftmost_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_leftmost_lane(time_step, ego_vehicle)
+                    self.in_leftmost_lane(time_step, ego_vehicle, OperatingMode.MONITOR)
             if "in_rightmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_rightmost_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_rightmost_lane(time_step, ego_vehicle)
+                    self.in_rightmost_lane(time_step, ego_vehicle, OperatingMode.MONITOR)
             if "right_of_broad_lane_marking__x_ego" in self._necessary_predicates:
                 predicate_trace["right_of_broad_lane_marking__x_ego"][ego_vehicle.id][time_step] = \
                     self.right_of_broad_lane_marking(time_step, ego_vehicle)

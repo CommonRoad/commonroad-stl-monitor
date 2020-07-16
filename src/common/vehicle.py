@@ -114,7 +114,7 @@ class Vehicle:
                  states_lat: Dict[int, StateLateral], shape: Union[Shape, Rectangle],
                  cr_states: Dict[int, State], vehicle_id: int, obstacle_type: ObstacleType, vehicle_param: Dict,
                  lanelet_assignments: Dict[int, Set[int]], signal_states: Dict[int, SignalState] = None,
-                 vehicle_classification: Dict[int, VehicleClassification] = None,  lane: Union[Lane, List[Lane]] = None):
+                 vehicle_classification: Dict[int, VehicleClassification] = None, lane: Union[Lane, List[Lane]] = None):
         """
         :param states_lon: list of longitudinal states for initialization
         :param states_lat: list of lateral states for initialization
@@ -179,6 +179,10 @@ class Vehicle:
     @property
     def lane(self) -> Lane:
         return self._lane
+
+    @lane.setter
+    def lane(self, lane: Lane):
+        self._lane = lane
 
     @property
     def vehicle_param(self) -> Dict:
