@@ -160,7 +160,7 @@ class PositionPredicateCollection(PredicateCollection):
 
     def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
         """
-        Evaluates if a vehicle is right of a broad lane marking
+        Evaluates if a vehicle is completely right of a broad lane marking
 
         :param vehicle: vehicle of interest
         :param time_step: time step of interest
@@ -182,7 +182,7 @@ class PositionPredicateCollection(PredicateCollection):
 
     def left_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
         """
-        Evaluates if a vehicle is left of a broad lane marking
+        Evaluates if a vehicle is completely left of a broad lane marking
 
         :param vehicle: vehicle of interest
         :param time_step: time step of interest
