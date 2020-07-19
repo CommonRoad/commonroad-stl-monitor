@@ -50,9 +50,9 @@ traffic_rules_backward:
 
     R_I4: always(in_congestion(time_step, ego_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
             -> (interstate_broad_enough(time_step, ego_vehicle) -> !on_shoulder(time_step, ego_vehicle) &&  (in_leftmost_lane(time_step, ego_vehicle, operating_mode)
-            -> drives_leftmost(time_step, ego_vehicle, other_vehicles) && single_lane(time_step, ego_vehicle)) && (!in_leftmost_lane(time_step, ego_vehicle, operating_mode)
-            -> drives_rightmost(time_step, ego_vehicle, other_vehicles))) && (!interstate_broad_enough(time_step, ego_vehicle)
-            -> drives_rightmost(time_step, ego_vehicle, other_vehicles) && in_rightmost_lane(time_step, ego_vehicle, operating_mode) && single_lane(time_step, ego_vehicle)))
+            -> drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode) && single_lane(time_step, ego_vehicle)) && (!in_leftmost_lane(time_step, ego_vehicle, operating_mode)
+            -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode))) && (!interstate_broad_enough(time_step, ego_vehicle)
+            -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode) && in_rightmost_lane(time_step, ego_vehicle, operating_mode) && single_lane(time_step, ego_vehicle)))
 
 # Parameters for traffic rules
 ###

@@ -266,7 +266,7 @@ class PositionPredicateCollection(PredicateCollection):
 
         return right_lanelets
 
-    def _vehicles_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+    def _vehicles_left(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
         """
         Searches for vehicles left of a vehicle
 
@@ -275,12 +275,12 @@ class PositionPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns list of vehicles left of a vehicle
         """
-        vehicles_adj = self._vehicles_adjacent(vehicle, other_vehicles, time_step)
+        vehicles_adj = self._vehicles_adjacent(time_step, vehicle, other_vehicles)
         vehicles_left = [veh for veh in vehicles_adj
                          if veh.right_d(time_step) > vehicle.left_d(time_step)]
         return vehicles_left
 
-    def _vehicles_right(self, vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+    def _vehicles_right(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
         """
         Searches for vehicles right of a vehicle
 
@@ -289,13 +289,13 @@ class PositionPredicateCollection(PredicateCollection):
         :param time_step: time step of interest
         :returns list of vehicles right of a vehicle
         """
-        vehicles_adj = self._vehicles_adjacent(vehicle, other_vehicles, time_step)
+        vehicles_adj = self._vehicles_adjacent(time_step, vehicle, other_vehicles)
         vehicles_right = [veh for veh in vehicles_adj
                           if veh.left_d(time_step) < vehicle.right_d(time_step)]
         return vehicles_right
 
     @staticmethod
-    def _vehicles_adjacent(vehicle: Vehicle, other_vehicles: List[Vehicle], time_step: int) -> List[Vehicle]:
+    def _vehicles_adjacent(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
         """
         Searches for vehicles adjacent to a vehicle
 
@@ -385,9 +385,9 @@ class PositionPredicateCollection(PredicateCollection):
             elif operating_mode is OperatingMode.ROBUSTNESS:
                 return constraint_value - vehicle.right_d(time_step)
 
-    def _vehicle_directly_right(self, vehicle: Vehicle, other_vehicles: List[Vehicle],
-                                time_step: int) -> Union[Vehicle, None]:
-        vehicles_right = self._vehicles_right(vehicle, other_vehicles, time_step)
+    def _vehicle_directly_right(self, time_step: int, vehicle: Vehicle,
+                                other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+        vehicles_right = self._vehicles_right(time_step, vehicle, other_vehicles)
         if len(vehicles_right) == 0:
             return None
         elif len(vehicles_right) == 1:
@@ -399,9 +399,9 @@ class PositionPredicateCollection(PredicateCollection):
                     vehicle_directly_right = veh
             return vehicle_directly_right
 
-    def _vehicle_directly_left(self, vehicle: Vehicle, other_vehicles: List[Vehicle],
-                               time_step: int) -> Union[Vehicle, None]:
-        vehicles_left = self._vehicles_left(vehicle, other_vehicles, time_step)
+    def _vehicle_directly_left(self, time_step: int, vehicle: Vehicle,
+                                other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+        vehicles_left = self._vehicles_left(time_step, vehicle, other_vehicles)
         if len(vehicles_left) == 0:
             return None
         elif len(vehicles_left) == 1:
@@ -413,78 +413,91 @@ class PositionPredicateCollection(PredicateCollection):
                     vehicle_directly_left = veh
             return vehicle_directly_left
 
-    def drives_rightmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def drives_rightmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                         operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
         """
-        Evaluates if a vehicle drives rightmost
+        Evaluates if a vehicle drives rightmost within its occupied lanes
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
         :param other_vehicles: list of other vehicles
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
-        vehicle_directly_right = self._vehicle_directly_right(vehicle, other_vehicles, time_step)
+        vehicle_directly_right = self._vehicle_directly_right(time_step, vehicle, other_vehicles)
         if vehicle_directly_right is not None:
-            if vehicle.right_d(time_step) - vehicle_directly_right.left_d(time_step) < \
-                    self._traffic_rules_param.get("close_to_other_vehicle"):
-                return True
-            else:
-                return False
+            if operating_mode is OperatingMode.MONITOR:
+                if vehicle.right_d(time_step) - vehicle_directly_right.left_d(time_step) < \
+                        self._traffic_rules_param.get("close_to_other_vehicle"):
+                    return True
+                else:
+                    return False
+            elif operating_mode is OperatingMode.CONSTRAINT:
+                return vehicle_directly_right.left_d(time_step) + vehicle.shape.width/2 + \
+                       self._traffic_rules_param.get("close_to_other_vehicle")
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                return vehicle_directly_right.left_d(time_step) + \
+                       self._traffic_rules_param.get("close_to_other_vehicle") - vehicle.right_d(time_step)
         else:
             right_position = vehicle.right_d(time_step)
             s_ego = vehicle.states_lon[time_step].s
             occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
             lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
-            for lane in lanes:
-                if 0.5 * lane.width(s_ego) + right_position > self._traffic_rules_param.get("close_to_lane_border"):
-                    return False
-            return True
-
-    def drives_rightmost_general(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
-        """
-        Evaluates if a vehicle drives rightmost
-
-        :param vehicle: vehicle object
-        :param time_step: time step of interest
-        :param other_vehicles: list of other vehicles
-        :returns boolean indicating satisfaction
-        """
-        vehicle_directly_right = self._vehicle_directly_right(vehicle, other_vehicles, time_step)
-        if vehicle_directly_right is not None:
-            if vehicle.right_d(time_step) - vehicle_directly_right.left_d(time_step) < \
-                    self._traffic_rules_param.get("close_to_other_vehicle"):
+            if operating_mode is OperatingMode.MONITOR:
+                for lane in lanes:
+                    if 0.5 * lane.width(s_ego) + right_position > self._traffic_rules_param.get("close_to_lane_border"):
+                        return False
                 return True
-            else:
-                return False
-        else:
-            if vehicle.states_lat[time_step].d > self._traffic_rules_param.get("above_centerline_th"):
-                return False
-            return True
+            elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
+                constraint = min([vehicle.shape.width/2 - 0.5 * lane.width(s_ego) +
+                                  self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
+                if operating_mode is OperatingMode.CONSTRAINT:
+                    return constraint
+                elif operating_mode is OperatingMode.ROBUSTNESS:
+                    return (constraint - vehicle.shape.width/2) - right_position
 
-    def drives_leftmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def drives_leftmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                        operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
         """
-        Evaluates if a vehicle drives leftmost
+        Evaluates if a vehicle drives leftmost  within its occupied lanes
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
         :param other_vehicles: list of other vehicles
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
         occupied_lanelet_ids = vehicle.lanelet_assignment[time_step]
-        vehicle_directly_left = self._vehicle_directly_left(vehicle, other_vehicles, time_step)
+        vehicle_directly_left = self._vehicle_directly_left(time_step, vehicle, other_vehicles)
         if vehicle_directly_left is not None:
-            if vehicle.left_d(time_step) - vehicle_directly_left.right_d(time_step) < \
-                    self._traffic_rules_param.get("close_to_other_vehicle"):
-                return True
-            else:
-                return False
+            if operating_mode is OperatingMode.MONITOR:
+                if vehicle_directly_left.right_d(time_step) - vehicle.left_d(time_step) < \
+                        self._traffic_rules_param.get("close_to_other_vehicle"):
+                    return True
+                else:
+                    return False
+            elif operating_mode is OperatingMode.CONSTRAINT:
+                return vehicle_directly_left.right_d(time_step) - vehicle.shape.width/2 - \
+                       self._traffic_rules_param.get("close_to_other_vehicle")
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                return vehicle.left_d(time_step) + vehicle_directly_left.right_d(time_step) + \
+                       self._traffic_rules_param.get("close_to_other_vehicle")
         else:
             left_position = vehicle.left_d(time_step)
             s_ego = vehicle.states_lon[time_step].s
             lanes = self._road_network.find_lanes_by_lanelets(occupied_lanelet_ids)
-            for lane in lanes:
-                if 0.5 * lane.width(s_ego) - left_position > self._traffic_rules_param.get("close_to_lane_border"):
-                    return False
-            return True
+            if operating_mode is OperatingMode.MONITOR:
+                for lane in lanes:
+                    if 0.5 * lane.width(s_ego) - left_position > self._traffic_rules_param.get("close_to_lane_border"):
+                        return False
+                return True
+            elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
+                constraint = max([0.5 * lane.width(s_ego) - vehicle.shape.width/2 -
+                                  self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
+                if operating_mode is OperatingMode.CONSTRAINT:
+                    return constraint
+                elif operating_mode is OperatingMode.ROBUSTNESS:
+                    return left_position - (constraint + vehicle.shape.width/2)
 
     def main_carriageway_right_lane(self, time_step: int, vehicle: Vehicle) -> bool:
         """
@@ -502,7 +515,6 @@ class PositionPredicateCollection(PredicateCollection):
                          or LaneletType.MAIN_CARRIAGE_WAY not in
                          self._road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type):
                 return True
-
         return False
 
     def single_lane(self, time_step: int, vehicle: Vehicle) -> bool:
@@ -511,19 +523,19 @@ class PositionPredicateCollection(PredicateCollection):
 
         :param vehicle: vehicle object
         :param time_step: time step of interest
-        :returns boolean indicating satisfaction
+        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
+        :returns boolean indicating satisfaction, constraint values, or robustness value
         """
         lanelets = vehicle.lanelet_assignment[time_step]
         for lanelet_id in lanelets:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            if lanelet.adj_right_same_direction and lanelet.adj_right in lanelets:
-                return False
-            if lanelet.adj_left_same_direction and lanelet.adj_left in lanelets:
+            if lanelet.adj_right_same_direction and lanelet.adj_right in lanelets \
+                    or lanelet.adj_left_same_direction and lanelet.adj_left in lanelets:
                 return False
         return True
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
+                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
