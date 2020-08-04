@@ -129,8 +129,8 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_constraint_mode_2 = 15.55
         exp_sol_constraint_mode_3 = 15.55
         exp_sol_constraint_mode_4 = 15.55
-        exp_sol_robustness_mode_1 = 10.55
-        exp_sol_robustness_mode_2 = 5.55
+        exp_sol_robustness_mode_1 = -5
+        exp_sol_robustness_mode_2 = -1e-17
         exp_sol_robustness_mode_3 = 0.55
         exp_sol_robustness_mode_4 = -4.45
 
@@ -223,7 +223,7 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_robustness_mode_1 = -5.0
         exp_sol_robustness_mode_2 = 0
         exp_sol_robustness_mode_3 = 5.0
-        exp_sol_robustness_mode_4 = 5.0
+        exp_sol_robustness_mode_4 = math.inf
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -368,7 +368,7 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_robustness_mode_1 = 5.0
         exp_sol_robustness_mode_2 = 0
         exp_sol_robustness_mode_3 = -5.0
-        exp_sol_robustness_mode_4 = 45.0
+        exp_sol_robustness_mode_4 = math.inf
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
