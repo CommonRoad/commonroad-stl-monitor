@@ -20,7 +20,7 @@ class TestPredicatesInterface(unittest.TestCase):
         self._traffic_rule_param = traffic_rules.get("traffic_rules_param")
         self._road_network_param = config.get("road_network_param")
 
-    def test_monitor_operating_mode_monitor(self):
+    def test_operating_mode_monitor(self):
         exp_sol = {1001: {5: True, 6: False, 7: False, 8: False, 9: False, 10: False},
                    1002: {5: True, 6: True, 7: True, 8: True, 9: True, 10: True},
                    1003: {5: False, 6: True, 7: True, 8: True, 9: True, 10: True},
