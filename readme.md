@@ -1,5 +1,7 @@
 # CommonRoad Traffic Rule Monitor
 
+**Note:** !!!Robustness mode only works for forward rules!!!
+
 **Note:** Currently, major changes are being made, so runtime errors may occur. 
 In addition, not all of the options listed below to execute the software work. 
 We try to finish the changes as soon as possible. The test cases should work.
