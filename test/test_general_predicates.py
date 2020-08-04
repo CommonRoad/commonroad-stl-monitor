@@ -71,10 +71,10 @@ class TestGeneralPredicates(unittest.TestCase):
         exp_sol_constraint_mode_2 = (-self._traffic_rule_param.get("u_turn"), self._traffic_rule_param.get("u_turn"))
         exp_sol_constraint_mode_3 = (-self._traffic_rule_param.get("u_turn"), self._traffic_rule_param.get("u_turn"))
         exp_sol_constraint_mode_4 = (-self._traffic_rule_param.get("u_turn"), self._traffic_rule_param.get("u_turn"))
-        exp_sol_robustness_mode_1 = self._traffic_rule_param.get("u_turn")
-        exp_sol_robustness_mode_2 = self._traffic_rule_param.get("u_turn") - (1/8) * math.pi
-        exp_sol_robustness_mode_3 = self._traffic_rule_param.get("u_turn") - (1/2) * math.pi
-        exp_sol_robustness_mode_4 = self._traffic_rule_param.get("u_turn") - (3/4) * math.pi
+        exp_sol_robustness_mode_1 = -self._traffic_rule_param.get("u_turn")
+        exp_sol_robustness_mode_2 = -self._traffic_rule_param.get("u_turn") + (1/8) * math.pi
+        exp_sol_robustness_mode_3 = -self._traffic_rule_param.get("u_turn") + (1/2) * math.pi
+        exp_sol_robustness_mode_4 = -self._traffic_rule_param.get("u_turn") + (3/4) * math.pi
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
