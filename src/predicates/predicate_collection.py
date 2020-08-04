@@ -5,6 +5,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from src.common.road_network import RoadNetwork
 from src.common.vehicle import Vehicle
+from src.common.helper import OperatingMode
 
 
 class PredicateCollection(ABC):
@@ -28,7 +29,7 @@ class PredicateCollection(ABC):
 
     @abstractmethod
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
+                            time_interval: Tuple[int, int], operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for predicate compliance
 

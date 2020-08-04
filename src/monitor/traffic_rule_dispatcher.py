@@ -18,6 +18,7 @@ class TrafficRuleDispatcher:
     """
     Manages the different monitors for each traffic rule
     """
+
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
@@ -38,6 +39,7 @@ class TrafficRuleDispatcher:
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
         self._road_network = road_network
+        self._operating_mode = operating_mode
         self._monitors_forward = self.create_forward_monitors(traffic_rules_forward, traffic_rule_sets,
                                                               activated_traffic_rule_sets,
                                                               vehicle_dependent_rules)
@@ -129,16 +131,20 @@ class TrafficRuleDispatcher:
         """
         velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                             (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())))
+                                                                             max(ego_vehicle.states_lon.keys())),
+                                                                            self._operating_mode)
         position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                             (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())))
+                                                                             max(ego_vehicle.states_lon.keys())),
+                                                                            self._operating_mode)
         braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())))
+                                                                           max(ego_vehicle.states_lon.keys())),
+                                                                          self._operating_mode)
         general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())))
+                                                                           max(ego_vehicle.states_lon.keys())),
+                                                                          self._operating_mode)
 
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates
@@ -177,7 +183,7 @@ class TrafficRuleDispatcher:
                     for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
-                rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
+                rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates, self._operating_mode)
             else:  # evaluate rules which depend on other vehicles, e.g., safe distance
                 rule_predicates = {}
                 rule_evaluated = False
@@ -197,7 +203,8 @@ class TrafficRuleDispatcher:
                             break
                         rule_predicates[pred] = trace
                         rule_evaluated = True
-                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
+                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates,
+                                                                                                   self._operating_mode)
                 if rule_evaluated is False:
                     rule_evaluation[rule.name] = True
         return rule_evaluation

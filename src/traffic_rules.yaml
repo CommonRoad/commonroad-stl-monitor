@@ -22,6 +22,8 @@ traffic_rules_forward:
    # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) | ~(~single_lane__x_ego U G(single_lane__x_ego)) | ~(single_lane__x_ego U (~single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))))) # -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
     # assumption: vehicle follows lane
     # new rule lane change has to be finished
+    R_G1_forward_no_cut_in: G((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
+
 traffic_rules_backward:
     R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode) && in_same_lane(time_step, ego_vehicle, other_vehicle) && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle)
                  && pre(!cut_in(time_step, other_vehicle, ego_vehicle)))) -> keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode))
@@ -107,5 +109,6 @@ traffic_rule_sets:
     B_SRI2: [R_I2]
     B_SRI3: [R_I3]
     B_SRI4: [R_I4]
-activated_traffic_rule_sets: [B_SRG1]
-vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7]
+    F_SRGXiao: [R_G1_forward_no_cut_in]
+activated_traffic_rule_sets: [F_SRGXiao] # [B_SRG1]
+vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7, R_G1_forward_no_cut_in]

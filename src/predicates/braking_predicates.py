@@ -153,7 +153,8 @@ class BrakingPredicateCollection(PredicateCollection):
             return min(vehicle_p.states_lon[time_step].a, 0) - vehicle_k.states_lon[time_step].a
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
+                            time_interval: Tuple[int, int],
+                            operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
@@ -170,7 +171,7 @@ class BrakingPredicateCollection(PredicateCollection):
         for time_step in ego_vehicle.states_lon.keys():
             if "unnecessary_braking__x_ego" in self._necessary_predicates:
                 predicate_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
-                    self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+                    self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode)
 
         for other_vehicle in other_vehicles:
             predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
@@ -184,13 +185,13 @@ class BrakingPredicateCollection(PredicateCollection):
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, OperatingMode.MONITOR)
+                        self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode)
                 if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, OperatingMode.MONITOR)
+                        self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode)
                 if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle, OperatingMode.MONITOR)
+                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle, operating_mode)
 
         return predicate_trace
 
@@ -246,34 +247,35 @@ class BrakingPredicateCollection(PredicateCollection):
         :param time_interval: time interval for which the predicates should be evaluated
         :returns dictionary with trace of real values for each predicate
         """
-        robustness_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
-                            "keeps_safe_distance_prec__x_ego__x_o": {},
-                            "keeps_safe_distance_prec__x_o__x_ego": {},
-                            "brakes_stronger__x_ego__x_o": {}}
-
-        for time_step in ego_vehicle.states_lon.keys():
-            if "unnecessary_braking__x_ego" in self._necessary_predicates:
-                robustness_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
-                    self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, OperatingMode.ROBUSTNESS)
-
-        for other_vehicle in other_vehicles:
-            robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
-            robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
-            robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in range(time_interval[0], time_interval[1] + 1):
-                if other_vehicle.states_lon.get(time_step) is None:
-                    robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
-                    robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
-                    robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
-                    continue
-                if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
-                    robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, OperatingMode.ROBUSTNESS)
-                if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
-                    robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, OperatingMode.ROBUSTNESS)
-                if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
-                    robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle, OperatingMode.ROBUSTNESS)
-
-        return robustness_trace
+        pass
+        # robustness_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
+        #                     "keeps_safe_distance_prec__x_ego__x_o": {},
+        #                     "keeps_safe_distance_prec__x_o__x_ego": {},
+        #                     "brakes_stronger__x_ego__x_o": {}}
+        #
+        # for time_step in ego_vehicle.states_lon.keys():
+        #     if "unnecessary_braking__x_ego" in self._necessary_predicates:
+        #         robustness_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
+        #             self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, OperatingMode.ROBUSTNESS)
+        #
+        # for other_vehicle in other_vehicles:
+        #     robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
+        #     robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
+        #     robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
+        #     for time_step in range(time_interval[0], time_interval[1] + 1):
+        #         if other_vehicle.states_lon.get(time_step) is None:
+        #             robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
+        #             robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
+        #             robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
+        #             continue
+        #         if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
+        #             robustness_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
+        #                 self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, OperatingMode.ROBUSTNESS)
+        #         if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
+        #             robustness_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
+        #                 self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, OperatingMode.ROBUSTNESS)
+        #         if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
+        #             robustness_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
+        #                 self.brakes_stronger(time_step, ego_vehicle, other_vehicle, OperatingMode.ROBUSTNESS)
+        #
+        # return robustness_trace
