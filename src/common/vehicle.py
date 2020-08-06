@@ -1,12 +1,10 @@
 from typing import Union, Set, Dict, List
 import enum
 import math
-import numpy as np
 
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
-from commonroad.geometry.transform import rotate_translate
 
 from src.common.road_network import Lane
 
