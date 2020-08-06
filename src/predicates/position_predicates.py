@@ -2,7 +2,8 @@ from typing import List, Dict, Set, Union, Tuple
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
-from src.predicates.predicate_collection import PredicateCollection
+from src.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintType, \
+    ConstraintRepresentation
 from src.common.vehicle import Vehicle
 from src.common.road_network import RoadNetwork
 from src.common.helper import OperatingMode
@@ -23,7 +24,7 @@ class PositionPredicateCollection(PredicateCollection):
 
     @staticmethod
     def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, float, Constraint]:
         """
         Evaluates if the kth vehicle is in front of the pth vehicle
 
@@ -39,7 +40,8 @@ class PositionPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return vehicle_p.front_s(time_step)
+            return Constraint([ConstraintType.LONGITUDINAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
+                              vehicle_p.front_s(time_step))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
 

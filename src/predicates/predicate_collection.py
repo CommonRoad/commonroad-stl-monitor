@@ -72,40 +72,54 @@ class PredicateCollection(ABC):
 
 
 @enum.unique
-class ConstraintType(enum.Enum):
+class ConstraintRepresentation(enum.Enum):
     """
     Defines the representation of a constraint
     """
     UPPER = 0   # real valued upper constraint
     LOWER = 1   # real valued lower constraint
-    OUTER_BOUNDARY = 2 # CommonRoad shape as an outer boundary
-    INNER_BOUNDARY = 3 # CommonRoad shape as an inner boundary
+    OUTER_BOUNDARY = 2  # CommonRoad shape as an outer boundary
+    INNER_BOUNDARY = 3  # CommonRoad shape as an inner boundary
+
+
+@enum.unique
+class ConstraintType(enum.Enum):
+    """
+    Defines the type of constraint axis
+    """
+    LONGITUDINAL_CURVILINEAR_POSITION = 0
+    LATERAL_CURVILINEAR_POSITION = 1
+    X_CARTESIAN_POSITION = 2
+    Y_CARTESIAN_POSITION = 3
+    VELOCITY = 4
+    ORIENTATION = 5
+    ACCELERATION = 6
 
 
 class Constraint:
     """
     Representation of a constraint so that constraints can be uses outside of the CommonRoad monitor.
     """
-    def __init__(self, axis: List[str], constraint_type: ConstraintType,
+    def __init__(self, axis: List[ConstraintType], constraint_representation: ConstraintRepresentation,
                  value: Union[int, float, Shape, ShapeGroup, Polygon, Rectangle, Circle]):
         """
         Constructor
 
         :param axis: list of axis values
-        :param constraint_type: dictionary with parameters of the simulation environment
+        :param constraint_representation: dictionary with parameters of the simulation environment
         :param value: constraint: can be a CommonRoad shape or a real value.
         """
         self._axis = axis
-        self._constraint_type = constraint_type
+        self._constraint_representation = constraint_representation
         self._value = value
 
     @property
-    def axis(self) -> List[str]:
+    def axis(self) -> List[ConstraintType]:
         return self._axis
 
     @property
-    def constraint_type(self) -> ConstraintType:
-        return self._constraint_type
+    def constraint_representation(self) -> ConstraintRepresentation:
+        return self._constraint_representation
 
     @property
     def value(self) -> Union[int, float, Shape, ShapeGroup, Polygon, Rectangle, Circle]:
