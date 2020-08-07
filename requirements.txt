@@ -1,5 +1,5 @@
 python-monitors >= 0.1.1
-scipy
+scipy >= 1.4.1
 numpy >=1.16.4
 metric-temporal-logic >= 0.1.4
 commonroad-io >= 2020.2

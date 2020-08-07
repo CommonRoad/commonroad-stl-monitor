@@ -1,17 +1,16 @@
-from scipy.integrate import odeint
-
 from commonroad.common.file_writer import CommonRoadFileWriter
 from commonroad.common.file_writer import OverwriteExistingFile
 from commonroad.geometry.shape import Rectangle
-from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.planning.goal import GoalRegion, Interval, AngleInterval
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.prediction.prediction import TrajectoryPrediction
-from commonroad.scenario.traffic_sign import TrafficSign, TrafficSignElement, TrafficSignIDGermany
 from commonroad.scenario.obstacle import ObstacleType
+from commonroad.scenario.traffic_sign import TrafficSign, TrafficSignElement, TrafficSignIDGermany
 from commonroad.scenario.trajectory import State, Trajectory
+from scipy.integrate import odeint
 from vehicleDynamics_ST import vehicleDynamics_ST
 
-from src.common.helper import *
+from crmonitor.common.helper import *
 from scenarios.test.road_network_generation import *
 
 CONSTANT_DRIVING_50 = [0] * 50
@@ -45,7 +44,7 @@ def create_obstacle_by_acceleration(acceleration_profile, v_init, p_init, obs_id
     time_step = 1
     x = [p_init[0], p_init[1], 0, v_init, 0, 0, 0]
     p = parameters_vehicle2()
-    t = np.arange(0, 2*dt, dt)
+    t = np.arange(0, 2 * dt, dt)
     for idx in range(len(acceleration_profile)):
         a = acceleration_profile[idx]
         if steering_velocity_profile is not None:
@@ -175,7 +174,8 @@ def create_safe_distance_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                             0, 0, 0, 0, 0, -10, -10, -10, -10, -10,
                                             -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
-                                            -10, -10, -10, -10, -10, -10, -10, -10, -10, -10], 30, np.array([3.0, 12.25]), 1008)
+                                            -10, -10, -10, -10, -10, -10, -10, -10, -10, -10], 30,
+                                           np.array([3.0, 12.25]), 1008)
     obs9 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([30.0, 12.25]), 1009,
                                            [0.05, 0.05, 0.05, 0, 0, 0, 0, -0.05, -0.05, -0.05,
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -184,10 +184,10 @@ def create_safe_distance_scenario():
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     obs10 = create_obstacle_by_acceleration(CONSTANT_DRIVING_50, 20, np.array([45.0, 15.75]), 1010,
                                             [-0.05, -0.05, -0.05, 0, 0, 0, 0, 0.05, 0.05, 0.05,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                             0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     for i in range(11):
         obs = locals().get('obs' + str(i))
         if obs is not None:
@@ -265,6 +265,7 @@ def create_unnecessary_braking_scenario():
                                         [3.5, 3.5, 3.5, 3.5, 3.5])
 
     write_to_file(scenario)
+
 
 def create_standstill_scenario():
     obstacles = []
@@ -564,7 +565,8 @@ def create_consider_entering_vehicles_for_lane_change_scenario():
     num_lanes = 2
     num_lanelets = 10
     road_length = 200
-    scenario = create_access_ramp_scenario("test_consider_entering_vehicles_for_lane_change", 0.1, num_lanes, num_lanelets,
+    scenario = create_access_ramp_scenario("test_consider_entering_vehicles_for_lane_change", 0.1, num_lanes,
+                                           num_lanelets,
                                            road_length, obstacles, [(LineMarking.DASHED, LineMarking.DASHED),
                                                                     (LineMarking.SOLID, LineMarking.DASHED)])
 
