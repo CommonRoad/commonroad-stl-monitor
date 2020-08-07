@@ -15,8 +15,3 @@ __pycache__
 
 # jupyter
 .ipynb_checkpoints
-
-# python package
-.eggs
-.pytest_cache
-*.egg-info
