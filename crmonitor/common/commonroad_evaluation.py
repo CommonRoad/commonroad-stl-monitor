@@ -1,8 +1,8 @@
 import traceback
 
-from src.common.helper import *
-from src.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
-from src.common.road_network import RoadNetwork
+from crmonitor.common.helper import *
+from crmonitor.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
+from crmonitor.common.road_network import RoadNetwork
 
 from commonroad.scenario.scenario import Scenario
 

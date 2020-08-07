@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple, Set
 import mtl
-from src.common.helper import OperatingMode
+from crmonitor.common.helper import OperatingMode
 
 class TrafficRuleMonitorForward:
     """

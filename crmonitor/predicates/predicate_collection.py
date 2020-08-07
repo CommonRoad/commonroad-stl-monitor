@@ -3,9 +3,9 @@ from typing import List, Dict, Set, Tuple
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
-from src.common.road_network import RoadNetwork
-from src.common.vehicle import Vehicle
-from src.common.helper import OperatingMode
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.helper import OperatingMode
 
 
 class PredicateCollection(ABC):

@@ -3,11 +3,11 @@ import math
 
 from commonroad.scenario.obstacle import ObstacleType
 
-from src.predicates.predicate_collection import PredicateCollection
-from src.common.road_network import RoadNetwork
-from src.common.vehicle import Vehicle
-from src.predicates.position_predicates import PositionPredicateCollection
-from src.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.predicates.position_predicates import PositionPredicateCollection
+from crmonitor.common.helper import OperatingMode
 
 
 class VelocityPredicateCollection(PredicateCollection):

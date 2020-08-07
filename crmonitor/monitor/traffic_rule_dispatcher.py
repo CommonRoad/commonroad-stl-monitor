@@ -3,15 +3,15 @@ import warnings
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
-from src.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
-from src.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
-from src.predicates.velocity_predicates import VelocityPredicateCollection
-from src.predicates.position_predicates import PositionPredicateCollection
-from src.predicates.braking_predicates import BrakingPredicateCollection
-from src.predicates.general_predicates import GeneralPredicateCollection
-from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork
-from src.common.helper import OperatingMode
+from crmonitor.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
+from crmonitor.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
+from crmonitor.predicates.velocity_predicates import VelocityPredicateCollection
+from crmonitor.predicates.position_predicates import PositionPredicateCollection
+from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
+from crmonitor.predicates.general_predicates import GeneralPredicateCollection
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.helper import OperatingMode
 
 
 class TrafficRuleDispatcher:

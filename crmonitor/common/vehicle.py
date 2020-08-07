@@ -8,7 +8,7 @@ from commonroad.scenario.trajectory import State
 from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.geometry.transform import rotate_translate
 
-from src.common.road_network import Lane
+from crmonitor.common.road_network import Lane
 
 
 class StateLongitudinal:

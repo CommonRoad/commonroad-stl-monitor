@@ -11,7 +11,7 @@ from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
 from vehicleDynamics_ST import vehicleDynamics_ST
 
-from src.common.helper import *
+from crmonitor.common.helper import *
 from scenarios.test.road_network_generation import *
 
 CONSTANT_DRIVING_50 = [0] * 50

@@ -3,10 +3,10 @@ from typing import List, Dict, Set, Union, Tuple
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
-from src.predicates.predicate_collection import PredicateCollection
-from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork
-from src.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.helper import OperatingMode
 
 
 class PositionPredicateCollection(PredicateCollection):

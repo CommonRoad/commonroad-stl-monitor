@@ -2,11 +2,11 @@ from typing import List, Dict, Set, Tuple, Union
 
 from commonroad.scenario.lanelet import Lanelet
 
-from src.predicates.predicate_collection import PredicateCollection
-from src.predicates.position_predicates import PositionPredicateCollection
-from src.common.vehicle import Vehicle
-from src.common.road_network import RoadNetwork
-from src.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection
+from crmonitor.predicates.position_predicates import PositionPredicateCollection
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.helper import OperatingMode
 
 
 class GeneralPredicateCollection(PredicateCollection):

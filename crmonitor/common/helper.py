@@ -11,8 +11,8 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 
-from src.common.vehicle import Vehicle, VehicleClassification, StateLongitudinal, StateLateral
-from src.common.road_network import RoadNetwork, Lane
+from crmonitor.common.vehicle import Vehicle, VehicleClassification, StateLongitudinal, StateLateral
+from crmonitor.common.road_network import RoadNetwork, Lane
 
 
 @enum.unique

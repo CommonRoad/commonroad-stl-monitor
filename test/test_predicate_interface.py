@@ -4,14 +4,14 @@ import os
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
-from src.predicates.braking_predicates import BrakingPredicateCollection
-from src.common.helper import *
-from src.common.road_network import RoadNetwork
+from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
+from crmonitor.common.helper import *
+from crmonitor.common.road_network import RoadNetwork
 
 
 class TestPredicatesInterface(unittest.TestCase):
     def setUp(self):
-        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')

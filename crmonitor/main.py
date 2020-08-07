@@ -3,8 +3,8 @@ import argparse
 import time
 import sys
 
-from src.common.helper import *
-from src.common.commonroad_evaluation import CommonRoadObstacleEvaluation
+from crmonitor.common.helper import *
+from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 
 from commonroad.scenario.scenario import Tag
 from commonroad.common.file_reader import CommonRoadFileReader

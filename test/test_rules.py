@@ -1,12 +1,12 @@
 import unittest
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from src.common.commonroad_evaluation import CommonRoadObstacleEvaluation
+from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 
 
 class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
-        self.cr_eval = CommonRoadObstacleEvaluation("../src/")
+        self.cr_eval = CommonRoadObstacleEvaluation("../crmonitor/")
         self.cr_eval.simulation_param["operating_mode"] = "test"
         self.test_scenario_dir = "../scenarios/test/"
 
