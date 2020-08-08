@@ -493,7 +493,6 @@ def load_yaml(file_name: str) -> Union[Dict, None]:
 
     :param file_name: name of the yaml file
     """
-    print(file_name)
     with open(file_name, 'r') as stream:
         try:
             config = ruamel.yaml.round_trip_load(stream, preserve_quotes=True)

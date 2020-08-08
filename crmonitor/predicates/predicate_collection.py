@@ -77,8 +77,8 @@ class ConstraintRepresentation(enum.Enum):
     """
     Defines the representation of a constraint
     """
-    UPPER = 0  # real valued upper constraint
-    LOWER = 1  # real valued lower constraint
+    UPPER = 0  # real-valued upper constraint
+    LOWER = 1  # real-valued lower constraint
     OUTER_BOUNDARY = 2  # CommonRoad shape as an outer boundary
     INNER_BOUNDARY = 3  # CommonRoad shape as an inner boundary
 

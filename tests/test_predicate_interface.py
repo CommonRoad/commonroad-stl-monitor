@@ -92,6 +92,9 @@ class TestPredicatesInterface(unittest.TestCase):
         time_interval = (5, 10)
         sol = braking_predicates.evaluate_constraints(ego_vehicle, other_vehicles, time_interval) \
             .get("keeps_safe_distance_prec__x_ego__x_o")
+        for veh_id, pred in sol.items():
+            for time, constraint in pred.items():
+                sol[veh_id][time] = constraint.value
         self.assertEqual(exp_sol, sol)
 
     def test_operating_robustness(self):

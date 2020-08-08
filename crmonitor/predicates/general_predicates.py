@@ -6,7 +6,8 @@ from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.position_predicates import PositionPredicateCollection
-from crmonitor.predicates.predicate_collection import PredicateCollection
+from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
+    ConstraintType
 
 
 class GeneralPredicateCollection(PredicateCollection):
@@ -22,7 +23,7 @@ class GeneralPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, traffic_rules_param,
                          necessary_predicates, traffic_sign_interpreter)
 
-    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is in a congestion
 
@@ -47,7 +48,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is part of slow moving traffic
 
@@ -72,7 +73,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is part of a queue of vehicles
 
@@ -116,7 +117,7 @@ class GeneralPredicateCollection(PredicateCollection):
         return lanelets
 
     def makes_u_turn(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, List[Constraint], float]:
         """
         Predicate which evaluates if vehicle makes U-turn
 
@@ -145,7 +146,10 @@ class GeneralPredicateCollection(PredicateCollection):
         if operating_mode is OperatingMode.MONITOR:
             return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return (max(constraint_values_min), min(constraint_values_max))
+            return [Constraint([ConstraintType.ORIENTATION], ConstraintRepresentation.LOWER,
+                               (max(constraint_values_min))),
+                    Constraint([ConstraintType.ORIENTATION], ConstraintRepresentation.UPPER,
+                               (min(constraint_values_max)))]
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return max(robustness_values)
 

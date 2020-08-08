@@ -726,13 +726,13 @@ class TestPositionPredicates(unittest.TestCase):
         sol_constraint_mode_7 = position_predicates.in_leftmost_lane(6, ego_vehicle, OperatingMode.CONSTRAINT)
         ego_vehicle.lane = road_network.lanes[0]
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
-        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
-        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6)
-        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5.value)
+        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6.value)
+        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = position_predicates.in_leftmost_lane(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -836,13 +836,13 @@ class TestPositionPredicates(unittest.TestCase):
         ego_vehicle.lane = road_network.lanes[0]
         sol_constraint_mode_7 = position_predicates.in_rightmost_lane(6, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
-        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
-        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6)
-        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5.value)
+        self.assertEqual(exp_sol_constraint_mode_6, sol_constraint_mode_6.value)
+        self.assertEqual(exp_sol_constraint_mode_7, sol_constraint_mode_7.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = position_predicates.in_rightmost_lane(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -1981,11 +1981,11 @@ class TestPositionPredicates(unittest.TestCase):
         sol_constraint_mode_5 = position_predicates.drives_rightmost(4, ego_vehicle, other_vehicles,
                                                                      OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
-        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = position_predicates.drives_rightmost(0, ego_vehicle, other_vehicles,
@@ -2086,11 +2086,11 @@ class TestPositionPredicates(unittest.TestCase):
         sol_constraint_mode_5 = position_predicates.drives_leftmost(4, ego_vehicle, other_vehicles,
                                                                     OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
-        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = position_predicates.drives_leftmost(0, ego_vehicle, other_vehicles,
