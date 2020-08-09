@@ -67,14 +67,9 @@ class CommonRoadObstacleEvaluation:
             if not (self.simulation_param.get("operating_mode") == "test"
                     or self.simulation_param.get("operating_mode") == "evaluation"
                     or self.simulation_param.get("operating_mode") == "single_scenario"
-                    or self.simulation_param.get("operating_mode") == "single_scenario_limited"
                     or (self.simulation_param.get("operating_mode") == "single_vehicle"
                         and self.simulation_param.get("ego_vehicle_id") == ego.obstacle_id)):
                 continue
-            if (self.simulation_param.get("operating_mode") == "evaluation"
-                or self.simulation_param.get("operating_mode") == "single_scenario_limited") \
-                    and self.simulation_param.get("num_vehicles") <= self.num_vehicles + len(vehicle_evaluation):
-                break
 
             ego_vehicle, other_vehicles = create_scenario_vehicles(self._simulation_param.get("dt"),
                                                                    scenario.obstacle_by_id(ego.obstacle_id),
@@ -117,6 +112,7 @@ class CommonRoadObstacleEvaluation:
             return
         self.evaluate_result(result, scenario.benchmark_id)
 
+        print(result)
         return result
 
     def update_eval_dict(self):

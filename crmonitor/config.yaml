@@ -14,15 +14,14 @@
 #    - time_measuring: activate/deactivate computation time measuring
 simulation_param:
   dt: 0.1
-  operating_mode: single_vehicle # single_scenario, single_vehicle, test, evaluation, single_scenario_limited
+  operating_mode: evaluation # single_scenario, single_vehicle, test, evaluation
   ego_vehicle_id: 1008
-  scenario_dir: /../scenarios/test # /../../../commonroad/scenarios/datasets/highD/commonroad_scenarios #test/  /../../../commonroad/scenarios/datasets/highD/commonroad-scenarios
+  scenario_dir: /../scenarios/test_interstate/
   benchmark_id: DEU_test_safe_distance
-  scenario_directories:  ["/../scenarios/test"] #["/../../../commonroad/scenarios/highD-dataset/cr_scenarios"]
-  num_vehicles: 2
+  scenario_directories:  ["/scenarios/test_interstate"]
   verbose_mode: false
   time_measuring: false
-  mode: monitor # one of monitor/constraint/robustness
+  mode: monitor # one of monitor, constraint, robustness
 
 # road network and curvilinear coordinate system parameters
 ###

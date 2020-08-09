@@ -13,7 +13,7 @@ setup(
         'python-monitors>=0.1.1',
         'scipy>=1.4.1',
         'numpy>=1.16.4'
-        'metric-temporal-logic>=0.1.4'
+        'metric-temporal-logic>=0.1.7'
         'commonroad-io==2020.2'
         'matplotlib>=2.5.0'
         'ruamel.yaml>=0.16.10'

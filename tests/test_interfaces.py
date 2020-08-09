@@ -9,7 +9,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
 
 
-class TestPredicatesInterface(unittest.TestCase):
+class TestInterfaces(unittest.TestCase):
     def setUp(self):
         config_path = os.path.dirname(__file__) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
@@ -19,6 +19,7 @@ class TestPredicatesInterface(unittest.TestCase):
         self._ego_vehicle_param = create_other_vehicles_param(config.get("ego_vehicle_param"))
         self._traffic_rule_param = traffic_rules.get("traffic_rules_param")
         self._road_network_param = config.get("road_network_param")
+        self.test_scenario_dir = os.path.dirname(__file__) + "/../scenarios/test_interstate/"
 
     def test_operating_mode_monitor(self):
         exp_sol = {1001: {5: True, 6: False, 7: False, 8: False, 9: False, 10: False},
@@ -32,8 +33,7 @@ class TestPredicatesInterface(unittest.TestCase):
                    1009: {5: False, 6: False, 7: False, 8: False, 9: False, 10: False},
                    1010: {5: False, 6: False, 7: False, 8: False, 9: False, 10: False}}
 
-        scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
-                                                              + "/../scenarios/test/DEU_test_safe_distance.xml"). \
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml"). \
             open(lanelet_assignment=True)
         ego_id = 1000
         road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
@@ -74,8 +74,7 @@ class TestPredicatesInterface(unittest.TestCase):
                    1010: {5: 72.09438095238093, 6: 72.09438095238093, 7: 71.24038095238095,
                           8: 71.24038095238095, 9: 70.39038095238094, 10: 70.39038095238094}}
 
-        scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
-                                                              + "/../scenarios/test/DEU_test_safe_distance.xml"). \
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml"). \
             open(lanelet_assignment=True)
         ego_id = 1000
         road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)
@@ -119,8 +118,7 @@ class TestPredicatesInterface(unittest.TestCase):
                    1010: {5: -44.200661384158295, 6: -46.05900924707709, 7: -47.064428648017355,
                           8: -48.93297281434592, 9: -49.97625938216209, 10: -51.896304205777206}}
 
-        scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
-                                                              + "/../scenarios/test/DEU_test_safe_distance.xml"). \
+        scenario, planning_problem_set = CommonRoadFileReader(self.test_scenario_dir + "DEU_test_safe_distance.xml"). \
             open(lanelet_assignment=True)
         ego_id = 1000
         road_network = RoadNetwork(scenario.lanelet_network, self._road_network_param)

@@ -10,7 +10,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
     def setUp(self):
         self.cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(__file__) + "/../crmonitor/")
         self.cr_eval.simulation_param["operating_mode"] = "test"
-        self.test_scenario_dir = os.path.dirname(__file__) + "/../scenarios/test/"
+        self.test_scenario_dir = os.path.dirname(__file__) + "/../scenarios/test_interstate/"
 
     def test_keeps_max_lane_speed_limit(self):
         # one vehicle which always violates speed limit (1002)

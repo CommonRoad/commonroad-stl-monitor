@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import time
+import multiprocessing
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Tag
@@ -44,8 +45,9 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 
 def get_args():
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
+    parser.add_argument('--operating_mode', help='Operating mode for execution.')
     parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')
-    parser.add_argument('--num_vehicles', default=1, type=int, help='Number of vehicles to evaluate.')
+    parser.add_argument('--num_cores', default=1, type=int, help='Number of processor cores which should be used.')
     parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
 
     return parser.parse_args()
@@ -55,9 +57,9 @@ def main():
     start_time = time.time()
 
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
-    if cr_eval.simulation_param.get("operating_mode") == "single_scenario" \
-            or cr_eval.simulation_param.get("operating_mode") == "single_vehicle" \
-            or cr_eval.simulation_param.get("operating_mode") == "":
+    args = get_args()
+
+    if args.operating_mode is None:
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
                                                               + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")
@@ -65,31 +67,21 @@ def main():
         result = cr_eval.evaluate_scenario(scenario)
         print(result)
     else:
-        args = get_args()
         if args.scenario_directories is None:
             scenario_directories = cr_eval.simulation_param.get("scenario_directories")
         else:
-            cr_eval.simulation_param["operating_mode"] = "evaluation"
             scenario_directories = args.scenario_directories
-        if args.max_num_scenarios is None:
-            max_num_scenarios = cr_eval.simulation_param.get("max_num_scenarios")
+        if args.operating_mode is not None:
+            cr_eval.simulation_param["operating_mode"] = args.operating_mode
+        if args.max_num_scenarios < 0:
+            max_num_scenarios = 2
         else:
-            cr_eval.simulation_param["operating_mode"] = "evaluation"
             max_num_scenarios = args.max_num_scenarios
-        if max_num_scenarios < 0:
-            max_num_scenarios = sys.maxsize
-        if args.num_vehicles is not None:
-            if args.num_vehicles < 0:
-                cr_eval.simulation_param["num_vehicles"] = sys.maxsize
-            else:
-                cr_eval.simulation_param["num_vehicles"] = args.num_vehicles
 
         scenarios = create_scenarios_from_directory(scenario_directories, max_num_scenarios)
-        for sc in scenarios:
-            result = cr_eval.evaluate_scenario(sc)
-            print(result)
-            if cr_eval.simulation_param.get("num_vehicles") <= cr_eval.num_vehicles:
-                break
+
+        pool = multiprocessing.Pool(processes=args.num_cores)
+        pool.map(cr_eval.evaluate_scenario, (scenarios[idx] for idx in range(len(scenarios))))
 
     print(cr_eval.eval_dict)
     print("Num. scenarios: " + str(cr_eval.num_scenarios))
