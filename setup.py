@@ -1,14 +1,15 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='commonroad-monitor',
     version='0.5.0',
-    packages=['crmonitor'],
     url='https://commonroad.in.tum.de/',
     license='',
     author='Sebastian Maierhofer',
     author_email='sebastian.maierhofer@tum.de',
     description='Traffic Rule Monitor for CommonRoad Scenarios',
+    packages=find_packages(exclude=("tests", "docs", "jupyter")),
+    include_package_data=True,
     install_requires=[
         'python-monitors>=0.1.1',
         'scipy>=1.4.1',
@@ -22,5 +23,8 @@ setup(
         'jupyter'
     ],
     setup_requires=['pytest-runner'],
-    tests_require=['pytest']
+    tests_require=['pytest'],
+    entry_points = {
+        'console_scripts': ['commonroad-monitor=crmonitor.main:main'],
+    }
 )
