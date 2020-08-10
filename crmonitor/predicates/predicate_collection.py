@@ -1,6 +1,8 @@
+import enum
 from abc import ABC, abstractmethod
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Union
 
+from commonroad.geometry.shape import Shape, ShapeGroup, Polygon, Rectangle, Circle
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.road_network import RoadNetwork

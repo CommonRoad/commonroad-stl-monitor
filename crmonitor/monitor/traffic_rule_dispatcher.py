@@ -22,7 +22,7 @@ class TrafficRuleDispatcher:
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str]):
+                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode):
         """
         Constructor
 

@@ -1,6 +1,6 @@
 from typing import List, Dict, Set, Union, Tuple
 
-from crmonitor.predicates.predicate_collection import PredicateCollection
+from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.position_predicates import PositionPredicateCollection
