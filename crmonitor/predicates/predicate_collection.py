@@ -7,6 +7,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.helper import OperatingMode
 
 
 class PredicateCollection(ABC):
@@ -34,40 +35,16 @@ class PredicateCollection(ABC):
 
     @abstractmethod
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
+                            time_interval: Tuple[int, int],
+                            operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with traces of bool values for each predicate
-        """
-        pass
-
-    @abstractmethod
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Extracts constraints for a vehicle
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with traces of constraints for each predicate
-        """
-        pass
-
-    @abstractmethod
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Extracts robustness values for a vehicle
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with traces of robustness values for each predicate
         """
         pass
 
@@ -126,3 +103,25 @@ class Constraint:
     @property
     def value(self) -> Union[int, float, Shape, ShapeGroup, Polygon, Rectangle, Circle]:
         return self._value
+
+
+class ConstraintEvaluation:
+    """
+    Class to extract a set of constraints from predicates   #TODO
+    """
+    def __init__(self, predicate_collections: List[PredicateCollection]):
+        self._predicate_collections = predicate_collections
+
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_interval: Tuple[int, int]):
+        constraints = []
+        for collection in self._predicate_collections:
+            constraints += collection.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
+                                                          OperatingMode.CONSTRAINT)
+
+        return self.unify_constraints(constraints)
+
+    def unify_constraints(self, constraints: List[Constraint]):
+        # iterate over Constraints and combine them  #TODO
+        pass
+
+

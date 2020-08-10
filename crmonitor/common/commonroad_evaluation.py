@@ -25,7 +25,7 @@ class CommonRoadObstacleEvaluation:
         self._vehicle_dependent_rules = traffic_rules.get("vehicle_dependent_rules")
         self._road_network_param = config.get("road_network_param")
         self._road_network: RoadNetwork  # updated in each test case
-        self._operating_mode = OperatingMode(self._simulation_param["mode"])
+        self._operating_mode = OperatingMode(self._simulation_param["operating_mode"])
 
         self.num_vehicles = 0
         self.num_scenarios = 0
@@ -60,14 +60,13 @@ class CommonRoadObstacleEvaluation:
         dispatcher = TrafficRuleDispatcher(self._traffic_rules_forward, self._traffic_rules_backward,
                                            self._traffic_rule_sets, self._road_network,
                                            self._simulation_param, self._traffic_rules_param,
-                                           self._activated_traffic_rule_sets, self._vehicle_dependent_rules,
-                                           self._operating_mode)
+                                           self._activated_traffic_rule_sets, self._vehicle_dependent_rules)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
-            if not (self.simulation_param.get("operating_mode") == "test"
-                    or self.simulation_param.get("operating_mode") == "evaluation"
-                    or self.simulation_param.get("operating_mode") == "single_scenario"
-                    or (self.simulation_param.get("operating_mode") == "single_vehicle"
+            if not (self.simulation_param.get("evaluation_mode") == "test"
+                    or self.simulation_param.get("evaluation_mode") == "statistic"
+                    or self.simulation_param.get("evaluation_mode") == "single_scenario"
+                    or (self.simulation_param.get("evaluation_mode") == "single_vehicle"
                         and self.simulation_param.get("ego_vehicle_id") == ego.obstacle_id)):
                 continue
 

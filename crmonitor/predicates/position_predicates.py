@@ -543,13 +543,15 @@ class PositionPredicateCollection(PredicateCollection):
         return True
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, bool]]]:
+                            time_interval: Tuple[int, int],
+                            operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for safety predicate compliance
 
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_same_lane__x_ego__x_o": {},
@@ -583,22 +585,19 @@ class PositionPredicateCollection(PredicateCollection):
                     self.on_shoulder(time_step, ego_vehicle)
             if "in_leftmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_leftmost_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_leftmost_lane(time_step, ego_vehicle, OperatingMode.MONITOR)
+                    self.in_leftmost_lane(time_step, ego_vehicle, operating_mode)
             if "in_rightmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_rightmost_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_rightmost_lane(time_step, ego_vehicle, OperatingMode.MONITOR)
+                    self.in_rightmost_lane(time_step, ego_vehicle, operating_mode)
             if "right_of_broad_lane_marking__x_ego" in self._necessary_predicates:
                 predicate_trace["right_of_broad_lane_marking__x_ego"][ego_vehicle.id][time_step] = \
                     self.right_of_broad_lane_marking(time_step, ego_vehicle)
             if "drives_leftmost__x_ego" in self._necessary_predicates:
                 predicate_trace["drives_leftmost__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_leftmost(time_step, ego_vehicle, other_vehicles)
+                    self.drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "drives_rightmost__x_ego" in self._necessary_predicates:
                 predicate_trace["drives_rightmost__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_rightmost(time_step, ego_vehicle, other_vehicles)
-            if "drives_rightmost_general__x_ego" in self._necessary_predicates:
-                predicate_trace["drives_rightmost_general__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_rightmost_general(time_step, ego_vehicle, other_vehicles)
+                    self.drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "single_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["single_lane__x_ego"][ego_vehicle.id][time_step] = \
                     self.single_lane(time_step, ego_vehicle)
@@ -622,10 +621,10 @@ class PositionPredicateCollection(PredicateCollection):
                         self.in_same_lane(time_step, ego_vehicle, other_vehicle)
                 if "in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.in_front_of(time_step, ego_vehicle, other_vehicle, OperatingMode.MONITOR)
+                        self.in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode)
                 if "in_front_of__x_o__x_ego" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.in_front_of(time_step, other_vehicle, ego_vehicle, OperatingMode.MONITOR)
+                        self.in_front_of(time_step, other_vehicle, ego_vehicle, operating_mode)
                 if "left_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.left_of(time_step, ego_vehicle, other_vehicle)
@@ -642,13 +641,3 @@ class PositionPredicateCollection(PredicateCollection):
                     predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id][time_step] = \
                         self.on_main_carriage_way(time_step, other_vehicle)
         return predicate_trace
-
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
-        pass
-
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
-        pass

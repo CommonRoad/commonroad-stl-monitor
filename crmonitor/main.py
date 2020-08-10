@@ -45,7 +45,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 
 def get_args():
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
-    parser.add_argument('--operating_mode', help='Operating mode for execution.')
+    parser.add_argument('--evaluation_mode', help='Evaluation mode for execution.')
     parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')
     parser.add_argument('--num_cores', default=1, type=int, help='Number of processor cores which should be used.')
     parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
@@ -72,7 +72,7 @@ def main():
         else:
             scenario_directories = args.scenario_directories
         if args.operating_mode is not None:
-            cr_eval.simulation_param["operating_mode"] = args.operating_mode
+            cr_eval.simulation_param["evaluation_mode"] = args.evaluation_mode
         if args.max_num_scenarios < 0:
             max_num_scenarios = 2
         else:

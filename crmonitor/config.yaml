@@ -14,14 +14,14 @@
 #    - time_measuring: activate/deactivate computation time measuring
 simulation_param:
   dt: 0.1
-  operating_mode: evaluation # single_scenario, single_vehicle, test, evaluation
+  evaluation_mode: statistic # single_scenario, single_vehicle, test, statistic
   ego_vehicle_id: 1008
   scenario_dir: /../scenarios/test_interstate/
   benchmark_id: DEU_test_safe_distance
   scenario_directories:  ["/scenarios/test_interstate"]
   verbose_mode: false
   time_measuring: false
-  mode: monitor # one of monitor, constraint, robustness
+  operating_mode: monitor # one of monitor, constraint, robustness
 
 # road network and curvilinear coordinate system parameters
 ###

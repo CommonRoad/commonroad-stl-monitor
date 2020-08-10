@@ -22,7 +22,7 @@ class TrafficRuleDispatcher:
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode):
+                 vehicle_dependent_rules: List[str]):
         """
         Constructor
 
@@ -34,7 +34,6 @@ class TrafficRuleDispatcher:
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
         :param activated_traffic_rule_sets: set of rules which are activated
         :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
@@ -130,16 +129,20 @@ class TrafficRuleDispatcher:
         """
         velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                             (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())))
+                                                                             max(ego_vehicle.states_lon.keys())),
+                                                                            OperatingMode.MONITOR)
         position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                             (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())))
+                                                                             max(ego_vehicle.states_lon.keys())),
+                                                                            OperatingMode.MONITOR)
         braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())))
+                                                                           max(ego_vehicle.states_lon.keys())),
+                                                                            OperatingMode.MONITOR)
         general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())))
+                                                                           max(ego_vehicle.states_lon.keys())),
+                                                                            OperatingMode.MONITOR)
 
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates

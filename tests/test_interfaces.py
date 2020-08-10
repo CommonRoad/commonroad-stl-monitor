@@ -48,8 +48,8 @@ class TestInterfaces(unittest.TestCase):
                                                                self._ego_vehicle_param, self._other_vehicles_param,
                                                                road_network, scenario.dynamic_obstacles)
         time_interval = (5, 10)
-        sol = braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles, time_interval) \
-            .get("keeps_safe_distance_prec__x_ego__x_o")
+        sol = braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
+                                                     OperatingMode.MONITOR).get("keeps_safe_distance_prec__x_ego__x_o")
         self.assertEqual(exp_sol, sol)
 
     def test_operating_mode_constraint(self):
@@ -89,7 +89,8 @@ class TestInterfaces(unittest.TestCase):
                                                                road_network, scenario.dynamic_obstacles)
 
         time_interval = (5, 10)
-        sol = braking_predicates.evaluate_constraints(ego_vehicle, other_vehicles, time_interval) \
+        sol = braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
+                                                     OperatingMode.CONSTRAINT) \
             .get("keeps_safe_distance_prec__x_ego__x_o")
         for veh_id, pred in sol.items():
             for time, constraint in pred.items():
@@ -134,6 +135,7 @@ class TestInterfaces(unittest.TestCase):
                                                                road_network, scenario.dynamic_obstacles)
 
         time_interval = (5, 10)
-        sol = braking_predicates.evaluate_robustness(ego_vehicle, other_vehicles, time_interval). \
+        sol = braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
+                                                     OperatingMode.ROBUSTNESS). \
             get("keeps_safe_distance_prec__x_ego__x_o")
         self.assertEqual(exp_sol, sol)
