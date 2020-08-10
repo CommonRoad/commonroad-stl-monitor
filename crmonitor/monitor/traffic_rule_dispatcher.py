@@ -22,7 +22,7 @@ class TrafficRuleDispatcher:
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode):
+                 vehicle_dependent_rules: List[str]):
         """
         Constructor
 
@@ -34,7 +34,6 @@ class TrafficRuleDispatcher:
         :param traffic_rule_param: dictionary with parameters of traffic rule parameters
         :param activated_traffic_rule_sets: set of rules which are activated
         :param vehicle_dependent_rules: set of rules which must be evaluated with respect to several vehicles
-        :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param

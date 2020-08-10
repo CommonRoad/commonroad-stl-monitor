@@ -4,7 +4,8 @@ from crmonitor.predicates.predicate_collection import PredicateCollection
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.position_predicates import PositionPredicateCollection
-from crmonitor.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
+    ConstraintType
 
 
 class BrakingPredicateCollection(PredicateCollection):
@@ -21,7 +22,7 @@ class BrakingPredicateCollection(PredicateCollection):
                          necessary_predicates, traffic_sign_interpreter)
 
     def unnecessary_braking(self, time_step: int, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            operating_mode: OperatingMode) -> bool:
+                            operating_mode: OperatingMode) -> Union[bool, Constraint, float]:
         """ Predicate to check whether an obstacle brakes abruptly
 
         :param ego_vehicle: ego vehicle
@@ -66,9 +67,10 @@ class BrakingPredicateCollection(PredicateCollection):
                 return False
         elif operating_mode is operating_mode.CONSTRAINT:
             if same_lane_front_vehicle is False:
-                return self._traffic_rules_param.get("a_abrupt")
+                return Constraint([ConstraintType.ACCELERATION], ConstraintRepresentation.LOWER,
+                                  self._traffic_rules_param.get("a_abrupt"))
             else:
-                return max(constraint_values)
+                return Constraint([ConstraintType.ACCELERATION], ConstraintRepresentation.LOWER, max(constraint_values))
         elif operating_mode is operating_mode.ROBUSTNESS:
             if same_lane_front_vehicle is False:
                 return max(a_ego, -a_ego + self._traffic_rules_param.get("a_abrupt"))
@@ -98,7 +100,7 @@ class BrakingPredicateCollection(PredicateCollection):
 
     @staticmethod
     def keeps_safe_distance_prec(time_step: int, vehicle_follow: Vehicle, vehicle_lead: Vehicle,
-                                 operating_mode: OperatingMode) -> Union[bool, float]:
+                                 operating_mode: OperatingMode) -> Union[bool, Constraint, float]:
         """
         Evaluates if safe distance is kept by following vehicle
 
@@ -116,8 +118,8 @@ class BrakingPredicateCollection(PredicateCollection):
                                                                  a_min_follow, a_min_lead, t_react_follow)
 
         if operating_mode is OperatingMode.CONSTRAINT:
-            return safe_distance
-
+            return Constraint([ConstraintType.LONGITUDINAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
+                              safe_distance)
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
         if operating_mode is OperatingMode.MONITOR:
             if 0 <= delta_s < safe_distance:
@@ -129,7 +131,7 @@ class BrakingPredicateCollection(PredicateCollection):
 
     @staticmethod
     def brakes_stronger(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle,
-                        operating_mode: OperatingMode) -> Union[bool, float]:
+                        operating_mode: OperatingMode) -> Union[bool, Constraint, float]:
         """
         Predicate which checks if the kth vehicle brakes stronger (has lower acceleration) than the pth vehicle.
         If the kth vehicle has a positive acceleration the predicate evaluates always to false since
@@ -148,7 +150,8 @@ class BrakingPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:  # returns upper bound for acceleration
-            return min(vehicle_p.states_lon[time_step].a, 0)
+            return Constraint([ConstraintType.ACCELERATION], ConstraintRepresentation.LOWER,
+                              min(vehicle_p.states_lon[time_step].a, 0))
         elif operating_mode is OperatingMode.ROBUSTNESS:  # returns difference to upper bound defined by constraint
             return min(vehicle_p.states_lon[time_step].a, 0) - vehicle_k.states_lon[time_step].a
 
@@ -161,6 +164,7 @@ class BrakingPredicateCollection(PredicateCollection):
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
@@ -194,57 +198,3 @@ class BrakingPredicateCollection(PredicateCollection):
                         self.brakes_stronger(time_step, ego_vehicle, other_vehicle, operating_mode)
 
         return predicate_trace
-
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Extracts constraints for a vehicle
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with trace of bool values for each predicate
-        """
-        constraint_trace = {"unnecessary_braking__x_ego": {ego_vehicle.id: {}},
-                            "keeps_safe_distance_prec__x_ego__x_o": {},
-                            "keeps_safe_distance_prec__x_o__x_ego": {},
-                            "brakes_stronger__x_ego__x_o": {}}
-
-        for time_step in ego_vehicle.states_lon.keys():
-            if "unnecessary_braking__x_ego" in self._necessary_predicates:
-                constraint_trace["unnecessary_braking__x_ego"][ego_vehicle.id][time_step] = \
-                    self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, OperatingMode.CONSTRAINT)
-
-        for other_vehicle in other_vehicles:
-            constraint_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = {}
-            constraint_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = {}
-            constraint_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in range(time_interval[0], time_interval[1] + 1):
-                if other_vehicle.states_lon.get(time_step) is None:
-                    constraint_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = True
-                    constraint_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = True
-                    constraint_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = True
-                    continue
-                if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
-                    constraint_trace["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, OperatingMode.CONSTRAINT)
-                if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
-                    constraint_trace["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, OperatingMode.CONSTRAINT)
-                if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
-                    constraint_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.brakes_stronger(time_step, ego_vehicle, other_vehicle, OperatingMode.CONSTRAINT)
-
-        return constraint_trace
-
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Extracts constraints for a vehicle
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with trace of real values for each predicate
-        """
-        pass

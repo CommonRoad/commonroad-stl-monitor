@@ -4,7 +4,7 @@
 # .. code-block:: yaml
 #
 #    - dt: time step size
-#    - operating_mode: specifies operating mode: either single_scenario, single_scenario_limited, single_vehicle, test, or evaluation
+#    - operating_mode: specifies operating mode: either single_scenario, single_vehicle, evaluation, or benchmark
 #    - ego_vehicle_id: ego vehicle ID
 #    - scenario_directories: directories in which CommonRoad scenarios are located
 #    - num_vehicles: number of vehicles which should be evaluated

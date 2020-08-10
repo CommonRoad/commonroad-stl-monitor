@@ -47,4 +47,4 @@ You can list the different parameters by executing `python main.py -h`.
 
 The temporal logic formulas of the rules and the rule specific parametrization can be found in the file *[traffic_rules.yaml](crmonitor/traffic_rules.yaml)*.  
 Simulation and vehicle parameters can be set in the file *[config.yaml](crmonitor/config.yaml)*.  
-The test scenarios (*[./scenarios/test](./scenarios/test)*) are described in the test script as comment in each test (*[./test/test_rules.py](./test/test_rules.py)*).
+The test scenarios (*[./scenarios/test](scenarios/test_interstate)*) are described in the test script as comment in each test (*[./test/test_rules.py](tests/test_rules.py)*).

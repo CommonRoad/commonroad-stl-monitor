@@ -7,7 +7,8 @@ from crmonitor.predicates.predicate_collection import PredicateCollection
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.position_predicates import PositionPredicateCollection
-from crmonitor.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
+    ConstraintType
 
 
 class VelocityPredicateCollection(PredicateCollection):
@@ -37,7 +38,7 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return min(self._traffic_rules_param.get("desired_interstate_velocity"), v_max_lane)
 
-    def slow_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def slow_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Predicate which evaluates if a slow leading vehicle exists if front of a vehicle
 
@@ -63,7 +64,8 @@ class VelocityPredicateCollection(PredicateCollection):
 
         return False
 
-    def preserves_traffic_flow(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
+    def preserves_traffic_flow(self, time_step: int, vehicle: Vehicle,
+                               operating_mode: OperatingMode) -> [bool, Constraint, float]:
         """
         Predicate for minimum speed limit evaluation
 
@@ -83,12 +85,13 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return v_max - self._traffic_rules_param.get("min_velocity_dif")
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER,
+                              v_max - self._traffic_rules_param.get("min_velocity_dif"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return vehicle.states_lon[time_step].v - v_max + self._traffic_rules_param.get("min_velocity_dif") - 1e-17
 
     def in_standstill(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, List[Constraint], float]:
         """
         Evaluation if vehicle is standing
 
@@ -104,8 +107,10 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return (-self._traffic_rules_param.get("standstill_error"),
-                    self._traffic_rules_param.get("standstill_error"))
+            return [Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER,
+                               -self._traffic_rules_param.get("standstill_error")),
+                    Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
+                               self._traffic_rules_param.get("standstill_error"))]
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return abs(self._traffic_rules_param.get("standstill_error")) - abs(vehicle.states_lon[time_step].v)
 
@@ -132,7 +137,8 @@ class VelocityPredicateCollection(PredicateCollection):
         return False
 
     def drives_with_slightly_higher_speed(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle,
-                                          operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                                          operating_mode: OperatingMode) -> Union[bool,
+                                                                                  List[Constraint], float]:
         """
         Predicate which checks if the kth vehicle drives maximum with slightly higher speed than the pth vehicle
 
@@ -149,7 +155,11 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return vehicle_p.states_lon[time_step].v + self._traffic_rules_param.get("slightly_higher_speed_difference")
+            return [Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER,
+                               vehicle_p.states_lon[time_step].v),
+                    Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
+                               vehicle_p.states_lon[time_step].v +
+                               self._traffic_rules_param.get("slightly_higher_speed_difference"))]
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return min(
                 vehicle_p.states_lon[time_step].v + self._traffic_rules_param.get("slightly_higher_speed_difference") -
@@ -158,7 +168,7 @@ class VelocityPredicateCollection(PredicateCollection):
 
     @staticmethod
     def drives_faster(time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle,
-                      operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                      operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate which checks if the kth vehicle drives faster than the pth vehicle
 
@@ -174,12 +184,13 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return vehicle_p.states_lon[time_step].v
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER,
+                              vehicle_p.states_lon[time_step].v)
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return vehicle_k.states_lon[time_step].v - vehicle_p.states_lon[time_step].v - 1.e-17
 
     def reverses(self, time_step: int, vehicle: Vehicle,
-                 operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                 operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Evaluates if a vehicle drives backwards
 
@@ -194,7 +205,8 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return -self._traffic_rules_param.get("standstill_error")
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER,
+                              -self._traffic_rules_param.get("standstill_error"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return -self._traffic_rules_param.get("standstill_error") - vehicle.states_lon[time_step].v - -1e-17
 
@@ -212,7 +224,7 @@ class VelocityPredicateCollection(PredicateCollection):
             return math.inf
 
     def keeps_sign_min_speed_limit(self, time_step: int, vehicle: Vehicle,
-                                   operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                                   operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate for lanelet required speed evaluation
 
@@ -232,9 +244,9 @@ class VelocityPredicateCollection(PredicateCollection):
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
             if required_speed is None:
-                return 0
+                return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER, 0)
             else:
-                return required_speed
+                return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.LOWER, required_speed)
         elif operating_mode is OperatingMode.ROBUSTNESS:
             if required_speed is None:
                 return math.inf
@@ -243,7 +255,7 @@ class VelocityPredicateCollection(PredicateCollection):
 
     @staticmethod
     def keeps_fov_speed_limit(time_step: int, vehicle: Vehicle,
-                              operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                              operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate for field of view speed limit evaluation. This is necessary to ensure that a vehicle is able to react
         to a standing vehicle at the border of the field of view.
@@ -259,13 +271,14 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return True
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return vehicle.vehicle_param.get("fov_speed_limit")
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
+                              vehicle.vehicle_param.get("fov_speed_limit"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return vehicle.vehicle_param.get("fov_speed_limit") - vehicle.states_lon[time_step].v
 
     @staticmethod
     def keeps_braking_speed_limit(time_step: int, vehicle: Vehicle,
-                                  operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                                  operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate for braking speed limit evaluation. This is necessary to ensure that a vehicle is able to react
         without unnecessary braking to an upcoming speed limit.
@@ -281,12 +294,13 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return True
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return vehicle.vehicle_param.get("braking_speed_limit")
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
+                              vehicle.vehicle_param.get("braking_speed_limit"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return vehicle.vehicle_param.get("braking_speed_limit") - vehicle.states_lon[time_step].v
 
     def keeps_type_speed_limit(self, time_step: int, vehicle: Vehicle,
-                               operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                               operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate for type speed limit evaluation
 
@@ -301,12 +315,13 @@ class VelocityPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return self._get_type_speed_limit(vehicle.obstacle_type)
+            return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
+                              self._get_type_speed_limit(vehicle.obstacle_type))
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return self._get_type_speed_limit(vehicle.obstacle_type) - vehicle.states_lon[time_step].v
 
     def keeps_lane_speed_limit(self, time_step: int, vehicle: Vehicle,
-                               operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                               operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Predicate for lanelet speed limit evaluation
 
@@ -326,9 +341,9 @@ class VelocityPredicateCollection(PredicateCollection):
                 return True
         elif operating_mode is OperatingMode.CONSTRAINT:
             if speed_limit is None:
-                return math.inf
+                return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER, math.inf)
             else:
-                return speed_limit
+                return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER, speed_limit)
         elif operating_mode is OperatingMode.ROBUSTNESS:
             if speed_limit is None:
                 return math.inf
@@ -344,6 +359,7 @@ class VelocityPredicateCollection(PredicateCollection):
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"keeps_lane_speed_limit__x_ego": {ego_vehicle.id: {}},
@@ -407,85 +423,5 @@ class VelocityPredicateCollection(PredicateCollection):
                         self.drives_faster(time_step, other_vehicle, ego_vehicle, operating_mode)
                 if "drives_with_slightly_higher_speed__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle,
-                                                               operating_mode)
+                        self.drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle, operating_mode)
         return predicate_trace
-
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Evaluates trajectory for safety predicate compliance
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with trace of bool values for each predicate
-        """
-        predicate_trace = {"keeps_lane_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "keeps_fov_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "preserves_traffic_flow__x_ego": {ego_vehicle.id: {}},
-                           "slow_leading_vehicle__x_ego": {ego_vehicle.id: {}},
-                           "keeps_sign_min_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "keeps_braking_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "keeps_type_speed_limit__x_ego": {ego_vehicle.id: {}},
-                           "exist_standing_leading_vehicle__x_ego": {ego_vehicle.id: {}},
-                           "in_standstill__x_ego": {ego_vehicle.id: {}},
-                           "drives_with_slightly_higher_speed__x_ego__x_o": {},
-                           "drives_faster__x_ego__x_o": {},
-                           "drives_faster__x_o__x_ego": {},
-                           "reverses__x_ego": {ego_vehicle.id: {}}}
-
-        for time_step in ego_vehicle.states_lon.keys():
-            if "keeps_lane_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_lane_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_lane_speed_limit(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            if "keeps_fov_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_fov_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_fov_speed_limit(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            if "keeps_braking_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_braking_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_braking_speed_limit(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            if "preserves_traffic_flow__x_ego" in self._necessary_predicates:
-                predicate_trace["preserves_traffic_flow__x_ego"][ego_vehicle.id][time_step] = \
-                    self.preserves_traffic_flow(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            # if "slow_leading_vehicle__x_ego" in self._necessary_predicates:
-            #     predicate_trace["slow_leading_vehicle__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.slow_leading_vehicle(time_step, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
-            if "keeps_type_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_type_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_type_speed_limit(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            if "keeps_sign_min_speed_limit__x_ego" in self._necessary_predicates:
-                predicate_trace["keeps_sign_min_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
-                    self.keeps_sign_min_speed_limit(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            # if "exist_standing_leading_vehicle__x_ego" in self._necessary_predicates:
-            #     predicate_trace["exist_standing_leading_vehicle__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
-            if "in_standstill__x_ego" in self._necessary_predicates:
-                predicate_trace["in_standstill__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_standstill(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            if "reverses__x_ego" in self._necessary_predicates:
-                predicate_trace["reverses__x_ego"][ego_vehicle.id][time_step] = \
-                    self.reverses(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-
-        for other_vehicle in other_vehicles:
-            predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id] = {}
-            predicate_trace["drives_faster__x_o__x_ego"][other_vehicle.id] = {}
-            predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id] = {}
-            for time_step in ego_vehicle.states_lon.keys():
-                if other_vehicle.states_lon.get(time_step) is None:
-                    continue
-                if "drives_faster__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["drives_faster__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.drives_faster(time_step, ego_vehicle, other_vehicle, OperatingMode.ROBUSTNESS)
-                if "drives_faster__x_o__x_ego" in self._necessary_predicates:
-                    predicate_trace["drives_faster__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.drives_faster(time_step, other_vehicle, ego_vehicle, OperatingMode.ROBUSTNESS)
-                if "drives_with_slightly_higher_speed__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["drives_with_slightly_higher_speed__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle,
-                                                               OperatingMode.ROBUSTNESS)
-        return predicate_trace
-
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        pass

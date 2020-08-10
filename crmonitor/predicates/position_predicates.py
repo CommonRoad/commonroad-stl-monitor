@@ -50,7 +50,7 @@ class PositionPredicateCollection(PredicateCollection):
             # return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
 
     @staticmethod
-    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle):
+    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
         """
         Evaluates if the kth vehicle is left of the pth vehicle
 
@@ -335,7 +335,7 @@ class PositionPredicateCollection(PredicateCollection):
         return vehicles_adj
 
     def in_leftmost_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, float, Constraint]:
         """
         Evaluates if a vehicle is in the leftmost lane
 
@@ -362,12 +362,13 @@ class PositionPredicateCollection(PredicateCollection):
             constraint_value -= self._road_network.find_lane_by_lanelet(current_lanelet).width(
                 vehicle.states_lon[time_step].s)
             if operating_mode is OperatingMode.CONSTRAINT:
-                return constraint_value
+                return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
+                                  constraint_value)
             elif operating_mode is OperatingMode.ROBUSTNESS:
                 return vehicle.left_d(time_step) - constraint_value
 
     def in_rightmost_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, float, Constraint]:
         """
         Evaluates if a vehicle is in the rightmost lane
 
@@ -395,7 +396,8 @@ class PositionPredicateCollection(PredicateCollection):
             constraint_value += self._road_network.find_lane_by_lanelet(current_lanelet).width(
                 vehicle.states_lon[time_step].s)
             if operating_mode is OperatingMode.CONSTRAINT:
-                return constraint_value
+                return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.UPPER,
+                                  constraint_value)
             elif operating_mode is OperatingMode.ROBUSTNESS:
                 return constraint_value - vehicle.right_d(time_step)
 
@@ -428,7 +430,7 @@ class PositionPredicateCollection(PredicateCollection):
             return vehicle_directly_left
 
     def drives_rightmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
-                         operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                         operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Evaluates if a vehicle drives rightmost within its occupied lanes
 
@@ -447,8 +449,9 @@ class PositionPredicateCollection(PredicateCollection):
                 else:
                     return False
             elif operating_mode is OperatingMode.CONSTRAINT:
-                return vehicle_directly_right.left_d(time_step) + vehicle.shape.width/2 + \
-                       self._traffic_rules_param.get("close_to_other_vehicle")
+                return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.UPPER,
+                                  vehicle_directly_right.left_d(time_step) + vehicle.shape.width / 2 +
+                                  self._traffic_rules_param.get("close_to_other_vehicle"))
             elif operating_mode is OperatingMode.ROBUSTNESS:
                 return vehicle_directly_right.left_d(time_step) + \
                        self._traffic_rules_param.get("close_to_other_vehicle") - vehicle.right_d(time_step)
@@ -466,12 +469,13 @@ class PositionPredicateCollection(PredicateCollection):
                 constraint = min([vehicle.shape.width/2 - 0.5 * lane.width(s_ego) +
                                   self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
                 if operating_mode is OperatingMode.CONSTRAINT:
-                    return constraint
+                    return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.UPPER,
+                                      constraint)
                 elif operating_mode is OperatingMode.ROBUSTNESS:
                     return (constraint - vehicle.shape.width/2) - right_position
 
     def drives_leftmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
-                        operating_mode: OperatingMode) -> Union[bool, float, Tuple[float, float]]:
+                        operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
         """
         Evaluates if a vehicle drives leftmost  within its occupied lanes
 
@@ -491,8 +495,9 @@ class PositionPredicateCollection(PredicateCollection):
                 else:
                     return False
             elif operating_mode is OperatingMode.CONSTRAINT:
-                return vehicle_directly_left.right_d(time_step) - vehicle.shape.width/2 - \
-                       self._traffic_rules_param.get("close_to_other_vehicle")
+                return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
+                                  vehicle_directly_left.right_d(time_step) - vehicle.shape.width / 2 - \
+                                  self._traffic_rules_param.get("close_to_other_vehicle"))
             elif operating_mode is OperatingMode.ROBUSTNESS:
                 return vehicle.left_d(time_step) + vehicle_directly_left.right_d(time_step) + \
                        self._traffic_rules_param.get("close_to_other_vehicle")
@@ -509,7 +514,8 @@ class PositionPredicateCollection(PredicateCollection):
                 constraint = max([0.5 * lane.width(s_ego) - vehicle.shape.width/2 -
                                   self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
                 if operating_mode is OperatingMode.CONSTRAINT:
-                    return constraint
+                    return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
+                                      constraint)
                 elif operating_mode is OperatingMode.ROBUSTNESS:
                     return left_position - (constraint + vehicle.shape.width/2)
 
@@ -557,6 +563,7 @@ class PositionPredicateCollection(PredicateCollection):
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_same_lane__x_ego__x_o": {},
@@ -599,13 +606,10 @@ class PositionPredicateCollection(PredicateCollection):
                     self.right_of_broad_lane_marking(time_step, ego_vehicle)
             if "drives_leftmost__x_ego" in self._necessary_predicates:
                 predicate_trace["drives_leftmost__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_leftmost(time_step, ego_vehicle, other_vehicles)
+                    self.drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "drives_rightmost__x_ego" in self._necessary_predicates:
                 predicate_trace["drives_rightmost__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_rightmost(time_step, ego_vehicle, other_vehicles)
-            if "drives_rightmost_general__x_ego" in self._necessary_predicates:
-                predicate_trace["drives_rightmost_general__x_ego"][ego_vehicle.id][time_step] = \
-                    self.drives_rightmost_general(time_step, ego_vehicle, other_vehicles)
+                    self.drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "single_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["single_lane__x_ego"][ego_vehicle.id][time_step] = \
                     self.single_lane(time_step, ego_vehicle)
@@ -649,15 +653,3 @@ class PositionPredicateCollection(PredicateCollection):
                     predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id][time_step] = \
                         self.on_main_carriage_way(time_step, other_vehicle)
         return predicate_trace
-
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
-        pass
-
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> \
-            Dict[str, Dict[int, Dict[int, float]]]:
-        pass
-
-

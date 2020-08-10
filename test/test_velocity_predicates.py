@@ -101,10 +101,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.in_standstill(2, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.in_standstill(3, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, (sol_constraint_mode_1[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_2, (sol_constraint_mode_2[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_3, (sol_constraint_mode_3[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_4, (sol_constraint_mode_4[0].value, sol_constraint_mode_1[1].value))
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.in_standstill(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -125,10 +125,10 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_monitor_mode_2 = False  # ego vehicle has same velocity
         exp_sol_monitor_mode_3 = True  # ego vehicle drives with only slightly higher speed
         exp_sol_monitor_mode_4 = False  # ego vehicle drives too fast
-        exp_sol_constraint_mode_1 = 15.55
-        exp_sol_constraint_mode_2 = 15.55
-        exp_sol_constraint_mode_3 = 15.55
-        exp_sol_constraint_mode_4 = 15.55
+        exp_sol_constraint_mode_1 = (10.0, 15.55)
+        exp_sol_constraint_mode_2 = (10.0, 15.55)
+        exp_sol_constraint_mode_3 = (10.0, 15.55)
+        exp_sol_constraint_mode_4 = (10.0, 15.55)
         exp_sol_robustness_mode_1 = -5
         exp_sol_robustness_mode_2 = -1e-17
         exp_sol_robustness_mode_3 = 0.55
@@ -190,10 +190,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_4 = velocity_predicates.drives_with_slightly_higher_speed(3, ego_vehicle, other_vehicle_1,
                                                                                       OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, (sol_constraint_mode_1[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_2, (sol_constraint_mode_2[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_3, (sol_constraint_mode_3[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_4, (sol_constraint_mode_4[0].value, sol_constraint_mode_1[1].value))
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.drives_with_slightly_higher_speed(0, ego_vehicle, other_vehicle_1,
@@ -263,10 +263,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.keeps_sign_min_speed_limit(2, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.keeps_sign_min_speed_limit(3, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.keeps_sign_min_speed_limit(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -339,9 +339,9 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.drives_faster(2, ego_vehicle, other_vehicle_1,
                                                                   OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.drives_faster(0, ego_vehicle, other_vehicle_1,
@@ -408,10 +408,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.keeps_lane_speed_limit(2, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.keeps_lane_speed_limit(3, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.keeps_lane_speed_limit(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -508,10 +508,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.keeps_type_speed_limit(2, ego_vehicle_1, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.keeps_type_speed_limit(3, ego_vehicle_2, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.keeps_type_speed_limit(0, ego_vehicle_1, OperatingMode.ROBUSTNESS)
@@ -572,9 +572,9 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_2 = velocity_predicates.keeps_braking_speed_limit(1, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_3 = velocity_predicates.keeps_braking_speed_limit(2, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.keeps_braking_speed_limit(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -633,9 +633,9 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_2 = velocity_predicates.keeps_fov_speed_limit(1, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_3 = velocity_predicates.keeps_fov_speed_limit(2, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.keeps_fov_speed_limit(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -701,10 +701,10 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_3 = velocity_predicates.reverses(2, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = velocity_predicates.reverses(3, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.reverses(0, ego_vehicle, OperatingMode.ROBUSTNESS)
@@ -849,9 +849,9 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_constraint_mode_2 = velocity_predicates.preserves_traffic_flow(1, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_3 = velocity_predicates.preserves_traffic_flow(2, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.preserves_traffic_flow(0, ego_vehicle, OperatingMode.ROBUSTNESS)

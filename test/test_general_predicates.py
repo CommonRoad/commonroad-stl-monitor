@@ -112,10 +112,10 @@ class TestGeneralPredicates(unittest.TestCase):
         sol_constraint_mode_3 = general_predicates.makes_u_turn(2, ego_vehicle, OperatingMode.CONSTRAINT)
         sol_constraint_mode_4 = general_predicates.makes_u_turn(3, ego_vehicle, OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_1, (sol_constraint_mode_1[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_2, (sol_constraint_mode_2[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_3, (sol_constraint_mode_3[0].value, sol_constraint_mode_1[1].value))
+        self.assertEqual(exp_sol_constraint_mode_4, (sol_constraint_mode_4[0].value, sol_constraint_mode_1[1].value))
 
         # Robustness-Mode
         sol_robustness_mode_1 = general_predicates.makes_u_turn(0, ego_vehicle, OperatingMode.ROBUSTNESS)

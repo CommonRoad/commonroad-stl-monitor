@@ -7,6 +7,8 @@ from crmonitor.predicates.position_predicates import PositionPredicateCollection
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.helper import OperatingMode
+from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
+    ConstraintType
 
 
 class GeneralPredicateCollection(PredicateCollection):
@@ -22,7 +24,7 @@ class GeneralPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, traffic_rules_param,
                          necessary_predicates, traffic_sign_interpreter)
 
-    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is in a congestion
 
@@ -47,7 +49,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is part of slow moving traffic
 
@@ -72,7 +74,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
-    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]):
+    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
         """
         Evaluates if a vehicle is part of a queue of vehicles
 
@@ -116,7 +118,7 @@ class GeneralPredicateCollection(PredicateCollection):
         return lanelets
 
     def makes_u_turn(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Tuple[float, float]]:
+            -> Union[bool, List[Constraint], float]:
         """
         Predicate which evaluates if vehicle makes U-turn
 
@@ -145,7 +147,10 @@ class GeneralPredicateCollection(PredicateCollection):
         if operating_mode is OperatingMode.MONITOR:
             return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return (max(constraint_values_min), min(constraint_values_max))
+            return [Constraint([ConstraintType.ORIENTATION], ConstraintRepresentation.LOWER,
+                               (max(constraint_values_min))),
+                    Constraint([ConstraintType.ORIENTATION], ConstraintRepresentation.UPPER,
+                               (min(constraint_values_max)))]
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return max(robustness_values)
 
@@ -211,6 +216,7 @@ class GeneralPredicateCollection(PredicateCollection):
         :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :param time_interval: time interval for which the predicates should be evaluated
+        :param operating_mode: operating mode which should be used for evaluation (monitor, constraint, or robustness)
         :returns dictionary with trace of bool values for each predicate
         """
         predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
@@ -263,66 +269,3 @@ class GeneralPredicateCollection(PredicateCollection):
 
         return predicate_trace
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        pass
-
-    def evaluate_robustness(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int]) -> Dict[str, Dict[int, Dict[int, float]]]:
-        """
-        Evaluates trajectory for safety predicate compliance
-
-        :param ego_vehicle: ego vehicle object containing trajectory and other relevant information
-        :param other_vehicles: other vehicle objects containing trajectory and other relevant information
-        :param time_interval: time interval for which the predicates should be evaluated
-        :returns dictionary with trace of real values for each predicate
-        """
-        predicate_trace = {"in_congestion__x_ego": {ego_vehicle.id: {}},
-                           "in_congestion__x_o": {},
-                           "in_slow_moving_traffic__x_ego": {ego_vehicle.id: {}},
-                           "in_slow_moving_traffic__x_o": {},
-                           "in_queue_of_vehicles__x_ego": {ego_vehicle.id: {}},
-                           "in_queue_of_vehicles__x_o": {},
-                           "cut_in__x_o__x_ego": {},
-                           "makes_u_turn__x_ego": {ego_vehicle.id: {}},
-                           "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
-
-        for time_step in ego_vehicle.states_lon.keys():
-            # if "in_congestion__x_ego" in self._necessary_predicates:
-            #     predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.in_congestion(time_step, ego_vehicle, other_vehicles)
-            # if "in_slow_moving_traffic__x_ego" in self._necessary_predicates:
-            #     predicate_trace["in_slow_moving_traffic__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
-            # if "in_queue_of_vehicles__x_ego" in self._necessary_predicates:
-            #     predicate_trace["in_queue_of_vehicles__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles)
-            if "makes_u_turn__x_ego" in self._necessary_predicates:
-                predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
-                    self.makes_u_turn(time_step, ego_vehicle, OperatingMode.ROBUSTNESS)
-            # if "interstate_broad_enough__x_ego" in self._necessary_predicates:
-            #     predicate_trace["interstate_broad_enough__x_ego"][ego_vehicle.id][time_step] = \
-            #         self.interstate_broad_enough(time_step, ego_vehicle)
-
-        for other_vehicle in other_vehicles:
-            predicate_trace["in_congestion__x_o"][other_vehicle.id] = {}
-            predicate_trace["in_slow_moving_traffic__x_o"][other_vehicle.id] = {}
-            predicate_trace["in_queue_of_vehicles__x_o"][other_vehicle.id] = {}
-            predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id] = {}
-            for time_step in ego_vehicle.states_lon.keys():
-                if other_vehicle.states_lon.get(time_step) is None:
-                    continue
-                # if "in_congestion__x_o" in self._necessary_predicates:
-                #     predicate_trace["in_congestion__x_o"][other_vehicle.id][time_step] = \
-                #         self.in_congestion(time_step, other_vehicle, other_vehicles)
-                # if "in_slow_moving_traffic__x_o" in self._necessary_predicates:
-                #     predicate_trace["in_slow_moving_traffic__x_o"][other_vehicle.id][time_step] = \
-                #         self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
-                # if "in_queue_of_vehicles__x_o" in self._necessary_predicates:
-                #     predicate_trace["in_queue_of_vehicles__x_o"][other_vehicle.id][time_step] = \
-                #         self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)
-                # if "cut_in__x_o__x_ego" in self._necessary_predicates:
-                #     predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id][time_step] = \
-                #         self.cut_in(time_step, other_vehicle, ego_vehicle)
-
-        return predicate_trace
