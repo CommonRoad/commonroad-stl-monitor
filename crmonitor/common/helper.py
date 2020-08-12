@@ -248,7 +248,7 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     else:
         t_a = dt
 
-    v_new = v_0 + a_0 * dt + 0.5 * j_input * t_a**2
+    v_new = v_0 + a_0 * dt + 0.5 * j_input * t_a ** 2
     if v_new > v_max and j_input != 0.0:
         t_v = calculate_tv(a_0, j_input, v_0, v_max)  # time until v_max is reached
         t_a = t_v
@@ -258,7 +258,7 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
         t_a = t_v
         v_new = v_max
     if v_new < v_min and j_input != 0.0:
-        t_v = calculate_tv(a_0, j_input, v_0, v_min)    # time until v_min is reached
+        t_v = calculate_tv(a_0, j_input, v_0, v_min)  # time until v_min is reached
         t_a = t_v
         v_new = v_min
     elif v_new < v_min and j_input == 0.0:
@@ -271,7 +271,7 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float, v_
     if v_new == v_max or v_new == v_min:
         a_new = 0
 
-    s_new = s_0 + v_0 * t_v + 0.5 * a_0 * t_a ** 2 + (1/6) * j_input * t_a ** 3
+    s_new = s_0 + v_0 * t_v + 0.5 * a_0 * t_a ** 2 + (1 / 6) * j_input * t_a ** 3
 
     return s_new, v_new, a_new
 
@@ -321,6 +321,7 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network:
                                                       list(obstacle.initial_shape_lanelet_ids))
         reference_lane = lane
     elif _adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
+                          # TODO: Why is adjacency only decided for initial time step?
                           list(obstacle.initial_shape_lanelet_ids)[0], road_network):
         vehicle_classification = VehicleClassification.ADJACENT_VEHICLE
         lane = road_network.find_lane_by_obstacle(list(obstacle.initial_center_lanelet_ids),
@@ -343,7 +344,7 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network:
     vehicle_classifications = {0: vehicle_classification}
     for state in obstacle.prediction.trajectory.state_list:
         acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
-        jerk = _compute_jerk(acceleration, 0, dt)
+        jerk = _compute_jerk(acceleration, 0, dt)  # TODO: why calculating jerk without previous acceleration?
 
         state_lon, state_lat = create_curvilinear_states(state.position, state.velocity, acceleration, jerk,
                                                          state.orientation, reference_lane)
@@ -500,3 +501,80 @@ def load_yaml(file_name: str) -> Union[Dict, None]:
         except ruamel.yaml.YAMLError as exc:
             print(exc)
             return None
+
+
+def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
+                   reference_lane: Lane, vehicle: Vehicle) -> Vehicle:
+    """
+    Append state to Vehicle according to current CommonRoad Obstacle State
+    :param obstacle: CommonRoad Obstacle which contains TrajectoryPrediction
+    :param dt: time step size of scenario
+    :param time_step: current time step
+    :param reference_lane: reference Lane object of Ego Vehicle
+    :param vehicle: the Vehicle object to be updated
+    :return: updated Vehicle object
+    """
+    # get obstacle current state
+    if obstacle.initial_state.time_step == time_step:
+        obstacle_state = obstacle.initial_state
+    else:
+        obstacle_state = obstacle.prediction.trajectory.state_at_time_step(time_step)
+    obstacle_state_previous = obstacle.prediction.trajectory.state_at_time_step(time_step - 1)
+    if obstacle_state_previous is None:
+        previous_acceleration = 0.
+    else:
+        previous_acceleration = obstacle_state_previous.acceleration
+
+    # compute jerk from current and previous acceleration
+    jerk = _compute_jerk(obstacle_state.acceleration, previous_acceleration, dt)
+
+    state_lon, state_lat = create_curvilinear_states(
+        obstacle_state.position,
+        obstacle_state.velocity,
+        obstacle_state.acceleration,
+        jerk,
+        obstacle_state.orientation,
+        reference_lane
+    )
+    lanelet_assignment = obstacle.prediction.shape_lanelet_assignment[time_step]
+    vehicle.append_time_step(time_step, state_lon, state_lat, obstacle_state,
+                             lanelet_assignment, signal_state=None)
+    return vehicle
+
+
+def update_scenario_vehicles(dt: float,
+                             time_step: int,
+                             ego_obstacle: DynamicObstacle,
+                             dynamic_obstacles: List[DynamicObstacle],
+                             ego_vehicle: Vehicle,
+                             dynamic_vehicles: Dict[int, Vehicle],
+                             other_vehicles_param: Dict,
+                             road_network: RoadNetwork) -> Tuple[Vehicle, List[Vehicle]]:
+    """
+    Append states for all Vehicles according to CommmonRoad Obstacle States
+    :param dt: time step size
+    :param time_step: current time step
+    :param ego_obstacle: CommonRoad DynamicObstacle for ego vehicle
+    :param dynamic_obstacles: List of all CommonRoad DynamicObstacles
+    :param ego_vehicle: ego Vehicle to be updated
+    :param dynamic_vehicles: dynamic Vehicles to be updated
+    :param other_vehicle_param: dictionary with vehicle parameters
+    :param road_network: CommonRoad lanelet network
+    :return: updated ego and dynamic vehicles
+    """
+    # update ego vehicle
+    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step, ego_vehicle.lane, ego_vehicle)
+
+    # update obstacle vehicles
+    other_vehicles = []
+    for o in dynamic_obstacles:
+        # only update if obstacle appears at the current time step
+        if o.initial_state.time_step <= time_step <= o.prediction.trajectory.final_state.time_step:
+            if o.obstacle_id in dynamic_vehicles:
+                updated_vehicle = update_vehicle(o, dt, time_step, ego_vehicle.lane, dynamic_vehicles[o.obstacle_id])
+            else:
+                # vehicle was not created yet, create new vehicle
+                updated_vehicle = create_vehicle(o, other_vehicles_param, road_network, dt, ego_vehicle)
+            other_vehicles.append(updated_vehicle)
+
+    return ego_vehicle, other_vehicles
