@@ -1,6 +1,10 @@
 import enum
 from abc import ABC, abstractmethod
 from typing import List, Dict, Set, Tuple, Union
+from shapely.ops import unary_union, cascaded_union
+from itertools import combinations
+import numpy as np
+import warnings
 
 from commonroad.geometry.shape import Shape, ShapeGroup, Polygon, Rectangle, Circle
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
@@ -54,10 +58,10 @@ class ConstraintRepresentation(enum.Enum):
     """
     Defines the representation of a constraint
     """
-    UPPER = 0  # real-valued upper constraint
-    LOWER = 1  # real-valued lower constraint
-    OUTER_BOUNDARY = 2  # CommonRoad shape as an outer boundary
-    INNER_BOUNDARY = 3  # CommonRoad shape as an inner boundary
+    UPPER = 'upper'  # real-valued upper constraint
+    LOWER = 'lower'  # real-valued lower constraint
+    OUTER_BOUNDARY = 'outer_boundary'  # CommonRoad shape as an outer boundary
+    INNER_BOUNDARY = 'inner_boundary'  # CommonRoad shape as an inner boundary
 
 
 @enum.unique
@@ -65,13 +69,13 @@ class ConstraintType(enum.Enum):
     """
     Defines the type of constraint axis
     """
-    LONGITUDINAL_CURVILINEAR_POSITION = 0
-    LATERAL_CURVILINEAR_POSITION = 1
-    X_CARTESIAN_POSITION = 2
-    Y_CARTESIAN_POSITION = 3
-    VELOCITY = 4
-    ORIENTATION = 5
-    ACCELERATION = 6
+    LONGITUDINAL_CURVILINEAR_POSITION = 's'
+    LATERAL_CURVILINEAR_POSITION = 'd'
+    X_CARTESIAN_POSITION = 'x'
+    Y_CARTESIAN_POSITION = 'y'
+    VELOCITY = 'v'
+    ORIENTATION = 'theta'
+    ACCELERATION = 'a'
 
 
 class Constraint:
@@ -107,21 +111,89 @@ class Constraint:
 
 class ConstraintEvaluation:
     """
-    Class to extract a set of constraints from predicates   #TODO
+    Class to extract a set of constraints from predicates
     """
     def __init__(self, predicate_collections: List[PredicateCollection]):
         self._predicate_collections = predicate_collections
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle], time_interval: Tuple[int, int]):
-        constraints = []
+    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             time_interval: Tuple[int, int]) -> Dict[int, List[Constraint]]:
+        """
+        Iterates over all predicate collections and computes constraints for a time interval
+
+        :param ego_vehicle: ego vehicle object
+        :param other_vehicles: list of other vehicles
+        :param time_interval: time interval for which the predicates should be evaluated
+        """
+        collection_constraints = []
+        constraints_per_time_step = {}
         for collection in self._predicate_collections:
-            constraints += collection.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
-                                                          OperatingMode.CONSTRAINT)
+            collection_constraints.append(collection.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
+                                                                         OperatingMode.CONSTRAINT))
+        for collection in collection_constraints:  # TODO update if only relevant predicats are returned
+            for predicate_name, constraitns_per_vehicle in collection.items():
+                if not any(constraitns_per_vehicle.values()):
+                    continue
+                for vehicle, time_step_constraints in constraitns_per_vehicle.items():
+                    if not any(time_step_constraints.values()):
+                        continue
+                    for time_step, constraint in time_step_constraints.items():
+                        if constraints_per_time_step.get(time_step) is not None:
+                            constraints_per_time_step[time_step].append(constraint)
+                        else:
+                            constraints_per_time_step[time_step] = [constraint]
+        for time_step, constraint_list in constraints_per_time_step.items():
+            constraints_per_time_step[time_step] = self.unify_constraints(constraint_list)
 
-        return self.unify_constraints(constraints)
+        return constraints_per_time_step
 
-    def unify_constraints(self, constraints: List[Constraint]):
-        # iterate over Constraints and combine them  #TODO
-        pass
+    @staticmethod
+    def unify_constraints(constraints: List[Constraint]) -> List[Constraint]:
+        """
+        Combines a list of constraints for each state
 
+        :param constraints: list of constraints
+        :returns list of unified constraints
+        """
+        # order constraints based on their type
+        ordered_constraints = {}
+        unified_constraints = []
+        for constr in constraints:
+            constr_types = '-'.join([constr_type.value for constr_type in constr.axis]) + '-' +\
+                           constr.constraint_representation.value
 
+            if ordered_constraints.get(constr_types) is None:
+                ordered_constraints[constr_types] = [constr.value]
+            else:
+                ordered_constraints[constr_types].append(constr.value)
+
+        # combine constraints of same type
+        for key, value in ordered_constraints.items():
+            if ConstraintRepresentation.LOWER.value in key:
+                unified_constraints.append(Constraint([c_type for c_type in ConstraintType if c_type.value in key],
+                                                      ConstraintRepresentation.LOWER, max(value)))
+            elif ConstraintRepresentation.UPPER.value in key:
+                unified_constraints.append(Constraint([ctype for ctype in ConstraintType if ctype.value in key],
+                                                      ConstraintRepresentation.UPPER, min(value)))
+            elif ConstraintRepresentation.OUTER_BOUNDARY.value in key:
+                shapely_polygons = unary_union([poly.shapely_object for poly in value])
+                if shapely_polygons.geom_type is 'MultiPolygon':
+                    constr_value = ShapeGroup([Polygon(np.array([[x, y] for x, y in poly.exterior.coords]))
+                                               for poly in list(shapely_polygons)])
+                else:
+                    constr_value = Polygon(np.array([[x, y] for x, y in shapely_polygons.exterior.coords]))
+
+                unified_constraints.append(Constraint([ctype for ctype in ConstraintType if ctype.value in key],
+                                                      ConstraintRepresentation.OUTER_BOUNDARY, constr_value))
+            elif ConstraintRepresentation.INNER_BOUNDARY.value in key:
+                shapely_polygon = cascaded_union([a.intersection(b) for a, b in
+                                                  combinations([poly.shapely_object for poly in value], 2)])
+                if shapely_polygon.is_empty:
+                    warnings.warn('<ConstraintEvaluation/unify_constraints>: constraint is empty set')
+                    constr_value = None
+                else:
+                    constr_value = Polygon(np.array([[x, y] for x, y in shapely_polygon.exterior.coords][:-1]))
+
+                unified_constraints.append(Constraint([c_type for c_type in ConstraintType if c_type.value in key],
+                                           ConstraintRepresentation.INNER_BOUNDARY, constr_value))
+        return unified_constraints

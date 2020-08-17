@@ -1,7 +1,7 @@
 import os
 import unittest
-
 import numpy as np
+
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import State, ObstacleType
