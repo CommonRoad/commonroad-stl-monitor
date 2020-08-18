@@ -8,11 +8,11 @@ before_script:
 - python get-pip.py
 - pip install tox coverage
 
-commonroad_io_python36:
+python36:
   image: python:3.6
   stage: test
   script: 
     - pip install -r ./requirements.txt
     - pip install -e .[tests] 
-    - coverage run commonroad/tests/run_tests.py
+    - coverage run tests/run_tests.py
     - coverage report -m || true
