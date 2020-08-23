@@ -7,9 +7,9 @@ import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
-from parameters_vehicle1 import parameters_vehicle1
-from parameters_vehicle2 import parameters_vehicle2
-from parameters_vehicle3 import parameters_vehicle3
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
+from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle, VehicleClassification, StateLongitudinal, StateLateral

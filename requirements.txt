@@ -7,3 +7,4 @@ matplotlib>= 2.5.0
 ruamel.yaml>= 0.16.10
 bezier>= 2020.2.3
 antlr4-python3-runtime==4.7.2
+commonroad-vehicle-models>=1.0.0
