@@ -5,7 +5,7 @@ from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
-from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintType, \
+from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, ConstraintType, \
     ConstraintRepresentation
 
 

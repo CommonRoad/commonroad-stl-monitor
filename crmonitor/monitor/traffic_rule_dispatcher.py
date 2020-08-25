@@ -8,10 +8,10 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
 from crmonitor.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
-from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
-from crmonitor.predicates.general_predicates import GeneralPredicateCollection
-from crmonitor.predicates.position_predicates import PositionPredicateCollection
-from crmonitor.predicates.velocity_predicates import VelocityPredicateCollection
+from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
+from crmonitor.predicates.python.general_predicates import GeneralPredicateCollection
+from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
+from crmonitor.predicates.python.velocity_predicates import VelocityPredicateCollection
 
 
 class TrafficRuleDispatcher:

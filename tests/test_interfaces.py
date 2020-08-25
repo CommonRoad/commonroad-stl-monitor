@@ -6,7 +6,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
+from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 
 
 class TestInterfaces(unittest.TestCase):
@@ -138,4 +138,7 @@ class TestInterfaces(unittest.TestCase):
         sol = braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
                                                      OperatingMode.ROBUSTNESS). \
             get("keeps_safe_distance_prec__x_ego__x_o")
-        self.assertEqual(exp_sol, sol)
+
+        for vehicle_id, trace in exp_sol.items():
+            for time_step, value in trace.items():
+                self.assertAlmostEqual(exp_sol[vehicle_id][time_step], sol[vehicle_id][time_step], 4)

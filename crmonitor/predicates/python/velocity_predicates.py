@@ -6,8 +6,8 @@ from commonroad.scenario.obstacle import ObstacleType
 from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
-from crmonitor.predicates.position_predicates import PositionPredicateCollection
-from crmonitor.predicates.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
+from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
+from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
     ConstraintType
 
 

@@ -3,7 +3,7 @@ import numpy as np
 
 from commonroad.geometry.shape import Polygon
 
-from crmonitor.predicates.predicate_collection import ConstraintType, ConstraintRepresentation, Constraint
+from crmonitor.predicates.python.predicate_collection import ConstraintType, ConstraintRepresentation, Constraint
 
 
 class TestConstraint(unittest.TestCase):

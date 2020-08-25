@@ -9,7 +9,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.predicates.general_predicates import GeneralPredicateCollection
+from crmonitor.predicates.python.general_predicates import GeneralPredicateCollection
 
 
 class TestGeneralPredicates(unittest.TestCase):

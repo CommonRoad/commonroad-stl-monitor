@@ -1,5 +1,6 @@
 import enum
 import math
+import numpy as np
 from typing import Union, Set, Dict, List
 
 from commonroad.geometry.shape import Shape, Rectangle
@@ -7,6 +8,8 @@ from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
 
 from crmonitor.common.road_network import Lane
+
+import cmake_example
 
 
 class StateLongitudinal:
@@ -194,10 +197,28 @@ class Vehicle:
         :param time_step: time step to consider
         :returns rear s-coordinate [m]
         """
-        return min((self._states_lon[time_step].s - self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
-                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
-                   (self._states_lon[time_step].s - self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
-                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
+        s = self._states_lon[time_step].s
+        d = self.states_lat[time_step].d
+        w = self.shape.width
+        l = self.shape.length
+        theta = self.states_lat[time_step].theta
+
+        return cmake_example.rear_s(d, l, s, theta, w)
+
+    @staticmethod
+    def calc_rear_s(d, length, s, theta, width):
+        """
+        Calculates rear s-coordinate of vehicle
+
+        :param d: lateral position
+        :param length: length of vehicle
+        :param s: longitudinal position
+        :param theta: orientation of vehicle
+        :param width: width of vehicle
+        :returns rear s-coordinate [m]
+        """
+        return min((s - length / 2) * np.cos(theta) - np.sin(theta) * (d + width / 2),
+                   (s - length / 2) * np.cos(theta) - np.sin(theta) * (d - width / 2))
 
     def front_s(self, time_step: int) -> float:
         """
@@ -206,10 +227,28 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front s-coordinate [m]
         """
-        return max((self._states_lon[time_step].s + self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
-                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
-                   (self._states_lon[time_step].s + self.shape.length / 2) * math.cos(self.states_lat[time_step].theta)
-                   - math.sin(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
+        s = self._states_lon[time_step].s
+        d = self.states_lat[time_step].d
+        w = self.shape.width
+        l = self.shape.length
+        theta = self.states_lat[time_step].theta
+
+        return cmake_example.front_s(d, l, s, theta, w)
+
+    @staticmethod
+    def calc_front_s(d, length, s, theta, width):
+        """
+        Calculates front s-coordinate of vehicle
+
+        :param d: lateral position
+        :param length: length of vehicle
+        :param s: longitudinal position
+        :param theta: orientation of vehicle
+        :param width: width of vehicle
+        :returns front s-coordinate [m]
+        """
+        return max((s + length / 2) * np.cos(theta) - np.sin(theta) * (d + width / 2),
+                   (s + length / 2) * np.cos(theta) - np.sin(theta) * (d - width / 2))
 
     def right_d(self, time_step: int) -> float:
         """

@@ -6,11 +6,11 @@ from commonroad.geometry.shape import Polygon
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from crmonitor.predicates.predicate_collection import ConstraintType, ConstraintRepresentation, Constraint, \
+from crmonitor.predicates.python.predicate_collection import ConstraintType, ConstraintRepresentation, Constraint, \
     ConstraintEvaluation
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
+from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 
 
 class TestConstraintEvaluation(unittest.TestCase):

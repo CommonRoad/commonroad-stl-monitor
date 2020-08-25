@@ -20,3 +20,7 @@ __pycache__
 .eggs
 .pytest_cache
 *.egg-info
+dist
+
+# binaries
+*.so

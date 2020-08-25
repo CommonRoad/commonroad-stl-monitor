@@ -9,7 +9,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.predicates.position_predicates import PositionPredicateCollection
+from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
 
 
 class TestPositionPredicates(unittest.TestCase):
