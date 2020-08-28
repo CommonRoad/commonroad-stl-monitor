@@ -88,7 +88,7 @@ setup(
     entry_points = {
         'console_scripts': ['commonroad-monitor=crmonitor.main:main'],
     },
-    ext_modules=[CMakeExtension('cmake_example', )],
+    ext_modules=[CMakeExtension('crmonitor_cpp', )],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False
 )

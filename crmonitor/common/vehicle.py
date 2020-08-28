@@ -1,5 +1,4 @@
 import enum
-import math
 import numpy as np
 from typing import Union, Set, Dict, List
 
@@ -9,7 +8,7 @@ from commonroad.scenario.trajectory import State
 
 from crmonitor.common.road_network import Lane
 
-import cmake_example
+import crmonitor_cpp
 
 
 class StateLongitudinal:
@@ -203,22 +202,23 @@ class Vehicle:
         l = self.shape.length
         theta = self.states_lat[time_step].theta
 
-        return cmake_example.rear_s(d, l, s, theta, w)
+        return crmonitor_cpp.rear_s(d, l, s, theta, w)
 
     @staticmethod
-    def calc_rear_s(d, length, s, theta, width):
+    def calc_rear_s(length, s, theta, width):
         """
         Calculates rear s-coordinate of vehicle
 
-        :param d: lateral position
         :param length: length of vehicle
         :param s: longitudinal position
         :param theta: orientation of vehicle
         :param width: width of vehicle
         :returns rear s-coordinate [m]
         """
-        return min((s - length / 2) * np.cos(theta) - np.sin(theta) * (d + width / 2),
-                   (s - length / 2) * np.cos(theta) - np.sin(theta) * (d - width / 2))
+        return min((length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+                   (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+                   (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+                   (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s)
 
     def front_s(self, time_step: int) -> float:
         """
@@ -233,22 +233,23 @@ class Vehicle:
         l = self.shape.length
         theta = self.states_lat[time_step].theta
 
-        return cmake_example.front_s(d, l, s, theta, w)
+        return crmonitor_cpp.front_s(d, l, s, theta, w)
 
     @staticmethod
-    def calc_front_s(d, length, s, theta, width):
+    def calc_front_s(length, s, theta, width):
         """
         Calculates front s-coordinate of vehicle
 
-        :param d: lateral position
         :param length: length of vehicle
         :param s: longitudinal position
         :param theta: orientation of vehicle
         :param width: width of vehicle
         :returns front s-coordinate [m]
         """
-        return max((s + length / 2) * np.cos(theta) - np.sin(theta) * (d + width / 2),
-                   (s + length / 2) * np.cos(theta) - np.sin(theta) * (d - width / 2))
+        return max((length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+                   (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+                   (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+                   (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s)
 
     def right_d(self, time_step: int) -> float:
         """
@@ -257,10 +258,15 @@ class Vehicle:
         :param time_step: time step to consider
         :returns right d-coordinate [m]
         """
-        return min((self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
-                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
-                   (self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
-                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
+        s = self._states_lon[time_step].s
+        d = self.states_lat[time_step].d
+        width = self.shape.width
+        length = self.shape.length
+        theta = self.states_lat[time_step].theta
+        return min((width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+                   (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+                   (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+                   (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d)
 
     def left_d(self, time_step: int) -> float:
         """
@@ -269,10 +275,15 @@ class Vehicle:
         :param time_step: time step to consider
         :returns left d-coordinate [m]
         """
-        return max((self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
-                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d + self.shape.width / 2),
-                   (self._states_lon[time_step].s + self.shape.length / 2) * math.sin(self.states_lat[time_step].theta)
-                   + math.cos(self.states_lat[time_step].theta) * (self.states_lat[time_step].d - self.shape.width / 2))
+        s = self._states_lon[time_step].s
+        d = self.states_lat[time_step].d
+        width = self.shape.width
+        length = self.shape.length
+        theta = self.states_lat[time_step].theta
+        return max((width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+                   (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+                   (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+                   (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d)
 
     def append_time_step(self, time_step: int, state_lon: StateLongitudinal, state_lat: StateLateral, state_cr: State,
                          lanelet_assignment: Set[int], signal_state: State = None):
