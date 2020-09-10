@@ -405,10 +405,10 @@ def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int, road_network: Roa
     adjacent_lanelet_ids = {ego_lanelet_id}
     ego_lanelet = road_network.lanelet_network.find_lanelet_by_id(ego_lanelet_id)
     current_lanelet = ego_lanelet
-    while current_lanelet.adj_left_same_direction is not None:
+    while current_lanelet.adj_left_same_direction is not None and current_lanelet.adj_left_same_direction is True:
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
-    while current_lanelet.adj_right_same_direction is not None:
+    while current_lanelet.adj_right_same_direction is not None and current_lanelet.adj_right_same_direction is True:
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     for lanelet_id in list(adjacent_lanelet_ids):
