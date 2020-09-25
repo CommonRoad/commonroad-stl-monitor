@@ -28,8 +28,7 @@ python36:
     #- cd commonroad-drivability-checker
 
     #- bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
-
-   - echo pwd
+    - echo $(pwd)
     # This is required for the GitLab runner to have permissions to all the repos the user stating the job has.
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
     # Install commonroad-io manually as installing though does not respect the JOB_TOKEN
