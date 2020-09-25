@@ -4,15 +4,7 @@ stages:
 - test
 
 before_script:
-- echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-- apt-get update -y > /dev/null
-- apt-get install -y apt-utils > /dev/null
-- apt-get install -y build-essential > /dev/null
-- apt-get install -y pkg-config > /dev/null
-- apt-get install -y libeigen3-dev > /dev/null
-- apt-get install -y libboost-all-dev
-- apt-get install -y cmake > /dev/null
-
+- bash install.sh
 - conda create -n commonroad python=3.6
 
 python36:
@@ -25,18 +17,13 @@ python36:
     #- cd commonroad-drivability-checker
 
     #- bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
-    - echo $(pwd)
-    # This is required for the GitLab runner to have permissions to all the repos the user stating the job has.
+    # Aloow permissions to all repositories
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
-    # Install commonroad-io manually as installing though does not respect the JOB_TOKEN
+    # commonroad-io
     - git clone --branch develop git@gitlab.lrz.de:cps/commonroad-io.git $HOME/commonroad-io
     - pip install -e $HOME/commonroad-io
+    # curvilinear-coordinate-system
     - git clone --branch development git@gitlab.lrz.de:cps/commonroad-curvilinear-coordinate-system.git $HOME/commonroad-curvilinear-coordinate-system
-    #- cd $HOME/commonroad-curvilinear-coordinate-system/pybind
-    #- mkdir build
-    #- cd build
-    #- cmake ..
-    #- make check
     - cd $HOME/commonroad-curvilinear-coordinate-system/
     - mkdir -p build
     - cd build
@@ -45,6 +32,7 @@ python36:
     - cd ..
     - python setup.py install
     - cd $CI_PROJECT_DIR
+    # test
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
     - coverage run tests/run_tests.py
