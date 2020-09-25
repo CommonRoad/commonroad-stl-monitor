@@ -8,6 +8,7 @@ before_script:
 - apt-get update -y > /dev/null
 - apt-get install -y apt-utils > /dev/null
 - apt-get install -y build-essential > /dev/null
+- apt-get install libeigen3-dev
 - apt-get install -y cmake > /dev/null
 #- apt-get install libboost-all-dev > /dev/null
 #- apt-get install libomp-dev
