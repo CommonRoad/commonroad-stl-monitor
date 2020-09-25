@@ -47,7 +47,7 @@ python36:
     - cmake -DADD_PYTHON_BINDINGS=TRUE -DPATH_TO_PYTHON_ENVIRONMENT="/opt/conda/envs/commonroad/" -DPYTHON_VERSION="3.6" -DCMAKE_BUILD_TYPE=Release ..
     - make
     - cd ..
-    - pip install -e
+    - python setup.py install
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
     - coverage run tests/run_tests.py
