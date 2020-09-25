@@ -8,7 +8,8 @@ before_script:
 - apt-get update -y > /dev/null
 - apt-get install -y apt-utils > /dev/null
 - apt-get install -y build-essential > /dev/null
-- apt-get install libeigen3-dev
+- apt-get install -< pkg-config > /dev/null
+- apt-get install libeigen3-dev > /dev/null
 - apt-get install -y cmake > /dev/null
 #- apt-get install libboost-all-dev > /dev/null
 #- apt-get install libomp-dev
@@ -21,11 +22,11 @@ python36:
   stage: test
   script:
     - source activate commonroad
-    - git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
-    - echo "Building commonroad drivability checker"
-    - cd commonroad-drivability-checker
+    #- git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
+    #- echo "Building commonroad drivability checker"
+    #- cd commonroad-drivability-checker
 
-    - bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
+    #- bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
 
 
     # This is required for the GitLab runner to have permissions to all the repos the user stating the job has.
