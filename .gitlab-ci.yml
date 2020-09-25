@@ -20,6 +20,7 @@ python36:
   stage: test
   script:
     - source activate commonroad
+    - which python
     - git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
     - echo "Building commonroad drivability checker"
     - cd commonroad-drivability-checker
