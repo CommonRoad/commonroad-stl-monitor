@@ -48,6 +48,7 @@ python36:
     - make
     - cd ..
     - python setup.py install
+    - cd ..
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
     - coverage run tests/run_tests.py
