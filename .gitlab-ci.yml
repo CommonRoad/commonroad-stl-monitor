@@ -33,11 +33,11 @@ python36:
     - git clone --branch develop git@gitlab.lrz.de:cps/commonroad-io.git $HOME/commonroad-io
     - pip install -e $HOME/commonroad-io
     - git clone --branch development git@gitlab.lrz.de:cps/commonroad-curvilinear-coordinate-system.git $HOME/commonroad-curvilinear-coordinate-system
-    - cd $HOME/commonroad-curvilinear-coordinate-system/pybind
-    - mkdir build
-    - cd build
-    - cmake ..
-    - make check
+    #- cd $HOME/commonroad-curvilinear-coordinate-system/pybind
+    #- mkdir build
+    #- cd build
+    #- cmake ..
+    #- make check
     - cd $HOME/commonroad-curvilinear-coordinate-system/
     - mkdir -p build
     - cd build
