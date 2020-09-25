@@ -12,17 +12,14 @@ before_script:
 - apt-get install -y libeigen3-dev > /dev/null
 - apt-get install -y libboost-all-dev
 - apt-get install -y cmake > /dev/null
-#- apt-get install libboost-all-dev > /dev/null
-#- apt-get install libomp-dev
 
 - conda create -n commonroad python=3.6
-- curl -O https://bootstrap.pypa.io/get-pip.py
-- pip install tox coverage
 
 python36:
   stage: test
   script:
     - source activate commonroad
+    - pip install tox coverage
     #- git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
     #- echo "Building commonroad drivability checker"
     #- cd commonroad-drivability-checker
@@ -47,7 +44,8 @@ python36:
     - make
     - cd ..
     - python setup.py install
-    - cd /builds/maierhofer/commonroad_monitor
+    - cd $CI_PROJECT_DIR
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
     - coverage run tests/run_tests.py
+    - coverage report -m || true
