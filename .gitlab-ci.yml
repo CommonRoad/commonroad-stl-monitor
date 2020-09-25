@@ -24,7 +24,7 @@ python36:
     - echo "Building commonroad drivability checker"
     - cd commonroad-drivability-checker
 
-    - bash build.sh -e "$/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
+    - bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
 
 
     # This is required for the GitLab runner to have permissions to all the repos the user stating the job has.
@@ -41,7 +41,7 @@ python36:
     - cd $HOME/commonroad-curvilinear-coordinate-system/
     - mkdir -p build
     - cd build
-    - cmake -DADD_PYTHON_BINDINGS=TRUE -DPATH_TO_PYTHON_ENVIRONMENT="$/opt/conda/envs/commonroad/" -DPYTHON_VERSION="3.6" -DCMAKE_BUILD_TYPE=Release ..
+    - cmake -DADD_PYTHON_BINDINGS=TRUE -DPATH_TO_PYTHON_ENVIRONMENT="/opt/conda/envs/commonroad/" -DPYTHON_VERSION="3.6" -DCMAKE_BUILD_TYPE=Release ..
     - make
     - cd ..
     - pip install -e
