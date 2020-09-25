@@ -29,7 +29,7 @@ python36:
 
     #- bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
 
-
+   - echo pwd
     # This is required for the GitLab runner to have permissions to all the repos the user stating the job has.
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
     # Install commonroad-io manually as installing though does not respect the JOB_TOKEN
@@ -48,7 +48,6 @@ python36:
     - make
     - cd ..
     - python setup.py install
-    - cd ..
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
     - coverage run tests/run_tests.py
