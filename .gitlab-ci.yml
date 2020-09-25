@@ -4,7 +4,7 @@ stages:
 - test
 
 before_script:
-- conda env create -n commonroad python=3.6
+- conda create -n commonroad python=3.6
 - curl -O https://bootstrap.pypa.io/get-pip.py
 - pip install tox coverage
 
