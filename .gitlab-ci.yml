@@ -18,12 +18,12 @@ python36:
     - git clone --branch develop git@gitlab.lrz.de:cps/commonroad-io.git $HOME/commonroad-io
     - pip install -e $HOME/commonroad-io
     - git clone --branch development git@gitlab.lrz.de:cps/commonroad-curvilinear-coordinate-system.git $HOME/commonroad-curvilinear-coordinate-system
-    - safe_cd $HOME/commonroad-curvilinear-coordinate-system
+    - cd $HOME/commonroad-curvilinear-coordinate-system
     - mkdir -p build
-    - safe_cd build
+    - cd build
     - cmake -DADD_PYTHON_BINDINGS=TRUE -DPATH_TO_PYTHON_ENVIRONMENT="${CONDA_PREFIX}/bin/envs/commonroad/" -DPYTHON_VERSION="3.6" -DCMAKE_BUILD_TYPE=Release ..
     - make
-    - safe_cd ..
+    - cd ..
     - pip install -e
     - pip install -r ./requirements.txt
     - pip install -e .[tests]
