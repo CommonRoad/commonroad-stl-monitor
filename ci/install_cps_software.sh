@@ -1,14 +1,16 @@
-    #- git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
-    #- echo "Building commonroad drivability checker"
-    #- cd commonroad-drivability-checker
-
-    #- bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 1
-    # Aloow permissions to all repositories
+# Allow permissions to all repositories
 git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
-    # commonroad-io
+
+# drivability-checker
+git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
+cd commonroad-drivability-checker || exit
+bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 4
+
+# commonroad-io
 git clone --branch develop git@gitlab.lrz.de:cps/commonroad-io.git "$HOME"/commonroad-io
 pip install -e "$HOME"/commonroad-io
-    # curvilinear-coordinate-system
+
+# curvilinear-coordinate-system
 git clone --branch development git@gitlab.lrz.de:cps/commonroad-curvilinear-coordinate-system.git "$HOME"/commonroad-curvilinear-coordinate-system
 cd "$HOME"/commonroad-curvilinear-coordinate-system/ || exit
 mkdir -p build
