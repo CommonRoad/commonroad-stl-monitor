@@ -138,11 +138,11 @@ class TrafficRuleDispatcher:
         braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
                                                                            max(ego_vehicle.states_lon.keys())),
-                                                                            OperatingMode.MONITOR)
+                                                                          OperatingMode.MONITOR)
         general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
                                                                           (min(ego_vehicle.states_lon.keys()),
                                                                            max(ego_vehicle.states_lon.keys())),
-                                                                            OperatingMode.MONITOR)
+                                                                          OperatingMode.MONITOR)
 
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates

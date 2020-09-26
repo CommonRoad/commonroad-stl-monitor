@@ -177,7 +177,7 @@ class ConstraintEvaluation:
                                                       ConstraintRepresentation.UPPER, min(value)))
             elif ConstraintRepresentation.OUTER_BOUNDARY.value in key:
                 shapely_polygons = unary_union([poly.shapely_object for poly in value])
-                if shapely_polygons.geom_type is 'MultiPolygon':
+                if shapely_polygons.geom_type == 'MultiPolygon':
                     constr_value = ShapeGroup([Polygon(np.array([[x, y] for x, y in poly.exterior.coords]))
                                                for poly in list(shapely_polygons)])
                 else:

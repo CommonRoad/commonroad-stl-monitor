@@ -4,8 +4,8 @@ from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
-from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
-    ConstraintType
+from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, \
+    ConstraintRepresentation, ConstraintType
 
 
 class BrakingPredicateCollection(PredicateCollection):

@@ -6,8 +6,8 @@ from crmonitor.common.helper import OperatingMode
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
-from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, ConstraintRepresentation, \
-    ConstraintType
+from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, \
+    ConstraintRepresentation, ConstraintType
 
 
 class GeneralPredicateCollection(PredicateCollection):
@@ -267,4 +267,3 @@ class GeneralPredicateCollection(PredicateCollection):
                         self.cut_in(time_step, other_vehicle, ego_vehicle)
 
         return predicate_trace
-
