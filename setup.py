@@ -83,9 +83,9 @@ setup(
         'antlr4-python3-runtime==4.7.2'
         'jupyter'
     ],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
-    entry_points = {
+    entry_points={
         'console_scripts': ['commonroad-monitor=crmonitor.main:main'],
     },
     ext_modules=[CMakeExtension('crmonitor_cpp', )],
