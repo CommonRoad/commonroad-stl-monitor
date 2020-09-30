@@ -19,12 +19,14 @@ For the monitor you need at least Python 3.6 and the following packages:
 * *commonroad-io* >= 2020.2
 * *commonroad-vehicle-models* >= 2020.1
 
-The usage of the Anaconda Python distribution is recommended. \
-You can install the required Python packages with the provided *requirements.txt* file (*pip install -r requirements.txt*). 
-
 Additionally, you need the following software:
 * *[commonroad-curvilinear-coordinate-system](https://gitlab.lrz.de/cps/commonroad-curvilinear-coordinate-system/-/tree/development)* 
 which has to be installed according to the readme inside the linked repository.
+
+The usage of the Anaconda Python distribution is recommended. \
+You can install the required Python packages with the provided *requirements.txt* file (*pip install -r requirements.txt*). 
+
+The CommonRoad Monitor can be installed with `pip install -e .`. 
 
 ## Running the CommonRoad Traffic Rule Monitor
 There exist several options to run the CommonRoad traffic rule monitor:
