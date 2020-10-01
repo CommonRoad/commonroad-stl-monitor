@@ -515,10 +515,7 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
     :return: updated Vehicle object
     """
     # get obstacle current state
-    if obstacle.initial_state.time_step == time_step:
-        obstacle_state = obstacle.initial_state
-    else:
-        obstacle_state = obstacle.prediction.trajectory.state_at_time_step(time_step)
+    obstacle_state = obstacle.state_at_time(time_step)
     obstacle_state_previous = obstacle.prediction.trajectory.state_at_time_step(time_step - 1)
     if obstacle_state_previous is None:
         previous_acceleration = 0.
