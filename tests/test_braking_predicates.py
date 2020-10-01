@@ -1,8 +1,6 @@
 import unittest
 import os
 import numpy as np
-
-from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.scenario.lanelet import LaneletNetwork

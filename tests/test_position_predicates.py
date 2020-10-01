@@ -7,9 +7,9 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.scenario.lanelet import LaneletNetwork, LineMarking
 
-from crmonitor.predicates.position_predicates import PositionPredicateCollection
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
+from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
 
 
 class TestPositionPredicates(unittest.TestCase):

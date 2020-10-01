@@ -8,9 +8,9 @@ from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.traffic_sign import TrafficSignElement, TrafficSign, TrafficSignIDGermany
 
-from crmonitor.predicates.velocity_predicates import VelocityPredicateCollection
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
+from crmonitor.predicates.python.velocity_predicates import VelocityPredicateCollection
 
 
 class TestVelocityPredicates(unittest.TestCase):

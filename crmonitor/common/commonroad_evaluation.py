@@ -15,8 +15,7 @@ class CommonRoadObstacleEvaluation:
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._traffic_rules_param = traffic_rules.get("traffic_rules_param")
-        self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param,
-                                                           self._traffic_rules_param)
+        self._ego_vehicle_param = create_ego_vehicle_param(config.get("ego_vehicle_param"), self._simulation_param)
         self._traffic_rule_sets = traffic_rules.get("traffic_rule_sets")
         self._traffic_rules_forward = traffic_rules.get("traffic_rules_forward")
         self._traffic_rules_backward = traffic_rules.get("traffic_rules_backward")

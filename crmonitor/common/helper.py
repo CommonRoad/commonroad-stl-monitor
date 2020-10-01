@@ -1,6 +1,3 @@
-from parameters_vehicle1 import parameters_vehicle1
-from parameters_vehicle2 import parameters_vehicle2
-from parameters_vehicle3 import parameters_vehicle3
 from typing import Dict, Union, List, Tuple
 import ruamel.yaml
 import math
@@ -10,6 +7,9 @@ from decimal import Decimal
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.lanelet import Lanelet, LaneletType
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
+from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.vehicle import Vehicle, VehicleClassification, StateLongitudinal, StateLateral
 from crmonitor.common.road_network import RoadNetwork, Lane
@@ -22,7 +22,7 @@ class OperatingMode(enum.Enum):
     ROBUSTNESS = "robustness"
 
 
-def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, traffic_rule_param: Dict) -> Dict:
+def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) -> Dict:
     """
     Update ego vehicle parameters
 
@@ -44,9 +44,9 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict, tr
     emergency_profile += [ego_vehicle_param.get("j_min")] * ego_vehicle_param.get("emergency_profile_num_steps_fb")
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
-    ego_vehicle_param["fov_speed_limit"] = calc_v_max_fov(ego_vehicle_param, simulation_param)
-    ego_vehicle_param["braking_speed_limit"] = calc_v_max_braking(ego_vehicle_param, simulation_param,
-                                                                  traffic_rule_param)
+    ego_vehicle_param["fov_speed_limit"] = 50
+
+    ego_vehicle_param["braking_speed_limit"] = 43
 
     if not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) %
                       Decimal(str(simulation_param.get("dt")))) <= 1e-12:
@@ -406,10 +406,10 @@ def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int, road_network: Roa
     adjacent_lanelet_ids = {ego_lanelet_id}
     ego_lanelet = road_network.lanelet_network.find_lanelet_by_id(ego_lanelet_id)
     current_lanelet = ego_lanelet
-    while current_lanelet.adj_left_same_direction is not None:
+    while current_lanelet.adj_left_same_direction is not None and current_lanelet.adj_left_same_direction is True:
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
-    while current_lanelet.adj_right_same_direction is not None:
+    while current_lanelet.adj_right_same_direction is not None and current_lanelet.adj_right_same_direction is True:
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     for lanelet_id in list(adjacent_lanelet_ids):

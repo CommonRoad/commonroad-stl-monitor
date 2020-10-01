@@ -33,9 +33,9 @@ simulation_param:
 #    - polyline_resampling_step: step size for polyline resampling
 #    - merging_length: maximum accumulated length of lanalets belonging to a lane
 road_network_param:
-    num_chankins_corner_cutting: 200
-    polyline_resampling_step: 0.5
-    merging_length: 10000
+  num_chankins_corner_cutting: 10
+  polyline_resampling_step: 0.5
+  merging_length: 10000
 
 # Ego vehicle parameters
 ###
@@ -59,23 +59,23 @@ road_network_param:
 #    - road_condition_speed_limit: speed limit based on road conditions
 
 ego_vehicle_param:
-    vehicle_number: 2
-    a_max: 3
-    a_min: -10.0
-    a_corr: 0.0
-    j_max: 10
-    j_min: -10
-    v_des: 30
-    t_react: 0.3
-    dynamics_param: None
-    fov: 200
-    v_min: 0
-    const_dist_offset: 0
-    emergency_profile: []
-    emergency_profile_num_steps_fb: 200
-    fov_speed_limit: None
-    braking_speed_limit: None
-    road_condition_speed_limit: 50
+  vehicle_number: 2
+  a_max: 3
+  a_min: -10.0
+  a_corr: 0.0
+  j_max: 10
+  j_min: -10
+  v_des: 30
+  t_react: 0.3
+  dynamics_param: None
+  fov: 200
+  v_min: 0
+  const_dist_offset: 0
+  emergency_profile: []
+  emergency_profile_num_steps_fb: 200
+  fov_speed_limit: 50 # compute with calc_v_max_fov(ego_vehicle_param, simulation_param)
+  braking_speed_limit: 43 # compute with calc_v_max_braking(ego_vehicle_param, simulation_param, traffic_rule_param)
+  road_condition_speed_limit: 50
 
 # Other vehicle's parameters
 ###
