@@ -28,7 +28,6 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) ->
 
     :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
     :param simulation_param: dictionary with parameters of the simulation environment
-    :param traffic_rule_param: dictionary with parameters related to traffic rules
     :returns updated dictionary with parameters of ACC vehicle
     """
     if ego_vehicle_param.get("vehicle_number") == 1:

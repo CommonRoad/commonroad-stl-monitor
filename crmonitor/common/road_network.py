@@ -3,7 +3,7 @@ import numpy as np
 
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
-from pycrccosy import TrapezoidCoordinateSystem # CurvilinearCoordinateSystem
+from pycrccosy import CurvilinearCoordinateSystem
 
 
 class Lane:
@@ -35,7 +35,7 @@ class Lane:
         return self._contained_lanelets
 
     @property
-    def clcs(self) -> TrapezoidCoordinateSystem: #CurvilinearCoordinateSystem:
+    def clcs(self) -> CurvilinearCoordinateSystem:
         return self._clcs
 
     def orientation(self, position) -> float:
@@ -129,7 +129,7 @@ class Lane:
 
     @staticmethod
     def create_curvilinear_coordinate_system_from_reference(ref_path: np.array, road_network_param: Dict) \
-            -> TrapezoidCoordinateSystem: #CurvilinearCoordinateSystem:
+            -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
 
@@ -142,7 +142,8 @@ class Lane:
             new_ref_path = chaikins_corner_cutting(ref_path)
         new_ref_path = resample_polyline(new_ref_path, road_network_param.get("polyline_resampling_step"))
 
-        curvilinear_cosy = TrapezoidCoordinateSystem(new_ref_path) # CurvilinearCoordinateSystem(new_ref_path)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+
         return curvilinear_cosy
 
 

@@ -5,7 +5,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.scenario.lanelet import LaneletNetwork
 
-from crmonitor.predicates.braking_predicates import BrakingPredicateCollection
+from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
 
