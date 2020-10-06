@@ -1,14 +1,15 @@
-import argparse
 import os
+import argparse
+import time
 import sys
 import time
 import multiprocessing
 
-from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.scenario import Tag
-
-from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 from crmonitor.common.helper import *
+from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
+
+from commonroad.scenario.scenario import Tag
+from commonroad.common.file_reader import CommonRoadFileReader
 
 
 def create_scenarios_from_directory(directories: List[str], max_num_scenarios: int = sys.maxsize):
@@ -44,6 +45,7 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 
 
 def get_args():
+
     parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
     parser.add_argument('--evaluation_mode', help='Evaluation mode for execution.')
     parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')

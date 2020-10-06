@@ -1,11 +1,11 @@
-import os
 import unittest
-
+import os
 import numpy as np
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork, LineMarking
-from commonroad.scenario.obstacle import State, ObstacleType
+
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.lanelet import LaneletNetwork, LineMarking
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
@@ -14,7 +14,7 @@ from crmonitor.predicates.python.position_predicates import PositionPredicateCol
 
 class TestPositionPredicates(unittest.TestCase):
     def setUp(self):
-        config_path = os.path.dirname(__file__) + "/../crmonitor/"
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
@@ -70,9 +70,9 @@ class TestPositionPredicates(unittest.TestCase):
                                   lanelet_type={LaneletType.INTERSTATE, LaneletType.EXIT_RAMP})
 
         self._lanelet_4_2 = Lanelet(left_vertices_lane_4, center_vertices_lane_4, right_vertices_lane_4, lanelet_id=4,
-                                    adjacent_left=5, adjacent_left_same_direction=True,
-                                    adjacent_right=3, adjacent_right_same_direction=True,
-                                    lanelet_type={LaneletType.INTERSTATE, LaneletType.MAIN_CARRIAGE_WAY})
+                                  adjacent_left=5, adjacent_left_same_direction=True,
+                                  adjacent_right=3, adjacent_right_same_direction=True,
+                                  lanelet_type={LaneletType.INTERSTATE, LaneletType.MAIN_CARRIAGE_WAY})
 
         right_vertices_lane_5 = np.array([[0, 16], [10, 16], [20, 16], [30, 16], [40, 16], [50, 16], [60, 16], [70, 16],
                                           [80, 16], [90, 16], [100, 16], [110, 16]])
@@ -88,7 +88,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle behind
         exp_sol_monitor_mode_2 = False  # ego vehicle and other vehicle have same occupancy
-        exp_sol_monitor_mode_3 = False  # ego vehicle is not completely in front
+        exp_sol_monitor_mode_3 = False   # ego vehicle is not completely in front
         exp_sol_monitor_mode_4 = True  # ego vehicle is in front in same lane
         exp_sol_monitor_mode_5 = True  # ego vehicle is in front in another lane
         exp_sol_constraint_mode_1 = 10.5
@@ -126,7 +126,7 @@ class TestPositionPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # other vehicle 1
-        state_list_lon_other_1 = {0: StateLongitudinal(s=8, v=2), 1: StateLongitudinal(s=10, v=2),
+        state_list_lon_other_1 = {0: StateLongitudinal(s=8, v=2),  1: StateLongitudinal(s=10, v=2),
                                   2: StateLongitudinal(s=12, v=2), 3: StateLongitudinal(s=14, v=2)}
         state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                                   2: StateLateral(d=0, theta=0), 3: StateLateral(d=0, theta=0)}
@@ -176,11 +176,11 @@ class TestPositionPredicates(unittest.TestCase):
         sol_constraint_mode_5 = position_predicates.in_front_of(4, other_vehicle_2, ego_vehicle,
                                                                 OperatingMode.CONSTRAINT)
 
-        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1.value)
-        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2.value)
-        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3.value)
-        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4.value)
-        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5.value)
+        self.assertEqual(exp_sol_constraint_mode_1, sol_constraint_mode_1)
+        self.assertEqual(exp_sol_constraint_mode_2, sol_constraint_mode_2)
+        self.assertEqual(exp_sol_constraint_mode_3, sol_constraint_mode_3)
+        self.assertEqual(exp_sol_constraint_mode_4, sol_constraint_mode_4)
+        self.assertEqual(exp_sol_constraint_mode_5, sol_constraint_mode_5)
 
         # Robustness-Mode
         sol_robustness_mode_1 = position_predicates.in_front_of(0, other_vehicle_1, ego_vehicle,
@@ -204,7 +204,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = True  # ego vehicle on shoulder
         exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = False  # ego vehicle on main carriageway
+        exp_sol_monitor_mode_3 = False   # ego vehicle on main carriageway
         exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
         exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
 
@@ -251,7 +251,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
         exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = False  # ego vehicle on main carriageway
+        exp_sol_monitor_mode_3 = False   # ego vehicle on main carriageway
         exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
         exp_sol_monitor_mode_5 = True  # ego vehicle on access ramp
 
@@ -298,7 +298,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
         exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = False  # ego vehicle on main carriageway
+        exp_sol_monitor_mode_3 = False   # ego vehicle on main carriageway
         exp_sol_monitor_mode_4 = True  # ego vehicle on exit ramp
         exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
 
@@ -345,7 +345,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
         exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = True  # ego vehicle on main carriageway
+        exp_sol_monitor_mode_3 = True   # ego vehicle on main carriageway
         exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
         exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
 
@@ -394,7 +394,7 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_lanelet_ids_1 = {2, 3, 4, 5}  # IDs of lanelets at t=0
         exp_sol_num_lanelets_2 = 3  # 3 lanelets left at t=1
         exp_sol_lanelet_ids_2 = {3, 4, 5}  # IDs of lanelets at t=1
-        exp_sol_num_lanelets_3 = 2  # 2 lanelets left at t=2
+        exp_sol_num_lanelets_3 = 2   # 2 lanelets left at t=2
         exp_sol_lanelet_ids_3 = {4, 5}  # IDs of lanelets at t=2
         exp_sol_num_lanelets_4 = 1  # 1 lanelets left at t=3
         exp_sol_lanelet_ids_4 = {5}  # IDs of lanelets at t=3
@@ -468,7 +468,7 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_lanelet_ids_1 = set()  # IDs of lanelets at t=0
         exp_sol_num_lanelets_2 = 1  # 3 lanelets left at t=1
         exp_sol_lanelet_ids_2 = {1}  # IDs of lanelets at t=1
-        exp_sol_num_lanelets_3 = 2  # 2 lanelets left at t=2
+        exp_sol_num_lanelets_3 = 2   # 2 lanelets left at t=2
         exp_sol_lanelet_ids_3 = {1, 2}  # IDs of lanelets at t=2
         exp_sol_num_lanelets_4 = 3  # 1 lanelets left at t=3
         exp_sol_lanelet_ids_4 = {1, 2, 3}  # IDs of lanelets at t=3
@@ -542,12 +542,13 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_lanelet_ids_1 = set()  # IDs of lanelets at t=0
         exp_sol_num_lanelets_2 = 1  # 3 lanelets left at t=1
         exp_sol_lanelet_ids_2 = {1}  # IDs of lanelets at t=1
-        exp_sol_num_lanelets_3 = 2  # 2 lanelets left at t=2
+        exp_sol_num_lanelets_3 = 2   # 2 lanelets left at t=2
         exp_sol_lanelet_ids_3 = {1, 2}  # IDs of lanelets at t=2
         exp_sol_num_lanelets_4 = 3  # 1 lanelets left at t=3
         exp_sol_lanelet_ids_4 = {1, 2, 3}  # IDs of lanelets at t=3
         exp_sol_num_lanelets_5 = 4  # 0 lanelets left at t=4
         exp_sol_lanelet_ids_5 = {1, 2, 3, 4}  # IDs of lanelets at t=4
+
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -595,7 +596,7 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_lanelet_ids_1 = {2, 3, 4, 5}  # IDs of lanelets at t=0
         exp_sol_num_lanelets_2 = 3  # 3 lanelets left at t=1
         exp_sol_lanelet_ids_2 = {3, 4, 5}  # IDs of lanelets at t=1
-        exp_sol_num_lanelets_3 = 2  # 2 lanelets left at t=2
+        exp_sol_num_lanelets_3 = 2   # 2 lanelets left at t=2
         exp_sol_lanelet_ids_3 = {4, 5}  # IDs of lanelets at t=2
         exp_sol_num_lanelets_4 = 1  # 1 lanelets left at t=3
         exp_sol_lanelet_ids_4 = {5}  # IDs of lanelets at t=3
@@ -898,7 +899,7 @@ class TestPositionPredicates(unittest.TestCase):
         state_list_lon_other_1 = {0: StateLongitudinal(s=10, v=10), 1: StateLongitudinal(s=20, v=10),
                                   2: StateLongitudinal(s=30, v=10), 3: StateLongitudinal(s=40, v=10)}
         state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
-                                  2: StateLateral(d=2, theta=0), 3: StateLateral(d=4, theta=0)}
+                                 2: StateLateral(d=2, theta=0), 3: StateLateral(d=4, theta=0)}
         cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=20, time_step=1),
                                  2: State(position=30, time_step=2), 3: State(position=40, time_step=3)}
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
@@ -963,7 +964,7 @@ class TestPositionPredicates(unittest.TestCase):
         state_list_lon_other_1 = {0: StateLongitudinal(s=10, v=10), 1: StateLongitudinal(s=20, v=10),
                                   2: StateLongitudinal(s=30, v=10), 3: StateLongitudinal(s=40, v=10)}
         state_list_lat_other_1 = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
-                                  2: StateLateral(d=2, theta=0), 3: StateLateral(d=4, theta=0)}
+                                 2: StateLateral(d=2, theta=0), 3: StateLateral(d=4, theta=0)}
         cr_state_list_other_1 = {0: State(position=10, time_step=0), 1: State(position=20, time_step=1),
                                  2: State(position=30, time_step=2), 3: State(position=40, time_step=3)}
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
@@ -2114,7 +2115,7 @@ class TestPositionPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
         exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = True  # ego vehicle on main carriageway
+        exp_sol_monitor_mode_3 = True   # ego vehicle on main carriageway
         exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
         exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
 

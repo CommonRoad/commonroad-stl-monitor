@@ -1,6 +1,8 @@
 # CommonRoad Traffic Rule Monitor
 
-**Note:** Currently, major changes are being made. Therefore, the code is not stable. 
+**Note:** !!!Robustness mode only works for forward rules!!!
+
+**Note:** Currently, major changes are being made, so runtime errors may occur. 
 In addition, not all of the options listed below to execute the software work. 
 We try to finish the changes as soon as possible. The test cases should work.
 The Develop branch is always most up-to-date
@@ -34,7 +36,7 @@ The CommonRoad Monitor can be installed with `pip install -e .` from the root di
 There exist several options to run the CommonRoad traffic rule monitor:
 * *[Jupyter notebook](./jupyter/scenario_evaluation.ipynb)* : Test scenarios can be visualized and every vehicle within the scenario 
 is evaluated based on a selected set of traffic rules.
-* *[Test cases](tests/run_test.py)* : Run all test cases which evaluate the formalized rules in different scenarios.
+* *[Test cases](./test/run_test.py)* : Run all test cases which evaluate the formalized rules in different scenarios.
 * *[main.py](crmonitor/main.py)* : Traffic rule evaluation for a single scenario or all scenarios which are located within predefined directories.
 
 The main file can be started from the commonroad_monitor directory via commandline by executing  

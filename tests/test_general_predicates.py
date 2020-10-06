@@ -1,11 +1,11 @@
-import os
 import unittest
-
+import os
 import numpy as np
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork
-from commonroad.scenario.obstacle import State, ObstacleType
+
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.lanelet import LaneletNetwork
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
@@ -14,7 +14,7 @@ from crmonitor.predicates.python.general_predicates import GeneralPredicateColle
 
 class TestGeneralPredicates(unittest.TestCase):
     def setUp(self):
-        config_path = os.path.dirname(__file__) + "/../crmonitor/"
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
@@ -38,9 +38,9 @@ class TestGeneralPredicates(unittest.TestCase):
                                          [80, 8], [90, 8]])
         center_vertices_lane_2 = np.array([[0, 12], [10, 12], [20, 12], [30, 12], [40, 12], [50, 12], [60, 12],
                                            [70, 12], [80, 12], [90, 12]])
-        self._lanelet_2 = Lanelet(left_vertices_lane_2, center_vertices_lane_2, right_vertices_lane_2, lanelet_id=2,
-                                  adjacent_left=3, adjacent_left_same_direction=True,
-                                  adjacent_right=1, adjacent_right_same_direction=True)
+        self._lanelet_2 =  Lanelet(left_vertices_lane_2, center_vertices_lane_2, right_vertices_lane_2, lanelet_id=2,
+                                   adjacent_left=3, adjacent_left_same_direction=True,
+                                   adjacent_right=1, adjacent_right_same_direction=True)
 
         right_vertices_lane_3 = np.array([[0, 8], [10, 8], [20, 8], [30, 8], [40, 8], [50, 8], [60, 8], [70, 8],
                                           [80, 8], [90, 8]])
@@ -72,9 +72,9 @@ class TestGeneralPredicates(unittest.TestCase):
         exp_sol_constraint_mode_3 = (-self._traffic_rule_param.get("u_turn"), self._traffic_rule_param.get("u_turn"))
         exp_sol_constraint_mode_4 = (-self._traffic_rule_param.get("u_turn"), self._traffic_rule_param.get("u_turn"))
         exp_sol_robustness_mode_1 = -self._traffic_rule_param.get("u_turn")
-        exp_sol_robustness_mode_2 = -self._traffic_rule_param.get("u_turn") + (1 / 8) * math.pi
-        exp_sol_robustness_mode_3 = -self._traffic_rule_param.get("u_turn") + (1 / 2) * math.pi
-        exp_sol_robustness_mode_4 = -self._traffic_rule_param.get("u_turn") + (3 / 4) * math.pi
+        exp_sol_robustness_mode_2 = -self._traffic_rule_param.get("u_turn") + (1/8) * math.pi
+        exp_sol_robustness_mode_3 = -self._traffic_rule_param.get("u_turn") + (1/2) * math.pi
+        exp_sol_robustness_mode_4 = -self._traffic_rule_param.get("u_turn") + (3/4) * math.pi
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -87,9 +87,8 @@ class TestGeneralPredicates(unittest.TestCase):
         # ego vehicle
         state_list_lon_ego = {0: StateLongitudinal(s=0, v=10), 1: StateLongitudinal(s=10, v=10),
                               2: StateLongitudinal(s=20, v=10), 3: StateLongitudinal(s=30, v=10)}
-        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=(1 / 8) * math.pi),
-                              2: StateLateral(d=0, theta=(1 / 2) * math.pi),
-                              3: StateLateral(d=0, theta=(3 / 4) * math.pi)}
+        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=(1/8) * math.pi),
+                              2: StateLateral(d=0, theta=(1/2) * math.pi), 3: StateLateral(d=0, theta=(3/4) * math.pi)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
                              2: State(position=20, time_step=2), 3: State(position=30, time_step=3)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
@@ -441,8 +440,8 @@ class TestGeneralPredicates(unittest.TestCase):
         # ego vehicle
         state_list_lon_ego = {0: StateLongitudinal(s=10, v=10), 1: StateLongitudinal(s=20, v=10),
                               2: StateLongitudinal(s=30, v=10), 3: StateLongitudinal(s=40, v=10)}
-        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=2, theta=(1 / 4) * math.pi),
-                              2: StateLateral(d=4, theta=0), 3: StateLateral(d=2, theta=-(1 / 4) * math.pi)}
+        state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=2, theta=(1/4)*math.pi),
+                              2: StateLateral(d=4, theta=0), 3: StateLateral(d=2, theta=-(1/4)*math.pi)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=10, time_step=1),
                              2: State(position=20, time_step=2), 3: State(position=30, time_step=3)}
         lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1, 2}, 3: {1, 2}}
@@ -538,6 +537,7 @@ class TestGeneralPredicates(unittest.TestCase):
         sol_monitor_mode_9 = general_predicates._road_width(lanelet_network.lanelets[3], 60)
         sol_monitor_mode_10 = general_predicates._road_width(lanelet_network.lanelets[4], 10)
         sol_monitor_mode_11 = general_predicates._road_width(lanelet_network.lanelets[4], 60)
+
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)

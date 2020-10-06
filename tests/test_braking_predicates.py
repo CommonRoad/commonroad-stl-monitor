@@ -1,20 +1,18 @@
-import os
 import unittest
+import os
 import numpy as np
-
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import State, ObstacleType
-from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.scenario.lanelet import LaneletNetwork
 
+from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 
 
 class TestBrakingPredicates(unittest.TestCase):
     def setUp(self):
-        config_path = os.path.dirname(__file__) + "/../crmonitor/"
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
@@ -85,11 +83,11 @@ class TestBrakingPredicates(unittest.TestCase):
         solution = BrakingPredicateCollection.safe_distance(5, 5, -10, -10, 0)
         self.assertEqual(exp_sol, solution)
 
-        exp_sol = 50.0  # both vehicles same velocity, with reaction time
+        exp_sol = 50.0   # both vehicles same velocity, with reaction time
         solution = BrakingPredicateCollection.safe_distance(5, 5, -10, -10, 10)
         self.assertEqual(exp_sol, solution)
 
-        exp_sol = 5.0  # following vehicle higher velocity, no reaction time
+        exp_sol = 5.0   # following vehicle higher velocity, no reaction time
         solution = BrakingPredicateCollection.safe_distance(10, 0, -10, -10, 0)
         self.assertEqual(exp_sol, solution)
 
@@ -131,7 +129,7 @@ class TestBrakingPredicates(unittest.TestCase):
                                2: State(acceleration=0, time_step=2), 3: State(acceleration=0, time_step=3)}
         lanelet_assignments_other = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         other_vehicle = Vehicle(state_list_lon_other, state_list_lat_other, Rectangle(5, 2), cr_state_list_other, 0,
-                                ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_other, None, None, None)
+                              ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_other, None, None, None)
 
         # Monitor-Mode
         sol_monitor_mode_1 = BrakingPredicateCollection.brakes_stronger(0, ego_vehicle, other_vehicle,

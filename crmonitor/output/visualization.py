@@ -1,18 +1,18 @@
+import matplotlib.pyplot as plt
 from typing import List, Tuple, Dict
 
-import matplotlib.pyplot as plt
-from commonroad.planning.planning_problem import PlanningProblemSet
-from commonroad.scenario.lanelet import LaneletNetwork
-from commonroad.scenario.obstacle import Obstacle
+
 from commonroad.scenario.scenario import Scenario
+from commonroad.scenario.lanelet import LaneletNetwork
+from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.visualization.draw_dispatch_cr import draw_object
-from commonroad.visualization.planning import create_default_draw_params as create_default_draw_params_planning
 from commonroad.visualization.scenario import create_default_draw_params as create_default_draw_params_scenario
+from commonroad.visualization.planning import create_default_draw_params as create_default_draw_params_planning
+from commonroad.scenario.obstacle import Obstacle
 
 
 class Visualization:
     """Visualization class as interface to CommonRoad visualization"""
-
     def __init__(self, ego_vehicle_color: Dict[int, str] = None, figsize: Tuple[float, float] = (8, 4.5)):
         """
         Constructor

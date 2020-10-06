@@ -1,6 +1,6 @@
 from typing import List, Set, Dict
-
 import numpy as np
+
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
 from pycrccosy import CurvilinearCoordinateSystem
@@ -10,7 +10,6 @@ class Lane:
     """
     Lane representation build from several lanelets
     """
-
     def __init__(self, merged_lanelet: Lanelet, contained_lanelets: List[int], road_network_param: Dict):
         """
         :param merged_lanelet: lanelet element of lane
@@ -125,7 +124,7 @@ class Lane:
         """
         width_along_lanelet = np.zeros((len(left_polyline),))
         for i in range(len(left_polyline)):
-            width_along_lanelet[i] = np.linalg.norm(left_polyline[i] - right_polyline[i])
+            width_along_lanelet[i] = np.linalg.norm(left_polyline[i]-right_polyline[i])
         return width_along_lanelet
 
     @staticmethod
@@ -144,6 +143,7 @@ class Lane:
         new_ref_path = resample_polyline(new_ref_path, road_network_param.get("polyline_resampling_step"))
 
         curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+
         return curvilinear_cosy
 
 
@@ -151,7 +151,6 @@ class RoadNetwork:
     """
     Representation of the complete road network of a CommonRoad scenario abstracted to lanes
     """
-
     def __init__(self, lanelet_network: LaneletNetwork, road_network_param: Dict):
         """
         :param lanelet_network: CommonRoad lanelet network

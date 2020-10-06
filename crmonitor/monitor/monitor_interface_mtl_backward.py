@@ -1,5 +1,4 @@
 from typing import Tuple, Set
-
 from monitors import mtl
 
 
@@ -7,7 +6,6 @@ class TrafficRuleMonitorBackward:
     """
     Represents single formalized traffic rule
     """
-
     def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool, predicate_references):
         """
         :param logic_formula: temporal logic formula

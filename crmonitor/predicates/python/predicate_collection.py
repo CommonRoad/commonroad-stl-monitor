@@ -15,10 +15,6 @@ from crmonitor.common.helper import OperatingMode
 
 
 class PredicateCollection(ABC):
-    """
-    Interface for a predicate class
-    """
-
     def __init__(self, road_network: RoadNetwork, simulation_param: Dict, traffic_rules_param: Dict,
                  necessary_predicates: Set[str], traffic_sign_interpreter: TrafficSigInterpreter):
         """

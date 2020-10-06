@@ -1,12 +1,12 @@
-import os
 import unittest
-
+import os
 import numpy as np
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork
-from commonroad.scenario.obstacle import State, ObstacleType
-from commonroad.scenario.traffic_sign import TrafficSignElement, TrafficSign, TrafficSignIDGermany
+
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.lanelet import LaneletNetwork
+from commonroad.scenario.traffic_sign import TrafficSignElement, TrafficSign, TrafficSignIDGermany
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
@@ -15,7 +15,7 @@ from crmonitor.predicates.python.velocity_predicates import VelocityPredicateCol
 
 class TestVelocityPredicates(unittest.TestCase):
     def setUp(self):
-        config_path = os.path.dirname(__file__) + "/../crmonitor/"
+        config_path = os.path.dirname(os.path.abspath(__file__)) + "/../crmonitor/"
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 1.0, 'DEU')
@@ -645,7 +645,7 @@ class TestVelocityPredicates(unittest.TestCase):
         self.assertAlmostEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         self.assertAlmostEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
         self.assertAlmostEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
-
+        
     def test_reverses(self):
         self._traffic_rules_param["standstill_error"] = 0.01
         # expected solutions
@@ -658,7 +658,7 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_constraint_mode_3 = -self._traffic_rules_param["standstill_error"]
         exp_sol_constraint_mode_4 = -self._traffic_rules_param["standstill_error"]
         exp_sol_robustness_mode_1 = -self._traffic_rules_param["standstill_error"]
-        exp_sol_robustness_mode_2 = -self._traffic_rules_param["standstill_error"] - 1
+        exp_sol_robustness_mode_2 = -self._traffic_rules_param["standstill_error"] -1
         exp_sol_robustness_mode_3 = -1e-17
         exp_sol_robustness_mode_4 = -self._traffic_rules_param["standstill_error"] - -2
 
@@ -675,7 +675,7 @@ class TestVelocityPredicates(unittest.TestCase):
         # ego vehicle
         state_list_lon_ego = {0: StateLongitudinal(s=0, v=0), 1: StateLongitudinal(s=0, v=1),
                               2: StateLongitudinal(s=1, v=-self._traffic_rules_param["standstill_error"]),
-                              3: StateLongitudinal(s=1 - self._traffic_rules_param["standstill_error"], v=-2)}
+                              3: StateLongitudinal(s=1-self._traffic_rules_param["standstill_error"], v=-2)}
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                               2: StateLateral(d=0, theta=0), 3: StateLateral(d=4, theta=0)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=0, time_step=1),

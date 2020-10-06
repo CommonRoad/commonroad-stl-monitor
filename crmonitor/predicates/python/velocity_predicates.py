@@ -391,7 +391,7 @@ class VelocityPredicateCollection(PredicateCollection):
                     self.preserves_traffic_flow(time_step, ego_vehicle, operating_mode)
             if "slow_leading_vehicle__x_ego" in self._necessary_predicates:
                 predicate_trace["slow_leading_vehicle__x_ego"][ego_vehicle.id][time_step] = \
-                    self.slow_leading_vehicle(time_step, ego_vehicle, other_vehicles)
+                    self.slow_leading_vehicle(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "keeps_type_speed_limit__x_ego" in self._necessary_predicates:
                 predicate_trace["keeps_type_speed_limit__x_ego"][ego_vehicle.id][time_step] = \
                     self.keeps_type_speed_limit(time_step, ego_vehicle, operating_mode)
@@ -400,7 +400,7 @@ class VelocityPredicateCollection(PredicateCollection):
                     self.keeps_sign_min_speed_limit(time_step, ego_vehicle, operating_mode)
             if "exist_standing_leading_vehicle__x_ego" in self._necessary_predicates:
                 predicate_trace["exist_standing_leading_vehicle__x_ego"][ego_vehicle.id][time_step] = \
-                    self.exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles)
+                    self.exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "in_standstill__x_ego" in self._necessary_predicates:
                 predicate_trace["in_standstill__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_standstill(time_step, ego_vehicle, operating_mode)

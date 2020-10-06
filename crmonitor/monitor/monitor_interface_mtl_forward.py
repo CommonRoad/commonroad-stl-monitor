@@ -1,13 +1,11 @@
 from typing import List, Dict, Tuple, Set
-
 import mtl
-
+from crmonitor.common.helper import OperatingMode
 
 class TrafficRuleMonitorForward:
     """
     Represents single formalized traffic rule
     """
-
     def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool):
         """
         :param logic_formula: temporal logic formula
@@ -47,11 +45,11 @@ class TrafficRuleMonitorForward:
         predicates = [x for x in predicates_tmp if x != ""]
         return set(predicates)
 
-    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]]) -> bool:
+    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]], operating_mode: OperatingMode) -> bool:
         """
         Evaluates monitor with provided trace of predicates
 
         :param predicates: trace for each predicate used in rule
         :returns boolean indicating if rule is fulfilled
         """
-        return self._monitor(predicates, quantitative=False)
+        return self._monitor(predicates, quantitative=operating_mode == OperatingMode.ROBUSTNESS)

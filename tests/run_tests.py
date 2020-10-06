@@ -1,5 +1,5 @@
-import os
 import unittest as unittest
+import os
 
 if __name__ == "__main__":
     for x in os.walk(os.getcwd()):

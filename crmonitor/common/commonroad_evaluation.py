@@ -1,15 +1,14 @@
 import traceback
 
-from commonroad.scenario.scenario import Scenario
-
 from crmonitor.common.helper import *
-from crmonitor.common.road_network import RoadNetwork
 from crmonitor.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
+from crmonitor.common.road_network import RoadNetwork
+
+from commonroad.scenario.scenario import Scenario
 
 
 class CommonRoadObstacleEvaluation:
     """Class for the traffic rule evaluation of CommonRoad scenarios"""
-
     def __init__(self, config_path: str):
         config = load_yaml(config_path + "config.yaml")
         traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
@@ -149,16 +148,16 @@ class CommonRoadObstacleEvaluation:
             out_string = "scenario: " + scenario_name + " - evaluated obs-id: " + str(vehicle[0])
             for rule_name, eval_result in vehicle[1].items():
                 if "_".join(rule_name.split("_", 2)[:2]) in self._vehicle_dependent_rules:
-                    if eval_result is False:
+                    if eval_result is False or eval_result < 0.:
                         self.eval_vehicle_dependent_rules["_".join(rule_name.split("_", 2)[:2])] = False
-                elif eval_result is True:
+                elif eval_result is True or eval_result > 0.:
                     self.eval_dict[rule_name] += 1
                     num_correct_rules += 1
                     out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
-                elif eval_result is False:
+                elif eval_result is False or eval_result < 0.:
                     out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)
             for rule_name, eval_result in self.eval_vehicle_dependent_rules.items():
-                if eval_result is True:
+                if eval_result is True or eval_result > 0.:
                     self.eval_dict["_".join(rule_name.split("_", 2)[:2])] += 1
                     num_correct_rules += 1
                 out_string += " - evaluation of rule " + rule_name + ": " + str(eval_result)

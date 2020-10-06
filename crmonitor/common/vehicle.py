@@ -1,10 +1,12 @@
+from typing import Union, Set, Dict, List
 import enum
 import numpy as np
 from typing import Union, Set, Dict, List
 
 from commonroad.geometry.shape import Shape, Rectangle
-from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
+from commonroad.scenario.obstacle import ObstacleType, SignalState
+from commonroad.geometry.transform import rotate_translate
 
 from crmonitor.common.road_network import Lane
 
@@ -110,7 +112,6 @@ class Vehicle:
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
-
     def __init__(self, states_lon: Dict[int, StateLongitudinal],
                  states_lat: Dict[int, StateLateral], shape: Union[Shape, Rectangle],
                  cr_states: Dict[int, State], vehicle_id: int, obstacle_type: ObstacleType, vehicle_param: Dict,

@@ -1,3 +1,4 @@
+import math
 from typing import List, Dict, Set, Union, Tuple
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
@@ -19,12 +20,12 @@ class PositionPredicateCollection(PredicateCollection):
         :param necessary_predicates: set with all predicates which should be evaluated
         :param traffic_sign_interpreter: CommonRoad traffic sign interpreter
         """
-        super().__init__(road_network, simulation_param, traffic_rules_param,
+        super().__init__(road_network, simulation_param,  traffic_rules_param,
                          necessary_predicates, traffic_sign_interpreter)
 
     @staticmethod
     def in_front_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle, operating_mode: OperatingMode) \
-            -> Union[bool, float, Constraint]:
+            -> Union[bool, float, Tuple[float, float]]:
         """
         Evaluates if the kth vehicle is in front of the pth vehicle
 
@@ -40,10 +41,14 @@ class PositionPredicateCollection(PredicateCollection):
             else:
                 return False
         elif operating_mode is OperatingMode.CONSTRAINT:
-            return Constraint([ConstraintType.LONGITUDINAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
-                              vehicle_p.front_s(time_step))
+            return vehicle_p.front_s(time_step)
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
+            # TODO
+            if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
+                return math.inf
+            else:
+                return -math.inf
+            # return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
 
     @staticmethod
     def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
@@ -70,7 +75,7 @@ class PositionPredicateCollection(PredicateCollection):
             else:
                 return False
 
-    def in_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+    def in_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if the kth vehicle is in the same lane as the pth vehicle
 
@@ -81,10 +86,18 @@ class PositionPredicateCollection(PredicateCollection):
         """
         lane_ids_k = self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])
         lane_ids_p = self._road_network.find_lanes_by_lanelets(vehicle_p.lanelet_assignment[time_step])
-        for lane_id in lane_ids_k:
-            if lane_id in lane_ids_p:
-                return True
-        return False
+        if operating_mode is OperatingMode.MONITOR:
+            for lane_id in lane_ids_k:
+                if lane_id in lane_ids_p:
+                    return True
+            return False
+        elif operating_mode is OperatingMode.CONSTRAINT:
+            raise NotImplementedError
+        elif operating_mode is OperatingMode.ROBUSTNESS:
+            for lane_id in lane_ids_k:
+                if lane_id in lane_ids_p:
+                    return math.inf
+            return -math.inf
 
     @staticmethod
     def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
@@ -404,7 +417,7 @@ class PositionPredicateCollection(PredicateCollection):
             return vehicle_directly_right
 
     def _vehicle_directly_left(self, time_step: int, vehicle: Vehicle,
-                               other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+                                other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
         vehicles_left = self._vehicles_left(time_step, vehicle, other_vehicles)
         if len(vehicles_left) == 0:
             return None
@@ -454,13 +467,13 @@ class PositionPredicateCollection(PredicateCollection):
                         return False
                 return True
             elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
-                constraint = min([vehicle.shape.width / 2 - 0.5 * lane.width(s_ego) +
+                constraint = min([vehicle.shape.width/2 - 0.5 * lane.width(s_ego) +
                                   self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
                 if operating_mode is OperatingMode.CONSTRAINT:
                     return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.UPPER,
                                       constraint)
                 elif operating_mode is OperatingMode.ROBUSTNESS:
-                    return (constraint - vehicle.shape.width / 2) - right_position
+                    return (constraint - vehicle.shape.width/2) - right_position
 
     def drives_leftmost(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
                         operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
@@ -499,13 +512,13 @@ class PositionPredicateCollection(PredicateCollection):
                         return False
                 return True
             elif operating_mode is OperatingMode.CONSTRAINT or operating_mode is OperatingMode.ROBUSTNESS:
-                constraint = max([0.5 * lane.width(s_ego) - vehicle.shape.width / 2 -
+                constraint = max([0.5 * lane.width(s_ego) - vehicle.shape.width/2 -
                                   self._traffic_rules_param.get("close_to_lane_border") for lane in lanes])
                 if operating_mode is OperatingMode.CONSTRAINT:
                     return Constraint([ConstraintType.LATERAL_CURVILINEAR_POSITION], ConstraintRepresentation.LOWER,
                                       constraint)
                 elif operating_mode is OperatingMode.ROBUSTNESS:
-                    return left_position - (constraint + vehicle.shape.width / 2)
+                    return left_position - (constraint + vehicle.shape.width/2)
 
     def main_carriageway_right_lane(self, time_step: int, vehicle: Vehicle) -> bool:
         """
@@ -518,7 +531,7 @@ class PositionPredicateCollection(PredicateCollection):
         lanelets = vehicle.lanelet_assignment[time_step]
         for lanelet_id in lanelets:
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type \
+            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type  \
                     and (not lanelet.adj_right_same_direction
                          or LaneletType.MAIN_CARRIAGE_WAY not in
                          self._road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type):
@@ -618,7 +631,7 @@ class PositionPredicateCollection(PredicateCollection):
                     continue
                 if "in_same_lane__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.in_same_lane(time_step, ego_vehicle, other_vehicle)
+                        self.in_same_lane(time_step, ego_vehicle, other_vehicle, operating_mode)
                 if "in_front_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["in_front_of__x_ego__x_o"][other_vehicle.id][time_step] = \
                         self.in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode)
