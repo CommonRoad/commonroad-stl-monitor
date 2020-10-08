@@ -1,9 +1,11 @@
-import unittest
 import os
+import unittest
 import numpy as np
+
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.scenario.lanelet import LaneletNetwork
+from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 from crmonitor.common.helper import *

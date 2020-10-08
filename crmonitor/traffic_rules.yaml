@@ -56,6 +56,7 @@ traffic_rules_backward:
             -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode))) && (!interstate_broad_enough(time_step, ego_vehicle)
             -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode) && in_rightmost_lane(time_step, ego_vehicle, operating_mode) && single_lane(time_step, ego_vehicle)))
 
+
 # Parameters for traffic rules
 ###
 # .. code-block:: yaml
@@ -110,5 +111,5 @@ traffic_rule_sets:
     B_SRI3: [R_I3]
     B_SRI4: [R_I4]
     F_SRGXiao: [R_G1_forward_no_cut_in]
-activated_traffic_rule_sets: [F_SRGXiao] # [B_SRG1]
+activated_traffic_rule_sets: [F_SRGXiao] #[B_SRG1] # [F_SRGXiao] #
 vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7, R_G1_forward_no_cut_in]

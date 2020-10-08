@@ -1,5 +1,5 @@
-import unittest
 import os
+import unittest
 import numpy as np
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter

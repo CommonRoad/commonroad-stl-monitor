@@ -61,7 +61,7 @@ def main():
     cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
     args = get_args()
 
-    if args.operating_mode is None:
+    if args.evaluation_mode is None:
         scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
                                                               + cr_eval.simulation_param.get("scenario_dir") + "/"
                                                               + cr_eval.simulation_param.get("benchmark_id")
@@ -73,7 +73,7 @@ def main():
             scenario_directories = cr_eval.simulation_param.get("scenario_directories")
         else:
             scenario_directories = args.scenario_directories
-        if args.operating_mode is not None:
+        if args.evaluation_mode is not None:
             cr_eval.simulation_param["evaluation_mode"] = args.evaluation_mode
         if args.max_num_scenarios < 0:
             max_num_scenarios = 2

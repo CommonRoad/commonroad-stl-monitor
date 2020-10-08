@@ -515,19 +515,20 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
     """
     # get obstacle current state
     obstacle_state = obstacle.state_at_time(time_step)
-    obstacle_state_previous = obstacle.prediction.trajectory.state_at_time_step(time_step - 1)
-    if obstacle_state_previous is None:
-        previous_acceleration = 0.
-    else:
-        previous_acceleration = obstacle_state_previous.acceleration
+    previous_state_longitudinal = vehicle.states_lon[time_step - 1]
+
+    try:
+        acceleration = obstacle_state.acceleration
+    except AttributeError:
+        acceleration = _compute_acceleration(previous_state_longitudinal.v,
+                                             obstacle_state.velocity, dt)
 
     # compute jerk from current and previous acceleration
-    jerk = _compute_jerk(obstacle_state.acceleration, previous_acceleration, dt)
-
+    jerk = _compute_jerk(acceleration, previous_state_longitudinal.a, dt)
     state_lon, state_lat = create_curvilinear_states(
         obstacle_state.position,
         obstacle_state.velocity,
-        obstacle_state.acceleration,
+        acceleration,
         jerk,
         obstacle_state.orientation,
         reference_lane

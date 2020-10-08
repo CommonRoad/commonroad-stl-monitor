@@ -1,6 +1,6 @@
+import os
 import unittest
 import numpy as np
-import os
 
 from commonroad.geometry.shape import Polygon
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter

@@ -206,6 +206,56 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return False
 
+    # TODO: evaluate_predicates_online
+    def evaluate_predicates_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                                   time_step: int,
+                                   operating_mode: OperatingMode) -> Dict[str, Dict[int, Union[float, bool]]]:
+
+        predicate_current_time_step = {"in_congestion__x_ego": {},
+                                       "in_congestion__x_o": {},
+                                       "in_slow_moving_traffic__x_ego": {},
+                                       "in_slow_moving_traffic__x_o": {},
+                                       "in_queue_of_vehicles__x_ego": {},
+                                       "in_queue_of_vehicles__x_o": {},
+                                       "cut_in__x_o__x_ego": {},
+                                       "makes_u_turn__x_ego": {},
+                                       "interstate_broad_enough__x_ego": {}}
+        # ego only
+        if "in_congestion__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["in_congestion__x_ego"][ego_vehicle.id] = \
+                self.in_congestion(time_step, ego_vehicle, other_vehicles)
+        if "in_slow_moving_traffic__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["in_slow_moving_traffic__x_ego"][ego_vehicle.id] = \
+                self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
+        if "in_queue_of_vehicles__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["in_queue_of_vehicles__x_ego"][ego_vehicle.id] = \
+                self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles)
+        if "makes_u_turn__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["makes_u_turn__x_ego"][ego_vehicle.id] = \
+                self.makes_u_turn(time_step, ego_vehicle)
+        if "interstate_broad_enough__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["interstate_broad_enough__x_ego"][ego_vehicle.id] = \
+                self.interstate_broad_enough(time_step, ego_vehicle)
+
+        # ego and other vehicle
+        for other_vehicle in other_vehicles:
+            if other_vehicle.states_lon.get(time_step) is None:
+                continue
+            if "in_congestion__x_o" in self._necessary_predicates:
+                predicate_current_time_step["in_congestion__x_o"][other_vehicle.id] = \
+                    self.in_congestion(time_step, other_vehicle, other_vehicles)
+            if "in_slow_moving_traffic__x_o" in self._necessary_predicates:
+                predicate_current_time_step["in_slow_moving_traffic__x_o"][other_vehicle.id] = \
+                    self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
+            if "in_queue_of_vehicles__x_o" in self._necessary_predicates:
+                predicate_current_time_step["in_queue_of_vehicles__x_o"][other_vehicle.id] = \
+                    self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)
+            if "cut_in__x_o__x_ego" in self._necessary_predicates:
+                predicate_current_time_step["cut_in__x_o__x_ego"][other_vehicle.id] = \
+                    self.cut_in(time_step, other_vehicle, ego_vehicle)
+
+        return predicate_current_time_step
+
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
                             time_interval: Tuple[int, int],
                             operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:

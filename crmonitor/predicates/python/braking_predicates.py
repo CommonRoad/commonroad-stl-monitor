@@ -1,3 +1,4 @@
+import math
 from typing import List, Dict, Set, Union, Tuple
 
 from crmonitor.common.helper import OperatingMode
@@ -154,6 +155,42 @@ class BrakingPredicateCollection(PredicateCollection):
                               min(vehicle_p.states_lon[time_step].a, 0))
         elif operating_mode is OperatingMode.ROBUSTNESS:  # returns difference to upper bound defined by constraint
             return min(vehicle_p.states_lon[time_step].a, 0) - vehicle_k.states_lon[time_step].a
+
+    # TODO: evaluate_predicates_online
+    def evaluate_predicates_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
+                                   time_step: int,
+                                   operating_mode: OperatingMode) -> Dict[str, Dict[int, Union[bool, float]]]:
+        predicate_current_time_step = {"unnecessary_braking__x_ego": {},
+                                       "keeps_safe_distance_prec__x_ego__x_o": {},
+                                       "keeps_safe_distance_prec__x_o__x_ego": {},
+                                       "brakes_stronger__x_ego__x_o": {}}
+        # ego only
+        if "unnecessary_braking__x_ego" in self._necessary_predicates:
+            predicate_current_time_step["unnecessary_braking__x_ego"][ego_vehicle.id] = \
+                self.unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode)
+
+        # ego and other vehicle
+        for other_vehicle in other_vehicles:
+            if other_vehicle.states_lon.get(time_step) is None:
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    value = math.inf
+                else:
+                    value = True
+                predicate_current_time_step["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = value
+                predicate_current_time_step["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = value
+                predicate_current_time_step["brakes_stronger__x_ego__x_o"][other_vehicle.id] = value
+                continue
+            if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
+                predicate_current_time_step["keeps_safe_distance_prec__x_ego__x_o"][other_vehicle.id] = \
+                    self.keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode)
+            if "keeps_safe_distance_prec__x_o__x_ego" in self._necessary_predicates:
+                predicate_current_time_step["keeps_safe_distance_prec__x_o__x_ego"][other_vehicle.id] = \
+                    self.keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode)
+            if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
+                predicate_current_time_step["brakes_stronger__x_ego__x_o"][other_vehicle.id] = \
+                    self.brakes_stronger(time_step, ego_vehicle, other_vehicle, operating_mode)
+
+        return predicate_current_time_step
 
     def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
                             time_interval: Tuple[int, int],
