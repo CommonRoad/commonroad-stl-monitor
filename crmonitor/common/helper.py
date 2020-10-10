@@ -1,8 +1,9 @@
-from typing import Dict, Union, List, Tuple
-import ruamel.yaml
 import math
 import enum
+import ruamel.yaml
+
 from decimal import Decimal
+from typing import Dict, Union, List, Tuple
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -335,15 +336,20 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict, road_network:
         create_curvilinear_states(obstacle.initial_state.position, obstacle.initial_state.velocity, acceleration, jerk,
                                   obstacle.initial_state.orientation, reference_lane)
 
-    state_list_lon = {0: state_lon}
-    state_list_lat = {0: state_lat}
-    state_list_cr = {0: obstacle.initial_state}
-    signal_series = {0: obstacle.initial_signal_state}
-    lanelet_assignments = {0: obstacle.initial_shape_lanelet_ids}
-    vehicle_classifications = {0: vehicle_classification}
+    initial_time_step = obstacle.initial_state.time_step
+    state_list_lon = {initial_time_step: state_lon}
+    state_list_lat = {initial_time_step: state_lat}
+    state_list_cr = {initial_time_step: obstacle.initial_state}
+    signal_series = {initial_time_step: obstacle.initial_signal_state}
+    lanelet_assignments = {initial_time_step: obstacle.initial_shape_lanelet_ids}
+    vehicle_classifications = {initial_time_step: vehicle_classification}
     for state in obstacle.prediction.trajectory.state_list:
         acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
-        jerk = _compute_jerk(acceleration, 0, dt)  # TODO: why calculating jerk without previous acceleration?
+        if state.time_step - 1 in state_list_lon:
+            previous_acceleration = state_list_lon[state.time_step - 1].a
+        else: # previous state out of projection domain
+            previous_acceleration = 0.
+        jerk = _compute_jerk(acceleration, previous_acceleration, dt)  # TODO: why calculating jerk without previous acceleration?
 
         state_lon, state_lat = create_curvilinear_states(state.position, state.velocity, acceleration, jerk,
                                                          state.orientation, reference_lane)
@@ -515,16 +521,24 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
     """
     # get obstacle current state
     obstacle_state = obstacle.state_at_time(time_step)
-    previous_state_longitudinal = vehicle.states_lon[time_step - 1]
+    if time_step - 1 in vehicle.states_lon:
+        previous_state_longitudinal = vehicle.states_lon[time_step - 1]
+        previous_v = previous_state_longitudinal.v
+        previous_a = previous_state_longitudinal.a
+    else:
+        previous_v = obstacle.initial_state.velocity
+        try:
+            previous_a = obstacle.initial_state.acceleration
+        except AttributeError:
+            previous_a = 0.
 
     try:
         acceleration = obstacle_state.acceleration
     except AttributeError:
-        acceleration = _compute_acceleration(previous_state_longitudinal.v,
-                                             obstacle_state.velocity, dt)
+        acceleration = _compute_acceleration(previous_v, obstacle_state.velocity, dt)
 
     # compute jerk from current and previous acceleration
-    jerk = _compute_jerk(acceleration, previous_state_longitudinal.a, dt)
+    jerk = _compute_jerk(acceleration, previous_a, dt)
     state_lon, state_lat = create_curvilinear_states(
         obstacle_state.position,
         obstacle_state.velocity,
