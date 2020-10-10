@@ -286,8 +286,8 @@ class Vehicle:
                    (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
                    (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d)
 
-    def append_time_step(self, time_step: int, state_lon: StateLongitudinal, state_lat: StateLateral, state_cr: State,
-                         lanelet_assignment: Set[int], signal_state: State = None):
+    def append_time_step(self, time_step: int, state_lon: StateLongitudinal, state_lat: StateLateral,
+                         state_cr: State, lanelet_assignment: Set[int], signal_state: State = None):
         """
         Adds information for a specific time step to vehicle
 

@@ -547,10 +547,13 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
         obstacle_state.orientation,
         reference_lane
     )
-    lanelet_assignment = obstacle.prediction.shape_lanelet_assignment[time_step]
-    vehicle.append_time_step(time_step, state_lon, state_lat, obstacle_state,
-                             lanelet_assignment, signal_state=None)
-    return vehicle
+    if state_lon is None or state_lat is None: # out of projection
+        return vehicle
+    else:
+        lanelet_assignment = obstacle.prediction.shape_lanelet_assignment[time_step]
+        vehicle.append_time_step(time_step, state_lon, state_lat, obstacle_state,
+                                 lanelet_assignment, signal_state=None)
+        return vehicle
 
 
 def update_scenario_vehicles(dt: float,
