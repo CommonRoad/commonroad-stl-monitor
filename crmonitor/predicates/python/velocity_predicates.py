@@ -38,7 +38,8 @@ class VelocityPredicateCollection(PredicateCollection):
         else:
             return min(self._traffic_rules_param.get("desired_interstate_velocity"), v_max_lane)
 
-    def slow_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def slow_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             operating_mode: OperatingMode) -> Union[bool, float]:
         """
         Predicate which evaluates if a slow leading vehicle exists if front of a vehicle
 
@@ -60,9 +61,14 @@ class VelocityPredicateCollection(PredicateCollection):
             v_type = self._get_type_speed_limit(veh_o.obstacle_type)
             v_max = min(vehicle.vehicle_param.get("road_condition_speed_limit"), v_max_lane, v_type)
             if v_max - veh_o.states_lon[time_step].v >= self._traffic_rules_param.get("min_velocity_dif"):
-                return True
-
-        return False
+                if not operating_mode == OperatingMode.ROBUSTNESS:
+                    return True
+                else:
+                    return math.inf
+        if not operating_mode == OperatingMode.ROBUSTNESS:
+            return False
+        else:
+            return -math.inf
 
     def preserves_traffic_flow(self, time_step: int, vehicle: Vehicle,
                                operating_mode: OperatingMode) -> [bool, Constraint, float]:

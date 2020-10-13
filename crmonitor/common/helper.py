@@ -22,6 +22,10 @@ class OperatingMode(enum.Enum):
     CONSTRAINT = "constraint"
     ROBUSTNESS = "robustness"
 
+@enum.unique
+class Backend(enum.Enum):
+    PythonMTL = "python-mtl"
+    RTAMT = "rtamt"
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) -> Dict:
     """

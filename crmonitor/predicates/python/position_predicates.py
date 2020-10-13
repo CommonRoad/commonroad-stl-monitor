@@ -75,22 +75,6 @@ class PositionPredicateCollection(PredicateCollection):
             else:
                 return False
 
-    # def in_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
-    #     """
-    #     Evaluates if the kth vehicle is in the same lane as the pth vehicle
-    #
-    #     :param time_step: time step of interest
-    #     :param vehicle_k: kth vehicle
-    #     :param vehicle_p: pth vehicle
-    #     :returns boolean indicating satisfaction
-    #     """
-    #     lane_ids_k = self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])
-    #     lane_ids_p = self._road_network.find_lanes_by_lanelets(vehicle_p.lanelet_assignment[time_step])
-    #
-    #     for lane_id in lane_ids_k:
-    #         if lane_id in lane_ids_p:
-    #             return True
-    #     return False
     def in_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle,
                      operating_mode: OperatingMode) -> bool:
         """

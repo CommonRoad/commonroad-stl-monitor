@@ -3,6 +3,7 @@ import unittest
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
+from crmonitor.common.helper import OperatingMode
 from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 
 
@@ -394,6 +395,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1002, {'R_I5_veh_1000': True, 'R_I5_veh_1001': True})]
         self.cr_eval.activated_traffic_rule_sets = ["F_SRI5"]
         self.cr_eval.update_eval_dict()
+        self.cr_eval._operating_mode = OperatingMode.MONITOR
         result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Considering entering vehicles:")
         print(result_forward)
@@ -436,6 +438,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       (1012, {'R_I4': False}), (1013, {'R_I4': True}), (1014, {'R_I4': False}), (1015, {'R_I4': True})]
         self.cr_eval.activated_traffic_rule_sets = ["B_SRI4"]
         self.cr_eval.update_eval_dict()
+        self.cr_eval._operating_mode = OperatingMode.MONITOR
         result_backward = self.cr_eval.evaluate_scenario(scenario)
         print("Test emergency lane:")
         print(result_backward)
@@ -484,6 +487,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                       ]
         self.cr_eval.activated_traffic_rule_sets = ["F_SRG7"]
         self.cr_eval.update_eval_dict()
+        self.cr_eval._operating_mode = OperatingMode.MONITOR
         result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Recapture safe distance:")
         print(result_forward)
@@ -554,6 +558,7 @@ class TestCommonRoadMonitor(unittest.TestCase):
                               'R_G6_veh_1007': True})]
         self.cr_eval.activated_traffic_rule_sets = ["B_SRG1", "B_SRG6"]
         self.cr_eval.update_eval_dict()
+        self.cr_eval._operating_mode = OperatingMode.MONITOR
         result_forward = self.cr_eval.evaluate_scenario(scenario)
         print("Safe distance to following and leading vehicles during lane change:")
         print(result_forward)

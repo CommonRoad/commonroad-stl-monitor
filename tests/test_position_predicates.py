@@ -96,11 +96,11 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_constraint_mode_3 = 14.5
         exp_sol_constraint_mode_4 = 16.5
         exp_sol_constraint_mode_5 = 12.5
-        exp_sol_robustness_mode_1 = -13.0
-        exp_sol_robustness_mode_2 = -5.0
-        exp_sol_robustness_mode_3 = -3.0
-        exp_sol_robustness_mode_4 = 5.0
-        exp_sol_robustness_mode_5 = 14.0
+        exp_sol_robustness_mode_1 = -math.inf # -13.0
+        exp_sol_robustness_mode_2 = -math.inf # -5.0
+        exp_sol_robustness_mode_3 = -math.inf # -3.0
+        exp_sol_robustness_mode_4 = math.inf # 5.0
+        exp_sol_robustness_mode_5 = math.inf # 14.0
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -917,11 +917,11 @@ class TestPositionPredicates(unittest.TestCase):
                                   lanelet_assignments_ego, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.in_same_lane(0, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_2 = position_predicates.in_same_lane(1, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_3 = position_predicates.in_same_lane(2, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_4 = position_predicates.in_same_lane(3, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_5 = position_predicates.in_same_lane(4, ego_vehicle, other_vehicle_2)
+        sol_monitor_mode_1 = position_predicates.in_same_lane(0, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.in_same_lane(1, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.in_same_lane(2, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.in_same_lane(3, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.in_same_lane(4, ego_vehicle, other_vehicle_2, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)

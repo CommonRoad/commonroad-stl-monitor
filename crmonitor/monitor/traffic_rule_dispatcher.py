@@ -3,16 +3,16 @@ from typing import List, Dict, Set, Union
 
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
-# from crmonitor.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
-from crmonitor.monitor.monitor_interface_stl_forward import TrafficRuleMonitorForwardSTL as TrafficRuleMonitorForward
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.helper import OperatingMode, Backend
+from crmonitor.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
+from crmonitor.monitor.monitor_interface_stl_forward import TrafficRuleMonitorForwardSTL
 from crmonitor.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
 from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 from crmonitor.predicates.python.general_predicates import GeneralPredicateCollection
 from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
 from crmonitor.predicates.python.velocity_predicates import VelocityPredicateCollection
-from crmonitor.common.vehicle import Vehicle
-from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.helper import OperatingMode
 
 
 class TrafficRuleDispatcher:
@@ -23,7 +23,8 @@ class TrafficRuleDispatcher:
     def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
                  traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
                  simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode):
+                 vehicle_dependent_rules: List[str], operating_mode: OperatingMode,
+                 backend: Backend = Backend.PythonMTL):
         """
         Constructor
 
@@ -40,9 +41,10 @@ class TrafficRuleDispatcher:
         self._simulation_param = simulation_param
         self._road_network = road_network
         self._operating_mode = operating_mode
+        self._backend = backend
         self._monitors_forward = self.create_forward_monitors(traffic_rules_forward, traffic_rule_sets,
                                                               activated_traffic_rule_sets,
-                                                              vehicle_dependent_rules)
+                                                              vehicle_dependent_rules, self._backend)
         necessary_predicates = self.extract_necessary_predicates()
         traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
                                                          road_network.lanelet_network)
@@ -75,7 +77,8 @@ class TrafficRuleDispatcher:
 
     @staticmethod
     def create_forward_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
-                                activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]) \
+                                activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str],
+                                backend: Backend) \
             -> List[TrafficRuleMonitorForward]:
         """
         Initialization of monitor for each MTL rule
@@ -92,7 +95,13 @@ class TrafficRuleDispatcher:
                 continue
             for rule in traffic_rule_sets.get(traffic_rule_set_id):
                 vehicle_dependency = rule in vehicle_dependent_rules
-                monitors.append(TrafficRuleMonitorForward((rule, traffic_rules.get(rule)), vehicle_dependency))
+                if backend == Backend.PythonMTL:
+                    traffic_rule_monitor_forward = TrafficRuleMonitorForward((rule, traffic_rules.get(rule)),
+                                                                             vehicle_dependency)
+                else:
+                    traffic_rule_monitor_forward = TrafficRuleMonitorForwardSTL((rule, traffic_rules.get(rule)),
+                                                                                vehicle_dependency)
+                monitors.append(traffic_rule_monitor_forward)
 
         return monitors
 
@@ -133,13 +142,13 @@ class TrafficRuleDispatcher:
                                                                                    current_time_step,
                                                                                    self._operating_mode)
         braking_predicates = self._braking_predicates.evaluate_predicates_online(ego_vehicle,
-                                                                                   other_vehicles,
-                                                                                   current_time_step,
-                                                                                   self._operating_mode)
+                                                                                 other_vehicles,
+                                                                                 current_time_step,
+                                                                                 self._operating_mode)
         general_predicates = self._general_predicates.evaluate_predicates_online(ego_vehicle,
-                                                                                   other_vehicles,
-                                                                                   current_time_step,
-                                                                                   self._operating_mode)
+                                                                                 other_vehicles,
+                                                                                 current_time_step,
+                                                                                 self._operating_mode)
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates
 
@@ -165,6 +174,20 @@ class TrafficRuleDispatcher:
         combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
         return combined_predicates
 
+    def evaluate_state(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, Union[float, bool]]:
+        """
+        Evaluates one time step using forward (rtamt) framework
+        :param ego_vehicle:
+        :param other_vehicles:
+        :return:
+        """
+        results_forward = self.evaluate_state_forward(ego_vehicle, other_vehicles)
+        # results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
+        result = {}
+        result.update(results_forward)
+        # result.update(results_backward)
+        return result
+
     def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
         Evaluates trajectory using forward and backward framework
@@ -173,8 +196,7 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary containing predicate evaluation
         """
-        # results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
-        results_forward = self.evaluate_trajectory_forward_online(ego_vehicle, other_vehicles)
+        results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
         results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
         result = {}
         result.update(results_forward)
@@ -226,7 +248,7 @@ class TrafficRuleDispatcher:
                     rule_evaluation[rule.name] = True
         return rule_evaluation
 
-    def evaluate_trajectory_forward_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
+    def evaluate_state_forward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with forward MTL framework
 
@@ -248,10 +270,10 @@ class TrafficRuleDispatcher:
                 rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates, self._operating_mode)
             else:  # evaluate rules which depend on other vehicles, e.g., safe distance
                 # rule_evaluated = False
-                time = max(ego_vehicle.states_lon.keys()) #* self._dt
+                time = max(ego_vehicle.states_lon.keys())  # * self._dt
                 for vehicle in other_vehicles:
                     rule_predicates = [time]
-                    for pred in rule.predicates: # [time, (var1, value1), (var2, value2)]
+                    for pred in rule.predicates:  # [time, (var1, value1), (var2, value2)]
                         predicate_value_vehicle = evaluated_predicates[pred].get(vehicle.id)
                         if len(evaluated_predicates[pred]) > 0 and predicate_value_vehicle is not None:
                             rule_predicates.append((pred, predicate_value_vehicle))

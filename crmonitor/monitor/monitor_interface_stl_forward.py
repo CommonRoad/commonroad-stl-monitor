@@ -47,11 +47,12 @@ class TrafficRuleMonitorForwardSTL:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
+        # https://github.com/nickovic/rtamt/blob/master/rtamt/parser/stl/StlParser.tokens
         replacements = ['U', 'X', 'G', 'F', '&', '->', '(', ')', '~', '|', '[', ']',
                         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '.',
                         'and', 'or', 'not', 'always', 'eventually', 'historically',
                         'comp', 'iff', 'implies', 'once', 'precedes', 'since', 'xor',
-                        'until']
+                        'until', 'prev', '!']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
