@@ -25,3 +25,5 @@ build
 
 # binaries
 *.so
+
+external/curvilinear_coordinate_system
