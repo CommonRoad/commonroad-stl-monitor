@@ -525,20 +525,31 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
     """
     # get obstacle current state
     obstacle_state = obstacle.state_at_time(time_step)
+
     if time_step - 1 in vehicle.states_lon:
         previous_state_longitudinal = vehicle.states_lon[time_step - 1]
         previous_v = previous_state_longitudinal.v
         previous_a = previous_state_longitudinal.a
-    else:
+    # initial state
+    elif time_step - 1 == obstacle.initial_state.time_step:
         previous_v = obstacle.initial_state.velocity
-        try:
+        if hasattr(obstacle.initial_state, "acceleration"):
             previous_a = obstacle.initial_state.acceleration
-        except AttributeError:
+        else:
+            previous_a = 0.
+    # out of projection domain
+    else:
+        previous_state = obstacle.state_at_time(time_step-1)
+        previous_v = previous_state.velocity
+        if hasattr(previous_state, "acceleration"):
+            previous_a = previous_state.acceleration
+        else:
             previous_a = 0.
 
-    try:
+    # get acceleration or compute from previous and current velocity
+    if hasattr(obstacle_state, "acceleration"):
         acceleration = obstacle_state.acceleration
-    except AttributeError:
+    else:
         acceleration = _compute_acceleration(previous_v, obstacle_state.velocity, dt)
 
     # compute jerk from current and previous acceleration
