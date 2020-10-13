@@ -1,10 +1,11 @@
+#!/usr/bin/env bash
 # Allow permissions to all repositories
 git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
-# drivability-checker
-git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git "$HOME"/commonroad-drivability-checker
-cd "$HOME"/commonroad-drivability-checker || exit
-bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 4
+## drivability-checker
+#git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git "$HOME"/commonroad-drivability-checker
+#cd "$HOME"/commonroad-drivability-checker || exit
+#bash build.sh -e "/opt/conda/envs/commonroad/" -v 3.6 --cgal --serializer --no-root -j 4
 
 # commonroad-io
 git clone --branch develop git@gitlab.lrz.de:cps/commonroad-io.git "$HOME"/commonroad-io
