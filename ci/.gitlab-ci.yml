@@ -4,6 +4,7 @@ stages:
 - test
 
 before_script:
+- apt dist-upgrade
 - echo ${CI_JOB_TOKEN}
 - export
 - conda create -n commonroad python=3.6
