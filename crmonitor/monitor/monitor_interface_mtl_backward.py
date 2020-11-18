@@ -6,7 +6,13 @@ class TrafficRuleMonitorBackward:
     """
     Represents single formalized traffic rule
     """
-    def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool, predicate_references):
+
+    def __init__(
+        self,
+        logic_formula: Tuple[str, str],
+        vehicle_dependency: bool,
+        predicate_references,
+    ):
         """
         :param logic_formula: temporal logic formula
         :param vehicle_dependency: boolean indicating if rule must be evaluated with respect to several vehicles
@@ -14,7 +20,9 @@ class TrafficRuleMonitorBackward:
         self._name = logic_formula[0]
         self._logic_formula = logic_formula[1]
         self._predicate_names = self._extract_predicate_names(logic_formula[1])
-        self._predicate_functions = self._extract_predicate_functions(predicate_references)
+        self._predicate_functions = self._extract_predicate_functions(
+            predicate_references
+        )
         self._monitor = mtl.monitor(logic_formula[1], **self._predicate_functions)
         self._vehicle_dependency = vehicle_dependency
         self._safety_monitor_init = self._monitor.states.copy()
@@ -56,8 +64,27 @@ class TrafficRuleMonitorBackward:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
-        replacements = ['always', 'since', 'once', 'pre(', '&&', '->', '(', ')', '!', '||', 'ego_vehicle',
-                        'other_vehicles', 'time_step', 'other_vehicle', ',', '[', ']', '150', '0']#, 'operating_mode']
+        replacements = [
+            "always",
+            "since",
+            "once",
+            "pre(",
+            "&&",
+            "->",
+            "(",
+            ")",
+            "!",
+            "||",
+            "ego_vehicle",
+            "other_vehicles",
+            "time_step",
+            "other_vehicle",
+            ",",
+            "[",
+            "]",
+            "150",
+            "0",
+        ]  # , 'operating_mode']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))

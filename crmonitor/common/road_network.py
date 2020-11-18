@@ -10,7 +10,13 @@ class Lane:
     """
     Lane representation build from several lanelets
     """
-    def __init__(self, merged_lanelet: Lanelet, contained_lanelets: List[int], road_network_param: Dict):
+
+    def __init__(
+        self,
+        merged_lanelet: Lanelet,
+        contained_lanelets: List[int],
+        road_network_param: Dict,
+    ):
         """
         :param merged_lanelet: lanelet element of lane
         :param contained_lanelets: lanelets lane consists of
@@ -18,13 +24,21 @@ class Lane:
         """
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
-        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(merged_lanelet.center_vertices,
-                                                                              road_network_param)
-        self._orientation = self._compute_orientation_from_polyline(merged_lanelet.center_vertices)
-        self._curvature = self._compute_curvature_from_polyline(merged_lanelet.center_vertices)
-        self._path_length = self._compute_path_length_from_polyline(merged_lanelet.center_vertices)
-        self._width = self._compute_witdh_from_lanalet_boundary(merged_lanelet.left_vertices,
-                                                                merged_lanelet.right_vertices)
+        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.center_vertices, road_network_param
+        )
+        self._orientation = self._compute_orientation_from_polyline(
+            merged_lanelet.center_vertices
+        )
+        self._curvature = self._compute_curvature_from_polyline(
+            merged_lanelet.center_vertices
+        )
+        self._path_length = self._compute_path_length_from_polyline(
+            merged_lanelet.center_vertices
+        )
+        self._width = self._compute_witdh_from_lanalet_boundary(
+            merged_lanelet.left_vertices, merged_lanelet.right_vertices
+        )
 
     @property
     def lanelet(self) -> Lanelet:
@@ -64,10 +78,14 @@ class Lane:
         :param polyline: polyline for which orientation should be calculated
         :return: orientation along polyline
         """
-        assert isinstance(polyline, np.ndarray) and len(polyline) > 1 and polyline.ndim == 2 and len(
-            polyline[0, :]) == 2, '<Math>: not a valid polyline. polyline = {}'.format(polyline)
+        assert (
+            isinstance(polyline, np.ndarray)
+            and len(polyline) > 1
+            and polyline.ndim == 2
+            and len(polyline[0, :]) == 2
+        ), "<Math>: not a valid polyline. polyline = {}".format(polyline)
         if len(polyline) < 2:
-            raise ValueError('Cannot create orientation from polyline of length < 2')
+            raise ValueError("Cannot create orientation from polyline of length < 2")
 
         orientation = [0]
         for i in range(1, len(polyline)):
@@ -86,15 +104,18 @@ class Lane:
         :param polyline: polyline for which curvature should be calculated
         :return: curvature along  polyline
         """
-        assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(
-            polyline[:, 0]) > 2, 'Polyline malformed for curvature computation p={}'.format(polyline)
+        assert (
+            isinstance(polyline, np.ndarray)
+            and polyline.ndim == 2
+            and len(polyline[:, 0]) > 2
+        ), "Polyline malformed for curvature computation p={}".format(polyline)
 
         x_d = np.gradient(polyline[:, 0])
         x_dd = np.gradient(x_d)
         y_d = np.gradient(polyline[:, 1])
         y_dd = np.gradient(y_d)
 
-        return (x_d * y_dd - x_dd * y_d) / ((x_d ** 2 + y_d ** 2) ** (3. / 2.))
+        return (x_d * y_dd - x_dd * y_d) / ((x_d ** 2 + y_d ** 2) ** (3.0 / 2.0))
 
     @staticmethod
     def _compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
@@ -104,17 +125,24 @@ class Lane:
         :param polyline: polyline for which path length should be calculated
         :return: path length along polyline
         """
-        assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(
-            polyline[:, 0]) > 2, 'Polyline malformed for pathlenth computation p={}'.format(polyline)
+        assert (
+            isinstance(polyline, np.ndarray)
+            and polyline.ndim == 2
+            and len(polyline[:, 0]) > 2
+        ), "Polyline malformed for pathlenth computation p={}".format(polyline)
 
         distance = np.zeros((len(polyline),))
         for i in range(1, len(polyline)):
-            distance[i] = distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1])
+            distance[i] = distance[i - 1] + np.linalg.norm(
+                polyline[i] - polyline[i - 1]
+            )
 
         return np.array(distance)
 
     @staticmethod
-    def _compute_witdh_from_lanalet_boundary(left_polyline: np.ndarray, right_polyline: np.ndarray) -> np.ndarray:
+    def _compute_witdh_from_lanalet_boundary(
+        left_polyline: np.ndarray, right_polyline: np.ndarray
+    ) -> np.ndarray:
         """
         Computes the width of a lanelet
 
@@ -124,12 +152,15 @@ class Lane:
         """
         width_along_lanelet = np.zeros((len(left_polyline),))
         for i in range(len(left_polyline)):
-            width_along_lanelet[i] = np.linalg.norm(left_polyline[i]-right_polyline[i])
+            width_along_lanelet[i] = np.linalg.norm(
+                left_polyline[i] - right_polyline[i]
+            )
         return width_along_lanelet
 
     @staticmethod
-    def create_curvilinear_coordinate_system_from_reference(ref_path: np.array, road_network_param: Dict) \
-            -> CurvilinearCoordinateSystem:
+    def create_curvilinear_coordinate_system_from_reference(
+        ref_path: np.array, road_network_param: Dict
+    ) -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
 
@@ -140,7 +171,9 @@ class Lane:
         new_ref_path = np.array([])
         for i in range(0, road_network_param.get("num_chankins_corner_cutting")):
             new_ref_path = chaikins_corner_cutting(ref_path)
-        new_ref_path = resample_polyline(new_ref_path, road_network_param.get("polyline_resampling_step"))
+        new_ref_path = resample_polyline(
+            new_ref_path, road_network_param.get("polyline_resampling_step")
+        )
 
         curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
 
@@ -151,6 +184,7 @@ class RoadNetwork:
     """
     Representation of the complete road network of a CommonRoad scenario abstracted to lanes
     """
+
     def __init__(self, lanelet_network: LaneletNetwork, road_network_param: Dict):
         """
         :param lanelet_network: CommonRoad lanelet network
@@ -172,7 +206,10 @@ class RoadNetwork:
             if len(lanelet.predecessor) == 0:
                 start_lanelets.append(lanelet)
             else:
-                predecessors = [self.lanelet_network.find_lanelet_by_id(pred_id) for pred_id in lanelet.predecessor]
+                predecessors = [
+                    self.lanelet_network.find_lanelet_by_id(pred_id)
+                    for pred_id in lanelet.predecessor
+                ]
                 for pred in predecessors:
                     if not lanelet.lanelet_type == pred.lanelet_type:
                         start_lanelets.append(lanelet)
@@ -185,10 +222,15 @@ class RoadNetwork:
                 lanelet_type = LaneletType.MAIN_CARRIAGE_WAY
             else:
                 lanelet_type = None
-            merged_lanelets, merge_jobs = \
-                Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet, self.lanelet_network,
-                                                                        road_network_param.get("merging_length"),
-                                                                        lanelet_type)
+            (
+                merged_lanelets,
+                merge_jobs,
+            ) = Lanelet.all_lanelets_by_merging_successors_from_lanelet(
+                lanelet,
+                self.lanelet_network,
+                road_network_param.get("merging_length"),
+                lanelet_type,
+            )
             if len(merged_lanelets) == 0 or len(merge_jobs) == 0:
                 merged_lanelets.append(lanelet)
                 merge_jobs.append([lanelet.lanelet_id])
@@ -254,7 +296,9 @@ class RoadNetwork:
             if lanelet_id in lane.contained_lanelets:
                 return lane
 
-    def find_lane_by_obstacle(self, obs_lanelet_center: List[int], obs_lanelet_shape: List[int]) -> Lane:
+    def find_lane_by_obstacle(
+        self, obs_lanelet_center: List[int], obs_lanelet_shape: List[int]
+    ) -> Lane:
         """
         Finds the lanes an obstacle occupies
 
@@ -280,6 +324,9 @@ class RoadNetwork:
             return list(occupied_lanes)[0]
         for lane in occupied_lanes:
             for lanelet_id in lane.contained_lanelets:
-                if LaneletType.MAIN_CARRIAGE_WAY in self.lanelet_network.find_lanelet_by_id(lanelet_id).lanelet_type:
+                if (
+                    LaneletType.MAIN_CARRIAGE_WAY
+                    in self.lanelet_network.find_lanelet_by_id(lanelet_id).lanelet_type
+                ):
                     return lane
         return list(occupied_lanes)[0]

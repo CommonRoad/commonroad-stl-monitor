@@ -3,11 +3,15 @@ from typing import List, Tuple, Set, Union, Dict
 
 from crmonitor.common.helper import OperatingMode
 
+
 class TrafficRuleMonitorForwardSTL:
     """
     Represents single formalized traffic rule
     """
-    def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool): #, predicate_references):
+
+    def __init__(
+        self, logic_formula: Tuple[str, str], vehicle_dependency: bool
+    ):  # , predicate_references):
         """
         :param logic_formula: temporal logic formula
         :param vehicle_dependency: boolean indicating if rule must be evaluated with respect to several vehicles
@@ -16,7 +20,7 @@ class TrafficRuleMonitorForwardSTL:
         self._logic_formula = self._reconstruct_logic_formula(logic_formula[1])
         self._predicate_names = self._extract_predicate_names(self._logic_formula)
         # self._predicate_functions = self._extract_predicate_functions(predicate_references)
-        self._monitor = {} # self.construct_monitor(logic_formula[1])
+        self._monitor = {}  # self.construct_monitor(logic_formula[1])
         self._vehicle_dependency = vehicle_dependency
 
     @property
@@ -36,7 +40,7 @@ class TrafficRuleMonitorForwardSTL:
 
     @staticmethod
     def _reconstruct_logic_formula(logic_formula: str) -> str:
-        replacements = {'~': 'not'}
+        replacements = {"~": "not"}
         for el in replacements.keys():
             logic_formula = logic_formula.replace(el, replacements[el])
         return logic_formula
@@ -50,11 +54,50 @@ class TrafficRuleMonitorForwardSTL:
         :returns list of predicates
         """
         # https://github.com/nickovic/rtamt/blob/master/rtamt/parser/stl/StlParser.tokens
-        replacements = ['U', 'X', 'G', 'F', '&', '->', '(', ')', '~', '|', '[', ']',
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '.',
-                        ' and', 'or', 'not', 'always', 'eventually', 'historically',
-                        'comp', 'iff', 'implies', 'once', 'precedes', 'since', 'xor',
-                        'until', 'prev', '!', '-', 'next']
+        replacements = [
+            "U",
+            "X",
+            "G",
+            "F",
+            "&",
+            "->",
+            "(",
+            ")",
+            "~",
+            "|",
+            "[",
+            "]",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            ",",
+            ".",
+            " and",
+            "or",
+            "not",
+            "always",
+            "eventually",
+            "historically",
+            "comp",
+            "iff",
+            "implies",
+            "once",
+            "precedes",
+            "since",
+            "xor",
+            "until",
+            "prev",
+            "!",
+            "-",
+            "next",
+        ]
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
@@ -76,8 +119,8 @@ class TrafficRuleMonitorForwardSTL:
         return predicate_functions
 
     def construct_monitor(self, logic_formula: str) -> rtamt.STLSpecification:
-        monitor = rtamt.STLSpecification(0) # 0: cpp; 1: Python
-        monitor.name = "HandMadeMonitor" #self.name
+        monitor = rtamt.STLSpecification(0)  # 0: cpp; 1: Python
+        monitor.name = "HandMadeMonitor"  # self.name
         for var in self.predicates:
             monitor.declare_var(var, "float")
         monitor.declare_var("out", "float")
@@ -86,8 +129,11 @@ class TrafficRuleMonitorForwardSTL:
 
         return monitor
 
-    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]],
-                         operating_mode: OperatingMode) -> Union[bool, float]:
+    def evaluate_monitor(
+        self,
+        predicates: Dict[str, List[Tuple[float, bool]]],
+        operating_mode: OperatingMode,
+    ) -> Union[bool, float]:
         """
         Evaluates monitor with provided predicate trace (for all time steps)
         :param predicates:
@@ -111,9 +157,11 @@ class TrafficRuleMonitorForwardSTL:
 
         return robustness
 
-
-
-    def evaluate_monitor_online(self, predicates: List[Union[float, Tuple[str, Union[float, bool]]]], vehicle_id: int):
+    def evaluate_monitor_online(
+        self,
+        predicates: List[Union[float, Tuple[str, Union[float, bool]]]],
+        vehicle_id: int,
+    ):
         """
         Evaluates monitor with provided current time step of predicates
 

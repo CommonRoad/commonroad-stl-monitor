@@ -2,10 +2,12 @@ from typing import List, Dict, Tuple, Set, Union
 import mtl
 from crmonitor.common.helper import OperatingMode
 
+
 class TrafficRuleMonitorForward:
     """
     Represents single formalized traffic rule
     """
+
     def __init__(self, logic_formula: Tuple[str, str], vehicle_dependency: bool):
         """
         :param logic_formula: temporal logic formula
@@ -37,20 +39,49 @@ class TrafficRuleMonitorForward:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
-        replacements = ['U', 'X', 'G', 'F', '&', '->', '(', ')', '~', '|', '[', ']', '0', '1', '2', '3', '4', '5',
-                        '6', '7', '8', '9', ',', '.']
+        replacements = [
+            "U",
+            "X",
+            "G",
+            "F",
+            "&",
+            "->",
+            "(",
+            ")",
+            "~",
+            "|",
+            "[",
+            "]",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            ",",
+            ".",
+        ]
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
         predicates = [x for x in predicates_tmp if x != ""]
         return set(predicates)
 
-    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]],
-                         operating_mode: OperatingMode) -> Union[bool, float]:
+    def evaluate_monitor(
+        self,
+        predicates: Dict[str, List[Tuple[float, bool]]],
+        operating_mode: OperatingMode,
+    ) -> Union[bool, float]:
         """
         Evaluates monitor with provided trace of predicates
 
         :param predicates: trace for each predicate used in rule
         :returns boolean indicating if rule is fulfilled
         """
-        return self._monitor(predicates, quantitative=operating_mode == OperatingMode.ROBUSTNESS)
+        return self._monitor(
+            predicates, quantitative=operating_mode == OperatingMode.ROBUSTNESS
+        )
