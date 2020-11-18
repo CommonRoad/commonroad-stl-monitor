@@ -3,7 +3,7 @@ from typing import List, Dict, Set, Union, Tuple
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
-from crmonitor.common.helper import OperatingMode
+from crmonitor.common.helper import OperatingMode, return_true_or_inf, return_false_or_minf
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.python.predicate_collection import PredicateCollection, Constraint, ConstraintType, \
@@ -43,7 +43,6 @@ class PositionPredicateCollection(PredicateCollection):
         elif operating_mode is OperatingMode.CONSTRAINT:
             return vehicle_p.front_s(time_step)
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            # TODO
             if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
                 return math.inf
             else:
@@ -51,7 +50,7 @@ class PositionPredicateCollection(PredicateCollection):
             # return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
 
     @staticmethod
-    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle) -> bool:
+    def left_of(time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if the kth vehicle is left of the pth vehicle
 
@@ -61,19 +60,34 @@ class PositionPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction
         """
         if not vehicle_p.left_d(time_step) < vehicle_k.right_d(time_step):
-            return False
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
         else:
             if vehicle_p.rear_s(time_step) <= vehicle_k.front_s(time_step) <= \
                     vehicle_p.front_s(time_step):
-                return True
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
             if vehicle_p.rear_s(time_step) < vehicle_k.rear_s(time_step) < \
                     vehicle_p.front_s(time_step):
-                return True
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
             if vehicle_k.rear_s(time_step) < vehicle_p.rear_s(time_step) \
                     and vehicle_p.front_s(time_step) < vehicle_k.front_s(time_step):
-                return True
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
             else:
-                return False
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return -math.inf
+                else:
+                    return False
 
     def in_same_lane(self, time_step: int, vehicle_p: Vehicle, vehicle_k: Vehicle,
                      operating_mode: OperatingMode) -> bool:
@@ -114,7 +128,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def on_access_ramp(self, time_step: int, vehicle: Vehicle) -> bool:
+    def on_access_ramp(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is on an access ramp
 
@@ -123,13 +137,20 @@ class PositionPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
-                return True
-        return False
+        if operating_mode is OperatingMode.ROBUSTNESS:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
+                    return math.inf
+            return -math.inf
+        else:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
+                    return True
+            return False
 
-    def on_shoulder(self, time_step: int, vehicle: Vehicle) -> bool:
+    def on_shoulder(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is on an shoulder lane
 
@@ -138,13 +159,20 @@ class PositionPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if LaneletType.SHOULDER in lanelet.lanelet_type:
-                return True
-        return False
+        if operating_mode is OperatingMode.ROBUSTNESS:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.SHOULDER in lanelet.lanelet_type:
+                    return math.inf
+            return -math.inf
+        else:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.SHOULDER in lanelet.lanelet_type:
+                    return True
+            return False
 
-    def on_main_carriage_way(self, time_step: int, vehicle: Vehicle) -> bool:
+    def on_main_carriage_way(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is on an main carriage way
 
@@ -153,11 +181,18 @@ class PositionPredicateCollection(PredicateCollection):
         :returns boolean indicating satisfaction
         """
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        for l_id in lanelet_ids:
-            lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
-                return True
-        return False
+        if operating_mode is OperatingMode.ROBUSTNESS:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+                    return math.inf
+            return -math.inf
+        else:
+            for l_id in lanelet_ids:
+                lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+                    return True
+            return False
 
     def on_exit_ramp(self, time_step: int, vehicle: Vehicle) -> bool:
         """
@@ -174,7 +209,7 @@ class PositionPredicateCollection(PredicateCollection):
                 return True
         return False
 
-    def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
+    def right_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is completely right of a broad lane marking
 
@@ -187,16 +222,26 @@ class PositionPredicateCollection(PredicateCollection):
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
             if lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or \
                     lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID:
-                return False
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return -math.inf
+                else:
+                    return False
 
         lanelets_left_of_veh = self._lanelets_left_of_vehicle(time_step, vehicle)
         for lanelet in lanelets_left_of_veh:
             if lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED or \
                     lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID:
-                return True
-        return False
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
 
-    def left_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle) -> bool:
+        if operating_mode == OperatingMode.ROBUSTNESS:
+            return -math.inf
+        else:
+            return False
+
+    def left_of_broad_lane_marking(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is completely left of a broad lane marking
 
@@ -209,14 +254,22 @@ class PositionPredicateCollection(PredicateCollection):
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(l_id)
             if lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or \
                     lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
-                return False
-
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return -math.inf
+                else:
+                    return False
         lanelets_right_of_veh = self._lanelets_right_of_vehicle(time_step, vehicle)
         for lanelet in lanelets_right_of_veh:
             if lanelet.line_marking_left_vertices is LineMarking.BROAD_DASHED or \
                     lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID:
-                return True
-        return False
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
+        if operating_mode == OperatingMode.ROBUSTNESS:
+            return -math.inf
+        else:
+            return False
 
     def _lanelets_left_of_vehicle(self, time_step: int, vehicle: Vehicle) -> Set[Lanelet]:
         """
@@ -521,7 +574,7 @@ class PositionPredicateCollection(PredicateCollection):
                 elif operating_mode is OperatingMode.ROBUSTNESS:
                     return left_position - (constraint + vehicle.shape.width / 2)
 
-    def main_carriageway_right_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+    def main_carriageway_right_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle occupies the rightmost main carriageway lane
 
@@ -536,10 +589,10 @@ class PositionPredicateCollection(PredicateCollection):
                     and (not lanelet.adj_right_same_direction
                          or LaneletType.MAIN_CARRIAGE_WAY not in
                          self._road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type):
-                return True
-        return False
+                return return_true_or_inf(operating_mode)
+        return return_false_or_minf(operating_mode)
 
-    def single_lane(self, time_step: int, vehicle: Vehicle) -> bool:
+    def single_lane(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle occupies a single lane
 
@@ -553,8 +606,14 @@ class PositionPredicateCollection(PredicateCollection):
             lanelet = self._road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
             if lanelet.adj_right_same_direction and lanelet.adj_right in lanelets \
                     or lanelet.adj_left_same_direction and lanelet.adj_left in lanelets:
-                return False
-        return True
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return -math.inf
+                else:
+                    return False
+        if operating_mode == OperatingMode.ROBUSTNESS:
+            return math.inf
+        else:
+            return True
 
     # TODO: evaluate_predicates_online()
     def evaluate_predicates_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
@@ -581,13 +640,13 @@ class PositionPredicateCollection(PredicateCollection):
         # vehicle_dependency = False
         if "on_access_ramp__x_ego" in self._necessary_predicates:
             predicate_current_time_step["on_access_ramp__x_ego"][ego_vehicle.id] = \
-                self.on_access_ramp(time_step, ego_vehicle)
+                self.on_access_ramp(time_step, ego_vehicle, operating_mode)
         if "on_main_carriage_way__x_ego" in self._necessary_predicates:
             predicate_current_time_step["on_main_carriage_way__x_ego"][ego_vehicle.id] = \
-                self.on_main_carriage_way(time_step, ego_vehicle)
+                self.on_main_carriage_way(time_step, ego_vehicle, operating_mode)
         if "on_shoulder__x_ego" in self._necessary_predicates:
             predicate_current_time_step["on_shoulder__x_ego"][ego_vehicle.id] = \
-                self.on_shoulder(time_step, ego_vehicle)
+                self.on_shoulder(time_step, ego_vehicle, operating_mode)
         if "in_leftmost_lane__x_ego" in self._necessary_predicates:
             predicate_current_time_step["in_leftmost_lane__x_ego"][ego_vehicle.id] = \
                 self.in_leftmost_lane(time_step, ego_vehicle, operating_mode)
@@ -596,7 +655,7 @@ class PositionPredicateCollection(PredicateCollection):
                 self.in_rightmost_lane(time_step, ego_vehicle, operating_mode)
         if "right_of_broad_lane_marking__x_ego" in self._necessary_predicates:
             predicate_current_time_step["right_of_broad_lane_marking__x_ego"][ego_vehicle.id] = \
-                self.right_of_broad_lane_marking(time_step, ego_vehicle)
+                self.right_of_broad_lane_marking(time_step, ego_vehicle, operating_mode)
         if "drives_leftmost__x_ego" in self._necessary_predicates:
             predicate_current_time_step["drives_leftmost__x_ego"][ego_vehicle.id] = \
                 self.drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode)
@@ -605,10 +664,10 @@ class PositionPredicateCollection(PredicateCollection):
                 self.drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode)
         if "single_lane__x_ego" in self._necessary_predicates:
             predicate_current_time_step["single_lane__x_ego"][ego_vehicle.id] = \
-                self.single_lane(time_step, ego_vehicle)
+                self.single_lane(time_step, ego_vehicle, operating_mode)
         if "main_carriageway_right_lane__x_ego" in self._necessary_predicates:
             predicate_current_time_step["main_carriageway_right_lane__x_ego"][ego_vehicle.id] = \
-                self.main_carriageway_right_lane(time_step, ego_vehicle)
+                self.main_carriageway_right_lane(time_step, ego_vehicle, operating_mode)
         # vehicle_dependency = True
         for other_vehicle in other_vehicles:
             if other_vehicle.states_lon.get(time_step) is None:
@@ -624,19 +683,19 @@ class PositionPredicateCollection(PredicateCollection):
                     self.in_front_of(time_step, other_vehicle, ego_vehicle, operating_mode)
             if "left_of__x_ego__x_o" in self._necessary_predicates:
                 predicate_current_time_step["left_of__x_ego__x_o"][other_vehicle.id] = \
-                    self.left_of(time_step, ego_vehicle, other_vehicle)
+                    self.left_of(time_step, ego_vehicle, other_vehicle, operating_mode)
             if "left_of_broad_lane_marking__x_o" in self._necessary_predicates:
                 predicate_current_time_step["left_of_broad_lane_marking__x_o"][other_vehicle.id] = \
-                    self.left_of_broad_lane_marking(time_step, other_vehicle)
+                    self.left_of_broad_lane_marking(time_step, other_vehicle, operating_mode)
             if "on_access_ramp__x_o" in self._necessary_predicates:
                 predicate_current_time_step["on_access_ramp__x_o"][other_vehicle.id] = \
-                    self.on_access_ramp(time_step, other_vehicle)
+                    self.on_access_ramp(time_step, other_vehicle, operating_mode)
             if "on_access_ramp__x_o" in self._necessary_predicates:
                 predicate_current_time_step["on_access_ramp__x_o"][other_vehicle.id] = \
-                    self.on_access_ramp(time_step, other_vehicle)
+                    self.on_access_ramp(time_step, other_vehicle, operating_mode)
             if "on_main_carriage_way__x_o" in self._necessary_predicates:
                 predicate_current_time_step["on_main_carriage_way__x_o"][other_vehicle.id] = \
-                    self.on_main_carriage_way(time_step, other_vehicle)
+                    self.on_main_carriage_way(time_step, other_vehicle, operating_mode)
 
         return predicate_current_time_step
 
@@ -674,13 +733,13 @@ class PositionPredicateCollection(PredicateCollection):
         for time_step in ego_vehicle.states_lon.keys():
             if "on_access_ramp__x_ego" in self._necessary_predicates:
                 predicate_trace["on_access_ramp__x_ego"][ego_vehicle.id][time_step] = \
-                    self.on_access_ramp(time_step, ego_vehicle)
+                    self.on_access_ramp(time_step, ego_vehicle, operating_mode)
             if "on_main_carriage_way__x_ego" in self._necessary_predicates:
                 predicate_trace["on_main_carriage_way__x_ego"][ego_vehicle.id][time_step] = \
-                    self.on_main_carriage_way(time_step, ego_vehicle)
+                    self.on_main_carriage_way(time_step, ego_vehicle, operating_mode)
             if "on_shoulder__x_ego" in self._necessary_predicates:
                 predicate_trace["on_shoulder__x_ego"][ego_vehicle.id][time_step] = \
-                    self.on_shoulder(time_step, ego_vehicle)
+                    self.on_shoulder(time_step, ego_vehicle, operating_mode)
             if "in_leftmost_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["in_leftmost_lane__x_ego"][ego_vehicle.id][time_step] = \
                     self.in_leftmost_lane(time_step, ego_vehicle, operating_mode)
@@ -689,7 +748,7 @@ class PositionPredicateCollection(PredicateCollection):
                     self.in_rightmost_lane(time_step, ego_vehicle, operating_mode)
             if "right_of_broad_lane_marking__x_ego" in self._necessary_predicates:
                 predicate_trace["right_of_broad_lane_marking__x_ego"][ego_vehicle.id][time_step] = \
-                    self.right_of_broad_lane_marking(time_step, ego_vehicle)
+                    self.right_of_broad_lane_marking(time_step, ego_vehicle, operating_mode)
             if "drives_leftmost__x_ego" in self._necessary_predicates:
                 predicate_trace["drives_leftmost__x_ego"][ego_vehicle.id][time_step] = \
                     self.drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode)
@@ -698,10 +757,10 @@ class PositionPredicateCollection(PredicateCollection):
                     self.drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "single_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["single_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.single_lane(time_step, ego_vehicle)
+                    self.single_lane(time_step, ego_vehicle, operating_mode)
             if "main_carriageway_right_lane__x_ego" in self._necessary_predicates:
                 predicate_trace["main_carriageway_right_lane__x_ego"][ego_vehicle.id][time_step] = \
-                    self.main_carriageway_right_lane(time_step, ego_vehicle)
+                    self.main_carriageway_right_lane(time_step, ego_vehicle, operating_mode)
 
         for other_vehicle in other_vehicles:
             predicate_trace["in_same_lane__x_ego__x_o"][other_vehicle.id] = {}
@@ -725,17 +784,17 @@ class PositionPredicateCollection(PredicateCollection):
                         self.in_front_of(time_step, other_vehicle, ego_vehicle, operating_mode)
                 if "left_of__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["left_of__x_ego__x_o"][other_vehicle.id][time_step] = \
-                        self.left_of(time_step, ego_vehicle, other_vehicle)
+                        self.left_of(time_step, ego_vehicle, other_vehicle, operating_mode)
                 if "left_of_broad_lane_marking__x_o" in self._necessary_predicates:
                     predicate_trace["left_of_broad_lane_marking__x_o"][other_vehicle.id][time_step] = \
-                        self.left_of_broad_lane_marking(time_step, other_vehicle)
+                        self.left_of_broad_lane_marking(time_step, other_vehicle, operating_mode)
                 if "on_access_ramp__x_o" in self._necessary_predicates:
                     predicate_trace["on_access_ramp__x_o"][other_vehicle.id][time_step] = \
-                        self.on_access_ramp(time_step, other_vehicle)
+                        self.on_access_ramp(time_step, other_vehicle, operating_mode)
                 if "on_access_ramp__x_o" in self._necessary_predicates:
                     predicate_trace["on_access_ramp__x_o"][other_vehicle.id][time_step] = \
-                        self.on_access_ramp(time_step, other_vehicle)
+                        self.on_access_ramp(time_step, other_vehicle, operating_mode)
                 if "on_main_carriage_way__x_o" in self._necessary_predicates:
                     predicate_trace["on_main_carriage_way__x_o"][other_vehicle.id][time_step] = \
-                        self.on_main_carriage_way(time_step, other_vehicle)
+                        self.on_main_carriage_way(time_step, other_vehicle, operating_mode)
         return predicate_trace

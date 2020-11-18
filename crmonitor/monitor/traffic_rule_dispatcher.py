@@ -202,6 +202,16 @@ class TrafficRuleDispatcher:
         result.update(results_forward)
         result.update(results_backward)
         return result
+        # if self._backend == Backend.PythonMTL:
+        #     results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
+        #     results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
+        #     result = {}
+        #     result.update(results_forward)
+        #     result.update(results_backward)
+        #     return result
+        # else:
+        # # TODO: evaluate_trajectory_online for RTAMT backend
+
 
     def evaluate_trajectory_forward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
         """
@@ -290,7 +300,7 @@ class TrafficRuleDispatcher:
                     # TODO: problem: monitor.update() does not distinguish between each vehicle,
                     # TODO: solution: one monitor for each vehicle? (cannot reset like the backward monitor cause we need
                     # to store past states
-                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates,
+                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor_online(rule_predicates,
                                                                                                    vehicle.id)
                 # if rule_evaluated is False:
                 #     rule_evaluation[rule.name] = True

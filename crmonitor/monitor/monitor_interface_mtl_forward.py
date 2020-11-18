@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Tuple, Set, Union
 import mtl
 from crmonitor.common.helper import OperatingMode
 
@@ -45,7 +45,8 @@ class TrafficRuleMonitorForward:
         predicates = [x for x in predicates_tmp if x != ""]
         return set(predicates)
 
-    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]], operating_mode: OperatingMode) -> bool:
+    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]],
+                         operating_mode: OperatingMode) -> Union[bool, float]:
         """
         Evaluates monitor with provided trace of predicates
 

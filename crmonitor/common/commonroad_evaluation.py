@@ -1,3 +1,4 @@
+import os
 import traceback
 
 from crmonitor.common.helper import *
@@ -9,9 +10,10 @@ from commonroad.scenario.scenario import Scenario
 
 class CommonRoadObstacleEvaluation:
     """Class for the traffic rule evaluation of CommonRoad scenarios"""
-    def __init__(self, config_path: str):
-        config = load_yaml(config_path + "config.yaml")
-        traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
+    def __init__(self, config_path: str, backend: Backend = Backend.PythonMTL):
+        assert os.path.exists(config_path)
+        config = load_yaml(os.path.join(config_path, "config.yaml"))
+        traffic_rules = load_yaml(os.path.join(config_path, "traffic_rules.yaml"))
         self._simulation_param = create_simulation_param(config.get("simulation_param"), 0.1, 'DEU')
         self._other_vehicles_param = create_other_vehicles_param(config.get("other_vehicles_param"))
         self._traffic_rules_param = traffic_rules.get("traffic_rules_param")
@@ -24,6 +26,7 @@ class CommonRoadObstacleEvaluation:
         self._road_network_param = config.get("road_network_param")
         self._road_network: RoadNetwork  # updated in each test case
         self._operating_mode = OperatingMode(self._simulation_param["operating_mode"])
+        self._backend = backend
 
         self.num_vehicles = 0
         self.num_scenarios = 0
@@ -59,7 +62,7 @@ class CommonRoadObstacleEvaluation:
                                            self._traffic_rule_sets, self._road_network,
                                            self._simulation_param, self._traffic_rules_param,
                                            self._activated_traffic_rule_sets, self._vehicle_dependent_rules,
-                                           self._operating_mode)
+                                           self._operating_mode, self._backend)
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
             if not (self.simulation_param.get("evaluation_mode") == "test"

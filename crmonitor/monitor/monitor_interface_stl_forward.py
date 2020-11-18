@@ -1,5 +1,7 @@
 import rtamt
-from typing import List, Tuple, Set, Union
+from typing import List, Tuple, Set, Union, Dict
+
+from crmonitor.common.helper import OperatingMode
 
 class TrafficRuleMonitorForwardSTL:
     """
@@ -50,9 +52,9 @@ class TrafficRuleMonitorForwardSTL:
         # https://github.com/nickovic/rtamt/blob/master/rtamt/parser/stl/StlParser.tokens
         replacements = ['U', 'X', 'G', 'F', '&', '->', '(', ')', '~', '|', '[', ']',
                         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '.',
-                        'and', 'or', 'not', 'always', 'eventually', 'historically',
+                        ' and', 'or', 'not', 'always', 'eventually', 'historically',
                         'comp', 'iff', 'implies', 'once', 'precedes', 'since', 'xor',
-                        'until', 'prev', '!']
+                        'until', 'prev', '!', '-', 'next']
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
@@ -84,11 +86,38 @@ class TrafficRuleMonitorForwardSTL:
 
         return monitor
 
-    def evaluate_monitor(self, predicates: List[Union[float, Tuple[str, Union[float, bool]]]], vehicle_id: int):
+    def evaluate_monitor(self, predicates: Dict[str, List[Tuple[float, bool]]],
+                         operating_mode: OperatingMode) -> Union[bool, float]:
+        """
+        Evaluates monitor with provided predicate trace (for all time steps)
+        :param predicates:
+        :param operating_mode:
+        :return:
+        """
+        # TODO: offline and online evaluation of whole trace
+        # offline
+        # create monitor for vehicle (iterate over all vehicles in the traffic rule dispatcher)
+        self._monitor = self.construct_monitor(self._logic_formula)
+
+        robustness = self._monitor.offline(predicates)
+        # online
+        self._monitor = self.construct_monitor(self._logic_formula)
+        time_steps = len(list(predicates.values())[0])
+        rob = []
+        for i in range(time_steps):
+            inputs = [(key, value[i][1]) for key, value in predicates.items()]
+            time = list(predicates.values())[0][i][0]
+            rob.append(self._monitor.update(time, inputs))
+
+        return robustness
+
+
+
+    def evaluate_monitor_online(self, predicates: List[Union[float, Tuple[str, Union[float, bool]]]], vehicle_id: int):
         """
         Evaluates monitor with provided current time step of predicates
 
-        :param predicates: trace for each predicate used in rule
+        :param predicates: current time step for each predicate used in rule
         :returns boolean indicating if rule is fulfilled
         """
         if vehicle_id not in self._monitor:

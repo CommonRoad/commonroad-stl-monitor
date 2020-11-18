@@ -120,7 +120,8 @@ class VelocityPredicateCollection(PredicateCollection):
         elif operating_mode is OperatingMode.ROBUSTNESS:
             return abs(self._traffic_rules_param.get("standstill_error")) - abs(vehicle.states_lon[time_step].v)
 
-    def exist_standing_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def exist_standing_leading_vehicle(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                                       operating_mode: OperatingMode) -> bool:
         """
         Predicate which checks if a standing leading vehicle exist in front of a vehicle
 
@@ -139,8 +140,14 @@ class VelocityPredicateCollection(PredicateCollection):
                         self._road_network.find_lane_ids_by_lanelets(veh_o.lanelet_assignment[time_step])):
                 continue
             if self.in_standstill(time_step, veh_o, OperatingMode.MONITOR):
-                return True
-        return False
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return math.inf
+                else:
+                    return True
+        if operating_mode == OperatingMode.ROBUSTNESS:
+            return -math.inf
+        else:
+            return False
 
     def drives_with_slightly_higher_speed(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle,
                                           operating_mode: OperatingMode) -> Union[bool,
@@ -280,7 +287,7 @@ class VelocityPredicateCollection(PredicateCollection):
             return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
                               vehicle.vehicle_param.get("fov_speed_limit"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            return vehicle.vehicle_param.get("fov_speed_limit") - vehicle.states_lon[time_step].v
+            return vehicle.vehicle_param.get("fov_speed_limit") - vehicle.states_lon[time_step].v  # v < speed_limit
 
     @staticmethod
     def keeps_braking_speed_limit(time_step: int, vehicle: Vehicle,
@@ -303,7 +310,7 @@ class VelocityPredicateCollection(PredicateCollection):
             return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
                               vehicle.vehicle_param.get("braking_speed_limit"))
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            return vehicle.vehicle_param.get("braking_speed_limit") - vehicle.states_lon[time_step].v
+            return vehicle.vehicle_param.get("braking_speed_limit") - vehicle.states_lon[time_step].v  # v < speed_limit
 
     def keeps_type_speed_limit(self, time_step: int, vehicle: Vehicle,
                                operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
@@ -324,7 +331,7 @@ class VelocityPredicateCollection(PredicateCollection):
             return Constraint([ConstraintType.VELOCITY], ConstraintRepresentation.UPPER,
                               self._get_type_speed_limit(vehicle.obstacle_type))
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            return self._get_type_speed_limit(vehicle.obstacle_type) - vehicle.states_lon[time_step].v
+            return self._get_type_speed_limit(vehicle.obstacle_type) - vehicle.states_lon[time_step].v  # v < speed_limit
 
     def keeps_lane_speed_limit(self, time_step: int, vehicle: Vehicle,
                                operating_mode: OperatingMode) -> Union[bool, float, Constraint]:
@@ -354,7 +361,7 @@ class VelocityPredicateCollection(PredicateCollection):
             if speed_limit is None:
                 return math.inf
             else:
-                return speed_limit - vehicle.states_lon[time_step].v
+                return speed_limit - vehicle.states_lon[time_step].v  # v < speed_limit
 
     # TODO: new evaluate_predicates_online function that evaluates only the current time step
     def evaluate_predicates_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],

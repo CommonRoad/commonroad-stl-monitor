@@ -24,6 +24,8 @@ traffic_rules_forward:
     # new rule lane change has to be finished
     R_G1_forward_no_cut_in: G((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
 
+    R_I5_new: always((on_main_carriage_way__x_ego and in_front_of__x_ego__x_o and on_access_ramp__x_o and eventually[0, 1000](on_main_carriage_way__x_o)) implies (not(not(main_carriageway_right_lane__x_ego) and eventually(main_carriageway_right_lane__x_ego))))
+
 #    R_G1_forward: always((in_front_of__x_ego__x_o and in_same_lane__x_ego__x_o and !once[0, 30](cut_in__x_o__x_ego)) #  and prev(not cut_in__x_o__x_ego)
 #      -> keeps_safe_distance_prec__x_ego__x_o)
 #

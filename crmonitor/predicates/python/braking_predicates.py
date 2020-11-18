@@ -59,6 +59,7 @@ class BrakingPredicateCollection(PredicateCollection):
                 elif operating_mode is operating_mode.ROBUSTNESS:
                     robustness_values.append(
                         self._traffic_rules_param.get("a_abrupt") - a_ego + veh_o.states_lon[time_step].a)
+                    # a_ego - a_obs < a_abrupt
 
         if operating_mode is operating_mode.MONITOR:
             if same_lane_front_vehicle is False and a_ego < self._traffic_rules_param.get("a_abrupt"):
@@ -74,7 +75,7 @@ class BrakingPredicateCollection(PredicateCollection):
                 return Constraint([ConstraintType.ACCELERATION], ConstraintRepresentation.LOWER, max(constraint_values))
         elif operating_mode is operating_mode.ROBUSTNESS:
             if same_lane_front_vehicle is False:
-                return max(a_ego, -a_ego + self._traffic_rules_param.get("a_abrupt"))
+                return self._traffic_rules_param.get("a_abrupt") - a_ego # a_ego < a_abrupt
             else:
                 return max(robustness_values)
 

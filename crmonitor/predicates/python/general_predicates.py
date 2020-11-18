@@ -1,3 +1,4 @@
+import math
 from typing import List, Dict, Set, Tuple, Union
 
 from commonroad.scenario.lanelet import Lanelet
@@ -23,7 +24,8 @@ class GeneralPredicateCollection(PredicateCollection):
         super().__init__(road_network, simulation_param, traffic_rules_param,
                          necessary_predicates, traffic_sign_interpreter)
 
-    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def in_congestion(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                      operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is in a congestion
 
@@ -44,11 +46,18 @@ class GeneralPredicateCollection(PredicateCollection):
                     veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_congestion_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_congestion"):
-            return True
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return math.inf
+            else:
+                return True
         else:
-            return False
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
 
-    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def in_slow_moving_traffic(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                               operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is part of slow moving traffic
 
@@ -69,11 +78,18 @@ class GeneralPredicateCollection(PredicateCollection):
                     veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_slow_moving_traffic_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_slow_moving_traffic"):
-            return True
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return math.inf
+            else:
+                return True
         else:
-            return False
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
 
-    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> bool:
+    def in_queue_of_vehicles(self, time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle],
+                             operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a vehicle is part of a queue of vehicles
 
@@ -94,9 +110,15 @@ class GeneralPredicateCollection(PredicateCollection):
                     veh_o.states_lon[time_step].v <= self._traffic_rules_param.get("max_queue_of_vehicles_velocity"):
                 num_vehicles += 1
         if num_vehicles >= self._traffic_rules_param.get("num_veh_queue_of_vehicles"):
-            return True
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return math.inf
+            else:
+                return True
         else:
-            return False
+            if operating_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
 
     def _adjacent_lanelets(self, lanelet: Lanelet) -> Set[Lanelet]:
         """
@@ -167,7 +189,7 @@ class GeneralPredicateCollection(PredicateCollection):
             road_width += self._road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
         return road_width
 
-    def interstate_broad_enough(self, time_step: int, vehicle: Vehicle) -> bool:
+    def interstate_broad_enough(self, time_step: int, vehicle: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Evaluates if a interstate is broad enough to build a standard emergency lane
 
@@ -180,10 +202,16 @@ class GeneralPredicateCollection(PredicateCollection):
         for l_id in occupied_lanelet_ids:
             if self._road_width(self._road_network.lanelet_network.find_lanelet_by_id(l_id), s) \
                     <= self._traffic_rules_param.get("min_interstate_width"):
-                return False
-        return True
+                if operating_mode == OperatingMode.ROBUSTNESS:
+                    return -math.inf
+                else:
+                    return False
+        if operating_mode == OperatingMode.ROBUSTNESS:
+            return math.inf
+        else:
+            return True
 
-    def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle) -> bool:
+    def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle, opetaing_mode: OperatingMode) -> bool:
         """
         Predicate which checks if the kth vehicle performs a cut-in into the pth vehicles lane
 
@@ -193,18 +221,30 @@ class GeneralPredicateCollection(PredicateCollection):
         :returns Boolean indicating satisfaction
         """
         if len(self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])) == 1:
-            return False
+            if opetaing_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
         if not PositionPredicateCollection.in_same_lane_classmethod(
                 self._road_network.find_lane_ids_by_lanelets(vehicle_k.lanelet_assignment[time_step]),
                 self._road_network.find_lane_ids_by_lanelets(vehicle_p.lanelet_assignment[time_step])):
-            return False
+            if opetaing_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
         if vehicle_k.states_lat[time_step].d < vehicle_p.states_lat[time_step].d \
                 and vehicle_k.states_lat[time_step].theta > 0 or \
                 vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d \
                 and vehicle_k.states_lat[time_step].theta < 0:
-            return True
+            if opetaing_mode == OperatingMode.ROBUSTNESS:
+                return math.inf
+            else:
+                return True
         else:
-            return False
+            if opetaing_mode == OperatingMode.ROBUSTNESS:
+                return -math.inf
+            else:
+                return False
 
     # TODO: evaluate_predicates_online
     def evaluate_predicates_online(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
@@ -218,24 +258,25 @@ class GeneralPredicateCollection(PredicateCollection):
                                        "in_queue_of_vehicles__x_ego": {},
                                        "in_queue_of_vehicles__x_o": {},
                                        "cut_in__x_o__x_ego": {},
+                                       "cut_in__x_ego__x_o": {},
                                        "makes_u_turn__x_ego": {},
                                        "interstate_broad_enough__x_ego": {}}
         # ego only
         if "in_congestion__x_ego" in self._necessary_predicates:
             predicate_current_time_step["in_congestion__x_ego"][ego_vehicle.id] = \
-                self.in_congestion(time_step, ego_vehicle, other_vehicles)
+                self.in_congestion(time_step, ego_vehicle, other_vehicles, operating_mode)
         if "in_slow_moving_traffic__x_ego" in self._necessary_predicates:
             predicate_current_time_step["in_slow_moving_traffic__x_ego"][ego_vehicle.id] = \
-                self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
+                self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles, operating_mode)
         if "in_queue_of_vehicles__x_ego" in self._necessary_predicates:
             predicate_current_time_step["in_queue_of_vehicles__x_ego"][ego_vehicle.id] = \
-                self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles)
+                self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles, operating_mode)
         if "makes_u_turn__x_ego" in self._necessary_predicates:
             predicate_current_time_step["makes_u_turn__x_ego"][ego_vehicle.id] = \
-                self.makes_u_turn(time_step, ego_vehicle)
+                self.makes_u_turn(time_step, ego_vehicle, operating_mode)
         if "interstate_broad_enough__x_ego" in self._necessary_predicates:
             predicate_current_time_step["interstate_broad_enough__x_ego"][ego_vehicle.id] = \
-                self.interstate_broad_enough(time_step, ego_vehicle)
+                self.interstate_broad_enough(time_step, ego_vehicle, operating_mode)
 
         # ego and other vehicle
         for other_vehicle in other_vehicles:
@@ -243,16 +284,19 @@ class GeneralPredicateCollection(PredicateCollection):
                 continue
             if "in_congestion__x_o" in self._necessary_predicates:
                 predicate_current_time_step["in_congestion__x_o"][other_vehicle.id] = \
-                    self.in_congestion(time_step, other_vehicle, other_vehicles)
+                    self.in_congestion(time_step, other_vehicle, other_vehicles, operating_mode)
             if "in_slow_moving_traffic__x_o" in self._necessary_predicates:
                 predicate_current_time_step["in_slow_moving_traffic__x_o"][other_vehicle.id] = \
-                    self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
+                    self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles, operating_mode)
             if "in_queue_of_vehicles__x_o" in self._necessary_predicates:
                 predicate_current_time_step["in_queue_of_vehicles__x_o"][other_vehicle.id] = \
-                    self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)
+                    self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles, operating_mode)
             if "cut_in__x_o__x_ego" in self._necessary_predicates:
                 predicate_current_time_step["cut_in__x_o__x_ego"][other_vehicle.id] = \
-                    self.cut_in(time_step, other_vehicle, ego_vehicle)
+                    self.cut_in(time_step, other_vehicle, ego_vehicle, operating_mode)
+            if "cut_in__x_ego__x_o" in self._necessary_predicates:
+                predicate_current_time_step["cut_in__x_ego__x_o"][other_vehicle.id] = \
+                    self.cut_in(time_step, ego_vehicle, other_vehicle, operating_mode)
 
         return predicate_current_time_step
 
@@ -275,45 +319,50 @@ class GeneralPredicateCollection(PredicateCollection):
                            "in_queue_of_vehicles__x_ego": {ego_vehicle.id: {}},
                            "in_queue_of_vehicles__x_o": {},
                            "cut_in__x_o__x_ego": {},
+                           "cut_in__x_ego__x_o": {},
                            "makes_u_turn__x_ego": {ego_vehicle.id: {}},
                            "interstate_broad_enough__x_ego": {ego_vehicle.id: {}}}
 
         for time_step in ego_vehicle.states_lon.keys():
             if "in_congestion__x_ego" in self._necessary_predicates:
                 predicate_trace["in_congestion__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_congestion(time_step, ego_vehicle, other_vehicles)
+                    self.in_congestion(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "in_slow_moving_traffic__x_ego" in self._necessary_predicates:
                 predicate_trace["in_slow_moving_traffic__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
+                    self.in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "in_queue_of_vehicles__x_ego" in self._necessary_predicates:
                 predicate_trace["in_queue_of_vehicles__x_ego"][ego_vehicle.id][time_step] = \
-                    self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles)
+                    self.in_queue_of_vehicles(time_step, ego_vehicle, other_vehicles, operating_mode)
             if "makes_u_turn__x_ego" in self._necessary_predicates:
                 predicate_trace["makes_u_turn__x_ego"][ego_vehicle.id][time_step] = \
-                    self.makes_u_turn(time_step, ego_vehicle)
+                    self.makes_u_turn(time_step, ego_vehicle, operating_mode)
             if "interstate_broad_enough__x_ego" in self._necessary_predicates:
                 predicate_trace["interstate_broad_enough__x_ego"][ego_vehicle.id][time_step] = \
-                    self.interstate_broad_enough(time_step, ego_vehicle)
+                    self.interstate_broad_enough(time_step, ego_vehicle, operating_mode)
 
         for other_vehicle in other_vehicles:
             predicate_trace["in_congestion__x_o"][other_vehicle.id] = {}
             predicate_trace["in_slow_moving_traffic__x_o"][other_vehicle.id] = {}
             predicate_trace["in_queue_of_vehicles__x_o"][other_vehicle.id] = {}
             predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id] = {}
+            predicate_trace["cut_in__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in ego_vehicle.states_lon.keys():
                 if other_vehicle.states_lon.get(time_step) is None:
                     continue
                 if "in_congestion__x_o" in self._necessary_predicates:
                     predicate_trace["in_congestion__x_o"][other_vehicle.id][time_step] = \
-                        self.in_congestion(time_step, other_vehicle, other_vehicles)
+                        self.in_congestion(time_step, other_vehicle, other_vehicles, operating_mode)
                 if "in_slow_moving_traffic__x_o" in self._necessary_predicates:
                     predicate_trace["in_slow_moving_traffic__x_o"][other_vehicle.id][time_step] = \
-                        self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
+                        self.in_slow_moving_traffic(time_step, other_vehicle, other_vehicles, operating_mode)
                 if "in_queue_of_vehicles__x_o" in self._necessary_predicates:
                     predicate_trace["in_queue_of_vehicles__x_o"][other_vehicle.id][time_step] = \
-                        self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)
+                        self.in_queue_of_vehicles(time_step, other_vehicle, other_vehicles, operating_mode)
                 if "cut_in__x_o__x_ego" in self._necessary_predicates:
                     predicate_trace["cut_in__x_o__x_ego"][other_vehicle.id][time_step] = \
-                        self.cut_in(time_step, other_vehicle, ego_vehicle)
+                        self.cut_in(time_step, other_vehicle, ego_vehicle, operating_mode)
+                if "cut_in__x_ego__x_o" in self._necessary_predicates:
+                    predicate_trace["cut_in__x_ego__x_o"][other_vehicle.id][time_step] = \
+                        self.cut_in(time_step, ego_vehicle, other_vehicle, operating_mode)
 
         return predicate_trace

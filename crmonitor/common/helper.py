@@ -607,3 +607,20 @@ def update_scenario_vehicles(dt: float,
             other_vehicles.append(updated_vehicle)
 
     return ego_vehicle, other_vehicles
+
+def return_true_or_inf(operating_mode: OperatingMode) -> Union[float, bool]:
+    """
+    Helper function to return True or inf for robustness mode
+    :param operating_mode:
+    :return:
+    """
+    return math.inf if operating_mode is OperatingMode.ROBUSTNESS else True
+
+def return_false_or_minf(operating_mode: OperatingMode) -> Union[float, bool]:
+    """
+    Helper function to return True or inf for robustness mode
+    :param operating_mode:
+    :return:
+    """
+    return -math.inf if operating_mode is OperatingMode.ROBUSTNESS else False
+
