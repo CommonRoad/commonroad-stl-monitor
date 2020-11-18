@@ -4,7 +4,7 @@ stages:
 - test
 
 before_script:
-- ${CI_JOB_TOKEN}
+- echo ${CI_JOB_TOKEN}
 - conda create -n commonroad python=3.6
 - source activate commonroad
 - bash ./ci/install_third_party_software.sh
