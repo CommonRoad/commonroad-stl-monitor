@@ -9,11 +9,11 @@ apt-get install -y libeigen3-dev > /dev/null
 apt-get install -y libboost-all-dev
 apt-get install -y cmake > /dev/null
 
-git clone https://github.com/nickovic/rtamt
-cd rtamt/rtamt
-mkdir build
-cd build
-cmake -DPythonVersion=3 ../
-make -j 20
-cd ../../
-pip install .
+#git clone https://github.com/nickovic/rtamt
+#cd rtamt/rtamt
+#mkdir build
+#cd build
+#cmake -DPythonVersion=3 ../
+#make -j 20
+#cd ../../
+#pip install .
