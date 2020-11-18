@@ -235,11 +235,11 @@ class TestPositionPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.on_shoulder(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.on_shoulder(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.on_shoulder(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.on_shoulder(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.on_shoulder(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.on_shoulder(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.on_shoulder(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.on_shoulder(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.on_shoulder(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.on_shoulder(4, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -282,11 +282,11 @@ class TestPositionPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.on_access_ramp(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.on_access_ramp(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.on_access_ramp(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.on_access_ramp(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.on_access_ramp(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.on_access_ramp(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.on_access_ramp(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.on_access_ramp(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.on_access_ramp(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.on_access_ramp(4, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -376,11 +376,11 @@ class TestPositionPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.on_main_carriage_way(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.on_main_carriage_way(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.on_main_carriage_way(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.on_main_carriage_way(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.on_main_carriage_way(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.on_main_carriage_way(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.on_main_carriage_way(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.on_main_carriage_way(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.on_main_carriage_way(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.on_main_carriage_way(4, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -1040,14 +1040,14 @@ class TestPositionPredicates(unittest.TestCase):
                               road_network.lanes[0])
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.right_of_broad_lane_marking(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.right_of_broad_lane_marking(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.right_of_broad_lane_marking(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.right_of_broad_lane_marking(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.right_of_broad_lane_marking(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.right_of_broad_lane_marking(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.right_of_broad_lane_marking(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.right_of_broad_lane_marking(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.right_of_broad_lane_marking(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.right_of_broad_lane_marking(4, ego_vehicle, OperatingMode.MONITOR)
         ego_vehicle.lane = road_network.lanes[3]
-        sol_monitor_mode_6 = position_predicates.right_of_broad_lane_marking(5, ego_vehicle)
-        sol_monitor_mode_7 = position_predicates.right_of_broad_lane_marking(6, ego_vehicle)
+        sol_monitor_mode_6 = position_predicates.right_of_broad_lane_marking(5, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_7 = position_predicates.right_of_broad_lane_marking(6, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -1098,14 +1098,14 @@ class TestPositionPredicates(unittest.TestCase):
                               road_network.lanes[0])
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.left_of_broad_lane_marking(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.left_of_broad_lane_marking(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.left_of_broad_lane_marking(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.left_of_broad_lane_marking(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.left_of_broad_lane_marking(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.left_of_broad_lane_marking(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.left_of_broad_lane_marking(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.left_of_broad_lane_marking(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.left_of_broad_lane_marking(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.left_of_broad_lane_marking(4, ego_vehicle, OperatingMode.MONITOR)
         ego_vehicle.lane = road_network.lanes[3]
-        sol_monitor_mode_6 = position_predicates.left_of_broad_lane_marking(5, ego_vehicle)
-        sol_monitor_mode_7 = position_predicates.left_of_broad_lane_marking(6, ego_vehicle)
+        sol_monitor_mode_6 = position_predicates.left_of_broad_lane_marking(5, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_7 = position_predicates.left_of_broad_lane_marking(6, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -1193,17 +1193,17 @@ class TestPositionPredicates(unittest.TestCase):
                                   lanelet_assignments_other_2, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.left_of(0, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_2 = position_predicates.left_of(1, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_3 = position_predicates.left_of(2, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_4 = position_predicates.left_of(3, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_5 = position_predicates.left_of(4, ego_vehicle, other_vehicle_2)
-        sol_monitor_mode_6 = position_predicates.left_of(5, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_7 = position_predicates.left_of(6, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_8 = position_predicates.left_of(7, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_9 = position_predicates.left_of(8, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_10 = position_predicates.left_of(9, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_11 = position_predicates.left_of(10, ego_vehicle, other_vehicle_2)
+        sol_monitor_mode_1 = position_predicates.left_of(0, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.left_of(1, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.left_of(2, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.left_of(3, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.left_of(4, ego_vehicle, other_vehicle_2, OperatingMode.MONITOR)
+        sol_monitor_mode_6 = position_predicates.left_of(5, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_7 = position_predicates.left_of(6, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_8 = position_predicates.left_of(7, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_9 = position_predicates.left_of(8, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_10 = position_predicates.left_of(9, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_11 = position_predicates.left_of(10, ego_vehicle, other_vehicle_2, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -1885,14 +1885,14 @@ class TestPositionPredicates(unittest.TestCase):
                               road_network.lanes[1])
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.single_lane(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.single_lane(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.single_lane(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.single_lane(3, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.single_lane(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.single_lane(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.single_lane(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.single_lane(3, ego_vehicle, OperatingMode.MONITOR)
         ego_vehicle.lane = road_network.lanes[0]
-        sol_monitor_mode_5 = position_predicates.single_lane(4, ego_vehicle)
+        sol_monitor_mode_5 = position_predicates.single_lane(4, ego_vehicle, OperatingMode.MONITOR)
         ego_vehicle.lane = road_network.lanes[1]
-        sol_monitor_mode_6 = position_predicates.single_lane(5, ego_vehicle)
+        sol_monitor_mode_6 = position_predicates.single_lane(5, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -2146,11 +2146,11 @@ class TestPositionPredicates(unittest.TestCase):
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = position_predicates.main_carriageway_right_lane(0, ego_vehicle)
-        sol_monitor_mode_2 = position_predicates.main_carriageway_right_lane(1, ego_vehicle)
-        sol_monitor_mode_3 = position_predicates.main_carriageway_right_lane(2, ego_vehicle)
-        sol_monitor_mode_4 = position_predicates.main_carriageway_right_lane(3, ego_vehicle)
-        sol_monitor_mode_5 = position_predicates.main_carriageway_right_lane(4, ego_vehicle)
+        sol_monitor_mode_1 = position_predicates.main_carriageway_right_lane(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = position_predicates.main_carriageway_right_lane(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = position_predicates.main_carriageway_right_lane(2, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = position_predicates.main_carriageway_right_lane(3, ego_vehicle, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = position_predicates.main_carriageway_right_lane(4, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)

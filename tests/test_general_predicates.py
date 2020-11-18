@@ -193,10 +193,10 @@ class TestGeneralPredicates(unittest.TestCase):
         other_vehicles = [other_vehicle_1, other_vehicle_2, other_vehicle_3]
 
         # Monitor-Mode
-        sol_monitor_mode_1 = general_predicates.in_congestion(0, ego_vehicle, other_vehicles)
-        sol_monitor_mode_2 = general_predicates.in_congestion(1, ego_vehicle, other_vehicles)
-        sol_monitor_mode_3 = general_predicates.in_congestion(2, ego_vehicle, other_vehicles)
-        sol_monitor_mode_4 = general_predicates.in_congestion(3, ego_vehicle, other_vehicles)
+        sol_monitor_mode_1 = general_predicates.in_congestion(0, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = general_predicates.in_congestion(1, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = general_predicates.in_congestion(2, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = general_predicates.in_congestion(3, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -268,10 +268,10 @@ class TestGeneralPredicates(unittest.TestCase):
         other_vehicles = [other_vehicle_1, other_vehicle_2, other_vehicle_3]
 
         # Monitor-Mode
-        sol_monitor_mode_1 = general_predicates.in_slow_moving_traffic(0, ego_vehicle, other_vehicles)
-        sol_monitor_mode_2 = general_predicates.in_slow_moving_traffic(1, ego_vehicle, other_vehicles)
-        sol_monitor_mode_3 = general_predicates.in_slow_moving_traffic(2, ego_vehicle, other_vehicles)
-        sol_monitor_mode_4 = general_predicates.in_slow_moving_traffic(3, ego_vehicle, other_vehicles)
+        sol_monitor_mode_1 = general_predicates.in_slow_moving_traffic(0, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = general_predicates.in_slow_moving_traffic(1, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = general_predicates.in_slow_moving_traffic(2, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = general_predicates.in_slow_moving_traffic(3, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -343,10 +343,10 @@ class TestGeneralPredicates(unittest.TestCase):
         other_vehicles = [other_vehicle_1, other_vehicle_2, other_vehicle_3]
 
         # Monitor-Mode
-        sol_monitor_mode_1 = general_predicates.in_queue_of_vehicles(0, ego_vehicle, other_vehicles)
-        sol_monitor_mode_2 = general_predicates.in_queue_of_vehicles(1, ego_vehicle, other_vehicles)
-        sol_monitor_mode_3 = general_predicates.in_queue_of_vehicles(2, ego_vehicle, other_vehicles)
-        sol_monitor_mode_4 = general_predicates.in_queue_of_vehicles(3, ego_vehicle, other_vehicles)
+        sol_monitor_mode_1 = general_predicates.in_queue_of_vehicles(0, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = general_predicates.in_queue_of_vehicles(1, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = general_predicates.in_queue_of_vehicles(2, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = general_predicates.in_queue_of_vehicles(3, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -411,9 +411,9 @@ class TestGeneralPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
                               ObstacleType.CAR, self._ego_vehicle_param, lanelet_assignments_ego, None, None, None)
 
-        sol_1 = general_predicates.interstate_broad_enough(0, ego_vehicle)
-        sol_2 = general_predicates.interstate_broad_enough(1, ego_vehicle)
-        sol_3 = general_predicates.interstate_broad_enough(2, ego_vehicle)
+        sol_1 = general_predicates.interstate_broad_enough(0, ego_vehicle, OperatingMode.MONITOR)
+        sol_2 = general_predicates.interstate_broad_enough(1, ego_vehicle, OperatingMode.MONITOR)
+        sol_3 = general_predicates.interstate_broad_enough(2, ego_vehicle, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_1, sol_1)
         self.assertEqual(exp_sol_2, sol_2)
@@ -470,11 +470,11 @@ class TestGeneralPredicates(unittest.TestCase):
                                   lanelet_assignments_other_2, None, None, None)
 
         # Monitor-Mode
-        sol_monitor_mode_1 = general_predicates.cut_in(0, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_2 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_3 = general_predicates.cut_in(2, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_4 = general_predicates.cut_in(3, ego_vehicle, other_vehicle_1)
-        sol_monitor_mode_5 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_2)
+        sol_monitor_mode_1 = general_predicates.cut_in(0, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_2 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_3 = general_predicates.cut_in(2, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_4 = general_predicates.cut_in(3, ego_vehicle, other_vehicle_1, OperatingMode.MONITOR)
+        sol_monitor_mode_5 = general_predicates.cut_in(1, ego_vehicle, other_vehicle_2, OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)

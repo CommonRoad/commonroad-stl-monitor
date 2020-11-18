@@ -645,7 +645,7 @@ class TestVelocityPredicates(unittest.TestCase):
         self.assertAlmostEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         self.assertAlmostEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
         self.assertAlmostEqual(exp_sol_robustness_mode_3, sol_robustness_mode_3)
-        
+
     def test_reverses(self):
         self._traffic_rules_param["standstill_error"] = 0.01
         # expected solutions
@@ -658,7 +658,7 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_constraint_mode_3 = -self._traffic_rules_param["standstill_error"]
         exp_sol_constraint_mode_4 = -self._traffic_rules_param["standstill_error"]
         exp_sol_robustness_mode_1 = -self._traffic_rules_param["standstill_error"]
-        exp_sol_robustness_mode_2 = -self._traffic_rules_param["standstill_error"] -1
+        exp_sol_robustness_mode_2 = -self._traffic_rules_param["standstill_error"] - 1
         exp_sol_robustness_mode_3 = -1e-17
         exp_sol_robustness_mode_4 = -self._traffic_rules_param["standstill_error"] - -2
 
@@ -675,7 +675,7 @@ class TestVelocityPredicates(unittest.TestCase):
         # ego vehicle
         state_list_lon_ego = {0: StateLongitudinal(s=0, v=0), 1: StateLongitudinal(s=0, v=1),
                               2: StateLongitudinal(s=1, v=-self._traffic_rules_param["standstill_error"]),
-                              3: StateLongitudinal(s=1-self._traffic_rules_param["standstill_error"], v=-2)}
+                              3: StateLongitudinal(s=1 - self._traffic_rules_param["standstill_error"], v=-2)}
         state_list_lat_ego = {0: StateLateral(d=0, theta=0), 1: StateLateral(d=0, theta=0),
                               2: StateLateral(d=0, theta=0), 3: StateLateral(d=4, theta=0)}
         cr_state_list_ego = {0: State(position=0, time_step=0), 1: State(position=0, time_step=1),
@@ -789,10 +789,14 @@ class TestVelocityPredicates(unittest.TestCase):
         other_vehicles = [other_vehicle_1, other_vehicle_2, other_vehicle_3, other_vehicle_4]
 
         # Monitor-Mode
-        sol_monitor_mode_1 = velocity_predicates.exist_standing_leading_vehicle(0, ego_vehicle, other_vehicles)
-        sol_monitor_mode_2 = velocity_predicates.exist_standing_leading_vehicle(1, ego_vehicle, other_vehicles)
-        sol_monitor_mode_3 = velocity_predicates.exist_standing_leading_vehicle(2, ego_vehicle, other_vehicles)
-        sol_monitor_mode_4 = velocity_predicates.exist_standing_leading_vehicle(3, ego_vehicle, other_vehicles)
+        sol_monitor_mode_1 = velocity_predicates.exist_standing_leading_vehicle(0, ego_vehicle, other_vehicles,
+                                                                                OperatingMode.MONITOR)
+        sol_monitor_mode_2 = velocity_predicates.exist_standing_leading_vehicle(1, ego_vehicle, other_vehicles,
+                                                                                OperatingMode.MONITOR)
+        sol_monitor_mode_3 = velocity_predicates.exist_standing_leading_vehicle(2, ego_vehicle, other_vehicles,
+                                                                                OperatingMode.MONITOR)
+        sol_monitor_mode_4 = velocity_predicates.exist_standing_leading_vehicle(3, ego_vehicle, other_vehicles,
+                                                                                OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -872,10 +876,10 @@ class TestVelocityPredicates(unittest.TestCase):
         exp_sol_monitor_mode_4 = True  # third leading vehicle drives to slow
 
         # expected solutions
-        exp_sol_robustness_mode_1 = -math.inf # no leading vehicle at all
-        exp_sol_robustness_mode_2 = -math.inf # two leading vehicles which drive with speed limit
-        exp_sol_robustness_mode_3 = math.inf # first leading vehicle is drives to slow
-        exp_sol_robustness_mode_4 = math.inf # third leading vehicle drives to slow
+        exp_sol_robustness_mode_1 = -math.inf  # no leading vehicle at all
+        exp_sol_robustness_mode_2 = -math.inf  # two leading vehicles which drive with speed limit
+        exp_sol_robustness_mode_3 = math.inf  # first leading vehicle is drives to slow
+        exp_sol_robustness_mode_4 = math.inf  # third leading vehicle drives to slow
 
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
@@ -943,10 +947,14 @@ class TestVelocityPredicates(unittest.TestCase):
         other_vehicles = [other_vehicle_1, other_vehicle_2, other_vehicle_3, other_vehicle_4]
 
         # Monitor-Mode
-        sol_monitor_mode_1 = velocity_predicates.slow_leading_vehicle(0, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
-        sol_monitor_mode_2 = velocity_predicates.slow_leading_vehicle(1, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
-        sol_monitor_mode_3 = velocity_predicates.slow_leading_vehicle(2, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
-        sol_monitor_mode_4 = velocity_predicates.slow_leading_vehicle(3, ego_vehicle, other_vehicles, OperatingMode.MONITOR)
+        sol_monitor_mode_1 = velocity_predicates.slow_leading_vehicle(0, ego_vehicle, other_vehicles,
+                                                                      OperatingMode.MONITOR)
+        sol_monitor_mode_2 = velocity_predicates.slow_leading_vehicle(1, ego_vehicle, other_vehicles,
+                                                                      OperatingMode.MONITOR)
+        sol_monitor_mode_3 = velocity_predicates.slow_leading_vehicle(2, ego_vehicle, other_vehicles,
+                                                                      OperatingMode.MONITOR)
+        sol_monitor_mode_4 = velocity_predicates.slow_leading_vehicle(3, ego_vehicle, other_vehicles,
+                                                                      OperatingMode.MONITOR)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -955,13 +963,13 @@ class TestVelocityPredicates(unittest.TestCase):
 
         # Robustness-Mode
         sol_robustness_mode_1 = velocity_predicates.slow_leading_vehicle(0, ego_vehicle, other_vehicles,
-                                                                      OperatingMode.ROBUSTNESS)
+                                                                         OperatingMode.ROBUSTNESS)
         sol_robustness_mode_2 = velocity_predicates.slow_leading_vehicle(1, ego_vehicle, other_vehicles,
-                                                                      OperatingMode.ROBUSTNESS)
+                                                                         OperatingMode.ROBUSTNESS)
         sol_robustness_mode_3 = velocity_predicates.slow_leading_vehicle(2, ego_vehicle, other_vehicles,
-                                                                      OperatingMode.ROBUSTNESS)
+                                                                         OperatingMode.ROBUSTNESS)
         sol_robustness_mode_4 = velocity_predicates.slow_leading_vehicle(3, ego_vehicle, other_vehicles,
-                                                                      OperatingMode.ROBUSTNESS)
+                                                                         OperatingMode.ROBUSTNESS)
 
         self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)

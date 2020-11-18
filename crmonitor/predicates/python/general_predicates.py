@@ -211,7 +211,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             return True
 
-    def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle, opetaing_mode: OperatingMode) -> bool:
+    def cut_in(self, time_step: int, vehicle_k: Vehicle, vehicle_p: Vehicle, operating_mode: OperatingMode) -> bool:
         """
         Predicate which checks if the kth vehicle performs a cut-in into the pth vehicles lane
 
@@ -221,14 +221,14 @@ class GeneralPredicateCollection(PredicateCollection):
         :returns Boolean indicating satisfaction
         """
         if len(self._road_network.find_lanes_by_lanelets(vehicle_k.lanelet_assignment[time_step])) == 1:
-            if opetaing_mode == OperatingMode.ROBUSTNESS:
+            if operating_mode == OperatingMode.ROBUSTNESS:
                 return -math.inf
             else:
                 return False
         if not PositionPredicateCollection.in_same_lane_classmethod(
                 self._road_network.find_lane_ids_by_lanelets(vehicle_k.lanelet_assignment[time_step]),
                 self._road_network.find_lane_ids_by_lanelets(vehicle_p.lanelet_assignment[time_step])):
-            if opetaing_mode == OperatingMode.ROBUSTNESS:
+            if operating_mode == OperatingMode.ROBUSTNESS:
                 return -math.inf
             else:
                 return False
@@ -236,12 +236,12 @@ class GeneralPredicateCollection(PredicateCollection):
                 and vehicle_k.states_lat[time_step].theta > 0 or \
                 vehicle_k.states_lat[time_step].d > vehicle_p.states_lat[time_step].d \
                 and vehicle_k.states_lat[time_step].theta < 0:
-            if opetaing_mode == OperatingMode.ROBUSTNESS:
+            if operating_mode == OperatingMode.ROBUSTNESS:
                 return math.inf
             else:
                 return True
         else:
-            if opetaing_mode == OperatingMode.ROBUSTNESS:
+            if operating_mode == OperatingMode.ROBUSTNESS:
                 return -math.inf
             else:
                 return False
