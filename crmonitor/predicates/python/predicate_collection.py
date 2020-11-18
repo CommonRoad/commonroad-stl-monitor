@@ -19,8 +19,14 @@ class PredicateCollection(ABC):
     Interface for a predicate class
     """
 
-    def __init__(self, road_network: RoadNetwork, simulation_param: Dict, traffic_rules_param: Dict,
-                 necessary_predicates: Set[str], traffic_sign_interpreter: TrafficSigInterpreter):
+    def __init__(
+        self,
+        road_network: RoadNetwork,
+        simulation_param: Dict,
+        traffic_rules_param: Dict,
+        necessary_predicates: Set[str],
+        traffic_sign_interpreter: TrafficSigInterpreter,
+    ):
         """
         Constructor
 
@@ -38,9 +44,13 @@ class PredicateCollection(ABC):
         self._traffic_sign_interpreter = traffic_sign_interpreter
 
     @abstractmethod
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                            time_interval: Tuple[int, int],
-                            operating_mode: OperatingMode) -> Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(
+        self,
+        ego_vehicle: Vehicle,
+        other_vehicles: List[Vehicle],
+        time_interval: Tuple[int, int],
+        operating_mode: OperatingMode,
+    ) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Evaluates trajectory for predicate compliance
 
@@ -58,10 +68,11 @@ class ConstraintRepresentation(enum.Enum):
     """
     Defines the representation of a constraint
     """
-    UPPER = 'upper'  # real-valued upper constraint
-    LOWER = 'lower'  # real-valued lower constraint
-    OUTER_BOUNDARY = 'outer_boundary'  # CommonRoad shape as an outer boundary
-    INNER_BOUNDARY = 'inner_boundary'  # CommonRoad shape as an inner boundary
+
+    UPPER = "upper"  # real-valued upper constraint
+    LOWER = "lower"  # real-valued lower constraint
+    OUTER_BOUNDARY = "outer_boundary"  # CommonRoad shape as an outer boundary
+    INNER_BOUNDARY = "inner_boundary"  # CommonRoad shape as an inner boundary
 
 
 @enum.unique
@@ -69,13 +80,14 @@ class ConstraintType(enum.Enum):
     """
     Defines the type of constraint axis
     """
-    LONGITUDINAL_CURVILINEAR_POSITION = 's'
-    LATERAL_CURVILINEAR_POSITION = 'd'
-    X_CARTESIAN_POSITION = 'x'
-    Y_CARTESIAN_POSITION = 'y'
-    VELOCITY = 'v'
-    ORIENTATION = 'theta'
-    ACCELERATION = 'a'
+
+    LONGITUDINAL_CURVILINEAR_POSITION = "s"
+    LATERAL_CURVILINEAR_POSITION = "d"
+    X_CARTESIAN_POSITION = "x"
+    Y_CARTESIAN_POSITION = "y"
+    VELOCITY = "v"
+    ORIENTATION = "theta"
+    ACCELERATION = "a"
 
 
 class Constraint:
@@ -83,8 +95,12 @@ class Constraint:
     Representation of a constraint so that constraints can be uses outside of the CommonRoad monitor.
     """
 
-    def __init__(self, axis: List[ConstraintType], constraint_representation: ConstraintRepresentation,
-                 value: Union[int, float, Shape, ShapeGroup, Polygon, Rectangle, Circle]):
+    def __init__(
+        self,
+        axis: List[ConstraintType],
+        constraint_representation: ConstraintRepresentation,
+        value: Union[int, float, Shape, ShapeGroup, Polygon, Rectangle, Circle],
+    ):
         """
         Constructor
 
@@ -113,11 +129,16 @@ class ConstraintEvaluation:
     """
     Class to extract a set of constraints from predicates
     """
+
     def __init__(self, predicate_collections: List[PredicateCollection]):
         self._predicate_collections = predicate_collections
 
-    def evaluate_constraints(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle],
-                             time_interval: Tuple[int, int]) -> Dict[int, List[Constraint]]:
+    def evaluate_constraints(
+        self,
+        ego_vehicle: Vehicle,
+        other_vehicles: List[Vehicle],
+        time_interval: Tuple[int, int],
+    ) -> Dict[int, List[Constraint]]:
         """
         Iterates over all predicate collections and computes constraints for a time interval
 
@@ -128,9 +149,16 @@ class ConstraintEvaluation:
         collection_constraints = []
         constraints_per_time_step = {}
         for collection in self._predicate_collections:
-            collection_constraints.append(collection.evaluate_predicates(ego_vehicle, other_vehicles, time_interval,
-                                                                         OperatingMode.CONSTRAINT))
-        for collection in collection_constraints:  # TODO update if only relevant predicats are returned
+            collection_constraints.append(
+                collection.evaluate_predicates(
+                    ego_vehicle, other_vehicles, time_interval, OperatingMode.CONSTRAINT
+                )
+            )
+        for (
+            collection
+        ) in (
+            collection_constraints
+        ):  # TODO update if only relevant predicats are returned
             for predicate_name, constraitns_per_vehicle in collection.items():
                 if not any(constraitns_per_vehicle.values()):
                     continue
@@ -143,7 +171,9 @@ class ConstraintEvaluation:
                         else:
                             constraints_per_time_step[time_step] = [constraint]
         for time_step, constraint_list in constraints_per_time_step.items():
-            constraints_per_time_step[time_step] = self.unify_constraints(constraint_list)
+            constraints_per_time_step[time_step] = self.unify_constraints(
+                constraint_list
+            )
 
         return constraints_per_time_step
 
@@ -159,8 +189,11 @@ class ConstraintEvaluation:
         ordered_constraints = {}
         unified_constraints = []
         for constr in constraints:
-            constr_types = '-'.join([constr_type.value for constr_type in constr.axis]) + '-' +\
-                           constr.constraint_representation.value
+            constr_types = (
+                "-".join([constr_type.value for constr_type in constr.axis])
+                + "-"
+                + constr.constraint_representation.value
+            )
 
             if ordered_constraints.get(constr_types) is None:
                 ordered_constraints[constr_types] = [constr.value]
@@ -170,30 +203,68 @@ class ConstraintEvaluation:
         # combine constraints of same type
         for key, value in ordered_constraints.items():
             if ConstraintRepresentation.LOWER.value in key:
-                unified_constraints.append(Constraint([c_type for c_type in ConstraintType if c_type.value in key],
-                                                      ConstraintRepresentation.LOWER, max(value)))
+                unified_constraints.append(
+                    Constraint(
+                        [c_type for c_type in ConstraintType if c_type.value in key],
+                        ConstraintRepresentation.LOWER,
+                        max(value),
+                    )
+                )
             elif ConstraintRepresentation.UPPER.value in key:
-                unified_constraints.append(Constraint([ctype for ctype in ConstraintType if ctype.value in key],
-                                                      ConstraintRepresentation.UPPER, min(value)))
+                unified_constraints.append(
+                    Constraint(
+                        [ctype for ctype in ConstraintType if ctype.value in key],
+                        ConstraintRepresentation.UPPER,
+                        min(value),
+                    )
+                )
             elif ConstraintRepresentation.OUTER_BOUNDARY.value in key:
                 shapely_polygons = unary_union([poly.shapely_object for poly in value])
-                if shapely_polygons.geom_type == 'MultiPolygon':
-                    constr_value = ShapeGroup([Polygon(np.array([[x, y] for x, y in poly.exterior.coords]))
-                                               for poly in list(shapely_polygons)])
+                if shapely_polygons.geom_type == "MultiPolygon":
+                    constr_value = ShapeGroup(
+                        [
+                            Polygon(np.array([[x, y] for x, y in poly.exterior.coords]))
+                            for poly in list(shapely_polygons)
+                        ]
+                    )
                 else:
-                    constr_value = Polygon(np.array([[x, y] for x, y in shapely_polygons.exterior.coords]))
+                    constr_value = Polygon(
+                        np.array([[x, y] for x, y in shapely_polygons.exterior.coords])
+                    )
 
-                unified_constraints.append(Constraint([ctype for ctype in ConstraintType if ctype.value in key],
-                                                      ConstraintRepresentation.OUTER_BOUNDARY, constr_value))
+                unified_constraints.append(
+                    Constraint(
+                        [ctype for ctype in ConstraintType if ctype.value in key],
+                        ConstraintRepresentation.OUTER_BOUNDARY,
+                        constr_value,
+                    )
+                )
             elif ConstraintRepresentation.INNER_BOUNDARY.value in key:
-                shapely_polygon = cascaded_union([a.intersection(b) for a, b in
-                                                  combinations([poly.shapely_object for poly in value], 2)])
+                shapely_polygon = cascaded_union(
+                    [
+                        a.intersection(b)
+                        for a, b in combinations(
+                            [poly.shapely_object for poly in value], 2
+                        )
+                    ]
+                )
                 if shapely_polygon.is_empty:
-                    warnings.warn('<ConstraintEvaluation/unify_constraints>: constraint is empty set')
+                    warnings.warn(
+                        "<ConstraintEvaluation/unify_constraints>: constraint is empty set"
+                    )
                     constr_value = None
                 else:
-                    constr_value = Polygon(np.array([[x, y] for x, y in shapely_polygon.exterior.coords][:-1]))
+                    constr_value = Polygon(
+                        np.array(
+                            [[x, y] for x, y in shapely_polygon.exterior.coords][:-1]
+                        )
+                    )
 
-                unified_constraints.append(Constraint([c_type for c_type in ConstraintType if c_type.value in key],
-                                           ConstraintRepresentation.INNER_BOUNDARY, constr_value))
+                unified_constraints.append(
+                    Constraint(
+                        [c_type for c_type in ConstraintType if c_type.value in key],
+                        ConstraintRepresentation.INNER_BOUNDARY,
+                        constr_value,
+                    )
+                )
         return unified_constraints

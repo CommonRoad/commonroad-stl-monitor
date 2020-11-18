@@ -11,7 +11,9 @@ from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 from crmonitor.common.helper import *
 
 
-def create_scenarios_from_directory(directories: List[str], max_num_scenarios: int = sys.maxsize):
+def create_scenarios_from_directory(
+    directories: List[str], max_num_scenarios: int = sys.maxsize
+):
     """
     Creation of CommonRoad scenarios from CommonRoad XML-files which are located in provided directories
 
@@ -23,16 +25,18 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
     for scenario_dir in directories:
         abs_path = os.path.abspath(os.getcwd() + scenario_dir)
         for filename in os.listdir(abs_path):
-            if filename.startswith('C-'):
+            if filename.startswith("C-"):
                 continue
             elif "DEU" not in filename:
                 continue
             elif "_S-" in filename:
                 continue
-            elif not filename.endswith('.xml'):
+            elif not filename.endswith(".xml"):
                 continue
             fullname = os.path.join(abs_path, filename)
-            scenario, planning_problem_set = CommonRoadFileReader(fullname).open(lanelet_assignment=True)
+            scenario, planning_problem_set = CommonRoadFileReader(fullname).open(
+                lanelet_assignment=True
+            )
             if Tag.INTERSTATE in scenario.tags or Tag.INTERSTATE in scenario.tags:
                 scenarios.append(scenario)
             if len(scenarios) == max_num_scenarios:
@@ -44,11 +48,27 @@ def create_scenarios_from_directory(directories: List[str], max_num_scenarios: i
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Traffic Rule Evaluation of CommonRoad scenarios")
-    parser.add_argument('--evaluation_mode', help='Evaluation mode for execution.')
-    parser.add_argument('--max_num_scenarios', default=2, type=int, help='Maximum number of scenarios to evaluate.')
-    parser.add_argument('--num_cores', default=1, type=int, help='Number of processor cores which should be used.')
-    parser.add_argument('--scenario_directories', nargs='+', help='List of directories where scenarios are located.')
+    parser = argparse.ArgumentParser(
+        description="Traffic Rule Evaluation of CommonRoad scenarios"
+    )
+    parser.add_argument("--evaluation_mode", help="Evaluation mode for execution.")
+    parser.add_argument(
+        "--max_num_scenarios",
+        default=2,
+        type=int,
+        help="Maximum number of scenarios to evaluate.",
+    )
+    parser.add_argument(
+        "--num_cores",
+        default=1,
+        type=int,
+        help="Number of processor cores which should be used.",
+    )
+    parser.add_argument(
+        "--scenario_directories",
+        nargs="+",
+        help="List of directories where scenarios are located.",
+    )
 
     return parser.parse_args()
 
@@ -56,14 +76,19 @@ def get_args():
 def main():
     start_time = time.time()
 
-    cr_eval = CommonRoadObstacleEvaluation(os.path.dirname(os.path.abspath(__file__)) + "/")
+    cr_eval = CommonRoadObstacleEvaluation(
+        os.path.dirname(os.path.abspath(__file__)) + "/"
+    )
     args = get_args()
 
     if args.operating_mode is None:
-        scenario, planning_problem_set = CommonRoadFileReader(os.path.dirname(os.path.abspath(__file__))
-                                                              + cr_eval.simulation_param.get("scenario_dir") + "/"
-                                                              + cr_eval.simulation_param.get("benchmark_id")
-                                                              + ".xml").open(lanelet_assignment=True)
+        scenario, planning_problem_set = CommonRoadFileReader(
+            os.path.dirname(os.path.abspath(__file__))
+            + cr_eval.simulation_param.get("scenario_dir")
+            + "/"
+            + cr_eval.simulation_param.get("benchmark_id")
+            + ".xml"
+        ).open(lanelet_assignment=True)
         result = cr_eval.evaluate_scenario(scenario)
         print(result)
     else:
@@ -78,10 +103,14 @@ def main():
         else:
             max_num_scenarios = args.max_num_scenarios
 
-        scenarios = create_scenarios_from_directory(scenario_directories, max_num_scenarios)
+        scenarios = create_scenarios_from_directory(
+            scenario_directories, max_num_scenarios
+        )
 
         pool = multiprocessing.Pool(processes=args.num_cores)
-        pool.map(cr_eval.evaluate_scenario, (scenarios[idx] for idx in range(len(scenarios))))
+        pool.map(
+            cr_eval.evaluate_scenario, (scenarios[idx] for idx in range(len(scenarios)))
+        )
 
     print(cr_eval.eval_dict)
     print("Num. scenarios: " + str(cr_eval.num_scenarios))

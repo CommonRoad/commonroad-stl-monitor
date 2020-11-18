@@ -19,10 +19,17 @@ class TrafficRuleDispatcher:
     Manages the different monitors for each traffic rule
     """
 
-    def __init__(self, traffic_rules_forward: Dict[str, str], traffic_rules_backward: Dict[str, str],
-                 traffic_rule_sets: Dict[str, str], road_network: RoadNetwork,
-                 simulation_param: Dict, traffic_rule_param: Dict, activated_traffic_rule_sets: List[str],
-                 vehicle_dependent_rules: List[str]):
+    def __init__(
+        self,
+        traffic_rules_forward: Dict[str, str],
+        traffic_rules_backward: Dict[str, str],
+        traffic_rule_sets: Dict[str, str],
+        road_network: RoadNetwork,
+        simulation_param: Dict,
+        traffic_rule_param: Dict,
+        activated_traffic_rule_sets: List[str],
+        vehicle_dependent_rules: List[str],
+    ):
         """
         Constructor
 
@@ -38,28 +45,51 @@ class TrafficRuleDispatcher:
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
         self._road_network = road_network
-        self._monitors_forward = self.create_forward_monitors(traffic_rules_forward, traffic_rule_sets,
-                                                              activated_traffic_rule_sets,
-                                                              vehicle_dependent_rules)
+        self._monitors_forward = self.create_forward_monitors(
+            traffic_rules_forward,
+            traffic_rule_sets,
+            activated_traffic_rule_sets,
+            vehicle_dependent_rules,
+        )
         necessary_predicates = self.extract_necessary_predicates()
-        traffic_sign_interpreter = TrafficSigInterpreter(self._simulation_param.get("country"),
-                                                         road_network.lanelet_network)
-        self._velocity_predicates = VelocityPredicateCollection(road_network, simulation_param,
-                                                                traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter)
-        self._position_predicates = PositionPredicateCollection(road_network, simulation_param,
-                                                                traffic_rule_param, necessary_predicates,
-                                                                traffic_sign_interpreter)
-        self._braking_predicates = BrakingPredicateCollection(road_network, simulation_param,
-                                                              traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter)
-        self._general_predicates = GeneralPredicateCollection(road_network, simulation_param,
-                                                              traffic_rule_param, necessary_predicates,
-                                                              traffic_sign_interpreter)
+        traffic_sign_interpreter = TrafficSigInterpreter(
+            self._simulation_param.get("country"), road_network.lanelet_network
+        )
+        self._velocity_predicates = VelocityPredicateCollection(
+            road_network,
+            simulation_param,
+            traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._position_predicates = PositionPredicateCollection(
+            road_network,
+            simulation_param,
+            traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._braking_predicates = BrakingPredicateCollection(
+            road_network,
+            simulation_param,
+            traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._general_predicates = GeneralPredicateCollection(
+            road_network,
+            simulation_param,
+            traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
 
-        self._monitors_backward = self.create_backward_monitors(traffic_rules_backward, traffic_rule_sets,
-                                                                activated_traffic_rule_sets,
-                                                                vehicle_dependent_rules)
+        self._monitors_backward = self.create_backward_monitors(
+            traffic_rules_backward,
+            traffic_rule_sets,
+            activated_traffic_rule_sets,
+            vehicle_dependent_rules,
+        )
 
     def extract_necessary_predicates(self) -> Set[str]:
         """
@@ -72,9 +102,12 @@ class TrafficRuleDispatcher:
         return predicates
 
     @staticmethod
-    def create_forward_monitors(traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
-                                activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]) \
-            -> List[TrafficRuleMonitorForward]:
+    def create_forward_monitors(
+        traffic_rules: Dict[str, str],
+        traffic_rule_sets: Dict[str, str],
+        activated_traffic_rule_sets: List[str],
+        vehicle_dependent_rules: List[str],
+    ) -> List[TrafficRuleMonitorForward]:
         """
         Initialization of monitor for each MTL rule
 
@@ -90,13 +123,21 @@ class TrafficRuleDispatcher:
                 continue
             for rule in traffic_rule_sets.get(traffic_rule_set_id):
                 vehicle_dependency = rule in vehicle_dependent_rules
-                monitors.append(TrafficRuleMonitorForward((rule, traffic_rules.get(rule)), vehicle_dependency))
+                monitors.append(
+                    TrafficRuleMonitorForward(
+                        (rule, traffic_rules.get(rule)), vehicle_dependency
+                    )
+                )
 
         return monitors
 
-    def create_backward_monitors(self, traffic_rules: Dict[str, str], traffic_rule_sets: Dict[str, str],
-                                 activated_traffic_rule_sets: List[str], vehicle_dependent_rules: List[str]) \
-            -> List[TrafficRuleMonitorBackward]:
+    def create_backward_monitors(
+        self,
+        traffic_rules: Dict[str, str],
+        traffic_rule_sets: Dict[str, str],
+        activated_traffic_rule_sets: List[str],
+        vehicle_dependent_rules: List[str],
+    ) -> List[TrafficRuleMonitorBackward]:
         """
         Initialization of monitor for each MTL rule
 
@@ -112,14 +153,24 @@ class TrafficRuleDispatcher:
                 continue
             for rule in traffic_rule_sets.get(traffic_rule_set_id):
                 vehicle_dependency = rule in vehicle_dependent_rules
-                monitors.append(TrafficRuleMonitorBackward((rule, traffic_rules.get(rule)), vehicle_dependency,
-                                                           [self._general_predicates, self._position_predicates,
-                                                            self._braking_predicates, self._velocity_predicates]))
+                monitors.append(
+                    TrafficRuleMonitorBackward(
+                        (rule, traffic_rules.get(rule)),
+                        vehicle_dependency,
+                        [
+                            self._general_predicates,
+                            self._position_predicates,
+                            self._braking_predicates,
+                            self._velocity_predicates,
+                        ],
+                    )
+                )
 
         return monitors
 
-    def evaluate_predicates(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> \
-            Dict[str, Dict[int, Dict[int, bool]]]:
+    def evaluate_predicates(
+        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+    ) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Calls different predicate classes for evaluation predicate of all predicates
 
@@ -127,27 +178,42 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns dictionary containing predicate evaluation
         """
-        velocity_predicates = self._velocity_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
-                                                                            (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())),
-                                                                            OperatingMode.MONITOR)
-        position_predicates = self._position_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
-                                                                            (min(ego_vehicle.states_lon.keys()),
-                                                                             max(ego_vehicle.states_lon.keys())),
-                                                                            OperatingMode.MONITOR)
-        braking_predicates = self._braking_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
-                                                                          (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())),
-                                                                          OperatingMode.MONITOR)
-        general_predicates = self._general_predicates.evaluate_predicates(ego_vehicle, other_vehicles,
-                                                                          (min(ego_vehicle.states_lon.keys()),
-                                                                           max(ego_vehicle.states_lon.keys())),
-                                                                          OperatingMode.MONITOR)
+        velocity_predicates = self._velocity_predicates.evaluate_predicates(
+            ego_vehicle,
+            other_vehicles,
+            (min(ego_vehicle.states_lon.keys()), max(ego_vehicle.states_lon.keys())),
+            OperatingMode.MONITOR,
+        )
+        position_predicates = self._position_predicates.evaluate_predicates(
+            ego_vehicle,
+            other_vehicles,
+            (min(ego_vehicle.states_lon.keys()), max(ego_vehicle.states_lon.keys())),
+            OperatingMode.MONITOR,
+        )
+        braking_predicates = self._braking_predicates.evaluate_predicates(
+            ego_vehicle,
+            other_vehicles,
+            (min(ego_vehicle.states_lon.keys()), max(ego_vehicle.states_lon.keys())),
+            OperatingMode.MONITOR,
+        )
+        general_predicates = self._general_predicates.evaluate_predicates(
+            ego_vehicle,
+            other_vehicles,
+            (min(ego_vehicle.states_lon.keys()), max(ego_vehicle.states_lon.keys())),
+            OperatingMode.MONITOR,
+        )
 
-        combined_predicates = {**velocity_predicates, **position_predicates, **braking_predicates, **general_predicates}
+        combined_predicates = {
+            **velocity_predicates,
+            **position_predicates,
+            **braking_predicates,
+            **general_predicates,
+        }
         return combined_predicates
 
-    def evaluate_trajectory(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
+    def evaluate_trajectory(
+        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+    ) -> Dict[str, bool]:
         """
         Evaluates trajectory using forward and backward framework
 
@@ -156,13 +222,17 @@ class TrafficRuleDispatcher:
         :returns dictionary containing predicate evaluation
         """
         results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
-        results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
+        results_backward = self.evaluate_trajectory_backward(
+            ego_vehicle, other_vehicles
+        )
         result = {}
         result.update(results_forward)
         result.update(results_backward)
         return result
 
-    def evaluate_trajectory_forward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
+    def evaluate_trajectory_forward(
+        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+    ) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with forward MTL framework
 
@@ -178,7 +248,9 @@ class TrafficRuleDispatcher:
                 rule_predicates = {}
                 for pred in rule.predicates:
                     trace = []
-                    for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
+                    for idx, value in enumerate(
+                        evaluated_predicates[pred][ego_vehicle.id].values()
+                    ):
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
                 rule_evaluation[rule.name] = rule.evaluate_monitor(rule_predicates)
@@ -188,20 +260,31 @@ class TrafficRuleDispatcher:
                 for vehicle in other_vehicles:
                     for pred in rule.predicates:
                         trace = []
-                        if len(evaluated_predicates[pred]) > 0 \
-                                and evaluated_predicates[pred].get(vehicle.id) is not None:
-                            for idx, value in enumerate(evaluated_predicates[pred][vehicle.id].values()):
+                        if (
+                            len(evaluated_predicates[pred]) > 0
+                            and evaluated_predicates[pred].get(vehicle.id) is not None
+                        ):
+                            for idx, value in enumerate(
+                                evaluated_predicates[pred][vehicle.id].values()
+                            ):
                                 trace.append((idx * self._dt, value))
-                        elif len(evaluated_predicates[pred]) > 0 \
-                                and evaluated_predicates[pred].get(ego_vehicle.id) is not None:
-                            for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
+                        elif (
+                            len(evaluated_predicates[pred]) > 0
+                            and evaluated_predicates[pred].get(ego_vehicle.id)
+                            is not None
+                        ):
+                            for idx, value in enumerate(
+                                evaluated_predicates[pred][ego_vehicle.id].values()
+                            ):
                                 trace.append((idx * self._dt, value))
                         else:
                             warnings.warn("Predicate cannot be found!")
                             break
                         rule_predicates[pred] = trace
                         rule_evaluated = True
-                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor(rule_predicates)
+                    rule_evaluation[
+                        rule.name + "_veh_" + str(vehicle.id)
+                    ] = rule.evaluate_monitor(rule_predicates)
                 if rule_evaluated is False:
                     rule_evaluation[rule.name] = True
         return rule_evaluation
@@ -210,7 +293,9 @@ class TrafficRuleDispatcher:
         for monitor in self._monitors_backward:
             monitor.reset_monitor()
 
-    def evaluate_trajectory_backward(self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Dict[str, bool]:
+    def evaluate_trajectory_backward(
+        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+    ) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with backward MTL framework
 
@@ -225,8 +310,12 @@ class TrafficRuleDispatcher:
                 self._reset_backward_monitors()
                 rule_evaluation[rule.name] = True
                 for time_step in time_steps:
-                    predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle, 'other_vehicles': other_vehicles,
-                                  'operating_mode': OperatingMode.MONITOR}
+                    predicates = {
+                        "time_step": time_step,
+                        "ego_vehicle": ego_vehicle,
+                        "other_vehicles": other_vehicles,
+                        "operating_mode": OperatingMode.MONITOR,
+                    }
                     result = rule.evaluate_monitor(predicates)
                     if result is False:
                         rule_evaluation[rule.name] = False
@@ -238,11 +327,17 @@ class TrafficRuleDispatcher:
                     for time_step in time_steps:
                         if vehicle.states_lon.get(time_step) is None:
                             continue
-                        predicates = {'time_step': time_step, 'ego_vehicle': ego_vehicle,
-                                      'other_vehicles': other_vehicles,
-                                      'other_vehicle': vehicle, 'operating_mode': OperatingMode.MONITOR}
+                        predicates = {
+                            "time_step": time_step,
+                            "ego_vehicle": ego_vehicle,
+                            "other_vehicles": other_vehicles,
+                            "other_vehicle": vehicle,
+                            "operating_mode": OperatingMode.MONITOR,
+                        }
                         result = rule.evaluate_monitor(predicates)
                         if result is False:
-                            rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = False
+                            rule_evaluation[
+                                rule.name + "_veh_" + str(vehicle.id)
+                            ] = False
                             break
         return rule_evaluation

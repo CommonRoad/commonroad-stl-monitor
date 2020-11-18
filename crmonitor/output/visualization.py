@@ -6,14 +6,22 @@ from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import Obstacle
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.draw_dispatch_cr import draw_object
-from commonroad.visualization.planning import create_default_draw_params as create_default_draw_params_planning
-from commonroad.visualization.scenario import create_default_draw_params as create_default_draw_params_scenario
+from commonroad.visualization.planning import (
+    create_default_draw_params as create_default_draw_params_planning,
+)
+from commonroad.visualization.scenario import (
+    create_default_draw_params as create_default_draw_params_scenario,
+)
 
 
 class Visualization:
     """Visualization class as interface to CommonRoad visualization"""
 
-    def __init__(self, ego_vehicle_color: Dict[int, str] = None, figsize: Tuple[float, float] = (8, 4.5)):
+    def __init__(
+        self,
+        ego_vehicle_color: Dict[int, str] = None,
+        figsize: Tuple[float, float] = (8, 4.5),
+    ):
         """
         Constructor
 
@@ -26,9 +34,17 @@ class Visualization:
         self._figsize = figsize
         plt.figure(figsize=self._figsize)
 
-    def plot_scenario(self, scenario: Scenario, planning_problem_set: PlanningProblemSet = None, time_begin: int = 0,
-                      obstacle_label: bool = False, draw_trajectory: bool = False, lanelet_label: bool = False,
-                      draw_planning_problem: bool = True, draw_traffic_signs: bool = False):
+    def plot_scenario(
+        self,
+        scenario: Scenario,
+        planning_problem_set: PlanningProblemSet = None,
+        time_begin: int = 0,
+        obstacle_label: bool = False,
+        draw_trajectory: bool = False,
+        lanelet_label: bool = False,
+        draw_planning_problem: bool = True,
+        draw_traffic_signs: bool = False,
+    ):
         """
         Management of visualization for complete CommonRoad scenario
 
@@ -43,23 +59,42 @@ class Visualization:
         """
         plot_limits = get_plot_limits(scenario)
         plt.clf()
-        plt.gca().set_aspect('equal')
+        plt.gca().set_aspect("equal")
         plt.gca().set_axis_off()
         plt.margins(0, 0.1)
 
         if planning_problem_set is not None and draw_planning_problem is not False:
-            draw_object(planning_problem_set, draw_params=self._default_parameters_planning, plot_limits=plot_limits)
+            draw_object(
+                planning_problem_set,
+                draw_params=self._default_parameters_planning,
+                plot_limits=plot_limits,
+            )
         for obs in scenario.obstacles:
-            if self._ego_vehicle_color is not None and obs.obstacle_id in self._ego_vehicle_color.keys():
-                self._draw_ego_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
+            if (
+                self._ego_vehicle_color is not None
+                and obs.obstacle_id in self._ego_vehicle_color.keys()
+            ):
+                self._draw_ego_obstacle(
+                    obs, plot_limits, time_begin, obstacle_label, draw_trajectory
+                )
             else:
-                self._draw_standard_obstacle(obs, plot_limits, time_begin, obstacle_label, draw_trajectory)
-        self._draw_lanelet_network(plot_limits, scenario.lanelet_network, lanelet_label, draw_traffic_signs)
-        plt.axis('off')
+                self._draw_standard_obstacle(
+                    obs, plot_limits, time_begin, obstacle_label, draw_trajectory
+                )
+        self._draw_lanelet_network(
+            plot_limits, scenario.lanelet_network, lanelet_label, draw_traffic_signs
+        )
+        plt.axis("off")
         plt.show()
 
-    def _draw_ego_obstacle(self, obstacle: Obstacle, plot_limits: List[float], time_begin: int = 0,
-                           obstacle_label: bool = False, draw_trajectory: bool = False):
+    def _draw_ego_obstacle(
+        self,
+        obstacle: Obstacle,
+        plot_limits: List[float],
+        time_begin: int = 0,
+        obstacle_label: bool = False,
+        draw_trajectory: bool = False,
+    ):
         """
         Visualization of ego vehicle obstacle
 
@@ -68,18 +103,33 @@ class Visualization:
         :param obstacle_label: boolean indicating if obstacle label should be shown
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         """
-        self._default_parameters_scenario['time_begin'] = time_begin
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['facecolor'] = \
-            self._ego_vehicle_color[obstacle.obstacle_id]
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['shape']['rectangle']['edgecolor'] = \
-            self._ego_vehicle_color[obstacle.obstacle_id]
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
-            draw_trajectory
-        draw_object(obstacle, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
+        self._default_parameters_scenario["time_begin"] = time_begin
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"]["shape"][
+            "rectangle"
+        ]["facecolor"] = self._ego_vehicle_color[obstacle.obstacle_id]
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"]["shape"][
+            "rectangle"
+        ]["edgecolor"] = self._ego_vehicle_color[obstacle.obstacle_id]
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"][
+            "show_label"
+        ] = obstacle_label
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"]["trajectory"][
+            "draw_trajectory"
+        ] = draw_trajectory
+        draw_object(
+            obstacle,
+            draw_params=self._default_parameters_scenario,
+            plot_limits=plot_limits,
+        )
 
-    def _draw_standard_obstacle(self, obstacle: Obstacle, plot_limits: List[float], time_begin: int = 0,
-                                obstacle_label: bool = False, draw_trajectory: bool = False):
+    def _draw_standard_obstacle(
+        self,
+        obstacle: Obstacle,
+        plot_limits: List[float],
+        time_begin: int = 0,
+        obstacle_label: bool = False,
+        draw_trajectory: bool = False,
+    ):
         """
         Visualization of non-ego vehicle obstacle
 
@@ -88,15 +138,29 @@ class Visualization:
         :param obstacle_label: boolean indicating if obstacle label should be shown
         :param draw_trajectory: boolean indicating if trajectory should be drawn
         """
-        self._default_parameters_scenario['time_begin'] = time_begin
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['trajectory']['draw_trajectory'] = \
-            draw_trajectory
-        self._default_parameters_scenario['scenario']['dynamic_obstacle']['show_label'] = obstacle_label
-        draw_object(obstacle, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
+        self._default_parameters_scenario["time_begin"] = time_begin
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"][
+            "show_label"
+        ] = obstacle_label
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"]["trajectory"][
+            "draw_trajectory"
+        ] = draw_trajectory
+        self._default_parameters_scenario["scenario"]["dynamic_obstacle"][
+            "show_label"
+        ] = obstacle_label
+        draw_object(
+            obstacle,
+            draw_params=self._default_parameters_scenario,
+            plot_limits=plot_limits,
+        )
 
-    def _draw_lanelet_network(self, plot_limits: List[float], lanelet_network: LaneletNetwork,
-                              lanelet_label: bool = False, draw_traffic_signs: bool = False):
+    def _draw_lanelet_network(
+        self,
+        plot_limits: List[float],
+        lanelet_network: LaneletNetwork,
+        lanelet_label: bool = False,
+        draw_traffic_signs: bool = False,
+    ):
         """
         Visualization of lanelet network
 
@@ -104,10 +168,20 @@ class Visualization:
         :param lanelet_label: boolean indicating if lanelet label should be shown
         :param draw_traffic_signs: boolean indicating if traffic signs should be drawn
         """
-        self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
-        self._default_parameters_scenario['lanelet_network']['lanelet']['draw_start_and_direction'] = False
-        self._default_parameters_scenario['lanelet_network']['lanelet']['show_label'] = lanelet_label
-        draw_object(lanelet_network, draw_params=self._default_parameters_scenario, plot_limits=plot_limits)
+        self._default_parameters_scenario["lanelet_network"]["lanelet"][
+            "show_label"
+        ] = lanelet_label
+        self._default_parameters_scenario["lanelet_network"]["lanelet"][
+            "draw_start_and_direction"
+        ] = False
+        self._default_parameters_scenario["lanelet_network"]["lanelet"][
+            "show_label"
+        ] = lanelet_label
+        draw_object(
+            lanelet_network,
+            draw_params=self._default_parameters_scenario,
+            plot_limits=plot_limits,
+        )
 
 
 def get_plot_limits(scenario: Scenario) -> List[float]:
@@ -118,12 +192,26 @@ def get_plot_limits(scenario: Scenario) -> List[float]:
     :param scenario: CommonRoad scenario
     :returns x/y min/max plot limits
     """
-    x_lanelet_left = [point[0] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
-    y_lanelet_left = [point[1] for lanelet in scenario.lanelet_network.lanelets for point in lanelet.left_vertices]
-    x_lanelet_right = [point[0] for lanelet in scenario.lanelet_network.lanelets
-                       for point in lanelet.right_vertices]
-    y_lanelet_right = [point[1] for lanelet in scenario.lanelet_network.lanelets
-                       for point in lanelet.right_vertices]
+    x_lanelet_left = [
+        point[0]
+        for lanelet in scenario.lanelet_network.lanelets
+        for point in lanelet.left_vertices
+    ]
+    y_lanelet_left = [
+        point[1]
+        for lanelet in scenario.lanelet_network.lanelets
+        for point in lanelet.left_vertices
+    ]
+    x_lanelet_right = [
+        point[0]
+        for lanelet in scenario.lanelet_network.lanelets
+        for point in lanelet.right_vertices
+    ]
+    y_lanelet_right = [
+        point[1]
+        for lanelet in scenario.lanelet_network.lanelets
+        for point in lanelet.right_vertices
+    ]
 
     x_min = min(x_lanelet_left + x_lanelet_right) - 5
     y_min = min(y_lanelet_left + y_lanelet_right) - 5

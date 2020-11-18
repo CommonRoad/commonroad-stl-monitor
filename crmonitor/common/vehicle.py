@@ -15,7 +15,8 @@ class StateLongitudinal:
     """
     Longitudinal state in curvilinear coordinate system
     """
-    __slots__ = ['s', 'v', 'a', 'j']
+
+    __slots__ = ["s", "v", "a", "j"]
 
     def __init__(self, **kwargs):
         """ Elements of state vector are determined during runtime."""
@@ -24,7 +25,7 @@ class StateLongitudinal:
 
     @property
     def attributes(self) -> List[str]:
-        """ Returns all dynamically set attributes of an instance of State.
+        """Returns all dynamically set attributes of an instance of State.
 
         :return: subset of slots which are dynamically assigned to the object.
         """
@@ -35,10 +36,10 @@ class StateLongitudinal:
         return attributes
 
     def __str__(self):
-        state = '\n'
+        state = "\n"
         for attr in self.attributes:
             state += attr
-            state += '= {}\n'.format(self.__getattribute__(attr))
+            state += "= {}\n".format(self.__getattribute__(attr))
         return state
 
 
@@ -46,7 +47,8 @@ class StateLateral:
     """
     Lateral state in curvilinear coordinate system
     """
-    __slots__ = ['d', 'theta', 'kappa', 'kappa_dot']
+
+    __slots__ = ["d", "theta", "kappa", "kappa_dot"]
 
     def __init__(self, **kwargs):
         """ Elements of state vector are determined during runtime."""
@@ -55,7 +57,7 @@ class StateLateral:
 
     @property
     def attributes(self) -> List[str]:
-        """ Returns all dynamically set attributes of an instance of State.
+        """Returns all dynamically set attributes of an instance of State.
 
         :return: subset of slots which are dynamically assigned to the object.
         """
@@ -66,10 +68,10 @@ class StateLateral:
         return attributes
 
     def __str__(self):
-        state = '\n'
+        state = "\n"
         for attr in self.attributes:
             state += attr
-            state += '= {}\n'.format(self.__getattribute__(attr))
+            state += "= {}\n".format(self.__getattribute__(attr))
         return state
 
 
@@ -77,11 +79,12 @@ class Input:
     """
     Lateral and longitudinal vehicle input
     """
-    __slots__ = ['a', 'kappa_dot_dot']
+
+    __slots__ = ["a", "kappa_dot_dot"]
 
     @property
     def attributes(self) -> List[str]:
-        """ Returns all dynamically set attributes of an instance of State.
+        """Returns all dynamically set attributes of an instance of State.
 
         :return: subset of slots which are dynamically assigned to the object.
         """
@@ -92,10 +95,10 @@ class Input:
         return attributes
 
     def __str__(self):
-        state = '\n'
+        state = "\n"
         for attr in self.attributes:
             state += attr
-            state += '= {}\n'.format(self.__getattribute__(attr))
+            state += "= {}\n".format(self.__getattribute__(attr))
         return state
 
 
@@ -111,11 +114,20 @@ class Vehicle:
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
 
-    def __init__(self, states_lon: Dict[int, StateLongitudinal],
-                 states_lat: Dict[int, StateLateral], shape: Union[Shape, Rectangle],
-                 cr_states: Dict[int, State], vehicle_id: int, obstacle_type: ObstacleType, vehicle_param: Dict,
-                 lanelet_assignments: Dict[int, Set[int]], signal_states: Dict[int, SignalState] = None,
-                 vehicle_classification: Dict[int, VehicleClassification] = None, lane: Union[Lane, List[Lane]] = None):
+    def __init__(
+        self,
+        states_lon: Dict[int, StateLongitudinal],
+        states_lat: Dict[int, StateLateral],
+        shape: Union[Shape, Rectangle],
+        cr_states: Dict[int, State],
+        vehicle_id: int,
+        obstacle_type: ObstacleType,
+        vehicle_param: Dict,
+        lanelet_assignments: Dict[int, Set[int]],
+        signal_states: Dict[int, SignalState] = None,
+        vehicle_classification: Dict[int, VehicleClassification] = None,
+        lane: Union[Lane, List[Lane]] = None,
+    ):
         """
         :param states_lon: list of longitudinal states for initialization
         :param states_lat: list of lateral states for initialization
@@ -215,10 +227,12 @@ class Vehicle:
         :param width: width of vehicle
         :returns rear s-coordinate [m]
         """
-        return min((length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
-                   (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
-                   (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
-                   (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s)
+        return min(
+            (length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+            (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+            (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+            (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+        )
 
     def front_s(self, time_step: int) -> float:
         """
@@ -246,10 +260,12 @@ class Vehicle:
         :param width: width of vehicle
         :returns front s-coordinate [m]
         """
-        return max((length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
-                   (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
-                   (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
-                   (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s)
+        return max(
+            (length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+            (length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+            (-length / 2) * np.cos(theta) - (width / 2) * np.sin(theta) + s,
+            (-length / 2) * np.cos(theta) - (-width / 2) * np.sin(theta) + s,
+        )
 
     def right_d(self, time_step: int) -> float:
         """
@@ -263,10 +279,12 @@ class Vehicle:
         width = self.shape.width
         length = self.shape.length
         theta = self.states_lat[time_step].theta
-        return min((width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-                   (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-                   (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-                   (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d)
+        return min(
+            (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+        )
 
     def left_d(self, time_step: int) -> float:
         """
@@ -280,13 +298,22 @@ class Vehicle:
         width = self.shape.width
         length = self.shape.length
         theta = self.states_lat[time_step].theta
-        return max((width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-                   (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-                   (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-                   (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d)
+        return max(
+            (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+        )
 
-    def append_time_step(self, time_step: int, state_lon: StateLongitudinal, state_lat: StateLateral, state_cr: State,
-                         lanelet_assignment: Set[int], signal_state: State = None):
+    def append_time_step(
+        self,
+        time_step: int,
+        state_lon: StateLongitudinal,
+        state_lat: StateLateral,
+        state_cr: State,
+        lanelet_assignment: Set[int],
+        signal_state: State = None,
+    ):
         """
         Adds information for a specific time step to vehicle
 

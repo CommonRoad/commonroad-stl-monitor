@@ -27,12 +27,12 @@ R_I4 = 453 + 594 + 443 + 413 + 573 + 404
 R_0 = 187 + 198 + 168 + 103 + 277 + 120
 
 height = [R_G1, R_G2, R_G3, R_G4, R_I1, R_I2, R_I3, R_I4, R_0]
-bars = ('R\_G1', 'R\_G2', 'R\_G3', 'R\_G4', 'R\_I1', 'R\_I2', 'R\_I3', 'R\_I4', 'R\_G0')
+bars = ("R\_G1", "R\_G2", "R\_G3", "R\_G4", "R\_I1", "R\_I2", "R\_I3", "R\_I4", "R\_G0")
 y_pos = np.arange(len(bars))
-plt.rcParams['svg.fonttype'] = 'none'
-ax = plt.bar(y_pos, height, color='#c3c3c3ff')
-plt.axhline(y=num_vehicles, color='black', linestyle='--')
-plt.xticks(y_pos, bars, rotation='vertical')
+plt.rcParams["svg.fonttype"] = "none"
+ax = plt.bar(y_pos, height, color="#c3c3c3ff")
+plt.axhline(y=num_vehicles, color="black", linestyle="--")
+plt.xticks(y_pos, bars, rotation="vertical")
 
 totals = []
 # find the values and append to list
@@ -45,6 +45,11 @@ total = sum(totals)
 # set individual bar lables using above list
 for i, el in enumerate(ax.patches):
     # get_x pulls left or right; get_height pushes up or down
-    plt.text(el.get_x() + 0.3, el.get_height() - 500, str("%6.2f" % ((height[i] * 100) / num_vehicles)) + '%',
-             color='black', rotation=90)
+    plt.text(
+        el.get_x() + 0.3,
+        el.get_height() - 500,
+        str("%6.2f" % ((height[i] * 100) / num_vehicles)) + "%",
+        color="black",
+        rotation=90,
+    )
 plt.show()

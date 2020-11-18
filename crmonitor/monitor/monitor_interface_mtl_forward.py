@@ -39,8 +39,32 @@ class TrafficRuleMonitorForward:
         :param logic_formula: temporal logic formula
         :returns list of predicates
         """
-        replacements = ['U', 'X', 'G', 'F', '&', '->', '(', ')', '~', '|', '[', ']', '0', '1', '2', '3', '4', '5',
-                        '6', '7', '8', '9', ',', '.']
+        replacements = [
+            "U",
+            "X",
+            "G",
+            "F",
+            "&",
+            "->",
+            "(",
+            ")",
+            "~",
+            "|",
+            "[",
+            "]",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            ",",
+            ".",
+        ]
         for el in replacements:
             logic_formula = logic_formula.replace(el, "")
         predicates_tmp = list(logic_formula.split(" "))
