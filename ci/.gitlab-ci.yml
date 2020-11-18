@@ -1,7 +1,7 @@
 variables:
-  pull_policy: if-not-present
+  pull_policy: never
 
-image: crmonitor:crmonitor-anaconda3 #continuumio/anaconda3
+image: crmonitor #continuumio/anaconda3
 
 stages:
 - test
