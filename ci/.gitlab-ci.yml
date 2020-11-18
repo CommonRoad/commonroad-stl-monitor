@@ -4,8 +4,8 @@ stages:
 - test
 
 before_script:
-#- conda create -n commonroad python=3.6
-#- source activate commonroad
+- conda create -n commonroad python=3.6
+- source activate commonroad
 - bash ./ci/install_third_party_software.sh
 
 
