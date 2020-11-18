@@ -13,8 +13,8 @@ before_script:
 
 python36:
   stage: test
-  # tags: 
-  #   - test
+  tags: 
+    - test
   script:
     - source activate commonroad
     - bash ./ci/install_cps_software.sh
