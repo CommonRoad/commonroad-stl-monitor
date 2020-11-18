@@ -5,6 +5,7 @@ stages:
 
 before_script:
 - echo ${CI_JOB_TOKEN}
+- eval $CI_PRE_CLONE_SCRIPT
 - conda create -n commonroad python=3.6
 - source activate commonroad
 - bash ./ci/install_third_party_software.sh
