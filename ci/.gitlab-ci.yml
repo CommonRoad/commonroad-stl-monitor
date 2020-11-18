@@ -1,10 +1,4 @@
-variables:
-  pull_policy: never
-
-build:
-  image: 
-    name: crmonitor #continuumio/anaconda3
-    pull_policy: if-not-present
+image: crmonitor #continuumio/anaconda3
 
 stages:
 - test
@@ -17,6 +11,8 @@ before_script:
 
 python36:
   stage: test
+  tags: 
+    - test
   script:
     - source activate commonroad
     - bash ./ci/install_cps_software.sh
