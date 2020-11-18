@@ -1,4 +1,7 @@
-image: localhost:crmonitor-anaconda3 #continuumio/anaconda3
+variables:
+  pull_policy: if-not-present
+
+image: crmonitor:crmonitor-anaconda3 #continuumio/anaconda3
 
 stages:
 - test
