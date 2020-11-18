@@ -1,19 +1,21 @@
-variables:
-  pull_policy: if-not-present
-
-image: crmonitor:crmonitor-anaconda3 #continuumio/anaconda3
+image: crmonitor # continuumio/anaconda3 # 
 
 stages:
 - test
 
 before_script:
-#- conda create -n commonroad python=3.6
-#- source activate commonroad
+- apt -y dist-upgrade
+- echo ${CI_JOB_TOKEN}
+- export
+- conda create -n commonroad python=3.6
+- source activate commonroad
 - bash ./ci/install_third_party_software.sh
 
 
 python36:
   stage: test
+  tags: 
+    - test
   script:
     - source activate commonroad
     - bash ./ci/install_cps_software.sh
