@@ -8,7 +8,10 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.helper import OperatingMode, Backend
 from crmonitor.monitor.monitor_interface_mtl_forward import TrafficRuleMonitorForward
 from crmonitor.monitor.monitor_interface_stl_forward import TrafficRuleMonitorForwardSTL
-from crmonitor.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
+try:
+    from crmonitor.monitor.monitor_interface_mtl_backward import TrafficRuleMonitorBackward
+except:
+    TrafficRuleMonitorBackward = None
 from crmonitor.predicates.python.braking_predicates import BrakingPredicateCollection
 from crmonitor.predicates.python.general_predicates import GeneralPredicateCollection
 from crmonitor.predicates.python.position_predicates import PositionPredicateCollection
@@ -21,17 +24,17 @@ class TrafficRuleDispatcher:
     """
 
     def __init__(
-        self,
-        traffic_rules_forward: Dict[str, str],
-        traffic_rules_backward: Dict[str, str],
-        traffic_rule_sets: Dict[str, str],
-        road_network: RoadNetwork,
-        simulation_param: Dict,
-        traffic_rule_param: Dict,
-        activated_traffic_rule_sets: List[str],
-        vehicle_dependent_rules: List[str],
-        operating_mode: OperatingMode,
-        backend: Backend = Backend.PythonMTL,
+            self,
+            traffic_rules_forward: Dict[str, str],
+            traffic_rules_backward: Dict[str, str],
+            traffic_rule_sets: Dict[str, str],
+            road_network: RoadNetwork,
+            simulation_param: Dict,
+            traffic_rule_param: Dict,
+            activated_traffic_rule_sets: List[str],
+            vehicle_dependent_rules: List[str],
+            operating_mode: OperatingMode,
+            backend: Backend = Backend.PythonMTL,
     ):
         """
         Constructor
@@ -89,13 +92,13 @@ class TrafficRuleDispatcher:
             necessary_predicates,
             traffic_sign_interpreter,
         )
-
-        self._monitors_backward = self.create_backward_monitors(
-            traffic_rules_backward,
-            traffic_rule_sets,
-            activated_traffic_rule_sets,
-            vehicle_dependent_rules,
-        )
+        if self._backend is Backend.PythonMTL:
+            self._monitors_backward = self.create_backward_monitors(
+                traffic_rules_backward,
+                traffic_rule_sets,
+                activated_traffic_rule_sets,
+                vehicle_dependent_rules,
+            )
 
     def extract_necessary_predicates(self) -> Set[str]:
         """
@@ -109,11 +112,11 @@ class TrafficRuleDispatcher:
 
     @staticmethod
     def create_forward_monitors(
-        traffic_rules: Dict[str, str],
-        traffic_rule_sets: Dict[str, str],
-        activated_traffic_rule_sets: List[str],
-        vehicle_dependent_rules: List[str],
-        backend: Backend,
+            traffic_rules: Dict[str, str],
+            traffic_rule_sets: Dict[str, str],
+            activated_traffic_rule_sets: List[str],
+            vehicle_dependent_rules: List[str],
+            backend: Backend,
     ) -> List[TrafficRuleMonitorForward]:
         """
         Initialization of monitor for each MTL rule
@@ -143,11 +146,11 @@ class TrafficRuleDispatcher:
         return monitors
 
     def create_backward_monitors(
-        self,
-        traffic_rules: Dict[str, str],
-        traffic_rule_sets: Dict[str, str],
-        activated_traffic_rule_sets: List[str],
-        vehicle_dependent_rules: List[str],
+            self,
+            traffic_rules: Dict[str, str],
+            traffic_rule_sets: Dict[str, str],
+            activated_traffic_rule_sets: List[str],
+            vehicle_dependent_rules: List[str],
     ) -> List[TrafficRuleMonitorBackward]:
         """
         Initialization of monitor for each MTL rule
@@ -181,7 +184,7 @@ class TrafficRuleDispatcher:
 
     # TODO evalute_predicates_online
     def evaluate_predicates_online(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, Dict[int, Union[float, bool]]]:
         current_time_step = max(ego_vehicle.states_lon.keys())
         velocity_predicates = self._velocity_predicates.evaluate_predicates_online(
@@ -205,7 +208,7 @@ class TrafficRuleDispatcher:
         return combined_predicates
 
     def evaluate_predicates(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, Dict[int, Dict[int, bool]]]:
         """
         Calls different predicate classes for evaluation predicate of all predicates
@@ -240,7 +243,7 @@ class TrafficRuleDispatcher:
         return combined_predicates
 
     def evaluate_state(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, Union[float, bool]]:
         """
         Evaluates one time step using forward (rtamt) framework
@@ -248,15 +251,15 @@ class TrafficRuleDispatcher:
         :param other_vehicles:
         :return:
         """
-        results_forward = self.evaluate_state_forward(ego_vehicle, other_vehicles)
-        # results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
-        result = {}
-        result.update(results_forward)
-        # result.update(results_backward)
-        return result
+        # results_forward = self.evaluate_state_forward(ego_vehicle, other_vehicles)
+        # # results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
+        # result = {}
+        # result.update(results_forward)
+        # # result.update(results_backward)
+        return self.evaluate_state_forward(ego_vehicle, other_vehicles)
 
     def evaluate_trajectory(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, bool]:
         """
         Evaluates trajectory using forward and backward framework
@@ -284,7 +287,7 @@ class TrafficRuleDispatcher:
         # # TODO: evaluate_trajectory_online for RTAMT backend
 
     def evaluate_trajectory_forward(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with forward MTL framework
@@ -302,7 +305,7 @@ class TrafficRuleDispatcher:
                 for pred in rule.predicates:
                     trace = []
                     for idx, value in enumerate(
-                        evaluated_predicates[pred][ego_vehicle.id].values()
+                            evaluated_predicates[pred][ego_vehicle.id].values()
                     ):
                         trace.append((idx * self._dt, value))
                     rule_predicates[pred] = trace
@@ -316,20 +319,20 @@ class TrafficRuleDispatcher:
                     for pred in rule.predicates:
                         trace = []
                         if (
-                            len(evaluated_predicates[pred]) > 0
-                            and evaluated_predicates[pred].get(vehicle.id) is not None
+                                len(evaluated_predicates[pred]) > 0
+                                and evaluated_predicates[pred].get(vehicle.id) is not None
                         ):
                             for idx, value in enumerate(
-                                evaluated_predicates[pred][vehicle.id].values()
+                                    evaluated_predicates[pred][vehicle.id].values()
                             ):
                                 trace.append((idx * self._dt, value))
                         elif (
-                            len(evaluated_predicates[pred]) > 0
-                            and evaluated_predicates[pred].get(ego_vehicle.id)
-                            is not None
+                                len(evaluated_predicates[pred]) > 0
+                                and evaluated_predicates[pred].get(ego_vehicle.id)
+                                is not None
                         ):
                             for idx, value in enumerate(
-                                evaluated_predicates[pred][ego_vehicle.id].values()
+                                    evaluated_predicates[pred][ego_vehicle.id].values()
                             ):
                                 trace.append((idx * self._dt, value))
                         else:
@@ -339,13 +342,13 @@ class TrafficRuleDispatcher:
                         rule_evaluated = True
                     rule_evaluation[
                         rule.name + "_veh_" + str(vehicle.id)
-                    ] = rule.evaluate_monitor(rule_predicates, self._operating_mode)
+                        ] = rule.evaluate_monitor(rule_predicates, self._operating_mode)
                 if rule_evaluated is False:
                     rule_evaluation[rule.name] = True
         return rule_evaluation
 
     def evaluate_state_forward(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with forward MTL framework
@@ -354,56 +357,35 @@ class TrafficRuleDispatcher:
         :param other_vehicles: other vehicle objects containing trajectory and other relevant information
         :returns each rule with boolean indicating satisfaction
         """
-        evaluated_predicates = self.evaluate_predicates_online(
-            ego_vehicle, other_vehicles
-        )
+        evaluated_predicates = self.evaluate_predicates_online(ego_vehicle, other_vehicles)
         rule_evaluation = {}
         for rule in self._monitors_forward:
+            time = max(ego_vehicle.states_lon.keys()) # * self._dt
             # evaluate rules which only depend on the ego vehicle and the environment
             if rule.vehicle_dependency is False:
-                rule_predicates = {}
+                rule_predicates = [time]
                 for pred in rule.predicates:
-                    trace = []
-                    for idx, value in enumerate(
-                        evaluated_predicates[pred][ego_vehicle.id].values()
-                    ):
-                        trace.append((idx * self._dt, value))
-                    rule_predicates[pred] = trace
-                rule_evaluation[rule.name] = rule.evaluate_monitor(
-                    rule_predicates, self._operating_mode
-                )
-            else:  # evaluate rules which depend on other vehicles, e.g., safe distance
+                    rule_predicates.append((pred, evaluated_predicates[pred][ego_vehicle.id]))
+                rule_evaluation[rule.name] = rule.evaluate_monitor_online(rule_predicates, self._operating_mode)
+            # evaluate rules which depend on other vehicles, e.g., safe distance
+            else:
                 # rule_evaluated = False
-                time = max(ego_vehicle.states_lon.keys())  # * self._dt
                 for vehicle in other_vehicles:
-                    rule_predicates = [time]
-                    for (
-                        pred
-                    ) in rule.predicates:  # [time, (var1, value1), (var2, value2)]
-                        predicate_value_vehicle = evaluated_predicates[pred].get(
-                            vehicle.id
-                        )
+                    rule_predicates = [time] # [time, (var1, value1), (var2, value2)]
+                    for pred in rule.predicates:
+                        predicate_value_vehicle = evaluated_predicates[pred].get(vehicle.id)
                         if (
-                            len(evaluated_predicates[pred]) > 0
-                            and predicate_value_vehicle is not None
+                                len(evaluated_predicates[pred]) > 0
+                                and predicate_value_vehicle is not None
                         ):
                             rule_predicates.append((pred, predicate_value_vehicle))
-                        # TODO: ???
-                        # elif len(evaluated_predicates[pred]) > 0 \
-                        #         and evaluated_predicates[pred].get(ego_vehicle.id) is not None:
-                        #     for idx, value in enumerate(evaluated_predicates[pred][ego_vehicle.id].values()):
-                        #         trace.append((idx * self._dt, value))
                         else:
                             warnings.warn("Predicate cannot be found!")
                             break
                         # rule_predicates[pred] = trace
                         # rule_evaluated = True
-                    # TODO: problem: monitor.update() does not distinguish between each vehicle,
-                    # TODO: solution: one monitor for each vehicle? (cannot reset like the backward monitor cause we need
-                    # to store past states
-                    rule_evaluation[
-                        rule.name + "_veh_" + str(vehicle.id)
-                    ] = rule.evaluate_monitor_online(rule_predicates, vehicle.id)
+                    rule_evaluation[rule.name + "_veh_" + str(vehicle.id)] = rule.evaluate_monitor_online(
+                        rule_predicates, vehicle.id)
                 # if rule_evaluated is False:
                 #     rule_evaluation[rule.name] = True
         return rule_evaluation
@@ -413,7 +395,7 @@ class TrafficRuleDispatcher:
             monitor.reset_monitor()
 
     def evaluate_trajectory_backward(
-        self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, bool]:
         """
         Evaluates trajectory for traffic rule compliance with backward MTL framework
@@ -457,6 +439,6 @@ class TrafficRuleDispatcher:
                         if result is False:
                             rule_evaluation[
                                 rule.name + "_veh_" + str(vehicle.id)
-                            ] = False
+                                ] = False
                             break
         return rule_evaluation

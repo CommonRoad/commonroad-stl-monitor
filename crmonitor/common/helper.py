@@ -710,15 +710,11 @@ def create_scenario_vehicles(
         if (
             obs.obstacle_id == ego_obstacle.obstacle_id
             or obs.prediction is None
-            or obs.initial_state.time_step
-            > ego_obstacle.prediction.trajectory.state_list[-1].time_step
-            or ego_obstacle.initial_state.time_step
-            > obs.prediction.trajectory.state_list[-1].time_step
+            or obs.initial_state.time_step > ego_obstacle.prediction.trajectory.state_list[-1].time_step
+            or ego_obstacle.initial_state.time_step > obs.prediction.trajectory.state_list[-1].time_step
         ):
             continue
-        vehicle = create_vehicle(
-            obs, other_vehicles_param, road_network, dt, ego_vehicle
-        )
+        vehicle = create_vehicle(obs, other_vehicles_param, road_network, dt, ego_vehicle)
         other_vehicles.append(vehicle)
     return ego_vehicle, other_vehicles
 

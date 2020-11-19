@@ -19,9 +19,11 @@ traffic_rules_forward:
 # originally forward rules:
 #    R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
     # TODO: automatic time bound (upper bound == time horizon of the scenario)
-    R_I5: always((on_main_carriage_way__x_ego and in_front_of__x_ego__x_o and on_access_ramp__x_o and eventually[0, 50](on_main_carriage_way__x_o)) implies (not(not(main_carriageway_right_lane__x_ego) and eventually[0, 50](main_carriageway_right_lane__x_ego))))
+#    R_I5: always((on_main_carriage_way__x_ego and in_front_of__x_ego__x_o and on_access_ramp__x_o and eventually[0, 50](on_main_carriage_way__x_o)) implies (not(not(main_carriageway_right_lane__x_ego) and eventually[0, 50](main_carriageway_right_lane__x_ego))))
+    R_I5: (on_main_carriage_way__x_ego and in_front_of__x_ego__x_o and on_access_ramp__x_o and eventually[0, 50](on_main_carriage_way__x_o)) implies (not(not(main_carriageway_right_lane__x_ego) and eventually[0, 50](main_carriageway_right_lane__x_ego)))
 #    R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
-    R_G7: always(((in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o)) or eventually[0, 5](in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o))) implies (brakes_stronger__x_ego__x_o or drives_faster__x_o__x_ego))
+#    R_G7: always(((in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o)) or eventually[0, 5](in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o))) implies (brakes_stronger__x_ego__x_o or drives_faster__x_o__x_ego))
+    R_G7: ((in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o)) or eventually[0, 5](in_same_lane__x_ego__x_o and in_front_of__x_ego__x_o and not(keeps_safe_distance_prec__x_ego__x_o))) implies (brakes_stronger__x_ego__x_o or drives_faster__x_o__x_ego)
 
 # originally backward rules:
 #    R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode) && in_same_lane(time_step, ego_vehicle, other_vehicle, operating_mode)
