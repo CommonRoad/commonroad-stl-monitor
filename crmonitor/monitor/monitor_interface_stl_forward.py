@@ -22,6 +22,8 @@ class TrafficRuleMonitorForwardSTL:
         # self._predicate_functions = self._extract_predicate_functions(predicate_references)
         self._monitor = {}  # self.construct_monitor(logic_formula[1])
         self._vehicle_dependency = vehicle_dependency
+        self._initial_monitor_list = []
+
 
     @property
     def name(self) -> str:
@@ -36,7 +38,11 @@ class TrafficRuleMonitorForwardSTL:
         return self._vehicle_dependency
 
     def reset_monitor(self):
-        pass
+        # garbage collect monitors
+        self._initial_monitor_list = list(self._monitor.values())
+        self._monitor = {}
+        for monitor in self._initial_monitor_list:
+            monitor.reset()
 
     @staticmethod
     def _reconstruct_logic_formula(logic_formula: str) -> str:
@@ -170,6 +176,11 @@ class TrafficRuleMonitorForwardSTL:
         """
         if vehicle_id not in self._monitor:
             # this vehicle appears for the first time, no monitor yet, construct a new monitor
-            self._monitor[vehicle_id] = self.construct_monitor(self._logic_formula)
+            if len(self._initial_monitor_list) > 0:
+                # retrieve one initial monitor from existing initial monitors
+                self._monitor[vehicle_id] = self._initial_monitor_list.pop()
+            else:
+                # no existing initial monitors, construct a new one
+                self._monitor[vehicle_id] = self.construct_monitor(self._logic_formula)
         rob = self._monitor[vehicle_id].update(predicates[0], predicates[1:])
         return rob

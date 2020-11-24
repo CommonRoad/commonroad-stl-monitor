@@ -58,10 +58,7 @@ traffic_rules_forward:
 #      || (right_of_broad_lane_marking(time_step, ego_vehicle) && left_of_broad_lane_marking(time_step, other_vehicle))
 #      || (on_access_ramp(time_step, ego_vehicle) && !(in_congestion(time_step, other_vehicle, other_vehicles)
 #      || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles) || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)))))
-    R_I2: always(left_of__x_ego__x_o and drives_faster__x_ego__x_o implies
-      (
-          (in_congestion__x_o or in_slow_moving_traffic__x_o or in_queue_of_vehicles__x_o) and drives_with_slightly_higher_speed__x_ego__x_o
-      )
+    R_I2: always(left_of__x_ego__x_o and drives_faster__x_ego__x_o implies ((in_congestion__x_o or in_slow_moving_traffic__x_o or in_queue_of_vehicles__x_o) and drives_with_slightly_higher_speed__x_ego__x_o)
       or (right_of_broad_lane_marking__x_ego and left_of_broad_lane_marking__x_o)
       or (on_access_ramp__x_ego and not(in_congestion__x_o or in_slow_moving_traffic__x_o or in_queue_of_vehicles__x_o)))
 
@@ -136,6 +133,6 @@ traffic_rule_sets:
     F_SRI2: [R_I2]
     F_SRI3: [R_I3]
     F_SRI4: [R_I4]
-    F_RTAMT: [R_G1, R_G2, R_G3, R_G4, R_G5, R_G6, R_G7, R_I1, R_I2, R_I3, R_I4, R_I5]
+    F_RTAMT: [R_G1, R_G2, R_G3, R_G4, R_G5, R_G6, R_G7, R_I1, R_I2, R_I3, R_I4, R_I5] #
 activated_traffic_rule_sets: [F_RTAMT]
 vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7]

@@ -92,7 +92,8 @@ class TrafficRuleDispatcher:
             necessary_predicates,
             traffic_sign_interpreter,
         )
-        if self._backend is Backend.PythonMTL:
+        if TrafficRuleMonitorBackward is not None:
+        # if self._backend is Backend.PythonMTL:
             self._monitors_backward = self.create_backward_monitors(
                 traffic_rules_backward,
                 traffic_rule_sets,
@@ -182,7 +183,7 @@ class TrafficRuleDispatcher:
 
         return monitors
 
-    # TODO evalute_predicates_online
+
     def evaluate_predicates_online(
             self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
     ) -> Dict[str, Dict[int, Union[float, bool]]]:
@@ -242,21 +243,16 @@ class TrafficRuleDispatcher:
         }
         return combined_predicates
 
-    def evaluate_state(
-            self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
-    ) -> Dict[str, Union[float, bool]]:
-        """
-        Evaluates one time step using forward (rtamt) framework
-        :param ego_vehicle:
-        :param other_vehicles:
-        :return:
-        """
-        # results_forward = self.evaluate_state_forward(ego_vehicle, other_vehicles)
-        # # results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
-        # result = {}
-        # result.update(results_forward)
-        # # result.update(results_backward)
-        return self.evaluate_state_forward(ego_vehicle, other_vehicles)
+    # def evaluate_state(
+    #         self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
+    # ) -> Dict[str, Union[float, bool]]:
+    #     """
+    #     Evaluates one time step using forward (rtamt) framework
+    #     :param ego_vehicle:
+    #     :param other_vehicles:
+    #     :return:
+    #     """
+    #     return self.evaluate_state_forward(ego_vehicle, other_vehicles)
 
     def evaluate_trajectory(
             self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
@@ -276,15 +272,6 @@ class TrafficRuleDispatcher:
         result.update(results_forward)
         result.update(results_backward)
         return result
-        # if self._backend == Backend.PythonMTL:
-        #     results_forward = self.evaluate_trajectory_forward(ego_vehicle, other_vehicles)
-        #     results_backward = self.evaluate_trajectory_backward(ego_vehicle, other_vehicles)
-        #     result = {}
-        #     result.update(results_forward)
-        #     result.update(results_backward)
-        #     return result
-        # else:
-        # # TODO: evaluate_trajectory_online for RTAMT backend
 
     def evaluate_trajectory_forward(
             self, ego_vehicle: Vehicle, other_vehicles: List[Vehicle]
@@ -373,14 +360,19 @@ class TrafficRuleDispatcher:
                 for vehicle in other_vehicles:
                     rule_predicates = [time] # [time, (var1, value1), (var2, value2)]
                     for pred in rule.predicates:
-                        predicate_value_vehicle = evaluated_predicates[pred].get(vehicle.id)
+                        if "x_o" not in pred: # vehicle dependent rule with only ego-related predicate
+                            predicate_value_vehicle = evaluated_predicates[pred].get(ego_vehicle.id)
+                        else:
+                            predicate_value_vehicle = evaluated_predicates[pred].get(vehicle.id)
                         if (
                                 len(evaluated_predicates[pred]) > 0
                                 and predicate_value_vehicle is not None
                         ):
                             rule_predicates.append((pred, predicate_value_vehicle))
                         else:
-                            warnings.warn("Predicate cannot be found!")
+                            msg = f"Predicate {pred} cannot be found!"
+                            raise NotImplementedError
+                            warnings.warn(str(msg))
                             break
                         # rule_predicates[pred] = trace
                         # rule_evaluated = True
@@ -389,6 +381,11 @@ class TrafficRuleDispatcher:
                 # if rule_evaluated is False:
                 #     rule_evaluation[rule.name] = True
         return rule_evaluation
+
+    def _reset_forward_monitors(self):
+        assert self._backend == Backend.RTAMT, "PythonMTL backend does not support reset forward monitors"
+        for monitor in self._monitors_forward:
+            monitor.reset_monitor()
 
     def _reset_backward_monitors(self):
         for monitor in self._monitors_backward:
