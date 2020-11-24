@@ -50,6 +50,7 @@ class TrafficRuleDispatcher:
         """
         self._dt = simulation_param.get("dt")
         self._simulation_param = simulation_param
+        self._traffic_rule_param = traffic_rule_param
         self._road_network = road_network
         self._operating_mode = operating_mode
         self._backend = backend
@@ -382,12 +383,45 @@ class TrafficRuleDispatcher:
                 #     rule_evaluation[rule.name] = True
         return rule_evaluation
 
-    def _reset_forward_monitors(self):
+    def _reset(self, road_network: RoadNetwork):
         assert self._backend == Backend.RTAMT, "PythonMTL backend does not support reset forward monitors"
+        necessary_predicates = self.extract_necessary_predicates()
+        traffic_sign_interpreter = TrafficSigInterpreter(
+            self._simulation_param.get("country"), road_network.lanelet_network
+        )
+        self._velocity_predicates = VelocityPredicateCollection(
+            road_network,
+            self._simulation_param,
+            self._traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._position_predicates = PositionPredicateCollection(
+            road_network,
+            self._simulation_param,
+            self._traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._braking_predicates = BrakingPredicateCollection(
+            road_network,
+            self._simulation_param,
+            self._traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+        self._general_predicates = GeneralPredicateCollection(
+            road_network,
+            self._simulation_param,
+            self._traffic_rule_param,
+            necessary_predicates,
+            traffic_sign_interpreter,
+        )
+
         for monitor in self._monitors_forward:
             monitor.reset_monitor()
 
-    def _reset_backward_monitors(self):
+    def _reset_backward_monitor(self):
         for monitor in self._monitors_backward:
             monitor.reset_monitor()
 
