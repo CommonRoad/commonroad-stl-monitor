@@ -27,3 +27,8 @@ build
 *.so
 
 external/curvilinear_coordinate_system
+
+bazel-bin
+bazel-out
+bazel-stl_crmonitor
+bazel-testlogs
