@@ -172,6 +172,13 @@ class BrakingPredicateCollection(PredicateCollection):
         :param operating_mode: specifies operating mode (one of robustness, constraint, or monitor)
         :returns boolean indicating satisfaction, constraint value, or robustness value
         """
+        if vehicle_lead.states_lon.get(time_step) is None:
+            if operating_mode is OperatingMode.MONITOR:
+                return True
+            elif operating_mode is OperatingMode.ROBUSTNESS:
+                return math.inf
+
+
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
@@ -341,15 +348,6 @@ class BrakingPredicateCollection(PredicateCollection):
             predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id] = {}
             for time_step in range(time_interval[0], time_interval[1] + 1):
                 if other_vehicle.states_lon.get(time_step) is None:
-                    predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][
-                        other_vehicle.id
-                    ][time_step] = True
-                    predicate_trace["keeps_safe_distance_prec__x_o__x_ego"][
-                        other_vehicle.id
-                    ][time_step] = True
-                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][
-                        time_step
-                    ] = True
                     continue
                 if "keeps_safe_distance_prec__x_ego__x_o" in self._necessary_predicates:
                     predicate_trace["keeps_safe_distance_prec__x_ego__x_o"][
@@ -364,10 +362,14 @@ class BrakingPredicateCollection(PredicateCollection):
                         time_step, other_vehicle, ego_vehicle, operating_mode
                     )
                 if "brakes_stronger__x_ego__x_o" in self._necessary_predicates:
-                    predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][
-                        time_step
-                    ] = self.brakes_stronger(
-                        time_step, ego_vehicle, other_vehicle, operating_mode
-                    )
+                    if other_vehicle.states_lon.get(time_step) is None:
+                        predicate_trace["brakes_stronger__x_ego__x_o"][
+                            other_vehicle.id][time_step] = True
+                    else:
+                        predicate_trace["brakes_stronger__x_ego__x_o"][other_vehicle.id][
+                            time_step
+                        ] = self.brakes_stronger(
+                            time_step, ego_vehicle, other_vehicle, operating_mode
+                        )
 
         return predicate_trace

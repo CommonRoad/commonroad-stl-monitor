@@ -66,11 +66,8 @@ class PositionPredicateCollection(PredicateCollection):
         elif operating_mode is OperatingMode.CONSTRAINT:
             return vehicle_p.front_s(time_step)
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            if vehicle_p.front_s(time_step) < vehicle_k.rear_s(time_step):
-                return math.inf
-            else:
-                return -math.inf
-            # return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step) - 1e-17
+            # TODO: Does this only work when roads are parallel?
+            return vehicle_k.rear_s(time_step) - vehicle_p.front_s(time_step)
 
     @staticmethod
     def left_of(
@@ -130,7 +127,7 @@ class PositionPredicateCollection(PredicateCollection):
         vehicle_p: Vehicle,
         vehicle_k: Vehicle,
         operating_mode: OperatingMode,
-    ) -> bool:
+    ) -> Union[bool, float]:
         """
         Evaluates if the kth vehicle is in the same lane as the pth vehicle
 
@@ -145,18 +142,31 @@ class PositionPredicateCollection(PredicateCollection):
         lane_ids_p = self._road_network.find_lanes_by_lanelets(
             vehicle_p.lanelet_assignment[time_step]
         )
+        intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
+        same_lane_binary = (len(intersecting_lanes) > 0)
         if operating_mode is OperatingMode.MONITOR:
-            for lane_id in lane_ids_k:
-                if lane_id in lane_ids_p:
-                    return True
-            return False
+            return same_lane_binary
         elif operating_mode is OperatingMode.CONSTRAINT:
             raise NotImplementedError
         elif operating_mode is OperatingMode.ROBUSTNESS:
-            for lane_id in lane_ids_k:
-                if lane_id in lane_ids_p:
-                    return math.inf
-            return -math.inf
+            if same_lane_binary:
+                return math.inf
+            else:
+                # Minimum distance to each others lanes
+                min_dist_k_to_p_lanes = math.inf
+                k_occ = vehicle_k.shape.shapely_object
+                for lane_k in lane_ids_p:
+                    dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(k_occ)
+                    min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
+
+                min_dist_p_to_k_lanes = math.inf
+                p_occ = vehicle_p.shape.shapely_object
+                for lane_k in lane_ids_k:
+                    dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(
+                        p_occ)
+                    min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
+
+                return -min(min_dist_k_to_p_lanes, min_dist_p_to_k_lanes)
 
     @staticmethod
     def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:

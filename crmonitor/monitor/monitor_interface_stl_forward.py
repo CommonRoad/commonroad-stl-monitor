@@ -135,10 +135,18 @@ class TrafficRuleMonitorForwardSTL:
 
         return monitor
 
+    def _prepare_predicates(self, predicates):
+        res = {}
+        for pred_name in self.predicates:
+            for vehicle_id, veh_preds in predicates[pred_name].items():
+                for time_step, value in veh_preds.items():
+                    res.setdefault(vehicle_id, {}).setdefault(time_step, []).append((pred_name, value))
+        return res
+
+
     def evaluate_monitor(
         self,
-        predicates: Dict[str, List[Tuple[float, bool]]],
-        operating_mode: OperatingMode,
+        predicates: Dict[str, List[Tuple[float, bool]]], vehicle_ids
     ) -> Union[bool, float]:
         """
         Evaluates monitor with provided predicate trace (for all time steps)
@@ -146,27 +154,20 @@ class TrafficRuleMonitorForwardSTL:
         :param operating_mode:
         :return:
         """
-        # TODO: offline and online evaluation of whole trace
-        # offline
-        # create monitor for vehicle (iterate over all vehicles in the traffic rule dispatcher)
         self._monitor = self.construct_monitor(self._logic_formula)
-
-        robustness = self._monitor.offline(predicates)
-        # online
-        self._monitor = self.construct_monitor(self._logic_formula)
-        time_steps = len(list(predicates.values())[0])
-        rob = []
-        for i in range(time_steps):
-            inputs = [(key, value[i][1]) for key, value in predicates.items()]
-            time = list(predicates.values())[0][i][0]
-            rob.append(self._monitor.update(time, inputs))
-
-        return robustness
+        predicates = self._prepare_predicates(predicates)
+        rob = {}
+        for vehicle_id in vehicle_ids:
+            rob_values = []
+            for t, pred in predicates[vehicle_id].items():
+                rob_values.append(self._monitor.update(t, pred))
+            rob[vehicle_id] = rob_values
+        return rob
 
     def evaluate_monitor_online(
         self,
         predicates: List[Union[float, Tuple[str, Union[float, bool]]]],
-        vehicle_id: int,
+        vehicle_id: int
     ):
         """
         Evaluates monitor with provided current time step of predicates
