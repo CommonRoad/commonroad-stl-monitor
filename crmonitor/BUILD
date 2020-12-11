@@ -1,9 +1,12 @@
 py_library(
-	name="stl_crmonitor",
-	srcs = glob(["**/*.py"],
+	name="crmonitor",
+	srcs = glob(["**/*.py"]),
+	visibility = ["//visibility:public"],
+	deps=["//crmonitor/common:common"],
 )
 
 filegroup(
 	name="data_files",
-	srcs = glob(["**/*.py", "**/*.yaml"])
+	srcs = glob(["**/*.yaml"]),
+	visibility = ["//visibility:public"],
 )

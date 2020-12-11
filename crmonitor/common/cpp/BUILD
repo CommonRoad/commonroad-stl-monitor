@@ -1,12 +1,13 @@
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
 pybind_extension(
-    name = "helper",
+    name = "crmonitor_cpp",
     srcs = ["helper.cpp"],
+    visibility = ["//visibility:public"],
 )
 
 py_test(
     name = "test_helper",
     srcs = ["test_helper.py"],
-    data = [":helper.so"],
+    data = [":crmonitor_cpp.so"],
 )
