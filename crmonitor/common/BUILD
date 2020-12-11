@@ -4,4 +4,5 @@ py_library(
 	visibility = ["//visibility:public"],
 	imports = ["cpp"],
 	data=["@stl_crmonitor//crmonitor/common/cpp:crmonitor_cpp.so",],
+	deps = ["@curvilinear//:pycrccosy_lib"]
 )
