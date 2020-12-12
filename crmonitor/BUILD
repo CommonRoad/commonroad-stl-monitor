@@ -11,3 +11,9 @@ filegroup(
 	srcs = glob(["**/*.yaml"]),
 	visibility = ["//visibility:public"],
 )
+
+py_test(
+    name="test_import",
+    srcs=["test_import.py"],
+    deps=[":crmonitor"]
+)
