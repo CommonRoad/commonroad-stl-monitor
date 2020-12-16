@@ -153,20 +153,23 @@ class PositionPredicateCollection(PredicateCollection):
                 return math.inf
             else:
                 # Minimum distance to each others lanes
+                k_state = vehicle_k.state_list_cr[time_step]
                 min_dist_k_to_p_lanes = math.inf
-                k_occ = vehicle_k.shape.shapely_object
-                for lane_k in lane_ids_p:
-                    dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(k_occ)
+                k_occ = vehicle_k.shape.rotate_translate_local(k_state.position, k_state.orientation).shapely_object
+                for lane_p in lane_ids_p:
+                    dist = lane_p.lanelet.convert_to_polygon().shapely_object.distance(k_occ)
                     min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
 
+                p_state = vehicle_p.state_list_cr[time_step]
                 min_dist_p_to_k_lanes = math.inf
-                p_occ = vehicle_p.shape.shapely_object
+                p_occ = vehicle_p.shape.rotate_translate_local(p_state.position, p_state.orientation).shapely_object
                 for lane_k in lane_ids_k:
                     dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(
                         p_occ)
                     min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
 
                 return -min(min_dist_k_to_p_lanes, min_dist_p_to_k_lanes)
+                # return -min_dist_p_to_k_lanes
 
     @staticmethod
     def in_same_lane_classmethod(lane_ids_k: Set[int], lane_ids_p: Set[int]) -> bool:
