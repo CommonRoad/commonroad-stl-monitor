@@ -685,3 +685,10 @@ def return_false_or_minf(operating_mode: OperatingMode) -> Union[float, bool]:
     :return:
     """
     return -math.inf if operating_mode is OperatingMode.ROBUSTNESS else False
+
+
+def gather(l, indices: List[int]):
+    output = []
+    for i in indices:
+        output.append(l[i])
+    return output

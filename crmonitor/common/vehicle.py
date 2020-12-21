@@ -331,3 +331,9 @@ class Vehicle:
         self._states_cr[time_step] = state_cr
         self._lanelet_assignment[time_step] = lanelet_assignment
         self._signal_series[time_step] = signal_state
+
+    def occupancy_at_time_step(self, time_step):
+        state = self.states_cr[time_step]
+        shape = self.shape.rotate_translate_local(state.position,
+                                               state.orientation)
+        return shape
