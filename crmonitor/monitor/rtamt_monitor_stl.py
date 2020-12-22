@@ -78,5 +78,5 @@ class TrafficRuleMonitorForwardSTL:
         for t in predicates.get_time_steps():
             time_pred = predicates.by_time_step(t)
             rob = self.evaluate_monitor_online(time_pred)
-            rob_series.append(rob)
+            rob_series.append((t, rob))
         return rob_series

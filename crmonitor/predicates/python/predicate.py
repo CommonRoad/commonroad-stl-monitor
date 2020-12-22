@@ -20,6 +20,7 @@ class LazyValue:
 
 class IPredicateEvaluator(abc.ABC):
     predicate_name = "interface"
+
     def __init__(self, config):
         self.config = config
 
@@ -42,7 +43,7 @@ class IPredicateEvaluator(abc.ABC):
 
 
 class PredInSameLane(IPredicateEvaluator):
-    predicate_name = "same_lane"
+    predicate_name = "in_same_lane"
 
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
@@ -105,6 +106,7 @@ class PredInFrontOf(IPredicateEvaluator):
 
 class PredSingleLane(IPredicateEvaluator):
     predicate_name = "single_lane"
+
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
@@ -134,6 +136,7 @@ class PredSingleLane(IPredicateEvaluator):
 
 class PredCutIn(IPredicateEvaluator):
     predicate_name = "cut_in"
+
     def __init__(self, config):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
@@ -163,3 +166,43 @@ class PredCutIn(IPredicateEvaluator):
         rob = min(-single_lane, same_lane,
                   max(min(l_dist, l_orient), min(r_dist, r_orient)))
         return rob
+
+
+class PredSafeDistPrec(IPredicateEvaluator):
+    predicate_name = "keeps_safe_distance_prec"
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._a_min_follow = config.get("a_min")
+        self._a_min_lead = config.get("a_min")
+        self._t_react_follow = config.get("t_react")
+        assert (
+                    self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
+
+    def _calculate_safe_distance(self, v_follow, v_lead):
+        d_safe = ((v_lead ** 2) / (-2 * abs(self._a_min_lead)) - (
+                    v_follow ** 2) / (-2 * abs(
+            self._a_min_follow)) + v_follow * self._t_react_follow)
+
+        return d_safe
+
+    def evaluate_boolean(self, world_state: WorldState,
+                         vehicle_ids: List[int]) -> bool:
+        raise NotImplementedError
+
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        vehicle_follow = world_state.vehicle_by_id(vehicle_ids[0])
+        vehicle_lead = world_state.vehicle_by_id(vehicle_ids[1])
+        time_step = world_state.time_step
+
+        if vehicle_lead.states_lon.get(time_step) is None:
+            return math.inf
+
+        safe_distance = self._calculate_safe_distance(
+                vehicle_follow.states_lon[time_step].v,
+                vehicle_lead.states_lon[time_step].v)
+
+        delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(
+                time_step)
+        return delta_s - safe_distance

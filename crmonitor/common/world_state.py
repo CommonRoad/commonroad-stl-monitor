@@ -1,3 +1,6 @@
+import collections
+from typing import Iterator
+
 from commonroad.scenario.scenario import Scenario
 
 from crmonitor.common.helper import create_scenario_vehicles, \
@@ -15,10 +18,11 @@ from crmonitor.common.road_network import RoadNetwork
 
 
 class WorldState:
-    def __init__(self, scenario: Scenario, time_step, ego_obs_id, road_network=None,
-                 config=None):
+
+    def __init__(self, scenario: Scenario, ego_obs_id, config, time_step=0, road_network=None):
         self.scenario = scenario
         self.time_step = time_step
+        self.config = config
         if road_network is None:
             params = config.get("road_network_param")
             self.road_network = RoadNetwork(scenario.lanelet_network, params)
@@ -35,7 +39,7 @@ class WorldState:
                                                                          ego_obs,
                                                                          ego_param,
                                                                          others_params,
-                                                                         road_network,
+                                                                         self.road_network,
                                                                          scenario.dynamic_obstacles)
 
     def step(self):
@@ -48,3 +52,19 @@ class WorldState:
         for veh in self.other_vehicles:
             if veh.id == id:
                 return veh
+
+    @property
+    def num_time_steps(self):
+        return self.ego_vehicle.state_list_cr[-1].time_step + 1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.time_step < self.num_time_steps - 1:
+            self.step()
+            return self
+        else:
+            raise StopIteration
+    # def copy(self):
+    #     return WorldState(scenario=self.scenario, ego_obs_id=self.ego_vehicle.id, config=self.config, time_step=self.time_step, road_network=self.road_network)
