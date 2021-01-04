@@ -1,8 +1,8 @@
 py_library(
-	name="common",
-	srcs=glob(["*.py"]),
-	visibility = ["//visibility:public"],
-	imports = ["cpp"],
-	data=["@stl_crmonitor//crmonitor/common/cpp:crmonitor_cpp.so",],
-	deps = ["@curvilinear//:pycrccosy_lib"]
+    name = "common",
+    srcs = glob(["*.py"]),
+    data = ["//crmonitor/common/cpp:crmonitor_cpp.so"],
+    imports = ["cpp"],
+    visibility = ["//visibility:public"],
+    deps = ["@crccosy//:pycrccosy_lib"],
 )
