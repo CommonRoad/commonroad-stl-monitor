@@ -27,6 +27,8 @@ class Rule:
     class PredicateAssignment:
         def __init__(self, full_name, agent_placeholders, evaluator,
                      io_type=IOType.OUTPUT):
+            assert len(
+                agent_placeholders) == evaluator.arity, f"The arity of the evaluator should be {len(agent_placeholders)}, but is {evaluator.arity}!"
             self.full_name = full_name
             self.agent_placeholders = tuple(agent_placeholders)
             self.evaluator = evaluator
@@ -82,9 +84,9 @@ class Rule:
             else:
                 io_type = IOType.INPUT
             assert evaluator is not None
-            p = Rule.PredicateAssignment(m.group("pred_name") + "_" + m.group("agents"),
-                                         predicate_agent_placeholders,
-                                         evaluator(self.config), io_type)
+            p = Rule.PredicateAssignment(
+                m.group("pred_name") + "_" + m.group("agents"),
+                predicate_agent_placeholders, evaluator(self.config), io_type)
             self._rule_str = self._rule_str.replace(m.group(0), p.full_name)
             self.predicate_assignment.add(p)
 

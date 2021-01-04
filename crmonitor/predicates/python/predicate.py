@@ -3,7 +3,27 @@ import math
 from typing import List
 from functools import partial
 
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+
+
+def get_preceding_vehicle(world_state: WorldState) -> Vehicle:
+    veh = None
+    min_dist = math.inf
+    vehicle_k = world_state.ego_vehicle
+    lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
+            vehicle_k.lanelet_assignment[world_state.time_step])
+    for vehicle_p in world_state.other_vehicles:
+        lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
+                vehicle_p.lanelet_assignment[world_state.time_step])
+        intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
+        if len(intersecting_lanes) > 0:
+            dist = vehicle_p.front_s(world_state.time_step) - vehicle_k.rear_s(
+                    world_state.time_step)
+            if dist < min_dist:
+                min_dist = dist
+                veh = vehicle_p
+    return veh
 
 
 class LazyValue:
@@ -31,10 +51,9 @@ class IPredicateEvaluator(abc.ABC):
         lazy_value = LazyValue(fun)
         return lazy_value
 
-    @abc.abstractmethod
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
-        pass
+        return self.evaluate_robustness(world_state, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
     def evaluate_robustness(self, world_state: WorldState,
@@ -44,6 +63,7 @@ class IPredicateEvaluator(abc.ABC):
 
 class PredInSameLane(IPredicateEvaluator):
     predicate_name = "in_same_lane"
+    arity = 2
 
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
@@ -91,10 +111,7 @@ class PredInSameLane(IPredicateEvaluator):
 
 class PredInFrontOf(IPredicateEvaluator):
     predicate_name = "in_front_of"
-
-    def evaluate_boolean(self, world_state: WorldState,
-                         vehicle_ids: List[int]) -> bool:
-        pass
+    arity = 2
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
@@ -106,6 +123,7 @@ class PredInFrontOf(IPredicateEvaluator):
 
 class PredSingleLane(IPredicateEvaluator):
     predicate_name = "single_lane"
+    arity = 1
 
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
@@ -136,15 +154,12 @@ class PredSingleLane(IPredicateEvaluator):
 
 class PredCutIn(IPredicateEvaluator):
     predicate_name = "cut_in"
+    arity = 2
 
     def __init__(self, config):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
-
-    def evaluate_boolean(self, world_state: WorldState,
-                         vehicle_ids: List[int]) -> bool:
-        pass
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
@@ -170,6 +185,7 @@ class PredCutIn(IPredicateEvaluator):
 
 class PredSafeDistPrec(IPredicateEvaluator):
     predicate_name = "keeps_safe_distance_prec"
+    arity = 2
 
     def __init__(self, config):
         super().__init__(config)
@@ -185,10 +201,6 @@ class PredSafeDistPrec(IPredicateEvaluator):
             self._a_min_follow)) + v_follow * self._t_react_follow)
 
         return d_safe
-
-    def evaluate_boolean(self, world_state: WorldState,
-                         vehicle_ids: List[int]) -> bool:
-        raise NotImplementedError
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
