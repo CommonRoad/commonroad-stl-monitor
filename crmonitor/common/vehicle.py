@@ -153,6 +153,14 @@ class Vehicle:
         self._vehicle_param = vehicle_param
 
     @property
+    def start_time(self):
+        return self.state_list_cr[0].time_step
+
+    @property
+    def end_time(self):
+        return self.state_list_cr[-1].time_step
+
+    @property
     def shape(self) -> Rectangle:
         return self._shape
 

@@ -1,11 +1,59 @@
 import itertools
 import math
-from typing import List, Set
+from typing import List, Tuple, Dict
 
 from crmonitor.common.helper import gather
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
+from crmonitor.predicates.python.predicate_value import PredicateValue, \
+    PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule
 
+def get_valid_time_interval(vehicle_a: Vehicle, vehicle_b: Vehicle):
+    start = max(vehicle_a.start_time, vehicle_b.start_time)
+    end = min(vehicle_a.end_time, vehicle_b.end_time)
+    return start, end
+
+def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[List[Tuple[float, float]], Dict[float, List[Tuple[str, float]]]]:
+    all_pred_values = PredicateValueCollection()
+    # Collect predicates
+    assignment = (world_state.ego_vehicle.id, o_id)
+    pred_values = PredicateValueCollection()
+    start, end = get_valid_time_interval(world_state.ego_vehicle,
+                                         world_state.vehicle_by_id(o_id))
+
+    while world_state.time_step <= end:
+        for pred_assign in rule.predicate_assignment:
+            predicate_ids = gather(assignment,
+                                   pred_assign.agent_placeholders)
+            value = PredicateValue(pred_assign.base_name, predicate_ids,
+                                   world_state.time_step)
+            if value not in pred_values:
+                value.value = pred_assign.evaluator.evaluate_robustness(
+                        world_state, predicate_ids)
+                all_pred_values.append(value)
+            pred_values.append(all_pred_values[value])
+        world_state.step()
+
+    # Evaluate rule
+    monitor = TrafficRuleMonitorForwardSTL(rule,
+                                           output_type="output-robustness")
+    monitor_values = {}
+    world_state.time_step = start
+    while world_state.time_step <= end:
+        l = []
+        for pred_assign in rule.predicate_assignment:
+            ids = gather(assignment, pred_assign.agent_placeholders)
+            v = pred_values.by_time_step(world_state.time_step).by_name(
+                    pred_assign.base_name).value
+            l.append((pred_assign.full_name, v))
+
+        monitor_values[world_state.time_step] = l
+        world_state.step()
+    world_state.time_step = 0
+    rob_values = monitor.evaluate_monitor_offline_stepwise(monitor_values)
+    return rob_values, monitor_values
 
 def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: WorldState):
     max_vehicle_dependency = max([x.num_dependent_vehicles for x in rules])
@@ -38,69 +86,3 @@ def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: Wor
     return predicate_values
 
 
-class PredicateValue:
-    def __init__(self, predicate_str, vehicle_ids, time_step, value=None):
-        self.predicate_str = predicate_str
-        self.vehicle_ids = tuple(vehicle_ids)
-        self.time_step = time_step
-        self.value = value
-
-    def __hash__(self):
-        return hash((self.predicate_str, self.vehicle_ids, self.time_step))
-
-    def __eq__(self, o) -> bool:
-        return self.predicate_str == o.predicate_str and self.vehicle_ids == o.vehicle_ids and self.time_step == o.time_step
-
-
-class PredicateValueCollection:
-    def __init__(self, l: Set[PredicateValue] = set()):
-        self._predicate_values = set(l)
-
-    def __iter__(self):
-        return self._predicate_values.__iter__()
-
-    def __contains__(self, item):
-        return item in self._predicate_values
-
-    def __getitem__(self, item):
-        intersect = self._predicate_values.intersection([item])
-        if len(intersect) == 0:
-            raise KeyError
-        else:
-            return intersect.pop()
-
-    @staticmethod
-    def _return_collection_or_value(pred):
-        if len(pred) == 0:
-            raise KeyError()
-        elif len(pred) == 1:
-            return pred[0]
-        else:
-            return PredicateValueCollection(pred)
-
-    def by_name(self, name):
-        pred = list(filter(lambda x: x.predicate_str == name,
-                           self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
-
-    def by_time_step(self, time_step):
-        pred = list(filter(lambda x: x.time_step == time_step,
-                           self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
-
-    def by_ids(self, ids):
-        pred = list(
-            filter(lambda x: x.vehicle_ids == ids, self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
-
-    def get_time_steps(self):
-        tsteps = set()
-        for p in self._predicate_values:
-            tsteps.add(p.time_step)
-        return tuple(sorted(tsteps))
-
-    def append(self, element):
-        self._predicate_values.add(element)
-
-    def extend(self, other):
-        self._predicate_values.update(other._predicate_values)

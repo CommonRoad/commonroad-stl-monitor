@@ -2,7 +2,7 @@ from typing import List, Tuple, Union, Dict
 
 import rtamt
 
-from crmonitor.common.evaluation import PredicateValueCollection
+from crmonitor.predicates.python.predicate_value import PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule, IOType
 
 
