@@ -2,6 +2,8 @@ import inspect
 import sys
 import re
 
+import enum
+
 
 def get_all_predicate_evaluators():
     mod_name = "crmonitor.predicates.python.predicate"
@@ -14,20 +16,35 @@ def get_all_predicate_evaluators():
     return d
 
 
+class IOType(enum.Enum):
+    OUTPUT = enum.auto()
+    INPUT = enum.auto()
+
+
 class Rule:
-    full_predicate_pattern = r"(\s|\A)(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?:_i)?_(?P<agents>(_a(\d)+)+)))(\s|\Z)"
+    full_predicate_pattern = r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))"
 
     class PredicateAssignment:
-        def __init__(self, pred_str, agent_placeholders, evaluator):
-            self.pred_str = pred_str
+        def __init__(self, full_name, agent_placeholders, evaluator,
+                     io_type=IOType.OUTPUT):
+            self.full_name = full_name
             self.agent_placeholders = tuple(agent_placeholders)
             self.evaluator = evaluator
+            self.io_type = io_type
+
+        @property
+        def base_name(self):
+            return self.evaluator.predicate_name
+
+        @property
+        def num_dependencies(self):
+            return len(self.agent_placeholders)
 
         def __eq__(self, o) -> bool:
-            return self.pred_str == o.pred_str and self.agent_placeholders == o.agent_placeholders
+            return self.full_name == o.full_name and self.agent_placeholders == o.agent_placeholders
 
         def __hash__(self) -> int:
-            return hash((self.pred_str, self.agent_placeholders))
+            return hash((self.full_name, self.agent_placeholders))
 
     def __init__(self, rule_str, config=None):
         self._rule_str = rule_str
@@ -42,7 +59,7 @@ class Rule:
 
     @property
     def predicate_names(self):
-        return [pred.pred_str for pred in self.predicate_assignment]
+        return [pred.full_name for pred in self.predicate_assignment]
 
     def _extract_predicates(self):
         required_predicates = set()
@@ -60,10 +77,15 @@ class Rule:
                     predicate_agent_placeholders.append(int(a))
                     agent_placeholders.add(int(a))
             evaluator = pred_evaluators[pred_basename]
+            if m.group('io_type') is None:
+                io_type = IOType.OUTPUT
+            else:
+                io_type = IOType.INPUT
             assert evaluator is not None
-            p = Rule.PredicateAssignment(m.group("pred"),
+            p = Rule.PredicateAssignment(m.group("pred_name") + "_" + m.group("agents"),
                                          predicate_agent_placeholders,
-                                         evaluator(self.config))
+                                         evaluator(self.config), io_type)
+            self._rule_str = self._rule_str.replace(m.group(0), p.full_name)
             self.predicate_assignment.add(p)
 
         # Check increasing order
@@ -72,5 +94,3 @@ class Rule:
             assert i == aid, f"Agent place holder IDs are not in increasing order. Missing {i}!"
         # List is sorted. Last item is largest.
         self.num_dependent_vehicles = a_ids[-1]
-
-

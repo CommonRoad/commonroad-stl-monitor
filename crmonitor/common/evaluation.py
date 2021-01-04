@@ -32,14 +32,14 @@ def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: Wor
             predicate_vehicle_ids = gather(ids, pred.agent_placeholders)
             value = pred.evaluator.evaluate_robustness(world_state,
                                                        predicate_vehicle_ids)
-            pred_value = PredicateValue(pred.pred_str, ids,
+            pred_value = PredicateValue(pred.full_name, predicate_vehicle_ids[:pred.num_dependencies],
                                         world_state.time_step, value)
             predicate_values.append(pred_value)
     return predicate_values
 
 
 class PredicateValue:
-    def __init__(self, predicate_str, vehicle_ids, time_step, value):
+    def __init__(self, predicate_str, vehicle_ids, time_step, value=None):
         self.predicate_str = predicate_str
         self.vehicle_ids = tuple(vehicle_ids)
         self.time_step = time_step
@@ -54,7 +54,20 @@ class PredicateValue:
 
 class PredicateValueCollection:
     def __init__(self, l: Set[PredicateValue] = set()):
-        self._predicate_values = l
+        self._predicate_values = set(l)
+
+    def __iter__(self):
+        return self._predicate_values.__iter__()
+
+    def __contains__(self, item):
+        return item in self._predicate_values
+
+    def __getitem__(self, item):
+        intersect = self._predicate_values.intersection([item])
+        if len(intersect) == 0:
+            raise KeyError
+        else:
+            return intersect.pop()
 
     @staticmethod
     def _return_collection_or_value(pred):

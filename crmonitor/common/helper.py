@@ -691,4 +691,4 @@ def gather(l, indices: List[int]):
     output = []
     for i in indices:
         output.append(l[i])
-    return output
+    return tuple(output)

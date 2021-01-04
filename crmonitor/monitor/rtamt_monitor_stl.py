@@ -3,7 +3,7 @@ from typing import List, Tuple, Union, Dict
 import rtamt
 
 from crmonitor.common.evaluation import PredicateValueCollection
-from crmonitor.predicates.python.rule import Rule
+from crmonitor.predicates.python.rule import Rule, IOType
 
 
 class TrafficRuleMonitorForwardSTL:
@@ -39,12 +39,12 @@ class TrafficRuleMonitorForwardSTL:
         logic_formula = self._reconstruct_logic_formula()
         monitor = rtamt.STLIOSpecification(0)  # 0: cpp; 1: Python
         monitor.name = "HandMadeMonitor"  # self.name
-        for var in self._rule.predicate_names:
-            monitor.declare_var(var, "float")
-            if var.split("_")[-1] == "i":
-                monitor.set_var_io_type(var, "input")
+        for var in self._rule.predicate_assignment:
+            monitor.declare_var(var.full_name, "float")
+            if var.io_type == IOType.INPUT:
+                monitor.set_var_io_type(var.full_name, "input")
             else:
-                monitor.set_var_io_type(var, "output")
+                monitor.set_var_io_type(var.full_name, "output")
         monitor.declare_var("out", "float")
 
         monitor.iosem = self._output_type
@@ -65,18 +65,17 @@ class TrafficRuleMonitorForwardSTL:
         str, List[Tuple[float, bool]]], vehicle_ids) -> Union[bool, float]:
         pass
 
-    def evaluate_monitor_online(self, predicates: PredicateValueCollection):
-        time = predicates._predicate_values[0].time_step
-        predicate_values = self._prepare_predicates_online(predicates)
-        rob = self._monitor.update(time, predicate_values)
+    def evaluate_monitor_online(self, time: float,
+                                predicates: List[Tuple[str, float]]):
+        rob = self._monitor.update(time, predicates)
         return rob
 
-    def evaluate_monitor_offline_stepwise(self,
-                                          predicates: PredicateValueCollection):
+    def evaluate_monitor_offline_stepwise(self, predicates: Dict[
+        float, List[Tuple[str, float]]]):
         self.reset_monitor()
         rob_series = []
-        for t in predicates.get_time_steps():
-            time_pred = predicates.by_time_step(t)
-            rob = self.evaluate_monitor_online(time_pred)
+        for t in sorted(predicates.keys()):
+            time_pred = predicates[t]
+            rob = self.evaluate_monitor_online(t, time_pred)
             rob_series.append((t, rob))
         return rob_series
