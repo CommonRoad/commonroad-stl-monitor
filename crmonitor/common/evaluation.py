@@ -10,23 +10,25 @@ from crmonitor.predicates.python.predicate_value import PredicateValue, \
     PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule
 
+
 def get_valid_time_interval(vehicle_a: Vehicle, vehicle_b: Vehicle):
     start = max(vehicle_a.start_time, vehicle_b.start_time)
     end = min(vehicle_a.end_time, vehicle_b.end_time)
     return start, end
 
-def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[List[Tuple[float, float]], Dict[float, List[Tuple[str, float]]]]:
+
+def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
+    List[Tuple[float, float]], Dict[float, List[Tuple[str, float]]]]:
     all_pred_values = PredicateValueCollection()
     # Collect predicates
     assignment = (world_state.ego_vehicle.id, o_id)
     pred_values = PredicateValueCollection()
     start, end = get_valid_time_interval(world_state.ego_vehicle,
                                          world_state.vehicle_by_id(o_id))
-
+    world_state.time_step = start
     while world_state.time_step <= end:
         for pred_assign in rule.predicate_assignment:
-            predicate_ids = gather(assignment,
-                                   pred_assign.agent_placeholders)
+            predicate_ids = gather(assignment, pred_assign.agent_placeholders)
             value = PredicateValue(pred_assign.base_name, predicate_ids,
                                    world_state.time_step)
             if value not in pred_values:
@@ -44,7 +46,7 @@ def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[List[Tuple[float
     while world_state.time_step <= end:
         l = []
         for pred_assign in rule.predicate_assignment:
-            ids = gather(assignment, pred_assign.agent_placeholders)
+            # ids = gather(assignment, pred_assign.agent_placeholders)
             v = pred_values.by_time_step(world_state.time_step).by_name(
                     pred_assign.base_name).value
             l.append((pred_assign.full_name, v))
@@ -55,7 +57,9 @@ def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[List[Tuple[float
     rob_values = monitor.evaluate_monitor_offline_stepwise(monitor_values)
     return rob_values, monitor_values
 
-def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: WorldState):
+
+def evaluate_necessary_predicates_all_agents(rules: List[Rule],
+                                             world_state: WorldState):
     max_vehicle_dependency = max([x.num_dependent_vehicles for x in rules])
     vehicles = world_state.other_vehicles
     vehicle_ids = [v.id for v in vehicles]
@@ -71,8 +75,12 @@ def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: Wor
         max_start_time = -math.inf
         min_end_time = math.inf
         for id in ids:
-            max_start_time = max(world_state.vehicle_by_id(id).state_list_cr[0].time_step, max_start_time)
-            min_end_time = min(world_state.vehicle_by_id(id).state_list_cr[-1].time_step, min_end_time)
+            max_start_time = max(
+                world_state.vehicle_by_id(id).state_list_cr[0].time_step,
+                max_start_time)
+            min_end_time = min(
+                world_state.vehicle_by_id(id).state_list_cr[-1].time_step,
+                min_end_time)
         if max_start_time > min_end_time:
             continue
 
@@ -80,9 +88,8 @@ def evaluate_necessary_predicates_all_agents(rules: List[Rule], world_state: Wor
             predicate_vehicle_ids = gather(ids, pred.agent_placeholders)
             value = pred.evaluator.evaluate_robustness(world_state,
                                                        predicate_vehicle_ids)
-            pred_value = PredicateValue(pred.full_name, predicate_vehicle_ids[:pred.num_dependencies],
+            pred_value = PredicateValue(pred.full_name, predicate_vehicle_ids[
+                                                        :pred.num_dependencies],
                                         world_state.time_step, value)
             predicate_values.append(pred_value)
     return predicate_values
-
-
