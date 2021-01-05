@@ -83,7 +83,7 @@ class PredInSameLane(IPredicateEvaluator):
 
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        k_state = vehicle_k.state_list_cr[world_state.time_step]
+        k_state = vehicle_k.states_cr[int(world_state.time_step)]
         min_dist_k_to_p_lanes = math.inf
         k_occ = vehicle_k.shape.rotate_translate_local(k_state.position,
                                                        k_state.orientation).shapely_object
@@ -97,7 +97,7 @@ class PredInSameLane(IPredicateEvaluator):
                     k_occ)
             min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
 
-        p_state = vehicle_p.state_list_cr[world_state.time_step]
+        p_state = vehicle_p.states_cr[int(world_state.time_step)]
         min_dist_p_to_k_lanes = math.inf
         p_occ = vehicle_p.shape.rotate_translate_local(p_state.position,
                                                        p_state.orientation).shapely_object
