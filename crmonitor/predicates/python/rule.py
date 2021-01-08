@@ -7,6 +7,7 @@ import enum
 
 def get_all_predicate_evaluators():
     mod_name = "crmonitor.predicates.python.predicate"
+    # noinspection PyUnresolvedReferences
     import crmonitor.predicates.python.predicate
     classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
     classes = list(filter(lambda p: "Pred" in p[0], classes))
