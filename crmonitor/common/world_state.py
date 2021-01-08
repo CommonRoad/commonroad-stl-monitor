@@ -1,4 +1,5 @@
 import collections
+import logging
 from typing import Iterator
 
 from commonroad.scenario.scenario import Scenario
@@ -35,27 +36,33 @@ class WorldState:
                                              simulation_param)
         others_params = create_other_vehicles_param(
                 config.get("other_vehicles_param"))
-        self.ego_vehicle, self.other_vehicles = create_scenario_vehicles(0.2,
-                                                                         ego_obs,
-                                                                         ego_param,
-                                                                         others_params,
-                                                                         self.road_network,
-                                                                         scenario.dynamic_obstacles)
+        self._ego_vehicle, self.other_vehicles = create_scenario_vehicles(scenario.dt,
+                                                                          ego_obs,
+                                                                          ego_param,
+                                                                          others_params,
+                                                                          self.road_network,
+                                                                          scenario.dynamic_obstacles)
 
     def step(self):
         self.time_step += 1
 
     def vehicle_by_id(self, id):
-        if id == self.ego_vehicle.id:
-            return self.ego_vehicle
+        if id == self._ego_vehicle.id:
+            return self._ego_vehicle
 
         for veh in self.other_vehicles:
             if veh.id == id:
                 return veh
+        logging.warning(f"Vehicle with ID {id} not found!")
+        return None
+
+    @property
+    def ego_vehicle(self):
+        return self._ego_vehicle
 
     @property
     def num_time_steps(self):
-        return self.ego_vehicle.state_list_cr[-1].time_step + 1
+        return self._ego_vehicle.state_list_cr[-1].time_step + 1
 
     def __iter__(self):
         return self

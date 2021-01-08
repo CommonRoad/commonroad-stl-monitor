@@ -19,6 +19,16 @@ def get_valid_time_interval(vehicle_a: Vehicle, vehicle_b: Vehicle):
 
 def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
     List[Tuple[float, float]], Dict[float, List[Tuple[str, float]]]]:
+    """
+    Evaluates a rule for the ego agent of the world_state and the given other agent stepwise.
+
+    :param world_state: Initial world state
+    :param o_id: ID of the other agent
+    :param rule: Rule to evaluate
+    :return: First element: List of tuples of time step and robustness value
+            Second element: Dictionary where the key is the time_step and the value is a list of tuples,
+            containing the predicate string and the corresponding robustness value.
+    """
     all_pred_values = PredicateValueCollection()
     # Collect predicates
     assignment = (world_state.ego_vehicle.id, o_id)
@@ -40,7 +50,7 @@ def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
 
     # Evaluate rule
     monitor = TrafficRuleMonitorForwardSTL(rule,
-                                           output_type="output-robustness")
+                                           output_type="standard")
     monitor_values = {}
     world_state.time_step = start
     while world_state.time_step <= end:

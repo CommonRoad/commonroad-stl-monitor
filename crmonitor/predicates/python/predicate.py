@@ -148,7 +148,7 @@ class PredSingleLane(IPredicateEvaluator):
             lane_poly = k_lane.lanelet.convert_to_polygon().shapely_object
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
         else:
-            distance_to_boundary = math.inf
+            distance_to_boundary = -math.inf
         return distance_to_boundary
 
 
@@ -163,23 +163,25 @@ class PredCutIn(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
+        cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
+        cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
 
         single_lane = self._single_lane_evaluator.evaluate_robustness(
-                world_state, vehicle_ids)
+                world_state, [vehicle_ids[0]])
         same_lane = self._same_lane_evaluator.evaluate_robustness(world_state,
                                                                   vehicle_ids)
 
-        l_dist = vehicle_p.states_lat[world_state.time_step].d - \
-                 vehicle_k.states_lat[world_state.time_step].d
-        l_orient = vehicle_k.states_lat[world_state.time_step].theta
-        r_dist = vehicle_k.states_lat[world_state.time_step].d - \
-                 vehicle_p.states_lat[world_state.time_step].d
-        r_orient = -vehicle_k.states_lat[world_state.time_step].theta
+        l_dist = cutted_vehicle.states_lat[world_state.time_step].d - \
+                 cutting_vehicle.states_lat[world_state.time_step].d
+        l_orient = cutting_vehicle.states_lat[world_state.time_step].theta
+        r_dist = cutting_vehicle.states_lat[world_state.time_step].d - \
+                 cutted_vehicle.states_lat[world_state.time_step].d
+        r_orient = -cutting_vehicle.states_lat[world_state.time_step].theta + .0
 
         rob = min(-single_lane, same_lane,
                   max(min(l_dist, l_orient), min(r_dist, r_orient)))
+        if rob >= 0.0:
+            rob = math.inf
         return rob
 
 
@@ -189,9 +191,9 @@ class PredSafeDistPrec(IPredicateEvaluator):
 
     def __init__(self, config):
         super().__init__(config)
-        self._a_min_follow = config.get("a_min")
-        self._a_min_lead = config.get("a_min")
-        self._t_react_follow = config.get("t_react")
+        self._a_min_follow = config["ego_vehicle_param"]["a_min"]
+        self._a_min_lead = config["other_vehicles_param"]["a_min"]
+        self._t_react_follow = config["ego_vehicle_param"]["t_react"]
         assert (
                     self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
 
