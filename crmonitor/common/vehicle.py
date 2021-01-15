@@ -342,6 +342,7 @@ class Vehicle:
 
     def occupancy_at_time_step(self, time_step):
         state = self.states_cr[time_step]
+        orientation = self.states_lat[time_step].theta
         shape = self.shape.rotate_translate_local(state.position,
-                                               state.orientation)
+                                               orientation)
         return shape

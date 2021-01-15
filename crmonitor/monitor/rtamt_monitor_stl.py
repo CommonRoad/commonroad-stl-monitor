@@ -71,7 +71,7 @@ class TrafficRuleMonitorForwardSTL:
         return rob
 
     def evaluate_monitor_offline_stepwise(self, predicates: Dict[
-        float, List[Tuple[str, float]]]):
+        float, List[Tuple[str, float]]]) -> List[Tuple[float, float]]:
         self.reset_monitor()
         rob_series = []
         for t in sorted(predicates.keys()):

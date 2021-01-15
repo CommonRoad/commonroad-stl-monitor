@@ -2,9 +2,24 @@ import abc
 import math
 from typing import List
 from functools import partial
+import warnings
 
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+
+
+def norm(x, min_val, max_val):
+    normed_val = ((x - min_val) / (max_val - min_val))
+    if normed_val > 1.0:
+        warnings.warn("Value to normalize exceeded maximum!")
+    elif normed_val < 0.0:
+        warnings.warn("Value to normalize exceeded minimum!")
+    return normed_val
+
+
+def scale(x, min_val, max_val, new_min=-1.0, new_max=1.0):
+    n = norm(x, min_val, max_val)
+    return n * (new_max - new_min) + new_min
 
 
 def get_preceding_vehicle(world_state: WorldState) -> Vehicle:
@@ -83,10 +98,9 @@ class PredInSameLane(IPredicateEvaluator):
 
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        k_state = vehicle_k.states_cr[int(world_state.time_step)]
         min_dist_k_to_p_lanes = math.inf
-        k_occ = vehicle_k.shape.rotate_translate_local(k_state.position,
-                                                       k_state.orientation).shapely_object
+        k_occ = vehicle_k.occupancy_at_time_step(
+                world_state.time_step).shapely_object
         # TODO: could be also reused from binary computation
         lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_k.lanelet_assignment[world_state.time_step])
@@ -97,10 +111,9 @@ class PredInSameLane(IPredicateEvaluator):
                     k_occ)
             min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
 
-        p_state = vehicle_p.states_cr[int(world_state.time_step)]
         min_dist_p_to_k_lanes = math.inf
-        p_occ = vehicle_p.shape.rotate_translate_local(p_state.position,
-                                                       p_state.orientation).shapely_object
+        p_occ = vehicle_p.occupancy_at_time_step(
+                world_state.time_step).shapely_object
         for lane_k in lane_ids_k:
             dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(
                     p_occ)
@@ -115,10 +128,10 @@ class PredInFrontOf(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        return vehicle_p.front_s(world_state.time_step) - vehicle_k.rear_s(
-                world_state.time_step)
+        rear = world_state.vehicle_by_id(vehicle_ids[0])
+        front = world_state.vehicle_by_id(vehicle_ids[1])
+        return front.rear_s(world_state.time_step) - rear.front_s(
+            world_state.time_step)
 
 
 class PredSingleLane(IPredicateEvaluator):
@@ -190,17 +203,13 @@ class PredSafeDistPrec(IPredicateEvaluator):
     arity = 2
 
     def __init__(self, config):
-        super().__init__(config)
-        self._a_min_follow = config["ego_vehicle_param"]["a_min"]
-        self._a_min_lead = config["other_vehicles_param"]["a_min"]
-        self._t_react_follow = config["ego_vehicle_param"]["t_react"]
-        assert (
-                    self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
+        super().__init__(
+                config)  # self._a_min_follow = config["ego_vehicle_param"]["a_min"]  # self._a_min_lead = config["other_vehicles_param"]["a_min"]  # self._t_react_follow = config["ego_vehicle_param"]["t_react"]  # assert (  #             self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
 
-    def _calculate_safe_distance(self, v_follow, v_lead):
-        d_safe = ((v_lead ** 2) / (-2 * abs(self._a_min_lead)) - (
-                    v_follow ** 2) / (-2 * abs(
-            self._a_min_follow)) + v_follow * self._t_react_follow)
+    def _calculate_safe_distance(self, v_follow, v_lead, a_min_lead,
+                                 a_min_follow, t_react_follow):
+        d_safe = ((v_lead ** 2) / (-2 * abs(a_min_lead)) - (v_follow ** 2) / (
+                -2 * abs(a_min_follow)) + v_follow * t_react_follow)
 
         return d_safe
 
@@ -212,10 +221,13 @@ class PredSafeDistPrec(IPredicateEvaluator):
 
         if vehicle_lead.states_lon.get(time_step) is None:
             return math.inf
-
+        a_min_follow = vehicle_follow.vehicle_param.get("a_min")
+        a_min_lead = vehicle_lead.vehicle_param.get("a_min")
+        t_react_follow = vehicle_follow.vehicle_param.get("t_react")
         safe_distance = self._calculate_safe_distance(
                 vehicle_follow.states_lon[time_step].v,
-                vehicle_lead.states_lon[time_step].v)
+                vehicle_lead.states_lon[time_step].v, a_min_lead, a_min_follow,
+                t_react_follow)
 
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(
                 time_step)

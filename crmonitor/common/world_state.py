@@ -20,15 +20,13 @@ from crmonitor.common.road_network import RoadNetwork
 
 class WorldState:
 
-    def __init__(self, scenario: Scenario, ego_obs_id, config, time_step=0, road_network=None):
-        self.scenario = scenario
-        self.time_step = time_step
-        self.config = config
+    @classmethod
+    def create_from_scenario(cls, scenario: Scenario, ego_obs_id, config, time_step=0, road_network=None):
         if road_network is None:
             params = config.get("road_network_param")
-            self.road_network = RoadNetwork(scenario.lanelet_network, params)
+            road_network = RoadNetwork(scenario.lanelet_network, params)
         else:
-            self.road_network = road_network
+            road_network = road_network
         ego_obs = scenario.obstacle_by_id(ego_obs_id)
         simulation_param = create_simulation_param(
                 config.get("simulation_param"), scenario.dt, scenario.scenario_id.country_id)
@@ -36,12 +34,23 @@ class WorldState:
                                              simulation_param)
         others_params = create_other_vehicles_param(
                 config.get("other_vehicles_param"))
-        self._ego_vehicle, self.other_vehicles = create_scenario_vehicles(scenario.dt,
+        ego_vehicle, other_vehicles = create_scenario_vehicles(scenario.dt,
                                                                           ego_obs,
                                                                           ego_param,
                                                                           others_params,
-                                                                          self.road_network,
+                                                                          road_network,
                                                                           scenario.dynamic_obstacles)
+        return cls(ego_vehicle, other_vehicles, road_network, time_step, scenario)
+
+
+    def __init__(self, ego_vehicle, other_vehicles, road_network, time_step=0, scenario=None):
+        if scenario is not None:
+            self.scenario = scenario
+        self.time_step = time_step
+        self._ego_vehicle = ego_vehicle
+        self.other_vehicles = other_vehicles
+        self.road_network = road_network
+
 
     def step(self):
         self.time_step += 1
