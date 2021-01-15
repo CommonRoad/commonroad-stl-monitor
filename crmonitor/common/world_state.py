@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import Iterator
+from typing import Iterator, Optional
 
 from commonroad.scenario.scenario import Scenario
 
@@ -16,6 +16,7 @@ from crmonitor.common.helper import create_scenario_vehicles, \
     create_simulation_param, \
     create_other_vehicles_param
 from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.vehicle import Vehicle
 
 
 class WorldState:
@@ -43,7 +44,7 @@ class WorldState:
         return cls(ego_vehicle, other_vehicles, road_network, time_step, scenario)
 
 
-    def __init__(self, ego_vehicle, other_vehicles, road_network, time_step=0, scenario=None):
+    def __init__(self, ego_vehicle, other_vehicles, road_network, time_step=0, scenario: Optional[Scenario]=None):
         if scenario is not None:
             self.scenario = scenario
         self.time_step = time_step
@@ -55,7 +56,7 @@ class WorldState:
     def step(self):
         self.time_step += 1
 
-    def vehicle_by_id(self, id):
+    def vehicle_by_id(self, id) -> Vehicle:
         if id == self._ego_vehicle.id:
             return self._ego_vehicle
 

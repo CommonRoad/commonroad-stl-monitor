@@ -15,7 +15,8 @@ from crmonitor.predicates.python.predicate import PredCutIn, \
     PredInSameLane, \
     PredSafeDistPrec, \
     PredInFrontOf, \
-    PredSingleLane
+    PredSingleLane, \
+    PredUnnecessaryBraking
 
 
 def parallel_lanes(num_lanes) -> List[Lanelet]:
@@ -517,5 +518,147 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5])
 
 
+    def test_unnecessary_braking(self):
+        a_abrupt = -2.0
+
+        # expected solutions
+        exp_sol_monitor_mode_1 = False  # a_ego > 0
+        exp_sol_monitor_mode_2 = True  # a_ego < a_lead - |a_abrupt| for single leading vehicle
+        exp_sol_monitor_mode_3 = True  # a_ego < a_lead - |a_abrupt| for all leading vehicles
+        exp_sol_monitor_mode_4 = False  # a_ego > a_lead - |a_abrupt| for all leading vehicles
+        exp_sol_monitor_mode_5 = True  # a_ego < a_abrupt; no leading vehicle
+        exp_sol_monitor_mode_6 = False  # a_ego > a_abrupt; no leading vehicle
+
+        # exp_sol_robustness_mode_1 = self._traffic_rule_param[
+        #     "a_abrupt"]  # a_abrupt = -2
+        # exp_sol_robustness_mode_2 = 4 + self._traffic_rule_param["a_abrupt"]
+        # exp_sol_robustness_mode_3 = 5 + self._traffic_rule_param["a_abrupt"]
+        # exp_sol_robustness_mode_4 = 1.5 + self._traffic_rule_param["a_abrupt"]
+        # exp_sol_robustness_mode_5 = 8 + self._traffic_rule_param["a_abrupt"]
+        # exp_sol_robustness_mode_6 = -4
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(1)
+        lanelet_network.add_lanelet(lanelets[0])
+        road_network = RoadNetwork(lanelet_network,
+                                   self.config.get("road_network_param"))
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=10, a=1),
+            1: StateLongitudinal(s=10, v=10, a=-5),
+            2: StateLongitudinal(s=20, v=10, a=-7),
+            3: StateLongitudinal(s=30, v=10, a=-3),
+            4: StateLongitudinal(s=40, v=10, a=-8),
+            5: StateLongitudinal(s=50, v=10, a=2)}
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0)}
+        cr_state_list_ego = {
+            0: State(position=0, time_step=0),
+            1: State(position=10, time_step=1),
+            2: State(position=20, time_step=2),
+            3: State(position=30, time_step=3),
+            4: State(position=40, time_step=4),
+            5: State(position=50, time_step=5)}
+        lanelet_assignments_ego = {
+            0: {1},
+            1: {1},
+            2: {1},
+            3: {1},
+            4: {1},
+            5: {1}}
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None, None)
+
+        # other vehicle 1
+        state_list_lon_other_1 = {
+            0: StateLongitudinal(s=10, v=10, a=1),
+            1: StateLongitudinal(s=20, v=10, a=-4),
+            2: StateLongitudinal(s=30, v=10, a=-2),
+            3: StateLongitudinal(s=40, v=10, a=-1.5)}
+        state_list_lat_other_1 = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0)}
+        cr_state_list_other_1 = {
+            0: State(position=10, time_step=0),
+            1: State(position=20, time_step=1),
+            2: State(position=30, time_step=1),
+            3: State(position=40, time_step=1)}
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        other_vehicle_1 = Vehicle(state_list_lon_other_1,
+                                  state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 1, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None, None)
+
+        # other vehicle 2
+        state_list_lon_other_2 = {
+            0: StateLongitudinal(s=20, v=10, a=1),
+            1: StateLongitudinal(s=30, v=10, a=-1),
+            2: StateLongitudinal(s=40, v=10, a=-3),
+            3: StateLongitudinal(s=50, v=10, a=-2)}
+        state_list_lat_other_2 = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0)}
+        cr_state_list_other_2 = {
+            0: State(position=20, time_step=0),
+            1: State(position=30, time_step=1),
+            2: State(position=40, time_step=1),
+            3: State(position=50, time_step=1)}
+        lanelet_assignments_other_2 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        other_vehicle_2 = Vehicle(state_list_lon_other_2,
+                                  state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 2, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_2, None, None, None)
+
+        world_state = WorldState(ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network)
+
+        pred = PredUnnecessaryBraking({"a_abrupt": a_abrupt})
+
+        vehicle_ids = [ego_vehicle.id]
+        sol_monitor_mode = []
+        sol_robustness_mode = []
+        for i in range(6):
+            sol_monitor_mode.append(
+                    pred.evaluate_boolean(world_state, vehicle_ids))
+            sol_robustness_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
+            world_state.step()
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0])
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode[2])
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4])
+        self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5])
+
+        # exp_sol_robustness_mode_1 = a_abrupt  # a_abrupt = -2
+        # exp_sol_robustness_mode_2 = 4 + a_abrupt
+        # exp_sol_robustness_mode_3 = 5 + a_abrupt
+        # exp_sol_robustness_mode_4 = 1.5 + a_abrupt
+        # exp_sol_robustness_mode_5 = 8 + a_abrupt
+        # exp_sol_robustness_mode_6 = -4
+        #
+        # self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode[0])
+        # self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode[1])
+        # self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode[2])
+        # self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode[3])
+        # self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode[4])
+        # self.assertEqual(exp_sol_robustness_mode_6, sol_robustness_mode[5])
+
+
+
 if __name__ == "__main__":
     unittest.main()
+

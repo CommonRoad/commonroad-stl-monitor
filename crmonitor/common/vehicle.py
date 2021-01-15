@@ -346,3 +346,8 @@ class Vehicle:
         shape = self.shape.rotate_translate_local(state.position,
                                                orientation)
         return shape
+
+    def is_valid(self, time_step):
+        state = self.states_cr.get(time_step)
+        return state is not None
+

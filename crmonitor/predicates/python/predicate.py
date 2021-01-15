@@ -232,3 +232,46 @@ class PredSafeDistPrec(IPredicateEvaluator):
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(
                 time_step)
         return delta_s - safe_distance
+
+class PredUnnecessaryBraking(IPredicateEvaluator):
+    predicate_name = "unnecessary_braking"
+    arity = 1
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_lane_evaluator = PredInSameLane(config)
+        self._front_evaluator = PredInFrontOf(config)
+        self._safe_distance_evaluator = PredSafeDistPrec(config)
+        self.a_abrupt = config["a_abrupt"]
+
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        other_ids = [veh.id for veh in world_state.other_vehicles] + [world_state.ego_vehicle.id]
+        other_ids.remove(vehicle_ids[0])
+        ego_acc = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[world_state.time_step].a
+        # # Short circuit: If we are not breaking, no unnecessary braking
+        # if ego_acc >= 0.0:
+        #     return -ego_acc + 0.0
+        excemption_a = [math.inf]
+        excemption_b = [-math.inf]
+        for o_id in other_ids:
+            if not world_state.vehicle_by_id(o_id).is_valid(world_state.time_step):
+                continue
+            ids = [vehicle_ids[0], o_id]
+            same_lane = self._same_lane_evaluator.evaluate_robustness(world_state,
+                                                                      ids)
+            front_of = self._front_evaluator.evaluate_robustness(world_state,
+                                                                 ids)
+            safe_dist = self._safe_distance_evaluator.evaluate_robustness(world_state,
+                                                                          ids)
+            excemption_a.append(-min(front_of, same_lane))
+            other_acc = world_state.vehicle_by_id(o_id).states_lon[world_state.time_step].a
+            acc_diff = self.a_abrupt + other_acc - ego_acc
+            excemption_b.append(min(safe_dist, front_of, same_lane, acc_diff))
+
+        min_excempt_a = min(min(excemption_a), self.a_abrupt - ego_acc)
+        max_excempt_b = max(excemption_b)
+
+        rob = min(-ego_acc, max(min_excempt_a, max_excempt_b))
+        return rob
+

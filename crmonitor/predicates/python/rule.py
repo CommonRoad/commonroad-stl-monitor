@@ -87,7 +87,7 @@ class Rule:
             assert evaluator is not None
             p = Rule.PredicateAssignment(
                 m.group("pred_name") + "_" + m.group("agents"),
-                predicate_agent_placeholders, evaluator(self.config), io_type)
+                predicate_agent_placeholders, evaluator(self.config["traffic_rules_param"]), io_type)
             self._rule_str = self._rule_str.replace(m.group(0), p.full_name)
             self.predicate_assignment.add(p)
 
