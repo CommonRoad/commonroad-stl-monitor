@@ -316,3 +316,27 @@ class PredUnnecessaryBraking(IPredicateEvaluator):
         rob = min(self._scale_acc(-ego_acc), max(min_excempt_a, max_excempt_b))
         return rob
 
+
+class PredLaneSpeedLimit(IPredicateEvaluator):
+    predicate_name = "keeps_lane_speed_limit"
+    arity = 1
+
+    def __init__(self, config: CommentedMap):
+        super().__init__(config)
+        self.country = SupportedTrafficSignCountry(config.get("country"))
+
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        vehicle = world_state.vehicle_by_id(vehicle_ids[0])
+        time_step = world_state.time_step
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        ts_interpreter = TrafficSigInterpreter(self.country, world_state.road_network.lanelet_network)
+        speed_limit = ts_interpreter.speed_limit(
+            frozenset(lanelet_ids))
+        if speed_limit is None:
+            rob = math.inf
+        else:
+            rob = speed_limit - vehicle.states_lon[time_step].v
+        rob = self._scale_speed(rob)
+        return rob
+
