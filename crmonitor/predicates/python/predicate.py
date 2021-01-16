@@ -4,8 +4,11 @@ from typing import List
 from functools import partial
 import warnings
 
+from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
+from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from ruamel.yaml.comments import CommentedMap
 
 
 def norm(x, min_val, max_val):
@@ -17,9 +20,14 @@ def norm(x, min_val, max_val):
     return normed_val
 
 
-def scale(x, min_val, max_val, new_min=-1.0, new_max=1.0):
-    n = norm(x, min_val, max_val)
-    return n * (new_max - new_min) + new_min
+def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
+    n = norm(math.fabs(x), min_val, max_val)
+    rescaled = n * (new_max - new_min) + new_min
+    # Clip
+    rescaled = min(max(rescaled, new_min), new_max)
+    if copysign:
+        rescaled = math.copysign(rescaled, x)
+    return rescaled
 
 
 def get_preceding_vehicle(world_state: WorldState) -> Vehicle:
@@ -56,8 +64,30 @@ class LazyValue:
 class IPredicateEvaluator(abc.ABC):
     predicate_name = "interface"
 
-    def __init__(self, config):
+    def __init__(self, config: CommentedMap):
         self.config = config
+        self.scale = config.setdefault("scale_rob", True)
+
+    def _scale(self, x, *args, **kwargs):
+        if self.scale:
+            return scale_clip(x, *args, **kwargs)
+        else:
+            return x
+
+    def _scale_speed(self, x):
+        return self._scale(x, 0.0, 250.0 / 3.6, copysign=True)
+
+    def _scale_acc(self, x):
+        return self._scale(x, 0, 10.5, copysign=True)
+
+    def _scale_dist(self, x):
+        return self._scale(x, 0.0, 200.0, copysign=True)
+
+    def _scale_angle(self, x):
+        # angle = x - (math.ceil((x + math.pi) / (2 * math.pi)) - 1) * 2 * math.pi
+        # TODO: Might be slow
+        # angle = math.asin(math.sin(x))
+        return self._scale(x, 0, math.pi, copysign=True)
 
     def evaluate_boolean_lazy(self, world_state: WorldState,
                               vehicle_ids: List[int]):
@@ -119,7 +149,7 @@ class PredInSameLane(IPredicateEvaluator):
                     p_occ)
             min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
 
-        return -min(min_dist_k_to_p_lanes, min_dist_p_to_k_lanes)
+        return -min(self._scale_dist(min_dist_k_to_p_lanes), self._scale_dist(min_dist_p_to_k_lanes))
 
 
 class PredInFrontOf(IPredicateEvaluator):
@@ -130,8 +160,8 @@ class PredInFrontOf(IPredicateEvaluator):
                             vehicle_ids: List[int]) -> float:
         rear = world_state.vehicle_by_id(vehicle_ids[0])
         front = world_state.vehicle_by_id(vehicle_ids[1])
-        return front.rear_s(world_state.time_step) - rear.front_s(
-            world_state.time_step)
+        return self._scale_dist(front.rear_s(world_state.time_step) - rear.front_s(
+                world_state.time_step))
 
 
 class PredSingleLane(IPredicateEvaluator):
@@ -162,7 +192,7 @@ class PredSingleLane(IPredicateEvaluator):
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
         else:
             distance_to_boundary = -math.inf
-        return distance_to_boundary
+        return self._scale_dist(distance_to_boundary)
 
 
 class PredCutIn(IPredicateEvaluator):
@@ -191,10 +221,15 @@ class PredCutIn(IPredicateEvaluator):
                  cutted_vehicle.states_lat[world_state.time_step].d
         r_orient = -cutting_vehicle.states_lat[world_state.time_step].theta + .0
 
+        l_dist = self._scale_dist(l_dist)
+        r_dist = self._scale_dist(r_dist)
+        l_orient = self._scale_angle(l_orient)
+        r_orient = self._scale_angle(r_orient)
+
         rob = min(-single_lane, same_lane,
                   max(min(l_dist, l_orient), min(r_dist, r_orient)))
         if rob >= 0.0:
-            rob = math.inf
+            rob = 1.0
         return rob
 
 
@@ -231,7 +266,9 @@ class PredSafeDistPrec(IPredicateEvaluator):
 
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(
                 time_step)
-        return delta_s - safe_distance
+        rob = self._scale_dist(delta_s - safe_distance)
+        return rob
+
 
 class PredUnnecessaryBraking(IPredicateEvaluator):
     predicate_name = "unnecessary_braking"
@@ -246,32 +283,36 @@ class PredUnnecessaryBraking(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        other_ids = [veh.id for veh in world_state.other_vehicles] + [world_state.ego_vehicle.id]
+        other_ids = [veh.id for veh in world_state.other_vehicles] + [
+            world_state.ego_vehicle.id]
         other_ids.remove(vehicle_ids[0])
-        ego_acc = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[world_state.time_step].a
+        ego_acc = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[
+            world_state.time_step].a
         # # Short circuit: If we are not breaking, no unnecessary braking
         # if ego_acc >= 0.0:
         #     return -ego_acc + 0.0
         excemption_a = [math.inf]
         excemption_b = [-math.inf]
         for o_id in other_ids:
-            if not world_state.vehicle_by_id(o_id).is_valid(world_state.time_step):
+            if not world_state.vehicle_by_id(o_id).is_valid(
+                    world_state.time_step):
                 continue
             ids = [vehicle_ids[0], o_id]
-            same_lane = self._same_lane_evaluator.evaluate_robustness(world_state,
-                                                                      ids)
+            same_lane = self._same_lane_evaluator.evaluate_robustness(
+                world_state, ids)
             front_of = self._front_evaluator.evaluate_robustness(world_state,
                                                                  ids)
-            safe_dist = self._safe_distance_evaluator.evaluate_robustness(world_state,
-                                                                          ids)
+            safe_dist = self._safe_distance_evaluator.evaluate_robustness(
+                world_state, ids)
             excemption_a.append(-min(front_of, same_lane))
-            other_acc = world_state.vehicle_by_id(o_id).states_lon[world_state.time_step].a
-            acc_diff = self.a_abrupt + other_acc - ego_acc
+            other_acc = world_state.vehicle_by_id(o_id).states_lon[
+                world_state.time_step].a
+            acc_diff = self._scale_acc(self.a_abrupt + other_acc - ego_acc)
             excemption_b.append(min(safe_dist, front_of, same_lane, acc_diff))
 
-        min_excempt_a = min(min(excemption_a), self.a_abrupt - ego_acc)
+        min_excempt_a = min(min(excemption_a), self._scale_acc(self.a_abrupt - ego_acc))
         max_excempt_b = max(excemption_b)
 
-        rob = min(-ego_acc, max(min_excempt_a, max_excempt_b))
+        rob = min(self._scale_acc(-ego_acc), max(min_excempt_a, max_excempt_b))
         return rob
 
