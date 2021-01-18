@@ -1,8 +1,8 @@
 import abc
+import logging
 import math
-from typing import List
 from functools import partial
-import warnings
+from typing import List
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
@@ -14,9 +14,9 @@ from ruamel.yaml.comments import CommentedMap
 def norm(x, min_val, max_val):
     normed_val = ((x - min_val) / (max_val - min_val))
     if normed_val > 1.0:
-        warnings.warn("Value to normalize exceeded maximum!")
+        logging.debug("Value to normalize exceeded maximum!")
     elif normed_val < 0.0:
-        warnings.warn("Value to normalize exceeded minimum!")
+        logging.debug("Value to normalize exceeded minimum!")
     return normed_val
 
 
