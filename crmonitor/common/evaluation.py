@@ -56,9 +56,9 @@ def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
     while world_state.time_step <= end:
         l = []
         for pred_assign in rule.predicate_assignment:
-            # ids = gather(assignment, pred_assign.agent_placeholders)
+            ids = gather(assignment, pred_assign.agent_placeholders)
             v = pred_values.by_time_step(world_state.time_step).by_name(
-                    pred_assign.base_name).value
+                    pred_assign.base_name).by_ids(ids).get_single_value().value
             l.append((pred_assign.full_name, v))
 
         monitor_values[world_state.time_step] = l

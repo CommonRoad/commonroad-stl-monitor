@@ -16,7 +16,9 @@ class PredicateValue:
 
 
 class PredicateValueCollection:
-    def __init__(self, l: Set[PredicateValue] = set()):
+    def __init__(self, l=None):
+        if l is None:
+            l = set()
         self._predicate_values = set(l)
 
     def __iter__(self):
@@ -32,29 +34,25 @@ class PredicateValueCollection:
         else:
             return intersect.pop()
 
-    @staticmethod
-    def _return_collection_or_value(pred):
-        if len(pred) == 0:
-            raise KeyError()
-        elif len(pred) == 1:
-            return pred[0]
-        else:
-            return PredicateValueCollection(pred)
+    def get_single_value(self):
+        assert len(
+            self._predicate_values) == 1, f"PredicateValueCollection contains {len(self._predicate_values)} != 1 value!"
+        return list(self._predicate_values)[0]
 
     def by_name(self, name):
-        pred = list(filter(lambda x: x.predicate_str == name,
-                           self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
+        pred = list(
+            filter(lambda x: x.predicate_str == name, self._predicate_values))
+        return PredicateValueCollection(pred)
 
     def by_time_step(self, time_step):
-        pred = list(filter(lambda x: x.time_step == time_step,
-                           self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
+        pred = list(
+            filter(lambda x: x.time_step == time_step, self._predicate_values))
+        return PredicateValueCollection(pred)
 
     def by_ids(self, ids):
         pred = list(
-            filter(lambda x: x.vehicle_ids == ids, self._predicate_values))
-        return PredicateValueCollection._return_collection_or_value(pred)
+                filter(lambda x: x.vehicle_ids == ids, self._predicate_values))
+        return PredicateValueCollection(pred)
 
     def get_time_steps(self):
         tsteps = set()
