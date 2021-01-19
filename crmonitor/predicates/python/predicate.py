@@ -241,7 +241,8 @@ class PredSafeDistPrec(IPredicateEvaluator):
         super().__init__(
                 config)  # self._a_min_follow = config["ego_vehicle_param"]["a_min"]  # self._a_min_lead = config["other_vehicles_param"]["a_min"]  # self._t_react_follow = config["ego_vehicle_param"]["t_react"]  # assert (  #             self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
 
-    def _calculate_safe_distance(self, v_follow, v_lead, a_min_lead,
+    @classmethod
+    def calculate_safe_distance(cls, v_follow, v_lead, a_min_lead,
                                  a_min_follow, t_react_follow):
         d_safe = ((v_lead ** 2) / (-2 * abs(a_min_lead)) - (v_follow ** 2) / (
                 -2 * abs(a_min_follow)) + v_follow * t_react_follow)
