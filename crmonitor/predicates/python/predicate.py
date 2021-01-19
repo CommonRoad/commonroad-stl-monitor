@@ -3,6 +3,7 @@ import logging
 import math
 from functools import partial
 from typing import List
+import numpy as np
 
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
@@ -244,8 +245,8 @@ class PredSafeDistPrec(IPredicateEvaluator):
     @classmethod
     def calculate_safe_distance(cls, v_follow, v_lead, a_min_lead,
                                  a_min_follow, t_react_follow):
-        d_safe = ((v_lead ** 2) / (-2 * abs(a_min_lead)) - (v_follow ** 2) / (
-                -2 * abs(a_min_follow)) + v_follow * t_react_follow)
+        d_safe = ((v_lead ** 2) / (-2 * np.abs(a_min_lead)) - (v_follow ** 2) / (
+                -2 * np.abs(a_min_follow)) + v_follow * t_react_follow)
 
         return d_safe
 
@@ -260,7 +261,7 @@ class PredSafeDistPrec(IPredicateEvaluator):
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
-        safe_distance = self._calculate_safe_distance(
+        safe_distance = self.calculate_safe_distance(
                 vehicle_follow.states_lon[time_step].v,
                 vehicle_lead.states_lon[time_step].v, a_min_lead, a_min_follow,
                 t_react_follow)
