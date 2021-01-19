@@ -17,7 +17,7 @@ def get_valid_time_interval(vehicle_a: Vehicle, vehicle_b: Vehicle):
     return start, end
 
 
-def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
+def evaluate_rule(world_state: WorldState, o_id, rule, interval=None) -> Tuple[
     List[Tuple[float, float]], Dict[float, List[Tuple[str, float]]]]:
     """
     Evaluates a rule for the ego agent of the world_state and the given other agent stepwise.
@@ -33,8 +33,11 @@ def evaluate_rule(world_state: WorldState, o_id, rule) -> Tuple[
     # Collect predicates
     assignment = (world_state.ego_vehicle.id, o_id)
     pred_values = PredicateValueCollection()
-    start, end = get_valid_time_interval(world_state.ego_vehicle,
+    if interval is None:
+        start, end = get_valid_time_interval(world_state.ego_vehicle,
                                          world_state.vehicle_by_id(o_id))
+    else:
+        start, end = interval
     world_state.time_step = start
     while world_state.time_step <= end:
         for pred_assign in rule.predicate_assignment:
