@@ -3,14 +3,14 @@ import unittest
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from crmonitor.common.evaluation import evaluate_rule
+from crmonitor.common.evaluation import RuleSetEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.python.rule import Rule
 
 logging.basicConfig(
         format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-        datefmt='%Y-%m-%d:%H:%M:%S', level=logging.DEBUG)
+        datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
 
 
 def check_violation(rob_values: List[Tuple[float, float]]):
@@ -24,24 +24,8 @@ class RefactoringTests(unittest.TestCase):
         super().setUp()
         config_path = "crmonitor/config.yaml"
         self.config = load_yaml(config_path)
-        self.scenario_file = "scenarios/test_interstate/DEU_test_safe_distance.xml"
-        self.rule_str = "always((in_front_of__a0_a1 and in_same_lane__a0_a1 and " \
-                        "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))" \
-                        " implies keeps_safe_distance_prec__a0_a1)"
-
-        self.scenario, _ = CommonRoadFileReader(self.scenario_file).open(
-                lanelet_assignment=True)
-
-        self.rule = Rule(self.rule_str, self.config)
-
-    def test_one_rule_one_agent_offline_stepwise(self):
-        assert self.rule.num_dependent_vehicles == 1
-        ego_id = 1005
-        other_id = 1004
-        world_state = WorldState.create_from_scenario(self.scenario, ego_id,
-                                                      self.config)
-        rob_values, pred_values = evaluate_rule(world_state, other_id,
-                                                self.rule)
+        rules_path = "crmonitor/traffic_rules.yaml"
+        self.traffic_rules = load_yaml(rules_path)
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
@@ -166,14 +150,54 @@ class RefactoringTests(unittest.TestCase):
             1007: True,
             1008: True,
             1009: True})]
+
+        scenario_file = "scenarios/test_interstate/DEU_test_safe_distance.xml"
+        rule_str = "always((in_front_of__a0_a1 and in_same_lane__a0_a1 and " \
+                   "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))" \
+                   " implies keeps_safe_distance_prec__a0_a1)"
+
+        scenario, _ = CommonRoadFileReader(scenario_file).open(
+                lanelet_assignment=True)
+
+        rule = Rule(rule_str, self.traffic_rules)
+
+        rule_eval = RuleSetEvaluator([rule])
+
         for ego_id, o_ids in exp_result:
-            world_state = WorldState.create_from_scenario(self.scenario, ego_id,
+            world_state = WorldState.create_from_scenario(scenario, ego_id,
                                                           self.config)
-            for o_id, violation in o_ids.items():
-                rob_values, pred_values = evaluate_rule(world_state, o_id,
-                                                        self.rule)
-                self.assertEqual(violation, rob_values[-1][1] >= 0.0,
+            for o_id, exp_violation in o_ids.items():
+                rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
+                    world_state, (o_id,))
+                self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
                                  f"Test failed for ego_id={ego_id} and o_id={o_id}")
+
+    def test_unnecessary_braking(self):
+        # one vehicle accelerates (1000)
+        # one vehicle drives with constant velocity (1001)
+        # two leading vehicle which brake only minimal (1005, 1007)
+        # one vehicle following another vehicle which brakes normal (1006)
+        # one vehicle which has no leading vehicle violates acceleration constraint (1002)
+        scenario, planning_problem_set = CommonRoadFileReader(
+            "scenarios/test_interstate/DEU_test_unnecessary_braking.xml").open(
+            lanelet_assignment=True)
+        exp_result = {
+            1000: True,
+            1001: True,
+            1002: False,
+            1005: True,
+            1006: True,
+            1007: True}
+        rule_str = "always(not unnecessary_braking__a0)"
+        rule = Rule(rule_str, self.traffic_rules)
+        rule_eval = RuleSetEvaluator([rule])
+        for ego_id, exp_violation in exp_result.items():
+            world_state = WorldState.create_from_scenario(scenario, ego_id,
+                                                          self.config)
+            rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
+                world_state, tuple())
+            self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
+                             f"Test failed for ego_id={ego_id}")
 
 
 if __name__ == "__main__":

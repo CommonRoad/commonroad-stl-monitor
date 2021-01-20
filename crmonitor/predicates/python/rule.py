@@ -49,12 +49,20 @@ class Rule:
         def __hash__(self) -> int:
             return hash((self.full_name, self.agent_placeholders))
 
-    def __init__(self, rule_str, config=None):
+    def __init__(self, rule_str, config=None, name=None):
         self._rule_str = rule_str
         self.config = config
         self.predicate_assignment = set()
         self.num_dependent_vehicles: int
         self._extract_predicates()
+        self._name = name
+
+    @property
+    def name(self):
+        if self._name is None:
+            return self._rule_str
+        else:
+            return self._name
 
     @property
     def is_vehicle_dependent(self):

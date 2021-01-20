@@ -34,6 +34,9 @@ class PredicateValueCollection:
         else:
             return intersect.pop()
 
+    def clear(self):
+        self._predicate_values.clear()
+
     def get_single_value(self):
         assert len(
             self._predicate_values) == 1, f"PredicateValueCollection contains {len(self._predicate_values)} != 1 value!"
