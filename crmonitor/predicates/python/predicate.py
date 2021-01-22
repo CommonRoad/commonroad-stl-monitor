@@ -125,7 +125,7 @@ class PredInSameLane(IPredicateEvaluator):
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
         if self.evaluate_boolean(world_state, vehicle_ids):
-            return math.inf
+            return self._scale_dist(math.inf)
 
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
