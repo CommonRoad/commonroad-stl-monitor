@@ -154,11 +154,11 @@ class Vehicle:
 
     @property
     def start_time(self):
-        return self.state_list_cr[0].time_step
+        return min(self._states_lon.keys())
 
     @property
     def end_time(self):
-        return self.state_list_cr[-1].time_step
+        return max(self._states_lon.keys())
 
     @property
     def shape(self) -> Rectangle:
