@@ -13,6 +13,8 @@ from ruamel.yaml.comments import CommentedMap
 
 
 def norm(x, min_val, max_val):
+    if math.isinf(x):
+        x = max_val
     normed_val = ((x - min_val) / (max_val - min_val))
     if normed_val > 1.0:
         logging.debug("Value to normalize exceeded maximum!")
@@ -257,7 +259,7 @@ class PredSafeDistPrec(IPredicateEvaluator):
         time_step = world_state.time_step
 
         if vehicle_lead.states_lon.get(time_step) is None:
-            return math.inf
+            return self._scale_dist(math.inf)
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
