@@ -33,22 +33,20 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
     return rescaled
 
 
-def get_preceding_vehicle(world_state: WorldState, vehicle_k: Vehicle) -> Vehicle:
-    veh = None
-    min_dist = math.inf
+def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> List[Vehicle]:
+    veh = []
     lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
-            vehicle_k.lanelet_assignment[world_state.time_step])
-    for vehicle_p in world_state.other_vehicles:
+            vehicle_rear.lanelet_assignment[world_state.time_step])
+    for vehicle_lead in world_state.other_vehicles:
         lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_p.lanelet_assignment[world_state.time_step])
+                vehicle_lead.lanelet_assignment[world_state.time_step])
         intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
         if len(intersecting_lanes) > 0:
-            dist = vehicle_p.rear_s(world_state.time_step) - vehicle_k.front_s(
+            dist = vehicle_lead.rear_s(world_state.time_step) - vehicle_rear.front_s(
                     world_state.time_step)
-            if dist >= 0.0 and dist < min_dist:
-                min_dist = dist
-                veh = vehicle_p
-    return veh
+            if dist >= 0.0:
+                veh.append((dist, vehicle_lead))
+    return [v[1] for v in sorted(veh, key=lambda d: d[0])]
 
 
 class LazyValue:
@@ -240,9 +238,7 @@ class PredSafeDistPrec(IPredicateEvaluator):
     arity = 2
 
     def __init__(self, config):
-        super().__init__(
-                config)  # self._a_min_follow = config["ego_vehicle_param"]["a_min"]  # self._a_min_lead = config["other_vehicles_param"]["a_min"]  # self._t_react_follow = config["ego_vehicle_param"]["t_react"]  # assert (  #             self._a_min_follow and 0 > self._a_min_lead), "<BrakingPredicateCollection/safe_distance>: acceleration is not valid"
-
+        super().__init__(config)
     @classmethod
     def calculate_safe_distance(cls, v_follow, v_lead, a_min_lead,
                                  a_min_follow, t_react_follow):
@@ -337,7 +333,7 @@ class PredLaneSpeedLimit(IPredicateEvaluator):
         speed_limit = ts_interpreter.speed_limit(
             frozenset(lanelet_ids))
         if speed_limit is None:
-            rob = math.inf
+            rob = self._scale_speed(math.inf)
         else:
             rob = speed_limit - vehicle.states_lon[time_step].v
         rob = self._scale_speed(rob)
@@ -382,14 +378,16 @@ class PredAcceleration(IPredicateEvaluator):
         accel = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[world_state.time_step].a
         return accel
 
-class PredLeadAcceleration(IPredicateEvaluator):
-    predicate_name = "lead_accel"
+class PredMaxLeadAcceleration(IPredicateEvaluator):
+    predicate_name = "max_lead_accel"
     arity = 1
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        lead_veh = get_preceding_vehicle(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
-        if lead_veh is None:
+        lead_veh = get_preceding_vehicles(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
+        if len(lead_veh) == 0:
             return 0.0
         else:
-            accel = lead_veh.states_lon[world_state.time_step].a
-            return accel
+            accel = [v.states_lon[world_state.time_step].a for v in lead_veh]
+            return max(accel)
+
+# class PredSafeDist

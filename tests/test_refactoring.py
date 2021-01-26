@@ -175,9 +175,9 @@ class RefactoringTests(unittest.TestCase):
     def test_unnecessary_braking(self):
         # one vehicle accelerates (1000)
         # one vehicle drives with constant velocity (1001)
+        # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         # two leading vehicle which brake only minimal (1005, 1007)
         # one vehicle following another vehicle which brakes normal (1006)
-        # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         scenario, planning_problem_set = CommonRoadFileReader(
             "scenarios/test_interstate/DEU_test_unnecessary_braking.xml").open(
             lanelet_assignment=True)
@@ -188,7 +188,7 @@ class RefactoringTests(unittest.TestCase):
             1005: True,
             1006: True,
             1007: True}
-        rule_str = "always((has_leading_vehicle__a0 < 0 implies accel__a0 >= -2.0) and (has_leading_vehicle__a0 >= 0 implies accel__a0 - lead_accel__a0 >= -2.0))"
+        rule_str = "always((has_leading_vehicle__a0 < 0 implies accel__a0 >= -2.0) and (has_leading_vehicle__a0 >= 0 implies accel__a0 - max_lead_accel__a0 >= -2.0))"
         rule = Rule(rule_str, self.traffic_rules)
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
