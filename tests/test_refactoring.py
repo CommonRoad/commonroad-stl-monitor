@@ -188,7 +188,7 @@ class RefactoringTests(unittest.TestCase):
             1005: True,
             1006: True,
             1007: True}
-        rule_str = "always(not unnecessary_braking__a0)"
+        rule_str = "always((has_leading_vehicle__a0 < 0 implies accel__a0 >= -2.0) and (has_leading_vehicle__a0 >= 0 implies accel__a0 - lead_accel__a0 >= -2.0))"
         rule = Rule(rule_str, self.traffic_rules)
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():

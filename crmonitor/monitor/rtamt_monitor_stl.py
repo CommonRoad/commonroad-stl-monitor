@@ -30,8 +30,9 @@ class TrafficRuleMonitorForwardSTL:
         # Workaround for rtamt when working with output-robustness and input vacuity
         predicates = self._rule.predicate_names
         mod_formula = logic_formula
-        for pred in predicates:
-            mod_formula.replace(pred, "({} >= 0)".format(pred))
+        # TODO: Only required for IA-STL
+        # for pred in predicates:
+        #     mod_formula.replace(pred, "({} >= 0)".format(pred))
         return mod_formula
 
     # TODO: Could be made static

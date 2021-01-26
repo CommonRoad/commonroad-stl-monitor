@@ -33,10 +33,9 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
     return rescaled
 
 
-def get_preceding_vehicle(world_state: WorldState) -> Vehicle:
+def get_preceding_vehicle(world_state: WorldState, vehicle_k: Vehicle) -> Vehicle:
     veh = None
     min_dist = math.inf
-    vehicle_k = world_state.ego_vehicle
     lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
             vehicle_k.lanelet_assignment[world_state.time_step])
     for vehicle_p in world_state.other_vehicles:
@@ -44,9 +43,9 @@ def get_preceding_vehicle(world_state: WorldState) -> Vehicle:
                 vehicle_p.lanelet_assignment[world_state.time_step])
         intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
         if len(intersecting_lanes) > 0:
-            dist = vehicle_p.front_s(world_state.time_step) - vehicle_k.rear_s(
+            dist = vehicle_p.rear_s(world_state.time_step) - vehicle_k.front_s(
                     world_state.time_step)
-            if dist < min_dist:
+            if dist >= 0.0 and dist < min_dist:
                 min_dist = dist
                 veh = vehicle_p
     return veh
@@ -344,3 +343,53 @@ class PredLaneSpeedLimit(IPredicateEvaluator):
         rob = self._scale_speed(rob)
         return rob
 
+class PredLeadingVehicle(IPredicateEvaluator):
+    predicate_name = "has_leading_vehicle"
+    arity = 1
+
+    def __init__(self, config: CommentedMap):
+        super().__init__(config)
+        self._same_lane_evaluator = PredInSameLane(config)
+        self._front_evaluator = PredInFrontOf(config)
+
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        other_ids = [veh.id for veh in world_state.other_vehicles] + [
+            world_state.ego_vehicle.id]
+        other_ids.remove(vehicle_ids[0])
+        rob_values = []
+        for o_id in other_ids:
+            if not world_state.vehicle_by_id(o_id).is_valid(
+                    world_state.time_step):
+                continue
+            ids = [vehicle_ids[0], o_id]
+            same_lane = self._same_lane_evaluator.evaluate_robustness(
+                    world_state, ids)
+            front_of = self._front_evaluator.evaluate_robustness(world_state,
+                                                                 ids)
+            rob_values.append(min(same_lane, front_of))
+        if len(rob_values) == 0:
+            rob = self._scale_dist(-math.inf)
+        else:
+            rob = min(rob_values)
+        return rob
+
+class PredAcceleration(IPredicateEvaluator):
+    predicate_name = "accel"
+    arity = 1
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        accel = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[world_state.time_step].a
+        return accel
+
+class PredLeadAcceleration(IPredicateEvaluator):
+    predicate_name = "lead_accel"
+    arity = 1
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        lead_veh = get_preceding_vehicle(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
+        if lead_veh is None:
+            return 0.0
+        else:
+            accel = lead_veh.states_lon[world_state.time_step].a
+            return accel
