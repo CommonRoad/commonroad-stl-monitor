@@ -37,7 +37,9 @@ def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> Li
     veh = []
     lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
             vehicle_rear.lanelet_assignment[world_state.time_step])
-    for vehicle_lead in world_state.other_vehicles:
+    for vehicle_lead in world_state.other_vehicles + [world_state.ego_vehicle]:
+        if not vehicle_lead.is_valid(world_state.time_step) or vehicle_lead is vehicle_rear:
+            continue
         lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_lead.lanelet_assignment[world_state.time_step])
         intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
