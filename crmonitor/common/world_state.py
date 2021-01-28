@@ -87,5 +87,11 @@ class WorldState:
             return self
         else:
             raise StopIteration
+
+    def __eq__(self, o) -> bool:
+        if o is None:
+            return False
+        return self.scenario.scenario_id == o.scenario.scenario_id and self.time_step == o.time_step and self.ego_vehicle.id == o.ego_vehicle.id
+
     # def copy(self):
     #     return WorldState(scenario=self.scenario, ego_obs_id=self.ego_vehicle.id, config=self.config, time_step=self.time_step, road_network=self.road_network)

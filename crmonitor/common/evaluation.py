@@ -19,7 +19,7 @@ def flatten_nested_dict(data, path=tuple()):
         if isinstance(val, dict):
             entries.extend(flatten_nested_dict(val, path+(key,)))
         else:
-            entries.append(path + (val,))
+            entries.append(path + (key, val))
     return entries
 
 def pandas_from_nested_dict(data, level_names):
@@ -37,22 +37,16 @@ class RuleSetEvaluator:
     def __init__(self, rules: Iterable[Rule]) -> None:
         self.rules = tuple(rules)
         self.num_dependent_vehicles = self.rules[0].num_dependent_vehicles
-        assert all(
-                [self.num_dependent_vehicles == x.num_dependent_vehicles for x
-                 in self.rules])
-        self.predicate_assignments = set()
-        for rule in rules:
-            self.predicate_assignments.update(rule.predicate_assignment)
         self.predicate_values = PredicateValueCollection()
         self._last_world_state = None
 
-    def evaluate_predicates_timestep(self, world_state: WorldState,
+    def evaluate_predicates_timestep(self, rule: Rule, world_state: WorldState,
                                      other_ids: Tuple[int]):
-        if not (self._last_world_state is world_state):
+        if not (self._last_world_state == world_state):
             self.predicate_values.clear()
             self._last_world_state = world_state
         ids = (world_state.ego_vehicle.id,) + other_ids
-        for pred_assign in self.predicate_assignments:
+        for pred_assign in rule.predicate_assignment:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
             value = PredicateValue(pred_assign.base_name, predicate_ids,
                                    world_state.time_step)
@@ -66,6 +60,7 @@ class RuleSetEvaluator:
                                monitor: TrafficRuleMonitorForwardSTL,
                                rule: Rule):
         l = {}
+        self.evaluate_predicates_timestep(rule, world_state, other_ids)
         for pred_assign in rule.predicate_assignment:
             ids = (world_state.ego_vehicle.id,) + other_ids
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
@@ -90,7 +85,6 @@ class RuleSetEvaluator:
         rob_values = {}
         world_state.time_step = start
         while world_state.time_step <= end:
-            self.evaluate_predicates_timestep(world_state, other_ids)
             rob_value, predicate_values = self.evaluate_rule_timestep(
                     world_state, other_ids, monitor, rule)
             rob_values[world_state.time_step] = rob_value
@@ -100,14 +94,7 @@ class RuleSetEvaluator:
 
     def evaluate_all_rules_all_timesteps(self, world_state,
                                          other_ids: Tuple[int], interval=None):
-        rules_rob_values = []
-        rules_predicate_values = []
-        for rule in self.rules:
-            rob_values, predicate_values = self.evaluate_rule_all_timesteps(
-                    rule, world_state, other_ids, interval)
-            rules_rob_values.append(rob_values)
-            rules_predicate_values.append(predicate_values)
-        return rules_rob_values, rules_predicate_values
+        raise NotImplementedError
 
     def evaluate_all_rules_all_timesteps_floating(self, world_state: WorldState):
         rule_value_dict = {}
@@ -127,16 +114,16 @@ class RuleSetEvaluator:
         df_rule_mins = []
         df_pred_mins = []
         for rule in self.rules:
-            for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time):
+            for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time + 1):
                 df = df_rule[(df_rule.rule_name == rule.name) & (df_rule.time_step == t)]
                 rob_min = df.rob.min()
                 df = df[df.rob == rob_min]
                 # if df.empty:
                 #     df_rule_mins.append(pd.DataFrame([rule.name, tuple(), t, 1.0]))
                 # else:
-                other_ids = df.head(1).other_ids
+                other_ids = df.head(1)["other_ids"].values[0]
                 df_rule_mins.append(df.head(1))
-                df = df_pred_mins[(df_pred.rule_name == rule.name) & (df_pred.time_step == t) & (df_pred.other_ids == other_ids)]
+                df = df_pred[(df_pred["rule_name"] == rule.name) & (df_pred["time_step"] == t) & (df_pred["other_ids"] == other_ids)]
                 df_pred_mins.append(df)
 
         return pd.concat(df_rule_mins), pd.concat(df_pred_mins)
