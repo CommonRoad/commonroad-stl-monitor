@@ -3,6 +3,7 @@ import math
 from typing import List, Tuple, Iterable
 
 import numpy as np
+import pandas as pd
 
 from crmonitor.common.helper import gather
 from crmonitor.common.vehicle import Vehicle
@@ -12,6 +13,18 @@ from crmonitor.predicates.python.predicate_value import PredicateValue, \
     PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule
 
+def flatten_nested_dict(data, path=tuple()):
+    entries = []
+    for key, val in data.items():
+        if isinstance(val, dict):
+            entries.extend(flatten_nested_dict(val, path+(key,)))
+        else:
+            entries.append(path + (val,))
+    return entries
+
+def pandas_from_nested_dict(data, level_names):
+    entries = flatten_nested_dict(data)
+    return pd.DataFrame(entries, columns=level_names)
 
 def get_valid_time_interval(vehicles: List[Vehicle]):
     start = max([v.start_time for v in vehicles])
@@ -52,7 +65,7 @@ class RuleSetEvaluator:
                                other_ids: Tuple[int],
                                monitor: TrafficRuleMonitorForwardSTL,
                                rule: Rule):
-        l = []
+        l = {}
         for pred_assign in rule.predicate_assignment:
             ids = (world_state.ego_vehicle.id,) + other_ids
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
@@ -60,8 +73,8 @@ class RuleSetEvaluator:
                     world_state.time_step).by_name(
                     pred_assign.base_name).by_ids(
                     predicate_ids).get_single_value().value
-            l.append((pred_assign.full_name, v))
-        rob_value = monitor.evaluate_monitor_online(world_state.time_step, l)
+            l[pred_assign.full_name] = v
+        rob_value = monitor.evaluate_monitor_online(world_state.time_step, list(l.items()))
         return rob_value, l
 
     def evaluate_rule_all_timesteps(self, rule, world_state,
@@ -100,18 +113,31 @@ class RuleSetEvaluator:
         rule_value_dict = {}
         pred_value_dict = {}
         for rule in self.rules:
-            rule_values = []
-            pred_values = []
+            rule_values = {}
+            pred_values = {}
             for selected_other_ids in itertools.combinations(world_state.other_ids, rule.num_dependent_vehicles):
                 rule_value, pred_value = self.evaluate_rule_all_timesteps(rule, world_state, selected_other_ids)
-                rule_values.append(rule_value)
-                pred_values.append(pred_value)
+                rule_values[selected_other_ids] = rule_value
+                pred_values[selected_other_ids] = pred_value
+            rule_value_dict[rule.name] = rule_values
+            pred_value_dict[rule.name] = pred_values
 
+        df_rule = pandas_from_nested_dict(rule_value_dict, ["rule_name", "other_ids", "time_step", "rob"])
+        df_pred = pandas_from_nested_dict(pred_value_dict, ["rule_name", "other_ids", "time_step", "full_name", "value"])
+        df_rule_mins = []
+        df_pred_mins = []
+        for rule in self.rules:
             for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time):
-                # Iterate over agent combinations
-                t_rob_values = [r.get(t, math.inf) for r in rule_values]
-                idx = np.argmin(t_rob_values)
-                rule_value_dict.setdefault(rule.name, []).append(t_rob_values[idx])
-                pred_value_dict.setdefault(rule.name, []).append(pred_values[idx][t])
-        return rule_value_dict, pred_value_dict
+                df = df_rule[(df_rule.rule_name == rule.name) & (df_rule.time_step == t)]
+                rob_min = df.rob.min()
+                df = df[df.rob == rob_min]
+                # if df.empty:
+                #     df_rule_mins.append(pd.DataFrame([rule.name, tuple(), t, 1.0]))
+                # else:
+                other_ids = df.head(1).other_ids
+                df_rule_mins.append(df.head(1))
+                df = df_pred_mins[(df_pred.rule_name == rule.name) & (df_pred.time_step == t) & (df_pred.other_ids == other_ids)]
+                df_pred_mins.append(df)
+
+        return pd.concat(df_rule_mins), pd.concat(df_pred_mins)
 
