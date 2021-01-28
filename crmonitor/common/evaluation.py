@@ -42,7 +42,7 @@ class RuleSetEvaluator:
 
     def evaluate_predicates_timestep(self, rule: Rule, world_state: WorldState,
                                      other_ids: Tuple[int]):
-        if not (self._last_world_state == world_state):
+        if not (self._last_world_state is world_state):
             self.predicate_values.clear()
             self._last_world_state = world_state
         ids = (world_state.ego_vehicle.id,) + other_ids
@@ -118,9 +118,8 @@ class RuleSetEvaluator:
                 df = df_rule[(df_rule.rule_name == rule.name) & (df_rule.time_step == t)]
                 rob_min = df.rob.min()
                 df = df[df.rob == rob_min]
-                # if df.empty:
-                #     df_rule_mins.append(pd.DataFrame([rule.name, tuple(), t, 1.0]))
-                # else:
+                if df.empty:
+                    break
                 other_ids = df.head(1)["other_ids"].values[0]
                 df_rule_mins.append(df.head(1))
                 df = df_pred[(df_pred["rule_name"] == rule.name) & (df_pred["time_step"] == t) & (df_pred["other_ids"] == other_ids)]
