@@ -43,18 +43,15 @@ class PredicateValueCollection:
         return list(self._predicate_values)[0]
 
     def by_name(self, name):
-        pred = list(
-            filter(lambda x: x.predicate_str == name, self._predicate_values))
+        pred = [x for x in self._predicate_values if x.predicate_str == name]
         return PredicateValueCollection(pred)
 
     def by_time_step(self, time_step):
-        pred = list(
-            filter(lambda x: x.time_step == time_step, self._predicate_values))
+        pred = [x for x in self._predicate_values if x.time_step == time_step]
         return PredicateValueCollection(pred)
 
     def by_ids(self, ids):
-        pred = list(
-                filter(lambda x: x.vehicle_ids == ids, self._predicate_values))
+        pred = [x for x in self._predicate_values if x.vehicle_ids == ids]
         return PredicateValueCollection(pred)
 
     def get_time_steps(self):
