@@ -74,6 +74,10 @@ class WorldState:
     def num_time_steps(self):
         return self._ego_vehicle.state_list_cr[-1].time_step + 1
 
+    @property
+    def other_ids(self):
+        return [v.id for v in self.other_vehicles]
+
     def __iter__(self):
         return self
 

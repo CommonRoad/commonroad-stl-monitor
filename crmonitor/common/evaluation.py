@@ -1,4 +1,8 @@
+import itertools
+import math
 from typing import List, Tuple, Iterable
+
+import numpy as np
 
 from crmonitor.common.helper import gather
 from crmonitor.common.vehicle import Vehicle
@@ -69,16 +73,15 @@ class RuleSetEvaluator:
         else:
             start, end = interval
         monitor = TrafficRuleMonitorForwardSTL(rule, output_type="standard")
-        rule_predicate_values = []
-        rob_values = []
+        rule_predicate_values = {}
+        rob_values = {}
         world_state.time_step = start
         while world_state.time_step <= end:
             self.evaluate_predicates_timestep(world_state, other_ids)
             rob_value, predicate_values = self.evaluate_rule_timestep(
                     world_state, other_ids, monitor, rule)
-            rob_values.append((world_state.time_step, rob_value))
-            rule_predicate_values.append(
-                    (world_state.time_step, predicate_values))
+            rob_values[world_state.time_step] = rob_value
+            rule_predicate_values[world_state.time_step] = predicate_values
             world_state.step()
         return rob_values, rule_predicate_values
 
@@ -92,3 +95,23 @@ class RuleSetEvaluator:
             rules_rob_values.append(rob_values)
             rules_predicate_values.append(predicate_values)
         return rules_rob_values, rules_predicate_values
+
+    def evaluate_all_rules_all_timesteps_floating(self, world_state: WorldState):
+        rule_value_dict = {}
+        pred_value_dict = {}
+        for rule in self.rules:
+            rule_values = []
+            pred_values = []
+            for selected_other_ids in itertools.combinations(world_state.other_ids, rule.num_dependent_vehicles):
+                rule_value, pred_value = self.evaluate_rule_all_timesteps(rule, world_state, selected_other_ids)
+                rule_values.append(rule_value)
+                pred_values.append(pred_value)
+
+            for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time):
+                # Iterate over agent combinations
+                t_rob_values = [r.get(t, math.inf) for r in rule_values]
+                idx = np.argmin(t_rob_values)
+                rule_value_dict.setdefault(rule.name, []).append(t_rob_values[idx])
+                pred_value_dict.setdefault(rule.name, []).append(pred_values[idx][t])
+        return rule_value_dict, pred_value_dict
+
