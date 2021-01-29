@@ -127,9 +127,6 @@ class RuleSetEvaluator:
                 df = df_pred[(df_pred["rule_name"] == rule.name) & (df_pred["time_step"] == t) & (df_pred["other_ids"] == other_ids)]
                 df_pred_mins.append(df)
 
-            if t_truncated is not None:
-                break
-
         df_rule_mins = pd.concat(df_rule_mins)
         df_pred_mins = pd.concat(df_pred_mins)
 
