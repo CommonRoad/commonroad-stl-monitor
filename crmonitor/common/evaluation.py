@@ -113,26 +113,26 @@ class RuleSetEvaluator:
         df_pred = pandas_from_nested_dict(pred_value_dict, ["rule_name", "other_ids", "time_step", "full_name", "value"])
         df_rule_mins = []
         df_pred_mins = []
-        t_truncated = None
         for rule in self.rules:
             for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time + 1):
                 df = df_rule[(df_rule["rule_name"] == rule.name) & (df_rule["time_step"] == t)]
                 rob_min = df.rob.min()
                 df = df[df["rob"] == rob_min]
                 if df.empty:
-                    t_truncated = t
-                    break
-                other_ids = df.head(1)["other_ids"].values[0]
+                    df = pd.DataFrame.from_records([{"rule_name": rule.name, "time_step": t, "other_ids": -1, "rob": 1.0}])
+                    pred = pd.DataFrame({"full_name": rule.predicate_names})
+                    pred["rule_name"] = rule.name
+                    pred["other_ids"] = -1
+                    pred["time_step"] = t
+                    pred["value"] = 0.0
+                else:
+                    other_ids = df.head(1)["other_ids"].values[0]
+                    pred = df_pred[(df_pred["rule_name"] == rule.name) & (df_pred["time_step"] == t) & (df_pred["other_ids"] == other_ids)]
                 df_rule_mins.append(df.head(1))
-                df = df_pred[(df_pred["rule_name"] == rule.name) & (df_pred["time_step"] == t) & (df_pred["other_ids"] == other_ids)]
-                df_pred_mins.append(df)
+                df_pred_mins.append(pred)
 
         df_rule_mins = pd.concat(df_rule_mins)
         df_pred_mins = pd.concat(df_pred_mins)
-
-        if t_truncated is not None:
-            df_rule_mins = df_rule_mins[df_rule_mins["time_step"] < t_truncated]
-            df_pred_mins = df_pred_mins[df_pred_mins["time_step"] < t_truncated]
 
         return df_rule_mins, df_pred_mins
 
