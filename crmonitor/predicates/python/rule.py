@@ -2,7 +2,7 @@ import inspect
 import sys
 import re
 
-import enum
+from enum import auto, Enum
 
 
 def get_all_predicate_evaluators():
@@ -17,9 +17,14 @@ def get_all_predicate_evaluators():
     return d
 
 
-class IOType(enum.Enum):
-    OUTPUT = enum.auto()
-    INPUT = enum.auto()
+class IOType(Enum):
+    OUTPUT = auto()
+    INPUT = auto()
+
+
+class QuantificationType(Enum):
+    ALL = auto()
+    EXISTENTIAL = auto()
 
 
 class Rule:
@@ -29,7 +34,7 @@ class Rule:
         def __init__(self, full_name, agent_placeholders, evaluator,
                      io_type=IOType.OUTPUT):
             assert len(
-                agent_placeholders) == evaluator.arity, f"The arity of the evaluator should be {len(agent_placeholders)}, but is {evaluator.arity}!"
+                agent_placeholders) == evaluator.arity, f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
             self.full_name = full_name
             self.agent_placeholders = tuple(agent_placeholders)
             self.evaluator = evaluator
@@ -49,13 +54,14 @@ class Rule:
         def __hash__(self) -> int:
             return hash((self.full_name, self.agent_placeholders))
 
-    def __init__(self, rule_str, config=None, name=None):
+    def __init__(self, rule_str, config=None, name=None, quantification=QuantificationType.ALL):
         self._rule_str = rule_str
         self.config = config
         self.predicate_assignment = set()
         self.num_dependent_vehicles: int
         self._extract_predicates()
         self._name = name
+        self.quantification = quantification
 
     @property
     def name(self):

@@ -27,6 +27,38 @@ class RefactoringTests(unittest.TestCase):
         rules_path = "crmonitor/traffic_rules.yaml"
         self.traffic_rules = load_yaml(rules_path)
 
+    def test_preserve_flow(self):
+        # two vehicles which preserves traffic flow (1001 ,1004)
+        # two vehicles without following vehicle (1000, 1002)
+        # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
+        # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
+        exp_result = {
+            1000: True,
+            1001: True,
+            1002: True,
+            1003: False,
+            1004: True,
+            1005: False}
+        scenario_file = "scenarios/test_interstate/DEU_test_preserve_traffic_flow.xml"
+        rule_str = "always((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) " \
+                   "and in_same_lane__a0_a1 and in_front_of__a0_a1)" \
+                   "or ((keeps_fov_speed_limit__a0 and keeps_lane_speed_limit_star__a0 and keeps_type_speed_limit__a0) < 0.216))"
+
+        scenario, _ = CommonRoadFileReader(scenario_file).open(
+                lanelet_assignment=True)
+
+        rule = Rule(rule_str, self.traffic_rules, name="preserve_flow")
+
+        rule_eval = RuleSetEvaluator([rule])
+        for ego_id, exp_violation in exp_result.items():
+            world_state = WorldState.create_from_scenario(scenario, ego_id,
+                                                          self.config)
+            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(world_state)
+            rob = df_rule[df_rule["time_step"] == df_rule["time_step"].max()]["rob"].values[0]
+            self.assertEqual(exp_violation, rob >= 0.0,
+                             f"Test failed for ego_id={ego_id}")
+
+
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
         # two vehicles which violate safe distance to directly leading vehicle (1003, 1004)
@@ -168,7 +200,7 @@ class RefactoringTests(unittest.TestCase):
                                                           self.config)
             for o_id, exp_violation in o_ids.items():
                 rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-                    world_state, (o_id,))
+                        world_state, (o_id,))
                 self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
                                  f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
@@ -179,8 +211,8 @@ class RefactoringTests(unittest.TestCase):
         # two leading vehicle which brake only minimal (1005, 1007)
         # one vehicle following another vehicle which brakes normal (1006)
         scenario, planning_problem_set = CommonRoadFileReader(
-            "scenarios/test_interstate/DEU_test_unnecessary_braking.xml").open(
-            lanelet_assignment=True)
+                "scenarios/test_interstate/DEU_test_unnecessary_braking.xml").open(
+                lanelet_assignment=True)
         exp_result = {
             1000: True,
             1001: True,
@@ -195,7 +227,7 @@ class RefactoringTests(unittest.TestCase):
             world_state = WorldState.create_from_scenario(scenario, ego_id,
                                                           self.config)
             rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-                world_state, tuple())
+                    world_state, tuple())
             self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
                              f"Test failed for ego_id={ego_id}")
 

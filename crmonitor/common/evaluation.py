@@ -11,7 +11,8 @@ from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
 from crmonitor.predicates.python.predicate_value import PredicateValue, \
     PredicateValueCollection
-from crmonitor.predicates.python.rule import Rule
+from crmonitor.predicates.python.rule import Rule, QuantificationType
+
 
 def flatten_nested_dict(data, path=tuple()):
     entries = []
@@ -116,7 +117,10 @@ class RuleSetEvaluator:
         for rule in self.rules:
             for t in range(world_state.ego_vehicle.start_time, world_state.ego_vehicle.end_time + 1):
                 df = df_rule[(df_rule["rule_name"] == rule.name) & (df_rule["time_step"] == t)]
-                rob_min = df.rob.min()
+                if rule.quantification == QuantificationType.ALL:
+                    rob_min = df.rob.min()
+                else:
+                    rob_min = df.rob.max()
                 df = df[df["rob"] == rob_min]
                 if df.empty:
                     df = pd.DataFrame.from_records([{"rule_name": rule.name, "time_step": t, "other_ids": -1, "rob": 1.0}])
