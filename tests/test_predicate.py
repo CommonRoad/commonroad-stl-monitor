@@ -23,7 +23,7 @@ from crmonitor.predicates.python.predicate import PredCutIn, \
     PredUnnecessaryBraking, \
     scale_clip, \
     PredLaneSpeedLimit
-from crmonitor.predicates.python.rule import Rule
+from crmonitor.predicates.python.rule import Rule, QuantificationType
 
 
 def parallel_lanes(num_lanes) -> List[Lanelet]:
@@ -534,11 +534,12 @@ class TestPredicate(unittest.TestCase):
 
         # expected solutions
         exp_sol_monitor_mode_1 = False  # a_ego > 0
-        exp_sol_monitor_mode_2 = True  # a_ego < a_lead - |a_abrupt| for single leading vehicle
+        exp_sol_monitor_mode_2 = False  # a_ego < a_lead - |a_abrupt| for single leading vehicle
         exp_sol_monitor_mode_3 = True  # a_ego < a_lead - |a_abrupt| for all leading vehicles
         exp_sol_monitor_mode_4 = False  # a_ego > a_lead - |a_abrupt| for all leading vehicles
         exp_sol_monitor_mode_5 = True  # a_ego < a_abrupt; no leading vehicle
         exp_sol_monitor_mode_6 = False  # a_ego > a_abrupt; no leading vehicle
+        exp_sol_monitor_mode_7 = False
 
         # exp_sol_robustness_mode_1 = self._traffic_rule_param[
         #     "a_abrupt"]  # a_abrupt = -2
@@ -563,54 +564,79 @@ class TestPredicate(unittest.TestCase):
             2: StateLongitudinal(s=20, v=10, a=-7),
             3: StateLongitudinal(s=30, v=10, a=-3),
             4: StateLongitudinal(s=40, v=10, a=-8),
-            5: StateLongitudinal(s=50, v=10, a=2)}
+            5: StateLongitudinal(s=50, v=10, a=2),
+            6: StateLongitudinal(s=60, v=10, a=-0.1)}
+
+        state_list_lon_other_1 = {
+            0: StateLongitudinal(s=10, v=10, a=1),
+            1: StateLongitudinal(s=20, v=10, a=-4),
+            2: StateLongitudinal(s=30, v=10, a=-2),
+            3: StateLongitudinal(s=40, v=10, a=-1.5),
+            4: StateLongitudinal(s=50, v=10, a=-1.5),
+            5: StateLongitudinal(s=60, v=10, a=-1.5),
+            6: StateLongitudinal(s=70, v=10, a=2.0)}
+
+        state_list_lon_other_2 = {
+            0: StateLongitudinal(s=20, v=10, a=1),
+            1: StateLongitudinal(s=30, v=10, a=-1),
+            2: StateLongitudinal(s=40, v=10, a=-3),
+            3: StateLongitudinal(s=50, v=10, a=-2)}
+
         state_list_lat_ego = {
             0: StateLateral(d=0, theta=0),
             1: StateLateral(d=0, theta=0),
             2: StateLateral(d=0, theta=0),
-            3: StateLateral(d=0, theta=0)}
+            3: StateLateral(d=0, theta=0),
+            4: StateLateral(d=0, theta=0),
+            5: StateLateral(d=0, theta=0),
+            6: StateLateral(d=0, theta=0)}
         cr_state_list_ego = {
             0: State(position=0, time_step=0),
             1: State(position=10, time_step=1),
             2: State(position=20, time_step=2),
             3: State(position=30, time_step=3),
             4: State(position=40, time_step=4),
-            5: State(position=50, time_step=5)}
+            5: State(position=50, time_step=5),
+            6: State(position=60, time_step=6)}
         lanelet_assignments_ego = {
             0: {1},
             1: {1},
             2: {1},
             3: {1},
             4: {1},
-            5: {1}}
+            5: {1},
+            6: {1}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
                               Rectangle(5, 2), cr_state_list_ego, 0,
                               ObstacleType.CAR, ego_vehicle_param,
                               lanelet_assignments_ego, None, None, None)
 
         # other vehicle 1
-        state_list_lon_other_1 = {
-            0: StateLongitudinal(s=10, v=10, a=1),
-            1: StateLongitudinal(s=20, v=10, a=-4),
-            2: StateLongitudinal(s=30, v=10, a=-2),
-            3: StateLongitudinal(s=40, v=10, a=-1.5)}
+
         state_list_lat_other_1 = {
             0: StateLateral(d=0, theta=0),
             1: StateLateral(d=0, theta=0),
             2: StateLateral(d=0, theta=0),
-            3: StateLateral(d=0, theta=0)}
+            3: StateLateral(d=0, theta=0),
+            4: StateLateral(d=0, theta=0),
+            5: StateLateral(d=0, theta=0),
+            6: StateLateral(d=0, theta=0)}
         cr_state_list_other_1 = {
             0: State(position=10, time_step=0),
             1: State(position=20, time_step=1),
-            2: State(position=30, time_step=1),
-            3: State(position=40, time_step=1)}
+            2: State(position=30, time_step=2),
+            3: State(position=40, time_step=3),
+            4: State(position=50, time_step=4),
+            5: State(position=60, time_step=5),
+            6: State(position=70, time_step=6)}
         lanelet_assignments_other_1 = {
             0: {1},
             1: {1},
             2: {1},
             3: {1},
             4: {0},
-            5: {0}}
+            5: {0},
+            6: {1}}
         other_vehicle_1 = Vehicle(state_list_lon_other_1,
                                   state_list_lat_other_1, Rectangle(5, 2),
                                   cr_state_list_other_1, 1, ObstacleType.CAR,
@@ -618,11 +644,6 @@ class TestPredicate(unittest.TestCase):
                                   lanelet_assignments_other_1, None, None, None)
 
         # other vehicle 2
-        state_list_lon_other_2 = {
-            0: StateLongitudinal(s=20, v=10, a=1),
-            1: StateLongitudinal(s=30, v=10, a=-1),
-            2: StateLongitudinal(s=40, v=10, a=-3),
-            3: StateLongitudinal(s=50, v=10, a=-2)}
         state_list_lat_other_2 = {
             0: StateLateral(d=0, theta=0),
             1: StateLateral(d=0, theta=0),
@@ -631,8 +652,8 @@ class TestPredicate(unittest.TestCase):
         cr_state_list_other_2 = {
             0: State(position=20, time_step=0),
             1: State(position=30, time_step=1),
-            2: State(position=40, time_step=1),
-            3: State(position=50, time_step=1)}
+            2: State(position=40, time_step=2),
+            3: State(position=50, time_step=3)}
         lanelet_assignments_other_2 = {
             0: {1},
             1: {1},
@@ -655,7 +676,7 @@ class TestPredicate(unittest.TestCase):
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
         sol_robustness_mode = []
-        for i in range(6):
+        for i in range(7):
             sol_monitor_mode.append(
                     pred.evaluate_boolean(world_state, vehicle_ids))
             sol_robustness_mode.append(
@@ -668,22 +689,31 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4])
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5])
+        # self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode[6])
 
         world_state.time_step = 0
 
-        rule_str = "((has_leading_vehicle__a0 < 0 implies accel__a0 >= -2.0) and" \
-                   " (has_leading_vehicle__a0 >= 0 implies" \
-                   " accel__a0 - max_lead_accel__a0 >= -2.0))"
-        rule = Rule(rule_str, {"traffic_rules_param": {}})
+        rule_str = "accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0)"
+        rule = Rule(rule_str, {"traffic_rules_param": {"scale_rob": False}},
+                    name="UnnecessaryBraking",
+                    quantification=QuantificationType.EXISTENTIAL)
         rule_eval = RuleSetEvaluator([rule])
-        rob, preds = rule_eval.evaluate_all_rules_all_timesteps(world_state,
-                                                                tuple())
-        self.assertEqual(not exp_sol_monitor_mode_1, rob[0][0][1] >= 0.0)
-        self.assertEqual(not exp_sol_monitor_mode_2, rob[0][1][1] >= 0.0)
-        self.assertEqual(not exp_sol_monitor_mode_3, rob[0][2][1] >= 0.0)
-        self.assertEqual(not exp_sol_monitor_mode_4, rob[0][3][1] >= 0.0)
-        self.assertEqual(not exp_sol_monitor_mode_5, rob[0][4][1] >= 0.0)
-        self.assertEqual(not exp_sol_monitor_mode_6, rob[0][5][1] >= 0.0)
+        rob, preds = rule_eval.evaluate_all_rules_all_timesteps_floating(
+            world_state)
+        self.assertEqual(not exp_sol_monitor_mode_1, np.all(
+            rob[rob["time_step"] == 0]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_2, np.all(
+            rob[rob["time_step"] == 1]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_3, np.all(
+            rob[rob["time_step"] == 2]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_4, np.all(
+            rob[rob["time_step"] == 3]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_5, np.all(
+            rob[rob["time_step"] == 4]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_6, np.all(
+            rob[rob["time_step"] == 5]["rob"].values >= 0.0))
+        self.assertEqual(not exp_sol_monitor_mode_7, np.all(
+            rob[rob["time_step"] == 6]["rob"].values >= 0.0))
 
     def test_speed_limit(self):
         # expected solutions

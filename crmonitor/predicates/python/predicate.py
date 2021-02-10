@@ -36,6 +36,12 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
 
 def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
         List[Vehicle]:
+    """
+    Returns a list of preceding vehicles in ascending order of distance
+    :param world_state:
+    :param vehicle_rear:
+    :return:
+    """
     veh = []
     lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
             vehicle_rear.lanelet_assignment[world_state.time_step])
@@ -52,7 +58,7 @@ def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
                     world_state.time_step)
             if dist >= 0.0:
                 veh.append((dist, vehicle_lead))
-    return [v[1] for v in sorted(veh, key=lambda d: d[0])]
+    return sorted(veh, key=lambda d: d[0])
 
 
 class LazyValue:
@@ -430,6 +436,19 @@ class PredLeadingVehicle(IPredicateEvaluator):
         return rob
 
 
+class PredPrecedes(IPredicateEvaluator):
+    predicate_name = "precedes"
+    arity = 2
+
+    def evaluate_robustness(self, world_state: WorldState,
+                            vehicle_ids: List[int]) -> float:
+        prec_veh = get_preceding_vehicles(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
+        if len(prec_veh) and prec_veh[0][1].id == vehicle_ids[1]:
+            return self._scale_dist(math.inf)
+        else:
+            return self._scale_dist(-math.inf)
+
+
 class PredAcceleration(IPredicateEvaluator):
     predicate_name = "accel"
     arity = 1
@@ -453,5 +472,5 @@ class PredMaxLeadAcceleration(IPredicateEvaluator):
         if len(lead_veh) == 0:
             return 0.0
         else:
-            accel = [v.states_lon[world_state.time_step].a for v in lead_veh]
+            accel = [v.states_lon[world_state.time_step].a for _, v in lead_veh]
             return max(accel)

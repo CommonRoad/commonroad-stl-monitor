@@ -6,7 +6,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.evaluation import RuleSetEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world_state import WorldState
-from crmonitor.predicates.python.rule import Rule
+from crmonitor.predicates.python.rule import Rule, QuantificationType
 
 logging.basicConfig(
         format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
@@ -47,17 +47,19 @@ class RefactoringTests(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(scenario_file).open(
                 lanelet_assignment=True)
 
-        rule = Rule(rule_str, self.traffic_rules, name="preserve_flow")
+        rule = Rule(rule_str, self.traffic_rules, name="preserve_flow",
+                    quantification=QuantificationType.EXISTENTIAL)
 
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id,
                                                           self.config)
-            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(world_state)
-            rob = df_rule[df_rule["time_step"] == df_rule["time_step"].max()]["rob"].values[0]
+            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+                world_state)
+            rob = df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
+                "rob"].values[0]
             self.assertEqual(exp_violation, rob >= 0.0,
                              f"Test failed for ego_id={ego_id}")
-
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
@@ -183,6 +185,8 @@ class RefactoringTests(unittest.TestCase):
             1008: True,
             1009: True})]
 
+        exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
+
         scenario_file = "scenarios/test_interstate/DEU_test_safe_distance.xml"
         rule_str = "always((in_front_of__a0_a1 and in_same_lane__a0_a1 and " \
                    "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))" \
@@ -195,14 +199,26 @@ class RefactoringTests(unittest.TestCase):
 
         rule_eval = RuleSetEvaluator([rule])
 
-        for ego_id, o_ids in exp_result:
+        # TODO: Repair test for defined other agent
+        # for ego_id, o_ids in exp_result:
+        #     world_state = WorldState.create_from_scenario(scenario, ego_id,
+        #                                                   self.config)
+        #     for o_id, exp_violation in o_ids.items():
+        #         rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
+        #                 world_state, (o_id,))
+        #         self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
+        #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
+
+        for ego_id, exp_violation in exp_floating:
             world_state = WorldState.create_from_scenario(scenario, ego_id,
                                                           self.config)
-            for o_id, exp_violation in o_ids.items():
-                rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-                        world_state, (o_id,))
-                self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
-                                 f"Test failed for ego_id={ego_id} and o_id={o_id}")
+            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+                    world_state)
+            rob_value = \
+                df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
+                    "rob"].values[0]
+            self.assertEqual(exp_violation, rob_value >= 0.0,
+                             f"Test failed for ego_id={ego_id}")
 
     def test_unnecessary_braking(self):
         # one vehicle accelerates (1000)
@@ -220,15 +236,20 @@ class RefactoringTests(unittest.TestCase):
             1005: True,
             1006: True,
             1007: True}
-        rule_str = "always((has_leading_vehicle__a0 < 0 implies accel__a0 >= -2.0) and (has_leading_vehicle__a0 >= 0 implies accel__a0 - max_lead_accel__a0 >= -2.0))"
-        rule = Rule(rule_str, self.traffic_rules)
+        rule_str = "always(accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
+        self.traffic_rules["scale_rob"] = False
+        rule = Rule(rule_str, self.traffic_rules, name="UnnecessaryBraking",
+                    quantification=QuantificationType.EXISTENTIAL)
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id,
                                                           self.config)
-            rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-                    world_state, tuple())
-            self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
+            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+                    world_state)
+            rob_value = \
+            df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
+                "rob"].values[0]
+            self.assertEqual(exp_violation, rob_value >= 0.0,
                              f"Test failed for ego_id={ego_id}")
 
 
