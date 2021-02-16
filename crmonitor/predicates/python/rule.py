@@ -76,7 +76,7 @@ class Rule:
 
     @property
     def predicate_names(self):
-        return [pred.full_name for pred in self.predicate_assignment]
+        return sorted([pred.full_name for pred in self.predicate_assignment])
 
     def _extract_predicates(self):
         required_predicates = set()
