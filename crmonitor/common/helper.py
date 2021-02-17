@@ -1,22 +1,21 @@
-import math
 import enum
-import ruamel.yaml
-
+import math
 from decimal import Decimal
 from typing import Dict, Union, List, Tuple
 
-from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
-from commonroad.scenario.obstacle import DynamicObstacle
+import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
-from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
-from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
-from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
-
+from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
+from commonroad.scenario.trajectory import State
+from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import (Vehicle,
                                       VehicleClassification,
                                       StateLongitudinal,
                                       StateLateral, )
-from crmonitor.common.road_network import RoadNetwork, Lane
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
+from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 
 @enum.unique
@@ -329,6 +328,21 @@ def calculate_tv(a_0, j_input, v_0, v_max):
 
     return t_v
 
+def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_network: RoadNetwork):
+    lanelets = obs.initial_shape_lanelet_ids
+    lanes = road_network.find_lanes_by_lanelets(lanelets)
+    shape = obs.obstacle_shape.rotate_translate_local(state.position,
+                                                      state.orientation)
+    veh_area = shape.shapely_object.area
+    intersecting_lanes = set()
+    for lane in lanes:
+        intersection = shape.shapely_object.intersection(
+            lane.lanelet.convert_to_polygon().shapely_object)
+        intersect_area = intersection.area
+        if intersect_area / veh_area > 0.33:
+            intersecting_lanes.add(lane.lanelet.lanelet_id)
+    return intersecting_lanes
+
 
 def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         road_network: RoadNetwork, dt: float,
@@ -389,6 +403,7 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
     lanelet_assignments = {
             initial_time_step: obstacle.initial_shape_lanelet_ids}
     vehicle_classifications = {initial_time_step: vehicle_classification}
+    robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(obstacle.initial_state, obstacle, road_network)}
     for state in obstacle.prediction.trajectory.state_list:
         acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
         if state.time_step - 1 in state_list_lon:
@@ -402,7 +417,7 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
                 state.velocity, acceleration, jerk, state.orientation,
                 reference_lane, )
         if state_lon is None or state_lat is None:
-            continue
+            break
         state_list_lon[state.time_step] = state_lon
         state_list_lat[state.time_step] = state_lat
         state_list_cr[state.time_step] = state
@@ -411,11 +426,12 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         lanelet_assignments[state.time_step] = \
         obstacle.prediction.shape_lanelet_assignment[state.time_step]
         vehicle_classifications[state.time_step] = vehicle_classification
+        robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(state, obstacle, road_network)
 
     vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape,
             state_list_cr, obstacle.obstacle_id, obstacle.obstacle_type,
             vehicle_param, lanelet_assignments, signal_series,
-            vehicle_classifications, lane, )
+            vehicle_classifications, lane, robust_lanelet_assginment)
     return vehicle
 
 

@@ -1,16 +1,12 @@
-from typing import Union, Set, Dict, List
 import enum
-import numpy as np
 from typing import Union, Set, Dict, List
-
-from commonroad.geometry.shape import Shape, Rectangle
-from commonroad.scenario.trajectory import State
-from commonroad.scenario.obstacle import ObstacleType, SignalState
-from commonroad.geometry.transform import rotate_translate
-
-from crmonitor.common.road_network import Lane
 
 import crmonitor_cpp
+import numpy as np
+from commonroad.geometry.shape import Shape, Rectangle
+from commonroad.scenario.obstacle import ObstacleType, SignalState
+from commonroad.scenario.trajectory import State
+from crmonitor.common.road_network import Lane
 
 
 class StateLongitudinal:
@@ -129,6 +125,7 @@ class Vehicle:
         signal_states: Dict[int, SignalState] = None,
         vehicle_classification: Dict[int, VehicleClassification] = None,
         lane: Union[Lane, List[Lane]] = None,
+        robust_lanelet_assignment: Dict[int, Set[int]] = None
     ):
         """
         :param states_lon: list of longitudinal states for initialization
@@ -151,6 +148,11 @@ class Vehicle:
         self._vehicle_classification = vehicle_classification
         self._lane = lane
         self._vehicle_param = vehicle_param
+        self._robust_lanelet_assignment = robust_lanelet_assignment
+
+    @property
+    def robust_lanelet_assignment(self):
+        return self._robust_lanelet_assignment
 
     @property
     def start_time(self):

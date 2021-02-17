@@ -2,10 +2,10 @@ import abc
 import logging
 import math
 from functools import partial
-from typing import List
+from typing import List, Tuple
+
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
-
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from crmonitor.common.vehicle import Vehicle
@@ -35,23 +35,21 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
 
 
 def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
-        List[Vehicle]:
+        List[Tuple[float, Vehicle]]:
     """
     Returns a list of preceding vehicles in ascending order of distance
-    :param world_state:
-    :param vehicle_rear:
-    :return:
+    :param world_state: Current world state
+    :param vehicle_rear: Reference vehicle
+    :return: Sorted list of tuples of distance and vehicle object
     """
     veh = []
-    lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
-            vehicle_rear.lanelet_assignment[world_state.time_step])
+    rear_lanes = vehicle_rear.robust_lanelet_assignment[world_state.time_step]
     for vehicle_lead in world_state.other_vehicles + [world_state.ego_vehicle]:
         if not vehicle_lead.is_valid(
                 world_state.time_step) or vehicle_lead is vehicle_rear:
             continue
-        lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_lead.lanelet_assignment[world_state.time_step])
-        intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
+        lead_lanes = vehicle_lead.robust_lanelet_assignment[world_state.time_step]
+        intersecting_lanes = lead_lanes.intersection(rear_lanes)
         if len(intersecting_lanes) > 0:
             dist = vehicle_lead.rear_s(
                     world_state.time_step) - vehicle_rear.front_s(
@@ -443,7 +441,7 @@ class PredPrecedes(IPredicateEvaluator):
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
         prec_veh = get_preceding_vehicles(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
-        if len(prec_veh) and prec_veh[0][1].id == vehicle_ids[1]:
+        if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
             return self._scale_dist(math.inf)
         else:
             return self._scale_dist(-math.inf)
