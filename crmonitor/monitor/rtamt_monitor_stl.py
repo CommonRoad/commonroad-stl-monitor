@@ -1,6 +1,7 @@
 from typing import List, Tuple, Union, Dict
 
 import rtamt
+from rtamt import Language
 
 from crmonitor.predicates.python.predicate_value import PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule, IOType
@@ -38,8 +39,7 @@ class TrafficRuleMonitorForwardSTL:
     # TODO: Could be made static
     def construct_monitor(self) -> rtamt.STLSpecification:
         logic_formula = self._reconstruct_logic_formula()
-        monitor = rtamt.STLIOSpecification(0)  # 0: cpp; 1: Python
-        monitor.name = "HandMadeMonitor"  # self.name
+        monitor = rtamt.STLDiscreteTimeSpecification(semantics=self._output_type, language=Language.CPP)
         for var in self._rule.predicate_assignment:
             monitor.declare_var(var.full_name, "float")
             if var.io_type == IOType.INPUT:
