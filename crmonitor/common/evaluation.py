@@ -1,19 +1,14 @@
 import itertools
 import logging
-import math
 from collections import defaultdict
 from functools import partial
 from typing import List, Tuple, Iterable
 
-import numpy as np
 import pandas as pd
-
 from crmonitor.common.helper import gather
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
-from crmonitor.predicates.python.predicate_value import PredicateValue, \
-    PredicateValueCollection
 from crmonitor.predicates.python.rule import Rule, QuantificationType
 
 
@@ -47,10 +42,15 @@ class RuleSetEvaluator:
         self.predicate_values = defaultdict(default_dict_factory)
         self._last_world_state = None
 
+    def clear_cache_timesteps(self, start_time_step, end_time_step):
+        for i in range(start_time_step, end_time_step + 1):
+            self.predicate_values.pop(i)
+
     def evaluate_predicates_timestep(self, rule: Rule, world_state: WorldState,
                                      other_ids: Tuple[int]):
-        if not (self._last_world_state is world_state):
-            logging.debug("Clear predicate cache!")
+        if self._last_world_state is None or self._last_world_state.scenario.scenario_id != world_state.scenario.scenario_id or world_state.ego_vehicle.id != self._last_world_state.ego_vehicle.id:
+            if self._last_world_state is not None:
+                logging.debug("Clear predicate cache!")
             self.predicate_values.clear()
             self._last_world_state = world_state
         ids = (world_state.ego_vehicle.id,) + other_ids
@@ -58,6 +58,9 @@ class RuleSetEvaluator:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
             if self.predicate_values[world_state.time_step][
                 pred_assign.base_name].get(predicate_ids) is None:
+                logging.debug("Evaluating predicate %s , t=%d, ids=%s",
+                              pred_assign.base_name, world_state.time_step,
+                              predicate_ids)
                 value = pred_assign.evaluator.evaluate_robustness(world_state,
                         predicate_ids)
                 self.predicate_values[world_state.time_step][
