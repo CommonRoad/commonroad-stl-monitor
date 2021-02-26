@@ -11,8 +11,7 @@ class TrafficRuleMonitorForwardSTL:
     Represents single formalized traffic rule
     """
 
-    def __init__(self, rule: Rule,
-                 output_type='standard'):  # , predicate_references):
+    def __init__(self, rule: Rule, output_type="standard"):  # , predicate_references):
 
         self._rule = rule
         self._output_type = output_type
@@ -38,7 +37,9 @@ class TrafficRuleMonitorForwardSTL:
     # TODO: Could be made static
     def construct_monitor(self) -> rtamt.STLSpecification:
         logic_formula = self._reconstruct_logic_formula()
-        monitor = rtamt.STLDiscreteTimeSpecification(semantics=self._output_type, language=Language.PYTHON)
+        monitor = rtamt.STLDiscreteTimeSpecification(
+            semantics=self._output_type, language=Language.PYTHON
+        )
         for var in self._rule.predicate_assignment:
             monitor.declare_var(var.full_name, "float")
             if var.io_type == IOType.INPUT:
@@ -61,17 +62,18 @@ class TrafficRuleMonitorForwardSTL:
             res.append((pred.predicate_str, pred.value))
         return res
 
-    def evaluate_monitor_offline(self, predicates: Dict[
-        str, List[Tuple[float, bool]]], vehicle_ids) -> Union[bool, float]:
+    def evaluate_monitor_offline(
+        self, predicates: Dict[str, List[Tuple[float, bool]]], vehicle_ids
+    ) -> Union[bool, float]:
         pass
 
-    def evaluate_monitor_online(self, time: float,
-                                predicates: List[Tuple[str, float]]):
+    def evaluate_monitor_online(self, time: float, predicates: List[Tuple[str, float]]):
         rob = self._monitor.update(time, predicates)
         return rob
 
-    def evaluate_monitor_offline_stepwise(self, predicates: Dict[
-        float, List[Tuple[str, float]]]) -> List[Tuple[float, float]]:
+    def evaluate_monitor_offline_stepwise(
+        self, predicates: Dict[float, List[Tuple[str, float]]]
+    ) -> List[Tuple[float, float]]:
         self.reset_monitor()
         rob_series = []
         for t in sorted(predicates.keys()):

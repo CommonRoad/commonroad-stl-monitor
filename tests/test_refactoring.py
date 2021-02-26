@@ -9,8 +9,10 @@ from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.python.rule import Rule, QuantificationType
 
 logging.basicConfig(
-        format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-        datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
+    format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+    datefmt="%Y-%m-%d:%H:%M:%S",
+    level=logging.INFO,
+)
 
 
 def check_violation(rob_values: List[Tuple[float, float]]):
@@ -19,7 +21,6 @@ def check_violation(rob_values: List[Tuple[float, float]]):
 
 
 class RefactoringTests(unittest.TestCase):
-
     def setUp(self) -> None:
         super().setUp()
         config_path = "crmonitor/config.yaml"
@@ -38,28 +39,32 @@ class RefactoringTests(unittest.TestCase):
             1002: True,
             1003: False,
             1004: True,
-            1005: False}
+            1005: False,
+        }
         scenario_file = "scenarios/test_interstate/DEU_test_preserve_traffic_flow.xml"
-        rule_str = "always((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) " \
-                   "and in_same_lane__a0_a1 and in_front_of__a0_a1)" \
-                   "or ((keeps_fov_speed_limit__a0 and keeps_lane_speed_limit_star__a0 and keeps_type_speed_limit__a0) < 0.216))"
+        rule_str = (
+            "((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) "
+            "and in_same_lane__a0_a1 and in_front_of__a0_a1)"
+            "or ((keeps_fov_speed_limit__a0 and keeps_lane_speed_limit_star__a0 and keeps_type_speed_limit__a0) < 0.216))"
+        )
 
-        scenario, _ = CommonRoadFileReader(scenario_file).open(
-                lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
-        rule = Rule(rule_str, self.traffic_rules, name="preserve_flow",
-                    quantification=QuantificationType.EXISTENTIAL)
+        rule = Rule(
+            rule_str,
+            self.traffic_rules,
+            name="preserve_flow",
+            quantification=QuantificationType.EXISTENTIAL,
+        )
 
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id,
-                                                          self.config)
+            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
             df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
-                world_state)
-            rob = df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
-                "rob"].values[0]
-            self.assertEqual(exp_violation, rob >= 0.0,
-                             f"Test failed for ego_id={ego_id}")
+                world_state
+            )
+            rob = all([r >= 0.0 for r in df_rule["rob"].values])
+            self.assertEqual(exp_violation, rob, f"Test failed for ego_id={ego_id}")
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
@@ -73,127 +78,184 @@ class RefactoringTests(unittest.TestCase):
         # one vehicle which violates safe distance to leading vehicle which leaves lane and
         #   recaptures safe distance to vehicle which enters lane (1008)
         # one vehicle which performs illegal cut-in (1010)
-        exp_result = [(1000, {
-            1001: False,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1007: True,
-            1008: True,
-            1009: True,
-            1010: True}), (1001, {
-            1000: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1007: True,
-            1008: True,
-            1009: True,
-            1010: True}), (1002, {
-            1000: True,
-            1001: True,
-            1003: False,
-            1004: False,
-            1005: True,
-            1006: True,
-            1007: False,
-            1008: True,
-            1009: True,
-            1010: True}), (1003, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1004: False,
-            1005: True,
-            1006: True,
-            1007: False,
-            1008: True,
-            1009: True,
-            1010: True}), (1004, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1005: True,
-            1006: True,
-            1007: False,
-            1008: True,
-            1009: True,
-            1010: True}), (1005, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1006: True,
-            1007: True,
-            1008: True,
-            1009: True,
-            1010: True}), (1006, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1007: True,
-            1008: True,
-            1009: True,
-            1010: True}), (1007, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1008: True,
-            1009: True,
-            1010: True}), (1008, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1007: True,
-            1009: False,
-            1010: True}), (1009, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1007: True,
-            1008: True,
-            1010: True}), (1010, {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: True,
-            1004: True,
-            1005: True,
-            1006: True,
-            1007: True,
-            1008: True,
-            1009: True})]
+        exp_result = [
+            (
+                1000,
+                {
+                    1001: False,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1001,
+                {
+                    1000: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1002,
+                {
+                    1000: True,
+                    1001: True,
+                    1003: False,
+                    1004: False,
+                    1005: True,
+                    1006: True,
+                    1007: False,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1003,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1004: False,
+                    1005: True,
+                    1006: True,
+                    1007: False,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1004,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1005: True,
+                    1006: True,
+                    1007: False,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1005,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1006,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1007: True,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1007,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1008: True,
+                    1009: True,
+                    1010: True,
+                },
+            ),
+            (
+                1008,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1009: False,
+                    1010: True,
+                },
+            ),
+            (
+                1009,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                    1010: True,
+                },
+            ),
+            (
+                1010,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                    1009: True,
+                },
+            ),
+        ]
 
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
         scenario_file = "scenarios/test_interstate/DEU_test_safe_distance.xml"
-        rule_str = "always((in_front_of__a0_a1 and in_same_lane__a0_a1 and " \
-                   "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))" \
-                   " implies keeps_safe_distance_prec__a0_a1)"
+        rule_str = (
+            "((in_front_of__a0_a1 and in_same_lane__a0_a1 and "
+            "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))"
+            " implies keeps_safe_distance_prec__a0_a1)"
+        )
 
-        scenario, _ = CommonRoadFileReader(scenario_file).open(
-                lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
         rule = Rule(rule_str, self.traffic_rules)
 
@@ -210,15 +272,14 @@ class RefactoringTests(unittest.TestCase):
         #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
         for ego_id, exp_violation in exp_floating:
-            world_state = WorldState.create_from_scenario(scenario, ego_id,
-                                                          self.config)
+            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
             df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
-                    world_state)
-            rob_value = \
-                df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
-                    "rob"].values[0]
-            self.assertEqual(exp_violation, rob_value >= 0.0,
-                             f"Test failed for ego_id={ego_id}")
+                world_state
+            )
+            rob_value = all([r >= 0.0 for r in df_rule["rob"].values])
+            self.assertEqual(
+                exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
+            )
 
     def test_unnecessary_braking(self):
         # one vehicle accelerates (1000)
@@ -227,30 +288,34 @@ class RefactoringTests(unittest.TestCase):
         # two leading vehicle which brake only minimal (1005, 1007)
         # one vehicle following another vehicle which brakes normal (1006)
         scenario, planning_problem_set = CommonRoadFileReader(
-                "scenarios/test_interstate/DEU_test_unnecessary_braking.xml").open(
-                lanelet_assignment=True)
+            "scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
+        ).open(lanelet_assignment=True)
         exp_result = {
             1000: True,
             1001: True,
             1002: False,
             1005: True,
             1006: True,
-            1007: True}
-        rule_str = "always(accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
+            1007: True,
+        }
+        rule_str = "(accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
         self.traffic_rules["scale_rob"] = False
-        rule = Rule(rule_str, self.traffic_rules, name="UnnecessaryBraking",
-                    quantification=QuantificationType.EXISTENTIAL)
+        rule = Rule(
+            rule_str,
+            self.traffic_rules,
+            name="UnnecessaryBraking",
+            quantification=QuantificationType.EXISTENTIAL,
+        )
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id,
-                                                          self.config)
+            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
             df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
-                    world_state)
-            rob_value = \
-            df_rule[df_rule["time_step"] == df_rule["time_step"].max()][
-                "rob"].values[0]
-            self.assertEqual(exp_violation, rob_value >= 0.0,
-                             f"Test failed for ego_id={ego_id}")
+                world_state
+            )
+            rob_value = all([r >= 0.0 for r in df_rule["rob"].values])
+            self.assertEqual(
+                exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
+            )
 
 
 if __name__ == "__main__":
