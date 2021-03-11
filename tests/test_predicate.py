@@ -32,6 +32,7 @@ def parallel_lanes(num_lanes) -> List[Lanelet]:
     lon_step = 10
     lanelets = []
     for i in range(num_lanes):
+        # Lanes from right to left
         right_y = i * lane_width
         left_y = (i + 1) * lane_width
         center_y = (i + 0.5) * lane_width
@@ -41,13 +42,19 @@ def parallel_lanes(num_lanes) -> List[Lanelet]:
         right_vertices_lane = np.stack((x_points, ones * right_y), axis=1)
         left_vertices_lane = np.stack((x_points, ones * left_y), axis=1)
         center_vertices_lane = np.stack((x_points, ones * center_y), axis=1)
+        if i == 0:
+            adjacent_right = None
+        else:
+            adjacent_right = i
         if i == num_lanes - 1:
             adjacent_left = None
         else:
-            adjacent_left = i + 1
+            adjacent_left = i + 2
         lanelets.append(Lanelet(left_vertices_lane, center_vertices_lane,
                                 right_vertices_lane, lanelet_id=i + 1,
                                 adjacent_left=adjacent_left,
+                                adjacent_right=adjacent_right,
+                                adjacent_right_same_direction=True,
                                 adjacent_left_same_direction=True))
     return lanelets
 
@@ -180,6 +187,7 @@ class TestPredicate(unittest.TestCase):
         exp_sol_monitor_mode_3 = True  # other vehicle partially in another lane
         exp_sol_monitor_mode_4 = False  # vehicles not in same lane
         exp_sol_monitor_mode_5 = True  # vehicles completely on same lane, but other vehicle is behind
+        exp_sol_monitor_mode_6 = True  # both vehicles in two lanes
 
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(2)
@@ -196,20 +204,23 @@ class TestPredicate(unittest.TestCase):
             1: StateLongitudinal(s=10, v=10),
             2: StateLongitudinal(s=20, v=10),
             3: StateLongitudinal(s=30, v=10),
-            4: StateLongitudinal(s=40, v=10)}
+            4: StateLongitudinal(s=40, v=10),
+            5: StateLongitudinal(s=50, v=10)}
         state_list_lat_ego = {
             0: StateLateral(d=0, theta=0),
             1: StateLateral(d=2, theta=0),
             2: StateLateral(d=0, theta=0),
             3: StateLateral(d=0, theta=0),
-            4: StateLateral(d=0, theta=0)}
+            4: StateLateral(d=0, theta=0),
+        5: StateLateral(d=3.5, theta=0)}
         cr_state_list_ego = {
             0: State(position=(0, 2), time_step=0),
             1: State(position=(10, 2), time_step=1),
             2: State(position=(20, 2), time_step=2),
             3: State(position=(30, 2), time_step=3),
-            4: State(position=(40, 2), time_step=4)}
-        lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1}, 4: {1}}
+            4: State(position=(40, 2), time_step=4),
+            5: State(position=(50, 3.5), time_step=5)}
+        lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1}, 4: {1}, 5: {1,2}}
         ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
                               Rectangle(5, 2), cr_state_list_ego, 0,
                               ObstacleType.CAR, ego_vehicle_param,
@@ -239,10 +250,11 @@ class TestPredicate(unittest.TestCase):
                                   lanelet_assignments_other_1, None, None, None)
 
         # other vehicle 2
-        state_list_lon_other_2 = {4: StateLongitudinal(s=20, v=10)}
-        state_list_lat_other_2 = {4: StateLateral(d=0, theta=0)}
-        cr_state_list_other_2 = {4: State(position=(20, 2), time_step=4)}
-        lanelet_assignments_ego = {4: {1}}
+        state_list_lon_other_2 = {4: StateLongitudinal(s=20, v=10), 5: StateLongitudinal(s=30, v=10)}
+        state_list_lat_other_2 = {4: StateLateral(d=0, theta=0), 5: StateLateral(d=4, theta=0)}
+        cr_state_list_other_2 = {4: State(position=(20, 2), time_step=4),
+                                 5: State(position=(30, 4), time_step=5)}
+        lanelet_assignments_ego = {4: {1}, 5: {1,2}}
         other_vehicle_2 = Vehicle(state_list_lon_other_2,
                                   state_list_lat_other_2, Rectangle(5, 2),
                                   cr_state_list_other_2, 2, ObstacleType.CAR,
@@ -270,11 +282,16 @@ class TestPredicate(unittest.TestCase):
         sol_monitor_mode_5 = pred.evaluate_robustness(world_state, [ego_vehicle.id,
                                                                  other_vehicle_2.id])
 
+        world_state.step()
+        sol_monitor_mode_6 = pred.evaluate_robustness(world_state, [ego_vehicle.id,
+                                                                 other_vehicle_2.id])
+
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1 >= 0)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2 >= 0)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3 >= 0)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4 >= 0)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6 >= 0)
 
     def test_safe_distance(self):
         # expected solutions
