@@ -48,7 +48,8 @@ def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
         if not vehicle_lead.is_valid(
                 world_state.time_step) or vehicle_lead is vehicle_rear:
             continue
-        lead_lanes = vehicle_lead.robust_lanelet_assignment[world_state.time_step]
+        lead_lanes = vehicle_lead.robust_lanelet_assignment[
+            world_state.time_step]
         intersecting_lanes = lead_lanes.intersection(rear_lanes)
         if len(intersecting_lanes) > 0:
             dist = vehicle_lead.rear_s(
@@ -94,7 +95,8 @@ class IPredicateEvaluator(abc.ABC):
         return self._scale(x, 0.0, 200.0, copysign=True)
 
     def _scale_angle(self, x):
-        # angle = x - (math.ceil((x + math.pi) / (2 * math.pi)) - 1) * 2 * math.pi
+        # angle = x - (math.ceil((x + math.pi) / (2 * math.pi)) - 1) * 2 *
+        # math.pi
         # TODO: Might be slow
         # angle = math.asin(math.sin(x))
         return self._scale(x, 0, math.pi, copysign=True)
@@ -133,34 +135,57 @@ class PredInSameLane(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        if self.evaluate_boolean(world_state, vehicle_ids):
-            return self._scale_dist(math.inf)
-
+        """
+        If boolean is
+        True: Minimum fractional overlap on same lanes
+        False: Minimum distance to lanes of other
+        :param world_state:
+        :param vehicle_ids:
+        :return:
+        """
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        min_dist_k_to_p_lanes = math.inf
-        k_occ = vehicle_k.occupancy_at_time_step(
-                world_state.time_step).shapely_object
-        # TODO: could be also reused from binary computation
         lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_k.lanelet_assignment[world_state.time_step])
         lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step])
-        for lane_p in lane_ids_p:
-            dist = lane_p.lanelet.convert_to_polygon().shapely_object.distance(
-                    k_occ)
-            min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
+        if self.evaluate_boolean(world_state, vehicle_ids):
+            shape_k = vehicle_k.shape.shapely_object
+            shape_p = vehicle_p.shape.shapely_object
+            area_k = shape_k.area
+            area_p = shape_p.area
+            intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
+            assert len(intersecting_lanes) > 0
+            overlaps = [min(
+                lane.lanelet.convert_to_polygon().shapely_object.intersection(
+                    shape_k).area / area_k,
+                lane.lanelet.convert_to_polygon().shapely_object.intersection(
+                    shape_p).area / area_p) for lane in intersecting_lanes]
+            # No need to normalize
+            return min(overlaps)
+        else:
+            min_dist_k_to_p_lanes = math.inf
+            k_occ = vehicle_k.occupancy_at_time_step(
+                    world_state.time_step).shapely_object
+            for lane_p in lane_ids_p:
+                dist = lane_p.lanelet.convert_to_polygon(
 
-        min_dist_p_to_k_lanes = math.inf
-        p_occ = vehicle_p.occupancy_at_time_step(
-                world_state.time_step).shapely_object
-        for lane_k in lane_ids_k:
-            dist = lane_k.lanelet.convert_to_polygon().shapely_object.distance(
-                    p_occ)
-            min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
+                ).shapely_object.distance(
+                        k_occ)
+                min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
 
-        return -min(self._scale_dist(min_dist_k_to_p_lanes),
-                    self._scale_dist(min_dist_p_to_k_lanes))
+            min_dist_p_to_k_lanes = math.inf
+            p_occ = vehicle_p.occupancy_at_time_step(
+                    world_state.time_step).shapely_object
+            for lane_k in lane_ids_k:
+                dist = lane_k.lanelet.convert_to_polygon(
+
+                ).shapely_object.distance(
+                        p_occ)
+                min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
+
+            return -min(self._scale_dist(min_dist_k_to_p_lanes),
+                        self._scale_dist(min_dist_p_to_k_lanes))
 
 
 class PredInFrontOf(IPredicateEvaluator):
@@ -192,19 +217,32 @@ class PredSingleLane(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
+        """
+        If false: 1 - largest fractional overlap with occupied lanes
+        If true: Distance to lane polygon boundary
+        :param world_state:
+        :param vehicle_ids:
+        :return:
+        """
         single_lane_boolean = self.evaluate_boolean(world_state, vehicle_ids)
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
+        k_lanes = world_state.road_network.find_lanes_by_lanelets(
+                vehicle_k.lanelet_assignment[world_state.time_step])
         if single_lane_boolean:
-            k_lanes = world_state.road_network.find_lanes_by_lanelets(
-                    vehicle_k.lanelet_assignment[world_state.time_step])
+            assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
             k_occ = vehicle_k.occupancy_at_time_step(
                     world_state.time_step).shapely_object
             lane_poly = k_lane.lanelet.convert_to_polygon().shapely_object
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
+            return self._scale_dist(distance_to_boundary)
         else:
-            distance_to_boundary = -math.inf
-        return self._scale_dist(distance_to_boundary)
+            shape_k = vehicle_k.shape.shapely_object
+            overlap_areas = [lane.lanelet.convert_to_polygon().shapely_object.intersection(
+                    shape_k).area for lane in k_lanes]
+            max_overlap = max(overlap_areas)
+            fraction = max_overlap / shape_k.area
+            return -(1 - fraction)
 
 
 class PredCutIn(IPredicateEvaluator):
@@ -396,7 +434,7 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
 
     def get_speed_limit(self, world_state, vehicle_ids):
         speed_limit = super(PredLaneSpeedLimitStar, self).get_speed_limit(
-            world_state, vehicle_ids)
+                world_state, vehicle_ids)
         if speed_limit is None:
             speed_limit = 130.0 / 3.6
         return speed_limit
@@ -440,7 +478,9 @@ class PredPrecedes(IPredicateEvaluator):
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
-        prec_veh = get_preceding_vehicles(world_state, world_state.vehicle_by_id(vehicle_ids[0]))
+        prec_veh = get_preceding_vehicles(world_state,
+                                          world_state.vehicle_by_id(
+                                                  vehicle_ids[0]))
         if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
             return self._scale_dist(math.inf)
         else:
