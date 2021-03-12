@@ -152,7 +152,7 @@ class RuleSetEvaluator:
                     pred["rule_name"] = rule.name
                     pred["other_ids"] = -1
                     pred["time_step"] = t
-                    pred["value"] = 0.0
+                    pred["value"] = 1.0 if rule.quantification == QuantificationType.ALL else -1.0
                 else:
                     other_ids = df.head(1)["other_ids"].values[0]
                     pred = df_pred[(df_pred["rule_name"] == rule.name) & (
