@@ -241,7 +241,7 @@ class PredSingleLane(IPredicateEvaluator):
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         k_lanes = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_k.lanelet_assignment[world_state.time_step])
-        assert len(k_lanes) > 0, "Vehicle must be assigned to at least one lane!"
+        assert len(k_lanes) > 0, f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}"
         if single_lane_boolean:
             assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
