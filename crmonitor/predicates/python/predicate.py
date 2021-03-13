@@ -241,6 +241,7 @@ class PredSingleLane(IPredicateEvaluator):
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         k_lanes = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_k.lanelet_assignment[world_state.time_step])
+        assert len(k_lanes) > 0, "Vehicle must be assigned to at least one lane!"
         if single_lane_boolean:
             assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
@@ -253,6 +254,7 @@ class PredSingleLane(IPredicateEvaluator):
             shape_k = vehicle_k.occupancy_at_time_step(world_state.time_step).shapely_object
             overlap_areas = [lane.lanelet.convert_to_polygon().shapely_object.intersection(
                     shape_k).area for lane in k_lanes]
+            assert len(overlap_areas) == len(k_lanes), f"No intersection found for some lanes. Found {len(overlap_areas)} instead of {len(k_lanes)}"
             max_overlap = max(overlap_areas)
             fraction = max_overlap / shape_k.area
             return -(1 - fraction)
