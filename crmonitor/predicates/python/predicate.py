@@ -250,7 +250,7 @@ class PredSingleLane(IPredicateEvaluator):
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
             return self._scale_lon_dist(distance_to_boundary)
         else:
-            shape_k = vehicle_k.occupancy_at_time_step(world_state.time_step)
+            shape_k = vehicle_k.occupancy_at_time_step(world_state.time_step).shapely_object
             overlap_areas = [lane.lanelet.convert_to_polygon().shapely_object.intersection(
                     shape_k).area for lane in k_lanes]
             max_overlap = max(overlap_areas)
