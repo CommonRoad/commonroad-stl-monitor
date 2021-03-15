@@ -179,30 +179,16 @@ class PredInSameLane(IPredicateEvaluator):
                 dist = np.max(left_y - occ.vertices[:,1])
             else:
                 dist = np.max(occ.vertices[:,1] - right_y)
-            return self._scale_lat_dist(dist)
+            return self._scale_lat_dist(np.abs(dist))
         else:
             min_dist_k_to_p_lanes = math.inf
             k_occ = vehicle_k.occupancy_at_time_step(
                     world_state.time_step).shapely_object
             for lane_p in lanes_p:
-                dist = lane_p.lanelet.convert_to_polygon(
-
-                ).shapely_object.distance(
-                        k_occ)
+                dist = k_occ.distance(lane_p.lanelet.convert_to_polygon(
+                ).shapely_object)
                 min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
-
-            min_dist_p_to_k_lanes = math.inf
-            p_occ = vehicle_p.occupancy_at_time_step(
-                    world_state.time_step).shapely_object
-            for lane_k in lanes_k:
-                dist = lane_k.lanelet.convert_to_polygon(
-
-                ).shapely_object.distance(
-                        p_occ)
-                min_dist_p_to_k_lanes = min(min_dist_p_to_k_lanes, dist)
-
-            return -min(self._scale_lat_dist(min_dist_k_to_p_lanes),
-                        self._scale_lat_dist(min_dist_p_to_k_lanes))
+            return -self._scale_lat_dist(min_dist_k_to_p_lanes)
 
 
 class PredInFrontOf(IPredicateEvaluator):
@@ -507,7 +493,9 @@ class PredPrecedes(IPredicateEvaluator):
         prec_veh = get_preceding_vehicles(world_state, ego_vehicle)
         same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
         if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
-            assert same_lane >= 0.0
+            # assert same_lane >= 0.0
+            if same_lane < 0:
+                same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
             fallback = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
             assert fallback >= 0.0
             ff_veh = get_preceding_vehicles(world_state, other_vehicle)
