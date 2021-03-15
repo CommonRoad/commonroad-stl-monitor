@@ -8,9 +8,10 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from ruamel.yaml.comments import CommentedMap
+
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from ruamel.yaml.comments import CommentedMap
 
 
 def norm(x, min_val, max_val):
@@ -43,12 +44,12 @@ def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
     :return: Sorted list of tuples of distance and vehicle object
     """
     veh = []
-    rear_lanes = vehicle_rear.robust_lanelet_assignment[world_state.time_step]
+    rear_lanes = vehicle_rear.lanelet_assignment[world_state.time_step]
     for vehicle_lead in world_state.other_vehicles + [world_state.ego_vehicle]:
         if not vehicle_lead.is_valid(
                 world_state.time_step) or vehicle_lead is vehicle_rear:
             continue
-        lead_lanes = vehicle_lead.robust_lanelet_assignment[
+        lead_lanes = vehicle_lead.lanelet_assignment[
             world_state.time_step]
         intersecting_lanes = lead_lanes.intersection(rear_lanes)
         if len(intersecting_lanes) > 0:
@@ -171,10 +172,13 @@ class PredInSameLane(IPredicateEvaluator):
             right_y = world_state.road_network.lanelet_network.find_lanelet_by_id(
                     right_most[0]).right_vertices[0][1]
             occ = world_state.vehicle_by_id(vehicle_ids[0]).occupancy_at_time_step(world_state.time_step)
-            min_y = np.min(occ.vertices[:,1])
-            max_y = np.max(occ.vertices[:,1])
+            dist_right_bound = np.min(np.abs(occ.vertices[:,1] - right_y))
+            dist_left_bound = np.max(np.abs(occ.vertices[:,1] - left_y))
             # Find maximum distance of to that boundary
-            dist = left_y - min_y if left_y - max_y < min_y - right_y else max_y - right_y
+            if dist_left_bound < dist_right_bound:
+                dist = np.max(left_y - occ.vertices[:,1])
+            else:
+                dist = np.max(occ.vertices[:,1] - right_y)
             return self._scale_lat_dist(dist)
         else:
             min_dist_k_to_p_lanes = math.inf
