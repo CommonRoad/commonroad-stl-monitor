@@ -493,9 +493,7 @@ class PredPrecedes(IPredicateEvaluator):
         prec_veh = get_preceding_vehicles(world_state, ego_vehicle)
         same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
         if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
-            # assert same_lane >= 0.0
-            if same_lane < 0:
-                same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
+            assert same_lane >= 0.0
             fallback = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
             assert fallback >= 0.0
             ff_veh = get_preceding_vehicles(world_state, other_vehicle)
