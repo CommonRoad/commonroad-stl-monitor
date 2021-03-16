@@ -8,10 +8,9 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
-from ruamel.yaml.comments import CommentedMap
-
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from ruamel.yaml.comments import CommentedMap
 
 
 def norm(x, min_val, max_val):
@@ -529,24 +528,25 @@ class PredPrecedes(IPredicateEvaluator):
                 fallback = math.inf
             return min(same_lane, overtake, fallback)
         else:
-            if other_vehicle.rear_s(world_state.time_step) < ego_vehicle.front_s(world_state.time_step):
-                # Other vehicle is behind
-                v = ego_vehicle.front_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
-            else:
-                # Other vehicle is in front
-                suc_veh = get_succeeding_vehicles(world_state, other_vehicle)
-                if len(suc_veh) > 0:
-                    # Other vehicle has a successor
-                    v = suc_veh[0][1].front_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
-                else:
-                    # Should only happen if same_lane < 0.0
-                    # as otherwise ego should be the successor -> precedes
-                    v = 0.0
-            if same_lane < 0.0:
-                return -self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
-            else:
-                assert v != 0.0
-                return -self._scale_lon_dist(v)
+            # if other_vehicle.rear_s(world_state.time_step) < ego_vehicle.front_s(world_state.time_step):
+            #     # Other vehicle is behind
+            #     v = ego_vehicle.front_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
+            # else:
+            #     # Other vehicle is in front
+            #     suc_veh = get_succeeding_vehicles(world_state, other_vehicle)
+            #     if len(suc_veh) > 0:
+            #         # Other vehicle has a successor
+            #         v = suc_veh[0][1].front_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
+            #     else:
+            #         # Should only happen if same_lane < 0.0
+            #         # as otherwise ego should be the successor -> precedes
+            #         v = 0.0
+            # if same_lane < 0.0:
+            #     return -self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
+            # else:
+            #     assert v != 0.0
+            #     return -self._scale_lon_dist(v)
+            return -1.0
 
 
 
