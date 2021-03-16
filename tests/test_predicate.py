@@ -21,7 +21,8 @@ from crmonitor.predicates.python.predicate import (PredCutIn, PredInSameLane,
                                                    PredSingleLane,
                                                    PredUnnecessaryBraking,
                                                    scale_clip,
-                                                   PredLaneSpeedLimit, )
+                                                   PredLaneSpeedLimit,
+                                                   PredPrecedes, )
 from crmonitor.predicates.python.rule import Rule, QuantificationType
 
 
@@ -1052,6 +1053,64 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode[2])
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
+
+
+    def test_precedes(self):
+        # Directly precedes
+        # Ego offset
+        # Ego and other offset
+        # Other behind
+        # Other behind one in between
+        # Other in front other in between
+        # Other in other lane
+        # Ego in other lane
+        expected = [True, True, True, False, False, False, False, False]
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(2)
+        lanelet_network.add_lanelet(lanelets[0])
+        lanelet_network.add_lanelet(lanelets[1])
+        road_network = RoadNetwork(lanelet_network,
+                self.config.get("road_network_param"))
+
+        lat_ego = [2, 3, 3, 2, 2, 2, 2, 6]
+        lon_ego = [30, 30, 30, 30, 30, 30, 30, 30]
+        lanelets_ego = [{1}, {1,2}, {1,2}, {1}, {1}, {1}, {1}, {2}]
+        ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego)
+
+        lat_other = [2, 2, 3, 2, 2, 2, 6, 2]
+        lon_other = [40, 40, 40, 20, 10, 50, 40, 40]
+        lanelets_other = [{1}, {1}, {1,2}, {1}, {1}, {1}, {2}, {1}]
+        other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other)
+
+        lat_other = [2, 2, 2, 2, 2, 2, 2, 2]
+        lon_other = [ 10, 10, 10, 10, 20, 40, 10, 10]
+        lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}]
+        other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other)
+
+        world_state = WorldState(ego_vehicle, [other_vehicle, other_vehicle_2], road_network)
+        vehicle_ids = [ego_vehicle.id, other_vehicle.id]
+
+        pred = PredPrecedes({})
+        for t, exp in enumerate(expected):
+            rob = pred.evaluate_robustness(world_state, vehicle_ids)
+            self.assertEqual(exp, rob >= 0.0, f"t={t}")
+            world_state.step()
+
+
+    def create_vehicle(self, id, lanelets_ego, lat_ego, lon_ego):
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        state_list_lon_ego = {t: StateLongitudinal(s=s, v=45) for t, s in
+            enumerate(lon_ego)}
+        state_list_lat_ego = {t: StateLateral(d=d, theta=0) for t, d in
+            enumerate(lat_ego)}
+        cr_state_list_ego = {t: State(position=s, time_step=t) for t, s in
+            enumerate(lon_ego)}
+        lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                Rectangle(5, 2), cr_state_list_ego, id, ObstacleType.CAR,
+                ego_vehicle_param, lanelet_assignments_ego, None, None, None)
+        return ego_vehicle
 
 
 if __name__ == "__main__":

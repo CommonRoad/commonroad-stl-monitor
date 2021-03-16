@@ -60,6 +60,31 @@ def get_preceding_vehicles(world_state: WorldState, vehicle_rear: Vehicle) -> \
                 veh.append((dist, vehicle_lead))
     return sorted(veh, key=lambda d: d[0])
 
+def get_succeeding_vehicles(world_state: WorldState, vehicle_front: Vehicle) -> \
+        List[Tuple[float, Vehicle]]:
+    """
+    Returns a list of preceding vehicles in ascending order of distance
+    :param world_state: Current world state
+    :param vehicle_front: Reference vehicle
+    :return: Sorted list of tuples of distance and vehicle object
+    """
+    veh = []
+    front_lanes = vehicle_front.lanelet_assignment[world_state.time_step]
+    for vehicle_rear in world_state.other_vehicles + [world_state.ego_vehicle]:
+        if not vehicle_rear.is_valid(
+                world_state.time_step) or vehicle_rear is vehicle_front:
+            continue
+        rear_lanes = vehicle_rear.lanelet_assignment[
+            world_state.time_step]
+        intersecting_lanes = rear_lanes.intersection(front_lanes)
+        if len(intersecting_lanes) > 0:
+            dist = vehicle_front.rear_s(
+                    world_state.time_step) - vehicle_rear.front_s(
+                    world_state.time_step)
+            if dist >= 0.0:
+                veh.append((dist, vehicle_rear))
+    return sorted(veh, key=lambda d: d[0])
+
 
 class LazyValue:
     def __init__(self, function):
@@ -494,26 +519,34 @@ class PredPrecedes(IPredicateEvaluator):
         same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
         if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
             assert same_lane >= 0.0
-            fallback = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
-            assert fallback >= 0.0
-            ff_veh = get_preceding_vehicles(world_state, other_vehicle)
-            if len(ff_veh) > 0:
-                overtake = ff_veh[0][1].rear_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
-                assert overtake >= 0.0
+            overtake = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
+            assert overtake >= 0.0
+            suc_veh = get_succeeding_vehicles(world_state, ego_vehicle)
+            if len(suc_veh) > 0:
+                fallback = ego_vehicle.front_s(world_state.time_step) - suc_veh[0][1].front_s(world_state.time_step)
+                assert fallback >= 0.0
             else:
-                overtake = math.inf
-            return min(same_lane, fallback, overtake)
+                fallback = math.inf
+            return min(same_lane, overtake, fallback)
         else:
             if other_vehicle.rear_s(world_state.time_step) < ego_vehicle.front_s(world_state.time_step):
-                v = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
-            elif len(prec_veh) > 0:
-                v = prec_veh[0][1].rear_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
+                # Other vehicle is behind
+                v = ego_vehicle.front_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
             else:
-                v = 0.0
+                # Other vehicle is in front
+                suc_veh = get_succeeding_vehicles(world_state, other_vehicle)
+                if len(suc_veh) > 0:
+                    # Other vehicle has a successor
+                    v = suc_veh[0][1].front_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
+                else:
+                    # Should only happen if same_lane < 0.0
+                    # as otherwise ego should be the successor -> precedes
+                    v = 0.0
             if same_lane < 0.0:
-                return self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
+                return -self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
             else:
-                return self._scale_lon_dist(v)
+                assert v != 0.0
+                return -self._scale_lon_dist(v)
 
 
 
