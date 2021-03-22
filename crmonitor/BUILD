@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//crmonitor/common",
         "@crccosy//:pycrccosy_lib",
+        "@rtamt_repo//:rtamt",
     ],
 )
 

@@ -1,5 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def load_stlmonitor_repos():
@@ -33,4 +33,12 @@ def load_stlmonitor_repos():
         commit = "6b4b290c0c323ce16e583b8f59786da438249743",
         remote = "git@gitlab.lrz.de:cps/commonroad-curvilinear-coordinate-system.git",
         shallow_since = "1608644996 +0100",
+    )
+
+    maybe(
+        new_git_repository,
+        name = "rtamt_repo",
+        commit = "5660f315d77f62b2b74d1c65ff9b48ee17afb5a1",
+        build_file_content = """py_library(name = "rtamt",srcs = glob(["rtamt/**/*.py"]),visibility = ["//visibility:public"], imports = ["rtamt"])""",
+        remote = "git@github.com:cirrostratus1/rtamt.git",
     )
