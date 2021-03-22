@@ -9,7 +9,6 @@ from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany,
                                               TrafficSignElement, )
 from commonroad.scenario.trajectory import State
-
 from crmonitor.common.evaluation import RuleSetEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -663,7 +662,7 @@ class TestPredicate(unittest.TestCase):
         exp_sol_monitor_mode_2 = True
         exp_sol_monitor_mode_3 = True
         exp_sol_monitor_mode_4 = False
-        exp_sol_monitor_mode_5 = True
+        exp_sol_monitor_mode_5 = False
         exp_sol_monitor_mode_6 = False
 
         lanelet_network = LaneletNetwork()
@@ -687,12 +686,12 @@ class TestPredicate(unittest.TestCase):
             5: StateLongitudinal(s=50, v=10),
         }
         state_list_lat_ego = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0.25, theta=0),
-            2: StateLateral(d=1, theta=0),
-            3: StateLateral(d=2, theta=0),
-            4: StateLateral(d=0, theta=0),
-            5: StateLateral(d=-2, theta=0),
+            0: StateLateral(d=1, theta=0),
+            1: StateLateral(d=2, theta=0),
+            2: StateLateral(d=3, theta=0),
+            3: StateLateral(d=3.5, theta=0),
+            4: StateLateral(d=4, theta=0),
+            5: StateLateral(d=4.5, theta=0),
         }
         cr_state_list_ego = {
             0: State(position=0, time_step=0),
@@ -702,7 +701,7 @@ class TestPredicate(unittest.TestCase):
             4: State(position=40, time_step=4),
             5: State(position=50, time_step=4),
         }
-        lanelet_assignments_ego = {0: {2}, 1: {2}, 2: {2}, 3: {2, 3}, 4: {1}, 5: {1, 2}}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1, 2}, 4: {1, 2}, 5: {1, 2}}
         ego_vehicle = Vehicle(
             state_list_lon_ego,
             state_list_lat_ego,
@@ -1096,6 +1095,20 @@ class TestPredicate(unittest.TestCase):
             rob = pred.evaluate_robustness(world_state, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
             world_state.step()
+
+
+    # def test_scenario(self):
+    #     config = self.config.copy()
+    #     config["ego_vehicle_param"]["t_react"] = 0.2
+    #     config["other_vehicles_param"]["t_react"] = 0.2
+    #     scn, _ = CommonRoadFileReader("/tmp/DEU_LocationALower-30_13_T-1.xml").open(True)
+    #     rnd = MPRenderer()
+    #     scn.draw(rnd, {"dynamic_obstacle": {"show_label": True}})
+    #     rnd.render(filename="/tmp/scn.pdf")
+    #     ws = WorldState.create_from_scenario(scn, 9, self.config)
+    #     pred = PredPrecedes({})
+    #     rob = pred.evaluate_robustness(ws, [9, 8])
+    #     pass
 
 
     def create_vehicle(self, id, lanelets_ego, lat_ego, lon_ego):

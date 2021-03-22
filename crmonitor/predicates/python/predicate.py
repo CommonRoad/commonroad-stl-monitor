@@ -11,6 +11,7 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from ruamel.yaml.comments import CommentedMap
+from shapely.geometry import Point
 
 
 def norm(x, min_val, max_val):
@@ -173,8 +174,7 @@ class PredInSameLane(IPredicateEvaluator):
         """
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        lanes_k = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_k.lanelet_assignment[world_state.time_step])
+
         lanes_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step])
         if self.evaluate_boolean(world_state, vehicle_ids):
@@ -265,14 +265,15 @@ class PredSingleLane(IPredicateEvaluator):
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
             return self._scale_lon_dist(distance_to_boundary)
         else:
+            k_lanes = list(k_lanes)
             shape_k = vehicle_k.occupancy_at_time_step(world_state.time_step).shapely_object
             overlap_areas = [lane.lanelet.convert_to_polygon().shapely_object.intersection(
                     shape_k).area for lane in k_lanes]
             assert len(overlap_areas) == len(k_lanes), f"No intersection found for some lanes. Found {len(overlap_areas)} instead of {len(k_lanes)}"
-            max_overlap = max(overlap_areas)
-            fraction = max_overlap / shape_k.area
-            return -(1 - fraction)
-
+            max_overlap_lane = k_lanes[np.argmax(overlap_areas)].lanelet.convert_to_polygon().shapely_object
+            diff = shape_k.boundary.coords
+            dist = [Point(*p).distance(max_overlap_lane) for p in diff]
+            return -max(dist)
 
 class PredCutIn(IPredicateEvaluator):
     predicate_name = "cut_in"
@@ -456,6 +457,14 @@ class PredFovSpeedLimit(PredGenericSpeedLimit):
         vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         return vehicle.vehicle_param.get("fov_speed_limit")
 
+class PredBrSpeedLimit(PredGenericSpeedLimit):
+    predicate_name = "keeps_brake_speed_limit"
+    arity = 1
+
+    def get_speed_limit(self, world_state, vehicle_ids):
+        vehicle = world_state.vehicle_by_id(vehicle_ids[0])
+        return vehicle.vehicle_param.get("braking_speed_limit")
+
 
 class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
     predicate_name = "keeps_lane_speed_limit_star"
@@ -559,19 +568,3 @@ class PredAcceleration(IPredicateEvaluator):
         accel = world_state.vehicle_by_id(vehicle_ids[0]).states_lon[
             world_state.time_step].a
         return accel
-
-
-class PredMaxLeadAcceleration(IPredicateEvaluator):
-    predicate_name = "max_lead_accel"
-    arity = 1
-
-    def evaluate_robustness(self, world_state: WorldState,
-                            vehicle_ids: List[int]) -> float:
-        lead_veh = get_preceding_vehicles(world_state,
-                                          world_state.vehicle_by_id(
-                                                  vehicle_ids[0]))
-        if len(lead_veh) == 0:
-            return 0.0
-        else:
-            accel = [v.states_lon[world_state.time_step].a for _, v in lead_veh]
-            return max(accel)
