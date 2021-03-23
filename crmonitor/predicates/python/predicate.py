@@ -1,5 +1,4 @@
 import abc
-import logging
 import math
 from typing import List, Tuple, Set
 
@@ -15,24 +14,14 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 
 
-def norm(x, min_val, max_val):
-    if math.isinf(x):
-        x = max_val
-    normed_val = ((x - min_val) / (max_val - min_val))
-    if normed_val > 1.0:
-        logging.debug("Value to normalize exceeded maximum!")
-    elif normed_val < 0.0:
-        logging.debug("Value to normalize exceeded minimum!")
-    return normed_val
-
-
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
-    n = norm(math.fabs(x), min_val, max_val)
-    rescaled = n * (new_max - new_min) + new_min
-    # Clip
-    rescaled = min(max(rescaled, new_min), new_max)
+    abs_x = np.abs(x)
+    if np.isinf(abs_x):
+        rescaled = new_max
+    else:
+        rescaled = np.interp(abs_x, [min_val, max_val], [new_min, new_max])
     if copysign:
-        rescaled = math.copysign(rescaled, x)
+        rescaled = np.copysign(rescaled, x)
     return rescaled
 
 
