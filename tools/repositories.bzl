@@ -40,5 +40,5 @@ def load_stlmonitor_repos():
         name = "rtamt_repo",
         commit = "5660f315d77f62b2b74d1c65ff9b48ee17afb5a1",
         build_file_content = """py_library(name = "rtamt",srcs = glob(["rtamt/**/*.py"]),visibility = ["//visibility:public"], imports = ["rtamt"])""",
-        remote = "git@github.com:cirrostratus1/rtamt.git",
+        remote = "https://github.com/cirrostratus1/rtamt.git",
     )
