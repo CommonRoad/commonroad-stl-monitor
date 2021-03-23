@@ -8,14 +8,13 @@ from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
-from crmonitor.common.road_network import RoadNetwork, Lane
-from crmonitor.common.vehicle import (Vehicle,
-                                      VehicleClassification,
-                                      StateLongitudinal,
-                                      StateLateral, )
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
+
+from crmonitor.common.road_network import RoadNetwork, Lane
+from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
+                                      StateLongitudinal, StateLateral, )
 
 
 @enum.unique
@@ -346,7 +345,7 @@ def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_netwo
 
 def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         road_network: RoadNetwork, dt: float,
-        ego_vehicle: Vehicle = None, ) -> Vehicle:
+        ego_vehicle: Vehicle = None, create_robust_lanelet_assignment=False) -> Vehicle:
     """
     Transforms a CommonRoad obstacle to a vehicle object
 
@@ -403,7 +402,10 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
     lanelet_assignments = {
             initial_time_step: obstacle.initial_shape_lanelet_ids}
     vehicle_classifications = {initial_time_step: vehicle_classification}
-    robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(obstacle.initial_state, obstacle, road_network)}
+    if create_robust_lanelet_assignment:
+        robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(obstacle.initial_state, obstacle, road_network)}
+    else:
+        robust_lanelet_assignment = None
     for state in obstacle.prediction.trajectory.state_list:
         acceleration = _compute_acceleration(state_lon.v, state.velocity, dt)
         if state.time_step - 1 in state_list_lon:
@@ -426,12 +428,13 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         lanelet_assignments[state.time_step] = \
         obstacle.prediction.shape_lanelet_assignment[state.time_step]
         vehicle_classifications[state.time_step] = vehicle_classification
-        robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(state, obstacle, road_network)
+        if create_robust_lanelet_assignment:
+            robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(state, obstacle, road_network)
 
     vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape,
             state_list_cr, obstacle.obstacle_id, obstacle.obstacle_type,
             vehicle_param, lanelet_assignments, signal_series,
-            vehicle_classifications, lane, robust_lanelet_assginment)
+            vehicle_classifications, lane, robust_lanelet_assignment)
     return vehicle
 
 
