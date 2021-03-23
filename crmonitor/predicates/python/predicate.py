@@ -2,16 +2,18 @@ import abc
 import logging
 import math
 from functools import partial
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
-from crmonitor.common.vehicle import Vehicle
-from crmonitor.common.world_state import WorldState
 from ruamel.yaml.comments import CommentedMap
 from shapely.geometry import Point
+
+from crmonitor.common.road_network import Lane
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.world_state import WorldState
 
 
 def norm(x, min_val, max_val):
@@ -153,6 +155,10 @@ class PredInSameLane(IPredicateEvaluator):
 
     def evaluate_boolean(self, world_state: WorldState,
                          vehicle_ids: List[int]) -> bool:
+        intersecting_lanes = self.get_same_lanes(world_state, vehicle_ids)
+        return len(intersecting_lanes) > 0
+
+    def get_same_lanes(self, world_state, vehicle_ids) -> Set[Lane]:
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
         lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
@@ -160,7 +166,7 @@ class PredInSameLane(IPredicateEvaluator):
         lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step])
         intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
-        return len(intersecting_lanes) > 0
+        return intersecting_lanes
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
@@ -174,27 +180,14 @@ class PredInSameLane(IPredicateEvaluator):
         """
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-
-        lanes_p = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_p.lanelet_assignment[world_state.time_step])
         if self.evaluate_boolean(world_state, vehicle_ids):
-            intersecting_lanelets = vehicle_p.lanelet_assignment[world_state.time_step].intersection(vehicle_k.lanelet_assignment[world_state.time_step])
-            assert len(intersecting_lanelets) > 0
+            intersecting_lanes = self.get_same_lanes(world_state,
+                                                        vehicle_ids)
+            assert len(intersecting_lanes) > 0
             # Find left most lane boundary (max y)
-            left_most = [l_id for l_id in intersecting_lanelets if world_state.road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left is None or world_state.road_network.lanelet_network.find_lanelet_by_id(l_id).adj_left not in intersecting_lanelets]
-            assert len(left_most) == 1
+            left_y = max([np.max(lane.lanelet.left_vertices[:,1]) for lane in intersecting_lanes])
             # Find right most lane boundary (min y)
-            right_most = [l_id for l_id in intersecting_lanelets if
-                          world_state.road_network.lanelet_network
-                              .find_lanelet_by_id(
-                                  l_id).adj_right is None or
-                         world_state.road_network.lanelet_network.find_lanelet_by_id(
-                             l_id).adj_right not in intersecting_lanelets]
-            assert len(right_most) == 1
-            # Find closest boundary by minimum distance of corner points
-            left_y = world_state.road_network.lanelet_network.find_lanelet_by_id(left_most[0]).left_vertices[0][1]
-            right_y = world_state.road_network.lanelet_network.find_lanelet_by_id(
-                    right_most[0]).right_vertices[0][1]
+            right_y = min([np.min(lane.lanelet.right_vertices[:,1]) for lane in intersecting_lanes])
             occ = world_state.vehicle_by_id(vehicle_ids[0]).occupancy_at_time_step(world_state.time_step)
             dist_right_bound = np.min(np.abs(occ.vertices[:,1] - right_y))
             dist_left_bound = np.max(np.abs(occ.vertices[:,1] - left_y))
@@ -205,6 +198,8 @@ class PredInSameLane(IPredicateEvaluator):
                 dist = np.max(occ.vertices[:,1] - right_y)
             return self._scale_lat_dist(np.abs(dist))
         else:
+            lanes_p = world_state.road_network.find_lanes_by_lanelets(
+                    vehicle_p.lanelet_assignment[world_state.time_step])
             min_dist_k_to_p_lanes = math.inf
             k_occ = vehicle_k.occupancy_at_time_step(
                     world_state.time_step).shapely_object
@@ -283,6 +278,7 @@ class PredCutIn(IPredicateEvaluator):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
+        self.theta_min = np.pi / 180.0 * 3.0
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
@@ -294,22 +290,20 @@ class PredCutIn(IPredicateEvaluator):
         same_lane = self._same_lane_evaluator.evaluate_robustness(world_state,
                                                                   vehicle_ids)
 
-        l_dist = cutted_vehicle.states_lat[world_state.time_step].d - \
+        r_l_dist = cutted_vehicle.states_lat[world_state.time_step].d - \
                  cutting_vehicle.states_lat[world_state.time_step].d
-        l_orient = cutting_vehicle.states_lat[world_state.time_step].theta
-        r_dist = cutting_vehicle.states_lat[world_state.time_step].d - \
+        r_l_orient = cutting_vehicle.states_lat[world_state.time_step].theta - self.theta_min
+        l_r_dist = cutting_vehicle.states_lat[world_state.time_step].d - \
                  cutted_vehicle.states_lat[world_state.time_step].d
-        r_orient = -cutting_vehicle.states_lat[world_state.time_step].theta + .0
+        l_r_orient = self.theta_min - cutting_vehicle.states_lat[world_state.time_step].theta + .0
 
-        l_dist = self._scale_lat_dist(l_dist)
-        r_dist = self._scale_lat_dist(r_dist)
-        l_orient = self._scale_angle(l_orient)
-        r_orient = self._scale_angle(r_orient)
+        r_l_dist = self._scale_lat_dist(r_l_dist)
+        l_r_dist = self._scale_lat_dist(l_r_dist)
+        r_l_orient = self._scale_angle(r_l_orient)
+        l_r_orient = self._scale_angle(l_r_orient)
 
         rob = min(-single_lane, same_lane,
-                  max(min(l_dist, l_orient), min(r_dist, r_orient)))
-        if rob >= 0.0:
-            rob = 1.0
+                  max(min(r_l_dist, r_l_orient), min(l_r_dist, l_r_orient)))
         return rob
 
 
@@ -523,15 +517,14 @@ class PredPrecedes(IPredicateEvaluator):
                             vehicle_ids: List[int]) -> float:
         ego_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
-        prec_veh = get_preceding_vehicles(world_state, ego_vehicle)
-        same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
-        if len(prec_veh) > 0 and prec_veh[0][1].id == vehicle_ids[1]:
+        succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
+        if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
+            same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
             assert same_lane >= 0.0
             overtake = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
             assert overtake >= 0.0
-            suc_veh = get_succeeding_vehicles(world_state, ego_vehicle)
-            if len(suc_veh) > 0:
-                fallback = ego_vehicle.front_s(world_state.time_step) - suc_veh[0][1].front_s(world_state.time_step)
+            if len(succ_veh) >= 2:
+                fallback = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][1].front_s(world_state.time_step)
                 assert fallback >= 0.0
             else:
                 fallback = math.inf
