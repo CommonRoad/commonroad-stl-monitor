@@ -248,7 +248,7 @@ class PredCutIn(IPredicateEvaluator):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
-        self.theta_min = np.pi / 180.0 * 3.0
+        self.theta_min = 1e-5
 
     def evaluate_robustness(self, world_state: WorldState,
                             vehicle_ids: List[int]) -> float:
@@ -265,7 +265,7 @@ class PredCutIn(IPredicateEvaluator):
         r_l_orient = cutting_vehicle.states_lat[world_state.time_step].theta - self.theta_min
         l_r_dist = cutting_vehicle.states_lat[world_state.time_step].d - \
                  cutted_vehicle.states_lat[world_state.time_step].d
-        l_r_orient = self.theta_min - cutting_vehicle.states_lat[world_state.time_step].theta + .0
+        l_r_orient = -self.theta_min - cutting_vehicle.states_lat[world_state.time_step].theta
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
         l_r_dist = self._scale_lat_dist(l_r_dist)
