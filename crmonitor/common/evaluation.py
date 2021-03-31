@@ -5,6 +5,7 @@ from functools import partial
 from typing import List, Tuple, Iterable
 
 import pandas as pd
+
 from crmonitor.common.helper import gather
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
@@ -146,11 +147,11 @@ class RuleSetEvaluator:
                     df = pd.DataFrame.from_records([{
                                                         "rule_name": rule.name,
                                                         "time_step": t,
-                                                        "other_ids": -1,
+                                                        "other_ids": (-1,),
                                                         "rob": 1.0}])
                     pred = pd.DataFrame({"full_name": rule.predicate_names})
                     pred["rule_name"] = rule.name
-                    pred["other_ids"] = -1
+                    pred["other_ids"] = (-1,)
                     pred["time_step"] = t
                     pred["value"] = 1.0 if rule.quantification == QuantificationType.ALL else -1.0
                 else:
