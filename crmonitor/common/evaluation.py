@@ -151,7 +151,7 @@ class RuleSetEvaluator:
                                                         "rob": 1.0}])
                     pred = pd.DataFrame({"full_name": rule.predicate_names})
                     pred["rule_name"] = rule.name
-                    pred["other_ids"] = (-1,)
+                    pred["other_ids"] = pd.Series(itertools.repeat(tuple([-1]), len(pred.index)), index=pred.index, dtype="object")
                     pred["time_step"] = t
                     pred["value"] = 1.0 if rule.quantification == QuantificationType.ALL else -1.0
                 else:
