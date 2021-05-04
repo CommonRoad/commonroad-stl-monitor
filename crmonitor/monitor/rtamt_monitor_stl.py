@@ -18,6 +18,10 @@ class TrafficRuleMonitorForwardSTL:
         self._output_type = output_type
         self._monitor = self.construct_monitor()
 
+    @property
+    def rule(self):
+        return self._rule
+
     def reset_monitor(self):
         self._monitor.reset()
 

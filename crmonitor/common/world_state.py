@@ -1,19 +1,10 @@
-import collections
 import logging
-from typing import Iterator, Optional
+from typing import Optional
 
 from commonroad.scenario.scenario import Scenario
 
 from crmonitor.common.helper import create_scenario_vehicles, \
-    create_ego_vehicle_param, \
-    create_simulation_param, \
-    create_other_vehicles_param
-from crmonitor.common.road_network import RoadNetwork
-from commonroad.scenario.scenario import Scenario
-
-from crmonitor.common.helper import create_scenario_vehicles, \
-    create_ego_vehicle_param, \
-    create_simulation_param, \
+    create_ego_vehicle_param, create_simulation_param, \
     create_other_vehicles_param
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
@@ -22,7 +13,7 @@ from crmonitor.common.vehicle import Vehicle
 class WorldState:
 
     @classmethod
-    def create_from_scenario(cls, scenario: Scenario, ego_obs_id, config, time_step=0, road_network=None):
+    def create_from_scenario(cls, scenario: Scenario, ego_obs_id, config, time_step=None, road_network=None):
         if road_network is None:
             params = config.get("road_network_param")
             road_network = RoadNetwork(scenario.lanelet_network, params)
@@ -41,6 +32,8 @@ class WorldState:
                                                                           others_params,
                                                                           road_network,
                                                                           scenario.dynamic_obstacles)
+        if time_step is None:
+            time_step = ego_vehicle.end_time
         return cls(ego_vehicle, other_vehicles, road_network, time_step, scenario)
 
 

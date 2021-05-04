@@ -116,12 +116,12 @@ class RuleTest(unittest.TestCase):
             None,
         )
 
-        world_state = WorldState(ego_vehicle, [other_vehicle_1], road_network)
+        world_state = WorldState(ego_vehicle, [other_vehicle_1], road_network, ego_vehicle.end_time)
 
         rule_str = "in_front_of__a0_a1"
         rule = Rule(rule_str, {"traffic_rules_param": {}})
         rule_eval = RuleSetEvaluator([rule])
-        rob, preds = rule_eval.evaluate_all_rules_all_timesteps_floating(world_state)
+        rob, preds = rule_eval.evaluate_incremental(world_state)
         self.assertEqual(rob.shape[0], 5)
 
     def test_preserve_flow(self):
@@ -156,10 +156,10 @@ class RuleTest(unittest.TestCase):
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
-            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+            df_rule, _ = rule_eval.evaluate_incremental(
                 world_state
             )
-            rob = all([r >= 0.0 for r in df_rule["rob"].values])
+            rob = all([r >= 0.0 for r in df_rule["robustness"].values])
             self.assertEqual(exp_violation, rob, f"Test failed for ego_id={ego_id}")
 
     def test_safe_distance(self):
@@ -369,10 +369,10 @@ class RuleTest(unittest.TestCase):
 
         for ego_id, exp_violation in exp_floating:
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
-            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+            df_rule, _ = rule_eval.evaluate_incremental(
                 world_state
             )
-            rob_value = all([r >= 0.0 for r in df_rule["rob"].values])
+            rob_value = all([r >= 0.0 for r in df_rule["robustness"].values])
             self.assertEqual(
                 exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
             )
@@ -405,10 +405,10 @@ class RuleTest(unittest.TestCase):
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
-            df_rule, _ = rule_eval.evaluate_all_rules_all_timesteps_floating(
+            df_rule, _ = rule_eval.evaluate_incremental(
                 world_state
             )
-            rob_value = all([r >= 0.0 for r in df_rule["rob"].values])
+            rob_value = all([r >= 0.0 for r in df_rule["robustness"].values])
             self.assertEqual(
                 exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
             )

@@ -3,6 +3,7 @@ import math
 from decimal import Decimal
 from typing import Dict, Union, List, Tuple
 
+import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -711,3 +712,18 @@ def gather(l, indices: List[int]):
     for i in indices:
         output.append(l[i])
     return tuple(output)
+
+
+def flatten_nested_dict(data, path=tuple()):
+    entries = []
+    for key, val in data.items():
+        if isinstance(val, dict):
+            entries.extend(flatten_nested_dict(val, path + (key,)))
+        else:
+            entries.append(path + (key, val))
+    return entries
+
+
+def pandas_from_nested_dict(data, level_names):
+    entries = flatten_nested_dict(data)
+    return pd.DataFrame(entries, columns=level_names)
