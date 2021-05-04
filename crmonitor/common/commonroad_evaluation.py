@@ -1,11 +1,12 @@
 import os
 import traceback
 
-from crmonitor.common.helper import *
-from crmonitor.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
-from crmonitor.common.road_network import RoadNetwork
-
 from commonroad.scenario.scenario import Scenario
+
+from crmonitor.common.helper import *
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.monitor.legacy.traffic_rule_dispatcher import \
+    TrafficRuleDispatcher
 
 
 class CommonRoadObstacleEvaluation:
