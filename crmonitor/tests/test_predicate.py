@@ -1,3 +1,4 @@
+import os
 import math
 import unittest
 
@@ -17,13 +18,14 @@ from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane,
                                             PredSafeDistPrec, PredInFrontOf,
                                             PredSingleLane, scale_clip,
                                             PredLaneSpeedLimit, PredPrecedes, )
-from .util import parallel_lanes
+from crmonitor.tests.util import parallel_lanes
 
 
 class TestPredicate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        config_path = "crmonitor/config.yaml"
+        root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        config_path = os.path.join(root_path, "config.yaml")
         self.config = load_yaml(config_path)
         self.config["scale_rob"] = False
 

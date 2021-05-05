@@ -1,3 +1,4 @@
+import os
 import logging
 import unittest
 from typing import List, Tuple
@@ -14,7 +15,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.rule import Rule, QuantificationType
-from .util import parallel_lanes
+from crmonitor.tests.util import parallel_lanes
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
@@ -31,10 +32,12 @@ def check_violation(rob_values: List[Tuple[float, float]]):
 class RuleTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        config_path = "crmonitor/config.yaml"
+        root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        config_path = os.path.join(root_path, "config.yaml")
         self.config = load_yaml(config_path)
-        rules_path = "crmonitor/traffic_rules.yaml"
+        rules_path = os.path.join(root_path, "traffic_rules.yaml")
         self.traffic_rules = load_yaml(rules_path)
+        self.scenario_root_path = os.path.join(root_path, "../scenarios")
 
     def test_single_vehicle(self):
         lanelet_network = LaneletNetwork()
@@ -137,7 +140,7 @@ class RuleTest(unittest.TestCase):
             1004: True,
             1005: False,
         }
-        scenario_file = "scenarios/test_interstate/DEU_test_preserve_traffic_flow.xml"
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_preserve_traffic_flow.xml")
         rule_str = (
             "((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) "
             "and in_same_lane__a0_a1 and in_front_of__a0_a1)"
@@ -344,7 +347,7 @@ class RuleTest(unittest.TestCase):
 
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
-        scenario_file = "scenarios/test_interstate/DEU_test_safe_distance.xml"
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
         rule_str = (
             "((in_front_of__a0_a1 and in_same_lane__a0_a1 and "
             "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))"
@@ -383,9 +386,8 @@ class RuleTest(unittest.TestCase):
         # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         # two leading vehicle which brake only minimal (1005, 1007)
         # one vehicle following another vehicle which brakes normal (1006)
-        scenario, planning_problem_set = CommonRoadFileReader(
-            "scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-        ).open(lanelet_assignment=True)
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_unnecessary_braking.xml")
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         exp_result = {
             1000: True,
             1001: True,
