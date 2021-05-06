@@ -33,7 +33,8 @@ class RuleSetEvaluator:
         self.rules = tuple(rules)
         self.monitors = {
             rule: defaultdict(
-                lambda: TrafficRuleMonitorForwardSTL(rule, output_type="standard")
+                # lambda: TrafficRuleMonitorForwardSTL(rule, output_type="standard")
+                partial(TrafficRuleMonitorForwardSTL, rule, output_type="standard")
             )
             for rule in rules
         }
@@ -133,15 +134,20 @@ class RuleSetEvaluator:
             self._last_world_state = world_state
             self._last_time_step = -1
             for rule_mons in self.monitors.values():
-                rule_mons.clear()
+                # rule_mons.clear()
+                for monitor in list(rule_mons.values()):
+                    monitor.reset_monitor()
+
         elif world_state.time_step < self._last_time_step:
             # Clear only monitor states, if time was decremented
             self._last_time_step = -1
             for rule_mons in self.monitors.values():
-                rule_mons.clear()
+                # rule_mons.clear()
+                for monitor in list(rule_mons.values()):
+                    monitor.reset_monitor()
 
     def evaluate_incremental(
-        self, world_state: WorldState
+        self, world_state: WorldState, to_panda=True
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Evaluate world state for each time step since the last evaluation.
@@ -200,11 +206,14 @@ class RuleSetEvaluator:
                     predicate_robustness[t][rule.name] = pred_values[idx]
             world_state.step()
 
-        df_rule = pandas_from_nested_dict(
-            rule_robustness, ["time_step", "rule_name", "robustness"]
-        )
-        df_pred = pandas_from_nested_dict(
-            predicate_robustness,
-            ["time_step", "rule_name", "full_name", "robustness"],
-        )
-        return df_rule, df_pred
+        if to_panda:
+            df_rule = pandas_from_nested_dict(
+                rule_robustness, ["time_step", "rule_name", "robustness"]
+            )
+            df_pred = pandas_from_nested_dict(
+                predicate_robustness,
+                ["time_step", "rule_name", "full_name", "robustness"],
+            )
+            return df_rule, df_pred
+        else:
+            return rule_robustness, predicate_robustness

@@ -668,15 +668,13 @@ def update_scenario_vehicles(dt: float, time_step: int,
     :return: updated ego and dynamic vehicles
     """
     # update ego vehicle
-    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step, ego_vehicle.lane,
-            ego_vehicle)
+    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step, ego_vehicle.lane, ego_vehicle)
 
     # update obstacle vehicles
     other_vehicles = []
     for o in dynamic_obstacles:
         # only update if obstacle appears at the current time step
-        if (
-                o.initial_state.time_step <= time_step <= o.prediction.trajectory.final_state.time_step):
+        if (o.initial_state.time_step <= time_step <= o.prediction.trajectory.final_state.time_step):
             if o.obstacle_id in dynamic_vehicles:
                 updated_vehicle = update_vehicle(o, dt, time_step,
                         ego_vehicle.lane, dynamic_vehicles[o.obstacle_id])
