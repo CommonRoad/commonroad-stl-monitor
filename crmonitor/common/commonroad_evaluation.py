@@ -1,18 +1,21 @@
+import os
 import traceback
 
 from commonroad.scenario.scenario import Scenario
 
 from crmonitor.common.helper import *
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.monitor.traffic_rule_dispatcher import TrafficRuleDispatcher
+from crmonitor.monitor.legacy.traffic_rule_dispatcher import \
+    TrafficRuleDispatcher
 
 
 class CommonRoadObstacleEvaluation:
     """Class for the traffic rule evaluation of CommonRoad scenarios"""
 
-    def __init__(self, config_path: str):
-        config = load_yaml(config_path + "config.yaml")
-        traffic_rules = load_yaml(config_path + "traffic_rules.yaml")
+    def __init__(self, config_path: str, backend: Backend = Backend.PythonMTL):
+        assert os.path.exists(config_path)
+        config = load_yaml(os.path.join(config_path, "config.yaml"))
+        traffic_rules = load_yaml(os.path.join(config_path, "traffic_rules.yaml"))
         self._simulation_param = create_simulation_param(
             config.get("simulation_param"), 0.1, "DEU"
         )
@@ -33,6 +36,7 @@ class CommonRoadObstacleEvaluation:
         self._road_network_param = config.get("road_network_param")
         self._road_network: RoadNetwork  # updated in each test case
         self._operating_mode = OperatingMode(self._simulation_param["operating_mode"])
+        self._backend = backend
 
         self.num_vehicles = 0
         self.num_scenarios = 0
@@ -77,6 +81,8 @@ class CommonRoadObstacleEvaluation:
             self._traffic_rules_param,
             self._activated_traffic_rule_sets,
             self._vehicle_dependent_rules,
+            self._operating_mode,
+            self._backend,
         )
         vehicle_evaluation = []
         for ego in scenario.dynamic_obstacles:
@@ -211,22 +217,22 @@ class CommonRoadObstacleEvaluation:
                     "_".join(rule_name.split("_", 2)[:2])
                     in self._vehicle_dependent_rules
                 ):
-                    if eval_result is False:
+                    if eval_result is False or eval_result < 0.0:
                         self.eval_vehicle_dependent_rules[
                             "_".join(rule_name.split("_", 2)[:2])
                         ] = False
-                elif eval_result is True:
+                elif eval_result is True or eval_result > 0.0:
                     self.eval_dict[rule_name] += 1
                     num_correct_rules += 1
                     out_string += (
                         " - evaluation of rule " + rule_name + ": " + str(eval_result)
                     )
-                elif eval_result is False:
+                elif eval_result is False or eval_result < 0.0:
                     out_string += (
                         " - evaluation of rule " + rule_name + ": " + str(eval_result)
                     )
             for rule_name, eval_result in self.eval_vehicle_dependent_rules.items():
-                if eval_result is True:
+                if eval_result is True or eval_result > 0.0:
                     self.eval_dict["_".join(rule_name.split("_", 2)[:2])] += 1
                     num_correct_rules += 1
                 out_string += (

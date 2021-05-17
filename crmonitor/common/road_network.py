@@ -1,6 +1,6 @@
 from typing import List, Set, Dict
-
 import numpy as np
+
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
 from pycrccosy import CurvilinearCoordinateSystem
@@ -176,6 +176,7 @@ class Lane:
         )
 
         curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+
         return curvilinear_cosy
 
 

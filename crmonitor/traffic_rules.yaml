@@ -16,43 +16,59 @@
 #   - R_I4: emergency lane
 #   - R_I5: consider entering vehicles
 traffic_rules_forward:
-  R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
-  R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
-  # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
-  # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) | ~(~single_lane__x_ego U G(single_lane__x_ego)) | ~(single_lane__x_ego U (~single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))))) # -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
-  # assumption: vehicle follows lane
-  # new rule lane change has to be finished
+    R_I5: G((on_main_carriage_way__x_ego & in_front_of__x_ego__x_o & on_access_ramp__x_o & F(on_main_carriage_way__x_o)) -> (~(~(main_carriageway_right_lane__x_ego) & F(main_carriageway_right_lane__x_ego))))
+    R_G7: G(((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o)) | F[0, 0.5](in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o & ~(keeps_safe_distance_prec__x_ego__x_o))) -> (brakes_stronger__x_ego__x_o | drives_faster__x_o__x_ego))
+   # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
+   # R_G8: G((single_lane__x_ego & F(G(single_lane__x_ego))) | ~(~single_lane__x_ego U G(single_lane__x_ego)) | ~(single_lane__x_ego U (~single_lane__x_ego & F(~single_lane__x_ego & X(single_lane__x_ego))))) # -> drives_rightmost_general__x_ego) # TODO only when no lane change -> drive rightmost TODO consider orientation for lane change
+    # assumption: vehicle follows lane
+    # new rule lane change has to be finished
+    R_G1_forward_no_cut_in: G((in_same_lane__x_ego__x_o & in_front_of__x_ego__x_o) -> keeps_safe_distance_prec__x_ego__x_o)
+
+    R_I5_new: always((on_main_carriage_way__x_ego and in_front_of__x_ego__x_o and on_access_ramp__x_o and eventually[0, 1000](on_main_carriage_way__x_o)) implies (not(not(main_carriageway_right_lane__x_ego) and eventually(main_carriageway_right_lane__x_ego))))
+
+#    R_G1_forward: always((in_front_of__x_ego__x_o and in_same_lane__x_ego__x_o and !once[0, 30](cut_in__x_o__x_ego)) #  and prev(not cut_in__x_o__x_ego)
+#      -> keeps_safe_distance_prec__x_ego__x_o)
+#
+#    R_G2_forward: always(!unnecessary_braking__x_ego)
+#
+#    R_G3_forward: always(keeps_lane_speed_limit__x_ego and keeps_fov_speed_limit__x_ego and keeps_braking_speed_limit__x_ego and keeps_type_speed_limit__x_ego)
+#
+#    R_G4_forward: always(!slow_leading_vehicle__x_ego -> preserves_traffic_flow__x_ego)
+
+
 traffic_rules_backward:
-  R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode) && in_same_lane(time_step, ego_vehicle, other_vehicle) && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle)
-    && pre(!cut_in(time_step, other_vehicle, ego_vehicle)))) -> keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode))
+    R_G1: always((in_front_of(time_step, ego_vehicle, other_vehicle, operating_mode) && in_same_lane(time_step, ego_vehicle, other_vehicle, operating_mode)
+                  && !once[0, 30](cut_in(time_step, other_vehicle, ego_vehicle, operating_mode)
+                 && pre(!cut_in(time_step, other_vehicle, ego_vehicle, operating_mode)))) -> keeps_safe_distance_prec(time_step, ego_vehicle, other_vehicle, operating_mode))
 
-  R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode))
+    R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode))
 
-  R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_fov_speed_limit(time_step, ego_vehicle, operating_mode)
-    && keeps_braking_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_type_speed_limit(time_step, ego_vehicle, operating_mode))
+    R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_fov_speed_limit(time_step, ego_vehicle, operating_mode)
+                 && keeps_braking_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_type_speed_limit(time_step, ego_vehicle, operating_mode))
 
-  R_G4: always(!slow_leading_vehicle(time_step, ego_vehicle, other_vehicles) -> preserves_traffic_flow(time_step, ego_vehicle, operating_mode))
+    R_G4: always(!slow_leading_vehicle(time_step, ego_vehicle, other_vehicles, operating_mode) -> preserves_traffic_flow(time_step, ego_vehicle, operating_mode))
 
-  R_G5: always(keeps_sign_min_speed_limit(time_step, ego_vehicle, operating_mode))
+    R_G5: always(keeps_sign_min_speed_limit(time_step, ego_vehicle, operating_mode))
 
-  R_G6: always(cut_in(time_step, ego_vehicle, other_vehicle) && in_front_of(time_step, other_vehicle, ego_vehicle, operating_mode) -> keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode))
+    R_G6: always(cut_in(time_step, ego_vehicle, other_vehicle, operating_mode) && in_front_of(time_step, other_vehicle, ego_vehicle, operating_mode) -> keeps_safe_distance_prec(time_step, other_vehicle, ego_vehicle, operating_mode))
 
-  R_I1: always(!(in_congestion(time_step, ego_vehicle, other_vehicles) || exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles))
-    -> !in_standstill(time_step, ego_vehicle, operating_mode))
+    R_I1: always(!(in_congestion(time_step, ego_vehicle, other_vehicles, operating_mode) || exist_standing_leading_vehicle(time_step, ego_vehicle, other_vehicles, operating_mode))
+                 -> !in_standstill(time_step, ego_vehicle, operating_mode))
 
-  R_I2: always(left_of(time_step, ego_vehicle, other_vehicle) && drives_faster(time_step, ego_vehicle, other_vehicle, operating_mode) -> ((in_congestion(time_step, other_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles)
-    || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)) && drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle, operating_mode))
-    || (right_of_broad_lane_marking(time_step, ego_vehicle) && left_of_broad_lane_marking(time_step, other_vehicle))
-    || (on_access_ramp(time_step, ego_vehicle) && !(in_congestion(time_step, other_vehicle, other_vehicles)
-    || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles) || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles)))))
+    R_I2: always(left_of(time_step, ego_vehicle, other_vehicle, operating_mode) && drives_faster(time_step, ego_vehicle, other_vehicle, operating_mode) -> ((in_congestion(time_step, other_vehicle, other_vehicles, operating_mode) || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles, operating_mode)
+                 || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles, operating_mode)) && drives_with_slightly_higher_speed(time_step, ego_vehicle, other_vehicle, operating_mode))
+                 || (right_of_broad_lane_marking(time_step, ego_vehicle, operating_mode) && left_of_broad_lane_marking(time_step, other_vehicle, operating_mode))
+                 || (on_access_ramp(time_step, ego_vehicle, operating_mode) && !(in_congestion(time_step, other_vehicle, other_vehicles, operating_mode)
+                 || in_slow_moving_traffic(time_step, other_vehicle, other_vehicles, operating_mode) || in_queue_of_vehicles(time_step, other_vehicle, other_vehicles, operating_mode)))))
 
-  R_I3: always(!makes_u_turn(time_step, ego_vehicle, operating_mode) && !reverses(time_step, ego_vehicle, operating_mode))
+    R_I3: always(!makes_u_turn(time_step, ego_vehicle, operating_mode) && !reverses(time_step, ego_vehicle, operating_mode))
 
-  R_I4: always(in_congestion(time_step, ego_vehicle, other_vehicles) || in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles)
-    -> (interstate_broad_enough(time_step, ego_vehicle) -> !on_shoulder(time_step, ego_vehicle) &&  (in_leftmost_lane(time_step, ego_vehicle, operating_mode)
-    -> drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode) && single_lane(time_step, ego_vehicle)) && (!in_leftmost_lane(time_step, ego_vehicle, operating_mode)
-    -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode))) && (!interstate_broad_enough(time_step, ego_vehicle)
-    -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode) && in_rightmost_lane(time_step, ego_vehicle, operating_mode) && single_lane(time_step, ego_vehicle)))
+    R_I4: always(in_congestion(time_step, ego_vehicle, other_vehicles, operating_mode) || in_slow_moving_traffic(time_step, ego_vehicle, other_vehicles, operating_mode)
+            -> (interstate_broad_enough(time_step, ego_vehicle, operating_mode) -> !on_shoulder(time_step, ego_vehicle, operating_mode) &&  (in_leftmost_lane(time_step, ego_vehicle, operating_mode)
+            -> drives_leftmost(time_step, ego_vehicle, other_vehicles, operating_mode) && single_lane(time_step, ego_vehicle, operating_mode)) && (!in_leftmost_lane(time_step, ego_vehicle, operating_mode)
+            -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode))) && (!interstate_broad_enough(time_step, ego_vehicle, operating_mode)
+            -> drives_rightmost(time_step, ego_vehicle, other_vehicles, operating_mode) && in_rightmost_lane(time_step, ego_vehicle, operating_mode) && single_lane(time_step, ego_vehicle, operating_mode)))
+
 
 # Parameters for traffic rules
 ###
@@ -71,41 +87,42 @@ traffic_rules_backward:
 #   - u_turn: angle [rad] indicating u-turn
 #   - country: countries where traffic rules are applied
 traffic_rules_param:
-  j_abrupt: -2 # for ego vehicle emergency profile calculation
-  a_abrupt: -2
-  standstill_error: 0.01
-  min_velocity_dif: 15
-  num_veh_congestion: 3
-  max_congestion_velocity: 2.78
-  num_veh_slow_moving_traffic: 3
-  max_slow_moving_traffic_velocity: 8.33
-  num_veh_queue_of_vehicles: 3
-  max_queue_of_vehicles_velocity: 3
-  max_velocity_limit_free_driving: 16.67
-  desired_interstate_velocity: 36.11
-  min_interstate_width: 7.0
-  close_to_lane_border: 0.2
-  close_to_other_vehicle: 0.5
-  slightly_higher_speed_difference: 5.55
-  u_turn: 1.57
-  country: "DEU"
-  above_centerline_th: 0.1
+    j_abrupt: -2 # for ego vehicle emergency profile calculation
+    a_abrupt: -2
+    standstill_error: 0.01
+    min_velocity_dif: 15
+    num_veh_congestion: 3
+    max_congestion_velocity: 2.78
+    num_veh_slow_moving_traffic: 3
+    max_slow_moving_traffic_velocity: 8.33
+    num_veh_queue_of_vehicles: 3
+    max_queue_of_vehicles_velocity: 3
+    max_velocity_limit_free_driving: 16.67
+    desired_interstate_velocity: 36.11
+    min_interstate_width: 7.0
+    close_to_lane_border: 0.2
+    close_to_other_vehicle: 0.5
+    slightly_higher_speed_difference: 5.55
+    u_turn: 1.57
+    country: "DEU"
+    above_centerline_th: 0.1
 
 traffic_rule_sets:
-  F_S0: [R_I5]
-  F_SRI5: [R_I5]
-  F_SRG7: [R_G7]
-  F_SRG8: [R_G8]
-  B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_G6, R_I1, R_I2, R_I3, R_I4]
-  B_SRG1: [R_G1]
-  B_SRG2: [R_G2]
-  B_SRG3: [R_G3]
-  B_SRG4: [R_G4]
-  B_SRG5: [R_G5]
-  B_SRG6: [R_G6]
-  B_SRI1: [R_I1]
-  B_SRI2: [R_I2]
-  B_SRI3: [R_I3]
-  B_SRI4: [R_I4]
-activated_traffic_rule_sets: [B_SRG1]
-vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7]
+    F_S0: [R_I5]
+    F_SRI5: [R_I5]
+    F_SRG7: [R_G7]
+    F_SRG8: [R_G8]
+    B_S0: [R_G1, R_G2, R_G3, R_G4, R_G5, R_G6, R_I1, R_I2, R_I3, R_I4]
+    B_SRG1: [R_G1]
+    B_SRG2: [R_G2]
+    B_SRG3: [R_G3]
+    B_SRG4: [R_G4]
+    B_SRG5: [R_G5]
+    B_SRG6: [R_G6]
+    B_SRI1: [R_I1]
+    B_SRI2: [R_I2]
+    B_SRI3: [R_I3]
+    B_SRI4: [R_I4]
+    F_S0_RTAMT: [R_G1_forward_no_cut_in] #, R_G2_forward, R_G3_forward, R_G4_forward]
+activated_traffic_rule_sets: [F_S0_RTAMT] #[B_SRG1] # [F_SRGXiao] #
+vehicle_dependent_rules: [R_G1, R_I2, R_I5, R_G6, R_G7, R_G1_forward, R_G1_forward_no_cut_in]

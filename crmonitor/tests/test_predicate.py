@@ -1,0 +1,863 @@
+import os
+import math
+import unittest
+
+import numpy as np
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.lanelet import LaneletNetwork
+from commonroad.scenario.obstacle import ObstacleType
+from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany,
+                                              TrafficSignElement, )
+from commonroad.scenario.trajectory import State
+
+from crmonitor.common.helper import load_yaml
+from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
+from crmonitor.common.world_state import WorldState
+from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane,
+                                            PredSafeDistPrec, PredInFrontOf,
+                                            PredSingleLane, scale_clip,
+                                            PredLaneSpeedLimit, PredPrecedes, )
+from crmonitor.tests.util import parallel_lanes
+
+
+class TestPredicate(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        config_path = os.path.join(root_path, "config.yaml")
+        self.config = load_yaml(config_path)
+        self.config["scale_rob"] = False
+
+    def test_scale(self):
+        from functools import partial
+
+        scale_dist = partial(scale_clip, min_val=0.0, max_val=200.0, copysign=True)
+        dist_inputs = [0.0, -200.0, 200.0, 100.0, -100.0, 300.0, -300.0]
+        exp_dist_outputs = [0.0, -1.0, 1.0, 0.5, -0.5, 1.0, -1.0]
+        for i, ex_o in zip(dist_inputs, exp_dist_outputs):
+            out = scale_dist(i)
+            self.assertEqual(ex_o, out, f"Input: {i}")
+
+    def test_cut_in(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = (
+            False
+            # before cut-in -> ego vehicle occupies only single lane
+        )
+        exp_sol_monitor_mode_2 = True  # during cut-in
+        exp_sol_monitor_mode_3 = False  # after cut-in
+        exp_sol_monitor_mode_4 = False  # driving back to initial lane
+        exp_sol_monitor_mode_5 = (
+            False
+            # during cut-in -> but other vehicles is in another lane
+        )
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(3)
+        for l in lanelets:
+            lanelet_network.add_lanelet(l)
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        # Constant velocity, Lane switches 1 -> 1, 2 -> 2 -> 2, 1 with 45 degree
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=10, v=10),
+            1: StateLongitudinal(s=20, v=10),
+            2: StateLongitudinal(s=30, v=10),
+            3: StateLongitudinal(s=40, v=10),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=2, theta=(1 / 4) * math.pi),
+            2: StateLateral(d=4, theta=0),
+            3: StateLateral(d=2, theta=-(1 / 4) * math.pi),
+        }
+        cr_state_list_ego = {
+            0: State(position=(10, 2), time_step=0),
+            1: State(position=(20, 4), time_step=1),
+            2: State(position=(30, 6), time_step=2),
+            3: State(position=(40, 4), time_step=3),
+        }
+        lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1, 2}}
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 1
+        # Constant velocity, lane keeping on lane 2
+        state_list_lon_other_1 = {
+            0: StateLongitudinal(s=0, v=10),
+            1: StateLongitudinal(s=10, v=10),
+            2: StateLongitudinal(s=20, v=10),
+            3: StateLongitudinal(s=30, v=10),
+        }
+        state_list_lat_other_1 = {
+            0: StateLateral(d=4, theta=0),
+            1: StateLateral(d=4, theta=0),
+            2: StateLateral(d=4, theta=0),
+            3: StateLateral(d=4, theta=0),
+        }
+        cr_state_list_other_1 = {
+            0: State(position=(0, 6), time_step=0),
+            1: State(position=(10, 6), time_step=1),
+            2: State(position=(20, 6), time_step=2),
+            3: State(position=(30, 6), time_step=3),
+        }
+        lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}}
+        other_vehicle_1 = Vehicle(
+            state_list_lon_other_1,
+            state_list_lat_other_1,
+            Rectangle(5, 2),
+            cr_state_list_other_1,
+            1,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other_1,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 2
+        # Constant velocity, lane keeping on lane 3
+        # Only defined at time step 1
+        state_list_lon_other_2 = {1: StateLongitudinal(s=0, v=10)}
+        state_list_lat_other_2 = {1: StateLateral(d=8, theta=0)}
+        cr_state_list_other_2 = {1: State(position=(10, 10), time_step=1)}
+        lanelet_assignments_other_2 = {1: {3}}
+        other_vehicle_2 = Vehicle(
+            state_list_lon_other_2,
+            state_list_lat_other_2,
+            Rectangle(5, 2),
+            cr_state_list_other_2,
+            2,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other_2,
+            None,
+            None,
+            None,
+        )
+
+        world_state = WorldState(
+            ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
+        )
+
+        pred = PredCutIn(self.config)
+
+        sol_monitor_mode_1 = pred.evaluate_boolean(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_2 = pred.evaluate_boolean(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_3 = pred.evaluate_boolean(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_4 = pred.evaluate_boolean(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.time_step = 1
+        sol_monitor_mode_5 = pred.evaluate_boolean(
+            world_state, [ego_vehicle.id, other_vehicle_2.id]
+        )
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
+
+    def test_same_lane(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = True  # vehicles completely on same lane
+        exp_sol_monitor_mode_2 = True  # ego vehicle partially in left lane
+        exp_sol_monitor_mode_3 = True  # other vehicle partially in another lane
+        exp_sol_monitor_mode_4 = False  # vehicles not in same lane
+        exp_sol_monitor_mode_5 = (
+            True
+            # vehicles completely on same lane, but other vehicle is behind
+        )
+        exp_sol_monitor_mode_6 = True  # both vehicles in two lanes
+        exp_sol_monitor_mode_7 = 0.5  # ego vehicle less in right lane
+        exp_sol_monitor_mode_8 = 1.5  # ego vehicle more in right lane
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(2)
+        for l in lanelets:
+            lanelet_network.add_lanelet(l)
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=10),
+            1: StateLongitudinal(s=10, v=10),
+            2: StateLongitudinal(s=20, v=10),
+            3: StateLongitudinal(s=30, v=10),
+            4: StateLongitudinal(s=40, v=10),
+            5: StateLongitudinal(s=50, v=10),
+            6: StateLongitudinal(s=60, v=10),
+            7: StateLongitudinal(s=60, v=10),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=3.5, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0),
+            4: StateLateral(d=0, theta=0),
+            5: StateLateral(d=3.5, theta=0),
+            6: StateLateral(d=4.5, theta=0),
+            7: StateLateral(d=3.5, theta=0),
+        }
+        cr_state_list_ego = {
+            0: State(position=(0, 2), time_step=0),
+            1: State(position=(10, 3.5), time_step=1),
+            2: State(position=(20, 2), time_step=2),
+            3: State(position=(30, 2), time_step=3),
+            4: State(position=(40, 2), time_step=4),
+            5: State(position=(50, 3.5), time_step=5),
+            6: State(position=(60, 3.5), time_step=6),
+            7: State(position=(70, 4.5), time_step=7),
+        }
+        lanelet_assignments_ego = {
+            0: {1},
+            1: {1, 2},
+            2: {1},
+            3: {1},
+            4: {1},
+            5: {1, 2},
+            6: {1, 2},
+            7: {1, 2},
+        }
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 1
+        state_list_lon_other_1 = {
+            0: StateLongitudinal(s=10, v=10),
+            1: StateLongitudinal(s=20, v=10),
+            2: StateLongitudinal(s=30, v=10),
+            3: StateLongitudinal(s=40, v=10),
+        }
+        state_list_lat_other_1 = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=2, theta=0),
+            3: StateLateral(d=4, theta=0),
+        }
+        cr_state_list_other_1 = {
+            0: State(position=(10, 2), time_step=0),
+            1: State(position=(20, 2), time_step=1),
+            2: State(position=(30, 4), time_step=2),
+            3: State(position=(40, 6), time_step=3),
+        }
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
+        other_vehicle_1 = Vehicle(
+            state_list_lon_other_1,
+            state_list_lat_other_1,
+            Rectangle(5, 2),
+            cr_state_list_other_1,
+            1,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other_1,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 2
+        state_list_lon_other_2 = {
+            4: StateLongitudinal(s=20, v=10),
+            5: StateLongitudinal(s=30, v=10),
+            6: StateLongitudinal(s=40, v=10),
+            7: StateLongitudinal(s=50, v=10),
+        }
+        state_list_lat_other_2 = {
+            4: StateLateral(d=0, theta=0),
+            5: StateLateral(d=4, theta=0),
+            6: StateLateral(d=6, theta=0),
+            7: StateLateral(d=6, theta=0),
+        }
+        cr_state_list_other_2 = {
+            4: State(position=(20, 2), time_step=4),
+            5: State(position=(30, 4), time_step=5),
+            6: State(position=(40, 6), time_step=6),
+            7: State(position=(50, 6), time_step=7),
+        }
+        lanelet_assignments_ego = {4: {1}, 5: {1, 2}, 6: {2}, 7: {2}}
+        other_vehicle_2 = Vehicle(
+            state_list_lon_other_2,
+            state_list_lat_other_2,
+            Rectangle(5, 2),
+            cr_state_list_other_2,
+            2,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        world_state = WorldState(
+            ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
+        )
+
+        pred = PredInSameLane(self.config)
+
+        sol_monitor_mode_1 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_2 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_3 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_4 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_1.id]
+        )
+        world_state.step()
+        sol_monitor_mode_5 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_2.id]
+        )
+
+        world_state.step()
+        sol_monitor_mode_6 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_2.id]
+        )
+
+        world_state.step()
+        sol_monitor_mode_7 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_2.id]
+        )
+
+        world_state.step()
+        sol_monitor_mode_8 = pred.evaluate_robustness(
+            world_state, [ego_vehicle.id, other_vehicle_2.id]
+        )
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6 >= 0)
+        self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode_7)
+        self.assertEqual(exp_sol_monitor_mode_8, sol_monitor_mode_8)
+
+    def test_safe_distance(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = True
+        exp_sol_monitor_mode_2 = False
+        exp_sol_robustness_mode_1 = 9.0
+        exp_sol_robustness_mode_2 = -21.0
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(1)
+        for l in lanelets:
+            lanelet_network.add_lanelet(l)
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=20),
+            1: StateLongitudinal(s=20, v=20),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+        }
+        cr_state_list_ego = {
+            0: State(acceleration=-1, time_step=0),
+            1: State(acceleration=0, time_step=1),
+        }
+        lanelet_assignments_ego = {0: {1}, 1: {1}}
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        state_list_lon_other = {
+            0: StateLongitudinal(s=20, v=20),
+            1: StateLongitudinal(s=30, v=0),
+        }
+        state_list_lat_other = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+        }
+        cr_state_list_other = {
+            0: State(acceleration=-1, time_step=0),
+            1: State(acceleration=0, time_step=1),
+        }
+        lanelet_assignments_other = {0: {1}, 1: {1}}
+        other_vehicle = Vehicle(
+            state_list_lon_other,
+            state_list_lat_other,
+            Rectangle(5, 2),
+            cr_state_list_other,
+            1,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other,
+            None,
+            None,
+            None,
+        )
+
+        world_state = WorldState(ego_vehicle, [other_vehicle], road_network)
+
+        pred = PredSafeDistPrec(self.config)
+
+        vehicle_ids = [ego_vehicle.id, other_vehicle.id]
+        sol_monitor_mode_1 = pred.evaluate_boolean(world_state, vehicle_ids)
+        world_state.step()
+        sol_monitor_mode_2 = pred.evaluate_boolean(world_state, vehicle_ids)
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        world_state.time_step = 0
+        sol_robustness_mode_1 = pred.evaluate_robustness(world_state, vehicle_ids)
+        world_state.step()
+        sol_robustness_mode_2 = pred.evaluate_robustness(world_state, vehicle_ids)
+
+        # self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
+        # self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
+
+    def test_front_of(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = False  # ego vehicle behind
+        exp_sol_monitor_mode_2 = (
+            False
+            # ego vehicle and other vehicle have same occupancy
+        )
+        exp_sol_monitor_mode_3 = False  # ego vehicle is not completely in front
+        exp_sol_monitor_mode_4 = True  # ego vehicle is in front in same lane
+        exp_sol_monitor_mode_5 = True  # ego vehicle is in front in another lane
+
+        exp_sol_robustness_mode_1 = -13.0
+        exp_sol_robustness_mode_2 = -5.0
+        exp_sol_robustness_mode_3 = -3.0
+        exp_sol_robustness_mode_4 = 5.0
+        exp_sol_robustness_mode_5 = 14.0
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(2)
+        for l in lanelets:
+            lanelet_network.add_lanelet(l)
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=10),
+            1: StateLongitudinal(s=10, v=4),
+            2: StateLongitudinal(s=14, v=10),
+            3: StateLongitudinal(s=24, v=5),
+            4: StateLongitudinal(s=29, v=5),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0),
+            4: StateLateral(d=0, theta=0),
+        }
+        cr_state_list_ego = {
+            0: State(position=0, time_step=0),
+            1: State(position=10, time_step=1),
+            2: State(position=14, time_step=2),
+            3: State(position=24, time_step=3),
+            4: State(position=29, time_step=4),
+        }
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 1
+        state_list_lon_other_1 = {
+            0: StateLongitudinal(s=8, v=2),
+            1: StateLongitudinal(s=10, v=2),
+            2: StateLongitudinal(s=12, v=2),
+            3: StateLongitudinal(s=14, v=2),
+        }
+        state_list_lat_other_1 = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=0, theta=0),
+        }
+        cr_state_list_other_1 = {
+            0: State(position=10, time_step=1),
+            1: State(position=10, time_step=1),
+            2: State(position=20, time_step=2),
+            3: State(position=30, time_step=3),
+        }
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        other_vehicle_1 = Vehicle(
+            state_list_lon_other_1,
+            state_list_lat_other_1,
+            Rectangle(5, 2),
+            cr_state_list_other_1,
+            41,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other_1,
+            None,
+            None,
+            None,
+        )
+
+        # other vehicle 2
+        state_list_lon_other_2 = {4: StateLongitudinal(s=10, v=10)}
+        state_list_lat_other_2 = {4: StateLateral(d=4, theta=0)}
+        cr_state_list_other_2 = {4: State(position=10, time_step=4)}
+        lanelet_assignments_other_2 = {4: {2}}
+        other_vehicle_2 = Vehicle(
+            state_list_lon_other_2,
+            state_list_lat_other_2,
+            Rectangle(5, 2),
+            cr_state_list_other_2,
+            42,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_other_2,
+            None,
+            None,
+            None,
+        )
+
+        world_state = WorldState(
+            ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
+        )
+
+        pred = PredInFrontOf(self.config)
+
+        vehicle_ids = [other_vehicle_1.id, ego_vehicle.id]
+        sol_monitor_mode = []
+        sol_robustness_mode = []
+        for i in range(4):
+            sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
+            sol_robustness_mode.append(
+                pred.evaluate_robustness(world_state, vehicle_ids)
+            )
+            world_state.step()
+        vehicle_ids = [other_vehicle_2.id, ego_vehicle.id]
+        sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
+        sol_robustness_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0])
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode[2])
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4])
+
+        # self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode[0])
+        # self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode[1])
+        # self.assertEqual(exp_sol_robustness_mode_3, sol_robustness_mode[2])
+        # self.assertEqual(exp_sol_robustness_mode_4, sol_robustness_mode[3])
+        # self.assertEqual(exp_sol_robustness_mode_5, sol_robustness_mode[4])
+
+    def test_single_lane(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = True
+        exp_sol_monitor_mode_2 = True
+        exp_sol_monitor_mode_3 = True
+        exp_sol_monitor_mode_4 = False
+        exp_sol_monitor_mode_5 = False
+        exp_sol_monitor_mode_6 = False
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(3)
+        for l in lanelets:
+            lanelet_network.add_lanelet(l)
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        # ego vehicle
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=10),
+            1: StateLongitudinal(s=10, v=10),
+            2: StateLongitudinal(s=20, v=10),
+            3: StateLongitudinal(s=30, v=10),
+            4: StateLongitudinal(s=40, v=10),
+            5: StateLongitudinal(s=50, v=10),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=1, theta=0),
+            1: StateLateral(d=2, theta=0),
+            2: StateLateral(d=3, theta=0),
+            3: StateLateral(d=3.5, theta=0),
+            4: StateLateral(d=4, theta=0),
+            5: StateLateral(d=4.5, theta=0),
+        }
+        cr_state_list_ego = {
+            0: State(position=0, time_step=0),
+            1: State(position=10, time_step=1),
+            2: State(position=20, time_step=2),
+            3: State(position=30, time_step=3),
+            4: State(position=40, time_step=4),
+            5: State(position=50, time_step=4),
+        }
+        lanelet_assignments_ego = {
+            0: {1},
+            1: {1},
+            2: {1},
+            3: {1, 2},
+            4: {1, 2},
+            5: {1, 2},
+        }
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            road_network.lanes[1],
+        )
+
+        world_state = WorldState(ego_vehicle, [], road_network)
+
+        pred = PredSingleLane(self.config)
+
+        vehicle_ids = [ego_vehicle.id]
+        sol_monitor_mode = []
+        for i in range(6):
+            sol_monitor_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
+            world_state.step()
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode[2] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5] >= 0)
+
+    def test_speed_limit(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = True  # ego vehicle drives with lower velocity
+        exp_sol_monitor_mode_2 = True  # ego vehicle drives exactly with the
+        # max speed
+        exp_sol_monitor_mode_3 = False  # ego vehicle drives too fast
+        exp_sol_monitor_mode_4 = True  # there exists no speed limit
+        exp_sol_robustness_mode_1 = 5.0
+        exp_sol_robustness_mode_2 = 0
+        exp_sol_robustness_mode_3 = -5.0
+        exp_sol_robustness_mode_4 = math.inf
+
+        lanelets = parallel_lanes(2)
+        lanelet_network = LaneletNetwork()
+        lanelet_network.add_lanelet(lanelets[0])
+        traffic_sign_max_speed = TrafficSignElement(
+            TrafficSignIDGermany.MAX_SPEED, ["50"]
+        )
+        lanelet_network.add_traffic_sign(
+            TrafficSign(111, [traffic_sign_max_speed], {1}, np.array([0.0, 0.0])), {1}
+        )
+        lanelet_network.add_lanelet(lanelets[1])
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        # ego vehicle
+        state_list_lon_ego = {
+            0: StateLongitudinal(s=0, v=45),
+            1: StateLongitudinal(s=45, v=50),
+            2: StateLongitudinal(s=95, v=55),
+            3: StateLongitudinal(s=150, v=45),
+        }
+        state_list_lat_ego = {
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
+            2: StateLateral(d=0, theta=0),
+            3: StateLateral(d=4, theta=0),
+        }
+        cr_state_list_ego = {
+            0: State(position=0, time_step=0),
+            1: State(position=45, time_step=1),
+            2: State(position=95, time_step=2),
+            3: State(position=150, time_step=3),
+        }
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {2}}
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+
+        world_state = WorldState(ego_vehicle, [], road_network)
+
+        pred = PredLaneSpeedLimit({"country": "DEU"})
+
+        vehicle_ids = [ego_vehicle.id]
+        sol_monitor_mode = []
+        sol_robustness_mode = []
+        for i in range(4):
+            sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
+            sol_robustness_mode.append(
+                pred.evaluate_robustness(world_state, vehicle_ids)
+            )
+            world_state.step()
+
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0])
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode[2])
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
+
+    def test_precedes(self):
+        # Directly precedes
+        # Ego offset
+        # Ego and other offset
+        # Other behind
+        # Other behind one in between
+        # Other in front other in between
+        # Other in other lane
+        # Ego in other lane
+        expected = [True, True, True, False, False, False, False, False]
+
+        lanelet_network = LaneletNetwork()
+        lanelets = parallel_lanes(2)
+        lanelet_network.add_lanelet(lanelets[0])
+        lanelet_network.add_lanelet(lanelets[1])
+        road_network = RoadNetwork(
+            lanelet_network, self.config.get("road_network_param")
+        )
+
+        lat_ego = [2, 3, 3, 2, 2, 2, 2, 6]
+        lon_ego = [30, 30, 30, 30, 30, 30, 30, 30]
+        lanelets_ego = [{1}, {1, 2}, {1, 2}, {1}, {1}, {1}, {1}, {2}]
+        ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego)
+
+        lat_other = [2, 2, 3, 2, 2, 2, 6, 2]
+        lon_other = [40, 40, 40, 20, 10, 50, 40, 40]
+        lanelets_other = [{1}, {1}, {1, 2}, {1}, {1}, {1}, {2}, {1}]
+        other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other)
+
+        lat_other = [2, 2, 2, 2, 2, 2, 2, 2]
+        lon_other = [10, 10, 10, 10, 20, 40, 10, 10]
+        lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}]
+        other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other)
+
+        world_state = WorldState(
+            ego_vehicle, [other_vehicle, other_vehicle_2], road_network
+        )
+        vehicle_ids = [ego_vehicle.id, other_vehicle.id]
+
+        pred = PredPrecedes({})
+        for t, exp in enumerate(expected):
+            rob = pred.evaluate_robustness(world_state, vehicle_ids)
+            self.assertEqual(exp, rob >= 0.0, f"t={t}")
+            world_state.step()
+
+    def create_vehicle(self, id, lanelets_ego, lat_ego, lon_ego):
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        state_list_lon_ego = {
+            t: StateLongitudinal(s=s, v=45) for t, s in enumerate(lon_ego)
+        }
+        state_list_lat_ego = {
+            t: StateLateral(d=d, theta=0) for t, d in enumerate(lat_ego)
+        }
+        cr_state_list_ego = {
+            t: State(position=s, time_step=t) for t, s in enumerate(lon_ego)
+        }
+        lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}
+        ego_vehicle = Vehicle(
+            state_list_lon_ego,
+            state_list_lat_ego,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            id,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            lanelet_assignments_ego,
+            None,
+            None,
+            None,
+        )
+        return ego_vehicle
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,3 +1,4 @@
+
 # simulation parameters
 ###
 # .. code-block:: yaml
@@ -13,8 +14,8 @@
 #    - verbose_mode: activate/deactivate status output of algorithms and simulation
 #    - time_measuring: activate/deactivate computation time measuring
 simulation_param:
-  dt: 0.1
-  evaluation_mode: statistic # single_scenario, single_vehicle, test, statistic
+  dt: 0.2
+  evaluation_mode: single_vehicle # single_scenario, single_vehicle, test, statistic
   ego_vehicle_id: 1008
   scenario_dir: /../scenarios/test_interstate/
   benchmark_id: DEU_test_safe_distance
@@ -22,6 +23,7 @@ simulation_param:
   verbose_mode: false
   time_measuring: false
   operating_mode: monitor # one of monitor, constraint, robustness
+
 
 # road network and curvilinear coordinate system parameters
 ###
@@ -64,7 +66,7 @@ ego_vehicle_param:
   j_max: 10
   j_min: -10
   v_des: 30
-  t_react: 0.3
+  t_react: 0.4
   dynamics_param: None
   fov: 200
   v_min: 0
@@ -89,41 +91,41 @@ ego_vehicle_param:
 #    - t_react: reaction time of ego vehicle
 
 other_vehicles_param:
-  vehicle_number: 2
-  v_max: 60
-  v_min: 0
-  a_max: 5
-  a_min: -10.5
-  j_max: 10
-  j_min: -10
-  t_react: 0.3 # for safe distance calculation of preceding vehicles
-  dynamics_param: None  # TODO replace dynamics parameter with worst case behavior
+    vehicle_number: 2
+    v_max: 60
+    v_min: 0
+    a_max: 5
+    a_min: -10.5
+    j_max: 10
+    j_min: -10
+    t_react: 0.4 # for safe distance calculation of preceding vehicles
+    dynamics_param: None  # TODO replace dynamics parameter with worst case behavior
 
 # Visualization parameters
 ###
 #    - Parameters for plotting of profiles
 #    - Parameters for video creation
 visualization:
-  # Parameters for plotting of profiles
-  ###
-  # .. code-block:: yaml
-  #
-  #   - width: width of matplotlib figure
-  #   - line_width: line width of profiles
-  #   - font_size: font size of text within the plot
-  #   - axes_line_width: line width of the axes
-  #   - figure_type: type of figure which should be stored
-  plot:
-    width: 3.75
-    line_width: 0.75
-    font_size: 9
-    axes_line_width: 0.25
-    figure_type: eps
+    # Parameters for plotting of profiles
+    ###
+    # .. code-block:: yaml
+    #
+    #   - width: width of matplotlib figure
+    #   - line_width: line width of profiles
+    #   - font_size: font size of text within the plot
+    #   - axes_line_width: line width of the axes
+    #   - figure_type: type of figure which should be stored
+    plot:
+        width: 3.75
+        line_width: 0.75
+        font_size: 9
+        axes_line_width: 0.25
+        figure_type: eps
 
-  # Parameters for video creation
-  ###
-  # .. code-block:: yaml
-  #
-  #   - obstacle_label: activate/deactivate visualization of obstacle label (ID) in video
-  video:
-    obstacle_label: True
+    # Parameters for video creation
+    ###
+    # .. code-block:: yaml
+    #
+    #   - obstacle_label: activate/deactivate visualization of obstacle label (ID) in video
+    video:
+        obstacle_label : True

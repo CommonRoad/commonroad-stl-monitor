@@ -1,14 +1,15 @@
-import argparse
 import os
+import argparse
+import time
 import sys
 import time
 import multiprocessing
 
-from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.scenario import Tag
-
-from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
 from crmonitor.common.helper import *
+from crmonitor.common.commonroad_evaluation import CommonRoadObstacleEvaluation
+
+from commonroad.scenario.scenario import Tag
+from commonroad.common.file_reader import CommonRoadFileReader
 
 
 def create_scenarios_from_directory(
@@ -48,6 +49,7 @@ def create_scenarios_from_directory(
 
 
 def get_args():
+
     parser = argparse.ArgumentParser(
         description="Traffic Rule Evaluation of CommonRoad scenarios"
     )
@@ -81,7 +83,7 @@ def main():
     )
     args = get_args()
 
-    if args.operating_mode is None:
+    if args.evaluation_mode is None:
         scenario, planning_problem_set = CommonRoadFileReader(
             os.path.dirname(os.path.abspath(__file__))
             + cr_eval.simulation_param.get("scenario_dir")
@@ -96,7 +98,7 @@ def main():
             scenario_directories = cr_eval.simulation_param.get("scenario_directories")
         else:
             scenario_directories = args.scenario_directories
-        if args.operating_mode is not None:
+        if args.evaluation_mode is not None:
             cr_eval.simulation_param["evaluation_mode"] = args.evaluation_mode
         if args.max_num_scenarios < 0:
             max_num_scenarios = 2
