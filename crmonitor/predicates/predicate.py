@@ -1,17 +1,17 @@
 import abc
 import math
+from functools import reduce
 from typing import List, Tuple, Set
 
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
-from ruamel.yaml.comments import CommentedMap
-from shapely.geometry import Point
-
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from ruamel.yaml.comments import CommentedMap
+from shapely.geometry import Point
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -135,10 +135,13 @@ class PredInSameLane(IPredicateEvaluator):
     def get_same_lanes(self, world_state, vehicle_ids) -> Set[Lane]:
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        lane_ids_k = vehicle_k.lanelet_assignment[world_state.time_step]
-        lane_ids_p = vehicle_p.lanelet_assignment[world_state.time_step]
+        lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
+                vehicle_k.lanelet_assignment[world_state.time_step])
+        lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
+                vehicle_p.lanelet_assignment[world_state.time_step])
         intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
-        return intersecting_lanes
+        intersecting_lanelets = reduce(lambda x, y: x.union(y), [l.contained_lanelets for l in intersecting_lanes], set())
+        return intersecting_lanelets
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
