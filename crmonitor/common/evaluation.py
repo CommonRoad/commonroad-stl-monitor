@@ -7,7 +7,6 @@ from typing import List, Tuple, Iterable, Dict
 
 import numpy as np
 import pandas as pd
-
 from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
@@ -167,6 +166,7 @@ class RuleSetEvaluator:
         rule_robustness = {}
         # Nested dictionary with levels: time step, rule, predicate name
         predicate_robustness = {}
+        other_ids_values = {}
         while world_state.time_step <= time_end:
             t = world_state.time_step
             ids = [
@@ -176,6 +176,7 @@ class RuleSetEvaluator:
             ]
             rule_robustness[t] = {}
             predicate_robustness[t] = {}
+            other_ids_values[t] = {}
             for rule in self.rules:
                 other_ids = list(
                     itertools.combinations(ids, rule.num_dependent_vehicles)
@@ -187,6 +188,7 @@ class RuleSetEvaluator:
                     predicate_robustness[t][rule.name] = {
                         name: val for name in rule.predicate_names
                     }
+                    other_ids_values[t][rule.name] = tuple()
                 else:
                     rule_values = []
                     pred_values = []
@@ -204,6 +206,7 @@ class RuleSetEvaluator:
                     # Select values of target vehicle
                     rule_robustness[t][rule.name] = rule_values[idx]
                     predicate_robustness[t][rule.name] = pred_values[idx]
+                    other_ids_values[t][rule.name] = other_ids[idx]
             world_state.step()
 
         if to_panda:
@@ -214,6 +217,8 @@ class RuleSetEvaluator:
                 predicate_robustness,
                 ["time_step", "rule_name", "full_name", "robustness"],
             )
+            df_ids = pandas_from_nested_dict(other_ids_values, ["time_step", "rule_name", "other_ids"])
+            df_rule = df_rule.merge(df_ids, on=["time_step", "rule_name"])
             return df_rule, df_pred
         else:
             return rule_robustness, predicate_robustness
