@@ -26,7 +26,7 @@ class RuleSetEvaluator:
     Evaluate individual vehicles of CommonRoad scenarios
     """
 
-    def __init__(self, rules: Iterable[Rule]) -> None:
+    def __init__(self, rules: Iterable[Rule], output_type: str = "standard") -> None:
         """
         :param rules: set of rules to be evaluated
         """
@@ -34,7 +34,7 @@ class RuleSetEvaluator:
         self.monitors = {
             rule: defaultdict(
                 # lambda: TrafficRuleMonitorForwardSTL(rule, output_type="standard")
-                partial(TrafficRuleMonitorForwardSTL, rule, output_type="standard")
+                partial(TrafficRuleMonitorForwardSTL, rule, output_type=output_type)
             )
             for rule in rules
         }

@@ -476,14 +476,10 @@ class PredPrecedes(IPredicateEvaluator):
         if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
             same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
             assert same_lane >= 0.0
-            overtake = other_vehicle.rear_s(
-                world_state.time_step
-            ) - ego_vehicle.front_s(world_state.time_step)
+            overtake = other_vehicle.rear_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
             assert overtake >= 0.0
             if len(succ_veh) >= 2:
-                fallback = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][
-                    1
-                ].front_s(world_state.time_step)
+                fallback = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][1].front_s(world_state.time_step)
                 assert fallback >= 0.0
             else:
                 fallback = math.inf
@@ -517,9 +513,5 @@ class PredAcceleration(IPredicateEvaluator):
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
-        accel = (
-            world_state.vehicle_by_id(vehicle_ids[0])
-            .states_lon[world_state.time_step]
-            .a
-        )
+        accel = (world_state.vehicle_by_id(vehicle_ids[0]).states_lon[world_state.time_step].a)
         return accel
