@@ -26,7 +26,7 @@ build
 # binaries
 *.so
 
-external/curvilinear_coordinate_system
+external/rtamt
 
 bazel-bin
 bazel-out

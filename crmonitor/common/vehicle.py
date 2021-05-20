@@ -151,6 +151,14 @@ class Vehicle:
         self._robust_lanelet_assignment = robust_lanelet_assignment
 
     @property
+    def vehicle_classification(self):
+        return self._vehicle_classification
+
+    @vehicle_classification.setter
+    def vehicle_classification(self, vehicle_classification: VehicleClassification):
+        self._vehicle_classification = vehicle_classification
+
+    @property
     def robust_lanelet_assignment(self):
         return self._robust_lanelet_assignment
 
