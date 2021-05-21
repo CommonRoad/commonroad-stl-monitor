@@ -32,8 +32,8 @@ class Rule:
     class PredicateAssignment:
         def __init__(self, full_name, agent_placeholders, evaluator,
                      io_type=IOType.OUTPUT):
-            assert len(
-                agent_placeholders) == evaluator.arity, f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
+            assert len(agent_placeholders) == evaluator.arity, \
+                f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
             self.full_name = full_name
             self.agent_placeholders = tuple(agent_placeholders)
             self.evaluator = evaluator

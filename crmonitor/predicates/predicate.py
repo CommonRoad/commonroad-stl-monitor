@@ -12,7 +12,7 @@ from shapely.geometry import Point
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-
+from crmonitor.predicates.rule import IOType
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
     abs_x = np.abs(x)
@@ -125,6 +125,7 @@ class IPredicateEvaluator(abc.ABC):
 
 
 class PredInSameLane(IPredicateEvaluator):
+    # input
     predicate_name = "in_same_lane"
     arity = 2
 
@@ -141,7 +142,7 @@ class PredInSameLane(IPredicateEvaluator):
         return intersecting_lanes
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int]
+        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
     ) -> float:
         """
         If boolean is
@@ -154,6 +155,8 @@ class PredInSameLane(IPredicateEvaluator):
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
         if self.evaluate_boolean(world_state, vehicle_ids):
+            if io_type == IOType.INPUT:
+                return np.inf
             intersecting_lanes = self.get_same_lanes(world_state, vehicle_ids)
             assert len(intersecting_lanes) > 0
             lanelets = [
@@ -191,6 +194,8 @@ class PredInSameLane(IPredicateEvaluator):
             max_dist = np.max([poly.distance(Point(p)) for p in occ.vertices])
             return self._scale_lat_dist(max_dist)
         else:
+            if io_type == IOType.INPUT:
+                return -np.inf
             lanes_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step]
             )
@@ -221,6 +226,7 @@ class PredInFrontOf(IPredicateEvaluator):
 
 
 class PredSingleLane(IPredicateEvaluator):
+    # input
     predicate_name = "single_lane"
     arity = 1
 
@@ -235,7 +241,7 @@ class PredSingleLane(IPredicateEvaluator):
         return single_lane
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int]
+        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
     ) -> float:
         """
         If false: 1 - largest fractional overlap with occupied lanes
@@ -253,6 +259,8 @@ class PredSingleLane(IPredicateEvaluator):
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
         if single_lane_boolean:
+            if io_type == IOType.INPUT:
+                return np.inf
             assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
             k_occ = vehicle_k.occupancy_at_time_step(
@@ -262,6 +270,8 @@ class PredSingleLane(IPredicateEvaluator):
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
             return self._scale_lon_dist(distance_to_boundary)
         else:
+            if io_type == IOType.INPUT:
+                return -np.inf
             k_lanes = list(k_lanes)
             shape_k = vehicle_k.occupancy_at_time_step(
                 world_state.time_step
@@ -286,6 +296,7 @@ class PredSingleLane(IPredicateEvaluator):
 
 
 class PredCutIn(IPredicateEvaluator):
+    # input
     predicate_name = "cut_in"
     arity = 2
 
@@ -295,16 +306,16 @@ class PredCutIn(IPredicateEvaluator):
         self._single_lane_evaluator = PredSingleLane(config)
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int]
+        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
     ) -> float:
         cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
 
         single_lane = self._single_lane_evaluator.evaluate_robustness(
-            world_state, [vehicle_ids[0]]
+            world_state, [vehicle_ids[0]], io_type
         )
         same_lane = self._same_lane_evaluator.evaluate_robustness(
-            world_state, vehicle_ids
+            world_state, vehicle_ids, io_type
         )
 
         r_l_dist = (

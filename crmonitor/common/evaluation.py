@@ -12,7 +12,7 @@ from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
-from crmonitor.predicates.rule import Rule, QuantificationType
+from crmonitor.predicates.rule import Rule, QuantificationType, IOType
 
 
 def get_valid_time_interval(vehicles: List[Vehicle]):
@@ -78,9 +78,15 @@ class RuleSetEvaluator:
                     world_state.time_step,
                     predicate_ids,
                 )
-                value = pred_assign.evaluator.evaluate_robustness(
-                    world_state, predicate_ids
-                )
+                # TODO: integrate IOType in each predicate
+                if pred_assign.io_type == IOType.INPUT:
+                    value = pred_assign.evaluator.evaluate_robustness(
+                        world_state, predicate_ids, pred_assign.io_type
+                    )
+                else:
+                    value = pred_assign.evaluator.evaluate_robustness(
+                        world_state, predicate_ids
+                    )
                 self.predicate_values[world_state.time_step][pred_assign.base_name][
                     predicate_ids
                 ] = value
