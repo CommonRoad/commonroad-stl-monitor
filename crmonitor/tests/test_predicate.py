@@ -1,5 +1,5 @@
-import os
 import math
+import os
 import unittest
 
 import numpy as np
@@ -17,7 +17,7 @@ from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane,
                                             PredSafeDistPrec, PredInFrontOf,
                                             PredSingleLane, scale_clip,
-                                            PredLaneSpeedLimit, PredPrecedes, )
+                                            PredLaneSpeedLimit, PredSucceeds, )
 from crmonitor.tests.util import parallel_lanes
 
 
@@ -825,7 +825,7 @@ class TestPredicate(unittest.TestCase):
         )
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
 
-        pred = PredPrecedes({})
+        pred = PredSucceeds({})
         for t, exp in enumerate(expected):
             rob = pred.evaluate_robustness(world_state, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")

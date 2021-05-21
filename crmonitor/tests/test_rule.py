@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import unittest
 from typing import List, Tuple
 
@@ -396,7 +396,7 @@ class RuleTest(unittest.TestCase):
             1006: True,
             1007: True,
         }
-        rule_str = "(accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
+        rule_str = "(accel__a0 < -2.0 implies succeeds__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
         self.traffic_rules["scale_rob"] = False
         rule = Rule(
             rule_str,
