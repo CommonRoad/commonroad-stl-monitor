@@ -394,7 +394,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world_state, vehicle_ids):
         vehicle_type = world_state.vehicle_by_id(vehicle_ids[0]).obstacle_type
         if vehicle_type is ObstacleType.TRUCK:
-            return 22.22
+            return self.confg["max_interstate_speed_truck"]
         else:
             return None
 
@@ -426,7 +426,7 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
             world_state, vehicle_ids
         )
         if speed_limit is None:
-            speed_limit = 130.0 / 3.6
+            speed_limit = self.config["desired_interstate_velocity"]
         return speed_limit
 
 
