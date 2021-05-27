@@ -7,12 +7,11 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
-from ruamel.yaml.comments import CommentedMap
-from shapely.geometry import Point
-
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from ruamel.yaml.comments import CommentedMap
+from shapely.geometry import Point
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -394,7 +393,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world_state, vehicle_ids):
         vehicle_type = world_state.vehicle_by_id(vehicle_ids[0]).obstacle_type
         if vehicle_type is ObstacleType.TRUCK:
-            return self.confg["max_interstate_speed_truck"]
+            return self.config["max_interstate_speed_truck"]
         else:
             return None
 
