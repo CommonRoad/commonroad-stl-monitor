@@ -34,7 +34,7 @@ traffic_rules_forward:
 
 #    R_G2: always(!unnecessary_braking(time_step, ego_vehicle, other_vehicles, operating_mode))
     # R_G2: not unnecessary_braking__x_ego
-    R_G2: (accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))
+    R_G2: (brakes_abruptly__a0 implies succeeds__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or rel_brakes_abruptly__a0_a1))
 
 ##    R_G3: always(keeps_lane_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_fov_speed_limit(time_step, ego_vehicle, operating_mode)
 ##      && keeps_braking_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_type_speed_limit(time_step, ego_vehicle, operating_mode))
@@ -119,6 +119,7 @@ traffic_rules_param:
     u_turn: 1.57
     country: "DEU"
     above_centerline_th: 0.1
+    max_interstate_speed_truck: 22.22
 
 traffic_rule_sets:
     F_S0: [R_I5]

@@ -35,7 +35,7 @@ class RuleTest(unittest.TestCase):
         root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         config_path = os.path.join(root_path, "config.yaml")
         self.config = load_yaml(config_path)
-        rules_path = os.path.join(root_path, "traffic_rules.yaml")
+        rules_path = os.path.join(root_path, "traffic_rules_rtamt.yaml")
         self.traffic_rules = load_yaml(rules_path)
         self.scenario_root_path = os.path.join(root_path, "../scenarios")
 
@@ -126,44 +126,6 @@ class RuleTest(unittest.TestCase):
         rule_eval = RuleSetEvaluator([rule])
         rob, preds = rule_eval.evaluate_incremental(world_state)
         self.assertEqual(rob.shape[0], 5)
-
-    def test_preserve_flow(self):
-        # two vehicles which preserves traffic flow (1001 ,1004)
-        # two vehicles without following vehicle (1000, 1002)
-        # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
-        # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
-        exp_result = {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: False,
-            1004: True,
-            1005: False,
-        }
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_preserve_traffic_flow.xml")
-        rule_str = (
-            "((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) "
-            "and in_same_lane__a0_a1 and in_front_of__a0_a1)"
-            "or ((keeps_fov_speed_limit__a0 and keeps_lane_speed_limit_star__a0 and keeps_type_speed_limit__a0) < 0.216))"
-        )
-
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-
-        rule = Rule(
-            rule_str,
-            self.traffic_rules,
-            name="preserve_flow",
-            quantification=QuantificationType.EXISTENTIAL,
-        )
-
-        rule_eval = RuleSetEvaluator([rule])
-        for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
-            df_rule, _ = rule_eval.evaluate_incremental(
-                world_state
-            )
-            rob = all([r >= 0.0 for r in df_rule["robustness"].values])
-            self.assertEqual(exp_violation, rob, f"Test failed for ego_id={ego_id}")
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
@@ -348,11 +310,7 @@ class RuleTest(unittest.TestCase):
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
-        rule_str = (
-            "((in_front_of__a0_a1 and in_same_lane__a0_a1 and "
-            "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))"
-            " implies keeps_safe_distance_prec__a0_a1)"
-        )
+        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G1"]
 
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
@@ -396,7 +354,7 @@ class RuleTest(unittest.TestCase):
             1006: True,
             1007: True,
         }
-        rule_str = "(accel__a0 < -2.0 implies succeeds__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
+        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
         rule = Rule(
             rule_str,

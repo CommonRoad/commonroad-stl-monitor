@@ -482,8 +482,8 @@ class PredSucceeds(IPredicateEvaluator):
             return -1.0
 
 
-class PredAcceleration(IPredicateEvaluator):
-    predicate_name = "accel"
+class PredAbruptBreaking(IPredicateEvaluator):
+    predicate_name = "brakes_abruptly"
     arity = 1
 
     def evaluate_robustness(
@@ -494,4 +494,26 @@ class PredAcceleration(IPredicateEvaluator):
             .states_lon[world_state.time_step]
             .a
         )
-        return accel
+        rob = self.config["a_abrupt"] - accel
+        return rob
+
+
+class PredRelAbruptBreaking(IPredicateEvaluator):
+    predicate_name = "rel_brakes_abruptly"
+    arity = 2
+
+    def evaluate_robustness(
+        self, world_state: WorldState, vehicle_ids: List[int]
+    ) -> float:
+        accel_k = (
+            world_state.vehicle_by_id(vehicle_ids[0])
+            .states_lon[world_state.time_step]
+            .a
+        )
+        accel_p = (
+            world_state.vehicle_by_id(vehicle_ids[1])
+            .states_lon[world_state.time_step]
+            .a
+        )
+        rob = self.config["a_abrupt"] - accel_k - accel_p
+        return self._scale_acc(rob)
