@@ -514,5 +514,5 @@ class PredRelAbruptBreaking(IPredicateEvaluator):
             .states_lon[world_state.time_step]
             .a
         )
-        rob = self.config["a_abrupt"] - accel_k - accel_p
+        rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)
