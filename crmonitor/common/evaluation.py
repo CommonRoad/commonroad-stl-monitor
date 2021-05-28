@@ -52,6 +52,13 @@ class RuleSetEvaluator:
         for i in range(start_time_step, end_time_step + 1):
             self.predicate_values.pop(i)
 
+    def reset_monitors(self):
+        self._last_time_step = -1
+        for rule_mons in self.monitors.values():
+            # rule_mons.clear()
+            for monitor in list(rule_mons.values()):
+                monitor.reset_monitor()
+
     def _evaluate_predicates_timestep(
         self, rule: Rule, world_state: WorldState, other_ids: Tuple[int]
     ) -> None:
@@ -131,19 +138,11 @@ class RuleSetEvaluator:
             logging.debug("Clear internal cache!")
             self.predicate_values.clear()
             self._last_world_state = world_state
-            self._last_time_step = -1
-            for rule_mons in self.monitors.values():
-                # rule_mons.clear()
-                for monitor in list(rule_mons.values()):
-                    monitor.reset_monitor()
+            self.reset_monitors()
 
         elif world_state.time_step < self._last_time_step:
             # Clear only monitor states, if time was decremented
-            self._last_time_step = -1
-            for rule_mons in self.monitors.values():
-                # rule_mons.clear()
-                for monitor in list(rule_mons.values()):
-                    monitor.reset_monitor()
+            self.reset_monitors()
 
     def evaluate_incremental(
         self, world_state: WorldState, to_panda=True
