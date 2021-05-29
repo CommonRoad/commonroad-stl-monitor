@@ -50,7 +50,8 @@ class RuleSetEvaluator:
         :return:
         """
         for i in range(start_time_step, end_time_step + 1):
-            self.predicate_values.pop(i)
+            if i in self.predicate_values:
+                self.predicate_values.pop(i)
 
     def reset_monitors(self):
         self._last_time_step = -1
