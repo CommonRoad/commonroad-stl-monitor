@@ -1,10 +1,8 @@
 import inspect
-import logging
 import re
 import sys
 from enum import auto, Enum
 
-logger = logging.getLogger(__name__)
 
 
 def get_all_predicate_evaluators():
