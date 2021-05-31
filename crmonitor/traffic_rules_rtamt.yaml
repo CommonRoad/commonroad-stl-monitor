@@ -40,7 +40,7 @@ traffic_rules_forward:
 ##      && keeps_braking_speed_limit(time_step, ego_vehicle, operating_mode) && keeps_type_speed_limit(time_step, ego_vehicle, operating_mode))
 #
     # R_G3: keeps_lane_speed_limit__x_ego and keeps_fov_speed_limit__x_ego and keeps_braking_speed_limit__x_ego and keeps_type_speed_limit__x_ego
-    R_G3: keeps_lane_speed_limit__a0 and keeps_type_speed_limit__a0 and keeps_fov_speed_limit__a0 and keeps_brake_speed_limit__a0
+    R_G3: A keeps_lane_speed_limit__a0 and keeps_type_speed_limit__a0 and keeps_fov_speed_limit__a0 and keeps_brake_speed_limit__a0
         
 ##    R_G4: always(!slow_leading_vehicle(time_step, ego_vehicle, other_vehicles, operating_mode) -> preserves_traffic_flow(time_step, ego_vehicle, operating_mode))
     R_G4: not slow_leading_vehicle__x_ego implies preserves_traffic_flow__x_ego

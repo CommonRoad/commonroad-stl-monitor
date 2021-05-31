@@ -411,6 +411,31 @@ class RuleTest(unittest.TestCase):
                 exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
             )
 
+    def test_speed_limit(self):
+        # one vehicle which always violates speed limit (1002)
+        # two vehicles which never violate speed limit (1001, 1003)
+        # one vehicle which violates speed limit partially (1000)
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_max_speed_limit.xml")
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
+        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G3"]
+        rule = Rule(
+            rule_str,
+            self.traffic_rules,
+            name="SpeedLimit"
+        )
+        self.assertEqual(rule.quantification, QuantificationType.ALL)
+        rule_eval = RuleSetEvaluator([rule])
+        for ego_id, exp_violation in exp_result.items():
+            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
+            df_rule, _ = rule_eval.evaluate_incremental(
+                world_state
+            )
+            rob_value = all([r >= 0.0 for r in df_rule["robustness"].values])
+            self.assertEqual(
+                exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
