@@ -1,12 +1,22 @@
 import enum
 from typing import Union, Set, Dict, List
 
+import numba
 import numpy as np
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
 
 from crmonitor.common.road_network import Lane
+
+rot_mat_factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
+
+
+@numba.njit
+def calc_s(s, w, l, theta):
+    s = rot_mat_factors[0] * l / 2. * np.cos(theta) - rot_mat_factors[
+        1] * w / 2 * np.sin(theta) + s
+    return s
 
 
 class StateLongitudinal:
@@ -224,15 +234,8 @@ class Vehicle:
         w = self.shape.width
         l = self.shape.length
         theta = self.states_lat[time_step].theta
-        rear_s = np.min(self.calc_s(s, w, l, theta))
+        rear_s = np.min(calc_s(s, w, l, theta))
         return rear_s
-
-    @staticmethod
-    def calc_s(s, w, l, theta):
-        factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
-        s = factors[0] * l / 2. * np.cos(theta) - factors[
-            1] * w / 2 * np.sin(theta) + s
-        return s
 
     def front_s(self, time_step: int) -> float:
         """
@@ -245,7 +248,7 @@ class Vehicle:
         w = self.shape.width
         l = self.shape.length
         theta = self.states_lat[time_step].theta
-        front_s = np.max(self.calc_s(s, w, l, theta))
+        front_s = np.max(calc_s(s, w, l, theta))
         return front_s
 
     def right_d(self, time_step: int) -> float:
