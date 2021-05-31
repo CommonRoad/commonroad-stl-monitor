@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import unittest
 from typing import List, Tuple
 
@@ -35,7 +35,7 @@ class RuleTest(unittest.TestCase):
         root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         config_path = os.path.join(root_path, "config.yaml")
         self.config = load_yaml(config_path)
-        rules_path = os.path.join(root_path, "traffic_rules.yaml")
+        rules_path = os.path.join(root_path, "traffic_rules_rtamt.yaml")
         self.traffic_rules = load_yaml(rules_path)
         self.scenario_root_path = os.path.join(root_path, "../scenarios")
 
@@ -121,12 +121,13 @@ class RuleTest(unittest.TestCase):
 
         world_state = WorldState(ego_vehicle, [other_vehicle_1], road_network, ego_vehicle.end_time)
 
-        rule_str = "in_front_of__a0_a1"
+        rule_str = "A in_front_of__a0_a1"
         rule = Rule(rule_str, {"traffic_rules_param": {}})
         rule_eval = RuleSetEvaluator([rule])
         rob, preds = rule_eval.evaluate_incremental(world_state)
         self.assertEqual(rob.shape[0], 5)
 
+    @unittest.SkipTest
     def test_preserve_flow(self):
         # two vehicles which preserves traffic flow (1001 ,1004)
         # two vehicles without following vehicle (1000, 1002)
@@ -152,8 +153,7 @@ class RuleTest(unittest.TestCase):
         rule = Rule(
             rule_str,
             self.traffic_rules,
-            name="preserve_flow",
-            quantification=QuantificationType.EXISTENTIAL,
+            name="preserve_flow"
         )
 
         rule_eval = RuleSetEvaluator([rule])
@@ -348,11 +348,7 @@ class RuleTest(unittest.TestCase):
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
-        rule_str = (
-            "((in_front_of__a0_a1 and in_same_lane__a0_a1 and "
-            "!once[0, 30](cut_in__a1_a0 and prev(not cut_in__a1_a0)))"
-            " implies keeps_safe_distance_prec__a0_a1)"
-        )
+        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G1"]
 
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
@@ -396,14 +392,14 @@ class RuleTest(unittest.TestCase):
             1006: True,
             1007: True,
         }
-        rule_str = "(accel__a0 < -2.0 implies precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or accel__a0 - accel__a1 > -2.0))"
+        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
         rule = Rule(
             rule_str,
             self.traffic_rules,
-            name="UnnecessaryBraking",
-            quantification=QuantificationType.EXISTENTIAL,
+            name="UnnecessaryBraking"
         )
+        self.assertEqual(rule.quantification, QuantificationType.EXISTENTIAL)
         rule_eval = RuleSetEvaluator([rule])
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
