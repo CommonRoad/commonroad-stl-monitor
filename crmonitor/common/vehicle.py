@@ -6,8 +6,8 @@ import numpy as np
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
-
 from crmonitor.common.road_network import Lane
+from shapely import affinity
 
 rot_mat_factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
 
@@ -320,6 +320,16 @@ class Vehicle:
         shape = self.shape.rotate_translate_local(state.position,
                                                orientation)
         return shape
+
+    def shapely_occupancy_at_time_step(self, time_step):
+        state = self.states_cr[time_step]
+        orientation = self.states_lat[time_step].theta
+        shape = self.shape.shapely_object
+        cos = np.cos(orientation)
+        sin = np.sin(orientation)
+        mat = [cos, -sin, sin, cos, state.position[0], state.position[1]]
+        new_shape = affinity.affine_transform(shape, mat)
+        return new_shape
 
     def is_valid(self, time_step):
         state = self.states_cr.get(time_step)

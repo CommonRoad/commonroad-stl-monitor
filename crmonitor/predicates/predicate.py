@@ -151,24 +151,23 @@ class PredInSameLane(IPredicateEvaluator):
             if len(adj) == 0:
                 # No adjacent lanes
                 return self._scale_lat_dist(np.inf)
-            occ = world_state.vehicle_by_id(vehicle_ids[0]).occupancy_at_time_step(
+            shapley_occ = world_state.vehicle_by_id(vehicle_ids[0]).shapely_occupancy_at_time_step(
                 world_state.time_step
             )
-            shapley_occ = occ.shapely_object
             polys = [l.convert_to_polygon().shapely_object for l in adj]
             dist = [shapley_occ.distance(l) for l in polys]
             poly = polys[np.argmin(dist)]
             # Directed Hausdorff distance
-            max_dist = np.max([poly.distance(Point(p)) for p in occ.vertices])
+            max_dist = np.max([poly.distance(Point(*p)) for p in shapley_occ.boundary.coords])
             return self._scale_lat_dist(max_dist)
         else:
             lanes_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step]
             )
             min_dist_k_to_p_lanes = math.inf
-            k_occ = vehicle_k.occupancy_at_time_step(
+            k_occ = vehicle_k.shapely_occupancy_at_time_step(
                 world_state.time_step
-            ).shapely_object
+            )
             for lane_p in lanes_p:
                 dist = k_occ.distance(
                     lane_p.lanelet.convert_to_polygon().shapely_object
@@ -227,16 +226,16 @@ class PredSingleLane(IPredicateEvaluator):
             assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
             adjacent_lanelets = get_adjacent_lanelets(vehicle_k.lanelet_assignment[world_state.time_step], world_state.road_network.lanelet_network)
-            k_occ = vehicle_k.occupancy_at_time_step(
+            k_occ = vehicle_k.shapely_occupancy_at_time_step(
                 world_state.time_step
-            ).shapely_object
+            )
             distance_to_adj = np.min([l.convert_to_polygon().shapely_object.distance(k_occ) for l in adjacent_lanelets])
             return self._scale_lon_dist(distance_to_adj)
         else:
             k_lanes = list(k_lanes)
-            shape_k = vehicle_k.occupancy_at_time_step(
+            shape_k = vehicle_k.shapely_occupancy_at_time_step(
                 world_state.time_step
-            ).shapely_object
+            )
             overlap_areas = [
                 lane.lanelet.convert_to_polygon()
                 .shapely_object.intersection(shape_k)
