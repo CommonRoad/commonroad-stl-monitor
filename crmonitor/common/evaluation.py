@@ -7,6 +7,7 @@ from typing import List, Tuple, Iterable, Dict
 
 import numpy as np
 import pandas as pd
+
 from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
@@ -20,12 +21,19 @@ def get_valid_time_interval(vehicles: List[Vehicle]):
     return start, end
 
 
+def bool_to_norm_rob(b: bool) -> float:
+    return 1.0 if b else -1.0
+
+
+def rob_to_bool(f: float) -> bool:
+    return f > 0.0
+
 class RuleSetEvaluator:
     """
     Evaluate individual vehicles of CommonRoad scenarios
     """
 
-    def __init__(self, rules: Iterable[Rule]) -> None:
+    def __init__(self, rules: Iterable[Rule], use_boolean=False) -> None:
         """
         :param rules: set of rules to be evaluated
         """
@@ -41,6 +49,7 @@ class RuleSetEvaluator:
         self.predicate_values = defaultdict(default_dict_factory)
         self._last_world_state = None
         self._last_time_step = -1
+        self.use_boolean = use_boolean
 
     def clear_cache_timesteps(self, start_time_step, end_time_step):
         """
@@ -85,9 +94,15 @@ class RuleSetEvaluator:
                     world_state.time_step,
                     predicate_ids,
                 )
-                value = pred_assign.evaluator.evaluate_robustness(
-                    world_state, predicate_ids
-                )
+                if self.use_boolean:
+                    value = pred_assign.evaluator.evaluate_boolean(
+                        world_state, predicate_ids
+                    )
+                    value = bool_to_norm_rob(value)
+                else:
+                    value = pred_assign.evaluator.evaluate_robustness(
+                        world_state, predicate_ids
+                    )
                 self.predicate_values[world_state.time_step][pred_assign.base_name][
                     predicate_ids
                 ] = value
@@ -199,6 +214,11 @@ class RuleSetEvaluator:
                         )
                         rule_values.append(rule_value)
                         pred_values.append(pred_value)
+                        # Short circuit
+                        if self.use_boolean:
+                            if (rule.quantification == QuantificationType.ALL and not rob_to_bool(rule_value)) \
+                                    or (rule.quantification == QuantificationType.EXISTENTIAL and rob_to_bool(rule_value)):
+                                break
                     if rule.quantification == QuantificationType.ALL:
                         idx = np.argmin(rule_values)
                     else:
