@@ -7,11 +7,12 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from ruamel.yaml.comments import CommentedMap
+from shapely.geometry import Point
+
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from ruamel.yaml.comments import CommentedMap
-from shapely.geometry import Point
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -229,7 +230,10 @@ class PredSingleLane(IPredicateEvaluator):
             k_occ = vehicle_k.shapely_occupancy_at_time_step(
                 world_state.time_step
             )
-            distance_to_adj = np.min([l.convert_to_polygon().shapely_object.distance(k_occ) for l in adjacent_lanelets])
+            if len(adjacent_lanelets) == 0:
+                distance_to_adj = np.inf
+            else:
+                distance_to_adj = np.min([l.convert_to_polygon().shapely_object.distance(k_occ) for l in adjacent_lanelets])
             return self._scale_lon_dist(distance_to_adj)
         else:
             k_lanes = list(k_lanes)
