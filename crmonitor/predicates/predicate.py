@@ -162,7 +162,7 @@ class PredInSameLane(IPredicateEvaluator):
             _, dist_left = zip(
                 *lane.clcs_left.convert_list_of_points_to_curvilinear_coords(vert, 1)
             )
-            dist_left = [d for d in dist_left if d < 0]
+            dist_left = [d for d in dist_left if d <= 0]
             d_l_min, d_l_max = min_max(dist_left)
             d_l_min = np.abs(d_l_min)
             d_l_max = np.abs(d_l_max)
@@ -176,7 +176,7 @@ class PredInSameLane(IPredicateEvaluator):
             _, dist_right = zip(
                 *lane.clcs_right.convert_list_of_points_to_curvilinear_coords(vert, 1)
             )
-            dist_right = [d for d in dist_right if d > 0]
+            dist_right = [d for d in dist_right if d >= 0]
             d_r_min, d_r_max = min_max(dist_right)
         else:
             d_r_min = np.inf
