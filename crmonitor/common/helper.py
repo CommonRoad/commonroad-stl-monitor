@@ -3,19 +3,20 @@ import math
 from decimal import Decimal
 from typing import Dict, Union, List, Tuple
 
+import numba
+import numpy as np
 import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
-from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
-from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
-from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
-
 from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
                                       StateLongitudinal, StateLateral, )
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
+from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 
 @enum.unique
@@ -725,3 +726,13 @@ def flatten_nested_dict(data, path=tuple()):
 def pandas_from_nested_dict(data, level_names):
     entries = flatten_nested_dict(data)
     return pd.DataFrame(entries, columns=level_names)
+
+
+@numba.njit
+def min_max(arr):
+    mini = np.inf
+    maxi = -np.inf
+    for a in arr:
+        mini = np.fmin(a, mini)
+        maxi = np.fmax(a, maxi)
+    return mini, maxi

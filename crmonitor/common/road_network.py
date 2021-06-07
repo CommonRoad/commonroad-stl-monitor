@@ -1,8 +1,9 @@
 from typing import List, Set, Dict
-import numpy as np
 
+import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
+from commonroad_ccosy.geometry.util import chaikins_corner_cutting, \
+    resample_polyline
 from pycrccosy import CurvilinearCoordinateSystem
 
 
@@ -24,6 +25,12 @@ class Lane:
         """
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
+        self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.left_vertices, road_network_param
+        )
+        self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.right_vertices, road_network_param
+        )
         self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
             merged_lanelet.center_vertices, road_network_param
         )

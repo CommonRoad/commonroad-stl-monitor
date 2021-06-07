@@ -9,7 +9,6 @@ from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany,
                                               TrafficSignElement, )
 from commonroad.scenario.trajectory import State
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
@@ -659,12 +658,12 @@ class TestPredicate(unittest.TestCase):
             5: StateLateral(d=4.5, theta=0),
         }
         cr_state_list_ego = {
-            0: State(position=0, time_step=0),
-            1: State(position=10, time_step=1),
-            2: State(position=20, time_step=2),
-            3: State(position=30, time_step=3),
-            4: State(position=40, time_step=4),
-            5: State(position=50, time_step=4),
+            0: State(position=(0, 1), time_step=0),
+            1: State(position=(10, 2), time_step=1),
+            2: State(position=(20, 3), time_step=2),
+            3: State(position=(30, 3.5), time_step=3),
+            4: State(position=(40, 4), time_step=4),
+            5: State(position=(50, 4.5), time_step=4),
         }
         lanelet_assignments_ego = {
             0: {1},
