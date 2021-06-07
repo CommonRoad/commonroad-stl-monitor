@@ -3,7 +3,6 @@ import math
 from decimal import Decimal
 from typing import Dict, Union, List, Tuple
 
-import numba
 import numpy as np
 import pandas as pd
 import ruamel.yaml
@@ -728,7 +727,6 @@ def pandas_from_nested_dict(data, level_names):
     return pd.DataFrame(entries, columns=level_names)
 
 
-@numba.njit
 def min_max(arr):
     mini = np.inf
     maxi = -np.inf
