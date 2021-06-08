@@ -8,7 +8,6 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State
-
 from crmonitor.common.evaluation import RuleSetEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -348,13 +347,8 @@ class RuleTest(unittest.TestCase):
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
-        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G1"]
-
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-
-        rule = Rule(rule_str, self.traffic_rules)
-
-        rule_eval = RuleSetEvaluator([rule])
+        rule_eval = RuleSetEvaluator.create_from_config(["R_G1"])
 
         # TODO: Repair test for defined other agent
         # for ego_id, o_ids in exp_result:
@@ -367,7 +361,7 @@ class RuleTest(unittest.TestCase):
         #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
         for ego_id, exp_violation in exp_floating:
-            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
+            world_state = WorldState.create_from_scenario(scenario, ego_id)
             df_rule, _ = rule_eval.evaluate_incremental(
                 world_state
             )
@@ -418,16 +412,10 @@ class RuleTest(unittest.TestCase):
         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_max_speed_limit.xml")
         scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
-        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G3"]
-        rule = Rule(
-            rule_str,
-            self.traffic_rules,
-            name="SpeedLimit"
-        )
-        self.assertEqual(rule.quantification, QuantificationType.ALL)
-        rule_eval = RuleSetEvaluator([rule])
+        rule_eval = RuleSetEvaluator.create_from_config("R_G3")
+        self.assertEqual(rule_eval.rules[0].quantification, QuantificationType.ALL)
         for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
+            world_state = WorldState.create_from_scenario(scenario, ego_id)
             df_rule, _ = rule_eval.evaluate_incremental(
                 world_state
             )

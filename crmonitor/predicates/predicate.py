@@ -129,9 +129,10 @@ class BasePredicateEvaluator(abc.ABC):
     def evaluate_robustness_with_cache(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
+        vehicle_ids_tuple = tuple(vehicle_ids)
         value = world_state.predicate_values[world_state.time_step][
             self.predicate_name
-        ].get(vehicle_ids)
+        ].get(vehicle_ids_tuple)
         if value is None:
             logger.debug(
                 "Evaluating predicate %s , t=%d, ids=%s",
@@ -141,7 +142,7 @@ class BasePredicateEvaluator(abc.ABC):
             )
             value = self.evaluate_robustness(world_state, vehicle_ids)
             world_state.predicate_values[world_state.time_step][self.predicate_name][
-                vehicle_ids
+                vehicle_ids_tuple
             ] = value
         return value
 

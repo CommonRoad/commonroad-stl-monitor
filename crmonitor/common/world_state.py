@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from functools import partial
+from pathlib import Path
 from typing import Optional
 
 from commonroad.scenario.scenario import Scenario
@@ -10,13 +11,16 @@ from crmonitor.common.helper import (create_scenario_vehicles,
                                      create_other_vehicles_param, )
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
+from ruamel.yaml import YAML
 
 
 class WorldState:
     @classmethod
     def create_from_scenario(
-        cls, scenario: Scenario, ego_obs_id, config, time_step=None, road_network=None
+        cls, scenario: Scenario, ego_obs_id, config=None, time_step=None, road_network=None
     ):
+        if config is None:
+            config = YAML().load(Path(__file__).parent.parent / "config.yaml")
         if road_network is None:
             params = config.get("road_network_param")
             road_network = RoadNetwork(scenario.lanelet_network, params)
