@@ -52,24 +52,9 @@ class RuleSetEvaluator:
         ids = (world_state.ego_vehicle.id,) + other_ids
         for pred_assign in rule.predicate_assignment:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
-            if (
-                world_state.predicate_values[world_state.time_step][pred_assign.base_name].get(
-                    predicate_ids
-                )
-                is None
-            ):
-                logging.debug(
-                    "Evaluating predicate %s , t=%d, ids=%s",
-                    pred_assign.base_name,
-                    world_state.time_step,
-                    predicate_ids,
-                )
-                value = pred_assign.evaluator.evaluate_robustness(
-                    world_state, predicate_ids
-                )
-                world_state.predicate_values[world_state.time_step][pred_assign.base_name][
-                    predicate_ids
-                ] = value
+            pred_assign.evaluator.evaluate_robustness_with_cache(
+                world_state, predicate_ids
+            )
 
     def _evaluate_rule_timestep(
         self,
