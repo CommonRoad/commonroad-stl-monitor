@@ -3,7 +3,7 @@ import math
 from decimal import Decimal
 from typing import Dict, Union, List, Tuple
 
-import numpy as np
+import numba
 import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
@@ -727,10 +727,29 @@ def pandas_from_nested_dict(data, level_names):
     return pd.DataFrame(entries, columns=level_names)
 
 
+@numba.njit(fastmath=True)
 def min_max(arr):
-    mini = np.inf
-    maxi = -np.inf
-    for a in arr:
-        mini = np.fmin(a, mini)
-        maxi = np.fmax(a, maxi)
-    return mini, maxi
+    """
+    https://stackoverflow.com/questions/12200580/numpy-function-for-simultaneous-max-and-min
+    :param arr:
+    :return:
+    """
+    n = arr.size
+    odd = n % 2
+    if not odd:
+        n -= 1
+    max_val = min_val = arr[0]
+    i = 1
+    while i < n:
+        x = arr[i]
+        y = arr[i + 1]
+        if x > y:
+            x, y = y, x
+        min_val = min(x, min_val)
+        max_val = max(y, max_val)
+        i += 2
+    if not odd:
+        x = arr[n]
+        min_val = min(x, min_val)
+        max_val = max(x, max_val)
+    return min_val, max_val

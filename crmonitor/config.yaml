@@ -33,7 +33,7 @@ simulation_param:
 #    - polyline_resampling_step: step size for polyline resampling
 #    - merging_length: maximum accumulated length of lanalets belonging to a lane
 road_network_param:
-  num_chankins_corner_cutting: 10
+  num_chankins_corner_cutting: 1
   polyline_resampling_step: 0.5
   merging_length: 10000
 
