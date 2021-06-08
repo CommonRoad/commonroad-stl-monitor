@@ -10,7 +10,6 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.helper import min_max
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
@@ -178,16 +177,19 @@ class PredInSameLane(BasePredicateEvaluator):
             return np.inf
 
         occ = vehicle_k.occupancy_at_time_step(world_state.time_step)
-        vert = list(occ.vertices)
+        # Last vertex is the same as first
+        vert = list(occ.vertices[:-1])
         if has_left_adj:
             lane = intersecting_lanes[
                 np.argmax([l.lanelet.left_vertices[0, 1] for l in intersecting_lanes])
             ]
-            _, dist_left = zip(
-                *lane.clcs_left.convert_list_of_points_to_curvilinear_coords(vert, 1)
+            cosy = np.array(
+                lane.clcs_left.convert_list_of_points_to_curvilinear_coords(vert, 1)
             )
-            dist_left = [d for d in dist_left if d <= 0]
-            d_l_min, d_l_max = min_max(dist_left)
+            dist_left = cosy[:, 1]
+            dist_left = dist_left[dist_left <= 0]
+            d_l_min = np.min(dist_left)
+            d_l_max = np.max(dist_left)
             d_l_min = np.abs(d_l_min)
             d_l_max = np.abs(d_l_max)
         else:
@@ -197,11 +199,13 @@ class PredInSameLane(BasePredicateEvaluator):
             lane = intersecting_lanes[
                 np.argmin([l.lanelet.right_vertices[0, 1] for l in intersecting_lanes])
             ]
-            _, dist_right = zip(
-                *lane.clcs_right.convert_list_of_points_to_curvilinear_coords(vert, 1)
+            cosy = np.array(
+                lane.clcs_right.convert_list_of_points_to_curvilinear_coords(vert, 1)
             )
-            dist_right = [d for d in dist_right if d >= 0]
-            d_r_min, d_r_max = min_max(dist_right)
+            dist_right = cosy[:, 1]
+            dist_right = dist_right[dist_right >= 0]
+            d_r_min = np.min(dist_right)
+            d_r_max = np.max(dist_right)
         else:
             d_r_min = np.inf
 
@@ -240,7 +244,7 @@ class PredInSameLane(BasePredicateEvaluator):
                 vehicle_p.lanelet_assignment[world_state.time_step]
             )
             k_occ = list(
-                vehicle_k.occupancy_at_time_step(world_state.time_step).vertices
+                vehicle_k.occupancy_at_time_step(world_state.time_step).vertices[:-1]
             )
             k_to_p_lanes = np.min(
                 [
@@ -616,7 +620,9 @@ class PredSucceeds(BasePredicateEvaluator):
         other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
         succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
         if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
-            same_lane = self.same_lane.evaluate_robustness_with_cache(world_state, vehicle_ids)
+            same_lane = self.same_lane.evaluate_robustness_with_cache(
+                world_state, vehicle_ids
+            )
             assert same_lane >= 0.0
             overtake = other_vehicle.rear_s(
                 world_state.time_step
