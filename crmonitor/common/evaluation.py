@@ -32,7 +32,6 @@ class RuleSetEvaluator:
         self.rules = tuple(rules)
         self.monitors = {
             rule: defaultdict(
-                # lambda: TrafficRuleMonitorForwardSTL(rule, output_type="standard")
                 partial(TrafficRuleMonitorForwardSTL, rule, output_type="standard")
             )
             for rule in rules
