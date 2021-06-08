@@ -1,4 +1,5 @@
 import abc
+import logging
 import math
 from functools import reduce
 from typing import List, Tuple, Set
@@ -7,11 +8,14 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from ruamel.yaml.comments import CommentedMap
+
 from crmonitor.common.helper import min_max
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from ruamel.yaml.comments import CommentedMap
+
+logger = logging.getLogger(__name__)
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -70,7 +74,7 @@ def get_adjacent_lanelets(lanelet_ids, lanelet_network):
     return left_adj, right_adj
 
 
-class IPredicateEvaluator(abc.ABC):
+class BasePredicateEvaluator(abc.ABC):
     predicate_name = "interface"
 
     def __init__(self, config: CommentedMap):
@@ -112,8 +116,28 @@ class IPredicateEvaluator(abc.ABC):
     ) -> float:
         pass
 
+    def evaluate_robustness_with_cache(
+        self, world_state: WorldState, vehicle_ids: List[int]
+    ) -> float:
+        vehicle_ids_tuple = tuple(vehicle_ids)
+        value = world_state.predicate_values[world_state.time_step][
+            self.predicate_name
+        ].get(vehicle_ids_tuple)
+        if value is None:
+            logger.debug(
+                "Evaluating predicate %s , t=%d, ids=%s",
+                self.predicate_name,
+                world_state.time_step,
+                vehicle_ids,
+            )
+            value = self.evaluate_robustness(world_state, vehicle_ids)
+            world_state.predicate_values[world_state.time_step][self.predicate_name][
+                vehicle_ids_tuple
+            ] = value
+        return value
 
-class PredInSameLane(IPredicateEvaluator):
+
+class PredInSameLane(BasePredicateEvaluator):
     predicate_name = "in_same_lane"
     arity = 2
 
@@ -288,7 +312,7 @@ class PredInSameLane(IPredicateEvaluator):
             return -self._scale_lat_dist(np.fmin(k_to_p_lanes, p_to_k_lanes))
 
 
-class PredInFrontOf(IPredicateEvaluator):
+class PredInFrontOf(BasePredicateEvaluator):
     predicate_name = "in_front_of"
     arity = 2
 
@@ -302,7 +326,7 @@ class PredInFrontOf(IPredicateEvaluator):
         )
 
 
-class PredSingleLane(IPredicateEvaluator):
+class PredSingleLane(BasePredicateEvaluator):
     predicate_name = "single_lane"
     arity = 1
 
@@ -378,7 +402,7 @@ class PredSingleLane(IPredicateEvaluator):
         return self._scale_lat_dist(np.fmin(d_l, d_r))
 
 
-class PredCutIn(IPredicateEvaluator):
+class PredCutIn(BasePredicateEvaluator):
     predicate_name = "cut_in"
     arity = 2
 
@@ -412,10 +436,10 @@ class PredCutIn(IPredicateEvaluator):
         cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
 
-        single_lane = self._single_lane_evaluator.evaluate_robustness(
+        single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
             world_state, [vehicle_ids[0]]
         )
-        same_lane = self._same_lane_evaluator.evaluate_robustness(
+        same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
             world_state, vehicle_ids
         )
 
@@ -443,7 +467,7 @@ class PredCutIn(IPredicateEvaluator):
         return rob
 
 
-class PredSafeDistPrec(IPredicateEvaluator):
+class PredSafeDistPrec(BasePredicateEvaluator):
     predicate_name = "keeps_safe_distance_prec"
     arity = 2
 
@@ -487,7 +511,7 @@ class PredSafeDistPrec(IPredicateEvaluator):
         return rob
 
 
-class PredGenericSpeedLimit(IPredicateEvaluator):
+class PredGenericSpeedLimit(BasePredicateEvaluator):
     def __init__(self, config: CommentedMap):
         super().__init__(config)
 
@@ -570,7 +594,7 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
         return speed_limit
 
 
-class PredSucceeds(IPredicateEvaluator):
+class PredSucceeds(BasePredicateEvaluator):
     predicate_name = "succeeds"
     arity = 2
 
@@ -592,7 +616,7 @@ class PredSucceeds(IPredicateEvaluator):
         other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
         succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
         if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
-            same_lane = self.same_lane.evaluate_robustness(world_state, vehicle_ids)
+            same_lane = self.same_lane.evaluate_robustness_with_cache(world_state, vehicle_ids)
             assert same_lane >= 0.0
             overtake = other_vehicle.rear_s(
                 world_state.time_step
@@ -632,7 +656,7 @@ class PredSucceeds(IPredicateEvaluator):
             return -1.0
 
 
-class PredAbruptBreaking(IPredicateEvaluator):
+class PredAbruptBreaking(BasePredicateEvaluator):
     predicate_name = "brakes_abruptly"
     arity = 1
 
@@ -648,7 +672,7 @@ class PredAbruptBreaking(IPredicateEvaluator):
         return rob
 
 
-class PredRelAbruptBreaking(IPredicateEvaluator):
+class PredRelAbruptBreaking(BasePredicateEvaluator):
     predicate_name = "rel_brakes_abruptly"
     arity = 2
 

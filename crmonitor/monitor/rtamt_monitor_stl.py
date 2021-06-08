@@ -1,10 +1,8 @@
 from typing import List, Tuple, Union, Dict
 
 import rtamt
-from rtamt import Language
-
-from crmonitor.predicates.predicate_value import PredicateValueCollection
 from crmonitor.predicates.rule import Rule, IOType
+from rtamt import Language
 
 
 class TrafficRuleMonitorForwardSTL:
@@ -59,13 +57,6 @@ class TrafficRuleMonitorForwardSTL:
         monitor.parse()
 
         return monitor
-
-    def _prepare_predicates_online(self, predicates: PredicateValueCollection):
-        res = []
-        for pred_name in self._rule.predicate_names:
-            pred = predicates.by_name(pred_name)
-            res.append((pred.predicate_str, pred.value))
-        return res
 
     def evaluate_monitor_offline(
         self, predicates: Dict[str, List[Tuple[float, bool]]], vehicle_ids
