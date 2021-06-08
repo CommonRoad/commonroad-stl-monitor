@@ -9,3 +9,7 @@ bezier>= 2020.2.3
 antlr4-python3-runtime==4.7.2
 commonroad-vehicle-models>=1.0.0
 pytest >= 5.3.2
+enum34~=1.1.10
+pandas~=1.2.4
+shapely~=1.7.1
+tqdm~=4.53.0
