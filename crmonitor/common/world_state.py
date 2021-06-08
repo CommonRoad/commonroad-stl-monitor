@@ -1,4 +1,6 @@
 import logging
+from collections import defaultdict
+from functools import partial
 from typing import Optional
 
 from commonroad.scenario.scenario import Scenario
@@ -54,6 +56,9 @@ class WorldState:
         self._ego_vehicle = ego_vehicle
         self.other_vehicles = other_vehicles
         self.road_network = road_network
+        # Levels: time step, predicate name, agent_ids
+        default_dict_factory = partial(defaultdict, dict)
+        self.predicate_values = defaultdict(default_dict_factory)
 
     def step(self):
         self.time_step += 1
@@ -98,6 +103,19 @@ class WorldState:
             and self.time_step == o.time_step
             and self.ego_vehicle.id == o.ego_vehicle.id
         )
+
+    def clear_predicate_values_timesteps(self, start_time_step, end_time_step):
+        """
+        Clear internal cached predicates between for the given time interval
+        :param start_time_step: start of the interval (inclusive)
+        :param end_time_step: end of the interval (inclusive)
+        :return:
+        """
+        for i in range(start_time_step, end_time_step + 1):
+            self.predicate_values.pop(i)
+
+    def clear_predicates(self):
+        self.predicate_values.clear()
 
     # def copy(self):
     #     return WorldState(scenario=self.scenario, ego_obs_id=self.ego_vehicle.id, config=self.config, time_step=self.time_step, road_network=self.road_network)

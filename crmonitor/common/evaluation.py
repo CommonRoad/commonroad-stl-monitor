@@ -36,20 +36,8 @@ class RuleSetEvaluator:
             )
             for rule in rules
         }
-        default_dict_factory = partial(defaultdict, dict)
-        self.predicate_values = defaultdict(default_dict_factory)
         self._last_world_state = None
         self._last_time_step = -1
-
-    def clear_cache_timesteps(self, start_time_step, end_time_step):
-        """
-        Clear internal cached predicates between for the given time interval
-        :param start_time_step: start of the interval (inclusive)
-        :param end_time_step: end of the interval (inclusive)
-        :return:
-        """
-        for i in range(start_time_step, end_time_step + 1):
-            self.predicate_values.pop(i)
 
     def _evaluate_predicates_timestep(
         self, rule: Rule, world_state: WorldState, other_ids: Tuple[int]
@@ -65,7 +53,7 @@ class RuleSetEvaluator:
         for pred_assign in rule.predicate_assignment:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
             if (
-                self.predicate_values[world_state.time_step][pred_assign.base_name].get(
+                world_state.predicate_values[world_state.time_step][pred_assign.base_name].get(
                     predicate_ids
                 )
                 is None
@@ -79,7 +67,7 @@ class RuleSetEvaluator:
                 value = pred_assign.evaluator.evaluate_robustness(
                     world_state, predicate_ids
                 )
-                self.predicate_values[world_state.time_step][pred_assign.base_name][
+                world_state.predicate_values[world_state.time_step][pred_assign.base_name][
                     predicate_ids
                 ] = value
 
@@ -97,22 +85,21 @@ class RuleSetEvaluator:
         :return: Tuple of robustness value and dictionary of the predicate
         values
         """
-        predicate_values = {}
+        rule_predicate_values = {}
         self._evaluate_predicates_timestep(monitor.rule, world_state, other_ids)
         for pred_assign in monitor.rule.predicate_assignment:
             ids = (world_state.ego_vehicle.id,) + other_ids
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
-            v = self.predicate_values[world_state.time_step][pred_assign.base_name][
+            v = world_state.predicate_values[world_state.time_step][pred_assign.base_name][
                 predicate_ids
             ]
-            predicate_values[pred_assign.full_name] = v
+            rule_predicate_values[pred_assign.full_name] = v
         rob_value = monitor.evaluate_monitor_online(
-            world_state.time_step, list(predicate_values.items())
+            world_state.time_step, list(rule_predicate_values.items())
         )
-        return rob_value, predicate_values
+        return rob_value, rule_predicate_values
 
-    def _check_cache(self, world_state: WorldState):
-
+    def _check_monitors(self, world_state: WorldState):
         if self._last_world_state is None or (
             self._last_world_state is not world_state
             and (
@@ -125,22 +112,11 @@ class RuleSetEvaluator:
                     != self._last_world_state.ego_vehicle.id
                 )
             )
-        ):
-            # Clear predicate values and monitor states, if a different world state was given as input
-            logging.debug("Clear internal cache!")
-            self.predicate_values.clear()
+        ) or world_state.time_step < self._last_time_step:
+            logging.debug("Clearing monitor states!")
             self._last_world_state = world_state
             self._last_time_step = -1
             for rule_mons in self.monitors.values():
-                # rule_mons.clear()
-                for monitor in list(rule_mons.values()):
-                    monitor.reset_monitor()
-
-        elif world_state.time_step < self._last_time_step:
-            # Clear only monitor states, if time was decremented
-            self._last_time_step = -1
-            for rule_mons in self.monitors.values():
-                # rule_mons.clear()
                 for monitor in list(rule_mons.values()):
                     monitor.reset_monitor()
 
@@ -153,7 +129,7 @@ class RuleSetEvaluator:
         :return: Tuple of pandas dataframes, where the first contains rule
             robustness and the second predicate robustness
         """
-        self._check_cache(world_state)
+        self._check_monitors(world_state)
         # Only evaluate if ego vehicle is present
         time_begin = max(self._last_time_step + 1, world_state.ego_vehicle.start_time)
         time_end = min(world_state.time_step, world_state.ego_vehicle.end_time)
