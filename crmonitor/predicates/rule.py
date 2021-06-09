@@ -17,8 +17,8 @@ def get_all_predicate_evaluators():
 
 
 class IOType(Enum):
-    OUTPUT = auto()
-    INPUT = auto()
+    OUTPUT = "output"
+    INPUT = "input"
 
 
 class QuantificationType(Enum):

@@ -4,7 +4,7 @@ import rtamt
 from rtamt import Language
 
 from crmonitor.predicates.predicate_value import PredicateValueCollection
-from crmonitor.predicates.rule import Rule, IOType
+from crmonitor.predicates.rule import Rule
 
 
 class TrafficRuleMonitorForwardSTL:
@@ -34,9 +34,8 @@ class TrafficRuleMonitorForwardSTL:
         # Workaround for rtamt when working with output-robustness and input vacuity
         predicates = self._rule.predicate_names
         mod_formula = logic_formula
-        # TODO: Only required for IA-STL
-        # for pred in predicates:
-        #     mod_formula.replace(pred, "({} >= 0)".format(pred))
+        for pred in predicates:
+            mod_formula.replace(pred, "({} >= 0)".format(pred))
         return mod_formula
 
     # TODO: Could be made static
@@ -47,16 +46,15 @@ class TrafficRuleMonitorForwardSTL:
         )
         for var in self._rule.predicate_assignment:
             monitor.declare_var(var.full_name, "float")
-            if var.io_type == IOType.INPUT:
-                monitor.set_var_io_type(var.full_name, "input")
-            else:
-                monitor.set_var_io_type(var.full_name, "output")
+            monitor.set_var_io_type(var.full_name, var.io_type.value)
+
         monitor.declare_var("out", "float")
 
-        monitor.iosem = self._output_type
+        # monitor.iosem = self._output_type
 
         monitor.spec = f"out = {logic_formula}"
         monitor.parse()
+        monitor.pastify()
 
         return monitor
 
