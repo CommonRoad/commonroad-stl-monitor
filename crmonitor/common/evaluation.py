@@ -12,7 +12,7 @@ from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
-from crmonitor.predicates.rule import Rule, QuantificationType
+from crmonitor.predicates.rule import Rule, QuantificationType, IOType
 from ruamel.yaml import YAML
 
 
@@ -87,9 +87,17 @@ class RuleSetEvaluator:
         ids = (world_state.ego_vehicle.id,) + other_ids
         for pred_assign in rule.predicate_assignment:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
-            pred_assign.evaluator.evaluate_robustness_with_cache(
-                world_state, predicate_ids
-            )
+            value = world_state.predicate_values[world_state.time_step][
+                pred_assign.base_name].get(predicate_ids)
+            if value is None:
+                if pred_assign.io_type == IOType.OUTPUT:
+                    value = pred_assign.evaluator.evaluate_robustness(world_state,
+                                                                      predicate_ids)
+                else:
+                    value = 1.0 if pred_assign.evaluator.evaluate_boolean(
+                        world_state, predicate_ids) else -1.0
+                world_state.predicate_values[world_state.time_step][
+                    pred_assign.base_name][predicate_ids] = value
 
     def _evaluate_rule_timestep(
         self,
