@@ -94,8 +94,8 @@ class RuleSetEvaluator:
                     value = pred_assign.evaluator.evaluate_robustness(world_state,
                                                                       predicate_ids)
                 else:
-                    value = 1.0 if pred_assign.evaluator.evaluate_boolean(
-                        world_state, predicate_ids) else -1.0
+                    value = 3.0 if pred_assign.evaluator.evaluate_boolean(
+                        world_state, predicate_ids) else -3.0
                 world_state.predicate_values[world_state.time_step][
                     pred_assign.base_name][predicate_ids] = value
 

@@ -390,8 +390,8 @@ class RuleTest(unittest.TestCase):
             # create expected values
             exp_rob = []
             for time_step in range(world_state.time_step + 1):
-                in_front_of = world_state.predicate_values[time_step]["in_front_of"]
-                in_same_lane = world_state.predicate_values[time_step]["in_same_lane"]
+                in_front_of = world_state.predicate_values[time_step]["in_front_of_i"]
+                in_same_lane = world_state.predicate_values[time_step]["in_same_lane_i"]
                 keeps_safe_distance_prec = world_state.predicate_values[time_step]["keeps_safe_distance_prec"]
 
                 all_vehicle_results = []
@@ -463,14 +463,15 @@ class RuleTest(unittest.TestCase):
                 accel = world_state.predicate_values[time_step]["accel"]
 
                 all_vehicle_results = []
+                ego_accel = world_state.predicate_values[time_step]["accel_i"][(ego_id, )]
                 for vehicle_pair in precedes.keys():
                     other_id = vehicle_pair[1]
-                    if accel[(ego_id, )] <= -2.:
+                    if ego_accel <= -2.:
                         # all_vehicle_results.append(precedes[vehicle_pair])
                         all_vehicle_results.append(
                             np.min([precedes[vehicle_pair],
                                    np.max([keeps_safe_distance_prec[vehicle_pair],
-                                          accel[(ego_id, )] - accel[(other_id, )] + 2.])])
+                                           ego_accel - accel[(other_id, )] + 2.])])
                         )
                     else:
                         all_vehicle_results.append(np.inf)
