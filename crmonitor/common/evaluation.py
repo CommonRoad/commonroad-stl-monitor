@@ -165,8 +165,7 @@ class RuleSetEvaluator:
             logging.debug("Clearing monitor states!")
             self._last_world_state = world_state
             self._last_time_step = -1
-            for rule_mons in self.monitors.values():
-                self.reset_monitors()
+            self.reset_monitors()
 
     def evaluate_incremental(
         self, world_state: WorldState, to_panda=True
@@ -222,16 +221,6 @@ class RuleSetEvaluator:
                         )
                         rule_values.append(rule_value)
                         pred_values.append(pred_value)
-                        # Short circuit
-                        if self.use_boolean:
-                            if (
-                                rule.quantification == QuantificationType.ALL
-                                and not rob_to_bool(rule_value)
-                            ) or (
-                                rule.quantification == QuantificationType.EXISTENTIAL
-                                and rob_to_bool(rule_value)
-                            ):
-                                break
                     if rule.quantification == QuantificationType.ALL:
                         idx = np.argmin(rule_values)
                     else:

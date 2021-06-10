@@ -8,11 +8,12 @@ from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from ruamel.yaml.comments import CommentedMap
+
 from crmonitor.common.helper import min_max
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from ruamel.yaml.comments import CommentedMap
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class BasePredicateEvaluator(abc.ABC):
         return self._scale(x, 0, math.pi, copysign=True)
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world_state, vehicle_ids) > 0.0
+        return self.evaluate_robustness(world_state, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
     def evaluate_robustness(
@@ -433,7 +434,7 @@ class PredCutIn(BasePredicateEvaluator):
         d_k = cutting_vehicle.states_lat[world_state.time_step].d
         orient_k = cutting_vehicle.states_lat[world_state.time_step].theta
 
-        result = (d_k < d_p and orient_k > 0) or (d_k > d_p and orient_k < 0)
+        result = (d_k < d_p and orient_k > self.eps) or (d_k > d_p and orient_k < -self.eps)
         return result
 
     def evaluate_robustness(
