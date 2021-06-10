@@ -60,14 +60,14 @@ class RuleSetEvaluator:
         rule_set = [Rule(r, traffic_rules_config, name=n) for r, n in rule_str.items()]
         return cls(rule_set)
 
-    def __init__(self, rules: Iterable[Rule]) -> None:
+    def __init__(self, rules: Iterable[Rule], output_type="standard") -> None:
         """
         :param rules: set of rules to be evaluated
         """
         self.rules = tuple(rules)
         self.monitors = {
             rule: defaultdict(
-                partial(TrafficRuleMonitorForwardSTL, rule, output_type="standard")
+                partial(TrafficRuleMonitorForwardSTL, rule, output_type=output_type)
             )
             for rule in rules
         }
