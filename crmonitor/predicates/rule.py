@@ -43,7 +43,10 @@ class Rule:
 
         @property
         def base_name(self):
-            return self.evaluator.predicate_name
+            name = self.evaluator.predicate_name
+            if self.io_type == IOType.INPUT:
+                name += "_i"
+            return name
 
         @property
         def num_dependencies(self):
