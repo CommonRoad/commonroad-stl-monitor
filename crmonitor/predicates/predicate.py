@@ -173,7 +173,7 @@ class PredInSameLane(BasePredicateEvaluator):
         return intersecting_lanelets
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
+        self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
         """
         If boolean is
@@ -186,8 +186,6 @@ class PredInSameLane(BasePredicateEvaluator):
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
         if self.evaluate_boolean(world_state, vehicle_ids):
-            if io_type == IOType.INPUT:
-                return np.inf
             intersecting_lanes = self.get_same_lanes(world_state, vehicle_ids)
             assert len(intersecting_lanes) > 0
             lanelets = [
@@ -225,8 +223,6 @@ class PredInSameLane(BasePredicateEvaluator):
             max_dist = np.max([poly.distance(Point(p)) for p in occ.vertices])
             return self._scale_lat_dist(max_dist)
         else:
-            if io_type == IOType.INPUT:
-                return -np.inf
             lanes_p = world_state.road_network.find_lanes_by_lanelets(
                 vehicle_p.lanelet_assignment[world_state.time_step]
             )
@@ -271,7 +267,7 @@ class PredSingleLane(BasePredicateEvaluator):
         return single_lane
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
+        self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
         """
         If false: 1 - largest fractional overlap with occupied lanes
@@ -289,8 +285,6 @@ class PredSingleLane(BasePredicateEvaluator):
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
         if single_lane_boolean:
-            if io_type == IOType.INPUT:
-                return np.inf
             assert len(k_lanes) == 1
             k_lane = k_lanes.pop()
             k_occ = vehicle_k.occupancy_at_time_step(
@@ -300,8 +294,6 @@ class PredSingleLane(BasePredicateEvaluator):
             distance_to_boundary = lane_poly.boundary.distance(k_occ)
             return self._scale_lon_dist(distance_to_boundary)
         else:
-            if io_type == IOType.INPUT:
-                return -np.inf
             k_lanes = list(k_lanes)
             shape_k = vehicle_k.occupancy_at_time_step(
                 world_state.time_step
@@ -335,7 +327,7 @@ class PredCutIn(BasePredicateEvaluator):
         self._single_lane_evaluator = PredSingleLane(config)
 
     def evaluate_robustness(
-        self, world_state: WorldState, vehicle_ids: List[int], io_type: IOType = IOType.OUTPUT
+        self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
         cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
