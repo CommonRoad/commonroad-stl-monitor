@@ -326,6 +326,28 @@ class PredCutIn(BasePredicateEvaluator):
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
 
+    def evaluate_boolean(self, world_state: WorldState,
+                         vehicle_ids: List[int]) -> bool:
+        cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
+        cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
+
+        single_lane = self._single_lane_evaluator.evaluate_boolean(
+            world_state, [vehicle_ids[0]]
+        )
+        if single_lane:
+            return False
+        same_lane = self._same_lane_evaluator.evaluate_boolean(
+            world_state, vehicle_ids
+        )
+        if not same_lane:
+            return False
+        d_p = cutted_vehicle.states_lat[world_state.time_step].d
+        d_k = cutting_vehicle.states_lat[world_state.time_step].d
+        orient_k = cutting_vehicle.states_lat[world_state.time_step].theta
+
+        result = ((d_k < d_p and orient_k > 0) or (d_k > d_p and orient_k < 0))
+        return result
+
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
@@ -498,6 +520,14 @@ class PredPrecedes(BasePredicateEvaluator):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
         self.same_lane.scale = False
+
+    def evaluate_boolean(self, world_state: WorldState,
+                         vehicle_ids: List[int]) -> bool:
+        succeeding_vehicle_id = vehicle_ids[0]
+        other_vehicle_id = vehicle_ids[1]
+        other_vehicle = world_state.vehicle_by_id(other_vehicle_id)
+        succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
+        return (len(succ_veh) > 0 and succ_veh[0][1].id == succeeding_vehicle_id)
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
