@@ -3,16 +3,17 @@ import itertools
 import logging
 from collections import defaultdict
 from functools import partial
-from typing import List, Tuple, Iterable, Dict
+from pathlib import Path
+from typing import List, Tuple, Iterable, Dict, Union
 
 import numpy as np
 import pandas as pd
-
 from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
 from crmonitor.predicates.rule import Rule, QuantificationType, IOType
+from ruamel.yaml import YAML
 
 
 def get_valid_time_interval(vehicles: List[Vehicle]):
@@ -26,32 +27,52 @@ class RuleSetEvaluator:
     Evaluate individual vehicles of CommonRoad scenarios
     """
 
-    def __init__(self, rules: Iterable[Rule], output_type: str = "standard") -> None:
+    @classmethod
+    def create_from_config(
+        cls,
+        rules: Union[str, Iterable[str]] = ("R_G1", "R_G2", "R_G3"),
+        traffic_rules_config=None,
+    ):
+        if traffic_rules_config is None:
+            traffic_rules_config = YAML().load(
+                Path(__file__).parent.parent / "traffic_rules_rtamt.yaml"
+            )
+        if isinstance(rules, str):
+            rules = [rules]
+        rule_str_dict = traffic_rules_config["traffic_rules_forward"]
+        rule_set = [Rule(rule_str_dict[r], traffic_rules_config, name=r) for r in rules]
+        return cls(rule_set)
+
+    @classmethod
+    def create_from_rule_str(
+        cls,
+        rule_str: Union[str, Iterable[str], Dict[str, str]],
+        traffic_rules_config=None,
+    ):
+        if traffic_rules_config is None:
+            traffic_rules_config = YAML().load(
+                Path(__file__).parent.parent / "traffic_rules_rtamt.yaml"
+            )
+        if isinstance(rule_str, str):
+            rule_str = {rule_str: rule_str}
+        if isinstance(rule_str, list):
+            rule_str = {r: r for r in rule_str}
+        rule_set = [Rule(r, traffic_rules_config, name=n) for r, n in rule_str.items()]
+        return cls(rule_set)
+
+    def __init__(self, rules: Iterable[Rule], output_type="standard") -> None:
         """
         :param rules: set of rules to be evaluated
         """
         self.rules = tuple(rules)
         self.monitors = {
             rule: defaultdict(
-                # lambda: TrafficRuleMonitorForwardSTL(rule, output_type="standard")
                 partial(TrafficRuleMonitorForwardSTL, rule, output_type=output_type)
             )
             for rule in rules
         }
-        default_dict_factory = partial(defaultdict, dict)
-        self.predicate_values = defaultdict(default_dict_factory)
         self._last_world_state = None
         self._last_time_step = -1
-
-    def clear_cache_timesteps(self, start_time_step, end_time_step):
-        """
-        Clear internal cached predicates between for the given time interval
-        :param start_time_step: start of the interval (inclusive)
-        :param end_time_step: end of the interval (inclusive)
-        :return:
-        """
-        for i in range(start_time_step, end_time_step + 1):
-            self.predicate_values.pop(i)
 
     def _evaluate_predicates_timestep(
         self, rule: Rule, world_state: WorldState, other_ids: Tuple[int]
@@ -66,30 +87,17 @@ class RuleSetEvaluator:
         ids = (world_state.ego_vehicle.id,) + other_ids
         for pred_assign in rule.predicate_assignment:
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
-            if (
-                self.predicate_values[world_state.time_step][pred_assign.base_name].get(
-                    predicate_ids
-                )
-                is None
-            ):
-                logging.debug(
-                    "Evaluating predicate %s , t=%d, ids=%s",
-                    pred_assign.base_name,
-                    world_state.time_step,
-                    predicate_ids,
-                )
-                # TODO: integrate IOType in each predicate
-                if pred_assign.io_type == IOType.INPUT:
-                    value = pred_assign.evaluator.evaluate_robustness(
-                        world_state, predicate_ids, pred_assign.io_type
-                    )
+            value = world_state.predicate_values[world_state.time_step][
+                pred_assign.base_name].get(predicate_ids)
+            if value is None:
+                if pred_assign.io_type == IOType.OUTPUT:
+                    value = pred_assign.evaluator.evaluate_robustness(world_state,
+                                                                      predicate_ids)
                 else:
-                    value = pred_assign.evaluator.evaluate_robustness(
-                        world_state, predicate_ids
-                    )
-                self.predicate_values[world_state.time_step][pred_assign.base_name][
-                    predicate_ids
-                ] = value
+                    value = 1.0 if pred_assign.evaluator.evaluate_boolean(
+                        world_state, predicate_ids) else -1.0
+                world_state.predicate_values[world_state.time_step][
+                    pred_assign.base_name][predicate_ids] = value
 
     def _evaluate_rule_timestep(
         self,
@@ -105,50 +113,42 @@ class RuleSetEvaluator:
         :return: Tuple of robustness value and dictionary of the predicate
         values
         """
-        predicate_values = {}
+        rule_predicate_values = {}
         self._evaluate_predicates_timestep(monitor.rule, world_state, other_ids)
         for pred_assign in monitor.rule.predicate_assignment:
             ids = (world_state.ego_vehicle.id,) + other_ids
             predicate_ids = gather(ids, pred_assign.agent_placeholders)
-            v = self.predicate_values[world_state.time_step][pred_assign.base_name][
-                predicate_ids
-            ]
-            predicate_values[pred_assign.full_name] = v
+            v = world_state.predicate_values[world_state.time_step][
+                pred_assign.base_name
+            ][predicate_ids]
+            rule_predicate_values[pred_assign.full_name] = v
         rob_value = monitor.evaluate_monitor_online(
-            world_state.time_step, list(predicate_values.items())
+            world_state.time_step, list(rule_predicate_values.items())
         )
-        return rob_value, predicate_values
+        return rob_value, rule_predicate_values
 
-    def _check_cache(self, world_state: WorldState):
-
-        if self._last_world_state is None or (
-            self._last_world_state is not world_state
-            and (
-                not hasattr(self._last_world_state, "scenario")
-                or hasattr(self._last_world_state, "scenario")
+    def _check_monitors(self, world_state: WorldState):
+        if (
+            self._last_world_state is None
+            or (
+                self._last_world_state is not world_state
                 and (
-                    self._last_world_state.scenario.scenario_id
-                    != world_state.scenario.scenario_id
-                    or world_state.ego_vehicle.id
-                    != self._last_world_state.ego_vehicle.id
+                    not hasattr(self._last_world_state, "scenario")
+                    or hasattr(self._last_world_state, "scenario")
+                    and (
+                        self._last_world_state.scenario.scenario_id
+                        != world_state.scenario.scenario_id
+                        or world_state.ego_vehicle.id
+                        != self._last_world_state.ego_vehicle.id
+                    )
                 )
             )
+            or world_state.time_step < self._last_time_step
         ):
-            # Clear predicate values and monitor states, if a different world state was given as input
-            logging.debug("Clear internal cache!")
-            self.predicate_values.clear()
+            logging.debug("Clearing monitor states!")
             self._last_world_state = world_state
             self._last_time_step = -1
             for rule_mons in self.monitors.values():
-                # rule_mons.clear()
-                for monitor in list(rule_mons.values()):
-                    monitor.reset_monitor()
-
-        elif world_state.time_step < self._last_time_step:
-            # Clear only monitor states, if time was decremented
-            self._last_time_step = -1
-            for rule_mons in self.monitors.values():
-                # rule_mons.clear()
                 for monitor in list(rule_mons.values()):
                     monitor.reset_monitor()
 
@@ -161,7 +161,7 @@ class RuleSetEvaluator:
         :return: Tuple of pandas dataframes, where the first contains rule
             robustness and the second predicate robustness
         """
-        self._check_cache(world_state)
+        self._check_monitors(world_state)
         # Only evaluate if ego vehicle is present
         time_begin = max(self._last_time_step + 1, world_state.ego_vehicle.start_time)
         time_end = min(world_state.time_step, world_state.ego_vehicle.end_time)
@@ -173,6 +173,7 @@ class RuleSetEvaluator:
         rule_robustness = {}
         # Nested dictionary with levels: time step, rule, predicate name
         predicate_robustness = {}
+        other_ids_values = {}
         while world_state.time_step <= time_end:
             t = world_state.time_step
             ids = [
@@ -182,6 +183,7 @@ class RuleSetEvaluator:
             ]
             rule_robustness[t] = {}
             predicate_robustness[t] = {}
+            other_ids_values[t] = {}
             for rule in self.rules:
                 other_ids = list(
                     itertools.combinations(ids, rule.num_dependent_vehicles)
@@ -193,6 +195,7 @@ class RuleSetEvaluator:
                     predicate_robustness[t][rule.name] = {
                         name: val for name in rule.predicate_names
                     }
+                    other_ids_values[t][rule.name] = tuple()
                 else:
                     rule_values = []
                     pred_values = []
@@ -210,6 +213,7 @@ class RuleSetEvaluator:
                     # Select values of target vehicle
                     rule_robustness[t][rule.name] = rule_values[idx]
                     predicate_robustness[t][rule.name] = pred_values[idx]
+                    other_ids_values[t][rule.name] = other_ids[idx]
             world_state.step()
 
         if to_panda:
@@ -220,6 +224,10 @@ class RuleSetEvaluator:
                 predicate_robustness,
                 ["time_step", "rule_name", "full_name", "robustness"],
             )
+            df_ids = pandas_from_nested_dict(
+                other_ids_values, ["time_step", "rule_name", "other_ids"]
+            )
+            df_rule = df_rule.merge(df_ids, on=["time_step", "rule_name"])
             return df_rule, df_pred
         else:
             return rule_robustness, predicate_robustness

@@ -1,10 +1,8 @@
 from typing import List, Tuple, Union, Dict
 
 import rtamt
+from crmonitor.predicates.rule import Rule, IOType
 from rtamt import Language
-
-from crmonitor.predicates.predicate_value import PredicateValueCollection
-from crmonitor.predicates.rule import Rule
 
 
 class TrafficRuleMonitorForwardSTL:
@@ -34,8 +32,9 @@ class TrafficRuleMonitorForwardSTL:
         # Workaround for rtamt when working with output-robustness and input vacuity
         predicates = self._rule.predicate_names
         mod_formula = logic_formula
-        for pred in predicates:
-            mod_formula.replace(pred, "({} >= 0)".format(pred))
+        # TODO: not working for G2, move >= 0 in rule_strs directly
+        # for pred in predicates:
+        #     mod_formula = mod_formula.replace(pred, "({} >= 0)".format(pred))
         return mod_formula
 
     # TODO: Could be made static
@@ -57,13 +56,6 @@ class TrafficRuleMonitorForwardSTL:
         monitor.pastify()
 
         return monitor
-
-    def _prepare_predicates_online(self, predicates: PredicateValueCollection):
-        res = []
-        for pred_name in self._rule.predicate_names:
-            pred = predicates.by_name(pred_name)
-            res.append((pred.predicate_str, pred.value))
-        return res
 
     def evaluate_monitor_offline(
         self, predicates: Dict[str, List[Tuple[float, bool]]], vehicle_ids

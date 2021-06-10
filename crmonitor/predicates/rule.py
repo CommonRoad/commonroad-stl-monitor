@@ -4,6 +4,7 @@ import sys
 from enum import auto, Enum
 
 
+
 def get_all_predicate_evaluators():
     mod_name = "crmonitor.predicates.predicate"
     # noinspection PyUnresolvedReferences
@@ -27,7 +28,8 @@ class QuantificationType(Enum):
 
 
 class Rule:
-    full_predicate_pattern = r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))"
+    full_predicate_pattern = re.compile(r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))")
+    rule_pattern = re.compile(r"^(?P<quant>[AE])\s(?P<rule>.*)")
 
     class PredicateAssignment:
         def __init__(self, full_name, agent_placeholders, evaluator,
@@ -41,7 +43,10 @@ class Rule:
 
         @property
         def base_name(self):
-            return self.evaluator.predicate_name
+            name = self.evaluator.predicate_name
+            if self.io_type == IOType.INPUT:
+                name += "_i"
+            return name
 
         @property
         def num_dependencies(self):
@@ -53,21 +58,15 @@ class Rule:
         def __hash__(self) -> int:
             return hash((self.full_name, self.agent_placeholders))
 
-    def __init__(self, rule_str, config=None, name=None, quantification=QuantificationType.ALL):
+    def __init__(self, full_rule_str, config, name=None):
+        rule_str, config, name, num_dependent_vehicles, quantification, \
+            predicate_assignment = self._from_string(full_rule_str, config, name)
         self._rule_str = rule_str
         self.config = config
-        self.predicate_assignment = set()
-        self.num_dependent_vehicles: int
-        self._extract_predicates()
-        self._name = name
+        self.predicate_assignment = predicate_assignment
+        self.num_dependent_vehicles = num_dependent_vehicles
         self.quantification = quantification
-
-    @property
-    def name(self):
-        if self._name is None:
-            return self._rule_str
-        else:
-            return self._name
+        self.name = name
 
     @property
     def is_vehicle_dependent(self):
@@ -77,10 +76,20 @@ class Rule:
     def predicate_names(self):
         return sorted([pred.full_name for pred in self.predicate_assignment])
 
-    def _extract_predicates(self):
+    @classmethod
+    def _from_string(cls, full_rule_str, config, name=None):
         required_predicates = set()
         agent_placeholders = set()
-        pred_matches = re.finditer(Rule.full_predicate_pattern, self._rule_str)
+        predicate_assignment = set()
+        match = Rule.rule_pattern.match(full_rule_str)
+
+        assert match is not None, f"Could not find quantification type for rule {full_rule_str}!"
+        if match.group("quant") == "E":
+            quantification = QuantificationType.EXISTENTIAL
+        else:
+            quantification = QuantificationType.ALL
+        rule_str = match.group("rule")
+        pred_matches = Rule.full_predicate_pattern.finditer(rule_str)
         pred_evaluators = get_all_predicate_evaluators()
         for m in pred_matches:
             pred_basename = m.group('pred_name')
@@ -100,13 +109,16 @@ class Rule:
             assert evaluator is not None
             p = Rule.PredicateAssignment(
                 m.group("pred_name") + "_" + m.group("agents"),
-                predicate_agent_placeholders, evaluator(self.config["traffic_rules_param"]), io_type)
-            self._rule_str = self._rule_str.replace(m.group(0), p.full_name)
-            self.predicate_assignment.add(p)
+                predicate_agent_placeholders, evaluator(config["traffic_rules_param"]), io_type)
+            rule_str = rule_str.replace(m.group(0), p.full_name)
+            predicate_assignment.add(p)
 
         # Check increasing order
         a_ids = sorted(list(agent_placeholders))
         for i, aid in enumerate(a_ids):
             assert i == aid, f"Agent place holder IDs are not in increasing order. Missing {i}!"
         # List is sorted. Last item is largest.
-        self.num_dependent_vehicles = a_ids[-1]
+        num_dependent_vehicles = a_ids[-1]
+        if name is None:
+            name = full_rule_str
+        return rule_str, config, name, num_dependent_vehicles, quantification, predicate_assignment
