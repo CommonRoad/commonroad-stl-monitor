@@ -2,9 +2,9 @@ from typing import List, Set, Dict
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad_ccosy.geometry.util import chaikins_corner_cutting, \
+from commonroad_dc.geometry.util import chaikins_corner_cutting, \
     resample_polyline
-from pycrccosy import CurvilinearCoordinateSystem
+from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 
 
 class Lane:
