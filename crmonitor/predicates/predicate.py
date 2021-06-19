@@ -679,7 +679,7 @@ class PredAbruptBreaking(BasePredicateEvaluator):
             .a
         )
         rob = self.config["a_abrupt"] - accel
-        return rob
+        return self._scale_acc(rob)
 
 
 class PredRelAbruptBreaking(BasePredicateEvaluator):
