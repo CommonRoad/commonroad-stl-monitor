@@ -14,6 +14,7 @@ from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
+from crmonitor.predicates.predicate import PredAbruptBreaking
 from crmonitor.predicates.rule import Rule, QuantificationType
 
 
@@ -205,10 +206,19 @@ class RuleSetEvaluator:
                 )
                 if len(other_ids) == 0:
                     # Case where ego vehicle is the only vehicle
-                    val = 1.0 if rule.quantification == QuantificationType.ALL else -1.0
+                    pred_val = 1.0 if rule.quantification == QuantificationType.ALL else -1.0
+                    if rule.quantification == QuantificationType.ALL:
+                        val = 1.0
+                    elif rule.name == "R_G2" or rule.name == "UnnecessaryBraking":
+                        # TODO: Temporary fix for partly existentially quantified rule R_G2
+                        val = -(PredAbruptBreaking(rule.config["traffic_rules_param"]).evaluate_robustness(world_state, [world_state.ego_vehicle.id]))
+                    else:
+                        val = -1.0
                     rule_robustness[t][rule.name] = val
                     predicate_robustness[t][rule.name] = {
-                        name: val for name in rule.predicate_names
+                        # TODO: Temporary fix for partly existentially
+                        #  quantified rule R_G2
+                        name: pred_val if name != "brakes_abruptly__a0" else -val for name in rule.predicate_names
                     }
                     other_ids_values[t][rule.name] = tuple()
                 else:
