@@ -1,7 +1,8 @@
 import abc
 import logging
 import math
-from typing import List, Tuple, Set
+from functools import reduce
+from typing import List, Tuple, Set, Iterable
 
 import numpy as np
 from commonroad.geometry.transform import rotate_translate
@@ -10,12 +11,15 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.helper import min_max
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 
 logger = logging.getLogger(__name__)
+
+
+def union_set(s: Iterable):
+    return reduce(lambda agg, e: agg.union(e), s, set())
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -57,21 +61,53 @@ def get_succeeding_vehicles(
     return sorted(veh, key=lambda d: d[0])
 
 
-def get_adjacent_lanelets(lanelet_ids, lanelet_network):
-    lanelets = [lanelet_network.find_lanelet_by_id(l_id) for l_id in lanelet_ids]
-    left_adj = [
-        lanelet.adj_left
-        for lanelet in lanelets
-        if lanelet.adj_left is not None and lanelet.adj_left not in lanelet_ids
-    ]
-    right_adj = [
-        lanelet.adj_right
-        for lanelet in lanelets
-        if lanelet.adj_right is not None and lanelet.adj_right not in lanelet_ids
-    ]
-    left_adj = [lanelet_network.find_lanelet_by_id(l_id) for l_id in left_adj]
-    right_adj = [lanelet_network.find_lanelet_by_id(l_id) for l_id in right_adj]
-    return left_adj, right_adj
+def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState):
+    state = vehicle_i.states_cr[world_state.time_step]
+    occ_points = list(
+        rotate_translate(vehicle_i.shape.vertices[:-1], state.position,
+                         state.orientation))
+    lanelets = [world_state.road_network.lanelet_network.find_lanelet_by_id(i)
+                for i in lanelet_ids]
+    left_bounds = [l for l in lanelets if
+                   l.adj_left is not None and l.adj_left not in lanelet_ids]
+    right_bounds = [l for l in lanelets if
+                    l.adj_right is not None and l.adj_right not in lanelet_ids]
+    d_left = [np.array([])]
+    for l in left_bounds:
+        # For performance reasons, we find a lane that contains the lanelet
+        # so that
+        # the curvilinear coordinate system stored in the lane can be reused.
+        lane = world_state.road_network.find_lanes_by_lanelets(
+                [l.lanelet_id]).pop()
+        start_s = \
+        lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[0])[0]
+        end_s = \
+        lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[-1])[0]
+        corner_points = np.array(
+                lane.clcs_left.convert_list_of_points_to_curvilinear_coords(
+                        occ_points, 1))
+        # Only consider points within the projection domain of the lanelet
+        points_in_proj_domain = corner_points[
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)]
+        if points_in_proj_domain.size > 0:
+            d_left.append(points_in_proj_domain[:, 1])
+
+    d_right = [np.array([])]
+    for l in right_bounds:
+        lane = world_state.road_network.find_lanes_by_lanelets(
+                [l.lanelet_id]).pop()
+        start_s = \
+        lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[0])[0]
+        end_s = \
+        lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[-1])[0]
+        corner_points = np.array(
+                lane.clcs_right.convert_list_of_points_to_curvilinear_coords(
+                        occ_points, 1))
+        points_in_proj_domain = corner_points[
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)]
+        if points_in_proj_domain.size > 0:
+            d_right.append(points_in_proj_domain[:, 1])
+    return np.concatenate(d_left), np.concatenate(d_right)
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -157,61 +193,6 @@ class PredInSameLane(BasePredicateEvaluator):
         intersecting_lanes = lanes_p.intersection(lanes_k)
         return intersecting_lanes
 
-    @staticmethod
-    def distance_to_lane_bound(vehicle_k, intersecting_lanes, world_state):
-        intersecting_lanelets = (
-            set()
-            .union(*[l.contained_lanelets for l in intersecting_lanes])
-            .intersection(vehicle_k.lanelet_assignment[world_state.time_step])
-        )
-        left_adj, right_adj = get_adjacent_lanelets(
-            intersecting_lanelets, world_state.road_network.lanelet_network
-        )
-        has_left_adj = len(left_adj) > 0
-        has_right_adj = len(right_adj) > 0
-        if not has_left_adj and not has_right_adj:
-            # No adjacent lanes
-            return np.inf, np.inf
-
-        state = vehicle_k.states_cr[world_state.time_step]
-        occ_points = rotate_translate(vehicle_k.shape.vertices[:-1], state.position, state.orientation)
-        # Last vertex is the same as first
-        vert = list(occ_points)
-        if has_left_adj:
-            lane = intersecting_lanes[
-                np.argmax([l.lanelet.left_vertices[0, 1] for l in intersecting_lanes])
-            ]
-            cosy = np.array(
-                lane.clcs_left.convert_list_of_points_to_curvilinear_coords(vert, 1)
-            )
-            dist_left = cosy[:, 1]
-            dist_left = dist_left[dist_left <= 0]
-            d_l_min, d_l_max = min_max(dist_left)
-            d_l_min = np.abs(d_l_min)
-            d_l_max = np.abs(d_l_max)
-        else:
-            d_l_min = np.inf
-
-        if has_right_adj:
-            lane = intersecting_lanes[
-                np.argmin([l.lanelet.right_vertices[0, 1] for l in intersecting_lanes])
-            ]
-            cosy = np.array(
-                lane.clcs_right.convert_list_of_points_to_curvilinear_coords(vert, 1)
-            )
-            dist_right = cosy[:, 1]
-            dist_right = dist_right[dist_right >= 0]
-            d_r_min, d_r_max = min_max(dist_right)
-        else:
-            d_r_min = np.inf
-
-        if d_l_min < d_r_min:
-            res = d_l_min, d_l_max
-        elif d_r_min < d_l_min:
-            res = d_r_min, d_r_max
-        else:
-            res = d_l_min, np.fmin(d_l_max, d_r_max)
-        return res
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
@@ -234,90 +215,17 @@ class PredInSameLane(BasePredicateEvaluator):
 
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        if self.evaluate_boolean(world_state, vehicle_ids):
-            intersecting_lanes = list(self.get_same_lanes(world_state, vehicle_ids))
-            rob_k = self.distance_to_lane_bound(
-                vehicle_k, intersecting_lanes, world_state
-            )[1]
-            rob_p = self.distance_to_lane_bound(
-                vehicle_p, intersecting_lanes, world_state
-            )[1]
-            return self._scale_lat_dist(np.fmin(rob_k, rob_p))
-        else:
-            lanes_p = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_p.lanelet_assignment[world_state.time_step]
-            )
-            state = vehicle_k.states_cr[world_state.time_step]
-            k_occ = list(rotate_translate(vehicle_k.shape.vertices[:-1],
-                                          state.position, state.orientation))
-            k_to_p_lanes = np.min(
-                [
-                    np.min(
-                        np.abs(
-                            list(
-                                zip(
-                                    *lane.clcs_right.convert_list_of_points_to_curvilinear_coords(
-                                        k_occ, 1
-                                    )
-                                )
-                            )[1]
-                        )
-                    )
-                    for lane in lanes_p
-                ]
-                + [
-                    np.min(
-                        np.abs(
-                            list(
-                                zip(
-                                    *lane.clcs_left.convert_list_of_points_to_curvilinear_coords(
-                                        k_occ, 1
-                                    )
-                                )
-                            )[1]
-                        )
-                    )
-                    for lane in lanes_p
-                ]
-            )
 
-            lanes_k = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_k.lanelet_assignment[world_state.time_step]
-            )
-            state = vehicle_p.states_cr[world_state.time_step]
-            p_occ = list(rotate_translate(vehicle_p.shape.vertices[:-1],
-                                          state.position, state.orientation))
-            p_to_k_lanes = np.min(
-                [
-                    np.min(
-                        np.abs(
-                            list(
-                                zip(
-                                    *lane.clcs_right.convert_list_of_points_to_curvilinear_coords(
-                                        p_occ, 1
-                                    )
-                                )
-                            )[1]
-                        )
-                    )
-                    for lane in lanes_k
-                ]
-                + [
-                    np.min(
-                        np.abs(
-                            list(
-                                zip(
-                                    *lane.clcs_left.convert_list_of_points_to_curvilinear_coords(
-                                        p_occ, 1
-                                    )
-                                )
-                            )[1]
-                        )
-                    )
-                    for lane in lanes_k
-                ]
-            )
-            return -self._scale_lat_dist(np.fmin(k_to_p_lanes, p_to_k_lanes))
+        def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int]):
+            d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world_state)
+            d_left = -np.min(d_left) if d_left.size > 0 else np.inf
+            d_right = np.max(d_right) if d_right.size > 0 else np.inf
+            return np.fmin(d_left, d_right)
+
+        lanelet_ids_k = union_set([l.contained_lanelets for l in vehicle_k.lanes_at_state(world_state)])
+        lanelet_ids_p = union_set([l.contained_lanelets for l in vehicle_p.lanes_at_state(world_state)])
+        rob = np.fmin(distance_to_lanes(vehicle_k, lanelet_ids_p), distance_to_lanes(vehicle_p, lanelet_ids_k))
+        return self._scale_lat_dist(rob)
 
 
 class PredInFrontOf(BasePredicateEvaluator):
@@ -365,48 +273,20 @@ class PredSingleLane(BasePredicateEvaluator):
         assert (
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
-        # k_lanes = list(k_lanes)
+
         shape_k = vehicle_k.shapely_occupancy_at_time_step(world_state.time_step)
         overlap_areas = [
             lane.lanelet.convert_to_polygon().shapely_object.intersection(shape_k).area
             for lane in k_lanes
         ]
         max_overlap_lane = k_lanes[np.argmax(overlap_areas)]
-        intersecting_lanelets = max_overlap_lane.contained_lanelets.intersection(
-            vehicle_k.lanelet_assignment[world_state.time_step]
-        )
-        left_adj, right_adj = get_adjacent_lanelets(
-            intersecting_lanelets, world_state.road_network.lanelet_network
-        )
-        has_left_adj = len(left_adj) > 0
-        has_right_adj = len(right_adj) > 0
-        if not has_left_adj and not has_right_adj:
-            # No adjacent lanes
-            return self._scale_lat_dist(np.inf)
-        state = vehicle_k.states_cr[world_state.time_step]
-        vert = list(
-            rotate_translate(vehicle_k.shape.vertices[:-1], state.position,
-                             state.orientation))
-        if has_left_adj:
-            _, dist_left = zip(
-                *max_overlap_lane.clcs_left.convert_list_of_points_to_curvilinear_coords(
-                    vert, 1
-                )
-            )
-            d_l = -np.max(dist_left)
-        else:
-            d_l = np.inf
 
-        if has_right_adj:
-            _, dist_right = zip(
-                *max_overlap_lane.clcs_right.convert_list_of_points_to_curvilinear_coords(
-                    vert, 1
-                )
-            )
-            d_r = np.min(dist_right)
-        else:
-            d_r = np.inf
-        return self._scale_lat_dist(np.fmin(d_l, d_r))
+        d_left, d_right = distance_to_bounds(vehicle_k, max_overlap_lane.contained_lanelets,
+                                             world_state)
+        d_left = -np.max(d_left) if d_left.size > 0 else np.inf
+        d_right = np.min(d_right) if d_right.size > 0 else np.inf
+        rob = np.fmin(d_left, d_right)
+        return self._scale_lat_dist(rob)
 
 
 class PredCutIn(BasePredicateEvaluator):

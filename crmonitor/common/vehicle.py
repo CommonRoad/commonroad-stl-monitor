@@ -6,8 +6,9 @@ import numpy as np
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
-from crmonitor.common.road_network import Lane
 from shapely import affinity
+
+from crmonitor.common.road_network import Lane
 
 rot_mat_factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
 
@@ -335,3 +336,6 @@ class Vehicle:
         state = self.states_cr.get(time_step)
         return state is not None
 
+    def lanes_at_state(self, world_state):
+        lanelets = self.lanelet_assignment[world_state.time_step]
+        return world_state.road_network.find_lanes_by_lanelets(lanelets)
