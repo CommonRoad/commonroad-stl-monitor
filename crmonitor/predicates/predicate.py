@@ -61,50 +61,56 @@ def get_succeeding_vehicles(
     return sorted(veh, key=lambda d: d[0])
 
 
-def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState):
+def distance_to_bounds(
+    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState
+):
     state = vehicle_i.states_cr[world_state.time_step]
     occ_points = list(
-        rotate_translate(vehicle_i.shape.vertices[:-1], state.position,
-                         state.orientation))
-    lanelets = [world_state.road_network.lanelet_network.find_lanelet_by_id(i)
-                for i in lanelet_ids]
-    left_bounds = [l for l in lanelets if
-                   l.adj_left is not None and l.adj_left not in lanelet_ids]
-    right_bounds = [l for l in lanelets if
-                    l.adj_right is not None and l.adj_right not in lanelet_ids]
+        rotate_translate(
+            vehicle_i.shape.vertices[:-1], state.position, state.orientation
+        )
+    )
+    lanelets = [
+        world_state.road_network.lanelet_network.find_lanelet_by_id(i)
+        for i in lanelet_ids
+    ]
+    left_bounds = [
+        l for l in lanelets if l.adj_left is not None and l.adj_left not in lanelet_ids
+    ]
+    right_bounds = [
+        l
+        for l in lanelets
+        if l.adj_right is not None and l.adj_right not in lanelet_ids
+    ]
     d_left = [np.array([])]
     for l in left_bounds:
         # For performance reasons, we find a lane that contains the lanelet
         # so that
         # the curvilinear coordinate system stored in the lane can be reused.
-        lane = world_state.road_network.find_lanes_by_lanelets(
-                [l.lanelet_id]).pop()
-        start_s = \
-        lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[0])[0]
-        end_s = \
-        lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[-1])[0]
+        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
+        start_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[0])[0]
+        end_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[-1])[0]
         corner_points = np.array(
-                lane.clcs_left.convert_list_of_points_to_curvilinear_coords(
-                        occ_points, 1))
+            lane.clcs_left.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
+        )
         # Only consider points within the projection domain of the lanelet
         points_in_proj_domain = corner_points[
-            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)]
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
+        ]
         if points_in_proj_domain.size > 0:
             d_left.append(points_in_proj_domain[:, 1])
 
     d_right = [np.array([])]
     for l in right_bounds:
-        lane = world_state.road_network.find_lanes_by_lanelets(
-                [l.lanelet_id]).pop()
-        start_s = \
-        lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[0])[0]
-        end_s = \
-        lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[-1])[0]
+        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
+        start_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[0])[0]
+        end_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[-1])[0]
         corner_points = np.array(
-                lane.clcs_right.convert_list_of_points_to_curvilinear_coords(
-                        occ_points, 1))
+            lane.clcs_right.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
+        )
         points_in_proj_domain = corner_points[
-            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)]
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
+        ]
         if points_in_proj_domain.size > 0:
             d_right.append(points_in_proj_domain[:, 1])
     return np.concatenate(d_left), np.concatenate(d_right)
@@ -193,7 +199,6 @@ class PredInSameLane(BasePredicateEvaluator):
         intersecting_lanes = lanes_p.intersection(lanes_k)
         return intersecting_lanes
 
-
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
@@ -222,9 +227,16 @@ class PredInSameLane(BasePredicateEvaluator):
             d_right = np.max(d_right) if d_right.size > 0 else np.inf
             return np.fmin(d_left, d_right)
 
-        lanelet_ids_k = union_set([l.contained_lanelets for l in vehicle_k.lanes_at_state(world_state)])
-        lanelet_ids_p = union_set([l.contained_lanelets for l in vehicle_p.lanes_at_state(world_state)])
-        rob = np.fmin(distance_to_lanes(vehicle_k, lanelet_ids_p), distance_to_lanes(vehicle_p, lanelet_ids_k))
+        lanelet_ids_k = union_set(
+            [l.contained_lanelets for l in vehicle_k.lanes_at_state(world_state)]
+        )
+        lanelet_ids_p = union_set(
+            [l.contained_lanelets for l in vehicle_p.lanes_at_state(world_state)]
+        )
+        rob = np.fmin(
+            distance_to_lanes(vehicle_k, lanelet_ids_p),
+            distance_to_lanes(vehicle_p, lanelet_ids_k),
+        )
         return self._scale_lat_dist(rob)
 
 
@@ -281,8 +293,9 @@ class PredSingleLane(BasePredicateEvaluator):
         ]
         max_overlap_lane = k_lanes[np.argmax(overlap_areas)]
 
-        d_left, d_right = distance_to_bounds(vehicle_k, max_overlap_lane.contained_lanelets,
-                                             world_state)
+        d_left, d_right = distance_to_bounds(
+            vehicle_k, max_overlap_lane.contained_lanelets, world_state
+        )
         d_left = -np.max(d_left) if d_left.size > 0 else np.inf
         d_right = np.min(d_right) if d_right.size > 0 else np.inf
         rob = np.fmin(d_left, d_right)
@@ -314,7 +327,9 @@ class PredCutIn(BasePredicateEvaluator):
         d_k = cutting_vehicle.states_lat[world_state.time_step].d
         orient_k = cutting_vehicle.states_lat[world_state.time_step].theta
 
-        result = (d_k < d_p and orient_k > self.eps) or (d_k > d_p and orient_k < -self.eps)
+        result = (d_k < d_p and orient_k > self.eps) or (
+            d_k > d_p and orient_k < -self.eps
+        )
         return result
 
     def evaluate_robustness(
