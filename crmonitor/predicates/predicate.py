@@ -522,7 +522,8 @@ class PredSucceeds(BasePredicateEvaluator):
             same_lane = self.same_lane.evaluate_robustness_with_cache(
                 world_state, vehicle_ids
             )
-            assert same_lane >= 0.0
+            assert same_lane >= -self.eps
+            same_lane = max(same_lane, 0.0)
             overtake = other_vehicle.rear_s(
                 world_state.time_step
             ) - ego_vehicle.front_s(world_state.time_step)
