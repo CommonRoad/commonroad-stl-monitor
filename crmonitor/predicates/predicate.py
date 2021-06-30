@@ -277,24 +277,16 @@ class PredSingleLane(BasePredicateEvaluator):
         """
         # single_lane_boolean = self.evaluate_boolean(world_state, vehicle_ids)
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
-        k_lanes = list(
-            world_state.road_network.find_lanes_by_lanelets(
-                vehicle_k.lanelet_assignment[world_state.time_step]
-            )
-        )
+        k_lanes = vehicle_k.lanes_at_state(world_state)
         assert (
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
 
-        shape_k = vehicle_k.shapely_occupancy_at_time_step(world_state.time_step)
-        overlap_areas = [
-            lane.lanelet.convert_to_polygon().shapely_object.intersection(shape_k).area
-            for lane in k_lanes
-        ]
-        max_overlap_lane = k_lanes[np.argmax(overlap_areas)]
+        ref_point = np.array(vehicle_k.states_cr[world_state.time_step].position)
+        ref_lane = [l for l in k_lanes if l.lanelet.convert_to_polygon().contains_point(ref_point)][0]
 
         d_left, d_right = distance_to_bounds(
-            vehicle_k, max_overlap_lane.contained_lanelets, world_state
+            vehicle_k, ref_lane.contained_lanelets, world_state
         )
         d_left = -np.max(d_left) if d_left.size > 0 else np.inf
         d_right = np.min(d_right) if d_right.size > 0 else np.inf
