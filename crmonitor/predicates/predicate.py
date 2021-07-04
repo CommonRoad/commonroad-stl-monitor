@@ -512,26 +512,27 @@ class PredSucceeds(BasePredicateEvaluator):
         succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
         bool_val = len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]
         same_lane = self.same_lane.evaluate_robustness_with_cache(
-            world_state, vehicle_ids
+                world_state, vehicle_ids
         )
         if bool_val:
             assert same_lane >= -self.eps
             same_lane = max(same_lane, 0.0)
         dist_front = other_vehicle.rear_s(
-            world_state.time_step
+                world_state.time_step
         ) - ego_vehicle.front_s(world_state.time_step)
 
-        if len(succ_veh) >= 2:
-            dist_succ = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][
+        succ_wo_ego = [v for v in succ_veh if v[1] is not ego_vehicle]
+        if len(succ_wo_ego) > 0:
+            dist_succ = ego_vehicle.front_s(world_state.time_step) - succ_wo_ego[0][
                 1
             ].front_s(world_state.time_step)
         else:
             dist_succ = math.inf
 
         rob = min(
-            same_lane,
-            self._scale_lon_dist(dist_front),
-            self._scale_lon_dist(dist_succ),
+                same_lane,
+                self._scale_lon_dist(dist_front),
+                self._scale_lon_dist(dist_succ),
         )
         assert (rob >= 0) == bool_val
         return rob
