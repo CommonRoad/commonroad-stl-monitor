@@ -43,14 +43,14 @@ def get_succeeding_vehicles(
     :return: Sorted list of tuples of distance and vehicle object
     """
     veh = []
-    front_lanes = vehicle_front.lanelet_assignment[world_state.time_step]
+    front_lanes = vehicle_front.lanes_at_state(world_state)
     for vehicle_rear in world_state.other_vehicles + [world_state.ego_vehicle]:
         if (
             not vehicle_rear.is_valid(world_state.time_step)
             or vehicle_rear is vehicle_front
         ):
             continue
-        rear_lanes = vehicle_rear.lanelet_assignment[world_state.time_step]
+        rear_lanes = vehicle_rear.lanes_at_state(world_state)
         intersecting_lanes = rear_lanes.intersection(front_lanes)
         if len(intersecting_lanes) > 0:
             dist = vehicle_front.rear_s(world_state.time_step) - vehicle_rear.front_s(
@@ -510,48 +510,31 @@ class PredSucceeds(BasePredicateEvaluator):
         ego_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
         succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
-        if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
-            same_lane = self.same_lane.evaluate_robustness_with_cache(
-                world_state, vehicle_ids
-            )
+        bool_val = len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]
+        same_lane = self.same_lane.evaluate_robustness_with_cache(
+            world_state, vehicle_ids
+        )
+        if bool_val:
             assert same_lane >= -self.eps
             same_lane = max(same_lane, 0.0)
-            overtake = other_vehicle.rear_s(
-                world_state.time_step
-            ) - ego_vehicle.front_s(world_state.time_step)
-            assert overtake >= 0.0
-            if len(succ_veh) >= 2:
-                fallback = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][
-                    1
-                ].front_s(world_state.time_step)
-                assert fallback >= 0.0
-            else:
-                fallback = math.inf
-            return min(
-                same_lane,
-                self._scale_lon_dist(overtake),
-                self._scale_lon_dist(fallback),
-            )
+        dist_front = other_vehicle.rear_s(
+            world_state.time_step
+        ) - ego_vehicle.front_s(world_state.time_step)
+
+        if len(succ_veh) >= 2:
+            dist_succ = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][
+                1
+            ].front_s(world_state.time_step)
         else:
-            # if other_vehicle.rear_s(world_state.time_step) < ego_vehicle.front_s(world_state.time_step):
-            #     # Other vehicle is behind
-            #     v = ego_vehicle.front_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
-            # else:
-            #     # Other vehicle is in front
-            #     suc_veh = get_succeeding_vehicles(world_state, other_vehicle)
-            #     if len(suc_veh) > 0:
-            #         # Other vehicle has a successor
-            #         v = suc_veh[0][1].front_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
-            #     else:
-            #         # Should only happen if same_lane < 0.0
-            #         # as otherwise ego should be the successor -> precedes
-            #         v = 0.0
-            # if same_lane < 0.0:
-            #     return -self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
-            # else:
-            #     assert v != 0.0
-            #     return -self._scale_lon_dist(v)
-            return -1.0
+            dist_succ = math.inf
+
+        rob = min(
+            same_lane,
+            self._scale_lon_dist(dist_front),
+            self._scale_lon_dist(dist_succ),
+        )
+        assert (rob >= 0) == bool_val
+        return rob
 
 
 class PredAbruptBreaking(BasePredicateEvaluator):
