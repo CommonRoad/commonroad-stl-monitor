@@ -33,34 +33,6 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
     return rescaled
 
 
-def get_succeeding_vehicles(
-    world_state: WorldState, vehicle_front: Vehicle
-) -> List[Tuple[float, Vehicle]]:
-    """
-    Returns a list of preceding vehicles in ascending order of distance
-    :param world_state: Current world state
-    :param vehicle_front: Reference vehicle
-    :return: Sorted list of tuples of distance and vehicle object
-    """
-    veh = []
-    front_lanes = vehicle_front.lanes_at_state(world_state)
-    for vehicle_rear in world_state.other_vehicles + [world_state.ego_vehicle]:
-        if (
-            not vehicle_rear.is_valid(world_state.time_step)
-            or vehicle_rear is vehicle_front
-        ):
-            continue
-        rear_lanes = vehicle_rear.lanes_at_state(world_state)
-        intersecting_lanes = rear_lanes.intersection(front_lanes)
-        if len(intersecting_lanes) > 0:
-            dist = vehicle_front.rear_s(world_state.time_step) - vehicle_rear.front_s(
-                world_state.time_step
-            )
-            if dist >= 0.0:
-                veh.append((dist, vehicle_rear))
-    return sorted(veh, key=lambda d: d[0])
-
-
 def distance_to_bounds(
     vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState
 ):
@@ -283,7 +255,11 @@ class PredSingleLane(BasePredicateEvaluator):
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
 
         ref_point = np.array(vehicle_k.states_cr[world_state.time_step].position)
-        ref_lane = [l for l in k_lanes if l.lanelet.convert_to_polygon().contains_point(ref_point)][0]
+        ref_lane = [
+            l
+            for l in k_lanes
+            if l.lanelet.convert_to_polygon().contains_point(ref_point)
+        ][0]
 
         d_left, d_right = distance_to_bounds(
             vehicle_k, ref_lane.contained_lanelets, world_state
@@ -489,50 +465,77 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
         return speed_limit
 
 
-class PredSucceeds(BasePredicateEvaluator):
-    predicate_name = "succeeds"
+class PredPreceding(BasePredicateEvaluator):
+    predicate_name = "precedes"
     arity = 2
 
     def __init__(self, config: CommentedMap):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
+    @staticmethod
+    def get_predecessors(
+        world_state: WorldState, vehicle_rear: Vehicle
+    ) -> List[Tuple[float, Vehicle]]:
+        """
+        Returns a list of preceding vehicles in ascending order of distance
+        :param world_state: Current world state
+        :param vehicle_rear: Reference vehicle
+        :return: Sorted list of tuples of distance and vehicle object
+        """
+        veh = []
+        rear_lanes = vehicle_rear.lanes_at_state(world_state)
+        for vehicle_front in world_state.other_vehicles + [world_state.ego_vehicle]:
+            if (
+                not vehicle_front.is_valid(world_state.time_step)
+                or vehicle_front is vehicle_rear
+            ):
+                continue
+            front_lanes = vehicle_front.lanes_at_state(world_state)
+            intersecting_lanes = rear_lanes.intersection(front_lanes)
+            if len(intersecting_lanes) > 0:
+                dist = vehicle_front.rear_s(
+                    world_state.time_step
+                ) - vehicle_rear.front_s(world_state.time_step)
+                if dist >= 0.0:
+                    veh.append((dist, vehicle_rear))
+        return sorted(veh, key=lambda d: d[0])
+
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
-        succeeding_vehicle_id = vehicle_ids[0]
-        other_vehicle_id = vehicle_ids[1]
-        other_vehicle = world_state.vehicle_by_id(other_vehicle_id)
-        succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
-        return len(succ_veh) > 0 and succ_veh[0][1].id == succeeding_vehicle_id
+        rear_vehicle_id = vehicle_ids[0]
+        front_vehicle_id = vehicle_ids[1]
+        rear_vehicle = world_state.vehicle_by_id(rear_vehicle_id)
+        pred_veh = self.get_predecessors(world_state, rear_vehicle)
+        return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
-        ego_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
-        other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
-        succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
-        bool_val = len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]
+        rear_veh = world_state.vehicle_by_id(vehicle_ids[0])
+        front_veh = world_state.vehicle_by_id(vehicle_ids[1])
+        pred_veh = self.get_predecessors(world_state, rear_veh)
+        bool_val = len(pred_veh) > 0 and pred_veh[0][1].id == vehicle_ids[1]
         same_lane = self.same_lane.evaluate_robustness_with_cache(
-                world_state, vehicle_ids
+            world_state, vehicle_ids
         )
         if bool_val:
             assert same_lane >= -self.eps
             same_lane = max(same_lane, 0.0)
-        dist_front = other_vehicle.rear_s(
-                world_state.time_step
-        ) - ego_vehicle.front_s(world_state.time_step)
 
-        succ_wo_ego = [v for v in succ_veh if v[1] is not ego_vehicle]
-        if len(succ_wo_ego) > 0:
-            dist_succ = ego_vehicle.front_s(world_state.time_step) - succ_wo_ego[0][
-                1
-            ].front_s(world_state.time_step)
+        dist_front = front_veh.rear_s(world_state.time_step) - rear_veh.front_s(
+            world_state.time_step
+        )
+
+        pred_wo_other = [v for v in pred_veh if v[1] is not front_veh]
+        if len(pred_wo_other) > 0:
+            dist_pred = pred_wo_other[0][1].rear_s(world_state.time_step) - front_veh.rear_s(world_state.time_step)
         else:
-            dist_succ = math.inf
+            dist_pred = math.inf
 
         rob = min(
-                same_lane,
-                self._scale_lon_dist(dist_front),
-                self._scale_lon_dist(dist_succ),
+            same_lane,
+            self._scale_lon_dist(dist_front),
+            self._scale_lon_dist(dist_pred),
         )
         assert (rob >= 0) == bool_val
         return rob
