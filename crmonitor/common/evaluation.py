@@ -2,7 +2,6 @@ import copy
 import itertools
 import logging
 from collections import defaultdict
-from functools import partial
 from pathlib import Path
 from typing import List, Tuple, Iterable, Dict, Union
 
@@ -13,7 +12,7 @@ from ruamel.yaml import YAML
 from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from crmonitor.monitor.rtamt_monitor_stl import TrafficRuleMonitorForwardSTL
+from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.predicates.predicate import PredAbruptBreaking
 from crmonitor.predicates.rule import Rule, QuantificationType
 
@@ -77,7 +76,7 @@ class RuleSetEvaluator:
         self.rules = tuple(rules)
         self.monitors = {
             rule: defaultdict(
-                partial(TrafficRuleMonitorForwardSTL, rule, output_type="standard")
+                rule.create_robustness_monitor
             )
             for rule in rules
         }
@@ -121,7 +120,7 @@ class RuleSetEvaluator:
         self,
         world_state: WorldState,
         other_ids: Tuple[int],
-        monitor: TrafficRuleMonitorForwardSTL,
+        monitor: RtamtStlMonitor,
     ) -> Tuple[float, Dict[str, float]]:
         """
         Evaluate a rule for on time step

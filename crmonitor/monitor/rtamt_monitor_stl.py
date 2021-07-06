@@ -5,7 +5,7 @@ from crmonitor.predicates.rule import Rule, IOType
 from rtamt import Language
 
 
-class TrafficRuleMonitorForwardSTL:
+class RtamtStlMonitor:
     """
     Represents single formalized traffic rule
     """
