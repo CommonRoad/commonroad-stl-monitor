@@ -3,6 +3,7 @@ import os
 import unittest
 
 import numpy as np
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
@@ -17,7 +18,7 @@ from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane,
                                             PredSafeDistPrec, PredInFrontOf,
                                             PredSingleLane, scale_clip,
-                                            PredLaneSpeedLimit, PredSucceeds, )
+                                            PredLaneSpeedLimit, PredPreceding, )
 from crmonitor.tests.util import parallel_lanes
 
 
@@ -792,7 +793,7 @@ class TestPredicate(unittest.TestCase):
         # Other in front other in between
         # Other in other lane
         # Ego in other lane
-        expected = [True, True, True, False, False, False, False, False]
+        expected = [True, True, True, False, False, False, False, False, True]
 
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(2)
@@ -802,19 +803,19 @@ class TestPredicate(unittest.TestCase):
             lanelet_network, self.config.get("road_network_param")
         )
 
-        lat_ego = [2, 3, 3, 2, 2, 2, 2, 6]
-        lon_ego = [30, 30, 30, 30, 30, 30, 30, 30]
-        lanelets_ego = [{1}, {1, 2}, {1, 2}, {1}, {1}, {1}, {1}, {2}]
+        lat_ego = [0, 1, 1, 0, 0, 0, 0, 4, 0]
+        lon_ego = [30, 30, 30, 30, 30, 30, 30, 30, 10]
+        lanelets_ego = [{1}, {1, 2}, {1, 2}, {1}, {1}, {1}, {1}, {2}, {1}]
         ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego)
 
-        lat_other = [2, 2, 3, 2, 2, 2, 6, 2]
-        lon_other = [40, 40, 40, 20, 10, 50, 40, 40]
-        lanelets_other = [{1}, {1}, {1, 2}, {1}, {1}, {1}, {2}, {1}]
+        lat_other = [0, 0, 1, 0, 0, 0, 4, 0, 2]
+        lon_other = [40, 40, 40, 20, 10, 50, 40, 40, 40]
+        lanelets_other = [{1}, {1}, {1, 2}, {1}, {1}, {1}, {2}, {1}, {1, 2}]
         other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other)
 
-        lat_other = [2, 2, 2, 2, 2, 2, 2, 2]
-        lon_other = [10, 10, 10, 10, 20, 40, 10, 10]
-        lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}]
+        lat_other = [0, 0, 0, 0, 0, 0, 0, 0, 2]
+        lon_other = [10, 10, 10, 10, 20, 40, 10, 10, 20]
+        lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {2}]
         other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other)
 
         world_state = WorldState(
@@ -822,7 +823,7 @@ class TestPredicate(unittest.TestCase):
         )
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
 
-        pred = PredSucceeds({})
+        pred = PredPreceding({})
         for t, exp in enumerate(expected):
             rob = pred.evaluate_robustness(world_state, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
