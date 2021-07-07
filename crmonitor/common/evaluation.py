@@ -233,6 +233,10 @@ class RuleSetEvaluator:
                         pred_values.append(pred_value)
                     if rule.quantification == QuantificationType.ALL:
                         idx = np.argmin(rule_values)
+                    elif rule.name == "R_G2" or rule.name == "UnnecessaryBraking":
+                        # TODO: Temporary fix for partly existentially quantified rule R_G2
+                        val = [min(d["precedes__a0_a1"], max(-d["keeps_safe_distance_prec__a0_a1"], -d["rel_brakes_abruptly__a0_a1"])) for d in pred_values]
+                        idx = np.argmax(val)
                     else:
                         idx = np.argmax(rule_values)
                     # Select values of target vehicle
