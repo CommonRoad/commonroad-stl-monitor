@@ -498,7 +498,7 @@ class PredPreceding(BasePredicateEvaluator):
                     world_state.time_step
                 ) - vehicle_rear.front_s(world_state.time_step)
                 if dist >= 0.0:
-                    veh.append((dist, vehicle_rear))
+                    veh.append((dist, vehicle_front))
         return sorted(veh, key=lambda d: d[0])
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
