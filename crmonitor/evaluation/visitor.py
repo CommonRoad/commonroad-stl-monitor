@@ -150,6 +150,7 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         if all_node.last_selected is None:
+            # Visit the prototype monitor
             val = all_node.children[0].visit(self, *ctx)
             val = [(n, v if v is not None else 1.0) for n, v in val]
         else:
@@ -158,6 +159,7 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         if exist_node.last_selected is None:
+            # Visit the prototype monitor
             val = exist_node.children[0].visit(self, *ctx)
             val = [(n, v if v is not None else -1.0) for n, v in val]
         else:
