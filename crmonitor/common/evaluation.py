@@ -143,7 +143,7 @@ class RuleSetEvaluator:
             for rule in self.rules:
                 rule_robustness[t][rule.name] = eval_visitor.walk(self.monitors[rule], world_state)
                 predicate_robustness[t][rule.name] = dict(self.monitors[rule].visit(self._collector_visitor))
-                other_ids_values[t][rule.name] = eval_visitor.other_ids
+                other_ids_values[t][rule.name] = eval_visitor.other_ids[1:]
             world_state.step()
 
         if to_pandas:
