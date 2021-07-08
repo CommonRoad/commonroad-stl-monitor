@@ -12,7 +12,6 @@ from ruamel.yaml import YAML
 from crmonitor.common.helper import gather, pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.predicates.predicate import PredAbruptBreaking
 from crmonitor.predicates.rule import Rule, QuantificationType
 

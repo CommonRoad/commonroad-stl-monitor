@@ -79,7 +79,7 @@ class WorldState:
         return None
 
     @property
-    def ego_vehicle(self):
+    def ego_vehicle(self) -> Vehicle:
         return self._ego_vehicle
 
     @property
