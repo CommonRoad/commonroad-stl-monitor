@@ -62,3 +62,6 @@ class RtamtStlMonitor:
 
     def copy(self):
         return RtamtStlMonitor(self._rule, self._predicates, self._output_type)
+
+    def reset(self):
+        self._monitor.reset()

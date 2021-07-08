@@ -1,17 +1,7 @@
-rom collections import defaultdict
-
-import numpy as np
-
-# from crmonitor.common.evaluation import bool_to_norm_rob
-from crmonitor.common.helper import gather
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.predicates.rule import RuleNode, ExistNode, PredicateNode, AllNode
-
 from collections import defaultdict
 
 import numpy as np
 
-# from crmonitor.common.evaluation import bool_to_norm_rob
 from crmonitor.common.helper import gather
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.predicates.rule import RuleNode, ExistNode, PredicateNode, \
@@ -35,6 +25,37 @@ class Visitor:
         pass
 
 
+class PredicateCollectorVisitor(Visitor):
+
+    def _visit(self, node):
+        r = []
+        for c in node.children:
+            r.extend(c.visit(self))
+        return r
+
+    def visit_rule_node(self, rule_node: RuleNode):
+        return self._visit(rule_node)
+
+    def visit_all_node(self, all_node: AllNode):
+        if all_node.last_selected is None:
+            val = all_node.children[0].visit(self)
+            val = [(n, v if v is not None else 1.0) for n, v in val]
+        else:
+            val = all_node.last_selected.visit(self)
+        return val
+
+    def visit_exist_node(self, exist_node: ExistNode):
+        if exist_node.last_selected is None:
+            val = exist_node.children[0].visit(self)
+            val = [(n, v if v is not None else -1.0) for n, v in val]
+        else:
+            val = exist_node.last_selected.visit(self)
+        return val
+
+    def visit_predicate_node(self, predicate_node: PredicateNode):
+        return [(predicate_node.name, predicate_node.latest_value)]
+
+
 class MonitorNode:
     def __init__(self, name, children=None):
         self.name = name
@@ -46,6 +67,10 @@ class MonitorNode:
 
     def copy(self):
         return self._copy_cls(self)
+
+    def reset(self):
+        for c in self.children:
+            c.reset()
 
 
 class RuleMonitorNode(MonitorNode):
@@ -64,15 +89,24 @@ class RuleMonitorNode(MonitorNode):
             self.name, [c.copy() for c in self.children], self.monitor.copy()
         )
 
+    def reset(self):
+        self.monitor.reset()
+
 
 class AllMonitorNode(MonitorNode):
     def __init__(self, name, children):
         assert len(children) == 1
         super().__init__(name, children)
         self.monitors = defaultdict(children[0].copy)
+        self.last_selected = None
 
     def visit(self, visitor, *ctx):
         return visitor.visit_all_node(self, *ctx)
+
+    def reset(self):
+        super().reset()
+        self.last_selected = None
+        self.monitors.clear()
 
 
 class ExistMonitorNode(MonitorNode):
@@ -80,14 +114,15 @@ class ExistMonitorNode(MonitorNode):
         assert len(children) == 1
         super().__init__(name, children)
         self.monitors = defaultdict(children[0].copy)
+        self.last_selected = None
 
     def visit(self, visitor, *ctx):
         return visitor.visit_exist_node(self, *ctx)
 
-
-class PredicateMonitorNode(MonitorNode):
-    def visit(self, visitor, *ctx):
-        return visitor.visit_predicate_node(self, *ctx)
+    def reset(self):
+        super().reset()
+        self.last_selected = None
+        self.monitors.clear()
 
 
 class CreateEvaluatorVisitor(Visitor):
@@ -109,6 +144,14 @@ class CreateEvaluatorVisitor(Visitor):
 
 
 class EvaluationVisitor:
+    def __init__(self, use_boolean=False):
+        self.other_ids = tuple()
+        self.use_boolean = use_boolean
+
+    def walk(self, node: MonitorNode, world_state, *ctx):
+        self.other_ids = tuple()
+        return node.visit(self, world_state, (world_state.ego_vehicle.id,), *ctx)
+
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
         # Collect child_values
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
@@ -129,31 +172,47 @@ class EvaluationVisitor:
         )
         remaining_ids = tuple(all_ids.difference(other_ids))
         values = []
+        selected_ids = []
         for i in remaining_ids:
             ids = other_ids + (i,)
             val = node.monitors[i].visit(self, world_state, ids, *ctx)
             values.append(val)
-        return values
+            selected_ids.append(ids)
+        return values, selected_ids
 
     def visit_all_node(self, all_node: AllMonitorNode, world_state, other_ids, *ctx):
-        values = self._visit_quant_node(all_node, world_state, other_ids, *ctx)
-        idx = np.argmin(values)
-        val = values[idx]
+        values, selected_ids = self._visit_quant_node(all_node, world_state, other_ids, *ctx)
+        if len(values) > 0:
+            idx = np.argmin(values)
+            val = values[idx]
+            self.other_ids = selected_ids[idx]
+            all_node.last_selected = all_node.monitors[self.other_ids[-1]]
+        else:
+            val = 1.0
+            self.other_ids = other_ids
+            all_node.last_selected = None
         return val
 
     def visit_exist_node(
         self, exist_node: ExistMonitorNode, world_state, other_ids, *ctx
     ):
-        values = self._visit_quant_node(exist_node, world_state, other_ids, *ctx)
-        idx = np.argmax(values)
-        val = values[idx]
+        values, selected_ids = self._visit_quant_node(exist_node, world_state, other_ids, *ctx)
+        if len(values) > 0:
+            idx = np.argmax(values)
+            val = values[idx]
+            self.other_ids = selected_ids[idx]
+            exist_node.last_selected = exist_node.monitors[self.other_ids[-1]]
+        else:
+            val = -1.0
+            self.other_ids = other_ids
+            exist_node.last_selected = None
         return val
 
     def visit_predicate_node(
-        self, predicate_node: PredicateNode, world_state, other_ids, use_boolean=False
+        self, predicate_node: PredicateNode, world_state, other_ids, *ctx
     ):
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
-        if use_boolean:
+        if self.use_boolean:
             value = predicate_node.evaluator.evaluate_boolean(
                 world_state, predicate_ids
             )
@@ -162,7 +221,7 @@ class EvaluationVisitor:
                 predicate_node.base_name
             ][tuple(predicate_ids)] = value
         else:
-            value = predicate_node.evaluator.evaluate_robustness_with_cache(
+            value = predicate_node.evaluate_robustness(
                 world_state, predicate_ids
             )
         return value

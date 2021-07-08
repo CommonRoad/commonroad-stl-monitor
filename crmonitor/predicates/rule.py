@@ -1,3 +1,4 @@
+import copy
 import inspect
 import re
 import sys
@@ -47,7 +48,7 @@ def parse_rule(full_rule_str, config, name=None):
         mod_rule_str = full_rule_str
         predicate_assignment = set()
         sub_rules = []
-        m = subrule_pattern.match(mod_rule_str)
+        m = subrule_pattern.search(mod_rule_str)
         while m is not None:
             mod_rule_str = (
                 mod_rule_str[: m.start()]
@@ -125,6 +126,13 @@ class PredicateNode:
         self.agent_placeholders = tuple(agent_placeholders)
         self.evaluator = evaluator
         self.io_type = io_type
+        self.latest_value = None
+
+    def evaluate_robustness(self, world_state, vehicle_ids):
+        value = self.evaluator.evaluate_robustness_with_cache(
+                world_state, vehicle_ids)
+        self.latest_value = value
+        return value
 
     def visit(self, visitor, *args):
         return visitor.visit_predicate_node(self, *args)
@@ -144,4 +152,7 @@ class PredicateNode:
         return hash((self.name, self.agent_placeholders))
 
     def copy(self):
-        return self
+        return copy.copy(self)
+
+    def reset(self):
+        self.latest_value = None
