@@ -6,8 +6,8 @@ from ruamel.yaml import YAML
 
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.rule import parse_rule
-from crmonitor.predicates.visitor import CreateEvaluatorVisitor, \
-    EvaluationVisitor
+from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, \
+    EvaluationMonitorTreeVisitor
 
 
 class TestRuleEvaluator(unittest.TestCase):
@@ -21,7 +21,6 @@ class TestRuleEvaluator(unittest.TestCase):
         self.traffic_rule_params = YAML().load(rules_path)
         self.scenario_root_path = root_path.parent / "scenarios/test_interstate"
 
-    @unittest.SkipTest
     def test_smoke(self):
         rules = [
             "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
@@ -35,8 +34,8 @@ class TestRuleEvaluator(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml").open(True)
         for r in rules:
             rule = parse_rule(r, config)
-            eval = rule.visit(CreateEvaluatorVisitor(scenario.dt))
-            eval_visitor = EvaluationVisitor()
+            eval = rule.visit(MonitorCreationRuleTreeVisitor(scenario.dt))
+            eval_visitor = EvaluationMonitorTreeVisitor()
             ws = WorldState.create_from_scenario(scenario, 1001)
             ws.time_step = ws.ego_vehicle.start_time
             rob = eval.visit(eval_visitor, ws, (1001,), False)

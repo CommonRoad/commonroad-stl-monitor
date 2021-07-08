@@ -10,22 +10,17 @@ from crmonitor.common.helper import pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.rule import parse_rule
-from crmonitor.predicates.visitor import CreateEvaluatorVisitor, \
-    EvaluationVisitor, PredicateCollectorVisitor
+from crmonitor.evaluation.visitor import (
+    MonitorCreationRuleTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+)
 
 
 def get_valid_time_interval(vehicles: List[Vehicle]):
     start = max([v.start_time for v in vehicles])
     end = min([v.end_time for v in vehicles])
     return start, end
-
-
-def bool_to_norm_rob(b: bool) -> float:
-    return 1.0 if b else -1.0
-
-
-def rob_to_bool(f: float) -> bool:
-    return f > 0.0
 
 
 class RuleSetEvaluator:
@@ -38,7 +33,7 @@ class RuleSetEvaluator:
         cls,
         rules: Union[str, Iterable[str]] = ("R_G1", "R_G2", "R_G3"),
         traffic_rules_config=None,
-        dt=0.1
+        dt=0.1,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = YAML().load(
@@ -57,7 +52,7 @@ class RuleSetEvaluator:
         cls,
         rule_str: Union[str, Iterable[str], Dict[str, str]],
         traffic_rules_config=None,
-        dt=0.1
+        dt=0.1,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = YAML().load(
@@ -77,12 +72,13 @@ class RuleSetEvaluator:
         :param rules: set of rules to be evaluated
         """
         self.rules = tuple(rules)
-        visitor = CreateEvaluatorVisitor(dt)
+        visitor = MonitorCreationRuleTreeVisitor(dt)
         self.monitors = {rule: rule.visit(visitor) for rule in rules}
         self._last_world_state = None
         self._last_time_step = -1
         self.use_boolean = use_boolean
-        self._collector_visitor = PredicateCollectorVisitor()
+        self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._eval_visitor = EvaluationMonitorTreeVisitor(use_boolean=use_boolean)
 
     def reset_monitors(self):
         self._last_time_step = -1
@@ -134,16 +130,19 @@ class RuleSetEvaluator:
         # Nested dictionary with levels: time step, rule, predicate name
         predicate_robustness = {}
         other_ids_values = {}
-        eval_visitor = EvaluationVisitor(use_boolean=self.use_boolean)
         while world_state.time_step <= time_end:
             t = world_state.time_step
             rule_robustness[t] = {}
             predicate_robustness[t] = {}
             other_ids_values[t] = {}
             for rule in self.rules:
-                rule_robustness[t][rule.name] = eval_visitor.walk(self.monitors[rule], world_state)
-                predicate_robustness[t][rule.name] = dict(self.monitors[rule].visit(self._collector_visitor))
-                other_ids_values[t][rule.name] = eval_visitor.other_ids[1:]
+                rule_robustness[t][rule.name] = self._eval_visitor.walk(
+                    self.monitors[rule], world_state
+                )
+                predicate_robustness[t][rule.name] = dict(
+                    self.monitors[rule].visit(self._collector_visitor)
+                )
+                other_ids_values[t][rule.name] = self._eval_visitor.other_ids[1:]
             world_state.step()
 
         if to_pandas:

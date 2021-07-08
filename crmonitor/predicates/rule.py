@@ -4,6 +4,7 @@ import re
 import sys
 from enum import auto, Enum
 
+
 def get_all_predicate_evaluators():
     mod_name = "crmonitor.predicates.predicate"
     # noinspection PyUnresolvedReferences
@@ -93,8 +94,8 @@ class RuleNode:
         self.name = name
         self.rule_str = rule_str
 
-    def visit(self, visitor):
-        return visitor.visit_rule_node(self)
+    def visit(self, visitor, *ctx):
+        return visitor.visit_rule_node(self, *ctx)
 
 
 class AllNode:
@@ -103,8 +104,8 @@ class AllNode:
         self.name = name
         self.quantified_vehicle = quantified_vehicle
 
-    def visit(self, visitor):
-        return visitor.visit_all_node(self)
+    def visit(self, visitor, *ctx):
+        return visitor.visit_all_node(self, *ctx)
 
 
 class ExistNode:
@@ -113,8 +114,8 @@ class ExistNode:
         self.name = name
         self.quantified_vehicle = quantified_vehicle
 
-    def visit(self, visitor):
-        return visitor.visit_exist_node(self)
+    def visit(self, visitor, *ctx):
+        return visitor.visit_exist_node(self, *ctx)
 
 
 class PredicateNode:
@@ -129,13 +130,12 @@ class PredicateNode:
         self.latest_value = None
 
     def evaluate_robustness(self, world_state, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(
-                world_state, vehicle_ids)
+        value = self.evaluator.evaluate_robustness_with_cache(world_state, vehicle_ids)
         self.latest_value = value
         return value
 
-    def visit(self, visitor, *args):
-        return visitor.visit_predicate_node(self, *args)
+    def visit(self, visitor, *ctx):
+        return visitor.visit_predicate_node(self, *ctx)
 
     @property
     def base_name(self):
