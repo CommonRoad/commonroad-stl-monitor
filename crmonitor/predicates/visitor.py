@@ -26,7 +26,6 @@ class Visitor:
 
 
 class PredicateCollectorVisitor(Visitor):
-
     def _visit(self, node):
         r = []
         for c in node.children:
@@ -126,9 +125,12 @@ class ExistMonitorNode(MonitorNode):
 
 
 class CreateEvaluatorVisitor(Visitor):
+    def __init__(self, dt):
+        self.dt = dt
+
     def visit_rule_node(self, rule_node: RuleNode):
         children = [c.visit(self) for c in rule_node.children]
-        monitor = RtamtStlMonitor.create_from_rule_node(rule_node)
+        monitor = RtamtStlMonitor.create_from_rule_node(rule_node, self.dt)
         return RuleMonitorNode(rule_node.name, children, monitor)
 
     def visit_all_node(self, all_node: AllNode):
@@ -153,9 +155,12 @@ class EvaluationVisitor:
         return node.visit(self, world_state, (world_state.ego_vehicle.id,), *ctx)
 
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        # Collect child_values
-        child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
         world_state = ctx[0]
+        # Collect child_values
+        assert (
+            rule_node.monitor.dt == world_state.dt
+        ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world_state.dt}!"
+        child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
         val = rule_node.evaluate_incremental(
             world_state.time_step, list(child_values.items())
         )
@@ -181,7 +186,9 @@ class EvaluationVisitor:
         return values, selected_ids
 
     def visit_all_node(self, all_node: AllMonitorNode, world_state, other_ids, *ctx):
-        values, selected_ids = self._visit_quant_node(all_node, world_state, other_ids, *ctx)
+        values, selected_ids = self._visit_quant_node(
+            all_node, world_state, other_ids, *ctx
+        )
         if len(values) > 0:
             idx = np.argmin(values)
             val = values[idx]
@@ -196,7 +203,9 @@ class EvaluationVisitor:
     def visit_exist_node(
         self, exist_node: ExistMonitorNode, world_state, other_ids, *ctx
     ):
-        values, selected_ids = self._visit_quant_node(exist_node, world_state, other_ids, *ctx)
+        values, selected_ids = self._visit_quant_node(
+            exist_node, world_state, other_ids, *ctx
+        )
         if len(values) > 0:
             idx = np.argmax(values)
             val = values[idx]
@@ -221,7 +230,5 @@ class EvaluationVisitor:
                 predicate_node.base_name
             ][tuple(predicate_ids)] = value
         else:
-            value = predicate_node.evaluate_robustness(
-                world_state, predicate_ids
-            )
+            value = predicate_node.evaluate_robustness(world_state, predicate_ids)
         return value

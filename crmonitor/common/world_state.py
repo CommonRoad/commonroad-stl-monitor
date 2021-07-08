@@ -90,6 +90,13 @@ class WorldState:
     def other_ids(self):
         return [v.id for v in self.other_vehicles]
 
+    @property
+    def dt(self):
+        if hasattr(self, "scenario"):
+            return self.scenario.dt
+        else:
+            return 0.1
+
     def __iter__(self):
         return self
 

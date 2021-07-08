@@ -36,32 +36,35 @@ class RtamtStlMonitor:
         monitor.declare_var("out", "float")
 
         monitor.iosem = output_type
-
+        monitor.unit = "s"
         monitor.spec = f"out = {logic_formula}"
         monitor.parse()
 
         return monitor
 
     @classmethod
-    def create_from_rule_node(cls, rule_node: RuleNode):
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float):
         predicates = [(c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT) for c in rule_node.children]
-        return cls(rule_node.rule_str, predicates)
+        return cls(rule_node.rule_str, predicates, dt)
 
-    def __init__(self, rule_str, predicates, output_type="standard"):
+    def __init__(self, rule_str, predicates, dt, output_type="standard"):
         self._rule = rule_str
         self._predicates = predicates
         self._output_type = output_type
         self._monitor = self.construct_monitor(rule_str, output_type, predicates)
+        self.dt = dt
+        self._monitor.set_sampling_period(dt)
 
     def reset_monitor(self):
         self._monitor.reset()
 
-    def evaluate_monitor_online(self, time: float, predicates: List[Tuple[str, float]]):
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
+        time = time_step * self.dt
         rob = self._monitor.update(time, predicates)
         return rob
 
     def copy(self):
-        return RtamtStlMonitor(self._rule, self._predicates, self._output_type)
+        return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)
 
     def reset(self):
         self._monitor.reset()

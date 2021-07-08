@@ -125,7 +125,7 @@ class RuleTest(unittest.TestCase):
 
         rule_str = "A a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleSetEvaluator([rule])
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
         rob, preds = rule_eval.evaluate_incremental(world_state)
         rob = rob[rob.time_step == 4]["robustness"].values[0]
         preds = preds[preds.time_step == 4]["robustness"]
@@ -134,7 +134,7 @@ class RuleTest(unittest.TestCase):
 
         rule_str = "E a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleSetEvaluator([rule])
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
         rob, preds = rule_eval.evaluate_incremental(world_state)
         rob = rob[rob.time_step == 4]["robustness"].values[0]
         preds = preds[preds.time_step == 4]["robustness"]
@@ -412,7 +412,7 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
         self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
-        rule_eval = RuleSetEvaluator([rule])
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
             df_rule, _ = rule_eval.evaluate_incremental(
