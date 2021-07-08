@@ -1,4 +1,12 @@
 mport unittest
+from pathlib import Path
+
+from commonroad.common.file_reader import CommonRoadFileReader
+from ruamel.yaml import YAML
+
+from crmonitor.common.world_state import WorldState
+from crmonitor.predicates.rule import parse_rule
+from crmonitor.predicates.visitor import CreateEvaluatorVisitor, EvaluationVisitor
 
 import unittest
 from pathlib import Path
@@ -12,12 +20,7 @@ from crmonitor.predicates.visitor import CreateEvaluatorVisitor, \
     EvaluationVisitor
 
 
-# from crmonitor.predicates.rule import Rule, RuleParserVisitor
-# from crmonitor.predicates.rule_evaluator import RuleEvaluator
-
-
 class TestRuleEvaluator(unittest.TestCase):
-
     def test_smoke(self):
         rules = [
             "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
@@ -38,20 +41,6 @@ class TestRuleEvaluator(unittest.TestCase):
             ws = WorldState.create_from_scenario(scenario, 1001)
             ws.time_step = ws.ego_vehicle.start_time
             rob = eval.visit(eval_visitor, ws, (1001,), False)
-        # evaluator = RuleEvaluator(rule)
-
-    # def test_parser(self):
-    #     rule_str = "A a1: (in_front_of(a0,a1) and single_lane(a0))"
-    #     input_stream = InputStream(rule_str)
-    #     lexer = StlLexer(input_stream)
-    #     stream = CommonTokenStream(lexer)
-    #     parser = StlParser(stream)
-    #     ctx = parser.compile_unit()
-    #
-    #     # Create the visitor for the actual spec nodes
-    #     visitor = RuleParserVisitor()
-    #     top = visitor.visit(ctx)
-    #     pass
 
 
 if __name__ == "__main__":
