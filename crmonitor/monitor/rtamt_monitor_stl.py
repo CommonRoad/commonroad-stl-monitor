@@ -22,7 +22,7 @@ class RtamtStlMonitor:
         return mod_formula
 
     @staticmethod
-    def construct_monitor(formula, output_type, predicates) -> rtamt.STLSpecification:
+    def construct_monitor(formula, output_type, predicates, dt) -> rtamt.STLSpecification:
         logic_formula = RtamtStlMonitor._reconstruct_logic_formula(formula, predicates)
         monitor = rtamt.STLDiscreteTimeSpecification(
             semantics=output_type, language=Language.PYTHON
@@ -36,8 +36,9 @@ class RtamtStlMonitor:
         monitor.declare_var("out", "float")
 
         monitor.iosem = output_type
-        monitor.unit = "s"
+        monitor.unit = "ms"
         monitor.spec = f"out = {logic_formula}"
+        monitor.set_sampling_period(dt * 1000.0, 'ms')
         monitor.parse()
 
         return monitor
@@ -51,15 +52,14 @@ class RtamtStlMonitor:
         self._rule = rule_str
         self._predicates = predicates
         self._output_type = output_type
-        self._monitor = self.construct_monitor(rule_str, output_type, predicates)
         self.dt = dt
-        self._monitor.set_sampling_period(dt)
+        self._monitor = self.construct_monitor(rule_str, output_type, predicates, dt)
 
     def reset_monitor(self):
         self._monitor.reset()
 
     def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
-        time = time_step * self.dt
+        time = time_step * self.dt * 1000.0
         rob = self._monitor.update(time, predicates)
         return rob
 
