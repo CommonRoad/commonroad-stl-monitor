@@ -126,7 +126,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         world_state, other_ids = ctx[:2]
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
         if self.use_boolean:
-            value = predicate_node.evaluator.evaluate_boolean(
+            value = predicate_node.evaluate_boolean(
                 world_state, predicate_ids
             )
             value = 1.0 if value else -1.0

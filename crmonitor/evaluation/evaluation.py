@@ -34,6 +34,7 @@ class RuleSetEvaluator:
         rules: Union[str, Iterable[str]] = ("R_G1", "R_G2", "R_G3"),
         traffic_rules_config=None,
         dt=0.1,
+        use_boolean=False,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = YAML().load(
@@ -45,7 +46,7 @@ class RuleSetEvaluator:
         rule_set = [
             parse_rule(rule_str_dict[r], traffic_rules_config, name=r) for r in rules
         ]
-        return cls(rule_set, dt)
+        return cls(rule_set, dt, use_boolean=use_boolean)
 
     @classmethod
     def create_from_rule_str(
