@@ -146,6 +146,7 @@ class RuleSetEvaluator:
             or world_state.time_step < self._last_time_step
         ):
             logging.debug("Clearing monitor states!")
+            world_state.predicate_values.clear()
             self._last_world_state = world_state
             self._last_time_step = -1
             for rule_mons in self.monitors.values():
