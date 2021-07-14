@@ -1,14 +1,15 @@
+import copy
 import inspect
 import re
 import sys
 from enum import auto, Enum
 
 
-
 def get_all_predicate_evaluators():
     mod_name = "crmonitor.predicates.predicate"
     # noinspection PyUnresolvedReferences
     import crmonitor.predicates.predicate
+
     classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
     classes = list(filter(lambda p: "Pred" in p[0], classes))
     d = {}
@@ -22,100 +23,141 @@ class IOType(Enum):
     INPUT = auto()
 
 
-class QuantificationType(Enum):
-    ALL = auto()
-    EXISTENTIAL = auto()
-
-
-class Rule:
-    full_predicate_pattern = re.compile(r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))")
-    rule_pattern = re.compile(r"^(?P<quant>[AE])\s(?P<rule>.*)")
-
-    class PredicateAssignment:
-        def __init__(self, full_name, agent_placeholders, evaluator,
-                     io_type=IOType.OUTPUT):
-            assert len(
-                agent_placeholders) == evaluator.arity, f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
-            self.full_name = full_name
-            self.agent_placeholders = tuple(agent_placeholders)
-            self.evaluator = evaluator
-            self.io_type = io_type
-
-        @property
-        def base_name(self):
-            return self.evaluator.predicate_name
-
-        @property
-        def num_dependencies(self):
-            return len(self.agent_placeholders)
-
-        def __eq__(self, o) -> bool:
-            return self.full_name == o.full_name and self.agent_placeholders == o.agent_placeholders
-
-        def __hash__(self) -> int:
-            return hash((self.full_name, self.agent_placeholders))
-
-    def __init__(self, full_rule_str, config, name=None):
-        rule_str, config, name, num_dependent_vehicles, quantification, \
-            predicate_assignment = self._from_string(full_rule_str, config, name)
-        self._rule_str = rule_str
-        self.config = config
-        self.predicate_assignment = predicate_assignment
-        self.num_dependent_vehicles = num_dependent_vehicles
-        self.quantification = quantification
-        self.name = name
-
-    @property
-    def is_vehicle_dependent(self):
-        return self.num_dependent_vehicles > 0
-
-    @property
-    def predicate_names(self):
-        return sorted([pred.full_name for pred in self.predicate_assignment])
-
-    @classmethod
-    def _from_string(cls, full_rule_str, config, name=None):
-        required_predicates = set()
-        agent_placeholders = set()
-        predicate_assignment = set()
-        match = Rule.rule_pattern.match(full_rule_str)
-
-        assert match is not None, f"Could not find quantification type for rule {full_rule_str}!"
-        if match.group("quant") == "E":
-            quantification = QuantificationType.EXISTENTIAL
+def parse_rule(full_rule_str, config, name=None):
+    full_predicate_pattern = re.compile(
+        r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))"
+    )
+    quantification_pattern = re.compile(
+        r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$"
+    )
+    subrule_pattern = re.compile(r"[AE]\sa\d+:\s\(.*\)")
+    if name is None:
+        name = full_rule_str
+    m = quantification_pattern.match(full_rule_str)
+    if m is not None:
+        # Quantification on top level
+        sub_rule_str = m["rule"]
+        children = parse_rule(sub_rule_str, config, "g0")
+        quantified_vehicle = int(m.group("veh_id"))
+        if m.group("quant") == "E":
+            node = ExistNode([children], quantified_vehicle, name)
+        elif m.group("quant") == "A":
+            node = AllNode([children], quantified_vehicle, name)
         else:
-            quantification = QuantificationType.ALL
-        rule_str = match.group("rule")
-        pred_matches = Rule.full_predicate_pattern.finditer(rule_str)
+            raise ValueError()
+    else:
+        mod_rule_str = full_rule_str
+        predicate_assignment = set()
+        sub_rules = []
+        m = subrule_pattern.search(mod_rule_str)
+        while m is not None:
+            mod_rule_str = (
+                mod_rule_str[: m.start()]
+                + f"g{len(sub_rules)}"
+                + mod_rule_str[m.end() :]
+            )
+            sub_rule_str = m[0]
+            sub_rules.append(parse_rule(sub_rule_str, config, f"g{len(sub_rules)}"))
+            m = subrule_pattern.match(mod_rule_str)
+
+        pred_matches = full_predicate_pattern.finditer(mod_rule_str)
         pred_evaluators = get_all_predicate_evaluators()
         for m in pred_matches:
-            pred_basename = m.group('pred_name')
-            required_predicates.add(pred_basename)
-            agent_string = m.group('agents')
+            pred_basename = m.group("pred_name")
+            agent_string = m.group("agents")
             agents = re.split(r"_a", agent_string)
             predicate_agent_placeholders = []
             for a in agents:
-                if a != '':
+                if a != "":
                     predicate_agent_placeholders.append(int(a))
-                    agent_placeholders.add(int(a))
             evaluator = pred_evaluators[pred_basename]
-            if m.group('io_type') is None:
+            if m.group("io_type") is None:
                 io_type = IOType.OUTPUT
             else:
                 io_type = IOType.INPUT
             assert evaluator is not None
-            p = Rule.PredicateAssignment(
+            p = PredicateNode(
                 m.group("pred_name") + "_" + m.group("agents"),
-                predicate_agent_placeholders, evaluator(config["traffic_rules_param"]), io_type)
-            rule_str = rule_str.replace(m.group(0), p.full_name)
+                predicate_agent_placeholders,
+                evaluator(config["traffic_rules_param"]),
+                io_type,
+            )
+            mod_rule_str = mod_rule_str.replace(m.group(0), p.name)
             predicate_assignment.add(p)
+        node = RuleNode(sub_rules + list(predicate_assignment), mod_rule_str, name)
+    return node
 
-        # Check increasing order
-        a_ids = sorted(list(agent_placeholders))
-        for i, aid in enumerate(a_ids):
-            assert i == aid, f"Agent place holder IDs are not in increasing order. Missing {i}!"
-        # List is sorted. Last item is largest.
-        num_dependent_vehicles = a_ids[-1]
-        if name is None:
-            name = full_rule_str
-        return rule_str, config, name, num_dependent_vehicles, quantification, predicate_assignment
+
+class RuleNode:
+    def __init__(self, children, rule_str, name):
+        self.children = children
+        self.name = name
+        self.rule_str = rule_str
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_rule_node(self, *ctx)
+
+
+class AllNode:
+    def __init__(self, children, quantified_vehicle, name):
+        self.children = children
+        self.name = name
+        self.quantified_vehicle = quantified_vehicle
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_all_node(self, *ctx)
+
+
+class ExistNode:
+    def __init__(self, children, quantified_vehicle, name):
+        self.children = children
+        self.name = name
+        self.quantified_vehicle = quantified_vehicle
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_exist_node(self, *ctx)
+
+
+class PredicateNode:
+    def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
+        assert (
+            len(agent_placeholders) == evaluator.arity
+        ), f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
+        self.name = full_name
+        self.agent_placeholders = tuple(agent_placeholders)
+        self.evaluator = evaluator
+        self.io_type = io_type
+        self.latest_value = None
+
+    def evaluate_boolean(self, world_state, vehicle_ids):
+        value = self.evaluator.evaluate_boolean(world_state, vehicle_ids)
+        self.latest_value = 1.0 if value else -1.0
+        return value
+
+    def evaluate_robustness(self, world_state, vehicle_ids):
+        value = self.evaluator.evaluate_robustness_with_cache(world_state, vehicle_ids)
+        self.latest_value = value
+        return value
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_predicate_node(self, *ctx)
+
+    @property
+    def base_name(self):
+        return self.evaluator.predicate_name
+
+    @property
+    def num_dependencies(self):
+        return len(self.agent_placeholders)
+
+    def __eq__(self, o) -> bool:
+        return self.name == o.name and self.agent_placeholders == o.agent_placeholders
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.agent_placeholders))
+
+    def copy(self):
+        return copy.copy(self)
+
+    def reset(self):
+        self.latest_value = None

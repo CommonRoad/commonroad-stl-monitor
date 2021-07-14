@@ -3,17 +3,20 @@ import os
 import unittest
 from typing import List, Tuple
 
+import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State
-from crmonitor.common.evaluation import RuleSetEvaluator
+
+from crmonitor.evaluation.evaluation import RuleSetEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
 from crmonitor.common.world_state import WorldState
-from crmonitor.predicates.rule import Rule, QuantificationType
+from crmonitor.predicates.rule import parse_rule, RuleNode, PredicateNode, \
+    ExistNode, AllNode
 from crmonitor.tests.util import parallel_lanes
 
 logging.basicConfig(
@@ -120,49 +123,23 @@ class RuleTest(unittest.TestCase):
 
         world_state = WorldState(ego_vehicle, [other_vehicle_1], road_network, ego_vehicle.end_time)
 
-        rule_str = "A in_front_of__a0_a1"
-        rule = Rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleSetEvaluator([rule])
+        rule_str = "A a1: (in_front_of__a0_a1)"
+        rule = parse_rule(rule_str, {"traffic_rules_param": {}})
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
         rob, preds = rule_eval.evaluate_incremental(world_state)
-        self.assertEqual(rob.shape[0], 5)
+        rob = rob[rob.time_step == 4]["robustness"].values[0]
+        preds = preds[preds.time_step == 4]["robustness"]
+        self.assertEqual(rob, 1.0)
+        self.assertTrue(np.all(preds.values == 1.0))
 
-    @unittest.SkipTest
-    def test_preserve_flow(self):
-        # two vehicles which preserves traffic flow (1001 ,1004)
-        # two vehicles without following vehicle (1000, 1002)
-        # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
-        # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
-        exp_result = {
-            1000: True,
-            1001: True,
-            1002: True,
-            1003: False,
-            1004: True,
-            1005: False,
-        }
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_preserve_traffic_flow.xml")
-        rule_str = (
-            "((((keeps_lane_speed_limit_star__a1 and keeps_type_speed_limit__a1) >= 0.216) "
-            "and in_same_lane__a0_a1 and in_front_of__a0_a1)"
-            "or ((keeps_fov_speed_limit__a0 and keeps_lane_speed_limit_star__a0 and keeps_type_speed_limit__a0) < 0.216))"
-        )
-
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-
-        rule = Rule(
-            rule_str,
-            self.traffic_rules,
-            name="preserve_flow"
-        )
-
-        rule_eval = RuleSetEvaluator([rule])
-        for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
-            df_rule, _ = rule_eval.evaluate_incremental(
-                world_state
-            )
-            rob = all([r >= 0.0 for r in df_rule["robustness"].values])
-            self.assertEqual(exp_violation, rob, f"Test failed for ego_id={ego_id}")
+        rule_str = "E a1: (in_front_of__a0_a1)"
+        rule = parse_rule(rule_str, {"traffic_rules_param": {}})
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
+        rob, preds = rule_eval.evaluate_incremental(world_state)
+        rob = rob[rob.time_step == 4]["robustness"].values[0]
+        preds = preds[preds.time_step == 4]["robustness"]
+        self.assertEqual(rob, -1.0)
+        self.assertTrue(np.all(preds.values == -1.0))
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
@@ -349,7 +326,11 @@ class RuleTest(unittest.TestCase):
         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         rule_eval = RuleSetEvaluator.create_from_config(["R_G1"])
-
+        rule = rule_eval.rules[0]
+        self.assertTrue(isinstance(rule, AllNode))
+        self.assertEqual(len(rule.children), 1)
+        self.assertTrue(isinstance(rule.children[0], RuleNode))
+        self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
         # TODO: Repair test for defined other agent
         # for ego_id, o_ids in exp_result:
         #     world_state = WorldState.create_from_scenario(scenario, ego_id,
@@ -386,15 +367,18 @@ class RuleTest(unittest.TestCase):
             1006: True,
             1007: True,
         }
-        rule_str = self.traffic_rules["traffic_rules_forward"]["R_G2"]
+        rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
-        rule = Rule(
+        rule = parse_rule(
             rule_str,
             self.traffic_rules,
             name="UnnecessaryBraking"
         )
-        self.assertEqual(rule.quantification, QuantificationType.EXISTENTIAL)
-        rule_eval = RuleSetEvaluator([rule])
+        self.assertTrue(isinstance(rule, RuleNode))
+        self.assertEqual(len(rule.children), 2)
+        self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
+        self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
+        rule_eval = RuleSetEvaluator([rule], dt=0.1)
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id, self.config)
             df_rule, _ = rule_eval.evaluate_incremental(
@@ -413,7 +397,10 @@ class RuleTest(unittest.TestCase):
         scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
         rule_eval = RuleSetEvaluator.create_from_config("R_G3")
-        self.assertEqual(rule_eval.rules[0].quantification, QuantificationType.ALL)
+        rule = rule_eval.rules[0]
+        self.assertTrue(isinstance(rule, RuleNode))
+        self.assertEqual(len(rule.children), 4)
+        self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id)
             df_rule, _ = rule_eval.evaluate_incremental(

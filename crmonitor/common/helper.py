@@ -1,7 +1,7 @@
 import enum
 import math
 from decimal import Decimal
-from typing import Dict, Union, List, Tuple
+from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
 import pandas as pd
@@ -10,12 +10,13 @@ from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
-from crmonitor.common.road_network import RoadNetwork, Lane
-from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
-                                      StateLongitudinal, StateLateral, )
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
+
+from crmonitor.common.road_network import RoadNetwork, Lane
+from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
+                                      StateLongitudinal, StateLateral, )
 
 
 @enum.unique
@@ -705,7 +706,7 @@ def return_false_or_minf(operating_mode: OperatingMode) -> Union[float, bool]:
     return -math.inf if operating_mode is OperatingMode.ROBUSTNESS else False
 
 
-def gather(l, indices: List[int]):
+def gather(l: Sequence, indices: Iterable[int]) -> Tuple:
     output = []
     for i in indices:
         output.append(l[i])

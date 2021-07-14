@@ -79,7 +79,7 @@ class WorldState:
         return None
 
     @property
-    def ego_vehicle(self):
+    def ego_vehicle(self) -> Vehicle:
         return self._ego_vehicle
 
     @property
@@ -89,6 +89,13 @@ class WorldState:
     @property
     def other_ids(self):
         return [v.id for v in self.other_vehicles]
+
+    @property
+    def dt(self):
+        if hasattr(self, "scenario"):
+            return self.scenario.dt
+        else:
+            return 0.1
 
     def __iter__(self):
         return self
