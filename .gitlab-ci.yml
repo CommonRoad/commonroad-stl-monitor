@@ -15,8 +15,10 @@ variables:
 #    - anaconda3/envs
 
 before_script:
+  - conda init bash
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@git@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
   - conda env create -f environment.yml
-  - conda activate cr-py37
+  - source activate cr-py37
   - git submodule update --init --recursive
   - external/commonroad-drivability-checker/build.sh -e $CI_PROJECT_DIR/.conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
   - conda develop $CI_PROJECT_DIR/external/rtamt
