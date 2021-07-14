@@ -537,7 +537,7 @@ class PredPreceding(BasePredicateEvaluator):
             self._scale_lon_dist(dist_front),
             self._scale_lon_dist(dist_pred),
         )
-        assert (rob >= 0) == bool_val
+        # assert (rob >= 0) == bool_val
         return rob
 
 
