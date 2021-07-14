@@ -14,7 +14,6 @@ dependencies:
   - wheel=0.35.1=pyhd3eb1b0_0
   - pip:
     - antlr4-python3-runtime==4.5
-    - commonroad-drivability-checker==2021.1
     - commonroad-io==2021.1
     - commonroad-vehicle-models==1.0.0
     - h5py==2.10.0
