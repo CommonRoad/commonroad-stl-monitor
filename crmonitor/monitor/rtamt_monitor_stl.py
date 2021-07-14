@@ -16,9 +16,8 @@ class RtamtStlMonitor:
             logic_formula = logic_formula.replace(el, replacements[el])
         # Workaround for rtamt when working with output-robustness and input vacuity
         mod_formula = logic_formula
-        # TODO: Only required for IA-STL
-        # for pred in predicates:
-        #     mod_formula.replace(pred, "({} >= 0)".format(pred))
+        for pred in predicates:
+            mod_formula.replace(pred[0].name, f"({pred[0].name} >= 0)")
         return mod_formula
 
     @staticmethod
@@ -44,9 +43,9 @@ class RtamtStlMonitor:
         return monitor
 
     @classmethod
-    def create_from_rule_node(cls, rule_node: RuleNode, dt: float):
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type="standard"):
         predicates = [(c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT) for c in rule_node.children]
-        return cls(rule_node.rule_str, predicates, dt)
+        return cls(rule_node.rule_str, predicates, dt, output_type)
 
     def __init__(self, rule_str, predicates, dt, output_type="standard"):
         self._rule = rule_str

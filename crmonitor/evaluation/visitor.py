@@ -33,12 +33,13 @@ class RuleTreeVisitor(ABC):
 
 
 class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
-    def __init__(self, dt):
+    def __init__(self, dt, output_type="standard"):
         self.dt = dt
+        self.output_type = output_type
 
     def visit_rule_node(self, rule_node: RuleNode, *ctx):
         children = [c.visit(self, *ctx) for c in rule_node.children]
-        monitor = RtamtStlMonitor.create_from_rule_node(rule_node, self.dt)
+        monitor = RtamtStlMonitor.create_from_rule_node(rule_node, self.dt, self.output_type)
         return RuleMonitorNode(rule_node.name, children, monitor)
 
     def visit_all_node(self, all_node: AllNode, *ctx):
