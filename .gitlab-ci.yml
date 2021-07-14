@@ -16,7 +16,7 @@ variables:
 
 before_script:
   - conda init bash
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@git@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
   - git submodule update --init --recursive
   - conda env create -f environment.yml
   - source activate cr-py37
