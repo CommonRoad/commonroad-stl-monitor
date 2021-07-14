@@ -9,6 +9,7 @@ from ruamel.yaml import YAML
 from crmonitor.common.helper import pandas_from_nested_dict
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
+from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.rule import parse_rule
 from crmonitor.evaluation.visitor import (
     MonitorCreationRuleTreeVisitor,
@@ -35,6 +36,7 @@ class RuleSetEvaluator:
         traffic_rules_config=None,
         dt=0.1,
         use_boolean=False,
+        output_type=OutputType.STANDARD,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = YAML().load(
@@ -46,7 +48,7 @@ class RuleSetEvaluator:
         rule_set = [
             parse_rule(rule_str_dict[r], traffic_rules_config, name=r) for r in rules
         ]
-        return cls(rule_set, dt, use_boolean=use_boolean)
+        return cls(rule_set, dt, use_boolean=use_boolean, output_type=output_type)
 
     @classmethod
     def create_from_rule_str(
@@ -54,6 +56,7 @@ class RuleSetEvaluator:
         rule_str: Union[str, Iterable[str], Dict[str, str]],
         traffic_rules_config=None,
         dt=0.1,
+        output_type=OutputType.STANDARD,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = YAML().load(
@@ -66,20 +69,24 @@ class RuleSetEvaluator:
         rule_set = [
             parse_rule(r, traffic_rules_config, name=n) for r, n in rule_str.items()
         ]
-        return cls(rule_set, dt)
+        return cls(rule_set, dt, output_type=output_type)
 
-    def __init__(self, rules: Iterable, dt, use_boolean=False) -> None:
+    def __init__(
+        self, rules: Iterable, dt, use_boolean=False, output_type=OutputType.STANDARD
+    ):
         """
         :param rules: set of rules to be evaluated
         """
         self.rules = tuple(rules)
-        visitor = MonitorCreationRuleTreeVisitor(dt)
+        visitor = MonitorCreationRuleTreeVisitor(dt, output_type)
         self.monitors = {rule: rule.visit(visitor) for rule in rules}
         self._last_world_state = None
         self._last_time_step = -1
         self.use_boolean = use_boolean
         self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
-        self._eval_visitor = EvaluationMonitorTreeVisitor(use_boolean=use_boolean)
+        self._eval_visitor = EvaluationMonitorTreeVisitor(
+            use_boolean=use_boolean, output_type=output_type
+        )
 
     def reset_monitors(self):
         self._last_time_step = -1

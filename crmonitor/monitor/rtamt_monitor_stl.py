@@ -1,8 +1,14 @@
+from enum import Enum
 from typing import List, Tuple
 
 import rtamt
 from crmonitor.predicates.rule import IOType, RuleNode
 from rtamt import Language
+
+
+class OutputType(Enum):
+    STANDARD = rtamt.Semantics.STANDARD
+    OUTPUT_ROBUSTNESS = rtamt.Semantics.OUTPUT_ROBUSTNESS
 
 
 class RtamtStlMonitor:
@@ -21,7 +27,7 @@ class RtamtStlMonitor:
         return mod_formula
 
     @staticmethod
-    def construct_monitor(formula, output_type, predicates, dt) -> rtamt.STLSpecification:
+    def construct_monitor(formula, output_type: OutputType, predicates, dt) -> rtamt.STLSpecification:
         logic_formula = RtamtStlMonitor._reconstruct_logic_formula(formula, predicates)
         monitor = rtamt.STLDiscreteTimeSpecification(
             semantics=output_type, language=Language.PYTHON
@@ -43,11 +49,11 @@ class RtamtStlMonitor:
         return monitor
 
     @classmethod
-    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type="standard"):
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD):
         predicates = [(c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT) for c in rule_node.children]
         return cls(rule_node.rule_str, predicates, dt, output_type)
 
-    def __init__(self, rule_str, predicates, dt, output_type="standard"):
+    def __init__(self, rule_str, predicates, dt, output_type=OutputType.STANDARD):
         self._rule = rule_str
         self._predicates = predicates
         self._output_type = output_type

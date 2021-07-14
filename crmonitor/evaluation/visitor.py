@@ -10,8 +10,9 @@ from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.predicates.rule import RuleNode, ExistNode, PredicateNode, AllNode
+from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
+from crmonitor.predicates.rule import RuleNode, ExistNode, PredicateNode, \
+    AllNode, IOType
 
 
 class RuleTreeVisitor(ABC):
@@ -33,7 +34,7 @@ class RuleTreeVisitor(ABC):
 
 
 class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
-    def __init__(self, dt, output_type="standard"):
+    def __init__(self, dt, output_type=OutputType.STANDARD):
         self.dt = dt
         self.output_type = output_type
 
@@ -55,9 +56,10 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
 
 
 class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
-    def __init__(self, use_boolean=False):
+    def __init__(self, use_boolean=False, output_type=OutputType.STANDARD):
         self.other_ids = tuple()
         self.use_boolean = use_boolean
+        self.output_type = output_type
 
     def walk(self, node: MonitorNode, world_state, *ctx):
         self.other_ids = tuple()
@@ -126,14 +128,11 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         world_state, other_ids = ctx[:2]
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
-        if self.use_boolean:
+        if self.use_boolean or predicate_node.io_type == IOType.INPUT and self.output_type == OutputType.OUTPUT_ROBUSTNESS:
             value = predicate_node.evaluate_boolean(
                 world_state, predicate_ids
             )
             value = 1.0 if value else -1.0
-            world_state.predicate_values[world_state.time_step][
-                predicate_node.base_name
-            ][tuple(predicate_ids)] = value
         else:
             value = predicate_node.evaluate_robustness(world_state, predicate_ids)
         return value
