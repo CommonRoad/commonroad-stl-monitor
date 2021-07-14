@@ -21,7 +21,7 @@ before_script:
   - conda env create -f environment.yml
   - source activate cr-py37
   - conda info
-  - external/commonroad-drivability-checker/build.sh -e $CI_PROJECT_DIR/.conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
+  - external/commonroad-drivability-checker/build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
   - conda develop $CI_PROJECT_DIR/external/rtamt
   - conda develop $CI_PROJECT_DIR
 
