@@ -16,13 +16,14 @@ variables:
 #    - anaconda3/envs
 
 before_script:
+  - apt install cmake
   - conda init bash
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
-  - git submodule update --init --recursive
+  #- git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+  #- git submodule update --init --recursive
   - conda env create -f environment.yml
   - source activate cr-py37
   - conda info
-  - external/commonroad-drivability-checker/build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
+  - cd external/commonroad-drivability-checker/ && ./build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
   - conda develop $CI_PROJECT_DIR/external/rtamt
   - conda develop $CI_PROJECT_DIR
 
