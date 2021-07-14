@@ -175,9 +175,9 @@ class Lane:
         :param road_network_param: dictionary containing parameters of the road network
         :returns curvilinear coordinate system for reference path
         """
-        new_ref_path = np.array([])
+        new_ref_path = ref_path
         for i in range(0, road_network_param.get("num_chankins_corner_cutting")):
-            new_ref_path = chaikins_corner_cutting(ref_path)
+            new_ref_path = chaikins_corner_cutting(new_ref_path)
         new_ref_path = resample_polyline(
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
