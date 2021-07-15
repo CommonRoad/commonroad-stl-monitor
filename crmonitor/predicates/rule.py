@@ -19,8 +19,8 @@ def get_all_predicate_evaluators():
 
 
 class IOType(Enum):
-    OUTPUT = auto()
-    INPUT = auto()
+    OUTPUT = "output"
+    INPUT = "input"
 
 
 def parse_rule(full_rule_str, config, name=None):

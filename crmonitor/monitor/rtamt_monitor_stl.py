@@ -45,6 +45,7 @@ class RtamtStlMonitor:
         monitor.spec = f"out = {logic_formula}"
         monitor.set_sampling_period(dt * 1000.0, 'ms')
         monitor.parse()
+        monitor.pastify()
 
         return monitor
 
