@@ -73,11 +73,13 @@ def parse_rule(full_rule_str, config, name=None):
             evaluator = pred_evaluators[pred_basename]
             if m.group("io_type") is None:
                 io_type = IOType.OUTPUT
+                full_name = m.group("pred_name") + "_" + m.group("agents")
             else:
                 io_type = IOType.INPUT
+                full_name = m.group("pred_name") + "_" + m.group("agents") + "_i"
             assert evaluator is not None
             p = PredicateNode(
-                m.group("pred_name") + "_" + m.group("agents"),
+                full_name,
                 predicate_agent_placeholders,
                 evaluator(config["traffic_rules_param"]),
                 io_type,

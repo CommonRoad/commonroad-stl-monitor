@@ -4,7 +4,6 @@ import unittest
 from typing import List, Tuple
 import numpy as np
 
-import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
@@ -357,21 +356,20 @@ class RuleTest(unittest.TestCase):
             )
 
         # output robustness
-        rule_str = "A ((in_front_of_i__a0_a1>=0 and in_same_lane_i__a0_a1>=0 ) implies keeps_safe_distance_prec__a0_a1>=0)"
-        rule = Rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleSetEvaluator([rule], output_type=Semantics.OUTPUT_ROBUSTNESS)
+        rule_str = "A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 ) implies keeps_safe_distance_prec__a0_a1)"
+        rule_eval = RuleSetEvaluator.create_from_rule_str(rule_str, output_type=Semantics.OUTPUT_ROBUSTNESS)
         for ego_id, exp_violation in exp_floating:
             world_state = WorldState.create_from_scenario(scenario, ego_id)
-            df_rule, _ = rule_eval.evaluate_incremental(
-                world_state
+            rule_robustness, predicate_robustness = rule_eval.evaluate_incremental(
+                world_state, to_pandas=False
             )
-            rob_value = [r for r in df_rule["robustness"].values]
+            rob_value = [list(rule_dict.values())[0] for rule_dict in rule_robustness.values()]
 
             # create expected values
             exp_rob = []
             for time_step in range(world_state.time_step + 1):
-                in_front_of = world_state.predicate_values[time_step]["in_front_of_i"]
-                in_same_lane = world_state.predicate_values[time_step]["in_same_lane_i"]
+                in_front_of = world_state.predicate_values[time_step]["in_front_of"]
+                in_same_lane = world_state.predicate_values[time_step]["in_same_lane"]
                 keeps_safe_distance_prec = world_state.predicate_values[time_step]["keeps_safe_distance_prec"]
 
                 all_vehicle_results = []
@@ -426,9 +424,7 @@ class RuleTest(unittest.TestCase):
             )
 
         # output robustness
-        rule_str = "E ((accel_i__a0<=-2.) implies (precedes__a0_a1>=0.) and (not keeps_safe_distance_prec__a0_a1>=0 or accel__a0 - accel__a1 > -2.0))"
-        rule = Rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleSetEvaluator([rule], output_type=Semantics.OUTPUT_ROBUSTNESS)
+        rule_eval = RuleSetEvaluator([rule], dt=0.1, output_type=Semantics.OUTPUT_ROBUSTNESS)
         for ego_id, exp_violation in exp_result.items():
             world_state = WorldState.create_from_scenario(scenario, ego_id)
             df_rule, _ = rule_eval.evaluate_incremental(
@@ -441,27 +437,26 @@ class RuleTest(unittest.TestCase):
             for time_step in range(world_state.time_step + 1):
                 precedes = world_state.predicate_values[time_step]["precedes"]
                 keeps_safe_distance_prec = world_state.predicate_values[time_step]["keeps_safe_distance_prec"]
-                accel = world_state.predicate_values[time_step]["accel"]
+                brakes_abruptly = world_state.predicate_values[time_step]["brakes_abruptly"]
+                rel_brakes_abruptly = world_state.predicate_values[time_step]["rel_brakes_abruptly"]
 
-                all_vehicle_results = []
-                ego_accel = world_state.predicate_values[time_step]["accel_i"][(ego_id, )]
-                for vehicle_pair in precedes.keys():
-                    other_id = vehicle_pair[1]
-                    if ego_accel <= -2.:
-                        # all_vehicle_results.append(precedes[vehicle_pair])
+                if brakes_abruptly[(ego_id,)] < 0.:
+                    exp_rob.append(np.inf)
+                else:
+                    all_vehicle_results = []
+                    for vehicle_pair in precedes.keys():
                         all_vehicle_results.append(
-                            np.min([precedes[vehicle_pair],
-                                   np.max([keeps_safe_distance_prec[vehicle_pair],
-                                           ego_accel - accel[(other_id, )] + 2.])])
+                            np.min([
+                                precedes[vehicle_pair],
+                                np.max([
+                                    -keeps_safe_distance_prec[vehicle_pair],
+                                    -rel_brakes_abruptly[vehicle_pair]
+                                ])
+                            ])
                         )
-                    else:
-                        all_vehicle_results.append(np.inf)
-
-                exp_rob.append(np.max(all_vehicle_results))
+                    exp_rob.append(np.max(all_vehicle_results))
 
             self.assertEqual(exp_rob, rob_value, msg=f"Test failed for ego_id={ego_id}")
-            # for i, (e, r) in enumerate(zip(exp_rob, rob_value)):
-            #     self.assertAlmostEqual(e, r, delta=1e-5, msg=f"Test failed for ego_id={ego_id}, item {i}")
 
 
     def test_speed_limit(self):

@@ -544,6 +544,9 @@ class PredAbruptBreaking(BasePredicateEvaluator):
     predicate_name = "brakes_abruptly"
     arity = 1
 
+    def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world_state, vehicle_ids) > -2.
+
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
