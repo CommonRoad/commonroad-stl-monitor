@@ -1,9 +1,10 @@
 from typing import List, Set, Dict
-import numpy as np
 
+import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad_ccosy.geometry.util import chaikins_corner_cutting, resample_polyline
-from pycrccosy import CurvilinearCoordinateSystem
+from commonroad_dc.geometry.util import chaikins_corner_cutting, \
+    resample_polyline
+from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 
 
 class Lane:
@@ -24,6 +25,12 @@ class Lane:
         """
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
+        self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.left_vertices, road_network_param
+        )
+        self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.right_vertices, road_network_param
+        )
         self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
             merged_lanelet.center_vertices, road_network_param
         )
@@ -168,9 +175,9 @@ class Lane:
         :param road_network_param: dictionary containing parameters of the road network
         :returns curvilinear coordinate system for reference path
         """
-        new_ref_path = np.array([])
+        new_ref_path = ref_path
         for i in range(0, road_network_param.get("num_chankins_corner_cutting")):
-            new_ref_path = chaikins_corner_cutting(ref_path)
+            new_ref_path = chaikins_corner_cutting(new_ref_path)
         new_ref_path = resample_polyline(
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )

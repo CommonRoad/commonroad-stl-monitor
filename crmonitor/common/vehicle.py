@@ -1,12 +1,23 @@
 import enum
 from typing import Union, Set, Dict, List
 
+import numba
 import numpy as np
 from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.obstacle import ObstacleType, SignalState
 from commonroad.scenario.trajectory import State
+from shapely import affinity
 
 from crmonitor.common.road_network import Lane
+
+rot_mat_factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
+
+
+@numba.njit
+def calc_s(s, w, l, theta):
+    s = rot_mat_factors[0] * l / 2. * np.cos(theta) - rot_mat_factors[
+        1] * w / 2 * np.sin(theta) + s
+    return s
 
 
 class StateLongitudinal:
@@ -151,6 +162,14 @@ class Vehicle:
         self._robust_lanelet_assignment = robust_lanelet_assignment
 
     @property
+    def vehicle_classification(self):
+        return self._vehicle_classification
+
+    @vehicle_classification.setter
+    def vehicle_classification(self, vehicle_classification: VehicleClassification):
+        self._vehicle_classification = vehicle_classification
+
+    @property
     def robust_lanelet_assignment(self):
         return self._robust_lanelet_assignment
 
@@ -224,15 +243,8 @@ class Vehicle:
         w = self.shape.width
         l = self.shape.length
         theta = self.states_lat[time_step].theta
-        rear_s = np.min(self.calc_s(s, w, l, theta))
+        rear_s = np.min(calc_s(s, w, l, theta))
         return rear_s
-
-    @staticmethod
-    def calc_s(s, w, l, theta):
-        factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
-        s = factors[0] * l / 2. * np.cos(theta) - factors[
-            1] * w / 2 * np.sin(theta) + s
-        return s
 
     def front_s(self, time_step: int) -> float:
         """
@@ -245,7 +257,7 @@ class Vehicle:
         w = self.shape.width
         l = self.shape.length
         theta = self.states_lat[time_step].theta
-        front_s = np.max(self.calc_s(s, w, l, theta))
+        front_s = np.max(calc_s(s, w, l, theta))
         return front_s
 
     def right_d(self, time_step: int) -> float:
@@ -318,7 +330,20 @@ class Vehicle:
                                                orientation)
         return shape
 
+    def shapely_occupancy_at_time_step(self, time_step):
+        state = self.states_cr[time_step]
+        orientation = self.states_lat[time_step].theta
+        shape = self.shape.shapely_object
+        cos = np.cos(orientation)
+        sin = np.sin(orientation)
+        mat = [cos, -sin, sin, cos, state.position[0], state.position[1]]
+        new_shape = affinity.affine_transform(shape, mat)
+        return new_shape
+
     def is_valid(self, time_step):
         state = self.states_cr.get(time_step)
         return state is not None
 
+    def lanes_at_state(self, world_state):
+        lanelets = self.lanelet_assignment[world_state.time_step]
+        return world_state.road_network.find_lanes_by_lanelets(lanelets)

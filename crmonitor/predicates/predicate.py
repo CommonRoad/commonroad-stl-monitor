@@ -2,19 +2,24 @@ import abc
 import logging
 import math
 from functools import reduce
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Iterable
 
 import numpy as np
+from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from ruamel.yaml.comments import CommentedMap
+
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
-from ruamel.yaml.comments import CommentedMap
-from shapely.geometry import Point
 
 logger = logging.getLogger(__name__)
+
+
+def union_set(s: Iterable):
+    return reduce(lambda agg, e: agg.union(e), s, set())
 
 
 def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
@@ -28,60 +33,59 @@ def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
     return rescaled
 
 
-def get_preceding_vehicles(
-    world_state: WorldState, vehicle_rear: Vehicle
-) -> List[Tuple[float, Vehicle]]:
-    """
-    Returns a list of preceding vehicles in ascending order of distance
-    :param world_state: Current world state
-    :param vehicle_rear: Reference vehicle
-    :return: Sorted list of tuples of distance and vehicle object
-    """
-    veh = []
-    rear_lanes = vehicle_rear.lanelet_assignment[world_state.time_step]
-    for vehicle_lead in world_state.other_vehicles + [world_state.ego_vehicle]:
-        if (
-            not vehicle_lead.is_valid(world_state.time_step)
-            or vehicle_lead is vehicle_rear
-        ):
-            continue
-        lead_lanes = vehicle_lead.lanelet_assignment[world_state.time_step]
-        intersecting_lanes = lead_lanes.intersection(rear_lanes)
-        if len(intersecting_lanes) > 0:
-            dist = vehicle_lead.rear_s(world_state.time_step) - vehicle_rear.front_s(
-                world_state.time_step
-            )
-            if dist >= 0.0:
-                veh.append((dist, vehicle_lead))
-    return sorted(veh, key=lambda d: d[0])
+def distance_to_bounds(
+    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState
+):
+    state = vehicle_i.states_cr[world_state.time_step]
+    occ_points = list(
+        rotate_translate(
+            vehicle_i.shape.vertices[:-1], state.position, state.orientation
+        )
+    )
+    lanelets = [
+        world_state.road_network.lanelet_network.find_lanelet_by_id(i)
+        for i in lanelet_ids
+    ]
+    left_bounds = [
+        l for l in lanelets if l.adj_left is not None and l.adj_left not in lanelet_ids
+    ]
+    right_bounds = [
+        l
+        for l in lanelets
+        if l.adj_right is not None and l.adj_right not in lanelet_ids
+    ]
+    d_left = [np.array([])]
+    for l in left_bounds:
+        # For performance reasons, we find a lane that contains the lanelet
+        # so that
+        # the curvilinear coordinate system stored in the lane can be reused.
+        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
+        start_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[0])[0]
+        end_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[-1])[0]
+        corner_points = np.array(
+            lane.clcs_left.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
+        )
+        # Only consider points within the projection domain of the lanelet
+        points_in_proj_domain = corner_points[
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
+        ]
+        if points_in_proj_domain.size > 0:
+            d_left.append(points_in_proj_domain[:, 1])
 
-
-def get_succeeding_vehicles(
-    world_state: WorldState, vehicle_front: Vehicle
-) -> List[Tuple[float, Vehicle]]:
-    """
-    Returns a list of preceding vehicles in ascending order of distance
-    :param world_state: Current world state
-    :param vehicle_front: Reference vehicle
-    :return: Sorted list of tuples of distance and vehicle object
-    """
-    veh = []
-    front_lanes = vehicle_front.lanelet_assignment[world_state.time_step]
-    for vehicle_rear in world_state.other_vehicles + [world_state.ego_vehicle]:
-        if (
-            not vehicle_rear.is_valid(world_state.time_step)
-            or vehicle_rear is vehicle_front
-        ):
-            continue
-        rear_lanes = vehicle_rear.lanelet_assignment[world_state.time_step]
-        intersecting_lanes = rear_lanes.intersection(front_lanes)
-        if len(intersecting_lanes) > 0:
-            dist = vehicle_front.rear_s(world_state.time_step) - vehicle_rear.front_s(
-                world_state.time_step
-            )
-            if dist >= 0.0:
-                veh.append((dist, vehicle_rear))
-    return sorted(veh, key=lambda d: d[0])
+    d_right = [np.array([])]
+    for l in right_bounds:
+        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
+        start_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[0])[0]
+        end_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[-1])[0]
+        corner_points = np.array(
+            lane.clcs_right.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
+        )
+        points_in_proj_domain = corner_points[
+            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
+        ]
+        if points_in_proj_domain.size > 0:
+            d_right.append(points_in_proj_domain[:, 1])
+    return np.concatenate(d_left), np.concatenate(d_right)
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -118,7 +122,7 @@ class BasePredicateEvaluator(abc.ABC):
         return self._scale(x, 0, math.pi, copysign=True)
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world_state, vehicle_ids) > 0.0
+        return self.evaluate_robustness(world_state, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
     def evaluate_robustness(
@@ -158,19 +162,14 @@ class PredInSameLane(BasePredicateEvaluator):
     def get_same_lanes(self, world_state, vehicle_ids) -> Set[Lane]:
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        lane_ids_k = world_state.road_network.find_lanes_by_lanelets(
+        lanes_k = world_state.road_network.find_lanes_by_lanelets(
             vehicle_k.lanelet_assignment[world_state.time_step]
         )
-        lane_ids_p = world_state.road_network.find_lanes_by_lanelets(
+        lanes_p = world_state.road_network.find_lanes_by_lanelets(
             vehicle_p.lanelet_assignment[world_state.time_step]
         )
-        intersecting_lanes = lane_ids_p.intersection(lane_ids_k)
-        intersecting_lanelets = reduce(
-            lambda x, y: x.union(y),
-            [l.contained_lanelets for l in intersecting_lanes],
-            set(),
-        )
-        return intersecting_lanelets
+        intersecting_lanes = lanes_p.intersection(lanes_k)
+        return intersecting_lanes
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
@@ -183,59 +182,34 @@ class PredInSameLane(BasePredicateEvaluator):
         :param vehicle_ids:
         :return:
         """
+        # Predicate is symmetric
+        vehicle_ids_tuple = tuple(reversed(vehicle_ids))
+        value = world_state.predicate_values[world_state.time_step][
+            self.predicate_name
+        ].get(vehicle_ids_tuple)
+        if value is not None:
+            return value
+
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world_state.vehicle_by_id(vehicle_ids[1])
-        if self.evaluate_boolean(world_state, vehicle_ids):
-            intersecting_lanes = self.get_same_lanes(world_state, vehicle_ids)
-            assert len(intersecting_lanes) > 0
-            lanelets = [
-                world_state.road_network.lanelet_network.find_lanelet_by_id(l_id)
-                for l_id in intersecting_lanes
-            ]
-            left_adj = [
-                lanelet.adj_left
-                for lanelet in lanelets
-                if lanelet.adj_left is not None
-                and lanelet.adj_left not in intersecting_lanes
-            ]
-            right_adj = [
-                lanelet.adj_right
-                for lanelet in lanelets
-                if lanelet.adj_right is not None
-                and lanelet.adj_right not in intersecting_lanes
-            ]
-            adj = left_adj + right_adj
-            if len(adj) == 0:
-                # No adjacent lanes
-                return self._scale_lat_dist(np.inf)
-            adj = [
-                world_state.road_network.lanelet_network.find_lanelet_by_id(l_id)
-                for l_id in adj
-            ]
-            occ = world_state.vehicle_by_id(vehicle_ids[0]).occupancy_at_time_step(
-                world_state.time_step
-            )
-            shapley_occ = occ.shapely_object
-            polys = [l.convert_to_polygon().shapely_object for l in adj]
-            dist = [shapley_occ.distance(l) for l in polys]
-            poly = polys[np.argmin(dist)]
-            # Directed Hausdorff distance
-            max_dist = np.max([poly.distance(Point(p)) for p in occ.vertices])
-            return self._scale_lat_dist(max_dist)
-        else:
-            lanes_p = world_state.road_network.find_lanes_by_lanelets(
-                vehicle_p.lanelet_assignment[world_state.time_step]
-            )
-            min_dist_k_to_p_lanes = math.inf
-            k_occ = vehicle_k.occupancy_at_time_step(
-                world_state.time_step
-            ).shapely_object
-            for lane_p in lanes_p:
-                dist = k_occ.distance(
-                    lane_p.lanelet.convert_to_polygon().shapely_object
-                )
-                min_dist_k_to_p_lanes = min(min_dist_k_to_p_lanes, dist)
-            return -self._scale_lat_dist(min_dist_k_to_p_lanes)
+
+        def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int]):
+            d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world_state)
+            d_left = -np.min(d_left) if d_left.size > 0 else np.inf
+            d_right = np.max(d_right) if d_right.size > 0 else np.inf
+            return np.fmin(d_left, d_right)
+
+        lanelet_ids_k = union_set(
+            [l.contained_lanelets for l in vehicle_k.lanes_at_state(world_state)]
+        )
+        lanelet_ids_p = union_set(
+            [l.contained_lanelets for l in vehicle_p.lanes_at_state(world_state)]
+        )
+        rob = np.fmin(
+            distance_to_lanes(vehicle_k, lanelet_ids_p),
+            distance_to_lanes(vehicle_p, lanelet_ids_k),
+        )
+        return self._scale_lat_dist(rob)
 
 
 class PredInFrontOf(BasePredicateEvaluator):
@@ -261,10 +235,7 @@ class PredSingleLane(BasePredicateEvaluator):
         k_lanes = world_state.road_network.find_lanes_by_lanelets(
             vehicle_k.lanelet_assignment[world_state.time_step]
         )
-        single_lane = False
-        if len(k_lanes) == 1:  # single_lane
-            single_lane = True
-        return single_lane
+        return len(k_lanes) == 1
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
@@ -276,45 +247,27 @@ class PredSingleLane(BasePredicateEvaluator):
         :param vehicle_ids:
         :return:
         """
-        single_lane_boolean = self.evaluate_boolean(world_state, vehicle_ids)
+        # single_lane_boolean = self.evaluate_boolean(world_state, vehicle_ids)
         vehicle_k = world_state.vehicle_by_id(vehicle_ids[0])
-        k_lanes = world_state.road_network.find_lanes_by_lanelets(
-            vehicle_k.lanelet_assignment[world_state.time_step]
-        )
+        k_lanes = vehicle_k.lanes_at_state(world_state)
         assert (
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
-        if single_lane_boolean:
-            assert len(k_lanes) == 1
-            k_lane = k_lanes.pop()
-            k_occ = vehicle_k.occupancy_at_time_step(
-                world_state.time_step
-            ).shapely_object
-            lane_poly = k_lane.lanelet.convert_to_polygon().shapely_object
-            distance_to_boundary = lane_poly.boundary.distance(k_occ)
-            return self._scale_lon_dist(distance_to_boundary)
-        else:
-            k_lanes = list(k_lanes)
-            shape_k = vehicle_k.occupancy_at_time_step(
-                world_state.time_step
-            ).shapely_object
-            overlap_areas = [
-                lane.lanelet.convert_to_polygon()
-                .shapely_object.intersection(shape_k)
-                .area
-                for lane in k_lanes
-            ]
-            assert len(overlap_areas) == len(
-                k_lanes
-            ), f"No intersection found for some lanes. Found {len(overlap_areas)} instead of {len(k_lanes)}"
-            max_overlap_lane = (
-                k_lanes[np.argmax(overlap_areas)]
-                .lanelet.convert_to_polygon()
-                .shapely_object
-            )
-            diff = shape_k.boundary.coords
-            dist = [Point(*p).distance(max_overlap_lane) for p in diff]
-            return -max(dist)
+
+        ref_point = np.array(vehicle_k.states_cr[world_state.time_step].position)
+        ref_lane = [
+            l
+            for l in k_lanes
+            if l.lanelet.convert_to_polygon().contains_point(ref_point)
+        ][0]
+
+        d_left, d_right = distance_to_bounds(
+            vehicle_k, ref_lane.contained_lanelets, world_state
+        )
+        d_left = -np.max(d_left) if d_left.size > 0 else np.inf
+        d_right = np.min(d_right) if d_right.size > 0 else np.inf
+        rob = np.fmin(d_left, d_right)
+        return self._scale_lat_dist(rob)
 
 
 class PredCutIn(BasePredicateEvaluator):
@@ -326,6 +279,27 @@ class PredCutIn(BasePredicateEvaluator):
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
 
+    def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
+        cutting_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
+        cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
+
+        single_lane = self._single_lane_evaluator.evaluate_boolean(
+            world_state, [vehicle_ids[0]]
+        )
+        if single_lane:
+            return False
+        same_lane = self._same_lane_evaluator.evaluate_boolean(world_state, vehicle_ids)
+        if not same_lane:
+            return False
+        d_p = cutted_vehicle.states_lat[world_state.time_step].d
+        d_k = cutting_vehicle.states_lat[world_state.time_step].d
+        orient_k = cutting_vehicle.states_lat[world_state.time_step].theta
+
+        result = (d_k < d_p and orient_k > self.eps) or (
+            d_k > d_p and orient_k < -self.eps
+        )
+        return result
+
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
@@ -333,7 +307,8 @@ class PredCutIn(BasePredicateEvaluator):
         cutted_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
 
         single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
-            world_state, [vehicle_ids[0]]
+            world_state,
+            (vehicle_ids[0],),
         )
         same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
             world_state, vehicle_ids
@@ -454,7 +429,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world_state, vehicle_ids):
         vehicle_type = world_state.vehicle_by_id(vehicle_ids[0]).obstacle_type
         if vehicle_type is ObstacleType.TRUCK:
-            return 22.22
+            return self.config["max_interstate_speed_truck"]
         else:
             return None
 
@@ -486,65 +461,91 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
             world_state, vehicle_ids
         )
         if speed_limit is None:
-            speed_limit = 130.0 / 3.6
+            speed_limit = self.config["desired_interstate_velocity"]
         return speed_limit
 
 
-class PredPrecedes(BasePredicateEvaluator):
+class PredPreceding(BasePredicateEvaluator):
     predicate_name = "precedes"
     arity = 2
 
     def __init__(self, config: CommentedMap):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
-        self.same_lane.scale = False
+
+    @staticmethod
+    def get_predecessors(
+        world_state: WorldState, vehicle_rear: Vehicle
+    ) -> List[Tuple[float, Vehicle]]:
+        """
+        Returns a list of preceding vehicles in ascending order of distance
+        :param world_state: Current world state
+        :param vehicle_rear: Reference vehicle
+        :return: Sorted list of tuples of distance and vehicle object
+        """
+        veh = []
+        rear_lanes = vehicle_rear.lanes_at_state(world_state)
+        for vehicle_front in world_state.other_vehicles + [world_state.ego_vehicle]:
+            if (
+                not vehicle_front.is_valid(world_state.time_step)
+                or vehicle_front is vehicle_rear
+            ):
+                continue
+            front_lanes = vehicle_front.lanes_at_state(world_state)
+            intersecting_lanes = rear_lanes.intersection(front_lanes)
+            if len(intersecting_lanes) > 0:
+                dist = vehicle_front.rear_s(
+                    world_state.time_step
+                ) - vehicle_rear.front_s(world_state.time_step)
+                if dist >= 0.0:
+                    veh.append((dist, vehicle_front))
+        return sorted(veh, key=lambda d: d[0])
+
+    def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
+        rear_vehicle_id = vehicle_ids[0]
+        front_vehicle_id = vehicle_ids[1]
+        rear_vehicle = world_state.vehicle_by_id(rear_vehicle_id)
+        pred_veh = self.get_predecessors(world_state, rear_vehicle)
+        return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
-        ego_vehicle = world_state.vehicle_by_id(vehicle_ids[0])
-        other_vehicle = world_state.vehicle_by_id(vehicle_ids[1])
-        succ_veh = get_succeeding_vehicles(world_state, other_vehicle)
-        if len(succ_veh) > 0 and succ_veh[0][1].id == vehicle_ids[0]:
-            same_lane = self.same_lane.evaluate_robustness_with_cache(world_state, vehicle_ids)
-            assert same_lane >= 0.0
-            overtake = other_vehicle.rear_s(
-                world_state.time_step
-            ) - ego_vehicle.front_s(world_state.time_step)
-            assert overtake >= 0.0
-            if len(succ_veh) >= 2:
-                fallback = ego_vehicle.front_s(world_state.time_step) - succ_veh[1][
-                    1
-                ].front_s(world_state.time_step)
-                assert fallback >= 0.0
-            else:
-                fallback = math.inf
-            return min(same_lane, overtake, fallback)
+        rear_veh = world_state.vehicle_by_id(vehicle_ids[0])
+        front_veh = world_state.vehicle_by_id(vehicle_ids[1])
+        pred_veh = self.get_predecessors(world_state, rear_veh)
+        bool_val = len(pred_veh) > 0 and pred_veh[0][1].id == vehicle_ids[1]
+        same_lane = self.same_lane.evaluate_robustness_with_cache(
+            world_state, vehicle_ids
+        )
+        if bool_val:
+            assert same_lane >= -self.eps
+            same_lane = max(same_lane, 0.0)
+
+        dist_front = front_veh.rear_s(world_state.time_step) - rear_veh.front_s(
+            world_state.time_step
+        )
+
+        pred_wo_other = [v for v in pred_veh if v[1] is not front_veh]
+        if len(pred_wo_other) > 0:
+            dist_pred = pred_wo_other[0][1].rear_s(world_state.time_step) - front_veh.rear_s(world_state.time_step)
         else:
-            # if other_vehicle.rear_s(world_state.time_step) < ego_vehicle.front_s(world_state.time_step):
-            #     # Other vehicle is behind
-            #     v = ego_vehicle.front_s(world_state.time_step) - other_vehicle.rear_s(world_state.time_step)
-            # else:
-            #     # Other vehicle is in front
-            #     suc_veh = get_succeeding_vehicles(world_state, other_vehicle)
-            #     if len(suc_veh) > 0:
-            #         # Other vehicle has a successor
-            #         v = suc_veh[0][1].front_s(world_state.time_step) - ego_vehicle.front_s(world_state.time_step)
-            #     else:
-            #         # Should only happen if same_lane < 0.0
-            #         # as otherwise ego should be the successor -> precedes
-            #         v = 0.0
-            # if same_lane < 0.0:
-            #     return -self._scale_lon_dist(np.sqrt(same_lane * same_lane + v * v))
-            # else:
-            #     assert v != 0.0
-            #     return -self._scale_lon_dist(v)
-            return -1.0
+            dist_pred = math.inf
+
+        rob = min(
+            same_lane,
+            self._scale_lon_dist(dist_front),
+            self._scale_lon_dist(dist_pred),
+        )
+        return rob
 
 
-class PredAcceleration(BasePredicateEvaluator):
-    predicate_name = "accel"
+class PredAbruptBreaking(BasePredicateEvaluator):
+    predicate_name = "brakes_abruptly"
     arity = 1
+
+    def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world_state, vehicle_ids) > -2.
 
     def evaluate_robustness(
         self, world_state: WorldState, vehicle_ids: List[int]
@@ -554,4 +555,26 @@ class PredAcceleration(BasePredicateEvaluator):
             .states_lon[world_state.time_step]
             .a
         )
-        return accel
+        rob = self.config["a_abrupt"] - accel
+        return self._scale_acc(rob)
+
+
+class PredRelAbruptBreaking(BasePredicateEvaluator):
+    predicate_name = "rel_brakes_abruptly"
+    arity = 2
+
+    def evaluate_robustness(
+        self, world_state: WorldState, vehicle_ids: List[int]
+    ) -> float:
+        accel_k = (
+            world_state.vehicle_by_id(vehicle_ids[0])
+            .states_lon[world_state.time_step]
+            .a
+        )
+        accel_p = (
+            world_state.vehicle_by_id(vehicle_ids[1])
+            .states_lon[world_state.time_step]
+            .a
+        )
+        rob = -accel_k + accel_p + self.config["a_abrupt"]
+        return self._scale_acc(rob)

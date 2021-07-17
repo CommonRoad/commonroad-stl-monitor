@@ -5,13 +5,14 @@ from pathlib import Path
 from typing import Optional
 
 from commonroad.scenario.scenario import Scenario
+from ruamel.yaml import YAML
+
 from crmonitor.common.helper import (create_scenario_vehicles,
                                      create_ego_vehicle_param,
                                      create_simulation_param,
                                      create_other_vehicles_param, )
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
-from ruamel.yaml import YAML
 
 
 class WorldState:
@@ -78,7 +79,7 @@ class WorldState:
         return None
 
     @property
-    def ego_vehicle(self):
+    def ego_vehicle(self) -> Vehicle:
         return self._ego_vehicle
 
     @property
@@ -88,6 +89,13 @@ class WorldState:
     @property
     def other_ids(self):
         return [v.id for v in self.other_vehicles]
+
+    @property
+    def dt(self):
+        if hasattr(self, "scenario"):
+            return self.scenario.dt
+        else:
+            return 0.1
 
     def __iter__(self):
         return self
@@ -116,7 +124,8 @@ class WorldState:
         :return:
         """
         for i in range(start_time_step, end_time_step + 1):
-            self.predicate_values.pop(i)
+            if i in self.predicate_values:
+                self.predicate_values.pop(i)
 
     def clear_predicates(self):
         self.predicate_values.clear()

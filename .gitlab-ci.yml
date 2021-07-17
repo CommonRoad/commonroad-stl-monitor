@@ -1,0 +1,32 @@
+image: continuumio/anaconda3
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  GIT_SUBMODULE_STRATEGY: recursive
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+#cache:
+#  paths:
+#    - .cache/pip
+#    - anaconda3/envs
+
+before_script:
+  - apt-get update && apt-get install -y cmake g++ libeigen3-dev libboost-all-dev
+  - conda init bash
+  #- git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+  #- git submodule update --init --recursive
+  - conda env create -f environment.yml
+  - source activate cr-py37
+  - conda info
+  - cd external/commonroad-drivability-checker/ && ./build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
+  - conda develop $CI_PROJECT_DIR/external/rtamt
+  - conda develop $CI_PROJECT_DIR
+
+test:
+  script:
+    - cd $CI_PROJECT_DIR/crmonitor/tests && python -m unittest

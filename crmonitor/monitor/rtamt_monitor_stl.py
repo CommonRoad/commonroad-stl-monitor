@@ -1,79 +1,76 @@
-from typing import List, Tuple, Union, Dict
+from enum import Enum
+from typing import List, Tuple
 
 import rtamt
-from crmonitor.predicates.rule import Rule, IOType
+from crmonitor.predicates.rule import IOType, RuleNode
 from rtamt import Language
 
 
-class TrafficRuleMonitorForwardSTL:
+class OutputType(Enum):
+    STANDARD = rtamt.Semantics.STANDARD
+    OUTPUT_ROBUSTNESS = rtamt.Semantics.OUTPUT_ROBUSTNESS
+
+
+class RtamtStlMonitor:
     """
-    Represents single formalized traffic rule
+    Represents single formalized STL rule
     """
-
-    def __init__(self, rule: Rule, output_type="standard"):  # , predicate_references):
-
-        self._rule = rule
-        self._output_type = output_type
-        self._monitor = self.construct_monitor()
-
-    @property
-    def rule(self):
-        return self._rule
-
-    def reset_monitor(self):
-        self._monitor.reset()
-
-    # TODO: Could be made static
-    def _reconstruct_logic_formula(self):
-        logic_formula = self._rule._rule_str
+    @staticmethod
+    def _reconstruct_logic_formula(logic_formula, predicates):
         replacements = {"~": "not"}
         for el in replacements.keys():
             logic_formula = logic_formula.replace(el, replacements[el])
         # Workaround for rtamt when working with output-robustness and input vacuity
-        predicates = self._rule.predicate_names
         mod_formula = logic_formula
-        # TODO: Only required for IA-STL
-        # for pred in predicates:
-        #     mod_formula.replace(pred, "({} >= 0)".format(pred))
+        for pred in predicates:
+            mod_formula = mod_formula.replace(pred[0].name, f"({pred[0].name} >= 0)")
         return mod_formula
 
-    # TODO: Could be made static
-    def construct_monitor(self) -> rtamt.STLSpecification:
-        logic_formula = self._reconstruct_logic_formula()
+    @staticmethod
+    def construct_monitor(formula, output_type: OutputType, predicates, dt) -> rtamt.STLSpecification:
+        logic_formula = RtamtStlMonitor._reconstruct_logic_formula(formula, predicates)
         monitor = rtamt.STLDiscreteTimeSpecification(
-            semantics=self._output_type, language=Language.PYTHON
+            semantics=output_type, language=Language.PYTHON
         )
-        for var in self._rule.predicate_assignment:
-            monitor.declare_var(var.full_name, "float")
-            if var.io_type == IOType.INPUT:
-                monitor.set_var_io_type(var.full_name, "input")
+        for var, io_type in predicates:
+            monitor.declare_var(var.name, "float")
+            if io_type == IOType.INPUT:
+                monitor.set_var_io_type(var.name, "input")
             else:
-                monitor.set_var_io_type(var.full_name, "output")
+                monitor.set_var_io_type(var.name, "output")
         monitor.declare_var("out", "float")
 
-        monitor.iosem = self._output_type
-
+        monitor.iosem = output_type
+        monitor.unit = "ms"
         monitor.spec = f"out = {logic_formula}"
+        monitor.set_sampling_period(dt * 1000.0, 'ms')
         monitor.parse()
+        monitor.pastify()
 
         return monitor
 
-    def evaluate_monitor_offline(
-        self, predicates: Dict[str, List[Tuple[float, bool]]], vehicle_ids
-    ) -> Union[bool, float]:
-        pass
+    @classmethod
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD):
+        predicates = [(c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT) for c in rule_node.children]
+        return cls(rule_node.rule_str, predicates, dt, output_type)
 
-    def evaluate_monitor_online(self, time: float, predicates: List[Tuple[str, float]]):
+    def __init__(self, rule_str, predicates, dt, output_type=OutputType.STANDARD):
+        self._rule = rule_str
+        self._predicates = predicates
+        self._output_type = output_type
+        self.dt = dt
+        self._monitor = self.construct_monitor(rule_str, output_type, predicates, dt)
+
+    def reset_monitor(self):
+        self._monitor.reset()
+
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
+        time = time_step * self.dt * 1000.0
         rob = self._monitor.update(time, predicates)
         return rob
 
-    def evaluate_monitor_offline_stepwise(
-        self, predicates: Dict[float, List[Tuple[str, float]]]
-    ) -> List[Tuple[float, float]]:
-        self.reset_monitor()
-        rob_series = []
-        for t in sorted(predicates.keys()):
-            time_pred = predicates[t]
-            rob = self.evaluate_monitor_online(t, time_pred)
-            rob_series.append((t, rob))
-        return rob_series
+    def copy(self):
+        return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)
+
+    def reset(self):
+        self._monitor.reset()
