@@ -1,16 +1,37 @@
-## Install all needed packages
-- Activate your conda env.
-- Go to  ../stl_crmonitor and run 
-``
-pip install -r requirements.txt
-``
-
-## Download rtamt library 
-- Follow the intruction in this link https://github.com/nickovic/rtamt to install all the needed packages, clone the repository, install and test its installaion.
-- Remark: If you don't have sudo rights for installaion, you can simply run `pip3 install .`
+## Installation
+- Install [anconda](https://www.anaconda.com/)
+- Clone and enter the repository
+- Create the environment and install the dependencies by
+```
+conda env create -f environment.yml
+```
+- Activate the created environment
+```
+conda activate py-cr37
+```
+- Checkout submodules
+```
+git submodule update --init --recursive
+```
+- Install commonroad-drivability-checker (press Ctrl-c if asked for root permission)
+```
+sudo apt install libboost-dev libboost-thread-dev libboost-test-dev libboost-filesystem-dev libeigen3-dev
+cd external/commonroad-drivability-checker
+bash build.sh -e /home/`whoami`/anaconda3/envs/cr-py37 -v 3.7 -i -j 4
+cd ../..
+```
+- Install rtamt
+```
+pip install external/rtamt
+```
+- Install package to development path
+```
+conda develop .
+```
 
 ## Run the tests
 - Run 
-``
-pytest crmonitor/tests
-``
+```
+cd crmonitor/tests
+python -m unittest
+```
