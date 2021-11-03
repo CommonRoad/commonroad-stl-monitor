@@ -4,3 +4,5 @@
 [submodule "external/rtamt"]
 	path = external/rtamt
 	url = https://github.com/cirrostratus1/rtamt.git
+[submodule "."]
+	url = https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
