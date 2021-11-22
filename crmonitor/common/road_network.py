@@ -43,7 +43,7 @@ class Lane:
         self._path_length = self._compute_path_length_from_polyline(
             merged_lanelet.center_vertices
         )
-        self._width = self._compute_witdh_from_lanalet_boundary(
+        self._width = self._compute_width_from_lanalet_boundary(
             merged_lanelet.left_vertices, merged_lanelet.right_vertices
         )
 
@@ -147,7 +147,7 @@ class Lane:
         return np.array(distance)
 
     @staticmethod
-    def _compute_witdh_from_lanalet_boundary(
+    def _compute_width_from_lanalet_boundary(
         left_polyline: np.ndarray, right_polyline: np.ndarray
     ) -> np.ndarray:
         """
