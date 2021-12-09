@@ -35,3 +35,6 @@ conda develop .
 cd crmonitor/tests
 python -m unittest
 ```
+
+## Getting Started
+Checkout the [minimum working example](mwe.ipynb)
