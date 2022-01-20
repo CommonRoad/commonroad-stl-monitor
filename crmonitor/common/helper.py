@@ -56,10 +56,6 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict,
         "j_min")] * ego_vehicle_param.get("emergency_profile_num_steps_fb")
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
-    ego_vehicle_param["fov_speed_limit"] = 50
-
-    ego_vehicle_param["braking_speed_limit"] = 43
-
     if (not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(
             str(simulation_param.get("dt")))) <= 1e-12):
         raise ValueError("Reaction time must be multiple of time step size.")
