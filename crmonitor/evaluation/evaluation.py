@@ -121,6 +121,7 @@ class RuleSetEvaluator:
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Evaluate world state for each time step since the last evaluation.
+        :param to_pandas: whether convert data to panda dataframe
         :param world_state: world state to evaluate
         :return: Tuple of pandas dataframes, where the first contains rule
             robustness and the second predicate robustness

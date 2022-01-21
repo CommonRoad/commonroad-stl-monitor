@@ -341,7 +341,8 @@ def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_netwo
     return intersecting_lanes
 
 
-def _get_vehicle_classification(ego_vehicle: Vehicle, road_network: RoadNetwork, obstacle: DynamicObstacle):
+def _get_vehicle_classification(ego_vehicle: Vehicle, road_network: RoadNetwork, obstacle: DynamicObstacle)\
+        -> VehicleClassification:
     if _adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
                         # TODO: Why is adjacency only decided for initial time step?
                         list(obstacle.initial_shape_lanelet_ids)[0], road_network, ):
@@ -548,11 +549,11 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
         ego_vehicle_param: Dict, other_vehicles_param: Dict,
         road_network: RoadNetwork,
         dynamic_obstacles: List[DynamicObstacle],
-        obstacle_vehicle_dict: Union[Dict, None] = None) -> Tuple[Vehicle, List[Vehicle]]:
+        obstacle_vehicle_curvi_states_dict: Union[Dict, None] = None) -> Tuple[Vehicle, List[Vehicle]]:
     """
     Creates vehicles object for all obstacles within a CommonRoad scenario given
 
-    :param obstacle_vehicle_dict:
+    :param obstacle_vehicle_curvi_states_dict:
     :param ego_obstacle: CommonRoad obstacle of ego vehicle
     :param dt: time step size
     :param ego_vehicle_param: :param vehicle_param: dictionary with vehicle ego parameters
@@ -571,16 +572,31 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
                     -1].time_step or ego_obstacle.initial_state.time_step >
                 obs.prediction.trajectory.state_list[-1].time_step):
             continue
-        if obstacle_vehicle_dict is None:
+        if obstacle_vehicle_curvi_states_dict is None:
             vehicle = create_vehicle(obs, other_vehicles_param, road_network, dt,
                                      ego_vehicle)
         else:
-            # load obstacle_vehicle
-            vehicle = obstacle_vehicle_dict[obs.obstacle_id][ego_vehicle.lane.lanelet.lanelet_id]
-            # update vehicle classification and lane
-            vehicle.vehicle_classification = _get_vehicle_classification(ego_vehicle, road_network, obs)
-            vehicle.lane = road_network.find_lane_by_obstacle(list(obs.initial_center_lanelet_ids),
-                                                              list(obs.initial_shape_lanelet_ids))
+            # load curvi states
+            state_list_lon, state_list_lat = obstacle_vehicle_curvi_states_dict[obs.obstacle_id][
+                ego_vehicle.lane.lanelet.lanelet_id]
+
+            initial_time_step = obs.initial_state.time_step
+            state_list_cr = {initial_time_step: obs.initial_state}
+            lanelet_assignments = {initial_time_step: obs.initial_shape_lanelet_ids}
+            signal_series = {initial_time_step: obs.initial_signal_state}
+            vehicle_classification = _get_vehicle_classification(ego_vehicle, road_network, obs)
+            for state in obs.prediction.trajectory.state_list:
+                state_list_cr[state.time_step] = state
+                signal_series[state.time_step] = obs.signal_state_at_time_step(state.time_step)
+                lanelet_assignments[state.time_step] = obs.prediction.shape_lanelet_assignment[state.time_step]
+            lane = road_network.find_lane_by_obstacle(list(obs.initial_center_lanelet_ids),
+                                                      list(obs.initial_shape_lanelet_ids))
+
+            vehicle = Vehicle(state_list_lon, state_list_lat, obs.obstacle_shape,
+                              state_list_cr, obs.obstacle_id, obs.obstacle_type,
+                              other_vehicles_param, lanelet_assignments, signal_series,
+                              vehicle_classification, lane, None)
+
         other_vehicles.append(vehicle)
     return ego_vehicle, other_vehicles
 

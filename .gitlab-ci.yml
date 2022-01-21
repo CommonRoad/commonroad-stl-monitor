@@ -19,11 +19,11 @@ before_script:
   - apt-get update && apt-get install -y cmake g++ libeigen3-dev libboost-all-dev
   - conda init bash
   #- git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
-  #- git submodule update --init --recursive
+  #- git submodule update --init --recursive  
   - conda env create -f environment.yml
   - source activate cr-py37
   - conda info
-  - cd external/commonroad-drivability-checker/ && ./build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 4 --no-root
+  - cd external/commonroad-drivability-checker/ && ./build.sh -e /opt/conda/envs/cr-py37 -v 3.7 -i -j 64 --no-root
   - conda develop $CI_PROJECT_DIR/external/rtamt
   - conda develop $CI_PROJECT_DIR
 
