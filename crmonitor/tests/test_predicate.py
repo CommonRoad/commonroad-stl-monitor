@@ -85,19 +85,10 @@ class TestPredicate(unittest.TestCase):
             3: State(position=(40, 4), time_step=3),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1, 2}}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
 
         # other vehicle 1
         # Constant velocity, lane keeping on lane 2
@@ -120,19 +111,11 @@ class TestPredicate(unittest.TestCase):
             3: State(position=(30, 6), time_step=3),
         }
         lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}}
-        other_vehicle_1 = Vehicle(
-            state_list_lon_other_1,
-            state_list_lat_other_1,
-            Rectangle(5, 2),
-            cr_state_list_other_1,
-            1,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_1,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_1 = Vehicle(state_list_lon_other_1,
+                                  state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 1, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None)
 
         # other vehicle 2
         # Constant velocity, lane keeping on lane 3
@@ -141,19 +124,11 @@ class TestPredicate(unittest.TestCase):
         state_list_lat_other_2 = {1: StateLateral(d=8, theta=0)}
         cr_state_list_other_2 = {1: State(position=(10, 10), time_step=1)}
         lanelet_assignments_other_2 = {1: {3}}
-        other_vehicle_2 = Vehicle(
-            state_list_lon_other_2,
-            state_list_lat_other_2,
-            Rectangle(5, 2),
-            cr_state_list_other_2,
-            2,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_2,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_2 = Vehicle(state_list_lon_other_2,
+                                  state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 2, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_2, None, None)
 
         world_state = WorldState(
             ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
@@ -249,19 +224,10 @@ class TestPredicate(unittest.TestCase):
             6: {1, 2},
             7: {1, 2},
         }
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
 
         # other vehicle 1
         state_list_lon_other_1 = {
@@ -283,19 +249,11 @@ class TestPredicate(unittest.TestCase):
             3: State(position=(40, 6), time_step=3, orientation=0),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
-        other_vehicle_1 = Vehicle(
-            state_list_lon_other_1,
-            state_list_lat_other_1,
-            Rectangle(5, 2),
-            cr_state_list_other_1,
-            1,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_1,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_1 = Vehicle(state_list_lon_other_1,
+                                  state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 1, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None)
 
         # other vehicle 2
         state_list_lon_other_2 = {
@@ -317,19 +275,11 @@ class TestPredicate(unittest.TestCase):
             7: State(position=(50, 6), time_step=7, orientation=0),
         }
         lanelet_assignments_ego = {4: {1}, 5: {1, 2}, 6: {2}, 7: {2}}
-        other_vehicle_2 = Vehicle(
-            state_list_lon_other_2,
-            state_list_lat_other_2,
-            Rectangle(5, 2),
-            cr_state_list_other_2,
-            2,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_2 = Vehicle(state_list_lon_other_2,
+                                  state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 2, ObstacleType.CAR,
+                                  ego_vehicle_param, lanelet_assignments_ego,
+                                  None, None)
 
         world_state = WorldState(
             ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
@@ -411,19 +361,10 @@ class TestPredicate(unittest.TestCase):
             1: State(acceleration=0, time_step=1),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
 
         state_list_lon_other = {
             0: StateLongitudinal(s=20, v=20),
@@ -438,19 +379,10 @@ class TestPredicate(unittest.TestCase):
             1: State(acceleration=0, time_step=1),
         }
         lanelet_assignments_other = {0: {1}, 1: {1}}
-        other_vehicle = Vehicle(
-            state_list_lon_other,
-            state_list_lat_other,
-            Rectangle(5, 2),
-            cr_state_list_other,
-            1,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other,
-            None,
-            None,
-            None,
-        )
+        other_vehicle = Vehicle(state_list_lon_other, state_list_lat_other,
+                                Rectangle(5, 2), cr_state_list_other, 1,
+                                ObstacleType.CAR, ego_vehicle_param,
+                                lanelet_assignments_other, None, None)
 
         world_state = WorldState(ego_vehicle, [other_vehicle], road_network)
 
@@ -521,19 +453,10 @@ class TestPredicate(unittest.TestCase):
             4: State(position=29, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
 
         # other vehicle 1
         state_list_lon_other_1 = {
@@ -555,38 +478,22 @@ class TestPredicate(unittest.TestCase):
             3: State(position=30, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        other_vehicle_1 = Vehicle(
-            state_list_lon_other_1,
-            state_list_lat_other_1,
-            Rectangle(5, 2),
-            cr_state_list_other_1,
-            41,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_1,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_1 = Vehicle(state_list_lon_other_1,
+                                  state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 41, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None)
 
         # other vehicle 2
         state_list_lon_other_2 = {4: StateLongitudinal(s=10, v=10)}
         state_list_lat_other_2 = {4: StateLateral(d=4, theta=0)}
         cr_state_list_other_2 = {4: State(position=10, time_step=4)}
         lanelet_assignments_other_2 = {4: {2}}
-        other_vehicle_2 = Vehicle(
-            state_list_lon_other_2,
-            state_list_lat_other_2,
-            Rectangle(5, 2),
-            cr_state_list_other_2,
-            42,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_2,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_2 = Vehicle(state_list_lon_other_2,
+                                  state_list_lat_other_2, Rectangle(5, 2),
+                                  cr_state_list_other_2, 42, ObstacleType.CAR,
+                                  ego_vehicle_param,
+                                  lanelet_assignments_other_2, None, None)
 
         world_state = WorldState(
             ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
@@ -672,19 +579,11 @@ class TestPredicate(unittest.TestCase):
             4: {1, 2},
             5: {1, 2},
         }
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            road_network.lanes[1],
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None,
+                              road_network.lanes[1])
 
         world_state = WorldState(ego_vehicle, [], road_network)
 
@@ -751,19 +650,10 @@ class TestPredicate(unittest.TestCase):
             3: State(position=150, time_step=3),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {2}}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
 
         world_state = WorldState(ego_vehicle, [], road_network)
 
@@ -841,19 +731,10 @@ class TestPredicate(unittest.TestCase):
             t: State(position=(s, d + 0.5 * 4), time_step=t, orientation=0) for t, (s, d) in enumerate(zip(lon_ego, lat_ego))
         }
         lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            id,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
+                              Rectangle(5, 2), cr_state_list_ego, id,
+                              ObstacleType.CAR, ego_vehicle_param,
+                              lanelet_assignments_ego, None, None)
         return ego_vehicle
 
 

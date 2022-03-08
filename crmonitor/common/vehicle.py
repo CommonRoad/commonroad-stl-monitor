@@ -111,33 +111,16 @@ class Input:
         return state
 
 
-@enum.unique
-class VehicleClassification(enum.Enum):
-    EGO_VEHICLE = 0
-    CROSSING_VEHICLE = 1
-    ADJACENT_VEHICLE = 2
-
-
 class Vehicle:
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
 
-    def __init__(
-        self,
-        states_lon: Dict[int, StateLongitudinal],
-        states_lat: Dict[int, StateLateral],
-        shape: Union[Shape, Rectangle],
-        cr_states: Dict[int, State],
-        vehicle_id: int,
-        obstacle_type: ObstacleType,
-        vehicle_param: Dict,
-        lanelet_assignments: Dict[int, Set[int]],
-        signal_states: Dict[int, SignalState] = None,
-        vehicle_classification: Dict[int, VehicleClassification] = None,
-        lane: Union[Lane, List[Lane]] = None,
-        robust_lanelet_assignment: Dict[int, Set[int]] = None
-    ):
+    def __init__(self, states_lon: Dict[int, StateLongitudinal], states_lat: Dict[int, StateLateral],
+                 shape: Union[Shape, Rectangle], cr_states: Dict[int, State], vehicle_id: int,
+                 obstacle_type: ObstacleType, vehicle_param: Dict, lanelet_assignments: Dict[int, Set[int]],
+                 signal_states: Dict[int, SignalState] = None, lane: Union[Lane, List[Lane]] = None,
+                 robust_lanelet_assignment: Dict[int, Set[int]] = None):
         """
         :param states_lon: list of longitudinal states for initialization
         :param states_lat: list of lateral states for initialization
@@ -156,18 +139,9 @@ class Vehicle:
         self._shape = shape
         self._id = vehicle_id
         self._obstacle_type = obstacle_type
-        self._vehicle_classification = vehicle_classification
         self._lane = lane
         self._vehicle_param = vehicle_param
         self._robust_lanelet_assignment = robust_lanelet_assignment
-
-    @property
-    def vehicle_classification(self):
-        return self._vehicle_classification
-
-    @vehicle_classification.setter
-    def vehicle_classification(self, vehicle_classification: VehicleClassification):
-        self._vehicle_classification = vehicle_classification
 
     @property
     def robust_lanelet_assignment(self):

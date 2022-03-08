@@ -76,19 +76,8 @@ class RuleTest(unittest.TestCase):
             4: State(position=29, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
-        ego_vehicle = Vehicle(
-            state_list_lon_ego,
-            state_list_lat_ego,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_ego,
-            None,
-            None,
-            None,
-        )
+        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego, Rectangle(5, 2), cr_state_list_ego, 0,
+                              ObstacleType.CAR, ego_vehicle_param, lanelet_assignments_ego, None, None)
 
         state_list_lon_other_1 = {
             0: StateLongitudinal(s=8, v=2),
@@ -109,19 +98,9 @@ class RuleTest(unittest.TestCase):
             3: State(position=30, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        other_vehicle_1 = Vehicle(
-            state_list_lon_other_1,
-            state_list_lat_other_1,
-            Rectangle(5, 2),
-            cr_state_list_other_1,
-            41,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            lanelet_assignments_other_1,
-            None,
-            None,
-            None,
-        )
+        other_vehicle_1 = Vehicle(state_list_lon_other_1, state_list_lat_other_1, Rectangle(5, 2),
+                                  cr_state_list_other_1, 41, ObstacleType.CAR, ego_vehicle_param,
+                                  lanelet_assignments_other_1, None, None)
 
         world_state = WorldState(ego_vehicle, [other_vehicle_1], road_network, ego_vehicle.end_time)
 
