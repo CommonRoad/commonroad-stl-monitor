@@ -225,6 +225,16 @@ class Vehicle:
         front_s = np.max(calc_s(s, w, l, theta))
         return front_s
 
+    def get_lat_state(self, world_state, lane: Lane=None):
+        lane = lane or self.get_lane(world_state)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[world_state.time_step], lane)
+        return state_lat
+
+    def get_lon_state(self, world_state, lane: Lane=None):
+        lane = lane or self.get_lane(world_state)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[world_state.time_step], lane)
+        return state_lon
+
     def occupancy_at_time_step(self, time_step):
         state = self.states_cr[time_step]
         orientation = state.orientation

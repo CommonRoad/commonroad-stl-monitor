@@ -219,7 +219,7 @@ class PredInFrontOf(BasePredicateEvaluator):
         rear = world_state.vehicle_by_id(vehicle_ids[0])
         front = world_state.vehicle_by_id(vehicle_ids[1])
         return self._scale_lon_dist(
-                front.rear_s(world_state.time_step, rear.get_lane(world_state.time_step)) - rear.front_s(world_state.time_step)
+                front.rear_s(world_state, rear.get_lane(world_state)) - rear.front_s(world_state)
         )
 
 
@@ -288,9 +288,12 @@ class PredCutIn(BasePredicateEvaluator):
         same_lane = self._same_lane_evaluator.evaluate_boolean(world_state, vehicle_ids)
         if not same_lane:
             return False
-        d_p = cutted_vehicle.states_lat[world_state.time_step].d
-        d_k = cutting_vehicle.states_lat[world_state.time_step].d
-        orient_k = cutting_vehicle.states_lat[world_state.time_step].theta
+        cutting_lane = cutting_vehicle.get_lane(world_state)
+        cutted_lat = cutted_vehicle.get_lat_state(world_state, cutting_lane)
+        cutting_lat = cutting_vehicle.get_lat_state(world_state)
+        d_p = cutted_lat.d
+        d_k = cutting_lat.d
+        orient_k = cutting_lat.theta
 
         result = (d_k < d_p and orient_k > self.eps) or (
             d_k > d_p and orient_k < -self.eps
@@ -305,22 +308,25 @@ class PredCutIn(BasePredicateEvaluator):
 
         single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
             world_state,
-            (vehicle_ids[0],),
+            [vehicle_ids[0],],
         )
         same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
             world_state, vehicle_ids
         )
 
+        cutting_lane = cutting_vehicle.get_lane(world_state)
+        cutted_lat = cutted_vehicle.get_lat_state(world_state, cutting_lane)
+        cutting_lat = cutting_vehicle.get_lat_state(world_state)
         r_l_dist = (
-            cutted_vehicle.states_lat[world_state.time_step].d
-            - cutting_vehicle.states_lat[world_state.time_step].d
+                cutted_lat.d
+                - cutting_lat.d
         )
-        r_l_orient = cutting_vehicle.states_lat[world_state.time_step].theta - self.eps
+        r_l_orient = cutting_lat.theta - self.eps
         l_r_dist = (
-            cutting_vehicle.states_lat[world_state.time_step].d
-            - cutted_vehicle.states_lat[world_state.time_step].d
+            cutting_lat.d
+            - cutted_lat.d
         )
-        l_r_orient = -self.eps - cutting_vehicle.states_lat[world_state.time_step].theta
+        l_r_orient = -self.eps - cutting_lat.theta
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
         l_r_dist = self._scale_lat_dist(l_r_dist)
@@ -361,7 +367,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         vehicle_lead = world_state.vehicle_by_id(vehicle_ids[1])
         time_step = world_state.time_step
 
-        if vehicle_lead.get_lane(time_step) is None:
+        if vehicle_lead.get_lane(world_state) is None:
             return self._scale_lon_dist(math.inf)
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
@@ -374,7 +380,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             t_react_follow,
         )
 
-        delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
+        delta_s = vehicle_lead.rear_s(world_state) - vehicle_follow.front_s(world_state)
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
 
@@ -395,7 +401,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator):
         if speed_limit is None:
             rob = math.inf
         else:
-            rob = speed_limit + self.eps - vehicle.states_lon[time_step].v
+            rob = speed_limit + self.eps - vehicle.states_cr[time_step].velocity
         rob = self._scale_speed(rob)
         return rob
 
