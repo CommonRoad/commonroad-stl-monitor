@@ -18,13 +18,13 @@ stages:
   - test
   - deploy
 
-before_script:
-  - apt-get update && apt-get install -y cmake g++
-  - conda init bash
-  - conda env create -f environment.yml
-  - source activate stl-crmonitor
-  - conda info
-  - conda develop $CI_PROJECT_DIR
+#before_script:
+#  - apt-get update && apt-get install -y cmake g++
+#  - conda init bash
+#  - conda env create -f environment.yml
+#  - source activate stl-crmonitor
+#  - conda info
+#  - conda develop $CI_PROJECT_DIR
 
 unittest:
   stage: test
@@ -40,4 +40,4 @@ deploy_develop:
     - pip install twine
     - python setup.py sdist bdist_wheel
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
-  when: manual
+  #when: manual
