@@ -21,7 +21,7 @@ stages:
 before_script:
   - apt-get update && apt-get install -y cmake g++ git-lfs
   - conda init bash
-#  - conda env create -f environment.yml
+  - conda env create -n stl-crmonitor python=3.7
   - source activate stl-crmonitor
   - conda info
 #  - conda develop $CI_PROJECT_DIR
