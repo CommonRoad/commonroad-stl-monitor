@@ -1,4 +1,21 @@
-## Installation
+## Toolbox installation
+
+The toolbox is installable as a regular pypi package. However, it is currently not available under the public index.
+
+Available versions can be found [here](https://gitlab.lrz.de/ge69xek/stl_crmonitor/-/packages).
+
+Installation by:
+
+```bash
+pip install --extra-index-url https://commonroad-dc-package:WRzXAy7oJ8S2atx8iit6@gitlab.lrz.de/api/v4/projects/62155/packages/pypi/simple \
+--extra-index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@gitlab.lrz.de/api/v4/projects/70411/packages/pypi/simple \
+stl-crmonitor
+```
+
+Both extra indicies are needed to obtain the internal versions of the commonroad-dc package and the stl-crmonitor package. 
+
+
+## Development setup
 - Install [anconda](https://www.anaconda.com/)
 - Clone and enter the repository
 - Create the environment and install the dependencies by
@@ -7,22 +24,7 @@ conda env create -f environment.yml
 ```
 - Activate the created environment
 ```
-conda activate py-cr37
-```
-- Checkout submodules
-```
-git submodule update --init --recursive
-```
-- Install commonroad-drivability-checker (press Ctrl-c if asked for root permission)
-```
-sudo apt install libboost-dev libboost-thread-dev libboost-test-dev libboost-filesystem-dev libeigen3-dev
-cd external/commonroad-drivability-checker
-bash build.sh -e /home/`whoami`/anaconda3/envs/cr-py37 -v 3.7 -i -j 4
-cd ../..
-```
-- Install rtamt
-```
-pip install external/rtamt
+conda activate stl-crmonitor
 ```
 - Install package to development path
 ```
@@ -35,6 +37,13 @@ conda develop .
 cd crmonitor/tests
 python -m unittest
 ```
+
+## Doing a version bump
+
+Version numbers are automatically bumbed using `bump2version` tool. It autmatically updates the version number in the
+setup.py file. Version numbering schema: `{major}.{minor}.{patch}-{release}{build}`. The version of each component can
+be bumped by e.g. `bump2version major` or `bump2version minor`. Merges to the development branch are automatically packaged,
+deployed and the build number is bumped.
 
 ## Getting Started
 Checkout the [minimum working example](mwe.ipynb)
