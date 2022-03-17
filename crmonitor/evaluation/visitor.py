@@ -61,9 +61,9 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.use_boolean = use_boolean
         self.output_type = output_type
 
-    def walk(self, node: MonitorNode, world_state, *ctx):
+    def walk(self, node: MonitorNode, world_state, ego_vehicle, *ctx):
         self.other_ids = tuple()
-        return node.visit(self, world_state, (world_state.ego_vehicle.id,), *ctx)
+        return node.visit(self, world_state, (ego_vehicle.id,), *ctx)
 
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
         world_state = ctx[0]
@@ -72,7 +72,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             rule_node.monitor.dt == world_state.dt
         ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world_state.dt}!"
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
-        val = rule_node.evaluate_incremental(
+        val = rule_node.update(
             world_state.time_step, list(child_values.items())
         )
         return val
@@ -82,10 +82,9 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         all_ids = set(
             [
                 v.id
-                for v in world_state.other_vehicles
+                for v in world_state.vehicles
                 if v.is_valid(world_state.time_step)
             ]
-            + [world_state.ego_vehicle.id]
         )
         remaining_ids = tuple(all_ids.difference(other_ids))
         values = []

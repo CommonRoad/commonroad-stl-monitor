@@ -284,7 +284,7 @@ class GeneralPredicateCollection(PredicateCollection):
         else:
             pred = PredCutIn(self._traffic_rules_param)
             world_state = WorldState(None, time_step, road_network=self._road_network)
-            return pred.evaluate_robustness(world_state, [vehicle_k, vehicle_p])
+            return pred.evaluate_robustness(0, 0, world_state)
 
     # TODO: evaluate_predicates_online
     def evaluate_predicates_online(self, ego_vehicle: Vehicle,

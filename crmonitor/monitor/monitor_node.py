@@ -3,7 +3,7 @@ from collections import defaultdict
 
 
 class MonitorNode(ABC):
-    def __init__(self, name, children=None):
+    def __init__(self, name, children=None, **kwargs):
         self.name = name
         self.children = children
 
@@ -13,14 +13,16 @@ class MonitorNode(ABC):
 
     @classmethod
     def _copy_cls(cls, o):
-        return cls(o.name, [c.copy() for c in o.children])
+        child_copy = [c.copy() for c in o.children] if o.children is not None else None
+        return cls(o.name, child_copy)
 
     def copy(self):
         return self._copy_cls(self)
 
     def reset(self):
-        for c in self.children:
-            c.reset()
+        if self.children is not None:
+            for c in self.children:
+                c.reset()
 
 
 class RuleMonitorNode(MonitorNode):
@@ -31,7 +33,7 @@ class RuleMonitorNode(MonitorNode):
     def visit(self, visitor, *ctx):
         return visitor.visit_rule_node(self, *ctx)
 
-    def evaluate_incremental(self, time, values):
+    def update(self, time, values):
         return self.monitor.evaluate_monitor_online(time, values)
 
     def copy(self):

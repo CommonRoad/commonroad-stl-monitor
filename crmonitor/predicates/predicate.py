@@ -11,7 +11,7 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.road_network import Lane
+from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 
@@ -97,6 +97,7 @@ class BasePredicateEvaluator(abc.ABC):
         self.eps = 1e-5
 
     def _scale(self, x, *args, **kwargs):
+        # TODO: refactor
         if self.scale:
             return scale_clip(x, *args, **kwargs)
         else:
@@ -133,21 +134,19 @@ class BasePredicateEvaluator(abc.ABC):
     def evaluate_robustness_with_cache(
         self, world_state: WorldState, vehicle_ids: List[int]
     ) -> float:
+        time_step = world_state.time_step
+        vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_ids_tuple = tuple(vehicle_ids)
-        value = world_state.predicate_values[world_state.time_step][
-            self.predicate_name
-        ].get(vehicle_ids_tuple)
+        value = vehicle.predicate_cache.get_robustness(time_step, self.predicate_name, vehicle_ids_tuple)
         if value is None:
             logger.debug(
                 "Evaluating predicate %s , t=%d, ids=%s",
                 self.predicate_name,
-                world_state.time_step,
-                vehicle_ids,
+                time_step,
+                vehicle_ids_tuple,
             )
             value = self.evaluate_robustness(world_state, vehicle_ids)
-            world_state.predicate_values[world_state.time_step][self.predicate_name][
-                vehicle_ids_tuple
-            ] = value
+            vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple, value)
         return value
 
 
@@ -184,7 +183,7 @@ class PredInSameLane(BasePredicateEvaluator):
         """
         # Predicate is symmetric
         vehicle_ids_tuple = tuple(reversed(vehicle_ids))
-        value = world_state.predicate_values[world_state.time_step][
+        value = world_state.get_vehicle_by_id(vehicle_ids_tuple[0]).predicate_values[world_state.time_step][
             self.predicate_name
         ].get(vehicle_ids_tuple)
         if value is not None:
@@ -222,7 +221,7 @@ class PredInFrontOf(BasePredicateEvaluator):
         rear = world_state.vehicle_by_id(vehicle_ids[0])
         front = world_state.vehicle_by_id(vehicle_ids[1])
         return self._scale_lon_dist(
-            front.rear_s(world_state.time_step) - rear.front_s(world_state.time_step)
+                front.rear_s(world_state.time_step, rear.get_lane(world_state.time_step)) - rear.front_s(world_state.time_step)
         )
 
 
@@ -364,14 +363,14 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         vehicle_lead = world_state.vehicle_by_id(vehicle_ids[1])
         time_step = world_state.time_step
 
-        if vehicle_lead.states_lon.get(time_step) is None:
+        if vehicle_lead.get_lane(time_step) is None:
             return self._scale_lon_dist(math.inf)
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
         safe_distance = self.calculate_safe_distance(
-            vehicle_follow.states_lon[time_step].v,
-            vehicle_lead.states_lon[time_step].v,
+            vehicle_follow.states_cr[time_step].velocity,
+            vehicle_lead.states_cr[time_step].velocity,
             a_min_lead,
             a_min_follow,
             t_react_follow,
@@ -484,21 +483,21 @@ class PredPreceding(BasePredicateEvaluator):
         :return: Sorted list of tuples of distance and vehicle object
         """
         veh = []
-        rear_lanes = vehicle_rear.lanes_at_state(world_state)
-        for vehicle_front in world_state.other_vehicles + [world_state.ego_vehicle]:
+        time_step = world_state.time_step
+        rear_lanes = vehicle_rear.lanes_at_state(time_step)
+        for vehicle_front in world_state.vehicles:
             if (
-                not vehicle_front.is_valid(world_state.time_step)
+                not vehicle_front.is_valid(time_step)
                 or vehicle_front is vehicle_rear
             ):
                 continue
-            front_lanes = vehicle_front.lanes_at_state(world_state)
+            front_lanes = vehicle_front.lanes_at_state(time_step)
             intersecting_lanes = rear_lanes.intersection(front_lanes)
-            if len(intersecting_lanes) > 0:
-                dist = vehicle_front.rear_s(
-                    world_state.time_step
-                ) - vehicle_rear.front_s(world_state.time_step)
-                if dist >= 0.0:
-                    veh.append((dist, vehicle_front))
+            lane = intersecting_lanes[0] if len(intersecting_lanes) > 0 else vehicle_rear.get_lane(time_step)
+            dist = vehicle_front.rear_s(
+                time_step, lane
+            ) - vehicle_rear.front_s(time_step, lane)
+            veh.append((dist, vehicle_front, lane))
         return sorted(veh, key=lambda d: d[0])
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
@@ -522,13 +521,18 @@ class PredPreceding(BasePredicateEvaluator):
             assert same_lane >= -self.eps
             same_lane = max(same_lane, 0.0)
 
-        dist_front = front_veh.rear_s(world_state.time_step) - rear_veh.front_s(
-            world_state.time_step
-        )
+        for dist, veh in pred_veh:
+            if veh == front_veh:
+                dist_front = dist
+                break
+        else:
+            # Should never happen
+            assert False
 
         pred_wo_other = [v for v in pred_veh if v[1] is not front_veh]
         if len(pred_wo_other) > 0:
-            dist_pred = pred_wo_other[0][1].rear_s(world_state.time_step) - front_veh.rear_s(world_state.time_step)
+            _, pred_wo_other, lane = pred_wo_other[0]
+            dist_pred = pred_wo_other.rear_s(world_state.time_step, lane) - front_veh.rear_s(world_state.time_step)
         else:
             dist_pred = math.inf
 

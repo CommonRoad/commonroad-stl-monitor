@@ -15,8 +15,7 @@ from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import RoadNetwork, Lane
-from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
-                                      StateLongitudinal, StateLateral, )
+from crmonitor.common.vehicle import Vehicle
 
 
 @enum.unique
@@ -421,37 +420,6 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
                       obstacle.obstacle_type, vehicle_param, lanelet_assignments, signal_series, lane,
                       robust_lanelet_assignment)
     return vehicle
-
-
-def create_curvilinear_states(position: List[float], velocity: float,
-        acceleration: float, jerk: float, orientation: float, lane: Lane, ) -> \
-Union[Tuple[StateLongitudinal, StateLateral], Tuple[None, None]]:
-    """
-    Computes initial state of ego vehicle
-
-    :param position: position of vehicle in cartesian coordinates
-    :param velocity: velocity of vehicle
-    :param acceleration: acceleration of vehicle
-    :param jerk: jerk of vehicle
-    :param orientation: orientation of vehicle
-    :param lane: reference lane of the vehicle
-    :return: lateral and longitudinal state of vehicle
-    """
-    try:
-        s, d = lane.clcs.convert_to_curvilinear_coords(position[0], position[1])
-    except ValueError:
-        print("Vehicle out of projection domain: State will not be considered")
-        return None, None
-    theta_cl = lane.orientation(s)
-    if acceleration is not None and jerk is not None:
-        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration, j=jerk)
-    elif acceleration is not None:
-        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
-    else:
-        x_lon = StateLongitudinal(s=s, v=velocity)
-    x_lat = StateLateral(d=d, theta=(orientation - theta_cl))
-
-    return x_lon, x_lat
 
 
 def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int,

@@ -3,22 +3,18 @@ import os
 import unittest
 
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
-from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany,
-                                              TrafficSignElement, )
+from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany, TrafficSignElement, )
 from commonroad.scenario.trajectory import State
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
+from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, CurvilinearStateManager
 from crmonitor.common.world_state import WorldState
-from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane,
-                                            PredSafeDistPrec, PredInFrontOf,
-                                            PredSingleLane, scale_clip,
-                                            PredLaneSpeedLimit, PredPreceding, )
+from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
+                                            scale_clip, PredLaneSpeedLimit, PredPreceding, )
 from crmonitor.tests.util import parallel_lanes
 
 
@@ -287,40 +283,24 @@ class TestPredicate(unittest.TestCase):
 
         pred = PredInSameLane(self.config)
 
-        sol_monitor_mode_1 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
+        sol_monitor_mode_1 = pred.evaluate_robustness(0, 0, world_state)
         world_state.step()
-        sol_monitor_mode_2 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
+        sol_monitor_mode_2 = pred.evaluate_robustness(0, 0, world_state)
         world_state.step()
-        sol_monitor_mode_3 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
+        sol_monitor_mode_3 = pred.evaluate_robustness(0, 0, world_state)
         world_state.step()
-        sol_monitor_mode_4 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
+        sol_monitor_mode_4 = pred.evaluate_robustness(0, 0, world_state)
         world_state.step()
-        sol_monitor_mode_5 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_5 = pred.evaluate_robustness(0, 0, world_state)
 
         world_state.step()
-        sol_monitor_mode_6 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_6 = pred.evaluate_robustness(0, 0, world_state)
 
         world_state.step()
-        sol_monitor_mode_7 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_7 = pred.evaluate_robustness(0, 0, world_state)
 
         world_state.step()
-        sol_monitor_mode_8 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_8 = pred.evaluate_robustness(0, 0, world_state)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -348,23 +328,13 @@ class TestPredicate(unittest.TestCase):
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
-        state_list_lon_ego = {
-            0: StateLongitudinal(s=0, v=20),
-            1: StateLongitudinal(s=20, v=20),
-        }
-        state_list_lat_ego = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0, theta=0),
-        }
         cr_state_list_ego = {
-            0: State(acceleration=-1, time_step=0),
-            1: State(acceleration=0, time_step=1),
+            0: State(acceleration=-1, time_step=0, orientation=0, velocity=20, position=[0, 0]),
+            1: State(acceleration=0, time_step=1, orientation=0, velocity=20, position=[20, 0]),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}}
-        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
-                              Rectangle(5, 2), cr_state_list_ego, 0,
-                              ObstacleType.CAR, ego_vehicle_param,
-                              lanelet_assignments_ego, None, None)
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
+                              lanelet_assignments_ego)
 
         state_list_lon_other = {
             0: StateLongitudinal(s=20, v=20),
@@ -375,17 +345,14 @@ class TestPredicate(unittest.TestCase):
             1: StateLateral(d=0, theta=0),
         }
         cr_state_list_other = {
-            0: State(acceleration=-1, time_step=0),
-            1: State(acceleration=0, time_step=1),
+            0: State(acceleration=-1, time_step=0, position=[20, 0], velocity=20, orientation=0),
+            1: State(acceleration=0, time_step=1, position=[30, 0], velocity=0, orientation=0),
         }
         lanelet_assignments_other = {0: {1}, 1: {1}}
-        other_vehicle = Vehicle(state_list_lon_other, state_list_lat_other,
-                                Rectangle(5, 2), cr_state_list_other, 1,
-                                ObstacleType.CAR, ego_vehicle_param,
-                                lanelet_assignments_other, None, None)
+        other_vehicle = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other, None,
+                                CurvilinearStateManager(road_network), lanelet_assignments_other)
 
-        world_state = WorldState(ego_vehicle, [other_vehicle], road_network)
-
+        world_state = WorldState({ego_vehicle, other_vehicle}, road_network)
         pred = PredSafeDistPrec(self.config)
 
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
@@ -431,74 +398,37 @@ class TestPredicate(unittest.TestCase):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
         # ego vehicle
-        state_list_lon_ego = {
-            0: StateLongitudinal(s=0, v=10),
-            1: StateLongitudinal(s=10, v=4),
-            2: StateLongitudinal(s=14, v=10),
-            3: StateLongitudinal(s=24, v=5),
-            4: StateLongitudinal(s=29, v=5),
-        }
-        state_list_lat_ego = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0, theta=0),
-            2: StateLateral(d=0, theta=0),
-            3: StateLateral(d=0, theta=0),
-            4: StateLateral(d=0, theta=0),
-        }
         cr_state_list_ego = {
-            0: State(position=0, time_step=0),
-            1: State(position=10, time_step=1),
-            2: State(position=14, time_step=2),
-            3: State(position=24, time_step=3),
-            4: State(position=29, time_step=4),
+            0: State(position=[0, 0], velocity=10,orientation=0, time_step=0),
+            1: State(position=[10, 0],velocity=4 ,orientation=0, time_step=1),
+            2: State(position=[14, 0],velocity=10,orientation=0, time_step=2),
+            3: State(position=[24, 0],velocity=5 ,orientation=0, time_step=3),
+            4: State(position=[29, 0],velocity=5 ,orientation=0, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
-        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
-                              Rectangle(5, 2), cr_state_list_ego, 0,
-                              ObstacleType.CAR, ego_vehicle_param,
-                              lanelet_assignments_ego, None, None)
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
+                              lanelet_assignments_ego)
 
         # other vehicle 1
-        state_list_lon_other_1 = {
-            0: StateLongitudinal(s=8, v=2),
-            1: StateLongitudinal(s=10, v=2),
-            2: StateLongitudinal(s=12, v=2),
-            3: StateLongitudinal(s=14, v=2),
-        }
-        state_list_lat_other_1 = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0, theta=0),
-            2: StateLateral(d=0, theta=0),
-            3: StateLateral(d=0, theta=0),
-        }
         cr_state_list_other_1 = {
-            0: State(position=10, time_step=1),
-            1: State(position=10, time_step=1),
-            2: State(position=20, time_step=2),
-            3: State(position=30, time_step=3),
+            0: State(position=[ 8, 0], orientation=0,velocity=2, time_step=1),
+            1: State(position=[10, 0], orientation=0,velocity=2, time_step=1),
+            2: State(position=[12, 0], orientation=0,velocity=2, time_step=2),
+            3: State(position=[14, 0], orientation=0,velocity=2, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        other_vehicle_1 = Vehicle(state_list_lon_other_1,
-                                  state_list_lat_other_1, Rectangle(5, 2),
-                                  cr_state_list_other_1, 41, ObstacleType.CAR,
-                                  ego_vehicle_param,
-                                  lanelet_assignments_other_1, None, None)
+        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
+                                CurvilinearStateManager(road_network), lanelet_assignments_other_1)
 
         # other vehicle 2
-        state_list_lon_other_2 = {4: StateLongitudinal(s=10, v=10)}
-        state_list_lat_other_2 = {4: StateLateral(d=4, theta=0)}
-        cr_state_list_other_2 = {4: State(position=10, time_step=4)}
+        cr_state_list_other_2 = {4: State(position=[10, 4], velocity=10, orientation=0, time_step=4)}
         lanelet_assignments_other_2 = {4: {2}}
-        other_vehicle_2 = Vehicle(state_list_lon_other_2,
-                                  state_list_lat_other_2, Rectangle(5, 2),
-                                  cr_state_list_other_2, 42, ObstacleType.CAR,
-                                  ego_vehicle_param,
-                                  lanelet_assignments_other_2, None, None)
+        other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
+                                CurvilinearStateManager(road_network), lanelet_assignments_other_2)
 
         world_state = WorldState(
-            ego_vehicle, [other_vehicle_1, other_vehicle_2], road_network
+                {ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network
         )
-
         pred = PredInFrontOf(self.config)
 
         vehicle_ids = [other_vehicle_1.id, ego_vehicle.id]
@@ -592,7 +522,7 @@ class TestPredicate(unittest.TestCase):
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
         for i in range(6):
-            sol_monitor_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
+            sol_monitor_mode.append(pred.evaluate_robustness(0, 0, world_state))
             world_state.step()
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0] >= 0)
@@ -664,8 +594,7 @@ class TestPredicate(unittest.TestCase):
         sol_robustness_mode = []
         for i in range(4):
             sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
-            sol_robustness_mode.append(
-                pred.evaluate_robustness(world_state, vehicle_ids)
+            sol_robustness_mode.append(pred.evaluate_robustness(0, 0, world_state)
             )
             world_state.step()
 
@@ -715,7 +644,7 @@ class TestPredicate(unittest.TestCase):
 
         pred = PredPreceding({})
         for t, exp in enumerate(expected):
-            rob = pred.evaluate_robustness(world_state, vehicle_ids)
+            rob = pred.evaluate_robustness(0, 0, world_state)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
             world_state.step()
 
