@@ -19,6 +19,11 @@ from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle
 
 
+@enum.unique
+class OperatingMode(enum.Enum):
+    MONITOR = "monitor"
+    ROBUSTNESS = "robustness"
+
 def create_ego_vehicle_param(ego_vehicle_param: Dict,
                              simulation_param: Dict) -> Dict:
     """
