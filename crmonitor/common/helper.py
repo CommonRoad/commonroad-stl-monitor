@@ -1,6 +1,7 @@
 import enum
 import math
 from decimal import Decimal
+from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
@@ -551,13 +552,14 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
     return ego_vehicle, other_vehicles
 
 
-def load_yaml(file_name: str) -> Union[Dict, None]:
+def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
     """
     Loads configuration setup from a yaml file
 
     :param file_name: name of the yaml file
     """
-    with open(file_name, "r") as stream:
+    file_name = Path(file_name)
+    with file_name.open("r") as stream:
         try:
             config = ruamel.yaml.round_trip_load(stream, preserve_quotes=True)
             return config

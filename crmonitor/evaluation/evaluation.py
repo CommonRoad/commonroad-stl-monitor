@@ -1,8 +1,10 @@
 from pathlib import Path
 from typing import List, Iterable, Union
 
+import crmonitor
 from ruamel.yaml import YAML
 
+from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
@@ -10,7 +12,7 @@ from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, Evalua
                                           PredicateCollectorMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.rule import VisitorNode, parse_rule
-
+import importlib.resources as pkg_resources
 
 # def get_valid_time_interval(vehicles: List[Vehicle]):
 #     start = max([v.start_time for v in vehicles])
@@ -29,10 +31,8 @@ class RuleEvaluator:
         output_type=OutputType.STANDARD,
     ):
         if traffic_rules_config is None:
-            # Todo: use importlib.resources
-            traffic_rules_config = YAML().load(
-                Path(__file__).parent.parent / "traffic_rules_rtamt.yaml"
-            )
+            with pkg_resources.path(crmonitor, "traffic_rules_rtamt.yaml") as traffic_rules_path:
+                traffic_rules_config = load_yaml(traffic_rules_path)
         rule_str_dict = traffic_rules_config["traffic_rules"]
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)

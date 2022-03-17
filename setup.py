@@ -18,4 +18,5 @@ setup(
         "commonroad-vehicle-models==1.0.0",
         "ruamel-yaml==0.16.12"
     ],  # package_dir={"": "src"},
+    data_files=[('crmonitor', ['*.yaml'])],
 )

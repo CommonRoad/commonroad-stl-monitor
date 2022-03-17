@@ -6,17 +6,16 @@ from functools import partial
 from pathlib import Path
 from typing import Optional, Set
 
+import crmonitor
 import numpy as np
 from commonroad.scenario.scenario import Scenario
 from ruamel.yaml import YAML
 
-from crmonitor.common.helper import (create_scenario_vehicles,
-                                     create_ego_vehicle_param,
-                                     create_simulation_param,
-                                     create_other_vehicles_param, )
+from crmonitor.common.helper import (create_scenario_vehicles, create_ego_vehicle_param, create_simulation_param,
+                                     create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, ControlledVehicle
-
+import importlib.resources as pkg_resources
 
 @dataclass
 class WorldState:
@@ -31,7 +30,8 @@ class WorldState:
         cls, scenario: Scenario, config=None, time_step=0, road_network=None
     ):
         if config is None:
-            config = YAML().load(Path(__file__).parent.parent / "config.yaml")
+            with pkg_resources.path(crmonitor, "config.yaml") as config_path:
+                config = load_yaml(config_path)
         if road_network is None:
             params = config.get("road_network_param")
             road_network = RoadNetwork(scenario.lanelet_network, params)
