@@ -1,6 +1,7 @@
 import math
 import os
 import unittest
+from pathlib import Path
 
 import numpy as np
 from commonroad.geometry.shape import Rectangle
@@ -15,15 +16,14 @@ from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, C
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
                                             scale_clip, PredLaneSpeedLimit, PredPreceding, )
-from crmonitor.tests.util import parallel_lanes
+from util import parallel_lanes
 
 
 class TestPredicate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-        config_path = os.path.join(root_path, "config.yaml")
-        self.config = load_yaml(config_path)
+        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
+        self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = False
 
     def test_scale(self):
