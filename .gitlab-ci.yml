@@ -29,7 +29,7 @@ before_script:
 unittest:
   stage: test
   script:
-    - pip install -e .
+    - pip install --index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi/simple  -e .
     - python -m unittest
 
 deploy_develop:
