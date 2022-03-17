@@ -1,4 +1,7 @@
-from typing import List
+from pathlib import Path
+from typing import List, Iterable, Union
+
+from ruamel.yaml import YAML
 
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
@@ -6,7 +9,7 @@ from crmonitor.common.world_state import WorldState
 from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
                                           PredicateCollectorMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.rule import VisitorNode
+from crmonitor.predicates.rule import VisitorNode, parse_rule
 
 
 # def get_valid_time_interval(vehicles: List[Vehicle]):
@@ -16,9 +19,28 @@ from crmonitor.predicates.rule import VisitorNode
 
 class RuleEvaluator:
 
+    @classmethod
+    def create_from_config(
+        cls, world_state, ego_vehicle,
+        rule: str = "R_G1",
+        traffic_rules_config=None,
+        dt=0.1,
+        use_boolean=False,
+        output_type=OutputType.STANDARD,
+    ):
+        if traffic_rules_config is None:
+            # Todo: use importlib.resources
+            traffic_rules_config = YAML().load(
+                Path(__file__).parent.parent / "traffic_rules_rtamt.yaml"
+            )
+        rule_str_dict = traffic_rules_config["traffic_rules"]
+        rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
+        return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)
+
     def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: WorldState, start_time_step=0, use_boolean: bool = False,
                  output_type: OutputType = OutputType.STANDARD):
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
+        self._rule = rule
         self._monitor = rule.visit(visitor)
         self._last_time_step = start_time_step - 1
         self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
@@ -37,7 +59,7 @@ class RuleEvaluator:
         if self._ego_vehicle.start_time > self._last_time_step or self._last_time_step > self._ego_vehicle.end_time:
             # Todo issue warning, return default
             return
-        assert self._world.time_step == self._last_time_step
+        assert self._world.time_step == self._last_time_step, f"World time step not as expected! {self._world.time_step} != {self._last_time_step}"
         rule_value = self._eval_visitor.walk(self._monitor, self._world, self._ego_vehicle)
         return rule_value
         # other_ids_values = self._eval_visitor.other_ids[1:]

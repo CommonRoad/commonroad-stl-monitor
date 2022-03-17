@@ -1,6 +1,7 @@
 import logging
 import os
 import unittest
+from pathlib import Path
 from typing import List, Tuple
 import numpy as np
 
@@ -10,14 +11,14 @@ from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State
 
-from crmonitor.evaluation.evaluation import RuleSetEvaluator
+from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.rule import parse_rule, RuleNode, PredicateNode, \
     ExistNode, AllNode
-from crmonitor.tests.util import parallel_lanes
+from .util import parallel_lanes
 
 from rtamt.enumerations.options import Semantics
 
@@ -36,12 +37,12 @@ def check_violation(rob_values: List[Tuple[float, float]]):
 class RuleTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-        config_path = os.path.join(root_path, "config.yaml")
-        self.config = load_yaml(config_path)
-        rules_path = os.path.join(root_path, "traffic_rules_rtamt.yaml")
-        self.traffic_rules = load_yaml(rules_path)
-        self.scenario_root_path = os.path.join(root_path, "../scenarios")
+        root_path = Path(__file__).parents[1] / "crmonitor"
+        config_path = root_path / "config.yaml"
+        self.config = load_yaml(str(config_path))
+        rules_path = root_path / "traffic_rules_rtamt.yaml"
+        self.traffic_rules = load_yaml(str(rules_path))
+        self.scenario_root_path = root_path.parent / "scenarios"
 
     def test_single_vehicle(self):
         lanelet_network = LaneletNetwork()
@@ -447,19 +448,24 @@ class RuleTest(unittest.TestCase):
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
 
         # standard robustness
-        rule_eval = RuleSetEvaluator.create_from_config("R_G3")
-        rule = rule_eval.rules[0]
-        self.assertTrue(isinstance(rule, RuleNode))
-        self.assertEqual(len(rule.children), 4)
-        self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
+        world_state = WorldState.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario, ego_id)
-            df_rule, _ = rule_eval.evaluate_incremental(
-                world_state
-            )
-            rob_value = all([r >= 0.0 for r in df_rule["robustness"].values])
+            world_state.time_step = 0
+            ego_vehicle = world_state.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator.create_from_config(world_state, ego_vehicle, "R_G3")
+            rule = rule_eval._rule
+            self.assertTrue(isinstance(rule, RuleNode))
+            self.assertEqual(len(rule.children), 4)
+            self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
+            rule_robustness = []
+            for i in range(ego_vehicle.end_time + 1):
+                rob = rule_eval.evaluate_rule_next()
+                rule_robustness.append(rob)
+                world_state.step()
+            rule_robustness = np.array(rule_robustness)
+            bool_value = rule_robustness >= 0.0
             self.assertEqual(
-                exp_violation, rob_value, f"Test failed for ego_id={ego_id}"
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
             )
 
 
