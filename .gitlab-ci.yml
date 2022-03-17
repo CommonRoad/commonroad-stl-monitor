@@ -15,6 +15,10 @@ image: continuumio/anaconda3
 #    - .cache/pip
 #    - anaconda3/envs
 
+stages:
+  - test
+  - deploy
+
 before_script:
   - apt-get update && apt-get install -y cmake g++
   - conda init bash
@@ -23,6 +27,15 @@ before_script:
   - conda info
   - conda develop $CI_PROJECT_DIR
 
-test:
+unittest:
+  stage: test
   script:
     - cd $CI_PROJECT_DIR/crmonitor/tests && python -m unittest
+
+deploy_develop:
+  stage: deploy
+  script:
+    - pip install twine
+    - python setup.py sdist bdist_wheel
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  when: manual
