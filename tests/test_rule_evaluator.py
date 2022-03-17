@@ -16,7 +16,7 @@ class TestRuleEvaluator(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        root_path = Path(__file__).parent.parent
+        root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = root_path / "config.yaml"
         self.config = YAML().load(config_path)
         rules_path = root_path / "traffic_rules_rtamt.yaml"
@@ -25,12 +25,12 @@ class TestRuleEvaluator(unittest.TestCase):
 
     def test_smoke(self):
         rules = [
-            # "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
-            # "A a1: (in_front_of__a0_a1) and single_lane__a0",
-            # "E a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
-            # "E a1: (in_front_of__a0_a1) and single_lane__a0",
-            # "single_lane__a0",
-            # "single_lane__a0 and single_lane__a0",
+            "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
+            "A a1: (in_front_of__a0_a1) and single_lane__a0",
+            "E a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
+            "E a1: (in_front_of__a0_a1) and single_lane__a0",
+            "single_lane__a0",
+            "single_lane__a0 and single_lane__a0",
             "A a1: (in_front_of__a0_a1)"
         ]
 
