@@ -80,7 +80,7 @@ class WorldState:
 
     @property
     def dt(self):
-        if hasattr(self, "scenario"):
+        if self.scenario is not None:
             return self.scenario.dt
         else:
             return 0.1

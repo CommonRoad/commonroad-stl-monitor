@@ -559,8 +559,8 @@ class PredAbruptBreaking(BasePredicateEvaluator):
     ) -> float:
         accel = (
             world_state.vehicle_by_id(vehicle_ids[0])
-            .states_lon[world_state.time_step]
-            .a
+            .states_cr[world_state.time_step]
+            .acceleration
         )
         rob = self.config["a_abrupt"] - accel
         return self._scale_acc(rob)
@@ -575,13 +575,13 @@ class PredRelAbruptBreaking(BasePredicateEvaluator):
     ) -> float:
         accel_k = (
             world_state.vehicle_by_id(vehicle_ids[0])
-            .states_lon[world_state.time_step]
-            .a
+            .states_cr[world_state.time_step]
+            .acceleration
         )
         accel_p = (
             world_state.vehicle_by_id(vehicle_ids[1])
-            .states_lon[world_state.time_step]
-            .a
+            .states_cr[world_state.time_step]
+            .acceleration
         )
         rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)

@@ -6,10 +6,7 @@ from ruamel.yaml import YAML
 
 from crmonitor.common.world_state import WorldState
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.predicates.rule import parse_rule, AllNode, RuleNode, ExistNode, \
-    PredicateNode, IOType
-from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, \
-    EvaluationMonitorTreeVisitor
+from crmonitor.predicates.rule import parse_rule, AllNode, RuleNode, ExistNode, PredicateNode, IOType
 
 
 class TestRuleEvaluator(unittest.TestCase):

@@ -1,5 +1,4 @@
 import math
-import os
 import unittest
 from pathlib import Path
 
@@ -16,7 +15,7 @@ from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, C
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
                                             scale_clip, PredLaneSpeedLimit, PredPreceding, )
-from .util import parallel_lanes
+from tests.util import parallel_lanes
 
 
 class TestPredicate(unittest.TestCase):
