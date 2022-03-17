@@ -20,19 +20,16 @@ stages:
 
 before_script:
   - apt-get update && apt-get install -y cmake g++ git-lfs
-#  - conda init bash
-#  - conda env create -f environment.yml
-#  - source activate stl-crmonitor
-#  - conda info
-#  - conda develop $CI_PROJECT_DIR
+  - conda init bash
+  - conda env create -f environment.yml
+  - source activate stl-crmonitor
+  - conda info
+  - conda develop $CI_PROJECT_DIR
 
 unittest:
   stage: test
   script:
     - cd $CI_PROJECT_DIR/crmonitor/tests && python -m unittest
-  # temporary for testing
-  when: manual
-  allow_failure: true
 
 deploy_develop:
   stage: deploy
