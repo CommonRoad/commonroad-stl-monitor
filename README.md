@@ -8,7 +8,7 @@ Installation by:
 
 ```bash
 pip install --extra-index-url https://commonroad-dc-package:WRzXAy7oJ8S2atx8iit6@gitlab.lrz.de/api/v4/projects/62155/packages/pypi/simple \
---extra-index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@gitlab.lrz.de/api/v4/projects/70411/packages/pypi/simple \
+--index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@gitlab.lrz.de/api/v4/projects/70411/packages/pypi/simple \
 stl-crmonitor
 ```
 
