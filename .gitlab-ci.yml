@@ -38,11 +38,11 @@ deploy_develop:
   stage: deploy
   script:
     - pip install twine bump2version
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
     - bump2version build
     - python setup.py sdist bdist_wheel
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
-    - git config --global user.email "${GITLAB_USER_EMAIL}"
-    - git config --global user.name "${GITLAB_USER_NAME}"
     - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}.git"
     - git push -o ci.skip origin HEAD:${CI_COMMIT_REF_NAME}
   when: manual
