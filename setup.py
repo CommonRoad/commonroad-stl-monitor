@@ -9,7 +9,7 @@ setup(
             "tools",
         ]
     ),
-    version="0.0.0-dev2",
+    version="0.0.0-dev3",
     install_requires=[
         "antlr4-python3-runtime==4.5",
         "rtamt==0.2.8",
