@@ -18,8 +18,8 @@ stages:
   - test
   - deploy
 
-# before_script:
-#  - apt-get update && apt-get install -y cmake g++
+before_script:
+  - apt-get update && apt-get install -y cmake g++ git-lfs
 #  - conda init bash
 #  - conda env create -f environment.yml
 #  - source activate stl-crmonitor
