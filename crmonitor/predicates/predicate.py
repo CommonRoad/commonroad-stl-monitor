@@ -183,9 +183,7 @@ class PredInSameLane(BasePredicateEvaluator):
         """
         # Predicate is symmetric
         vehicle_ids_tuple = tuple(reversed(vehicle_ids))
-        value = world_state.get_vehicle_by_id(vehicle_ids_tuple[0]).predicate_values[world_state.time_step][
-            self.predicate_name
-        ].get(vehicle_ids_tuple)
+        value = world_state.vehicle_by_id(vehicle_ids_tuple[0]).predicate_cache[world_state.time_step, self.predicate_name, vehicle_ids_tuple]
         if value is not None:
             return value
 
@@ -475,7 +473,7 @@ class PredPreceding(BasePredicateEvaluator):
     @staticmethod
     def get_predecessors(
         world_state: WorldState, vehicle_rear: Vehicle
-    ) -> List[Tuple[float, Vehicle]]:
+    ) -> List[Tuple[float, Vehicle, Lane, bool]]:
         """
         Returns a list of preceding vehicles in ascending order of distance
         :param world_state: Current world state
@@ -484,20 +482,21 @@ class PredPreceding(BasePredicateEvaluator):
         """
         veh = []
         time_step = world_state.time_step
-        rear_lanes = vehicle_rear.lanes_at_state(time_step)
+        rear_lanes = vehicle_rear.lanes_at_state(world_state)
         for vehicle_front in world_state.vehicles:
             if (
                 not vehicle_front.is_valid(time_step)
                 or vehicle_front is vehicle_rear
             ):
                 continue
-            front_lanes = vehicle_front.lanes_at_state(time_step)
+            front_lanes = vehicle_front.lanes_at_state(world_state)
             intersecting_lanes = rear_lanes.intersection(front_lanes)
-            lane = intersecting_lanes[0] if len(intersecting_lanes) > 0 else vehicle_rear.get_lane(time_step)
+            same_lane = len(intersecting_lanes) > 0
+            lane = list(intersecting_lanes)[0] if len(intersecting_lanes) > 0 else vehicle_rear.get_lane(world_state)
             dist = vehicle_front.rear_s(
-                time_step, lane
-            ) - vehicle_rear.front_s(time_step, lane)
-            veh.append((dist, vehicle_front, lane))
+                world_state, lane
+            ) - vehicle_rear.front_s(world_state, lane)
+            veh.append((dist, vehicle_front, lane, same_lane))
         return sorted(veh, key=lambda d: d[0])
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
@@ -512,8 +511,9 @@ class PredPreceding(BasePredicateEvaluator):
     ) -> float:
         rear_veh = world_state.vehicle_by_id(vehicle_ids[0])
         front_veh = world_state.vehicle_by_id(vehicle_ids[1])
-        pred_veh = self.get_predecessors(world_state, rear_veh)
-        bool_val = len(pred_veh) > 0 and pred_veh[0][1].id == vehicle_ids[1]
+        veh_lon_dist = self.get_predecessors(world_state, rear_veh)
+        veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
+        bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
         same_lane = self.same_lane.evaluate_robustness_with_cache(
             world_state, vehicle_ids
         )
@@ -521,7 +521,7 @@ class PredPreceding(BasePredicateEvaluator):
             assert same_lane >= -self.eps
             same_lane = max(same_lane, 0.0)
 
-        for dist, veh in pred_veh:
+        for dist, veh, _, __ in veh_lon_dist:
             if veh == front_veh:
                 dist_front = dist
                 break
@@ -529,10 +529,10 @@ class PredPreceding(BasePredicateEvaluator):
             # Should never happen
             assert False
 
-        pred_wo_other = [v for v in pred_veh if v[1] is not front_veh]
+        pred_wo_other = [v for v in veh_front_dist if v[1] is not front_veh]
         if len(pred_wo_other) > 0:
-            _, pred_wo_other, lane = pred_wo_other[0]
-            dist_pred = pred_wo_other.rear_s(world_state.time_step, lane) - front_veh.rear_s(world_state.time_step)
+            _, pred_wo_other, lane, __ = pred_wo_other[0]
+            dist_pred = pred_wo_other.rear_s(world_state, lane) - front_veh.rear_s(world_state)
         else:
             dist_pred = math.inf
 

@@ -604,14 +604,14 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3])
 
     def test_precedes(self):
-        # Directly precedes
-        # Ego offset
-        # Ego and other offset
-        # Other behind
-        # Other behind one in between
-        # Other in front other in between
-        # Other in other lane
-        # Ego in other lane
+        # Directly precedes t=0
+        # Ego offset t=1
+        # Ego and other offset  t=2
+        # Other behind t=3
+        # Other behind one in between t=4
+        # Other in front other in between t=5
+        # Other in other lane t=6
+        # Ego in other lane t=7
         expected = [True, True, True, False, False, False, False, False, True]
 
         lanelet_network = LaneletNetwork()
@@ -625,45 +625,37 @@ class TestPredicate(unittest.TestCase):
         lat_ego = [0, 1, 1, 0, 0, 0, 0, 4, 0]
         lon_ego = [30, 30, 30, 30, 30, 30, 30, 30, 10]
         lanelets_ego = [{1}, {1, 2}, {1, 2}, {1}, {1}, {1}, {1}, {2}, {1}]
-        ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego)
+        ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego, road_network)
 
         lat_other = [0, 0, 1, 0, 0, 0, 4, 0, 2]
         lon_other = [40, 40, 40, 20, 10, 50, 40, 40, 40]
         lanelets_other = [{1}, {1}, {1, 2}, {1}, {1}, {1}, {2}, {1}, {1, 2}]
-        other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other)
+        other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other, road_network)
 
         lat_other = [0, 0, 0, 0, 0, 0, 0, 0, 2]
         lon_other = [10, 10, 10, 10, 20, 40, 10, 10, 20]
         lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {2}]
-        other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other)
+        other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other, road_network)
 
         world_state = WorldState(
-            ego_vehicle, [other_vehicle, other_vehicle_2], road_network
+                {ego_vehicle, other_vehicle, other_vehicle_2}, road_network
         )
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
 
         pred = PredPreceding({})
         for t, exp in enumerate(expected):
-            rob = pred.evaluate_robustness(0, 0, world_state)
+            rob = pred.evaluate_robustness(world_state, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
             world_state.step()
 
-    def create_vehicle(self, id, lanelets_ego, lat_ego, lon_ego):
+    def create_vehicle(self, veh_id, lanelets_ego, lat_ego, lon_ego, road_network):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
-        state_list_lon_ego = {
-            t: StateLongitudinal(s=s, v=45) for t, s in enumerate(lon_ego)
-        }
-        state_list_lat_ego = {
-            t: StateLateral(d=d, theta=0) for t, d in enumerate(lat_ego)
-        }
         cr_state_list_ego = {
-            t: State(position=(s, d + 0.5 * 4), time_step=t, orientation=0) for t, (s, d) in enumerate(zip(lon_ego, lat_ego))
-        }
+            t: State(position=(s, d + 0.5 * 4), time_step=t, orientation=0, velocity=45) for
+            t, (s, d, l) in enumerate(zip(lon_ego, lat_ego, lanelets_ego))}
         lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}
-        ego_vehicle = Vehicle(state_list_lon_ego, state_list_lat_ego,
-                              Rectangle(5, 2), cr_state_list_ego, id,
-                              ObstacleType.CAR, ego_vehicle_param,
-                              lanelet_assignments_ego, None, None)
+        ego_vehicle = Vehicle(veh_id, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(road_network), lanelet_assignments_ego)
         return ego_vehicle
 
 

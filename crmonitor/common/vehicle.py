@@ -193,15 +193,15 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache
 
-    def rear_s(self, time_step: int, lane: Lane=None) -> float:
+    def rear_s(self, world_state: "WorldState", lane: Lane=None) -> float:
         """
         Calculates rear s-coordinate of vehicle
 
-        :param time_step: time step to consider
+        :param world_state: time step to consider
         :returns rear s-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
+        lane = lane or self.get_lane(world_state)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[world_state.time_step], lane)
         s = state_lon.s
         w = self.shape.width
         l = self.shape.length
@@ -209,15 +209,15 @@ class Vehicle:
         rear_s = np.min(calc_s(s, w, l, theta))
         return rear_s
 
-    def front_s(self, time_step: int, lane: Lane=None) -> float:
+    def front_s(self, world_state: "WorldState", lane: Lane=None) -> float:
         """
         Calculates front s-coordinate of vehicle
 
-        :param time_step: time step to consider
+        :param world_state: time step to consider
         :returns front s-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
+        lane = lane or self.get_lane(world_state)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[world_state.time_step], lane)
         s = state_lon.s
         w = self.shape.width
         l = self.shape.length
@@ -246,13 +246,13 @@ class Vehicle:
         state = self.states_cr.get(time_step)
         return state is not None
 
-    def lanes_at_state(self, time_step):
-        lanelets = self.lanelet_assignment[time_step]
+    def lanes_at_state(self, world_state):
+        lanelets = self.lanelet_assignment[world_state.time_step]
         return self.ccosy_cache.road_network.find_lanes_by_lanelets(lanelets)
 
-    def get_lane(self, time_step):
+    def get_lane(self, world_state):
         # Todo: How to decide lane assignment generally?
-        lanes = self.lanes_at_state(time_step)
+        lanes = self.lanes_at_state(world_state)
         return lanes.pop() if lanes is not None else None
 
     @property
