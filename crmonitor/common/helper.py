@@ -19,19 +19,6 @@ from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle
 
 
-@enum.unique
-class OperatingMode(enum.Enum):
-    MONITOR = "monitor"
-    CONSTRAINT = "constraint"
-    ROBUSTNESS = "robustness"
-
-
-@enum.unique
-class Backend(enum.Enum):
-    PythonMTL = "python-mtl"
-    RTAMT = "rtamt"
-
-
 def create_ego_vehicle_param(ego_vehicle_param: Dict,
                              simulation_param: Dict) -> Dict:
     """
