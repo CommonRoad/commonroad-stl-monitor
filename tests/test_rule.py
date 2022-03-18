@@ -82,10 +82,9 @@ class RuleTest(unittest.TestCase):
             rule_robustness.append(rob)
             world_state.step()
         rule_robustness = np.array(rule_robustness)
-        # Todo: Check predicates
-        # preds = preds[preds.time_step == 4]["robustness"]
+        preds = rule_eval.get_predicates()
         self.assertEqual(rule_robustness[4], 1.0)
-        # self.assertTrue(np.all(preds.values == 1.0))
+        np.testing.assert_allclose(np.array(list(preds.values())), 1.0)
 
         rule_str = "E a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
@@ -97,10 +96,9 @@ class RuleTest(unittest.TestCase):
             rule_robustness.append(rob)
             world_state.step()
         rule_robustness = np.array(rule_robustness)
-        # Todo: Check predicates
-        # preds = preds[preds.time_step == 4]["robustness"]
         self.assertEqual(rule_robustness[4], -1.0)
-        # self.assertTrue(np.all(preds.values == -1.0))
+        preds = rule_eval.get_predicates()
+        np.testing.assert_allclose(np.array(list(preds.values())), -1.0)
 
     def test_safe_distance(self):
         # one vehicles which has no leading vehicle (1001)
