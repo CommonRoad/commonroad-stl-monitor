@@ -50,9 +50,9 @@ class WorldState:
 
     @classmethod
     def augment_state_acceleration_jerk(cls, dt, obs):
-        accelerations = np.diff([s.velocity for s in [obs.initial_state] + obs.prediction.trajectory.state_list]) / dt
-        accelerations += accelerations[-1:]
+        accelerations = (np.diff([s.velocity for s in [obs.initial_state] + obs.prediction.trajectory.state_list]) / dt).tolist()
         jerk = (np.diff(accelerations) / dt).tolist()
+        accelerations += accelerations[-1:]
         jerk += [jerk[-1], 0]
         obs.initial_state.acceleration = accelerations[0]
         obs.initial_state.jerk = jerk[0]
