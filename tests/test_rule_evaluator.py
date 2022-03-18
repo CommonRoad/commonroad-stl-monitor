@@ -38,7 +38,7 @@ class TestRuleEvaluator(unittest.TestCase):
             ego_vehicle = ws.vehicle_by_id(1001)
             ws.time_step = ego_vehicle.start_time
             evaluator = RuleEvaluator(rule, ego_vehicle, ws, ws.time_step)
-            rob = evaluator.evaluate_rule_next()
+            rob = evaluator.update()
 
     def test_parsing(self):
         rule = parse_rule("A a1: (in_front_of__a0_a1 and cut_in__a0_a1)", self.traffic_rule_params)

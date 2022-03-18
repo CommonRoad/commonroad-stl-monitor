@@ -76,12 +76,7 @@ class RuleTest(unittest.TestCase):
         rule_str = "A a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
         rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
-        rule_robustness = []
-        for i in range(ego_vehicle.end_time + 1):
-            rob = rule_eval.evaluate_rule_next()
-            rule_robustness.append(rob)
-            world_state.step()
-        rule_robustness = np.array(rule_robustness)
+        rule_robustness = rule_eval.evaluate()
         preds = rule_eval.get_predicates()
         self.assertEqual(rule_robustness[4], 1.0)
         np.testing.assert_allclose(np.array(list(preds.values())), 1.0)
@@ -92,7 +87,7 @@ class RuleTest(unittest.TestCase):
         rule_robustness = []
         world_state.time_step = 0
         for i in range(ego_vehicle.end_time + 1):
-            rob = rule_eval.evaluate_rule_next()
+            rob = rule_eval.update()
             rule_robustness.append(rob)
             world_state.step()
         rule_robustness = np.array(rule_robustness)
@@ -307,7 +302,7 @@ class RuleTest(unittest.TestCase):
             self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.evaluate_rule_next()
+                rob = rule_eval.update()
                 rule_robustness.append(rob)
                 world_state.step()
             rule_robustness = np.array(rule_robustness)
@@ -380,7 +375,7 @@ class RuleTest(unittest.TestCase):
             rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.evaluate_rule_next()
+                rob = rule_eval.update()
                 rule_robustness.append(rob)
                 world_state.step()
             rule_robustness = np.array(rule_robustness)
@@ -444,7 +439,7 @@ class RuleTest(unittest.TestCase):
             self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.evaluate_rule_next()
+                rob = rule_eval.update()
                 rule_robustness.append(rob)
                 world_state.step()
             rule_robustness = np.array(rule_robustness)

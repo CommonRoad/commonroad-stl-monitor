@@ -1,5 +1,8 @@
+import copy
 from pathlib import Path
-from typing import List, Iterable, Union
+from typing import List, Iterable, Union, Tuple
+
+import numpy as np
 
 import crmonitor
 from ruamel.yaml import YAML
@@ -26,7 +29,6 @@ class RuleEvaluator:
         cls, world_state, ego_vehicle,
         rule: str = "R_G1",
         traffic_rules_config=None,
-        dt=0.1,
         use_boolean=False,
         output_type=OutputType.STANDARD,
     ):
@@ -54,7 +56,12 @@ class RuleEvaluator:
         predicate_values = dict(self._monitor.visit(self._collector_visitor))
         return predicate_values
 
-    def evaluate_rule_next(self):
+    def update(self):
+        """
+        Advance the monitor state by one time step and return the corresponding rule evaluation value.
+
+        :return: robustness or boolean rule value
+        """
         self._last_time_step += 1
         if self._ego_vehicle.start_time > self._last_time_step or self._last_time_step > self._ego_vehicle.end_time:
             # Todo issue warning, return default
@@ -62,8 +69,24 @@ class RuleEvaluator:
         assert self._world.time_step == self._last_time_step, f"World time step not as expected! {self._world.time_step} != {self._last_time_step}"
         rule_value = self._eval_visitor.walk(self._monitor, self._world, self._ego_vehicle)
         return rule_value
-        # other_ids_values = self._eval_visitor.other_ids[1:]
 
+    def evaluate(self) -> np.ndarray:
+        """
+        Evaluate the rule exhaustively until the final time step of the vehicle object is reached.
+
+        Caution: This will change the time step of the world object!
+
+        :return: Array of all rule values for all time steps of the vehicle's known trajectory
+        """
+        robustness_values = []
+        for i in range(self._last_time_step + 1, self._ego_vehicle.end_time + 1):
+            robustness_values.append(self.update())
+            self._world.step()
+        return np.array(robustness_values)
+
+    @property
+    def other_ids(self) -> Tuple[int]:
+        return self._eval_visitor.other_ids[1:]
 
     def reset(self, ego_vehicle=None, other_vehicles=None, road_network=None):
         raise NotImplementedError
