@@ -311,7 +311,10 @@ class DynamicObstacleVehicle(Vehicle):
         vehicle_param = vehicle_param
         states_cr = {state.time_step: state for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list}
         shape = obstacle.obstacle_shape
-        signal_series = {state.time_step: state for state in obstacle.signal_series}
+        if obstacle.signal_series is not None:
+            signal_series = {state.time_step: state for state in obstacle.signal_series}
+        else:
+            signal_series = None
         ccosy_cache = ccosy_cache
         lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
         super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment)
