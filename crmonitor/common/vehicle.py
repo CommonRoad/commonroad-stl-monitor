@@ -190,7 +190,7 @@ class PredicateCache:
 
 
 class Vehicle:
-    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=PredicateCache()):
+    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None):
         self.id = id
         self.obstacle_type = obstacle_type
         self.vehicle_param = vehicle_param
@@ -199,7 +199,7 @@ class Vehicle:
         self.signal_series = signal_series
         self.ccosy_cache = ccosy_cache
         self.lanelet_assignment = lanelet_assignment
-        self.predicate_cache = predicate_cache
+        self.predicate_cache = predicate_cache or PredicateCache()
 
     def rear_s(self, world_state: "WorldState", lane: Lane=None) -> float:
         """

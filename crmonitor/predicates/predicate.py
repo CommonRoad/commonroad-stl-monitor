@@ -137,7 +137,7 @@ class BasePredicateEvaluator(abc.ABC):
         time_step = world_state.time_step
         vehicle = world_state.vehicle_by_id(vehicle_ids[0])
         vehicle_ids_tuple = tuple(vehicle_ids)
-        value = vehicle.predicate_cache.get_robustness(time_step, self.predicate_name, vehicle_ids_tuple)
+        value = vehicle.predicate_cache.get_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:])
         if value is None:
             logger.debug(
                 "Evaluating predicate %s , t=%d, ids=%s",
@@ -146,7 +146,7 @@ class BasePredicateEvaluator(abc.ABC):
                 vehicle_ids_tuple,
             )
             value = self.evaluate_robustness(world_state, vehicle_ids)
-            vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple, value)
+            vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
         return value
 
 
@@ -183,7 +183,7 @@ class PredInSameLane(BasePredicateEvaluator):
         """
         # Predicate is symmetric
         vehicle_ids_tuple = tuple(reversed(vehicle_ids))
-        value = world_state.vehicle_by_id(vehicle_ids_tuple[0]).predicate_cache[world_state.time_step, self.predicate_name, vehicle_ids_tuple]
+        value = world_state.vehicle_by_id(vehicle_ids_tuple[0]).predicate_cache[world_state.time_step, self.predicate_name, vehicle_ids_tuple[1:]]
         if value is not None:
             return value
 
