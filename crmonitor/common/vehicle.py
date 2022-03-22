@@ -174,7 +174,15 @@ class PredicateCache:
 
     def __getitem__(self, item):
         assert isinstance(item, tuple) and len(item) == 3
-        return self.get_robustness(*item)
+        time_step = item[0]
+        predicate_name = item[1]
+        ids = item[2]
+        if isinstance(predicate_name, slice):
+            # Only accept slice over all predicates
+            assert predicate_name.start is None and predicate_name.stop is None and predicate_name.step is None
+            return {n: pred_vals[ids] for n, pred_vals in self.cache[time_step].items() if len(pred_vals) > 0 and len(list(pred_vals.keys())[0]) == 2}
+        else:
+            return self.get_robustness(*item)
 
     def __setitem__(self, key, value):
         assert isinstance(key, tuple) and len(key) == 3

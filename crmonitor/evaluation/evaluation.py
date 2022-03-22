@@ -1,4 +1,5 @@
 import copy
+import logging
 from pathlib import Path
 from typing import List, Iterable, Union, Tuple
 
@@ -22,6 +23,8 @@ import importlib.resources as pkg_resources
 #     end = min([v.end_time for v in vehicles])
 #     return start, end
 
+logger = logging.getLogger(__name__)
+
 class RuleEvaluator:
 
     @classmethod
@@ -39,12 +42,12 @@ class RuleEvaluator:
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)
 
-    def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: WorldState, start_time_step=0, use_boolean: bool = False,
+    def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: WorldState, start_time_step=None, use_boolean: bool = False,
                  output_type: OutputType = OutputType.STANDARD):
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = rule.visit(visitor)
-        self._last_time_step = start_time_step - 1
+        self._last_time_step = start_time_step - 1 if start_time_step is not None else ego_vehicle.start_time - 1
         self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
         self._eval_visitor = EvaluationMonitorTreeVisitor(
             use_boolean=use_boolean, output_type=output_type
@@ -64,8 +67,8 @@ class RuleEvaluator:
         """
         self._last_time_step += 1
         if self._ego_vehicle.start_time > self._last_time_step or self._last_time_step > self._ego_vehicle.end_time:
-            # Todo issue warning, return default
-            return
+            logger.warning("Evaluating vehicle outside its lifetime!")
+            return np.inf
         assert self._world.time_step == self._last_time_step, f"World time step not as expected! {self._world.time_step} != {self._last_time_step}"
         rule_value = self._eval_visitor.walk(self._monitor, self._world, self._ego_vehicle)
         return rule_value
