@@ -11,7 +11,6 @@ class Lane:
     """
     Lane representation build from several lanelets
     """
-    lane_counter = 0
 
     def __init__(
         self,
@@ -24,10 +23,9 @@ class Lane:
         :param contained_lanelets: lanelets lane consists of
         :param road_network_param: dictionary with parameters for the road network
         """
-        self.lane_id = Lane.lane_counter
-        Lane.lane_counter += 1
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
+        self.lane_id = int("".join((str(i) for i in self._contained_lanelets)))
         self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
             merged_lanelet.left_vertices, road_network_param
         )
