@@ -180,7 +180,7 @@ class PredicateCache:
         if isinstance(predicate_name, slice):
             # Only accept slice over all predicates
             assert predicate_name.start is None and predicate_name.stop is None and predicate_name.step is None
-            return {n: pred_vals[ids] for n, pred_vals in self.cache[time_step].items() if len(pred_vals) > 0 and len(list(pred_vals.keys())[0]) == 2}
+            return {n: pred_vals[ids] for n, pred_vals in self.cache[time_step].items() if len(pred_vals) > 0 and len(list(pred_vals.keys())[0]) == 1}
         else:
             return self.get_robustness(*item)
 
