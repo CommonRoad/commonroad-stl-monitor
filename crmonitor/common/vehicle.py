@@ -1,14 +1,12 @@
-import enum
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, Field, field
+from dataclasses import dataclass, field
 from functools import partial
-from typing import Union, Set, Dict, List, Tuple, Optional
+from typing import Union, Dict, List, Tuple, Optional
 
 import numba
 import numpy as np
-from commonroad.geometry.shape import Shape, Rectangle
-from commonroad.scenario.obstacle import ObstacleType, SignalState, DynamicObstacle
+from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 
@@ -124,7 +122,8 @@ class CurvilinearStateManager:
     road_network: RoadNetwork
     cache: Dict[Tuple[State, Lane], Tuple[StateLongitudinal, StateLateral]] = field(default_factory=dict)
 
-    def _compute_curvilinear_state(self, state: State, lane: Lane) -> Optional[Tuple[StateLongitudinal, StateLateral]]:
+    @staticmethod
+    def _compute_curvilinear_state(state: State, lane: Lane) -> Optional[Tuple[StateLongitudinal, StateLateral]]:
         try:
             s, d = lane.clcs.convert_to_curvilinear_coords(*state.position)
         except ValueError:
@@ -312,7 +311,7 @@ class DynamicObstacleVehicle(Vehicle):
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
-    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param):
+    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param, predicate_cache=None):
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
         id = obstacle.obstacle_id
         obstacle_type = obstacle.obstacle_type
@@ -325,7 +324,7 @@ class DynamicObstacleVehicle(Vehicle):
             signal_series = None
         ccosy_cache = ccosy_cache
         lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
-        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment)
+        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache)
 
     # @property
     # def states_lon(self) -> Dict[int, StateLongitudinal]:

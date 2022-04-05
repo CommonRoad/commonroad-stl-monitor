@@ -1,10 +1,11 @@
 import dataclasses
 import logging
+import shelve
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional, Set, Dict
 
 import crmonitor
 import numpy as np
@@ -14,7 +15,8 @@ from ruamel.yaml import YAML
 from crmonitor.common.helper import (create_scenario_vehicles, create_ego_vehicle_param, create_simulation_param,
                                      create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, ControlledVehicle
+from crmonitor.common.vehicle import Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, ControlledVehicle, \
+    PredicateCache
 import importlib.resources as pkg_resources
 
 @dataclass
@@ -23,11 +25,12 @@ class WorldState:
     road_network: RoadNetwork
     time_step: int = 0
     scenario: Optional[Scenario] = None
+    cache: Optional[shelve.Shelf] = None
 
 
     @classmethod
     def create_from_scenario(
-        cls, scenario: Scenario, config=None, time_step=0, road_network=None
+        cls, scenario: Scenario, config=None, time_step=0, road_network=None, cache_dir="/tmp"
     ):
         if config is None:
             with pkg_resources.path(crmonitor, "config.yaml") as config_path:
@@ -37,19 +40,18 @@ class WorldState:
             road_network = RoadNetwork(scenario.lanelet_network, params)
         else:
             road_network = road_network
-        # dt = scenario.dt
-        # simulation_param = create_simulation_param(
-        #     config.get("simulation_param"), dt, scenario.scenario_id.country_id
-        # )
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
         vehicles = set()
+        cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
+        cache = shelve.open(str(cache_file), writeback=True)
         for obs in scenario.dynamic_obstacles:
             cls.augment_state_acceleration_jerk(scenario.dt, obs)
-            vehicles.add(DynamicObstacleVehicle(obs, CurvilinearStateManager(road_network), others_params))
-        return cls(vehicles, road_network, time_step, scenario)
+            curvi_cache, predicate_dict = cache.setdefault(str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict))))
+            vehicles.add(DynamicObstacleVehicle(obs, CurvilinearStateManager(road_network, curvi_cache), others_params, PredicateCache(predicate_dict)))
+        return cls(vehicles, road_network, time_step, scenario, cache)
 
-    @classmethod
-    def augment_state_acceleration_jerk(cls, dt, obs):
+    @staticmethod
+    def augment_state_acceleration_jerk(dt, obs):
         accelerations = (np.diff([s.velocity for s in [obs.initial_state] + obs.prediction.trajectory.state_list]) / dt).tolist()
         obs.initial_state.acceleration = accelerations[0]
         if len(accelerations) >= 2:
@@ -90,6 +92,11 @@ class WorldState:
             return self.scenario.dt
         else:
             return 0.1
+
+    def __del__(self):
+        if self.cache is not None:
+            logging.info("Cache close!")
+            self.cache.close()
 
     # def __iter__(self):
     #     return self
