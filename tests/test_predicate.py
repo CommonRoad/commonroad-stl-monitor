@@ -14,7 +14,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, CurvilinearStateManager
 from crmonitor.common.world_state import WorldState
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
-                                            scale_clip, PredLaneSpeedLimit, PredPreceding, )
+                                            PredLaneSpeedLimit, PredPreceding, )
 from tests.util import parallel_lanes
 
 
@@ -24,16 +24,6 @@ class TestPredicate(unittest.TestCase):
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = False
-
-    def test_scale(self):
-        from functools import partial
-
-        scale_dist = partial(scale_clip, min_val=0.0, max_val=200.0, copysign=True)
-        dist_inputs = [0.0, -200.0, 200.0, 100.0, -100.0, 300.0, -300.0]
-        exp_dist_outputs = [0.0, -1.0, 1.0, 0.5, -0.5, 1.0, -1.0]
-        for i, ex_o in zip(dist_inputs, exp_dist_outputs):
-            out = scale_dist(i)
-            self.assertEqual(ex_o, out, f"Input: {i}")
 
     def test_cut_in(self):
         # expected solutions
