@@ -230,7 +230,7 @@ class PredSingleLane(BasePredicateEvaluator):
         k_lanes = vehicle_k.lanes_at_state(world_state)
         assert (
             len(k_lanes) > 0
-        ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}, ego={world_state.ego_vehicle.id}"
+        ), f"Vehicle must be assigned to at least one lane! {str(world_state.scenario.scenario_id)}, id={vehicle_ids[0]}, t={world_state.time_step}"
 
         ref_point = np.array(vehicle_k.states_cr[world_state.time_step].position)
         ref_lane = [
