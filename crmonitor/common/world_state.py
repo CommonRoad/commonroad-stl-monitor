@@ -1,4 +1,3 @@
-import logging
 import importlib.resources as pkg_resources
 import logging
 import shelve
@@ -12,17 +11,9 @@ import numpy as np
 from commonroad.scenario.scenario import Scenario
 
 import crmonitor
-from crmonitor.common.helper import (
-    create_other_vehicles_param,
-    load_yaml,
-)
+from crmonitor.common.helper import (create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import (
-    Vehicle,
-    DynamicObstacleVehicle,
-    CurvilinearStateManager,
-    PredicateCache,
-)
+from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache, )
 
 
 @dataclass
