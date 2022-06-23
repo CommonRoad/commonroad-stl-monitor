@@ -22,17 +22,6 @@ def union_set(s: Iterable):
     return reduce(lambda agg, e: agg.union(e), s, set())
 
 
-def scale_clip(x, min_val, max_val, new_min=0.0, new_max=1.0, copysign=False):
-    abs_x = np.abs(x)
-    if np.isinf(abs_x):
-        rescaled = new_max
-    else:
-        rescaled = np.interp(abs_x, [min_val, max_val], [new_min, new_max])
-    if copysign:
-        rescaled = np.copysign(rescaled, x)
-    return rescaled
-
-
 def distance_to_bounds(
     vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState
 ):
@@ -96,31 +85,23 @@ class BasePredicateEvaluator(abc.ABC):
         self.scale = config.setdefault("scale_rob", True)
         self.eps = 1e-5
 
-    def _scale(self, x, *args, **kwargs):
-        # TODO: refactor
-        if self.scale:
-            return scale_clip(x, *args, **kwargs)
-        else:
-            return x
+    def _scale(self, x, max_value):
+        return np.clip(x / max_value, -1., 1.) if self.scale else x
 
     def _scale_speed(self, x):
-        return self._scale(x, 0.0, 250.0 / 3.6, copysign=True)
+        return self._scale(x, 250.0 / 3.6)
 
     def _scale_acc(self, x):
-        return self._scale(x, 0, 10.5, copysign=True)
+        return self._scale(x, 10.5)
 
     def _scale_lon_dist(self, x):
-        return self._scale(x, 0.0, 200.0, copysign=True)
+        return self._scale(x, 200.0)
 
     def _scale_lat_dist(self, x):
-        return self._scale(x, 0.0, 20.0, copysign=True)
+        return self._scale(x, 20.0)
 
     def _scale_angle(self, x):
-        # angle = x - (math.ceil((x + math.pi) / (2 * math.pi)) - 1) * 2 *
-        # math.pi
-        # TODO: Might be slow
-        # angle = math.asin(math.sin(x))
-        return self._scale(x, 0, math.pi, copysign=True)
+        return self._scale(x, math.pi)
 
     def evaluate_boolean(self, world_state: WorldState, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world_state, vehicle_ids) >= 0.0
