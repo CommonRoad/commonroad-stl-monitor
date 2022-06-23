@@ -16,7 +16,8 @@ setup(
         "commonroad-io==2021.1",
         "commonroad-vehicle-models==1.0.0",
         "ruamel-yaml>=0.16.12",
-        "commonroad-drivability-checker>=2021.4"
+        "commonroad-drivability-checker>=2021.4",
+        "antlr4-python3-runtime>=4.6,<=4.8"
     ],
     package_data={'crmonitor': ['*.yaml']},
 )
