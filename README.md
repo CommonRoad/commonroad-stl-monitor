@@ -2,17 +2,11 @@
 
 The toolbox is installable as a regular pypi package. However, it is currently not available under the public index.
 
-Available versions can be found [here](https://gitlab.lrz.de/ge69xek/stl_crmonitor/-/packages).
-
 Installation by:
 
 ```bash
-pip install --extra-index-url https://commonroad-dc-package:WRzXAy7oJ8S2atx8iit6@gitlab.lrz.de/api/v4/projects/62155/packages/pypi/simple \
---index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@gitlab.lrz.de/api/v4/projects/70411/packages/pypi/simple \
-stl-crmonitor
+pip install git+git@gitlab.lrz.de:ge69xek/stl_crmonitor.git@refactor_gnn
 ```
-
-Both extra indicies are needed to obtain the internal versions of the commonroad-dc package and the stl-crmonitor package. 
 
 
 ## Development setup
@@ -32,7 +26,6 @@ conda develop .
 ```
 
 ## Run the tests
-- Run 
 ```
 cd crmonitor/tests
 python -m unittest
@@ -46,7 +39,39 @@ be bumped by e.g. `bump2version major` or `bump2version minor`. Merges to the de
 deployed and the build number is bumped.
 
 ## Getting Started
-Checkout the [minimum working example](mwe.ipynb)
+Checkout the [minimum working example](tutorials/monitor_scenario.py)
+
+```python
+from commonroad.common.file_reader import CommonRoadFileReader
+
+from crmonitor.common.world_state import WorldState
+from crmonitor.evaluation.evaluation import RuleEvaluator
+
+scenario_path = "../scenarios/test_interstate/DEU_test_safe_distance.xml"
+
+# Open the scenario
+# Make sure to call with lanelet_assignment=True
+scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+
+# Create a world state, which is a holder class for intermediate results produced by the monitoring.
+# Use the convenience class method to create with default configuration from a scenario.
+world_state = WorldState.create_from_scenario(scenario)
+
+# Create a rule evaluator
+# Provide the vehicle to evaluate traffic rules for as ego vehicle
+ego_vehicle = next(iter(world_state.vehicles))
+rule_evaluator = RuleEvaluator.create_from_config(world_state, ego_vehicle)
+
+# Either step through time steps sequentially
+robustness = rule_evaluator.update()
+current_time_step = rule_evaluator.current_time
+
+# Also all predicate robustness values are available
+predicate_robustness = rule_evaluator.get_predicates()
+
+# Or evaluate for all time steps of the vehicle
+robustness_array = rule_evaluator.evaluate()
+```
 
 ## Concepts
 
