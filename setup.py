@@ -11,13 +11,11 @@ setup(
     ),
     version="0.0.0.dev4",
     install_requires=[
-        "antlr4-python3-runtime==4.5",
-        "rtamt==0.2.8",
+        "rtamt==0.3",
         "numba==0.51.2",
         "commonroad-io==2021.1",
         "commonroad-vehicle-models==1.0.0",
-        "ruamel-yaml==0.16.12",
-        "antlr4-python3-runtime==4.5"
+        "ruamel-yaml>=0.16.12",
     ],
     package_data={'crmonitor': ['*.yaml']},
 )
