@@ -19,7 +19,7 @@ stages:
   - deploy
 
 before_script:
-  - apt-get update && apt-get install -y cmake g++ git-lfs
+  - apt-get update && apt-get install -y git-lfs
   - conda init bash
   - conda env create -n stl-crmonitor python=3.7
   - source activate stl-crmonitor
@@ -29,7 +29,7 @@ before_script:
 unittest:
   stage: test
   script:
-    - pip install --index-url https://stl-crmonitor-package:4qhSxJuW2qo4q-A6dyMY@${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi/simple  -e .
+    - pip install -e .
     - python -m unittest
 
 deploy_develop:
