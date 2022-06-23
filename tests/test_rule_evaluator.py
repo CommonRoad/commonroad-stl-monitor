@@ -4,7 +4,7 @@ from pathlib import Path
 from commonroad.common.file_reader import CommonRoadFileReader
 from ruamel.yaml import YAML
 
-from crmonitor.common.world_state import WorldState
+from crmonitor.common.world_state import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.predicates.rule import parse_rule, AllNode, RuleNode, ExistNode, PredicateNode, IOType
 
@@ -34,7 +34,7 @@ class TestRuleEvaluator(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(str(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml")).open(True)
         for r in rules:
             rule = parse_rule(r, self.traffic_rule_params)
-            ws = WorldState.create_from_scenario(scenario)
+            ws = World.create_from_scenario(scenario)
             ego_vehicle = ws.vehicle_by_id(1001)
             evaluator = RuleEvaluator(rule, ego_vehicle, ws)
             rob = evaluator.update()

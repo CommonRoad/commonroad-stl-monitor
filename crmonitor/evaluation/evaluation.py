@@ -7,7 +7,7 @@ import numpy as np
 import crmonitor
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.vehicle import Vehicle
-from crmonitor.common.world_state import WorldState
+from crmonitor.common.world_state import WorldState, World
 from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
                                           PredicateCollectorMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
@@ -20,7 +20,7 @@ class RuleEvaluator:
 
     @classmethod
     def create_from_config(
-        cls, world_state: WorldState, ego_vehicle: Vehicle,
+        cls, world_state: World, ego_vehicle: Vehicle,
         rule: str = "R_G1",
         traffic_rules_config=None,
         use_boolean: bool=False,
@@ -33,7 +33,7 @@ class RuleEvaluator:
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)
 
-    def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: WorldState, start_time_step=None, use_boolean: bool = False,
+    def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: World, start_time_step=None, use_boolean: bool = False,
                  output_type: OutputType = OutputType.STANDARD):
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
@@ -64,9 +64,9 @@ class RuleEvaluator:
         if self._ego_vehicle.start_time > self._last_evaluation_time_step or self._last_evaluation_time_step > self._ego_vehicle.end_time:
             logger.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
-        # Todo: Remove time step from world state
-        self._world.time_step = self._last_evaluation_time_step
-        rule_value = self._eval_visitor.walk(self._monitor, self._world, self._ego_vehicle)
+        # Todo: Remove time step from world state and pass a seperate parameter to predicates
+        world_state = WorldState(time_step=self._last_evaluation_time_step, **self._world.__dict__)
+        rule_value = self._eval_visitor.walk(self._monitor, world_state, self._ego_vehicle)
         return rule_value
 
     def evaluate(self) -> np.ndarray:

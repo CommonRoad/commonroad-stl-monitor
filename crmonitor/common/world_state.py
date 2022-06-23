@@ -17,7 +17,7 @@ from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, Curviline
 
 
 @dataclass
-class WorldState:
+class World:
     vehicles: Set[Vehicle]
     road_network: RoadNetwork
     scenario: Optional[Scenario] = None
@@ -100,3 +100,12 @@ class WorldState:
         if self.cache is not None:
             logging.info("Cache close!")
             self.cache.close()
+
+
+# ToDo: Temporary workaround
+@dataclass
+class WorldState(World):
+    time_step: int = 0
+
+    def step(self):
+        self.time_step += 1
