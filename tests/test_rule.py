@@ -85,11 +85,9 @@ class RuleTest(unittest.TestCase):
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
         rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
         rule_robustness = []
-        world_state.time_step = 0
         for i in range(ego_vehicle.end_time + 1):
             rob = rule_eval.update()
             rule_robustness.append(rob)
-            world_state.step()
         rule_robustness = np.array(rule_robustness)
         self.assertEqual(rule_robustness[4], -1.0)
         preds = rule_eval.get_predicates()
@@ -304,7 +302,6 @@ class RuleTest(unittest.TestCase):
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
                 rule_robustness.append(rob)
-                world_state.step()
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
             self.assertEqual(
@@ -372,13 +369,11 @@ class RuleTest(unittest.TestCase):
         world_state = WorldState.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world_state.vehicle_by_id(ego_id)
-            world_state.time_step = ego_vehicle.start_time
             rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
                 rule_robustness.append(rob)
-                world_state.step()
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
             self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
@@ -431,7 +426,6 @@ class RuleTest(unittest.TestCase):
         # standard robustness
         world_state = WorldState.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
-            world_state.time_step = 0
             ego_vehicle = world_state.vehicle_by_id(ego_id)
             rule_eval = RuleEvaluator.create_from_config(world_state, ego_vehicle, "R_G3")
             rule = rule_eval._rule
@@ -442,7 +436,6 @@ class RuleTest(unittest.TestCase):
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
                 rule_robustness.append(rob)
-                world_state.step()
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
             self.assertEqual(

@@ -36,8 +36,7 @@ class TestRuleEvaluator(unittest.TestCase):
             rule = parse_rule(r, self.traffic_rule_params)
             ws = WorldState.create_from_scenario(scenario)
             ego_vehicle = ws.vehicle_by_id(1001)
-            ws.time_step = ego_vehicle.start_time
-            evaluator = RuleEvaluator(rule, ego_vehicle, ws, ws.time_step)
+            evaluator = RuleEvaluator(rule, ego_vehicle, ws)
             rob = evaluator.update()
 
     def test_parsing(self):
