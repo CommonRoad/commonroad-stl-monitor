@@ -1,14 +1,12 @@
-import enum
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, Field, field
+from dataclasses import dataclass, field
 from functools import partial
-from typing import Union, Set, Dict, List, Tuple, Optional
+from typing import Union, Dict, List, Tuple, Optional
 
 import numba
 import numpy as np
-from commonroad.geometry.shape import Shape, Rectangle
-from commonroad.scenario.obstacle import ObstacleType, SignalState, DynamicObstacle
+from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 
@@ -124,7 +122,8 @@ class CurvilinearStateManager:
     road_network: RoadNetwork
     cache: Dict[Tuple[State, Lane], Tuple[StateLongitudinal, StateLateral]] = field(default_factory=dict)
 
-    def _compute_curvilinear_state(self, state: State, lane: Lane) -> Optional[Tuple[StateLongitudinal, StateLateral]]:
+    @staticmethod
+    def _compute_curvilinear_state(state: State, lane: Lane) -> Optional[Tuple[StateLongitudinal, StateLateral]]:
         try:
             s, d = lane.clcs.convert_to_curvilinear_coords(*state.position)
         except ValueError:
@@ -174,7 +173,15 @@ class PredicateCache:
 
     def __getitem__(self, item):
         assert isinstance(item, tuple) and len(item) == 3
-        return self.get_robustness(*item)
+        time_step = item[0]
+        predicate_name = item[1]
+        ids = item[2]
+        if isinstance(predicate_name, slice):
+            # Only accept slice over all predicates
+            assert predicate_name.start is None and predicate_name.stop is None and predicate_name.step is None
+            return {n: pred_vals[ids] for n, pred_vals in self.cache[time_step].items() if len(pred_vals) > 0 and len(list(pred_vals.keys())[0]) == 1}
+        else:
+            return self.get_robustness(*item)
 
     def __setitem__(self, key, value):
         assert isinstance(key, tuple) and len(key) == 3
@@ -182,7 +189,7 @@ class PredicateCache:
 
 
 class Vehicle:
-    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=PredicateCache()):
+    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None):
         self.id = id
         self.obstacle_type = obstacle_type
         self.vehicle_param = vehicle_param
@@ -191,7 +198,7 @@ class Vehicle:
         self.signal_series = signal_series
         self.ccosy_cache = ccosy_cache
         self.lanelet_assignment = lanelet_assignment
-        self.predicate_cache = predicate_cache
+        self.predicate_cache = predicate_cache or PredicateCache()
 
     def rear_s(self, world_state: "WorldState", lane: Lane=None) -> float:
         """
@@ -304,7 +311,7 @@ class DynamicObstacleVehicle(Vehicle):
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
-    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param):
+    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param, predicate_cache=None):
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
         id = obstacle.obstacle_id
         obstacle_type = obstacle.obstacle_type
@@ -317,7 +324,7 @@ class DynamicObstacleVehicle(Vehicle):
             signal_series = None
         ccosy_cache = ccosy_cache
         lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
-        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment)
+        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache)
 
     # @property
     # def states_lon(self) -> Dict[int, StateLongitudinal]:

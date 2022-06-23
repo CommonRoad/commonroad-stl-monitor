@@ -361,17 +361,18 @@ class RuleTest(unittest.TestCase):
         rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
         rule = parse_rule(
-            rule_str,
-            self.traffic_rules,
-            name="UnnecessaryBraking"
+                rule_str,
+                self.traffic_rules,
+                name="UnnecessaryBraking"
         )
         self.assertTrue(isinstance(rule, RuleNode))
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
         self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
+        world_state = WorldState.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
-            world_state = WorldState.create_from_scenario(scenario)
             ego_vehicle = world_state.vehicle_by_id(ego_id)
+            world_state.time_step = ego_vehicle.start_time
             rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
