@@ -1,5 +1,6 @@
 import importlib.resources as pkg_resources
 import logging
+from functools import lru_cache
 from typing import Tuple, Dict
 
 import numpy as np
@@ -16,6 +17,13 @@ from crmonitor.predicates.rule import VisitorNode, parse_rule
 logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=None)
+def get_traffic_rule_config():
+    with pkg_resources.path(crmonitor, "traffic_rules_rtamt.yaml") as traffic_rules_path:
+        traffic_rules_config = load_yaml(traffic_rules_path)
+    return traffic_rules_config
+
+
 class RuleEvaluator:
 
     @classmethod
@@ -27,8 +35,7 @@ class RuleEvaluator:
         output_type: OutputType=OutputType.STANDARD,
     ):
         if traffic_rules_config is None:
-            with pkg_resources.path(crmonitor, "traffic_rules_rtamt.yaml") as traffic_rules_path:
-                traffic_rules_config = load_yaml(traffic_rules_path)
+            traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)

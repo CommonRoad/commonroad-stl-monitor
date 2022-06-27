@@ -3,7 +3,7 @@ import logging
 import shelve
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import partial
+from functools import partial, lru_cache
 from pathlib import Path
 from typing import Optional, Set
 
@@ -14,6 +14,13 @@ import crmonitor
 from crmonitor.common.helper import (create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache, )
+
+
+@lru_cache(maxsize=None)
+def get_world_config():
+    with pkg_resources.path(crmonitor, "config.yaml") as config_path:
+        config = load_yaml(config_path)
+    return config
 
 
 @dataclass
@@ -28,8 +35,7 @@ class World:
         cls, scenario: Scenario, config=None, road_network=None, cache_dir="/tmp"
     ):
         if config is None:
-            with pkg_resources.path(crmonitor, "config.yaml") as config_path:
-                config = load_yaml(config_path)
+            config = get_world_config()
         if road_network is None:
             params = config.get("road_network_param")
             road_network = RoadNetwork(scenario.lanelet_network, params)
