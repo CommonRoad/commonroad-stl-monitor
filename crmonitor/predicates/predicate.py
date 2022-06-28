@@ -44,6 +44,7 @@ def distance_to_bounds(
         if l.adj_right is not None and l.adj_right not in lanelet_ids
     ]
     d_left = [np.array([])]
+    # Todo: Cache curvilinear states
     for l in left_bounds:
         # For performance reasons, we find a lane that contains the lanelet
         # so that

@@ -167,3 +167,22 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         return [(predicate_node.name, predicate_node.latest_value)]
+
+
+class ResetMonitorTreeVisitor(RuleTreeVisitor):
+
+    def _visit(self, node, *ctx):
+        for c in node.monitors:
+            c.visit(self, *ctx)
+
+    def visit_rule_node(self, rule_node: Union[RuleNode, RuleMonitorNode], *ctx):
+        rule_node.reset()
+
+    def visit_all_node(self, all_node: Union[AllNode, AllMonitorNode], *ctx):
+        self._visit(all_node, *ctx)
+
+    def visit_exist_node(self, exist_node: Union[ExistNode, ExistMonitorNode], *ctx):
+        self._visit(exist_node, *ctx)
+
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        pass

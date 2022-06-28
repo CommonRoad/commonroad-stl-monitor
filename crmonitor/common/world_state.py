@@ -115,3 +115,7 @@ class WorldState(World):
 
     def step(self):
         self.time_step += 1
+
+    def __del__(self):
+        self.cache = None
+        super(WorldState, self).__del__()
