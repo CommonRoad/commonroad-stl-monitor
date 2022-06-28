@@ -9,8 +9,12 @@ import crmonitor
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState, World
-from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
-                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor, )
+from crmonitor.evaluation.visitor import (
+    MonitorCreationRuleTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
+)
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.rule import VisitorNode, parse_rule
 
@@ -25,23 +29,37 @@ def get_traffic_rule_config():
 
 
 class RuleEvaluator:
-
     @classmethod
     def create_from_config(
-        cls, world_state: World=None, ego_vehicle: Vehicle=None,
+        cls,
+        world_state: World = None,
+        ego_vehicle: Vehicle = None,
         rule: str = "R_G1",
         traffic_rules_config=None,
-        use_boolean: bool=False,
-        output_type: OutputType=OutputType.STANDARD,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
-        return cls(rule_set, ego_vehicle, world_state, use_boolean=use_boolean, output_type=output_type)
+        return cls(
+            rule_set,
+            ego_vehicle,
+            world_state,
+            use_boolean=use_boolean,
+            output_type=output_type,
+        )
 
-    def __init__(self, rule: VisitorNode, ego_vehicle: Vehicle, world: World, start_time_step=None, use_boolean: bool = False,
-                 output_type: OutputType = OutputType.STANDARD):
+    def __init__(
+        self,
+        rule: VisitorNode,
+        ego_vehicle: Vehicle,
+        world: World,
+        start_time_step=None,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
+    ):
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = rule.visit(visitor)
@@ -71,12 +89,17 @@ class RuleEvaluator:
         :return: robustness or boolean rule value
         """
         self._last_evaluation_time_step += 1
-        if self._ego_vehicle.start_time > self._last_evaluation_time_step or self._last_evaluation_time_step > self._ego_vehicle.end_time:
+        if (
+            self._ego_vehicle.start_time > self._last_evaluation_time_step
+            or self._last_evaluation_time_step > self._ego_vehicle.end_time
+        ):
             logger.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
         # Todo: Remove time step from world state and pass a seperate parameter to predicates
         self._world.time_step = self._last_evaluation_time_step
-        rule_value = self._eval_visitor.walk(self._monitor, self._world, self._ego_vehicle)
+        rule_value = self._eval_visitor.walk(
+            self._monitor, self._world, self._ego_vehicle
+        )
         return rule_value
 
     def evaluate(self) -> np.ndarray:
@@ -88,7 +111,9 @@ class RuleEvaluator:
         :return: Array of all rule values for all time steps of the vehicle's known trajectory
         """
         robustness_values = []
-        for i in range(self._last_evaluation_time_step + 1, self._ego_vehicle.end_time + 1):
+        for i in range(
+            self._last_evaluation_time_step + 1, self._ego_vehicle.end_time + 1
+        ):
             robustness_values.append(self.update())
         return np.array(robustness_values)
 
@@ -97,7 +122,11 @@ class RuleEvaluator:
         return self._eval_visitor.other_ids[1:]
 
     def reset(self, ego_vehicle: Vehicle, world: World, start_time_step=-1):
-        self._last_evaluation_time_step = start_time_step - 1 if start_time_step is not None else ego_vehicle.start_time - 1
+        self._last_evaluation_time_step = (
+            start_time_step - 1
+            if start_time_step is not None
+            else ego_vehicle.start_time - 1
+        )
         self._ego_vehicle = ego_vehicle
         self._last_evaluation_time_step = -1
         self._world = WorldState(**world.__dict__)
