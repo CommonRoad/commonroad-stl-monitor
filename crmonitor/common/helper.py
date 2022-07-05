@@ -1,10 +1,12 @@
 import enum
 import math
 from decimal import Decimal
+from functools import reduce
 from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
+import numpy as np
 import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
@@ -725,3 +727,47 @@ def min_max(arr):
         min_val = min(x, min_val)
         max_val = max(x, max_val)
     return min_val, max_val
+
+
+def union_set(s: Iterable):
+    return reduce(lambda agg, e: agg.union(e), s, set())
+
+
+def cartesian_to_curvilinear(reference_paths: Iterable[np.ndarray], cartesian_points: np.ndarray) -> np.ndarray:
+    curvilinear_coords = []
+    for ref_path in reference_paths:
+        # This could also be pre-computed
+        # Segment start points
+        seg_start = ref_path[:-1]
+        # Segment directions
+        seg_dir = ref_path[1:] - ref_path[:-1]
+        # Segment lengths
+        seg_length = np.sqrt(np.sum(seg_dir * seg_dir, axis=-1))
+        # Cumulated segment length offsets
+        cumsum_seg_length = np.concatenate((np.zeros(1), np.cumsum(seg_length)))
+        # Segment direction with length 1
+        seg_dir_normalized = seg_dir / seg_length[:, np.newaxis]
+        # Segment normal with length 1
+        seg_normal_normalized = seg_dir_normalized[:, ::-1].copy()
+        seg_normal_normalized[:, 1] *= -1
+
+        # Calculate the normalized segment arc length value
+        s_norm_segment = ((cartesian_points[:, np.newaxis] - seg_start[np.newaxis]) * seg_dir_normalized).sum(axis=-1)
+        # Calculate the arc length relative to the segment length
+        s = s_norm_segment / seg_length[np.newaxis, :]
+        # Determine the segment with the lowest index to which the points can be projected (0 <= s <= 1)
+        # np.argmax of a boolean gets the index of the first True value, or 0 if there is no true value.
+        idx = np.argmax((0 <= s) & (s <= 1), axis=-1)
+        arc_length = s_norm_segment[np.arange(start=0, stop=len(idx)), idx]
+        # Get the projected point on the line
+        projected_points = ref_path[idx] + seg_dir_normalized[idx] * arc_length[:, np.newaxis]
+        # Get the signed lateral distance
+        lateral_dist = -((cartesian_points - projected_points) * seg_normal_normalized[idx]).sum(axis=-1)
+        # Offset arc lengths by the arc length of the segment start
+        arc_length = arc_length + cumsum_seg_length[idx]
+        # Assemble curvilinear coordinate array
+        cc = np.stack((arc_length, lateral_dist), axis=1)
+        # Set points beyond start or end of the line to nan
+        cc[np.sum((0 <= s) & (s <= 1), axis=1) == 0] = np.nan
+        curvilinear_coords.append(cc)
+    return np.array(curvilinear_coords)

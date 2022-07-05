@@ -1,7 +1,6 @@
 import abc
 import logging
 import math
-from functools import reduce
 from typing import List, Tuple, Set, Iterable
 
 import numpy as np
@@ -11,71 +10,45 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.road_network import Lane, RoadNetwork
+from crmonitor.common.helper import union_set, cartesian_to_curvilinear
+from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
 
-def union_set(s: Iterable):
-    return reduce(lambda agg, e: agg.union(e), s, set())
-
-
 def distance_to_bounds(
     vehicle_i: Vehicle, lanelet_ids: Iterable[int], world_state: WorldState
 ):
     state = vehicle_i.states_cr[world_state.time_step]
-    occ_points = list(
-        rotate_translate(
+    occ_points = rotate_translate(
             vehicle_i.shape.vertices[:-1], state.position, state.orientation
         )
-    )
     lanelets = [
         world_state.road_network.lanelet_network.find_lanelet_by_id(i)
         for i in lanelet_ids
     ]
-    left_bounds = [
-        l for l in lanelets if l.adj_left is not None and l.adj_left not in lanelet_ids
-    ]
-    right_bounds = [
-        l
+    left_bounds = tuple([
+        l.left_vertices for l in lanelets if l.adj_left is not None and l.adj_left not in lanelet_ids
+    ])
+    right_bounds = tuple([
+        l.right_vertices
         for l in lanelets
         if l.adj_right is not None and l.adj_right not in lanelet_ids
-    ]
-    d_left = [np.array([])]
-    # Todo: Cache curvilinear states
-    for l in left_bounds:
-        # For performance reasons, we find a lane that contains the lanelet
-        # so that
-        # the curvilinear coordinate system stored in the lane can be reused.
-        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
-        start_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[0])[0]
-        end_s = lane.clcs_left.convert_to_curvilinear_coords(*l.left_vertices[-1])[0]
-        corner_points = np.array(
-            lane.clcs_left.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
-        )
-        # Only consider points within the projection domain of the lanelet
-        points_in_proj_domain = corner_points[
-            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
-        ]
-        if points_in_proj_domain.size > 0:
-            d_left.append(points_in_proj_domain[:, 1])
+    ])
+    if len(left_bounds) > 0:
+        d_left = np.array(cartesian_to_curvilinear(left_bounds, occ_points))[..., 1].ravel()
+        d_left = d_left[~np.isnan(d_left)]
+    else:
+        d_left = np.array([])
+    if len(right_bounds) > 0:
+        d_right = np.array(cartesian_to_curvilinear(right_bounds, occ_points))[..., 1].ravel()
+        d_right = d_right[~np.isnan(d_right)]
+    else:
+        d_right = np.array([])
 
-    d_right = [np.array([])]
-    for l in right_bounds:
-        lane = world_state.road_network.find_lanes_by_lanelets([l.lanelet_id]).pop()
-        start_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[0])[0]
-        end_s = lane.clcs_right.convert_to_curvilinear_coords(*l.right_vertices[-1])[0]
-        corner_points = np.array(
-            lane.clcs_right.convert_list_of_points_to_curvilinear_coords(occ_points, 1)
-        )
-        points_in_proj_domain = corner_points[
-            (corner_points[:, 0] >= start_s) & (corner_points[:, 0] <= end_s)
-        ]
-        if points_in_proj_domain.size > 0:
-            d_right.append(points_in_proj_domain[:, 1])
-    return np.concatenate(d_left), np.concatenate(d_right)
+    return d_left, d_right
 
 
 class BasePredicateEvaluator(abc.ABC):
