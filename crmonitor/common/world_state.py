@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial, lru_cache
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional, Set, Union
 
 import numpy as np
 from commonroad.scenario.scenario import Scenario
@@ -28,7 +28,7 @@ class World:
     vehicles: Set[Vehicle]
     road_network: RoadNetwork
     scenario: Optional[Scenario] = None
-    cache: Optional[shelve.Shelf] = None
+    cache: Union[None, shelve.Shelf, dict] = None
 
     @classmethod
     def create_from_scenario(
@@ -43,8 +43,11 @@ class World:
             road_network = road_network
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
         vehicles = set()
-        cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
-        cache = shelve.open(str(cache_file), writeback=True)
+        if cache_dir is not None:
+            cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
+            cache = shelve.open(str(cache_file), writeback=True)
+        else:
+            cache = {}
         for obs in scenario.dynamic_obstacles:
             cls.augment_state_acceleration_jerk(scenario.dt, obs)
             curvi_cache, predicate_dict = cache.setdefault(
@@ -103,7 +106,7 @@ class World:
             return 0.1
 
     def __del__(self):
-        if self.cache is not None:
+        if isinstance(self.cache, shelve.Shelf):
             logging.info("Cache close!")
             self.cache.close()
 
