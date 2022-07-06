@@ -127,15 +127,3 @@ class World:
             logging.info("Cache close!")
             self.cache.close()
 
-
-# ToDo: Temporary workaround
-@dataclass
-class WorldState(World):
-    time_step: int = 0
-
-    def step(self):
-        self.time_step += 1
-
-    def __del__(self):
-        self.cache = None
-        super(WorldState, self).__del__()

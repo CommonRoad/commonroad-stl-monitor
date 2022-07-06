@@ -13,7 +13,7 @@ from commonroad.scenario.trajectory import State
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
-from crmonitor.common.world_state import World
+from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.predicates.rule import parse_rule, RuleNode, PredicateNode, ExistNode, AllNode
 from tests.util import parallel_lanes
@@ -67,11 +67,11 @@ class RuleTest(unittest.TestCase):
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_1)
 
-        world_state = World({ego_vehicle, other_vehicle_1}, road_network)
+        world = World({ego_vehicle, other_vehicle_1}, road_network)
 
         rule_str = "A a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
+        rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = rule_eval.evaluate()
         preds = rule_eval.get_predicates()
         self.assertEqual(rule_robustness[4], 1.0)
@@ -79,7 +79,7 @@ class RuleTest(unittest.TestCase):
 
         rule_str = "E a1: (in_front_of__a0_a1)"
         rule = parse_rule(rule_str, {"traffic_rules_param": {}})
-        rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
+        rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = []
         for i in range(ego_vehicle.end_time + 1):
             rob = rule_eval.update()
@@ -277,18 +277,18 @@ class RuleTest(unittest.TestCase):
         # standard robustness
         # TODO: Repair test for defined other agent
         # for ego_id, o_ids in exp_result:
-        #     world_state = World.create_from_scenario(scenario, ego_id,
+        #     world = World.create_from_scenario(scenario, ego_id,
         #                                                   self.config)
         #     for o_id, exp_violation in o_ids.items():
         #         rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-        #                 world_state, (o_id,))
+        #                 world, (o_id,))
         #         self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
         #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
         for ego_id, exp_violation in exp_floating:
-            world_state = World.create_from_scenario(scenario)
-            ego_vehicle = world_state.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world_state, ego_vehicle, "R_G1")
+            world = World.create_from_scenario(scenario)
+            ego_vehicle = world.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G1")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, AllNode))
             self.assertEqual(len(rule.children), 1)
@@ -309,18 +309,18 @@ class RuleTest(unittest.TestCase):
         # rule_str = "A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 ) implies keeps_safe_distance_prec__a0_a1)"
         # rule_eval = RuleEvaluator.create_from_rule_str(rule_str, output_type=Semantics.OUTPUT_ROBUSTNESS)
         # for ego_id, exp_violation in exp_floating:
-        #     world_state = World.create_from_scenario(scenario, ego_id)
+        #     world = World.create_from_scenario(scenario, ego_id)
         #     rule_robustness, predicate_robustness = rule_eval.evaluate_incremental(
-        #         world_state, to_pandas=False
+        #         world, to_pandas=False
         #     )
         #     rob_value = [list(rule_dict.values())[0] for rule_dict in rule_robustness.values()]
         #
         #     # create expected values
         #     exp_rob = []
-        #     for time_step in range(world_state.time_step + 1):
-        #         in_front_of = world_state.predicate_values[time_step]["in_front_of"]
-        #         in_same_lane = world_state.predicate_values[time_step]["in_same_lane"]
-        #         keeps_safe_distance_prec = world_state.predicate_values[time_step]["keeps_safe_distance_prec"]
+        #     for time_step in range(world.time_step + 1):
+        #         in_front_of = world.predicate_values[time_step]["in_front_of"]
+        #         in_same_lane = world.predicate_values[time_step]["in_same_lane"]
+        #         keeps_safe_distance_prec = world.predicate_values[time_step]["keeps_safe_distance_prec"]
         #
         #         all_vehicle_results = []
         #         for vehicle_pair in in_front_of.keys():
@@ -362,10 +362,10 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
         self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
-        world_state = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
-            ego_vehicle = world_state.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator(rule, ego_vehicle, world_state)
+            ego_vehicle = world.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator(rule, ego_vehicle, world)
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
@@ -378,19 +378,19 @@ class RuleTest(unittest.TestCase):
         # Todo: RuleEvaluator.create_from_rule_str
         # rule_eval = RuleSetEvaluator([rule], dt=0.1, output_type=Semantics.OUTPUT_ROBUSTNESS)
         # for ego_id, exp_violation in exp_result.items():
-        #     world_state = World.create_from_scenario(scenario, ego_id)
+        #     world = World.create_from_scenario(scenario, ego_id)
         #     df_rule, _ = rule_eval.evaluate_incremental(
-        #         world_state
+        #         world
         #     )
         #     rob_value = [r for r in df_rule["robustness"].values]
         #
         #     # create expected values
         #     exp_rob = []
-        #     for time_step in range(world_state.time_step + 1):
-        #         precedes = world_state.predicate_values[time_step]["precedes"]
-        #         keeps_safe_distance_prec = world_state.predicate_values[time_step]["keeps_safe_distance_prec"]
-        #         brakes_abruptly = world_state.predicate_values[time_step]["brakes_abruptly"]
-        #         rel_brakes_abruptly = world_state.predicate_values[time_step]["rel_brakes_abruptly"]
+        #     for time_step in range(world.time_step + 1):
+        #         precedes = world.predicate_values[time_step]["precedes"]
+        #         keeps_safe_distance_prec = world.predicate_values[time_step]["keeps_safe_distance_prec"]
+        #         brakes_abruptly = world.predicate_values[time_step]["brakes_abruptly"]
+        #         rel_brakes_abruptly = world.predicate_values[time_step]["rel_brakes_abruptly"]
         #
         #         if brakes_abruptly[(ego_id,)] < 0.:
         #             exp_rob.append(np.inf)
@@ -420,10 +420,10 @@ class RuleTest(unittest.TestCase):
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
 
         # standard robustness
-        world_state = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
-            ego_vehicle = world_state.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world_state, ego_vehicle, "R_G3")
+            ego_vehicle = world.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G3")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleNode))
             self.assertEqual(len(rule.children), 4)

@@ -145,13 +145,13 @@ class PredicateNode(MonitorNode, VisitorNode):
         self.io_type = io_type
         self.latest_value = None
 
-    def evaluate_boolean(self, world_state, vehicle_ids):
-        value = self.evaluator.evaluate_boolean(world_state, vehicle_ids)
+    def evaluate_boolean(self, world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
         self.latest_value = 1.0 if value else -1.0
         return value
 
-    def evaluate_robustness(self, world_state, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(world_state, vehicle_ids)
+    def evaluate_robustness(self, world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         self.latest_value = value
         return value
 

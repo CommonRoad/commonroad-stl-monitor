@@ -44,7 +44,7 @@ Checkout the [minimum working example](tutorials/monitor_scenario.py)
 ```python
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from crmonitor.common.world_state import World
+from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 
 scenario_path = "../scenarios/test_interstate/DEU_test_safe_distance.xml"
@@ -55,12 +55,12 @@ scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
 
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
 # Use the convenience class method to create with default configuration from a scenario.
-world_state = World.create_from_scenario(scenario)
+world = World.create_from_scenario(scenario)
 
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
-ego_vehicle = next(iter(world_state.vehicles))
-rule_evaluator = RuleEvaluator.create_from_config(world_state, ego_vehicle)
+ego_vehicle = next(iter(world.vehicles))
+rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
 
 # Either step through time steps sequentially
 robustness = rule_evaluator.update()

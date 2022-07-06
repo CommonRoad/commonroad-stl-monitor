@@ -8,7 +8,7 @@ import numpy as np
 import crmonitor
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.vehicle import Vehicle
-from crmonitor.common.world_state import WorldState, World
+from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
     MonitorCreationRuleTreeVisitor,
     EvaluationMonitorTreeVisitor,
@@ -32,7 +32,7 @@ class RuleEvaluator:
     @classmethod
     def create_from_config(
         cls,
-        world_state: World = None,
+        world: World = None,
         ego_vehicle: Vehicle = None,
         rule: str = "R_G1",
         traffic_rules_config=None,
@@ -46,7 +46,7 @@ class RuleEvaluator:
         return cls(
             rule_set,
             ego_vehicle,
-            world_state,
+            world,
             use_boolean=use_boolean,
             output_type=output_type,
         )
@@ -95,11 +95,7 @@ class RuleEvaluator:
         ):
             logger.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
-        # Todo: Remove time step from world state and pass a seperate parameter to predicates
-        self._world.time_step = self._last_evaluation_time_step
-        rule_value = self._eval_visitor.walk(
-            self._monitor, self._world, self._ego_vehicle
-        )
+        rule_value = self._eval_visitor.walk(self._monitor, self._world, self._last_evaluation_time_step, self._ego_vehicle)
         return rule_value
 
     def evaluate(self) -> np.ndarray:
@@ -129,7 +125,7 @@ class RuleEvaluator:
         )
         self._ego_vehicle = ego_vehicle
         self._last_evaluation_time_step = -1
-        self._world = WorldState(**world.__dict__)
+        self._world = world
         # Reset monitor
         reset_visitor = ResetMonitorTreeVisitor()
         self._monitor.visit(reset_visitor)

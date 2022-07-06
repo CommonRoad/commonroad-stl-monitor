@@ -12,7 +12,7 @@ from commonroad.scenario.trajectory import State
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, CurvilinearStateManager
-from crmonitor.common.world_state import WorldState
+from crmonitor.common.world import World
 from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
                                             PredLaneSpeedLimit, PredPreceding, )
 from tests.util import parallel_lanes
@@ -81,31 +81,17 @@ class TestPredicate(unittest.TestCase):
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_2)
 
-        world_state = WorldState(
+        world = World(
                 {ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network
         )
 
         pred = PredCutIn(self.config)
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_2 = pred.evaluate_boolean(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_3 = pred.evaluate_boolean(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_4 = pred.evaluate_boolean(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.time_step = 1
-        sol_monitor_mode_5 = pred.evaluate_boolean(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_5 = pred.evaluate_boolean(world, 1, [ego_vehicle.id, other_vehicle_2.id])
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -180,46 +166,20 @@ class TestPredicate(unittest.TestCase):
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_2)
 
-        world_state = WorldState(
+        world = World(
             {ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network
         )
 
         pred = PredInSameLane(self.config)
 
-        sol_monitor_mode_1 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_2 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_3 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_4 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        world_state.step()
-        sol_monitor_mode_5 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
-
-        world_state.step()
-        sol_monitor_mode_6 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
-
-        world_state.step()
-        sol_monitor_mode_7 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
-
-        world_state.step()
-        sol_monitor_mode_8 = pred.evaluate_robustness(
-            world_state, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_1 = pred.evaluate_robustness(world, 0, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_2 = pred.evaluate_robustness(world, 1, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_3 = pred.evaluate_robustness(world, 2, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_4 = pred.evaluate_robustness(world, 3, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_5 = pred.evaluate_robustness(world, 4, [ego_vehicle.id, other_vehicle_2.id])
+        sol_monitor_mode_6 = pred.evaluate_robustness(world, 5, [ego_vehicle.id, other_vehicle_2.id])
+        sol_monitor_mode_7 = pred.evaluate_robustness(world, 6, [ego_vehicle.id, other_vehicle_2.id])
+        sol_monitor_mode_8 = pred.evaluate_robustness(world, 7, [ego_vehicle.id, other_vehicle_2.id])
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -271,20 +231,19 @@ class TestPredicate(unittest.TestCase):
         other_vehicle = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other)
 
-        world_state = WorldState({ego_vehicle, other_vehicle}, road_network)
+        world = World({ego_vehicle, other_vehicle}, road_network)
         pred = PredSafeDistPrec(self.config)
 
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
-        sol_monitor_mode_1 = pred.evaluate_boolean(world_state, vehicle_ids)
-        world_state.step()
-        sol_monitor_mode_2 = pred.evaluate_boolean(world_state, vehicle_ids)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        world_state.time_step = 0
-        sol_robustness_mode_1 = pred.evaluate_robustness(world_state, vehicle_ids)
-        world_state.step()
-        sol_robustness_mode_2 = pred.evaluate_robustness(world_state, vehicle_ids)
+        sol_robustness_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+
+        sol_robustness_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
 
         # self.assertEqual(exp_sol_robustness_mode_1, sol_robustness_mode_1)
         # self.assertEqual(exp_sol_robustness_mode_2, sol_robustness_mode_2)
@@ -345,7 +304,7 @@ class TestPredicate(unittest.TestCase):
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_2)
 
-        world_state = WorldState(
+        world = World(
                 {ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network
         )
         pred = PredInFrontOf(self.config)
@@ -354,14 +313,13 @@ class TestPredicate(unittest.TestCase):
         sol_monitor_mode = []
         sol_robustness_mode = []
         for i in range(4):
-            sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
-            sol_robustness_mode.append(
-                pred.evaluate_robustness(world_state, vehicle_ids)
-            )
-            world_state.step()
+            sol_monitor_mode.append(pred.evaluate_boolean(world, i, vehicle_ids))
+            sol_robustness_mode.append(pred.evaluate_robustness(world, i, vehicle_ids)
+                                       )
+
         vehicle_ids = [other_vehicle_2.id, ego_vehicle.id]
-        sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
-        sol_robustness_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
+        sol_monitor_mode.append(pred.evaluate_boolean(world, 4, vehicle_ids))
+        sol_robustness_mode.append(pred.evaluate_robustness(world, 4, vehicle_ids))
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0])
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
@@ -415,15 +373,14 @@ class TestPredicate(unittest.TestCase):
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
                               lanelet_assignments_ego)
 
-        world_state = WorldState({ego_vehicle}, road_network)
+        world = World({ego_vehicle}, road_network)
 
         pred = PredSingleLane(self.config)
 
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
         for i in range(6):
-            sol_monitor_mode.append(pred.evaluate_robustness(world_state, vehicle_ids))
-            world_state.step()
+            sol_monitor_mode.append(pred.evaluate_robustness(world, i, vehicle_ids))
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0] >= 0)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1] >= 0)
@@ -484,7 +441,7 @@ class TestPredicate(unittest.TestCase):
                               lanelet_assignments_ego)
 
 
-        world_state = WorldState({ego_vehicle}, road_network)
+        world = World({ego_vehicle}, road_network)
 
         pred = PredLaneSpeedLimit({"country": "DEU"})
 
@@ -492,11 +449,10 @@ class TestPredicate(unittest.TestCase):
         sol_monitor_mode = []
         sol_robustness_mode = []
         for i in range(4):
-            sol_monitor_mode.append(pred.evaluate_boolean(world_state, vehicle_ids))
-            sol_robustness_mode.append(
-                pred.evaluate_robustness(world_state, vehicle_ids)
-            )
-            world_state.step()
+            sol_monitor_mode.append(pred.evaluate_boolean(world, i, vehicle_ids))
+            sol_robustness_mode.append(pred.evaluate_robustness(world, i, vehicle_ids)
+                                       )
+
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0])
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode[1])
@@ -537,16 +493,15 @@ class TestPredicate(unittest.TestCase):
         lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {2}]
         other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other, road_network)
 
-        world_state = WorldState(
+        world = World(
                 {ego_vehicle, other_vehicle, other_vehicle_2}, road_network
         )
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
 
         pred = PredPreceding({})
         for t, exp in enumerate(expected):
-            rob = pred.evaluate_robustness(world_state, vehicle_ids)
+            rob = pred.evaluate_robustness(world, t, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
-            world_state.step()
 
     def create_vehicle(self, veh_id, lanelets_ego, lat_ego, lon_ego, road_network):
         ego_vehicle_param = self.config.get("ego_vehicle_param")

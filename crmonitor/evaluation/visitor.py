@@ -61,29 +61,30 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.use_boolean = use_boolean
         self.output_type = output_type
 
-    def walk(self, node: MonitorNode, world_state, ego_vehicle, *ctx):
+    def walk(self, node: MonitorNode, world, time_step, ego_vehicle, *ctx):
         self.other_ids = tuple()
-        return node.visit(self, world_state, (ego_vehicle.id,), *ctx)
+        return node.visit(self, world, time_step, (ego_vehicle.id,), *ctx)
 
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        world_state = ctx[0]
+        world = ctx[0]
+        time_step = ctx[1]
         # Collect child_values
         assert (
-            rule_node.monitor.dt == world_state.dt
-        ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world_state.dt}!"
+            rule_node.monitor.dt == world.dt
+        ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world.dt}!"
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
         val = rule_node.update(
-            world_state.time_step, list(child_values.items())
+            time_step, list(child_values.items())
         )
         return val
 
     def _visit_quant_node(self, node, *ctx):
-        world_state, other_ids = ctx[:2]
+        world, time_step, other_ids = ctx[:3]
         all_ids = set(
             [
                 v.id
-                for v in world_state.vehicles
-                if v.is_valid(world_state.time_step)
+                for v in world.vehicles
+                if v.is_valid(time_step)
             ]
         )
         remaining_ids = tuple(all_ids.difference(other_ids))
@@ -91,14 +92,14 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         selected_ids = []
         for i in remaining_ids:
             ids = other_ids + (i,)
-            val = node.monitors[i].visit(self, world_state, ids, *ctx[2:])
+            val = node.monitors[i].visit(self, world, time_step, ids, *ctx[2:])
             values.append(val)
             selected_ids.append(ids)
         return values, selected_ids
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         values, selected_ids = self._visit_quant_node(all_node, *ctx)
-        other_ids = ctx[1]
+        other_ids = ctx[2]
         if len(values) > 0:
             idx = np.argmin(values)
             val = values[idx]
@@ -112,7 +113,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         values, selected_ids = self._visit_quant_node(exist_node, *ctx)
-        other_ids = ctx[1]
+        other_ids = ctx[2]
         if len(values) > 0:
             idx = np.argmax(values)
             val = values[idx]
@@ -125,15 +126,15 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return val
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        world_state, other_ids = ctx[:2]
+        world, time_step, other_ids = ctx[:3]
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
         if self.use_boolean or predicate_node.io_type == IOType.INPUT and self.output_type == OutputType.OUTPUT_ROBUSTNESS:
             value = predicate_node.evaluate_boolean(
-                world_state, predicate_ids
+                world, time_step, predicate_ids
             )
             value = 1.0 if value else -1.0
         else:
-            value = predicate_node.evaluate_robustness(world_state, predicate_ids)
+            value = predicate_node.evaluate_robustness(world, time_step, predicate_ids)
         return value
 
 
