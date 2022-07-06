@@ -45,7 +45,7 @@ class World:
 
     @classmethod
     def create_from_scenario(
-        cls, scenario: Scenario, config=None, road_network=None, cache_dir="/tmp"
+        cls, scenario: Scenario, config=None, road_network=None, cache_dir=None
     ):
         if config is None:
             config = get_world_config()
