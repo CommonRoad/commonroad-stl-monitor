@@ -1,11 +1,12 @@
 import importlib.resources as pkg_resources
 import logging
 import shelve
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial, lru_cache
 from pathlib import Path
-from typing import Optional, Set, Union
+from typing import Optional, Set, Union, List
 
 import numpy as np
 from commonroad.scenario.scenario import Scenario
@@ -13,7 +14,8 @@ from commonroad.scenario.scenario import Scenario
 import crmonitor
 from crmonitor.common.helper import (create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache, )
+from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache,
+                                      ControlledVehicle, )
 
 
 @lru_cache(maxsize=None)
@@ -29,6 +31,17 @@ class World:
     road_network: RoadNetwork
     scenario: Optional[Scenario] = None
     cache: Union[None, shelve.Shelf, dict] = None
+
+    def _warn_persistent_cache(self):
+        if len(self.controlled_vehicle_ids) > 0 and isinstance(self.cache, shelve.Shelf):
+            warnings.warn("Using controlled vehicles with persistent caching may result in inconsistent caches and is therfore discouraged!")
+
+    def __post_init__(self):
+        self._warn_persistent_cache()
+
+    def add_vehicle(self, vehicle: Vehicle):
+        self.vehicles.add(vehicle)
+        self._warn_persistent_cache()
 
     @classmethod
     def create_from_scenario(
@@ -62,6 +75,10 @@ class World:
                 )
             )
         return cls(vehicles, road_network, scenario, cache)
+
+    @property
+    def controlled_vehicle_ids(self) -> Set[int]:
+        return {vehicle.id for vehicle in self.vehicles if isinstance(vehicle, ControlledVehicle)}
 
     @staticmethod
     def augment_state_acceleration_jerk(dt, obs):

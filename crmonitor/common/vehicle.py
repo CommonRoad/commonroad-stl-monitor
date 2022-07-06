@@ -293,13 +293,13 @@ class Vehicle:
 
 class ControlledVehicle(Vehicle):
 
-    def __init__(self, id, vehicle_param, shape, road_network,
+    def __init__(self, obstacle_id, vehicle_param, shape, road_network,
                  initial_lanelets, inital_state,obstacle_type=ObstacleType.CAR, initial_signal=None):
         states_cr = {inital_state.time_step: inital_state}
         signal_series = {inital_state.time_step: initial_signal}
         ccosy_cache = CurvilinearStateManager(road_network)
         lanelet_assignment = {inital_state.time_step: initial_lanelets}
-        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache,
+        super().__init__(obstacle_id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache,
                          lanelet_assignment)
 
     def add_state(self, state: State, lanelets, signal_state=None):
