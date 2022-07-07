@@ -1,8 +1,8 @@
 rtamt==0.3
 numba==0.51.2
 numpy
-commonroad-io==2021.1
-commonroad-vehicle-models==1.0.0
+commonroad-io==2022.1
+commonroad-vehicle-models==2.0.0
 ruamel-yaml>=0.16.12
 matplotlib~=3.5.1
 setuptools~=50.3.1

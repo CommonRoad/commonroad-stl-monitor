@@ -13,8 +13,8 @@ setup(
     install_requires=[
         "rtamt==0.3",
         "numba==0.51.2",
-        "commonroad-io==2021.1",
-        "commonroad-vehicle-models==1.0.0",
+        "commonroad-io==2022.1",
+        "commonroad-vehicle-models==2.0.0",
         "ruamel-yaml>=0.16.12",
         "commonroad-drivability-checker>=2021.4",
         "antlr4-python3-runtime>=4.6,<=4.8"

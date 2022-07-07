@@ -237,7 +237,6 @@ class RoadNetwork:
                 lanelet,
                 self.lanelet_network,
                 road_network_param.get("merging_length"),
-                lanelet_type,
             )
             if len(merged_lanelets) == 0 or len(merge_jobs) == 0:
                 merged_lanelets.append(lanelet)
