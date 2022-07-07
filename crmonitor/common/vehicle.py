@@ -293,18 +293,21 @@ class Vehicle:
 
 class ControlledVehicle(Vehicle):
 
-    def __init__(self, obstacle_id, vehicle_param, shape, road_network,
-                 initial_lanelets, inital_state,obstacle_type=ObstacleType.CAR, initial_signal=None):
+    def __init__(self, obstacle_id, vehicle_param, shape, road_network: RoadNetwork, inital_state,
+                 obstacle_type=ObstacleType.CAR, initial_signal=None):
         states_cr = {inital_state.time_step: inital_state}
         signal_series = {inital_state.time_step: initial_signal}
         ccosy_cache = CurvilinearStateManager(road_network)
+        self.lanelet_network = road_network.lanelet_network
+        initial_lanelets = road_network.lanelet_network.find_lanelet_by_shape(shape.rotate_translate_local(inital_state.position, inital_state.orientation))
         lanelet_assignment = {inital_state.time_step: initial_lanelets}
         super().__init__(obstacle_id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache,
                          lanelet_assignment)
 
-    def add_state(self, state: State, lanelets, signal_state=None):
+    def add_state(self, state: State, signal_state=None):
         self.states_cr[state.time_step] = state
-        self.lanelet_assignment[state.time_step] = lanelets
+        loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
+        self.lanelet_assignment[state.time_step] = self.lanelet_network.find_lanelet_by_shape(loc_shape)
         self.signal_series[state.time_step] = signal_state
 
 class DynamicObstacleVehicle(Vehicle):
