@@ -4,18 +4,16 @@ from pathlib import Path
 from commonroad.common.file_reader import CommonRoadFileReader
 from ruamel.yaml import YAML
 
-from crmonitor.common.world_state import WorldState
-from crmonitor.predicates.rule import parse_rule, AllNode, RuleNode, ExistNode, \
-    PredicateNode, IOType
-from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, \
-    EvaluationMonitorTreeVisitor
+from crmonitor.common.world import World
+from crmonitor.evaluation.evaluation import RuleEvaluator
+from crmonitor.predicates.rule import parse_rule, AllNode, RuleNode, ExistNode, PredicateNode, IOType
 
 
 class TestRuleEvaluator(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        root_path = Path(__file__).parent.parent
+        root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = root_path / "config.yaml"
         self.config = YAML().load(config_path)
         rules_path = root_path / "traffic_rules_rtamt.yaml"
@@ -30,16 +28,16 @@ class TestRuleEvaluator(unittest.TestCase):
             "E a1: (in_front_of__a0_a1) and single_lane__a0",
             "single_lane__a0",
             "single_lane__a0 and single_lane__a0",
+            "A a1: (in_front_of__a0_a1)"
         ]
 
-        scenario, _ = CommonRoadFileReader(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml").open(True)
+        scenario, _ = CommonRoadFileReader(str(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml")).open(True)
         for r in rules:
             rule = parse_rule(r, self.traffic_rule_params)
-            eval = rule.visit(MonitorCreationRuleTreeVisitor(scenario.dt))
-            eval_visitor = EvaluationMonitorTreeVisitor()
-            ws = WorldState.create_from_scenario(scenario, 1001)
-            ws.time_step = ws.ego_vehicle.start_time
-            rob = eval.visit(eval_visitor, ws, (1001,), False)
+            ws = World.create_from_scenario(scenario)
+            ego_vehicle = ws.vehicle_by_id(1001)
+            evaluator = RuleEvaluator(rule, ego_vehicle, ws)
+            rob = evaluator.update()
 
     def test_parsing(self):
         rule = parse_rule("A a1: (in_front_of__a0_a1 and cut_in__a0_a1)", self.traffic_rule_params)

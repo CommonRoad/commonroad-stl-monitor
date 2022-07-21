@@ -1,9 +1,12 @@
 import enum
 import math
 from decimal import Decimal
+from functools import reduce
+from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
+import numpy as np
 import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
@@ -15,22 +18,13 @@ from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import RoadNetwork, Lane
-from crmonitor.common.vehicle import (Vehicle, VehicleClassification,
-                                      StateLongitudinal, StateLateral, )
+from crmonitor.common.vehicle import Vehicle
 
 
 @enum.unique
 class OperatingMode(enum.Enum):
     MONITOR = "monitor"
-    CONSTRAINT = "constraint"
     ROBUSTNESS = "robustness"
-
-
-@enum.unique
-class Backend(enum.Enum):
-    PythonMTL = "python-mtl"
-    RTAMT = "rtamt"
-
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict,
                              simulation_param: Dict) -> Dict:
@@ -341,16 +335,6 @@ def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_netwo
     return intersecting_lanes
 
 
-def _get_vehicle_classification(ego_vehicle: Vehicle, road_network: RoadNetwork, obstacle: DynamicObstacle)\
-        -> VehicleClassification:
-    if _adjacent_to_ego(list(ego_vehicle.lanelet_assignment[ego_vehicle.state_list_cr[0].time_step])[0],
-                        # TODO: Why is adjacency only decided for initial time step?
-                        list(obstacle.initial_shape_lanelet_ids)[0], road_network, ):
-        return VehicleClassification.ADJACENT_VEHICLE
-    else:
-        return VehicleClassification.CROSSING_VEHICLE
-
-
 def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         road_network: RoadNetwork, dt: float,
         ego_vehicle: Vehicle = None, create_robust_lanelet_assignment=False) -> Vehicle:
@@ -368,7 +352,6 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
             obstacle.prediction.trajectory.state_list[0].velocity, dt, )
     jerk = _compute_jerk(acceleration, 0, dt)
     if ego_vehicle is None:
-        vehicle_classification = VehicleClassification.EGO_VEHICLE
         initial_lanelets = [
                 road_network.lanelet_network.find_lanelet_by_id(lanelet_id) for
                 lanelet_id in obstacle.initial_shape_lanelet_ids]
@@ -387,7 +370,6 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
             list(obstacle.initial_center_lanelet_ids),
             list(obstacle.initial_shape_lanelet_ids))
         reference_lane = ego_vehicle.lane
-        vehicle_classification = _get_vehicle_classification(ego_vehicle, road_network, obstacle)
 
     state_lon, state_lat = create_curvilinear_states(
             obstacle.initial_state.position, obstacle.initial_state.velocity,
@@ -401,7 +383,6 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
     signal_series = {initial_time_step: obstacle.initial_signal_state}
     lanelet_assignments = {
             initial_time_step: obstacle.initial_shape_lanelet_ids}
-    vehicle_classifications = {initial_time_step: vehicle_classification}
     if create_robust_lanelet_assignment:
         robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(obstacle.initial_state, obstacle, road_network)}
     else:
@@ -427,46 +408,13 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
                 state.time_step)
         lanelet_assignments[state.time_step] = \
         obstacle.prediction.shape_lanelet_assignment[state.time_step]
-        vehicle_classifications[state.time_step] = vehicle_classification
         if create_robust_lanelet_assignment:
             robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(state, obstacle, road_network)
 
-    vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape,
-            state_list_cr, obstacle.obstacle_id, obstacle.obstacle_type,
-            vehicle_param, lanelet_assignments, signal_series,
-            vehicle_classifications, lane, robust_lanelet_assignment)
+    vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape, state_list_cr, obstacle.obstacle_id,
+                      obstacle.obstacle_type, vehicle_param, lanelet_assignments, signal_series, lane,
+                      robust_lanelet_assignment)
     return vehicle
-
-
-def create_curvilinear_states(position: List[float], velocity: float,
-        acceleration: float, jerk: float, orientation: float, lane: Lane, ) -> \
-Union[Tuple[StateLongitudinal, StateLateral], Tuple[None, None]]:
-    """
-    Computes initial state of ego vehicle
-
-    :param position: position of vehicle in cartesian coordinates
-    :param velocity: velocity of vehicle
-    :param acceleration: acceleration of vehicle
-    :param jerk: jerk of vehicle
-    :param orientation: orientation of vehicle
-    :param lane: reference lane of the vehicle
-    :return: lateral and longitudinal state of vehicle
-    """
-    try:
-        s, d = lane.clcs.convert_to_curvilinear_coords(position[0], position[1])
-    except ValueError:
-        print("Vehicle out of projection domain: State will not be considered")
-        return None, None
-    theta_cl = lane.orientation(s)
-    if acceleration is not None and jerk is not None:
-        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration, j=jerk)
-    elif acceleration is not None:
-        x_lon = StateLongitudinal(s=s, v=velocity, a=acceleration)
-    else:
-        x_lon = StateLongitudinal(s=s, v=velocity)
-    x_lat = StateLateral(d=d, theta=(orientation - theta_cl))
-
-    return x_lon, x_lat
 
 
 def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int,
@@ -584,7 +532,6 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
             state_list_cr = {initial_time_step: obs.initial_state}
             lanelet_assignments = {initial_time_step: obs.initial_shape_lanelet_ids}
             signal_series = {initial_time_step: obs.initial_signal_state}
-            vehicle_classification = _get_vehicle_classification(ego_vehicle, road_network, obs)
             for state in obs.prediction.trajectory.state_list:
                 state_list_cr[state.time_step] = state
                 signal_series[state.time_step] = obs.signal_state_at_time_step(state.time_step)
@@ -592,22 +539,21 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
             lane = road_network.find_lane_by_obstacle(list(obs.initial_center_lanelet_ids),
                                                       list(obs.initial_shape_lanelet_ids))
 
-            vehicle = Vehicle(state_list_lon, state_list_lat, obs.obstacle_shape,
-                              state_list_cr, obs.obstacle_id, obs.obstacle_type,
-                              other_vehicles_param, lanelet_assignments, signal_series,
-                              vehicle_classification, lane, None)
+            vehicle = Vehicle(state_list_lon, state_list_lat, obs.obstacle_shape, state_list_cr, obs.obstacle_id,
+                              obs.obstacle_type, other_vehicles_param, lanelet_assignments, signal_series, lane, None)
 
         other_vehicles.append(vehicle)
     return ego_vehicle, other_vehicles
 
 
-def load_yaml(file_name: str) -> Union[Dict, None]:
+def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
     """
     Loads configuration setup from a yaml file
 
     :param file_name: name of the yaml file
     """
-    with open(file_name, "r") as stream:
+    file_name = Path(file_name)
+    with file_name.open("r") as stream:
         try:
             config = ruamel.yaml.round_trip_load(stream, preserve_quotes=True)
             return config
@@ -707,7 +653,6 @@ def update_scenario_vehicles(dt: float, time_step: int,
                 if o.obstacle_id not in dynamic_vehicles:
                     vehicle = obstacle_vehicle_dict[o.obstacle_id][ego_vehicle.lane.lanelet.lanelet_id]
                     # update vehicle classification and lane
-                    vehicle.vehicle_classification = _get_vehicle_classification(ego_vehicle, road_network, o)
                     vehicle.lane = road_network.find_lane_by_obstacle(list(o.initial_center_lanelet_ids),
                                                                       list(o.initial_shape_lanelet_ids))
 
@@ -782,3 +727,47 @@ def min_max(arr):
         min_val = min(x, min_val)
         max_val = max(x, max_val)
     return min_val, max_val
+
+
+def union_set(s: Iterable):
+    return reduce(lambda agg, e: agg.union(e), s, set())
+
+
+def cartesian_to_curvilinear(reference_paths: Iterable[np.ndarray], cartesian_points: np.ndarray) -> np.ndarray:
+    curvilinear_coords = []
+    for ref_path in reference_paths:
+        # This could also be pre-computed
+        # Segment start points
+        seg_start = ref_path[:-1]
+        # Segment directions
+        seg_dir = ref_path[1:] - ref_path[:-1]
+        # Segment lengths
+        seg_length = np.sqrt(np.sum(seg_dir * seg_dir, axis=-1))
+        # Cumulated segment length offsets
+        cumsum_seg_length = np.concatenate((np.zeros(1), np.cumsum(seg_length)))
+        # Segment direction with length 1
+        seg_dir_normalized = seg_dir / seg_length[:, np.newaxis]
+        # Segment normal with length 1
+        seg_normal_normalized = seg_dir_normalized[:, ::-1].copy()
+        seg_normal_normalized[:, 1] *= -1
+
+        # Calculate the normalized segment arc length value
+        s_norm_segment = ((cartesian_points[:, np.newaxis] - seg_start[np.newaxis]) * seg_dir_normalized).sum(axis=-1)
+        # Calculate the arc length relative to the segment length
+        s = s_norm_segment / seg_length[np.newaxis, :]
+        # Determine the segment with the lowest index to which the points can be projected (0 <= s <= 1)
+        # np.argmax of a boolean gets the index of the first True value, or 0 if there is no true value.
+        idx = np.argmax((0 <= s) & (s <= 1), axis=-1)
+        arc_length = s_norm_segment[np.arange(start=0, stop=len(idx)), idx]
+        # Get the projected point on the line
+        projected_points = ref_path[idx] + seg_dir_normalized[idx] * arc_length[:, np.newaxis]
+        # Get the signed lateral distance
+        lateral_dist = -((cartesian_points - projected_points) * seg_normal_normalized[idx]).sum(axis=-1)
+        # Offset arc lengths by the arc length of the segment start
+        arc_length = arc_length + cumsum_seg_length[idx]
+        # Assemble curvilinear coordinate array
+        cc = np.stack((arc_length, lateral_dist), axis=1)
+        # Set points beyond start or end of the line to nan
+        cc[np.sum((0 <= s) & (s <= 1), axis=1) == 0] = np.nan
+        curvilinear_coords.append(cc)
+    return np.array(curvilinear_coords)

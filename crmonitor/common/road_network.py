@@ -25,6 +25,7 @@ class Lane:
         """
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
+        self.lane_id = int("".join((str(i) for i in self._contained_lanelets)))
         self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
             merged_lanelet.left_vertices, road_network_param
         )
@@ -236,7 +237,6 @@ class RoadNetwork:
                 lanelet,
                 self.lanelet_network,
                 road_network_param.get("merging_length"),
-                lanelet_type,
             )
             if len(merged_lanelets) == 0 or len(merge_jobs) == 0:
                 merged_lanelets.append(lanelet)

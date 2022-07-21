@@ -1,0 +1,38 @@
+@startuml
+
+abstract class Predicate {
+{abstract} +evaluate_boolean(world_state: World)
+{abstract} +evaluate_robustness(world_state: World)
+}
+
+class RuleEvaluator {
++step() : Uniont[float,bool]
+}
+
+abstract class Vehicle
+
+class World
+
+class RoadNetwork
+
+class Rule {
+{static} +parse(rule_str: String)
+}
+
+class ControlledVehicle {
++add_state(state: State)
+}
+
+Vehicle <|-- ScenarioVehicle
+Vehicle <|-- ControlledVehicle
+
+Predicate <|-- InSameLanePredicate
+
+World o-- RoadNetwork
+World o-- Vehicle : vehicles
+RuleEvaluator o-- Vehicle : ego_vehicle
+RuleEvaluator o-- Rule
+RuleEvaluator o-- World
+
+
+@enduml

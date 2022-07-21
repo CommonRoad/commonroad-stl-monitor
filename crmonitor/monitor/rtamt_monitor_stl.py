@@ -1,7 +1,10 @@
+import copy
 from enum import Enum
 from typing import List, Tuple
 
 import rtamt
+from rtamt.evaluator.stl.online_evaluator import STLOnlineEvaluator
+
 from crmonitor.predicates.rule import IOType, RuleNode
 from rtamt import Language
 
@@ -12,6 +15,7 @@ class OutputType(Enum):
 
 
 class RtamtStlMonitor:
+    specs = {}
     """
     Represents single formalized STL rule
     """
@@ -59,7 +63,16 @@ class RtamtStlMonitor:
         self._predicates = predicates
         self._output_type = output_type
         self.dt = dt
-        self._monitor = self.construct_monitor(rule_str, output_type, predicates, dt)
+        spec = self.specs.get((rule_str, output_type, dt))
+        if spec is None:
+            spec = self.specs.setdefault((rule_str, output_type, dt), self.construct_monitor(rule_str, output_type, predicates, dt))
+            self.specs[(rule_str, output_type, dt)] = spec
+        # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
+        self._monitor = copy.copy(spec)
+        self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
+        self._monitor.top.accept(self._monitor.online_evaluator)
+        self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
+        self._monitor.reset()
 
     def reset_monitor(self):
         self._monitor.reset()

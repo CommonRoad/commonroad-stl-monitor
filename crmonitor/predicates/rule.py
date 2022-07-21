@@ -2,7 +2,10 @@ import copy
 import inspect
 import re
 import sys
-from enum import auto, Enum
+from abc import ABCMeta, abstractmethod
+from enum import Enum
+
+from crmonitor.monitor.monitor_node import MonitorNode
 
 
 def get_all_predicate_evaluators():
@@ -90,7 +93,17 @@ def parse_rule(full_rule_str, config, name=None):
     return node
 
 
-class RuleNode:
+class VisitorNode(metaclass=ABCMeta):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    @abstractmethod
+    def visit(self, visitor, **ctx):
+        pass
+
+
+class RuleNode(VisitorNode):
     def __init__(self, children, rule_str, name):
         self.children = children
         self.name = name
@@ -100,7 +113,7 @@ class RuleNode:
         return visitor.visit_rule_node(self, *ctx)
 
 
-class AllNode:
+class AllNode(VisitorNode):
     def __init__(self, children, quantified_vehicle, name):
         self.children = children
         self.name = name
@@ -110,7 +123,7 @@ class AllNode:
         return visitor.visit_all_node(self, *ctx)
 
 
-class ExistNode:
+class ExistNode(VisitorNode):
     def __init__(self, children, quantified_vehicle, name):
         self.children = children
         self.name = name
@@ -120,24 +133,25 @@ class ExistNode:
         return visitor.visit_exist_node(self, *ctx)
 
 
-class PredicateNode:
+class PredicateNode(MonitorNode, VisitorNode):
+
     def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
         assert (
             len(agent_placeholders) == evaluator.arity
         ), f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
-        self.name = full_name
+        super().__init__(full_name)
         self.agent_placeholders = tuple(agent_placeholders)
         self.evaluator = evaluator
         self.io_type = io_type
         self.latest_value = None
 
-    def evaluate_boolean(self, world_state, vehicle_ids):
-        value = self.evaluator.evaluate_boolean(world_state, vehicle_ids)
+    def evaluate_boolean(self, world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
         self.latest_value = 1.0 if value else -1.0
         return value
 
-    def evaluate_robustness(self, world_state, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(world_state, vehicle_ids)
+    def evaluate_robustness(self, world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         self.latest_value = value
         return value
 
