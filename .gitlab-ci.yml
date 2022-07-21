@@ -46,4 +46,4 @@ deploy_develop:
 #    - git push -o ci.skip origin HEAD:${CI_COMMIT_REF_NAME}
   rules:
     # Deploy only when a merge request is merged into the master branch
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "refactor_gnn" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "test_ci_version_bump"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "refactor_gnn" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "test_ci_version_bump" && $CI_COMMIT_REF_NAME == "refactor_gnn"'
