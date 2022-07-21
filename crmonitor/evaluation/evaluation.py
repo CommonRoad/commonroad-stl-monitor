@@ -117,14 +117,13 @@ class RuleEvaluator:
     def other_ids(self) -> Tuple[int]:
         return self._eval_visitor.other_ids[1:]
 
-    def reset(self, ego_vehicle: Vehicle, world: World, start_time_step=-1):
+    def reset(self, ego_vehicle: Vehicle, world: World, start_time_step=None):
         self._last_evaluation_time_step = (
             start_time_step - 1
             if start_time_step is not None
             else ego_vehicle.start_time - 1
         )
         self._ego_vehicle = ego_vehicle
-        self._last_evaluation_time_step = -1
         self._world = world
         # Reset monitor
         reset_visitor = ResetMonitorTreeVisitor()
