@@ -44,6 +44,8 @@ deploy_develop:
 #    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 #    - git remote set-url origin "https://gitlab-ci-token:${VERSION_BUMP_PUSH_TOKEN}@gitlab.lrz.de/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}.git"
 #    - git push -o ci.skip origin HEAD:${CI_COMMIT_REF_NAME}
-  rules:
-    # Deploy only when a merge request is merged into the master branch
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "refactor_gnn" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "test_ci_version_bump" && $CI_COMMIT_REF_NAME == "refactor_gnn"'
+#  rules:
+#    # Deploy only when a merge request is merged into the master branch
+#    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "refactor_gnn" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "test_ci_version_bump" && $CI_COMMIT_REF_NAME == "refactor_gnn"'
+  only:
+    - refactor_gnn
