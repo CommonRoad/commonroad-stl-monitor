@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Union, Dict, List, Tuple, Optional
+from typing import Union, Dict, List, Tuple, Optional, Set
 
 import numba
 import numpy as np
@@ -263,7 +263,7 @@ class Vehicle:
         state = self.states_cr.get(time_step)
         return state is not None
 
-    def lanes_at_state(self, time_step):
+    def lanes_at_state(self, time_step) -> Set[Lane]:
         lanelets = self.lanelet_assignment[time_step]
         return self.ccosy_cache.road_network.find_lanes_by_lanelets(lanelets)
 

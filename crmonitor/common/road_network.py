@@ -48,6 +48,10 @@ class Lane:
             merged_lanelet.left_vertices, merged_lanelet.right_vertices
         )
 
+    def __lt__(self, other):
+        assert isinstance(other, Lane)
+        return tuple(sorted(self.contained_lanelets)) < tuple(sorted(other.contained_lanelets))
+
     @property
     def lanelet(self) -> Lanelet:
         return self._lanelet

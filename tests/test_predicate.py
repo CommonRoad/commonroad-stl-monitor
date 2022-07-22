@@ -341,6 +341,7 @@ class TestPredicate(unittest.TestCase):
         exp_sol_monitor_mode_4 = False
         exp_sol_monitor_mode_5 = False
         exp_sol_monitor_mode_6 = False
+        exp_sol_monitor_mode_7 = False
 
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(3)
@@ -361,6 +362,7 @@ class TestPredicate(unittest.TestCase):
             3: State(position=(30, 3.5), time_step=3,velocity=10, orientation=0),
             4: State(position=(40, 4), time_step=4,  velocity=10, orientation=0),
             5: State(position=(50, 4.5), time_step=5,velocity=10, orientation=0),
+            6: State(position=(50, 100), time_step=5,velocity=10, orientation=0),
         }
         lanelet_assignments_ego = {
             0: {1},
@@ -369,6 +371,7 @@ class TestPredicate(unittest.TestCase):
             3: {1, 2},
             4: {1, 2},
             5: {1, 2},
+            6: {1},
         }
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
                               lanelet_assignments_ego)
@@ -379,7 +382,8 @@ class TestPredicate(unittest.TestCase):
 
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
-        for i in range(6):
+        assert len(cr_state_list_ego) == len(lanelet_assignments_ego)
+        for i in range(len(cr_state_list_ego)):
             sol_monitor_mode.append(pred.evaluate_robustness(world, i, vehicle_ids))
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode[0] >= 0)
@@ -388,6 +392,7 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3] >= 0)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4] >= 0)
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5] >= 0)
+        self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode[6] >= 0)
 
     def test_speed_limit(self):
         # expected solutions

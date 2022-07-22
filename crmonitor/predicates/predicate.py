@@ -190,7 +190,7 @@ class PredSingleLane(BasePredicateEvaluator):
         """
         # single_lane_boolean = self.evaluate_boolean(world, vehicle_ids)
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        k_lanes = vehicle_k.lanes_at_state(time_step)
+        k_lanes = sorted(vehicle_k.lanes_at_state(time_step))
         assert (
             len(k_lanes) > 0
         ), f"Vehicle must be assigned to at least one lane! {str(world.scenario.scenario_id)}, id={vehicle_ids[0]}, t={time_step}"
@@ -199,7 +199,7 @@ class PredSingleLane(BasePredicateEvaluator):
         ref_lanes = [
             l
             for l in k_lanes
-            if l.lanelet.convert_to_polygon().contains_point(ref_point)
+            if l.lanelet.polygon.contains_point(ref_point)
         ]
         ref_lane = ref_lanes[0] if len(ref_lanes) > 0 else k_lanes[0]
 
