@@ -270,7 +270,7 @@ class Vehicle:
     def get_lane(self, time_step):
         # Todo: How to decide lane assignment generally?
         lanes = self.lanes_at_state(time_step)
-        return lanes.pop() if lanes is not None else None
+        return lanes.pop() if len(lanes) > 0 else None
 
     @property
     def end_time(self):
