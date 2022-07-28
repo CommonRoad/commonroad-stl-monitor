@@ -61,7 +61,6 @@ class RuleEvaluator:
         output_type: OutputType = OutputType.STANDARD,
     ):
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
-        self.output_type = output_type
         self._rule = rule
         self._monitor = rule.visit(visitor)
         self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
@@ -128,6 +127,4 @@ class RuleEvaluator:
         self._world = world
         # Reset monitor
         reset_visitor = ResetMonitorTreeVisitor()
-        visitor = MonitorCreationRuleTreeVisitor(world.dt, self.output_type)
-        self._monitor = self._rule.visit(visitor)
         self._monitor.visit(reset_visitor)

@@ -173,7 +173,7 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
 class ResetMonitorTreeVisitor(RuleTreeVisitor):
 
     def _visit(self, node, *ctx):
-        for c in node.monitors:
+        for c in node.monitors.values():
             c.visit(self, *ctx)
 
     def visit_rule_node(self, rule_node: Union[RuleNode, RuleMonitorNode], *ctx):
