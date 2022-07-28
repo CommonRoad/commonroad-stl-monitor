@@ -39,6 +39,8 @@ class TestRuleEvaluator(unittest.TestCase):
             evaluator = RuleEvaluator(rule, ego_vehicle, ws)
             rob = evaluator.update()
 
+        evaluator.reset(ego_vehicle, ws)
+
     def test_parsing(self):
         rule = parse_rule("A a1: (in_front_of__a0_a1 and cut_in__a0_a1)", self.traffic_rule_params)
         self.assertTrue(isinstance(rule, AllNode))

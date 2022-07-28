@@ -27,3 +27,5 @@ predicate_robustness = rule_evaluator.get_predicates()
 
 # Or evaluate for all time steps of the vehicle
 robustness_array = rule_evaluator.evaluate()
+
+rule_evaluator.reset(ego_vehicle, world)
