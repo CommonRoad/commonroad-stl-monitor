@@ -4,9 +4,11 @@ from functools import lru_cache
 from typing import Tuple, Dict
 
 import numpy as np
+from commonroad.visualization.mp_renderer import MPRenderer
+from commonroad.visualization.renderer import IRenderer
 
 import crmonitor
-from crmonitor.common.helper import load_yaml
+from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
@@ -14,6 +16,7 @@ from crmonitor.evaluation.visitor import (
     EvaluationMonitorTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.rule import VisitorNode, parse_rule
@@ -21,9 +24,20 @@ from crmonitor.predicates.rule import VisitorNode, parse_rule
 logger = logging.getLogger(__name__)
 
 
+EGO_VEHICLE_DRAW_PARAMS = {
+    "dynamic_obstacle": {
+        "vehicle_shape": {
+            "occupancy": {"shape": {"rectangle": {"facecolor": "yellow"}}}
+        }
+    }
+}
+
+
 @lru_cache(maxsize=None)
 def get_traffic_rule_config():
-    with pkg_resources.path(crmonitor, "traffic_rules_rtamt.yaml") as traffic_rules_path:
+    with pkg_resources.path(
+        crmonitor, "traffic_rules_rtamt.yaml"
+    ) as traffic_rules_path:
         traffic_rules_config = load_yaml(traffic_rules_path)
     return traffic_rules_config
 
@@ -64,6 +78,7 @@ class RuleEvaluator:
         self._rule = rule
         self._monitor = rule.visit(visitor)
         self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         self._eval_visitor = EvaluationMonitorTreeVisitor(
             use_boolean=use_boolean, output_type=output_type
         )
@@ -82,6 +97,38 @@ class RuleEvaluator:
         predicate_values = dict(self._monitor.visit(self._collector_visitor))
         return predicate_values
 
+    def visualize_predicates(
+        self, renderer: IRenderer = None, only_effective_predicates=True
+    ) -> None:
+        if renderer is None:
+            renderer = MPRenderer(figsize=(25, 10))
+
+        commonroad_scenario = self._world.scenario
+
+        general_draw_params = {"time_begin": self.current_time}
+
+        commonroad_scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+
+        vehicle2draw_params = {}
+
+        draw_functions = self._monitor.visit(
+            self._visualizer_visitor, vehicle2draw_params, self._world, self.current_time, only_effective_predicates
+        )
+
+        for i in self._world.vehicle_ids_for_time_step(self.current_time):
+            draw_params = vehicle2draw_params.get(i, {})
+            commonroad_scenario.obstacle_by_id(i).draw(
+                    renderer, draw_params={**general_draw_params, **draw_params}
+            )
+
+        commonroad_scenario.obstacle_by_id(self._ego_vehicle.id).draw(renderer, draw_params={**general_draw_params,
+                                                                                             **EGO_VEHICLE_DRAW_PARAMS}, )
+
+        renderer.render()
+
+        for fun in draw_functions:
+            fun(renderer)
+
     def update(self):
         """
         Advance the monitor state by one time step and return the corresponding rule evaluation value.
@@ -95,7 +142,12 @@ class RuleEvaluator:
         ):
             logger.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
-        rule_value = self._eval_visitor.walk(self._monitor, self._world, self._last_evaluation_time_step, self._ego_vehicle)
+        rule_value = self._eval_visitor.walk(
+            self._monitor,
+            self._world,
+            self._last_evaluation_time_step,
+            self._ego_vehicle,
+        )
         return rule_value
 
     def evaluate(self) -> np.ndarray:

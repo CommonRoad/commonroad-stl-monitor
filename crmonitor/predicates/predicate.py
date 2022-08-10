@@ -1,16 +1,18 @@
 import abc
 import logging
 import math
-from typing import List, Tuple, Set, Iterable
+from typing import List, Tuple, Set, Iterable, Dict
 
+import matplotlib.colors
 import numpy as np
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from matplotlib import pyplot as plt
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.helper import union_set, cartesian_to_curvilinear
+from crmonitor.common.helper import union_set, cartesian_to_curvilinear, merge_dicts_recursively
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -48,6 +50,7 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
 
     return d_left, d_right
 
+MAX_LONG_DIST = 200.
 
 class BasePredicateEvaluator(abc.ABC):
     predicate_name = "interface"
@@ -67,7 +70,7 @@ class BasePredicateEvaluator(abc.ABC):
         return self._scale(x, 10.5)
 
     def _scale_lon_dist(self, x):
-        return self._scale(x, 200.0)
+        return self._scale(x, MAX_LONG_DIST)
 
     def _scale_lat_dist(self, x):
         return self._scale(x, 20.0)
@@ -96,6 +99,9 @@ class BasePredicateEvaluator(abc.ABC):
             value = self.evaluate_robustness(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
         return value
+
+    def visualize(self, latest_value: float, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int):
+        return ()
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -275,6 +281,16 @@ class PredCutIn(BasePredicateEvaluator):
         )
         return rob
 
+    def visualize(self, latest_value: float, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int):
+        latest_value_normalized = (latest_value + 1) / 2
+        violation_color = plt.get_cmap('seismic')(latest_value_normalized)
+        violation_color_hex = matplotlib.colors.rgb2hex(violation_color)
+
+        vehicle = vehicle_ids[0]
+        draw_params = {'dynamic_obstacle': {'vehicle_shape': {'occupancy': {'shape': {'rectangle': {'facecolor': violation_color_hex}}}}}}
+        vehicle2draw_params[vehicle] = merge_dicts_recursively(vehicle2draw_params.get(vehicle, {}), draw_params)
+        return ()
+
 
 class PredSafeDistPrec(BasePredicateEvaluator):
     predicate_name = "keeps_safe_distance_prec"
@@ -316,6 +332,15 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
+
+    def visualize(self, latest_value: float, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int):
+        latest_value *= MAX_LONG_DIST  # un-scale to actual range and make positive
+        vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
+        front = vehicle_follow.front_s(time_step)
+        y = vehicle_follow.states_cr[time_step].position[1]
+        fun = lambda renderer: renderer.ax.arrow(front, y, latest_value, 0, head_width=1, head_length=1, linewidth=2, color='r', zorder=25,
+                                     length_includes_head=True)
+        return (fun,)
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):

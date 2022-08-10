@@ -1,3 +1,4 @@
+import itertools
 from abc import abstractmethod, ABC
 from typing import Union
 
@@ -11,8 +12,13 @@ from crmonitor.monitor.monitor_node import (
     ExistMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
-from crmonitor.predicates.rule import RuleNode, ExistNode, PredicateNode, \
-    AllNode, IOType
+from crmonitor.predicates.rule import (
+    RuleNode,
+    ExistNode,
+    PredicateNode,
+    AllNode,
+    IOType,
+)
 
 
 class RuleTreeVisitor(ABC):
@@ -40,7 +46,9 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
 
     def visit_rule_node(self, rule_node: RuleNode, *ctx):
         children = [c.visit(self, *ctx) for c in rule_node.children]
-        monitor = RtamtStlMonitor.create_from_rule_node(rule_node, self.dt, self.output_type)
+        monitor = RtamtStlMonitor.create_from_rule_node(
+            rule_node, self.dt, self.output_type
+        )
         return RuleMonitorNode(rule_node.name, children, monitor)
 
     def visit_all_node(self, all_node: AllNode, *ctx):
@@ -73,20 +81,12 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             rule_node.monitor.dt == world.dt
         ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world.dt}!"
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
-        val = rule_node.update(
-            time_step, list(child_values.items())
-        )
+        val = rule_node.update(time_step, list(child_values.items()))
         return val
 
     def _visit_quant_node(self, node, *ctx):
         world, time_step, other_ids = ctx[:3]
-        all_ids = set(
-            [
-                v.id
-                for v in world.vehicles
-                if v.is_valid(time_step)
-            ]
-        )
+        all_ids = world.vehicle_ids_for_time_step(time_step)
         remaining_ids = tuple(all_ids.difference(other_ids))
         values = []
         selected_ids = []
@@ -128,10 +128,12 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         world, time_step, other_ids = ctx[:3]
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
-        if self.use_boolean or predicate_node.io_type == IOType.INPUT and self.output_type == OutputType.OUTPUT_ROBUSTNESS:
-            value = predicate_node.evaluate_boolean(
-                world, time_step, predicate_ids
-            )
+        if (
+            self.use_boolean
+            or predicate_node.io_type == IOType.INPUT
+            and self.output_type == OutputType.OUTPUT_ROBUSTNESS
+        ):
+            value = predicate_node.evaluate_boolean(world, time_step, predicate_ids)
             value = 1.0 if value else -1.0
         else:
             value = predicate_node.evaluate_robustness(world, time_step, predicate_ids)
@@ -170,8 +172,40 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
         return [(predicate_node.name, predicate_node.latest_value)]
 
 
-class ResetMonitorTreeVisitor(RuleTreeVisitor):
+class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
+    """
+    Returns list of dictionaries, each dictionary mapping vehicle ids to a possibly nested dict of draw-parameters
+    """
 
+    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
+        draw_functions_nested = [c.visit(self, *ctx) for c in rule_node.children]
+        return list(itertools.chain(*draw_functions_nested))
+
+    def _visit_quant_node(self, node, *ctx):
+        only_effective_predicates = ctx[3]
+        if only_effective_predicates:
+            if node.last_selected is not None:
+                return node.last_selected.visit(self, *ctx)
+            else:
+                return ()
+        else:
+            draw_functions_nested = [monitor.visit(self, *ctx) for i, monitor in node.monitors.items()]
+            return list(itertools.chain(*draw_functions_nested))
+
+    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
+        return self._visit_quant_node(all_node, *ctx)
+
+    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
+        return self._visit_quant_node(exist_node, *ctx)
+
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        vehicle2draw_params = ctx[0]
+        world = ctx[1]
+        time_step = ctx[2]
+        return predicate_node.evaluator.visualize(predicate_node.latest_value, predicate_node.latest_vehicle_ids, vehicle2draw_params, world, time_step)
+
+
+class ResetMonitorTreeVisitor(RuleTreeVisitor):
     def _visit(self, node, *ctx):
         for c in node.monitors.values():
             c.visit(self, *ctx)
