@@ -1,11 +1,12 @@
 import importlib.resources as pkg_resources
 import logging
 from functools import lru_cache
-from typing import Tuple, Dict
+from typing import Tuple, Dict, TypedDict, Literal
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 from commonroad.visualization.renderer import IRenderer
+from typing_extensions import NotRequired
 
 import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
@@ -40,6 +41,23 @@ def get_traffic_rule_config():
     ) as traffic_rules_path:
         traffic_rules_config = load_yaml(traffic_rules_path)
     return traffic_rules_config
+
+
+PredicateInstanceFilterType = Literal['all', 'only_non_negative', 'only_negative']
+
+
+class PredicateVisualizationConfig(TypedDict):
+    """
+    Configuration type for visualizing a certain predicate-type P (identified by name).
+    An effective instance of P is one that if it belongs to an effective group within all enclosing all- and
+    exist-quantifiers; "effective" group denotes the group giving the minimum resp. maximum value for all- resp.
+    exist-quantifier.
+    """
+    effective_predicate_instances_filter: NotRequired[PredicateInstanceFilterType] # Default: 'all'.
+
+    show_non_effective_predicate_instances: NotRequired[bool] # Default: False.
+    non_effective_predicate_instances_filter: NotRequired[PredicateInstanceFilterType] # Default: 'only_non_negative'.
+
 
 
 class RuleEvaluator:
@@ -98,8 +116,15 @@ class RuleEvaluator:
         return predicate_values
 
     def visualize_predicates(
-        self, renderer: IRenderer = None, only_effective_predicates=True
+        self, renderer: IRenderer = None, visualization_config=Dict[str,PredicateVisualizationConfig]
     ) -> None:
+        """
+        Renders a scenario visualization using the :renderer and adds plots of the predicates.
+        :renderer: currently, only MPRenderer is supported. For supporting any IRenderer, the methods inheriting from
+        BasePredicateEvaluator:visualize have to be adapted.
+        :visualization_config: predicate-name | 'default' -> PredicateVisualizationConfig. Allows predicate-type wise
+        configuration of the visualization.
+        """
         if renderer is None:
             renderer = MPRenderer(figsize=(25, 10))
 
@@ -112,7 +137,7 @@ class RuleEvaluator:
         vehicle2draw_params = {}
 
         draw_functions = self._monitor.visit(
-            self._visualizer_visitor, vehicle2draw_params, self._world, self.current_time, only_effective_predicates
+            self._visualizer_visitor, vehicle2draw_params, self._world, self.current_time, visualization_config
         )
 
         for i in self._world.vehicle_ids_for_time_step(self.current_time):

@@ -182,15 +182,13 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
         return list(itertools.chain(*draw_functions_nested))
 
     def _visit_quant_node(self, node, *ctx):
-        only_effective_predicates = ctx[3]
-        if only_effective_predicates:
-            if node.last_selected is not None:
-                return node.last_selected.visit(self, *ctx)
-            else:
-                return ()
-        else:
-            draw_functions_nested = [monitor.visit(self, *ctx) for i, monitor in node.monitors.items()]
-            return list(itertools.chain(*draw_functions_nested))
+        is_effective_so_far = ctx[4] if len(ctx) > 4 else True
+        ctx = ctx[0:4] # remove is_effective if existing
+        draw_functions_for_effective_node = []
+        if node.last_selected is not None:
+            draw_functions_for_effective_node = node.last_selected.visit(self, *ctx, True and is_effective_so_far)
+        draw_functions_nested = [monitor.visit(self, *ctx, False) for i, monitor in node.monitors.items() if monitor != node.last_selected]
+        return list(itertools.chain(*draw_functions_nested)) + draw_functions_for_effective_node
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         return self._visit_quant_node(all_node, *ctx)
@@ -199,10 +197,28 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
         return self._visit_quant_node(exist_node, *ctx)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        is_effective = ctx[4] if len(ctx) > 4 else True
+        visualization_config = ctx[3]
+
+        pred_name = predicate_node.evaluator.predicate_name
+        pred_value = predicate_node.latest_value
+
+        config_entry_key = pred_name if pred_name in visualization_config else 'default'
+        config_obj = visualization_config.get(config_entry_key, {})
+        effective_predicate_instances_filter = config_obj.get('effective_predicate_instances_filter', 'all')
+        show_non_effective_predicate_instances = config_obj.get('show_non_effective_predicate_instances', False)
+        non_effective_predicate_instances_filter = config_obj.get('non_effective_predicate_instances_filter', 'only_non_negative')
+
+        if not show_non_effective_predicate_instances and not is_effective:
+            return ()
+        predicate_instances_filter = effective_predicate_instances_filter if is_effective else non_effective_predicate_instances_filter
+        if (predicate_instances_filter == 'only_non_negative' and pred_value < 0) or (predicate_instances_filter == 'only_negative' and pred_value >= 0):
+            return ()
+
         vehicle2draw_params = ctx[0]
         world = ctx[1]
         time_step = ctx[2]
-        return predicate_node.evaluator.visualize(predicate_node.latest_value, predicate_node.latest_vehicle_ids, vehicle2draw_params, world, time_step)
+        return predicate_node.evaluator.visualize(pred_value, predicate_node.latest_vehicle_ids, vehicle2draw_params, world, time_step)
 
 
 class ResetMonitorTreeVisitor(RuleTreeVisitor):
