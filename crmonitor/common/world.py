@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial, lru_cache
 from pathlib import Path
-from typing import Optional, Set, Union, List
+from typing import Optional, Set, Union
 
 import numpy as np
 from commonroad.scenario.scenario import Scenario
@@ -62,6 +62,9 @@ class World:
         else:
             cache = {}
         for obs in scenario.dynamic_obstacles:
+            # Skip obstacles that go out of the road
+            if any(map(lambda a: len(a) == 0, obs.prediction.shape_lanelet_assignment.values())):
+                continue
             cls.augment_state_acceleration_jerk(scenario.dt, obs)
             curvi_cache, predicate_dict = cache.setdefault(
                 str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict)))
