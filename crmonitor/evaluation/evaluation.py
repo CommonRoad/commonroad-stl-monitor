@@ -1,14 +1,16 @@
 import importlib.resources as pkg_resources
 import logging
+from collections import defaultdict
 from functools import lru_cache
 from typing import Tuple, Dict
 
 import numpy as np
+import pandas as pd
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad.visualization.renderer import IRenderer
+from matplotlib import pyplot as plt
 
 import crmonitor
-from crmonitor.common.helper import load_yaml
+from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
@@ -99,50 +101,68 @@ class RuleEvaluator:
         return predicate_values
 
     def visualize_predicates(
-        self, renderer: IRenderer = None, visualization_config=Dict[str,any]
+            self, visualization_config=Dict[str,any], plot_predicate_values=True, plot_scale=1.
     ) -> None:
         """
-        Renders a scenario visualization using the :renderer and adds plots of the predicates.
+        Renders a scenario visualization using the MPRenderer and adds plots of the predicates.
 
         :renderer: currently, only MPRenderer is supported. For supporting any IRenderer, the methods inheriting from
         BasePredicateEvaluator:visualize have to be adapted.
 
         :visualization_config: predicate-name | 'default' -> {
-            effective_predicate_instances_filter: 'all', 'only_non_negative', 'only_negative' # Default: 'all'.
-            show_non_effective_predicate_instances: bool # Default: False.
-            non_effective_predicate_instances_filter: 'all', 'only_non_negative', 'only_negative' # Default: 'only_non_negative'.
+            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]], # show predicate value for certain
+            # vehicle-ids
         }. Allows predicate-type wise configuration of the visualization. Here, an effective predicate instance is one
         that belongs to an effective group within all enclosing all- and exist-quantifiers; "effective" group denotes
         the group giving the minimum resp. maximum value for all- resp.
         """
-        if renderer is None:
-            renderer = MPRenderer(figsize=(25, 10))
+        default_fig_size = (25, 3)
+        figsize = tuple(d*plot_scale for d in default_fig_size)
+        if plot_predicate_values:
+            # make scenario-plot and bar-chart side-by-side
+            fig, axes = plt.subplots(figsize=figsize, nrows=1, ncols=2, gridspec_kw={'width_ratios': [5, 1]})
+            ax = axes[0]
+        else:
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
+
+
+        renderer = MPRenderer(ax=ax)
 
         commonroad_scenario = self._world.scenario
 
-        general_draw_params = {"time_begin": self.current_time}
+        general_draw_params = {"time_begin": self.current_time, 'dynamic_obstacle': {'show_label': True}}
 
         commonroad_scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
 
-        vehicle2draw_params = {}
+        vehicle2draw_params = {} # FIXME replace by adder function which does merging automatically...
+        predicate_names2vehicle_ids2values = defaultdict(dict)
 
         draw_functions = self._monitor.visit(
-            self._visualizer_visitor, vehicle2draw_params, self._world, self.current_time, visualization_config
+            self._visualizer_visitor, vehicle2draw_params, predicate_names2vehicle_ids2values, self._world, self.current_time, visualization_config
         )
 
         for i in self._world.vehicle_ids_for_time_step(self.current_time):
             draw_params = vehicle2draw_params.get(i, {})
             commonroad_scenario.obstacle_by_id(i).draw(
-                    renderer, draw_params={**general_draw_params, **draw_params}
+                    renderer, draw_params=merge_dicts_recursively(general_draw_params, draw_params)
             )
 
-        commonroad_scenario.obstacle_by_id(self._ego_vehicle.id).draw(renderer, draw_params={**general_draw_params,
-                                                                                             **EGO_VEHICLE_DRAW_PARAMS}, )
+        commonroad_scenario.obstacle_by_id(self._ego_vehicle.id).draw(renderer, draw_params=merge_dicts_recursively(general_draw_params, EGO_VEHICLE_DRAW_PARAMS))
 
+        # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
+        #   predicates need to return functions instead of directly plotting
         renderer.render()
-
         for fun in draw_functions:
             fun(renderer)
+
+        if plot_predicate_values:
+            df = pd.DataFrame.from_dict({predicate_name: {str(vehicle_ids): values for vehicle_ids, values in vehicle_ids2values.items()} for predicate_name, vehicle_ids2values in predicate_names2vehicle_ids2values.items()})
+            cmap = plt.get_cmap('turbo') # different color map, as default one produces non-distinguishable colors for different bars
+            numbers_for_bars = np.linspace(0, 1, num=len(df.columns), endpoint=False)
+            ax = df.plot.barh(rot=0, ax=axes[1], width=1., edgecolor='black', linewidth=0.5, color=cmap(numbers_for_bars))
+            ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5)) # place legend to the right
+
 
     def update(self):
         """

@@ -81,7 +81,7 @@ class World:
         return {vehicle.id for vehicle in self.vehicles if isinstance(vehicle, ControlledVehicle)}
 
     def vehicle_ids_for_time_step(self, time_step: int):
-        return set([v.id for v in self.vehicles if v.is_valid(time_step)])
+        return [v.id for v in self.vehicles if v.is_valid(time_step)]
 
     @staticmethod
     def augment_state_acceleration_jerk(dt, obs):
