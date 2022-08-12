@@ -214,14 +214,14 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
         if not is_effective and latest_vehicle_ids not in show_non_effective_predicate_instances_for_vehicles:
             return ()
 
-        vehicle2draw_params = ctx[0]
+        add_vehicle_draw_params = ctx[0]
         predicate_names2vehicle_ids2values = ctx[1]
         world = ctx[2]
         time_step = ctx[3]
 
         predicate_node.evaluator.gather_predicate_values_to_plot(latest_vehicle_ids, world, time_step, predicate_names2vehicle_ids2values)
 
-        return predicate_node.evaluator.visualize(latest_vehicle_ids, vehicle2draw_params, world, time_step)
+        return predicate_node.evaluator.visualize(latest_vehicle_ids, add_vehicle_draw_params, world, time_step)
 
 
 class ResetMonitorTreeVisitor(RuleTreeVisitor):

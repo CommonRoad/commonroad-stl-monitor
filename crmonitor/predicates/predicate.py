@@ -102,7 +102,7 @@ class BasePredicateEvaluator(abc.ABC):
             vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
         return value
 
-    def visualize(self, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int) -> Tuple[Callable[[IRenderer], None],...]:
+    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any],None], world: World, time_step: int) -> Tuple[Callable[[IRenderer], None],...]:
         return ()
 
     def gather_predicate_values_to_plot(self, vehicle_ids: List[int], world: World, time_step: int, predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int,...], float]]):
@@ -286,7 +286,7 @@ class PredCutIn(BasePredicateEvaluator):
         )
         return rob
 
-    def visualize(self, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int):
+    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any], None], world: World, time_step: int):
         latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         latest_value_normalized = (latest_value + 1) / 2
         violation_color = plt.get_cmap('bwr')(latest_value_normalized)
@@ -294,10 +294,10 @@ class PredCutIn(BasePredicateEvaluator):
 
         vehicle = vehicle_ids[0]
         draw_params = {'dynamic_obstacle': {'vehicle_shape': {'occupancy': {'shape': {'rectangle': {'facecolor': violation_color_hex}}}}}}
-        vehicle2draw_params[vehicle] = merge_dicts_recursively(vehicle2draw_params.get(vehicle, {}), draw_params)
+        add_vehicle_draw_params(vehicle, draw_params)
 
-        draw_functions1 = self._same_lane_evaluator.visualize(vehicle_ids, vehicle2draw_params, world, time_step)
-        draw_functions2 = self._single_lane_evaluator.visualize([vehicle], vehicle2draw_params, world, time_step)
+        draw_functions1 = self._same_lane_evaluator.visualize(vehicle_ids, add_vehicle_draw_params, world, time_step)
+        draw_functions2 = self._single_lane_evaluator.visualize([vehicle], add_vehicle_draw_params, world, time_step)
 
         return () + draw_functions1 + draw_functions2
 
@@ -348,7 +348,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
 
-    def visualize(self, vehicle_ids: List[int], vehicle2draw_params: Dict[int, any], world: World, time_step: int):
+    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any], None], world: World, time_step: int):
         latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         latest_value_unscaled = latest_value * MAX_LONG_DIST  # un-scale to actual range and make positive
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])

@@ -155,9 +155,12 @@ class RuleEvaluator:
         )  # FIXME replace by adder function which does merging automatically...
         predicate_names2vehicle_ids2values = defaultdict(dict)
 
+        def add_vehicle_draw_params(vehicle_id: int, draw_params: any):
+            vehicle2draw_params[vehicle_id] = merge_dicts_recursively(vehicle2draw_params.get(vehicle_id, {}), draw_params)
+
         draw_functions = self._monitor.visit(
             self._visualizer_visitor,
-            vehicle2draw_params,
+            add_vehicle_draw_params,
             predicate_names2vehicle_ids2values,
             self._world,
             self.current_time,
