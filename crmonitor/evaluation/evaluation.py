@@ -150,18 +150,22 @@ class RuleEvaluator:
         plotted for the first time-step only.
         :bar_chart_plot_limits: minimum and maximum value of the bar-chart.
         """
-        vehicle2draw_params = (
-            {}
-        )  # FIXME replace by adder function which does merging automatically...
-        predicate_names2vehicle_ids2values = defaultdict(dict)
+        vehicle2draw_params = {}
 
         def add_vehicle_draw_params(vehicle_id: int, draw_params: any):
-            vehicle2draw_params[vehicle_id] = merge_dicts_recursively(vehicle2draw_params.get(vehicle_id, {}), draw_params)
+            vehicle2draw_params[vehicle_id] = merge_dicts_recursively(
+                vehicle2draw_params.get(vehicle_id, {}), draw_params
+            )
+
+        predicate_names2vehicle_ids2values = defaultdict(dict)
+
+        predicate_name2predicate_evaluator = {}
 
         draw_functions = self._monitor.visit(
             self._visualizer_visitor,
             add_vehicle_draw_params,
             predicate_names2vehicle_ids2values,
+            predicate_name2predicate_evaluator,
             self._world,
             self.current_time,
             visualization_config,
@@ -172,8 +176,11 @@ class RuleEvaluator:
             self._ego_vehicle.id,
             self.current_time,
             vehicle2draw_params,
-            draw_functions, predicate_names2vehicle_ids2values,
+            draw_functions,
+            predicate_names2vehicle_ids2values,
             plot_scale,
+            plot_scenario_legend,
+            predicate_name2predicate_evaluator,
             plot_predicate_bar_chart,
             bar_chart_plot_limits,
         )

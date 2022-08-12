@@ -51,8 +51,10 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
 
     return d_left, d_right
 
-MAX_LONG_DIST = 200.
-MAX_LAT_DIST = 20.
+
+MAX_LONG_DIST = 200.0
+MAX_LAT_DIST = 20.0
+
 
 class BasePredicateEvaluator(abc.ABC):
     predicate_name = "interface"
@@ -63,7 +65,7 @@ class BasePredicateEvaluator(abc.ABC):
         self.eps = 1e-5
 
     def _scale(self, x, max_value):
-        return np.clip(x / max_value, -1., 1.) if self.scale else x
+        return np.clip(x / max_value, -1.0, 1.0) if self.scale else x
 
     def _scale_speed(self, x):
         return self._scale(x, 250.0 / 3.6)
@@ -102,11 +104,37 @@ class BasePredicateEvaluator(abc.ABC):
             vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
         return value
 
-    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any],None], world: World, time_step: int) -> Tuple[Callable[[IRenderer], None],...]:
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ) -> Tuple[Callable[[IRenderer], None], ...]:
+        """
+        Overwrite this function for visualizing a predicate in a certain way within the scenario plot.
+        """
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
         return ()
 
-    def gather_predicate_values_to_plot(self, vehicle_ids: List[int], world: World, time_step: int, predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int,...], float]]):
-        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+    def _gather_predicate_values_to_plot(
+        self,
+        vehicle_ids: List[int],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        predicate_names2vehicle_ids2values[self.predicate_name][
+            tuple(vehicle_ids)
+        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        ax.axis("off")
+        ax.text(0.1, 0.5, "[not visualized]", fontsize=12)
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -286,25 +314,65 @@ class PredCutIn(BasePredicateEvaluator):
         )
         return rob
 
-    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any], None], world: World, time_step: int):
-        latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+    @staticmethod
+    def _get_color_map():
+        return plt.get_cmap("bwr")
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+
+        latest_value = self.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
         latest_value_normalized = (latest_value + 1) / 2
-        violation_color = plt.get_cmap('bwr')(latest_value_normalized)
+        violation_color = self._get_color_map()(latest_value_normalized)
         violation_color_hex = matplotlib.colors.rgb2hex(violation_color)
 
         vehicle = vehicle_ids[0]
-        draw_params = {'dynamic_obstacle': {'vehicle_shape': {'occupancy': {'shape': {'rectangle': {'facecolor': violation_color_hex}}}}}}
+        draw_params = {
+            "dynamic_obstacle": {
+                "vehicle_shape": {
+                    "occupancy": {
+                        "shape": {"rectangle": {"facecolor": violation_color_hex}}
+                    }
+                }
+            }
+        }
         add_vehicle_draw_params(vehicle, draw_params)
 
-        draw_functions1 = self._same_lane_evaluator.visualize(vehicle_ids, add_vehicle_draw_params, world, time_step)
-        draw_functions2 = self._single_lane_evaluator.visualize([vehicle], add_vehicle_draw_params, world, time_step)
+        draw_functions1 = self._same_lane_evaluator.visualize(
+            vehicle_ids,
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
+        draw_functions2 = self._single_lane_evaluator.visualize(
+            [vehicle],
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
 
         return () + draw_functions1 + draw_functions2
 
-    def gather_predicate_values_to_plot(self, vehicle_ids: List[int], world: World, time_step: int, predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int,...], float]]):
-        super().gather_predicate_values_to_plot(vehicle_ids, world, time_step, predicate_names2vehicle_ids2values)
-        self._same_lane_evaluator.gather_predicate_values_to_plot(vehicle_ids, world, time_step, predicate_names2vehicle_ids2values)
-        self._single_lane_evaluator.gather_predicate_values_to_plot([vehicle_ids[0]], world, time_step, predicate_names2vehicle_ids2values)
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        points = np.linspace(0, 1, 256)
+        points = np.vstack((points, points))
+        ax.imshow(points, cmap=PredCutIn._get_color_map(), extent=[-1, 1, 0, 1])
+        ax.get_yaxis().set_ticks([])
+        ax.set_ylabel('vehicle color')
 
 
 class PredSafeDistPrec(BasePredicateEvaluator):
@@ -348,15 +416,56 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
 
-    def visualize(self, vehicle_ids: List[int], add_vehicle_draw_params: Callable[[int, any], None], world: World, time_step: int):
-        latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
-        latest_value_unscaled = latest_value * MAX_LONG_DIST  # un-scale to actual range and make positive
+    @staticmethod
+    def _plot_red_arrow(ax, x, y, x_length, head_width=1.0, head_length=1.0):
+        ax.arrow(
+            x,
+            y,
+            x_length,
+            0,
+            head_width=head_width,
+            head_length=head_length,
+            linewidth=2,
+            color="r",
+            zorder=25,
+            length_includes_head=True,
+        )
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+        latest_value = self.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
+        latest_value_unscaled = (
+            latest_value * MAX_LONG_DIST
+        )  # un-scale to actual range and make positive
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
         front = vehicle_follow.front_s(time_step)
         y = vehicle_follow.states_cr[time_step].position[1]
-        fun = lambda renderer: renderer.ax.arrow(front, y, latest_value_unscaled, 0, head_width=1, head_length=1, linewidth=2, color='r', zorder=25,
-                                     length_includes_head=True)
+        fun = lambda renderer: self._plot_red_arrow(
+            renderer.ax, front, y, latest_value_unscaled
+        )
         return (fun,)
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        ax.get_yaxis().set_ticks([])
+        ax.set_xlim((-1, 1))
+        ax.set_ylim((0, 1))
+        ax.plot(0, 0.5, color="r")
+        PredSafeDistPrec._plot_red_arrow(ax, 0, 0.5, 1, head_width=0.1, head_length=0.1)
+        PredSafeDistPrec._plot_red_arrow(
+            ax, 0, 0.5, -1, head_width=0.1, head_length=0.1
+        )
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):
