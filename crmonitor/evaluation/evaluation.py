@@ -136,13 +136,14 @@ class RuleEvaluator:
         bar_chart_plot_limits=(-1, 1),
     ) -> None:
         """
-        Renders a scenario visualization using the MPRenderer and adds plots of the predicates
+        Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
+        predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
+        considered rule are visualized; here, "effective group" denotes the group giving the minimum resp. maximum
+        value for an all- resp. exist-quantifier.
         :visualization_config: predicate-name | 'default' -> {
             show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]], # show predicate value for certain
             # vehicle-ids
-        }. Allows predicate-type wise configuration of the visualization. Here, an effective predicate instance is one
-        that belongs to an effective group within all enclosing all- and exist-quantifiers; "effective" group denotes
-        the group giving the minimum resp. maximum value for all- resp. exist-quantifier.
+        }. Allows predicate-type wise configuration of the visualization.
         : plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
         predicate instances included in the visualization are the same as the ones shown in the scenario visualization
         :plot_scale: for controlling the size of the whole visualization
