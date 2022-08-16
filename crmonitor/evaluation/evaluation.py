@@ -5,9 +5,6 @@ from functools import lru_cache
 from typing import Tuple, Dict
 
 import numpy as np
-import pandas as pd
-from commonroad.visualization.mp_renderer import MPRenderer
-from matplotlib import pyplot as plt
 
 import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
@@ -77,6 +74,7 @@ class RuleEvaluator:
             use_boolean=use_boolean, output_type=output_type
         )
         self._last_evaluation_time_step = -1
+        self._rule_value_course = []
         self._ego_vehicle = None
         self._world = None
         if ego_vehicle is not None:
@@ -110,6 +108,7 @@ class RuleEvaluator:
             self._last_evaluation_time_step,
             self._ego_vehicle,
         )
+        self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
         return rule_value
 
     def evaluate(self) -> np.ndarray:
@@ -133,7 +132,9 @@ class RuleEvaluator:
         plot_scenario_legend=None,
         plot_scale=1.0,
         plot_predicate_bar_chart=True,
-        bar_chart_plot_limits=(-1, 1),
+        bar_chart_plot_limits=(-1.0, 1.0),
+        plot_rule_robustness_course=True,
+        rule_robustness_course_plot_limits=(-1.0, 1.0),
     ) -> None:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
@@ -143,13 +144,16 @@ class RuleEvaluator:
         :visualization_config: predicate-name | 'default' -> {
             show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]], # show predicate value for certain
             # vehicle-ids
-        }. Allows predicate-type wise configuration of the visualization.
-        : plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
-        predicate instances included in the visualization are the same as the ones shown in the scenario visualization
-        :plot_scale: for controlling the size of the whole visualization
+        }. Allows predicate-type wise configuration of the visualization
         :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
-        plotted for the first time-step only.
-        :bar_chart_plot_limits: minimum and maximum value of the bar-chart.
+        plotted for the first time-step only
+        :plot_scale: for controlling the size of the whole visualization
+        :plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
+        predicate instances included in the visualization are the same as the ones shown in the scenario visualization
+        :bar_chart_plot_limits: minimum and maximum value of the bar-chart
+        :plot_rule_robustness_course: whether the rule robustness should be plotted
+        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
+        :
         """
         vehicle2draw_params = {}
 
@@ -184,6 +188,9 @@ class RuleEvaluator:
             predicate_name2predicate_evaluator,
             plot_predicate_bar_chart,
             bar_chart_plot_limits,
+            plot_rule_robustness_course,
+            self._rule_value_course,
+            rule_robustness_course_plot_limits,
         )
 
     @property
@@ -196,6 +203,7 @@ class RuleEvaluator:
             if start_time_step is not None
             else ego_vehicle.start_time - 1
         )
+        self._rule_value_course = []
         self._ego_vehicle = ego_vehicle
         self._world = world
         # Reset monitor
