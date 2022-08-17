@@ -67,28 +67,33 @@ def _plot_predicate_bar_chart(
     ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5))  # place legend to the right
 
 
-SCENARIO_FIG_SIZE = (20, 2)
-
-
 def _create_axes(
-    plot_scale: float, plot_predicate_bar_chart: bool, plot_rule_robustness_course: bool
+    scenario_fig_size: Tuple[float, float],
+    scenario_scale_compared_to_other_plots: int,
+    plot_predicate_bar_chart: bool,
+    plot_rule_robustness_course: bool,
 ):
-    figsize = tuple(d * plot_scale for d in SCENARIO_FIG_SIZE)
-
     additional_plots = [plot_predicate_bar_chart, plot_rule_robustness_course]
     axes_of_additional_plots = [None] * len(additional_plots)
     n_additional_cols = sum(int(v) for v in additional_plots)
 
     if n_additional_cols > 0:
-        width_ratio = 6
-        width, height = figsize
-        figsize = (width * (1 + n_additional_cols / width_ratio), height)
+        width, height = scenario_fig_size
+        figsize = (
+            width * (1 + n_additional_cols / scenario_scale_compared_to_other_plots),
+            height,
+        )
         # make scenario-plot and bar-chart side-by-side
         fig, axes = plt.subplots(
             figsize=figsize,
             nrows=1,
             ncols=1 + n_additional_cols,
-            gridspec_kw={"width_ratios": [width_ratio, *([1] * n_additional_cols)]},
+            gridspec_kw={
+                "width_ratios": [
+                    scenario_scale_compared_to_other_plots,
+                    *([1] * n_additional_cols),
+                ]
+            },
             layout="constrained",  # makes the layout consider overlaps of columns automatically
         )
         scenario_ax = axes[0]
@@ -98,18 +103,21 @@ def _create_axes(
                 axes_of_additional_plots[i] = axes[1 + k]
                 k += 1
     else:
-        plt.figure(figsize=figsize)
+        plt.figure(figsize=scenario_fig_size)
         scenario_ax = plt.gca()
 
     return (scenario_ax, *axes_of_additional_plots)
 
 
 def _plot_scenario_legend(
-    predicate_name2predicate_evaluator: Dict[str, BasePredicateEvaluator]
+    predicate_name2predicate_evaluator: Dict[str, BasePredicateEvaluator],
+    scenario_fig_size: Tuple[float, float],
 ):
+    width, _ = scenario_fig_size
+    figsize = (width, width / 4)
     num_predicates = len(predicate_name2predicate_evaluator)
     fig, (axes_row_1, axes_row_2) = plt.subplots(
-        figsize=SCENARIO_FIG_SIZE, nrows=2, ncols=num_predicates
+        figsize=figsize, nrows=2, ncols=num_predicates
     )
     fig.suptitle("Legend: predicate visualization in scenario", fontsize=14)
     for ax1, ax2, (pred_name, pred_evaluator) in zip(
@@ -127,7 +135,8 @@ def plot_predicate_visualization(
     vehicle2draw_params: Dict[int, any],
     draw_functions: List[Callable[[IRenderer], None]],
     predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
-    plot_scale: float,
+    scenario_fig_size: Tuple[float, float],
+    scenario_scale_compared_to_other_plots: int,
     plot_scenario_legend: Optional[bool],
     predicate_name2predicate_evaluator: Dict[str, BasePredicateEvaluator],
     plot_predicate_bar_chart: bool,
@@ -138,10 +147,13 @@ def plot_predicate_visualization(
     scenario_plot_limits: Union[List[Union[int, float]], None]
 ):
     if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
-        _plot_scenario_legend(predicate_name2predicate_evaluator)
+        _plot_scenario_legend(predicate_name2predicate_evaluator, scenario_fig_size)
 
     scenario_ax, bar_chart_ax, robustness_course_ax = _create_axes(
-        plot_scale, plot_predicate_bar_chart, plot_rule_robustness_course
+        scenario_fig_size,
+        scenario_scale_compared_to_other_plots,
+        plot_predicate_bar_chart,
+        plot_rule_robustness_course,
     )
 
     renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)

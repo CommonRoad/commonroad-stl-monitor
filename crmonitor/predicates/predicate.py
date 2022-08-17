@@ -13,7 +13,7 @@ from commonroad.visualization.renderer import IRenderer
 from matplotlib import pyplot as plt
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.helper import union_set, cartesian_to_curvilinear, merge_dicts_recursively
+from crmonitor.common.helper import union_set, cartesian_to_curvilinear
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -417,19 +417,9 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         return rob
 
     @staticmethod
-    def _plot_red_arrow(ax, x, y, x_length, head_width=1.0, head_length=1.0):
-        ax.arrow(
-            x,
-            y,
-            x_length,
-            0,
-            head_width=head_width,
-            head_length=head_length,
-            linewidth=2,
-            color="r",
-            zorder=25,
-            length_includes_head=True,
-        )
+    def _plot_red_arrow(ax, x, y, size=1.):
+        ax.plot(x, y, linewidth=2, color='r', zorder=25)
+        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=False, head_width=size, head_length=size, zorder=25, color='r')
 
     def visualize(
         self,
@@ -449,23 +439,32 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             latest_value * MAX_LONG_DIST
         )  # un-scale to actual range and make positive
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
-        front = vehicle_follow.front_s(time_step)
-        y = vehicle_follow.states_cr[time_step].position[1]
-        fun = lambda renderer: self._plot_red_arrow(
-            renderer.ax, front, y, latest_value_unscaled
-        )
+
+        lane_clcs = vehicle_follow.get_lane(time_step).clcs  # center curvilinear coordinate system
+        sampling_step_size = 1.
+
+        s_start = vehicle_follow.front_s(time_step)
+        num_points = max(2, abs(int(latest_value_unscaled / sampling_step_size)))
+        points_s = np.linspace(0, latest_value_unscaled, num_points) + s_start
+        points_s = points_s[:, None]
+        points_l = np.zeros((points_s.shape[0], 1))
+        points_curvi = np.concatenate((points_s, points_l), axis=1)
+        points_cartesian = np.stack([lane_clcs.convert_to_cartesian_coords(*p) for p in points_curvi], axis=0)
+
+        # back_again = np.stack(lane_clcs.convert_list_of_points_to_curvilinear_coords([p for p in points_cartesian], 8), axis=0)
+
+        def fun(renderer):
+            self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
         return (fun,)
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):
         ax.get_yaxis().set_ticks([])
-        ax.set_xlim((-1, 1))
+        ax.set_xlim((-1.1, 1.1))
         ax.set_ylim((0, 1))
         ax.plot(0, 0.5, color="r")
-        PredSafeDistPrec._plot_red_arrow(ax, 0, 0.5, 1, head_width=0.1, head_length=0.1)
-        PredSafeDistPrec._plot_red_arrow(
-            ax, 0, 0.5, -1, head_width=0.1, head_length=0.1
-        )
+        PredSafeDistPrec._plot_red_arrow(ax, [0, 1], [0.5, 0.5], size=0.1)
+        PredSafeDistPrec._plot_red_arrow(ax, [0, -1], [0.5, 0.5], size=0.1)
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):
