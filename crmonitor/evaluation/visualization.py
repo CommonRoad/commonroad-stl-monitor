@@ -92,9 +92,11 @@ def _create_axes(
             layout="constrained",  # makes the layout consider overlaps of columns automatically
         )
         scenario_ax = axes[0]
+        k = 0
         for i, p in enumerate(additional_plots):
             if p:
-                axes_of_additional_plots[i] = axes[1 + i]
+                axes_of_additional_plots[i] = axes[1 + k]
+                k += 1
     else:
         plt.figure(figsize=figsize)
         scenario_ax = plt.gca()
