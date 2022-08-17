@@ -157,16 +157,12 @@ def plot_predicate_visualization(
         },
     }
 
-    commonroad_scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+    ego_vehicle = commonroad_scenario.obstacle_by_id(ego_vehicle_id)
+    commonroad_scenario.remove_obstacle(ego_vehicle)
+    # only visualize the obstacles within the plotting limits
+    commonroad_scenario.draw(renderer, draw_params=general_draw_params)
 
-    for i in world.vehicle_ids_for_time_step(time_step):
-        draw_params = vehicle2draw_params.get(i, {})
-        commonroad_scenario.obstacle_by_id(i).draw(
-            renderer,
-            draw_params=merge_dicts_recursively(general_draw_params, draw_params),
-        )
-
-    commonroad_scenario.obstacle_by_id(ego_vehicle_id).draw(
+    ego_vehicle.draw(
         renderer,
         draw_params=merge_dicts_recursively(
             general_draw_params, EGO_VEHICLE_DRAW_PARAMS
