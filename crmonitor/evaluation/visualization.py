@@ -2,6 +2,7 @@ from typing import Dict, List, Callable, Tuple, Optional, Union
 
 import numpy as np
 import pandas as pd
+from commonroad.common.util import Interval
 from commonroad.visualization.mp_renderer import MPRenderer
 from commonroad.visualization.renderer import IRenderer
 from matplotlib import pyplot as plt
@@ -169,17 +170,23 @@ def plot_predicate_visualization(
         },
     }
 
-    ego_vehicle = commonroad_scenario.obstacle_by_id(ego_vehicle_id)
-    commonroad_scenario.remove_obstacle(ego_vehicle)
-    # only visualize the obstacles within the plotting limits
-    commonroad_scenario.draw(renderer, draw_params=general_draw_params)
+    commonroad_scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
 
-    ego_vehicle.draw(
-        renderer,
-        draw_params=merge_dicts_recursively(
-            general_draw_params, EGO_VEHICLE_DRAW_PARAMS
-        ),
-    )
+    if scenario_plot_limits:
+        plot_veh_ids = [obs.obstacle_id for obs in commonroad_scenario.obstacles_by_position_intervals(
+                [Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
+                 Interval(scenario_plot_limits[2], scenario_plot_limits[3])])]
+    else:
+        plot_veh_ids = world.vehicle_ids_for_time_step(time_step)
+    for i in plot_veh_ids:
+        draw_params = vehicle2draw_params.get(i, {})
+        commonroad_scenario.obstacle_by_id(i).draw(
+            renderer,
+            draw_params=merge_dicts_recursively(general_draw_params, draw_params),
+        )
+
+    commonroad_scenario.obstacle_by_id(ego_vehicle_id).draw(renderer,
+            draw_params=merge_dicts_recursively(general_draw_params, EGO_VEHICLE_DRAW_PARAMS), )
 
     # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
     #   predicates need to return functions instead of directly plotting
