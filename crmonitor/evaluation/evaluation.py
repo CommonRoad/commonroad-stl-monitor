@@ -135,6 +135,7 @@ class RuleEvaluator:
         bar_chart_plot_limits=(-1.0, 1.0),
         plot_rule_robustness_course=True,
         rule_robustness_course_plot_limits=(-1.0, 1.0),
+        scenario_plot_limit=None,
     ) -> None:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
@@ -153,7 +154,7 @@ class RuleEvaluator:
         :bar_chart_plot_limits: minimum and maximum value of the bar-chart
         :plot_rule_robustness_course: whether the rule robustness should be plotted
         :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
-        :
+        :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
         """
         vehicle2draw_params = {}
 
@@ -191,6 +192,7 @@ class RuleEvaluator:
             plot_rule_robustness_course,
             self._rule_value_course,
             rule_robustness_course_plot_limits,
+            scenario_plot_limit
         )
 
     @property

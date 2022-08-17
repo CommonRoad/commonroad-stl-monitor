@@ -1,4 +1,4 @@
-from typing import Dict, List, Callable, Tuple, Optional
+from typing import Dict, List, Callable, Tuple, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -135,6 +135,7 @@ def plot_predicate_visualization(
     plot_rule_robustness_course: bool,
     rule_robustness_course: List[Tuple[int, float]],
     rule_robustness_course_plot_limits: Tuple[float, float],
+    scenario_plot_limits: Union[List[Union[int, float]], None]
 ):
     if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
         _plot_scenario_legend(predicate_name2predicate_evaluator)
@@ -143,7 +144,7 @@ def plot_predicate_visualization(
         plot_scale, plot_predicate_bar_chart, plot_rule_robustness_course
     )
 
-    renderer = MPRenderer(ax=scenario_ax)
+    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
     commonroad_scenario = world.scenario
 
     general_draw_params = {
