@@ -130,7 +130,8 @@ class RuleEvaluator:
         self,
         visualization_config=Dict[str, any],
         plot_scenario_legend=None,
-        plot_scale=1.0,
+        scenario_fig_size= (10., 2.),
+        scenario_scale_compared_to_other_plots = 6,
         plot_predicate_bar_chart=True,
         bar_chart_plot_limits=(-1.0, 1.0),
         plot_rule_robustness_course=True,
@@ -147,7 +148,9 @@ class RuleEvaluator:
         }. Allows predicate-type wise configuration of the visualization
         :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
         plotted for the first time-step only
-        :plot_scale: for controlling the size of the whole visualization
+        :scenario_fig_size: figure size of the scenario only
+        :scenario_scale_compared_to_other_plots: scale describing how much larger than the other bar-chart and the
+        rule-robustness chart the scenario should be drawn
         :plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
         predicate instances included in the visualization are the same as the ones shown in the scenario visualization
         :bar_chart_plot_limits: minimum and maximum value of the bar-chart
@@ -183,7 +186,8 @@ class RuleEvaluator:
             vehicle2draw_params,
             draw_functions,
             predicate_names2vehicle_ids2values,
-            plot_scale,
+            scenario_fig_size,
+            scenario_scale_compared_to_other_plots,
             plot_scenario_legend,
             predicate_name2predicate_evaluator,
             plot_predicate_bar_chart,
