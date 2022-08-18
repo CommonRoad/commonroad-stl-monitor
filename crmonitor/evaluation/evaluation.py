@@ -17,9 +17,11 @@ from crmonitor.evaluation.visitor import (
     ResetMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
 )
-from crmonitor.evaluation.visualization import plot_predicate_visualization
+from crmonitor.evaluation.visualization import plot_rule_robustness_course, plot_predicate_bar_chart
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.rule import VisitorNode, parse_rule
+
+from commonroad.visualization.mp_renderer import MPRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -128,16 +130,14 @@ class RuleEvaluator:
 
     def visualize_predicates(
         self,
-        visualization_config=Dict[str, any],
-        plot_scenario_legend=None,
-        scenario_fig_size= (10., 2.),
-        scenario_scale_compared_to_other_plots = 6,
-        plot_predicate_bar_chart=True,
-        bar_chart_plot_limits=(-1.0, 1.0),
-        plot_rule_robustness_course=True,
-        rule_robustness_course_plot_limits=(-1.0, 1.0),
-        scenario_plot_limit=None,
-    ) -> None:
+        scenario_render: MPRenderer,
+        vehicle2draw_params: Dict,
+        visualization_config: Dict[str, any],
+        bar_chart_plot_limits,
+        rule_robustness_course_plot_limits,
+        bar_chart_ax=None,
+        rob_course_ax=None,
+    ) -> Dict:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -159,7 +159,6 @@ class RuleEvaluator:
         :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
         :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
         """
-        vehicle2draw_params = {}
 
         def add_vehicle_draw_params(vehicle_id: int, draw_params: any):
             vehicle2draw_params[vehicle_id] = merge_dicts_recursively(
@@ -179,25 +178,20 @@ class RuleEvaluator:
             self.current_time,
             visualization_config,
         )
+        for fun in draw_functions:
+            fun(scenario_render)
 
-        plot_predicate_visualization(
-            self._world,
-            self._ego_vehicle.id,
-            self.current_time,
-            vehicle2draw_params,
-            draw_functions,
-            predicate_names2vehicle_ids2values,
-            scenario_fig_size,
-            scenario_scale_compared_to_other_plots,
-            plot_scenario_legend,
-            predicate_name2predicate_evaluator,
-            plot_predicate_bar_chart,
-            bar_chart_plot_limits,
-            plot_rule_robustness_course,
-            self._rule_value_course,
-            rule_robustness_course_plot_limits,
-            scenario_plot_limit
-        )
+        if bar_chart_ax is not None:
+            plot_predicate_bar_chart(
+                predicate_names2vehicle_ids2values, bar_chart_ax, bar_chart_plot_limits
+            )
+
+        if rob_course_ax is not None:
+            plot_rule_robustness_course(
+                rob_course_ax,
+                self._rule_value_course,
+                rule_robustness_course_plot_limits,
+            )
 
     @property
     def other_ids(self) -> Tuple[int]:
