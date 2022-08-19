@@ -97,7 +97,7 @@ def _create_axes(
         for r in range(n_rows - 1):
             if flag_plot_predicate_bar_chart:
                 bar_plots.append(fig.add_subplot(gs[r + 1, 0]))
-                rob_plot_index += 1
+                rob_plot_index = 1
             if flag_plot_rule_robustness_course:
                 rob_plots.append(fig.add_subplot(gs[r + 1, rob_plot_index]))
     else:
