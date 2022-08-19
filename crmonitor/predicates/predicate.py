@@ -2,6 +2,7 @@ import abc
 import logging
 import math
 from typing import List, Tuple, Set, Iterable, Dict, Callable
+from shapely.geometry.polygon import Polygon
 
 import matplotlib.colors
 import numpy as np
@@ -381,6 +382,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
     def __init__(self, config):
         super().__init__(config)
+        self._safe_distance = None
 
     @classmethod
     def calculate_safe_distance(
@@ -404,7 +406,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         a_min_follow = vehicle_follow.vehicle_param.get("a_min")
         a_min_lead = vehicle_lead.vehicle_param.get("a_min")
         t_react_follow = vehicle_follow.vehicle_param.get("t_react")
-        safe_distance = self.calculate_safe_distance(
+        self._safe_distance = self.calculate_safe_distance(
             vehicle_follow.states_cr[time_step].velocity,
             vehicle_lead.states_cr[time_step].velocity,
             a_min_lead,
@@ -413,13 +415,50 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         )
 
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
-        rob = self._scale_lon_dist(delta_s - safe_distance)
+        rob = self._scale_lon_dist(delta_s - self._safe_distance)
         return rob
 
     @staticmethod
     def _plot_red_arrow(ax, x, y, size=1.):
         ax.plot(x, y, linewidth=2, color='r', zorder=25)
         ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=False, head_width=size, head_length=size, zorder=25, color='r')
+
+    def visualize_unsafe_region(self,
+                                ax,
+                                time_step: int,
+                                vehicle_front: Vehicle):
+        """
+        Plots the unsafe region starting from the rear of the front vehicle
+        """
+        safe_pos_s = vehicle_front.rear_s(time_step) - self._safe_distance
+        # get the Cartesian coordinate of the safe distance
+        safe_pos_cart = vehicle_front.get_lane(time_step).clcs.convert_to_cartesian_coords(safe_pos_s, 0)
+        front_rear_cart = vehicle_front.get_lane(time_step).clcs.\
+            convert_to_cartesian_coords(vehicle_front.rear_s(time_step), 0.0)
+        # left vertices
+        front_rear_left_cart = vehicle_front.get_lane(time_step).clcs_left.\
+            convert_to_cartesian_coords(vehicle_front.rear_s(time_step), 0.0)
+        safe_pos_left_cart = vehicle_front.get_lane(time_step).clcs_left.convert_to_cartesian_coords(safe_pos_s, 0)
+        reference_left = np.vstack(vehicle_front.get_lane(time_step).clcs_left.reference_path())
+        vertices_left = reference_left[(reference_left[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_left[:, 0] < front_rear_left_cart[0]), :]
+        vertices_left = np.concatenate(([safe_pos_left_cart], vertices_left, [front_rear_left_cart]))
+        # right vertices
+        front_rear_right_cart = vehicle_front.get_lane(time_step).clcs_right.convert_to_cartesian_coords(
+            vehicle_front.rear_s(time_step), 0.0)
+        safe_pos_right_cart = vehicle_front.get_lane(time_step).clcs_right.convert_to_cartesian_coords(safe_pos_s, 0)
+        reference_right = np.vstack(vehicle_front.get_lane(time_step).clcs_right.reference_path())
+        vertices_right = reference_right[(reference_right[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_right[:, 0] < front_rear_left_cart[0]), :]
+        vertices_right = np.concatenate(([safe_pos_right_cart], vertices_right, [front_rear_right_cart]))
+        # concatenate vertices
+        vertices_total = np.concatenate(([safe_pos_cart],
+                                         vertices_left,
+                                         [front_rear_cart],
+                                         np.flip(vertices_right, 0),
+                                         [safe_pos_cart])).tolist()
+        unsafe_region = Polygon(vertices_total)
+        ax.fill(*unsafe_region.exterior.xy, zorder=30, alpha=0.2, facecolor='red', edgecolor=None)
 
     def visualize(
         self,
@@ -455,6 +494,8 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
         def fun(renderer):
             self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
+            if self._safe_distance is not None:
+                self.visualize_unsafe_region(renderer.ax, time_step, world.vehicle_by_id(vehicle_ids[1]))
         return (fun,)
 
     @staticmethod
