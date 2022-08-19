@@ -2,7 +2,7 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Any, List
 
 import numpy as np
 
@@ -133,11 +133,7 @@ class RuleEvaluator:
         scenario_render: MPRenderer,
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
-        bar_chart_plot_limits,
-        rule_robustness_course_plot_limits,
-        bar_chart_ax=None,
-        rob_course_ax=None,
-    ) -> Dict:
+    ) -> Tuple[Dict[Any, Dict], List]:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -181,17 +177,7 @@ class RuleEvaluator:
         for fun in draw_functions:
             fun(scenario_render)
 
-        if bar_chart_ax is not None:
-            plot_predicate_bar_chart(
-                predicate_names2vehicle_ids2values, bar_chart_ax, bar_chart_plot_limits
-            )
-
-        if rob_course_ax is not None:
-            plot_rule_robustness_course(
-                rob_course_ax,
-                self._rule_value_course,
-                rule_robustness_course_plot_limits,
-            )
+        return predicate_names2vehicle_ids2values, self._rule_value_course
 
     @property
     def other_ids(self) -> Tuple[int]:
