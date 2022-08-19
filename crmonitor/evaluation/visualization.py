@@ -1,15 +1,18 @@
-from typing import Dict, List, Callable, Tuple, Optional, Union
-
+from typing import Dict, List, Tuple, Union, Optional
+from collections import defaultdict
+from itertools import groupby
 import numpy as np
 import pandas as pd
+
 from commonroad.common.util import Interval
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad.visualization.renderer import IRenderer
+from commonroad.scenario.scenario import Scenario
 from matplotlib import pyplot as plt
+from matplotlib.gridspec import GridSpec
 
 from crmonitor.common.helper import merge_dicts_recursively
-from crmonitor.common.world import World
 from crmonitor.predicates.predicate import BasePredicateEvaluator
+
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
@@ -20,10 +23,11 @@ EGO_VEHICLE_DRAW_PARAMS = {
 }
 
 
-def _plot_rule_robustness_course(
-    ax,
-    rule_robustness_course: List[Tuple[int, float]],
-    plot_limits: Tuple[float, float],
+def plot_rule_robustness_course(
+        rule_robustness_course: List[Tuple[int, float]],
+        ax,
+        plot_limits: Tuple[float, float],
+        rules: List[str]
 ):
     np_rule_robustness_course = np.array(rule_robustness_course)
     rob_values = np_rule_robustness_course[:, 1]
@@ -33,10 +37,11 @@ def _plot_rule_robustness_course(
     ax.set_xlim([np_rule_robustness_course[0, 0], np_rule_robustness_course[-1, 0]])
     ax.set_ylim(plot_limits)
     ax.grid(True)
-    ax.set_xlabel("rule robustness")
+    ax.set_ylabel(f"robustness of rule {','.join(rules)}")
+    ax.set_xlabel("time step")
 
 
-def _plot_predicate_bar_chart(
+def plot_predicate_bar_chart(
     predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ax,
     bar_chart_plot_limits: Tuple[float, float],
@@ -70,44 +75,36 @@ def _plot_predicate_bar_chart(
 
 def _create_axes(
     scenario_fig_size: Tuple[float, float],
-    scenario_scale_compared_to_other_plots: int,
-    plot_predicate_bar_chart: bool,
-    plot_rule_robustness_course: bool,
+    nr_rules: int,
+    flag_plot_predicate_bar_chart: bool,
+    flag_plot_rule_robustness_course: bool,
+    flag_rule_conjunction: bool
 ):
-    additional_plots = [plot_predicate_bar_chart, plot_rule_robustness_course]
-    axes_of_additional_plots = [None] * len(additional_plots)
-    n_additional_cols = sum(int(v) for v in additional_plots)
+    bar_plots = []
+    rob_plots = []
 
-    if n_additional_cols > 0:
-        width, height = scenario_fig_size
-        figsize = (
-            width * (1 + n_additional_cols / scenario_scale_compared_to_other_plots),
-            height,
-        )
-        # make scenario-plot and bar-chart side-by-side
-        fig, axes = plt.subplots(
-            figsize=figsize,
-            nrows=1,
-            ncols=1 + n_additional_cols,
-            gridspec_kw={
-                "width_ratios": [
-                    scenario_scale_compared_to_other_plots,
-                    *([1] * n_additional_cols),
-                ]
-            },
-            layout="constrained",  # makes the layout consider overlaps of columns automatically
-        )
-        scenario_ax = axes[0]
-        k = 0
-        for i, p in enumerate(additional_plots):
-            if p:
-                axes_of_additional_plots[i] = axes[1 + k]
-                k += 1
+    if flag_plot_predicate_bar_chart or flag_plot_rule_robustness_course:
+        fig = plt.figure(constrained_layout=True,
+                         figsize=(scenario_fig_size[0], scenario_fig_size[1]*(1+nr_rules)))
+        if flag_rule_conjunction:
+            n_rows = 2
+        else:
+            n_rows = nr_rules + 1
+        n_cols = sum([flag_plot_predicate_bar_chart, flag_plot_rule_robustness_course])
+        gs = GridSpec(nrows=n_rows, ncols=n_cols, figure=fig)
+        scenario_ax = fig.add_subplot(gs[0, :])
+        rob_plot_index = 0
+        for r in range(n_rows - 1):
+            if flag_plot_predicate_bar_chart:
+                bar_plots.append(fig.add_subplot(gs[r + 1, 0]))
+                rob_plot_index = 1
+            if flag_plot_rule_robustness_course:
+                rob_plots.append(fig.add_subplot(gs[r + 1, rob_plot_index]))
     else:
         plt.figure(figsize=scenario_fig_size)
         scenario_ax = plt.gca()
 
-    return (scenario_ax, *axes_of_additional_plots)
+    return scenario_ax, bar_plots, rob_plots
 
 
 def _plot_scenario_legend(
@@ -129,36 +126,38 @@ def _plot_scenario_legend(
         pred_evaluator.plot_predicate_visualization_legend(ax2)
 
 
-def plot_predicate_visualization(
-    world: World,
-    ego_vehicle_id: int,
-    time_step: int,
-    vehicle2draw_params: Dict[int, any],
-    draw_functions: List[Callable[[IRenderer], None]],
-    predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
-    scenario_fig_size: Tuple[float, float],
-    scenario_scale_compared_to_other_plots: int,
-    plot_scenario_legend: Optional[bool],
-    predicate_name2predicate_evaluator: Dict[str, BasePredicateEvaluator],
-    plot_predicate_bar_chart: bool,
-    bar_chart_plot_limits: Tuple[float, float],
-    plot_rule_robustness_course: bool,
-    rule_robustness_course: List[Tuple[int, float]],
-    rule_robustness_course_plot_limits: Tuple[float, float],
-    scenario_plot_limits: Union[List[Union[int, float]], None]
-):
-    if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
-        _plot_scenario_legend(predicate_name2predicate_evaluator, scenario_fig_size)
+def plot_rule_visualization(scenario: Scenario,
+                            ego_vehicle_id: int,
+                            time_step: int,
+                            rule_evaluator_list,
+                            visualization_config: Dict[str, any],
+                            scenario_fig_size: Tuple[float, float] = (10., 2.),
+                            bar_chart_plot_limits: Tuple[float, float]=(-1.0, 1.0),
+                            rule_robustness_course_plot_limits: Tuple[float, float]=(-1.0, 1.0),
+                            flag_plot_predicate_bar_chart: bool = True,
+                            flat_plot_rule_robustness_course: bool = True,
+                            scenario_plot_limits: Union[List[Union[int, float]], None] = None,
+                            flag_rule_conjunction: bool = False,
+                            plot_scenario_legend: Optional[bool]=None):
+    """
+    Plotting the rule evaluation result
+    :param scenario: the CommonRoad scenario to be visualized
+    :param ego_vehicle_id: id of ego vehicle (the vehicle to be controlled)
+    :param time_step: the time step of the current scenario
+    :param rule_evaluator_list: precreated list of rule evaluators
+    :param visualization_config: user-defined configuration of visualization
+    :param scenario_fig_size: size of scenario plot
+    :param bar_chart_plot_limits: the plot limits of x-axis
+    :param rule_robustness_course_plot_limits: the plot limits of x-axis
+    :param flag_plot_predicate_bar_chart: flag of whether the bar chart needs to be plotted
+    :param flat_plot_rule_robustness_course: flag of whether the robustness curve needs to be plotted
+    :param scenario_plot_limits: the plot limits of scenario,
+    :param flag_rule_conjunction: whether consider the conjunction of rules or separately calculate them
+    :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
+    plotted for the first time-step only
+    """
 
-    scenario_ax, bar_chart_ax, robustness_course_ax = _create_axes(
-        scenario_fig_size,
-        scenario_scale_compared_to_other_plots,
-        plot_predicate_bar_chart,
-        plot_rule_robustness_course,
-    )
-
-    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
-    commonroad_scenario = world.scenario
+    nr_rules = len(rule_evaluator_list)
 
     general_draw_params = {
         "time_begin": time_step,
@@ -170,38 +169,82 @@ def plot_predicate_visualization(
         },
     }
 
-    commonroad_scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+    vehicle2draw_params = {}
+    pred_result_dict = {}
+    rule_result_dict = {}
+    rule_name_list = []
+    all_predicate_name2predicate_evaluator = {}
+    # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
+    #   predicates need to return functions instead of directly plotting
+    all_draw_functions = []
+    for i in range(nr_rules):
+        rule_evaluator_list[i].update()
+        predicate_name2predicate_evaluator, pred_result, rule_result, draw_functions = rule_evaluator_list[i].visualize_predicates(vehicle2draw_params,
+                                                                               visualization_config)
+        all_predicate_name2predicate_evaluator.update(predicate_name2predicate_evaluator)
+        all_draw_functions += draw_functions
+        pred_result_dict[rule_evaluator_list[i]._rule.name] = pred_result  # merge the dict
+        rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
+        rule_name_list.append(rule_evaluator_list[i]._rule.name)
 
+    if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
+        _plot_scenario_legend(all_predicate_name2predicate_evaluator, scenario_fig_size)
+
+    scenario_ax, bar_chart_axs, robustness_course_axs = _create_axes(scenario_fig_size, nr_rules,
+                                                                     flag_plot_predicate_bar_chart,
+                                                                     flat_plot_rule_robustness_course,
+                                                                     flag_rule_conjunction)
+
+    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
+
+    if flag_rule_conjunction:
+        if flag_plot_predicate_bar_chart:
+            pred_conjunct_dict = defaultdict(dict)
+            for _, pred_result_sep in pred_result_dict.items():
+                for veh_ids, rob_pairs in pred_result_sep.items():
+                    pred_conjunct_dict[veh_ids].update(rob_pairs)
+            plot_predicate_bar_chart(pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits)
+
+        if flat_plot_rule_robustness_course:
+            # conjunction of all rules, i.e., the min of the robustness is calculated
+            rule_rob_list = [r for _, rule_rob in rule_result_dict.items() for r in rule_rob]
+            rule_conjunct_list = [min(time_rob[1]) for time_rob in groupby(rule_rob_list,
+                                                                           lambda rule_rob_list: rule_rob_list[0])]
+            plot_rule_robustness_course(rule_conjunct_list, robustness_course_axs[0],
+                                        rule_robustness_course_plot_limits, rule_name_list)
+
+    else:
+        i = 0
+        for rule in rule_name_list:
+            if flag_plot_predicate_bar_chart:
+                plot_predicate_bar_chart(pred_result_dict[rule], bar_chart_axs[i], bar_chart_plot_limits)
+
+            if flat_plot_rule_robustness_course:
+                plot_rule_robustness_course(rule_result_dict[rule], robustness_course_axs[i],
+                                            rule_robustness_course_plot_limits, [rule])
+            i += 1
+    # after vehicle2draw_params is determined, draw the scenarios
+    scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+
+    # plotting scenario and obstacles
     if scenario_plot_limits:
-        plot_veh_ids = [obs.obstacle_id for obs in commonroad_scenario.obstacles_by_position_intervals(
+        plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles_by_position_intervals(
                 [Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
                  Interval(scenario_plot_limits[2], scenario_plot_limits[3])])]
     else:
-        plot_veh_ids = world.vehicle_ids_for_time_step(time_step)
+        plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles]
     for i in plot_veh_ids:
-        draw_params = vehicle2draw_params.get(i, {})
-        commonroad_scenario.obstacle_by_id(i).draw(
-            renderer,
-            draw_params=merge_dicts_recursively(general_draw_params, draw_params),
-        )
+        if i != ego_vehicle_id:
+            draw_params = vehicle2draw_params.get(i, {})
+            scenario.obstacle_by_id(i).draw(
+                renderer,
+                draw_params=merge_dicts_recursively(general_draw_params, draw_params),
+            )
 
-    commonroad_scenario.obstacle_by_id(ego_vehicle_id).draw(renderer,
-            draw_params=merge_dicts_recursively(general_draw_params, EGO_VEHICLE_DRAW_PARAMS), )
-
-    # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
-    #   predicates need to return functions instead of directly plotting
+    scenario.obstacle_by_id(ego_vehicle_id).draw(renderer,
+                                                 draw_params=merge_dicts_recursively(general_draw_params,
+                                                                                     EGO_VEHICLE_DRAW_PARAMS), )
     renderer.render()
-    for fun in draw_functions:
-        fun(renderer)
 
-    if plot_predicate_bar_chart:
-        _plot_predicate_bar_chart(
-            predicate_names2vehicle_ids2values, bar_chart_ax, bar_chart_plot_limits
-        )
-
-    if plot_rule_robustness_course:
-        _plot_rule_robustness_course(
-            robustness_course_ax,
-            rule_robustness_course,
-            rule_robustness_course_plot_limits,
-        )
+    for f in all_draw_functions:
+        f(renderer)

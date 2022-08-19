@@ -2,23 +2,20 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Any, List, Callable
 
 import numpy as np
+from commonroad.visualization.mp_renderer import MPRenderer
 
 import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
-    EvaluationMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
-    ResetMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
-)
-from crmonitor.evaluation.visualization import plot_predicate_visualization
+from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
+                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
+                                          PredicateVisualizerMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.predicates.predicate import BasePredicateEvaluator
 from crmonitor.predicates.rule import VisitorNode, parse_rule
 
 logger = logging.getLogger(__name__)
@@ -128,16 +125,9 @@ class RuleEvaluator:
 
     def visualize_predicates(
         self,
-        visualization_config=Dict[str, any],
-        plot_scenario_legend=None,
-        scenario_fig_size= (10., 2.),
-        scenario_scale_compared_to_other_plots = 6,
-        plot_predicate_bar_chart=True,
-        bar_chart_plot_limits=(-1.0, 1.0),
-        plot_rule_robustness_course=True,
-        rule_robustness_course_plot_limits=(-1.0, 1.0),
-        scenario_plot_limit=None,
-    ) -> None:
+        vehicle2draw_params: Dict,
+        visualization_config: Dict[str, any],
+    ) -> Tuple[Dict[str, BasePredicateEvaluator], Dict[Any, Dict], List, List[Callable[[MPRenderer],None]]]:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -159,7 +149,6 @@ class RuleEvaluator:
         :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
         :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
         """
-        vehicle2draw_params = {}
 
         def add_vehicle_draw_params(vehicle_id: int, draw_params: any):
             vehicle2draw_params[vehicle_id] = merge_dicts_recursively(
@@ -180,24 +169,7 @@ class RuleEvaluator:
             visualization_config,
         )
 
-        plot_predicate_visualization(
-            self._world,
-            self._ego_vehicle.id,
-            self.current_time,
-            vehicle2draw_params,
-            draw_functions,
-            predicate_names2vehicle_ids2values,
-            scenario_fig_size,
-            scenario_scale_compared_to_other_plots,
-            plot_scenario_legend,
-            predicate_name2predicate_evaluator,
-            plot_predicate_bar_chart,
-            bar_chart_plot_limits,
-            plot_rule_robustness_course,
-            self._rule_value_course,
-            rule_robustness_course_plot_limits,
-            scenario_plot_limit
-        )
+        return predicate_name2predicate_evaluator, predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
 
     @property
     def other_ids(self) -> Tuple[int]:
