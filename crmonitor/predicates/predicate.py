@@ -1,6 +1,7 @@
 import abc
 import logging
 import math
+import operator
 from typing import List, Tuple, Set, Iterable, Dict, Callable
 from shapely.geometry.polygon import Polygon
 
@@ -431,23 +432,28 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         Plots the unsafe region starting from the rear of the front vehicle
         """
         safe_pos_s = vehicle_front.rear_s(time_step) - self._safe_distance
+        # the ids of lanes are increasing together with the d-coordinate
+        vehicle_lanes = list(sorted(vehicle_front.lanes_at_state(time_step),
+                                    key=operator.attrgetter('lane_id'),
+                                    reverse=True))
+        reference_lane = vehicle_front.get_lane(time_step)
         # get the Cartesian coordinate of the safe distance
-        safe_pos_cart = vehicle_front.get_lane(time_step).clcs.convert_to_cartesian_coords(safe_pos_s, 0)
-        front_rear_cart = vehicle_front.get_lane(time_step).clcs.\
+        safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(safe_pos_s, 0)
+        front_rear_cart = reference_lane.clcs.\
             convert_to_cartesian_coords(vehicle_front.rear_s(time_step), 0.0)
         # left vertices
-        front_rear_left_cart = vehicle_front.get_lane(time_step).clcs_left.\
+        front_rear_left_cart = vehicle_lanes[0].clcs_left.\
             convert_to_cartesian_coords(vehicle_front.rear_s(time_step), 0.0)
-        safe_pos_left_cart = vehicle_front.get_lane(time_step).clcs_left.convert_to_cartesian_coords(safe_pos_s, 0)
-        reference_left = np.vstack(vehicle_front.get_lane(time_step).clcs_left.reference_path())
+        safe_pos_left_cart = vehicle_lanes[0].clcs_left.convert_to_cartesian_coords(safe_pos_s, 0)
+        reference_left = np.vstack(vehicle_lanes[0].clcs_left.reference_path())
         vertices_left = reference_left[(reference_left[:, 0] > safe_pos_left_cart[0]) & (
                     reference_left[:, 0] < front_rear_left_cart[0]), :]
         vertices_left = np.concatenate(([safe_pos_left_cart], vertices_left, [front_rear_left_cart]))
         # right vertices
-        front_rear_right_cart = vehicle_front.get_lane(time_step).clcs_right.convert_to_cartesian_coords(
+        front_rear_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(
             vehicle_front.rear_s(time_step), 0.0)
-        safe_pos_right_cart = vehicle_front.get_lane(time_step).clcs_right.convert_to_cartesian_coords(safe_pos_s, 0)
-        reference_right = np.vstack(vehicle_front.get_lane(time_step).clcs_right.reference_path())
+        safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(safe_pos_s, 0)
+        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.reference_path())
         vertices_right = reference_right[(reference_right[:, 0] > safe_pos_left_cart[0]) & (
                     reference_right[:, 0] < front_rear_left_cart[0]), :]
         vertices_right = np.concatenate(([safe_pos_right_cart], vertices_right, [front_rear_right_cart]))
