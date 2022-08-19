@@ -174,10 +174,8 @@ class RuleEvaluator:
             self.current_time,
             visualization_config,
         )
-        for fun in draw_functions:
-            fun(scenario_render)
 
-        return predicate_names2vehicle_ids2values, self._rule_value_course
+        return predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
 
     @property
     def other_ids(self) -> Tuple[int]:

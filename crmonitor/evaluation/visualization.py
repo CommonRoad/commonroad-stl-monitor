@@ -175,11 +175,13 @@ def plot_rule_visualization(scenario: Scenario,
     rule_name_list = []
     # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
     #   predicates need to return functions instead of directly plotting
+    all_draw_functions = []
     for i in range(nr_rules):
         rule_evaluator_list[i].update()
-        pred_result, rule_result = rule_evaluator_list[i].visualize_predicates(renderer,
+        pred_result, rule_result, draw_functions = rule_evaluator_list[i].visualize_predicates(renderer,
                                                                                vehicle2draw_params,
                                                                                visualization_config)
+        all_draw_functions += draw_functions
         pred_result_dict[rule_evaluator_list[i]._rule.name] = pred_result  # merge the dict
         rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
         rule_name_list.append(rule_evaluator_list[i]._rule.name)
@@ -232,3 +234,6 @@ def plot_rule_visualization(scenario: Scenario,
                                                  draw_params=merge_dicts_recursively(general_draw_params,
                                                                                      EGO_VEHICLE_DRAW_PARAMS), )
     renderer.render()
+
+    for f in all_draw_functions:
+        f(renderer)
