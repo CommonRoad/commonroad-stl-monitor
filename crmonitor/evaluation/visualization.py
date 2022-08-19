@@ -93,9 +93,13 @@ def _create_axes(
         n_cols = sum([flag_plot_predicate_bar_chart, flag_plot_rule_robustness_course])
         gs = GridSpec(nrows=n_rows, ncols=n_cols, figure=fig)
         scenario_ax = fig.add_subplot(gs[0, :])
+        rob_plot_index = 0
         for r in range(n_rows - 1):
-            bar_plots.append(fig.add_subplot(gs[r + 1, 0]))
-            rob_plots.append(fig.add_subplot(gs[r + 1, 1]))
+            if flag_plot_predicate_bar_chart:
+                bar_plots.append(fig.add_subplot(gs[r + 1, 0]))
+                rob_plot_index += 1
+            if flag_plot_rule_robustness_course:
+                rob_plots.append(fig.add_subplot(gs[r + 1, rob_plot_index]))
     else:
         plt.figure(figsize=scenario_fig_size)
         scenario_ax = plt.gca()
@@ -134,6 +138,21 @@ def plot_rule_visualization(scenario: Scenario,
                             flat_plot_rule_robustness_course: bool = True,
                             scenario_plot_limits: Union[List[Union[int, float]], None] = None,
                             flag_rule_conjunction: bool = False):
+    """
+    Plotting the rule evaluation result
+    :param scenario: the CommonRoad scenario to be visualized
+    :param ego_vehicle_id: id of ego vehicle (the vehicle to be controlled)
+    :param time_step: the time step of the current scenario
+    :param rule_evaluator_list: precreated list of rule evaluators
+    :param visualization_config: user-defined configuration of visualization
+    :param scenario_fig_size: size of scenario plot
+    :param bar_chart_plot_limits: the plot limits of x-axis
+    :param rule_robustness_course_plot_limits: the plot limits of x-axis
+    :param flag_plot_predicate_bar_chart: flag of whether the bar chart needs to be plotted
+    :param flat_plot_rule_robustness_course: flag of whether the robustness curve needs to be plotted
+    :param scenario_plot_limits: the plot limits of scenario,
+    :param flag_rule_conjunction: whether consider the conjunction of rules or separately calculate them
+    """
     nr_rules = len(rule_evaluator_list)
     scenario_ax, bar_chart_axs, robustness_course_axs = _create_axes(scenario_fig_size, nr_rules,
                                                                      flag_plot_predicate_bar_chart,
@@ -169,11 +188,12 @@ def plot_rule_visualization(scenario: Scenario,
         if flag_plot_predicate_bar_chart:
             pred_conjunct_dict = defaultdict(dict)
             for _, pred_result_sep in pred_result_dict.items():
-                for key, value in pred_result_sep.items():
-                    pred_conjunct_dict[key].update(value)
+                for veh_ids, rob_pairs in pred_result_sep.items():
+                    pred_conjunct_dict[veh_ids].update(rob_pairs)
             plot_predicate_bar_chart(pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits)
 
         if flat_plot_rule_robustness_course:
+            # conjunction of all rules, i.e., the min of the robustness is calculated
             rule_rob_list = [r for _, rule_rob in rule_result_dict.items() for r in rule_rob]
             rule_conjunct_list = [min(time_rob[1]) for time_rob in groupby(rule_rob_list,
                                                                            lambda rule_rob_list: rule_rob_list[0])]
@@ -183,15 +203,17 @@ def plot_rule_visualization(scenario: Scenario,
     else:
         i = 0
         for rule in rule_name_list:
-            if bar_chart_axs[i] is not None:
+            if flag_plot_predicate_bar_chart:
                 plot_predicate_bar_chart(pred_result_dict[rule], bar_chart_axs[i], bar_chart_plot_limits)
 
-            if robustness_course_axs[i] is not None:
+            if flat_plot_rule_robustness_course:
                 plot_rule_robustness_course(rule_result_dict[rule], robustness_course_axs[i],
                                             rule_robustness_course_plot_limits, [rule])
             i += 1
     # after vehicle2draw_params is determined, draw the scenarios
     scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+
+    # plotting scenario and obstacles
     if scenario_plot_limits:
         plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles_by_position_intervals(
                 [Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
