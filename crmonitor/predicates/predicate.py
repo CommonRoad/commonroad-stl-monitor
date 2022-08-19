@@ -421,7 +421,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
     @staticmethod
     def _plot_red_arrow(ax, x, y, size=1.):
         ax.plot(x, y, linewidth=2, color='r', zorder=25)
-        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=False, head_width=size, head_length=size, zorder=25, color='r')
+        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=True, head_width=size, head_length=size, zorder=25, color='r')
 
     def visualize_unsafe_region(self,
                                 ax,
