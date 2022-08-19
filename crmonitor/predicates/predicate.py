@@ -1,7 +1,9 @@
 import abc
 import logging
 import math
+import operator
 from typing import List, Tuple, Set, Iterable, Dict, Callable
+from shapely.geometry.polygon import Polygon
 
 import matplotlib.colors
 import numpy as np
@@ -419,7 +421,49 @@ class PredSafeDistPrec(BasePredicateEvaluator):
     @staticmethod
     def _plot_red_arrow(ax, x, y, size=1.):
         ax.plot(x, y, linewidth=2, color='r', zorder=25)
-        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=False, head_width=size, head_length=size, zorder=25, color='r')
+        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=True, head_width=size, head_length=size, zorder=25, color='r')
+
+    def visualize_unsafe_region(self,
+                                ax,
+                                time_step: int,
+                                unsafe_s: float,
+                                vehicle_lead: Vehicle):
+        """
+        Plots the unsafe region starting from the rear of the front vehicle
+        """
+        # the ids of lanes are increasing together with the d-coordinate
+        vehicle_lanes = list(sorted(vehicle_lead.lanes_at_state(time_step),
+                                    key=operator.attrgetter('lane_id'),
+                                    reverse=True))
+        reference_lane = vehicle_lead.get_lane(time_step)
+        # get the Cartesian coordinate of the safe distance
+        safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(unsafe_s, 0)
+        lead_rear_cart = reference_lane.clcs.\
+            convert_to_cartesian_coords(vehicle_lead.rear_s(time_step), 0.0)
+        # left vertices
+        front_rear_left_cart = vehicle_lanes[0].clcs_left.\
+            convert_to_cartesian_coords(vehicle_lead.rear_s(time_step), 0.0)
+        safe_pos_left_cart = vehicle_lanes[0].clcs_left.convert_to_cartesian_coords(unsafe_s, 0)
+        reference_left = np.vstack(vehicle_lanes[0].clcs_left.reference_path())
+        vertices_left = reference_left[(reference_left[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_left[:, 0] < front_rear_left_cart[0]), :]
+        vertices_left = np.concatenate(([safe_pos_left_cart], vertices_left, [front_rear_left_cart]))
+        # right vertices
+        lead_rear_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(
+            vehicle_lead.rear_s(time_step), 0.0)
+        safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(unsafe_s, 0)
+        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.reference_path())
+        vertices_right = reference_right[(reference_right[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_right[:, 0] < front_rear_left_cart[0]), :]
+        vertices_right = np.concatenate(([safe_pos_right_cart], vertices_right, [lead_rear_right_cart]))
+        # concatenate vertices
+        vertices_total = np.concatenate(([safe_pos_cart],
+                                         vertices_left,
+                                         [lead_rear_cart],
+                                         np.flip(vertices_right, 0),
+                                         [safe_pos_cart])).tolist()
+        unsafe_region = Polygon(vertices_total)
+        ax.fill(*unsafe_region.exterior.xy, zorder=30, alpha=0.2, facecolor='red', edgecolor=None)
 
     def visualize(
         self,
@@ -455,6 +499,8 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
         def fun(renderer):
             self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
+            unsafe_s = latest_value_unscaled + s_start
+            self.visualize_unsafe_region(renderer.ax, time_step, unsafe_s, world.vehicle_by_id(vehicle_ids[1]))
         return (fun,)
 
     @staticmethod
