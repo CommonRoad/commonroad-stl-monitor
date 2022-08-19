@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 from collections import defaultdict
 from itertools import groupby
 import numpy as np
@@ -137,7 +137,8 @@ def plot_rule_visualization(scenario: Scenario,
                             flag_plot_predicate_bar_chart: bool = True,
                             flat_plot_rule_robustness_course: bool = True,
                             scenario_plot_limits: Union[List[Union[int, float]], None] = None,
-                            flag_rule_conjunction: bool = False):
+                            flag_rule_conjunction: bool = False,
+                            plot_scenario_legend: Optional[bool]=None):
     """
     Plotting the rule evaluation result
     :param scenario: the CommonRoad scenario to be visualized
@@ -152,13 +153,12 @@ def plot_rule_visualization(scenario: Scenario,
     :param flat_plot_rule_robustness_course: flag of whether the robustness curve needs to be plotted
     :param scenario_plot_limits: the plot limits of scenario,
     :param flag_rule_conjunction: whether consider the conjunction of rules or separately calculate them
+    :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
+    plotted for the first time-step only
     """
+
     nr_rules = len(rule_evaluator_list)
-    scenario_ax, bar_chart_axs, robustness_course_axs = _create_axes(scenario_fig_size, nr_rules,
-                                                                     flag_plot_predicate_bar_chart,
-                                                                     flat_plot_rule_robustness_course,
-                                                                     flag_rule_conjunction)
-    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
+
     general_draw_params = {
         "time_begin": time_step,
         "dynamic_obstacle": {
@@ -173,18 +173,29 @@ def plot_rule_visualization(scenario: Scenario,
     pred_result_dict = {}
     rule_result_dict = {}
     rule_name_list = []
+    all_predicate_name2predicate_evaluator = {}
     # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
     #   predicates need to return functions instead of directly plotting
     all_draw_functions = []
     for i in range(nr_rules):
         rule_evaluator_list[i].update()
-        pred_result, rule_result, draw_functions = rule_evaluator_list[i].visualize_predicates(renderer,
-                                                                               vehicle2draw_params,
+        predicate_name2predicate_evaluator, pred_result, rule_result, draw_functions = rule_evaluator_list[i].visualize_predicates(vehicle2draw_params,
                                                                                visualization_config)
+        all_predicate_name2predicate_evaluator.update(predicate_name2predicate_evaluator)
         all_draw_functions += draw_functions
         pred_result_dict[rule_evaluator_list[i]._rule.name] = pred_result  # merge the dict
         rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
         rule_name_list.append(rule_evaluator_list[i]._rule.name)
+
+    if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
+        _plot_scenario_legend(all_predicate_name2predicate_evaluator, scenario_fig_size)
+
+    scenario_ax, bar_chart_axs, robustness_course_axs = _create_axes(scenario_fig_size, nr_rules,
+                                                                     flag_plot_predicate_bar_chart,
+                                                                     flat_plot_rule_robustness_course,
+                                                                     flag_rule_conjunction)
+
+    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
 
     if flag_rule_conjunction:
         if flag_plot_predicate_bar_chart:

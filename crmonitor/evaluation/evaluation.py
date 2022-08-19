@@ -2,26 +2,21 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any, List, Callable
 
 import numpy as np
+from commonroad.visualization.mp_renderer import MPRenderer
 
 import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
-    EvaluationMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
-    ResetMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
-)
-from crmonitor.evaluation.visualization import plot_rule_robustness_course, plot_predicate_bar_chart
+from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
+                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
+                                          PredicateVisualizerMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.predicates.predicate import BasePredicateEvaluator
 from crmonitor.predicates.rule import VisitorNode, parse_rule
-
-from commonroad.visualization.mp_renderer import MPRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -130,10 +125,9 @@ class RuleEvaluator:
 
     def visualize_predicates(
         self,
-        scenario_render: MPRenderer,
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
-    ) -> Tuple[Dict[Any, Dict], List]:
+    ) -> Tuple[Dict[str, BasePredicateEvaluator], Dict[Any, Dict], List, List[Callable[[MPRenderer],None]]]:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -175,7 +169,7 @@ class RuleEvaluator:
             visualization_config,
         )
 
-        return predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
+        return predicate_name2predicate_evaluator, predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
 
     @property
     def other_ids(self) -> Tuple[int]:
