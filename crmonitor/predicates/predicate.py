@@ -1,13 +1,18 @@
 import abc
 import logging
 import math
-from typing import List, Tuple, Set, Iterable
+import operator
+from typing import List, Tuple, Set, Iterable, Dict, Callable
+from shapely.geometry.polygon import Polygon
 
+import matplotlib.colors
 import numpy as np
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.visualization.renderer import IRenderer
+from matplotlib import pyplot as plt
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.helper import union_set, cartesian_to_curvilinear
@@ -49,6 +54,10 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
     return d_left, d_right
 
 
+MAX_LONG_DIST = 200.0
+MAX_LAT_DIST = 20.0
+
+
 class BasePredicateEvaluator(abc.ABC):
     predicate_name = "interface"
 
@@ -58,7 +67,7 @@ class BasePredicateEvaluator(abc.ABC):
         self.eps = 1e-5
 
     def _scale(self, x, max_value):
-        return np.clip(x / max_value, -1., 1.) if self.scale else x
+        return np.clip(x / max_value, -1.0, 1.0) if self.scale else x
 
     def _scale_speed(self, x):
         return self._scale(x, 250.0 / 3.6)
@@ -67,10 +76,10 @@ class BasePredicateEvaluator(abc.ABC):
         return self._scale(x, 10.5)
 
     def _scale_lon_dist(self, x):
-        return self._scale(x, 200.0)
+        return self._scale(x, MAX_LONG_DIST)
 
     def _scale_lat_dist(self, x):
-        return self._scale(x, 20.0)
+        return self._scale(x, MAX_LAT_DIST)
 
     def _scale_angle(self, x):
         return self._scale(x, math.pi)
@@ -96,6 +105,38 @@ class BasePredicateEvaluator(abc.ABC):
             value = self.evaluate_robustness(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
         return value
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ) -> Tuple[Callable[[IRenderer], None], ...]:
+        """
+        Overwrite this function for visualizing a predicate in a certain way within the scenario plot.
+        """
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+        return ()
+
+    def _gather_predicate_values_to_plot(
+        self,
+        vehicle_ids: List[int],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        predicate_names2vehicle_ids2values[self.predicate_name][
+            tuple(vehicle_ids)
+        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        ax.axis("off")
+        ax.text(0.1, 0.5, "[not visualized]", fontsize=12)
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -275,6 +316,66 @@ class PredCutIn(BasePredicateEvaluator):
         )
         return rob
 
+    @staticmethod
+    def _get_color_map():
+        return plt.get_cmap("bwr")
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+
+        latest_value = self.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
+        latest_value_normalized = (latest_value + 1) / 2
+        violation_color = self._get_color_map()(latest_value_normalized)
+        violation_color_hex = matplotlib.colors.rgb2hex(violation_color)
+
+        vehicle = vehicle_ids[0]
+        draw_params = {
+            "dynamic_obstacle": {
+                "vehicle_shape": {
+                    "occupancy": {
+                        "shape": {"rectangle": {"facecolor": violation_color_hex}}
+                    }
+                }
+            }
+        }
+        add_vehicle_draw_params(vehicle, draw_params)
+
+        draw_functions1 = self._same_lane_evaluator.visualize(
+            vehicle_ids,
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
+        draw_functions2 = self._single_lane_evaluator.visualize(
+            [vehicle],
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
+
+        return () + draw_functions1 + draw_functions2
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        points = np.linspace(0, 1, 256)
+        points = np.vstack((points, points))
+        ax.imshow(points, cmap=PredCutIn._get_color_map(), extent=[-1, 1, 0, 1])
+        ax.get_yaxis().set_ticks([])
+        ax.set_ylabel('vehicle color')
+
 
 class PredSafeDistPrec(BasePredicateEvaluator):
     predicate_name = "keeps_safe_distance_prec"
@@ -316,6 +417,100 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
+
+    @staticmethod
+    def _plot_red_arrow(ax, x, y, size=1.):
+        ax.plot(x, y, linewidth=2, color='r', zorder=25)
+        ax.arrow(x[-2], y[-2], x[-1] - x[-2], y[-1] - y[-2], lw=0, length_includes_head=True, head_width=size, head_length=size, zorder=25, color='r')
+
+    def visualize_unsafe_region(self,
+                                ax,
+                                time_step: int,
+                                unsafe_s: float,
+                                vehicle_lead: Vehicle):
+        """
+        Plots the unsafe region starting from the rear of the front vehicle
+        """
+        # the ids of lanes are increasing together with the d-coordinate
+        vehicle_lanes = list(sorted(vehicle_lead.lanes_at_state(time_step),
+                                    key=operator.attrgetter('lane_id'),
+                                    reverse=True))
+        reference_lane = vehicle_lead.get_lane(time_step)
+        # get the Cartesian coordinate of the safe distance
+        safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(unsafe_s, 0)
+        lead_rear_cart = reference_lane.clcs.\
+            convert_to_cartesian_coords(vehicle_lead.rear_s(time_step), 0.0)
+        # left vertices
+        front_rear_left_cart = vehicle_lanes[0].clcs_left.\
+            convert_to_cartesian_coords(vehicle_lead.rear_s(time_step), 0.0)
+        safe_pos_left_cart = vehicle_lanes[0].clcs_left.convert_to_cartesian_coords(unsafe_s, 0)
+        reference_left = np.vstack(vehicle_lanes[0].clcs_left.reference_path())
+        vertices_left = reference_left[(reference_left[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_left[:, 0] < front_rear_left_cart[0]), :]
+        vertices_left = np.concatenate(([safe_pos_left_cart], vertices_left, [front_rear_left_cart]))
+        # right vertices
+        lead_rear_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(
+            vehicle_lead.rear_s(time_step), 0.0)
+        safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(unsafe_s, 0)
+        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.reference_path())
+        vertices_right = reference_right[(reference_right[:, 0] > safe_pos_left_cart[0]) & (
+                    reference_right[:, 0] < front_rear_left_cart[0]), :]
+        vertices_right = np.concatenate(([safe_pos_right_cart], vertices_right, [lead_rear_right_cart]))
+        # concatenate vertices
+        vertices_total = np.concatenate(([safe_pos_cart],
+                                         vertices_left,
+                                         [lead_rear_cart],
+                                         np.flip(vertices_right, 0),
+                                         [safe_pos_cart])).tolist()
+        unsafe_region = Polygon(vertices_total)
+        ax.fill(*unsafe_region.exterior.xy, zorder=30, alpha=0.2, facecolor='red', edgecolor=None)
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+        latest_value = self.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
+        latest_value_unscaled = (
+            latest_value * MAX_LONG_DIST
+        )  # un-scale to actual range and make positive
+        vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
+
+        lane_clcs = vehicle_follow.get_lane(time_step).clcs  # center curvilinear coordinate system
+        sampling_step_size = 1.
+
+        s_start = vehicle_follow.front_s(time_step)
+        num_points = max(2, abs(int(latest_value_unscaled / sampling_step_size)))
+        points_s = np.linspace(0, latest_value_unscaled, num_points) + s_start
+        points_s = points_s[:, None]
+        points_l = np.zeros((points_s.shape[0], 1))
+        points_curvi = np.concatenate((points_s, points_l), axis=1)
+        points_cartesian = np.stack([lane_clcs.convert_to_cartesian_coords(*p) for p in points_curvi], axis=0)
+
+        # back_again = np.stack(lane_clcs.convert_list_of_points_to_curvilinear_coords([p for p in points_cartesian], 8), axis=0)
+
+        def fun(renderer):
+            self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
+            unsafe_s = latest_value_unscaled + s_start
+            self.visualize_unsafe_region(renderer.ax, time_step, unsafe_s, world.vehicle_by_id(vehicle_ids[1]))
+        return (fun,)
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        ax.get_yaxis().set_ticks([])
+        ax.set_xlim((-1.1, 1.1))
+        ax.set_ylim((0, 1))
+        ax.plot(0, 0.5, color="r")
+        PredSafeDistPrec._plot_red_arrow(ax, [0, 1], [0.5, 0.5], size=0.1)
+        PredSafeDistPrec._plot_red_arrow(ax, [0, -1], [0.5, 0.5], size=0.1)
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):

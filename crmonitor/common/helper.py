@@ -771,3 +771,17 @@ def cartesian_to_curvilinear(reference_paths: Iterable[np.ndarray], cartesian_po
         cc[np.sum((0 <= s) & (s <= 1), axis=1) == 0] = np.nan
         curvilinear_coords.append(cc)
     return np.array(curvilinear_coords)
+
+
+def merge_dicts_recursively(*dicts):
+    result = {}
+    for d in dicts:
+        for k, v in d.items():
+            if k in result:
+                if isinstance(result[k], dict) and isinstance(v, dict):
+                    result[k] = merge_dicts_recursively(result[k], v)
+                else:
+                    result[k] = v  # in case of two different values take the one later added
+            else:
+                result[k] = v
+    return result

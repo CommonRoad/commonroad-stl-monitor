@@ -144,15 +144,18 @@ class PredicateNode(MonitorNode, VisitorNode):
         self.evaluator = evaluator
         self.io_type = io_type
         self.latest_value = None
+        self.latest_vehicle_ids = None
 
     def evaluate_boolean(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
         self.latest_value = 1.0 if value else -1.0
+        self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
 
     def evaluate_robustness(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         self.latest_value = value
+        self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
 
     def visit(self, visitor, *ctx):
@@ -177,3 +180,4 @@ class PredicateNode(MonitorNode, VisitorNode):
 
     def reset(self):
         self.latest_value = None
+        self.latest_vehicle_ids = None
