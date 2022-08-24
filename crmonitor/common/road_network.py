@@ -1,6 +1,7 @@
 from typing import List, Set, Dict
 
 import numpy as np
+
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_dc.geometry.util import chaikins_corner_cutting, \
     resample_polyline
@@ -214,7 +215,12 @@ class RoadNetwork:
         lanes = []
         lane_lanelets = []
         start_lanelets = []
-        for lanelet in self.lanelet_network.lanelets:
+        # sort the lanelets to let the id increase with the lateral position
+        if self.lanelet_network.lanelets[0].adj_left is None:
+            lanelets_sorted = sorted(self.lanelet_network.lanelets, key=lambda x: x.lanelet_id, reverse=False)
+        else:
+            lanelets_sorted = sorted(self.lanelet_network.lanelets, key=lambda x: x.lanelet_id, reverse=True)
+        for lanelet in lanelets_sorted:
             if len(lanelet.predecessor) == 0:
                 start_lanelets.append(lanelet)
             else:

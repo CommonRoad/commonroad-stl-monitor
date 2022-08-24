@@ -432,9 +432,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         Plots the unsafe region starting from the rear of the front vehicle
         """
         # the ids of lanes are increasing together with the d-coordinate
-        vehicle_lanes = list(sorted(vehicle_lead.lanes_at_state(time_step),
-                                    key=operator.attrgetter('lane_id'),
-                                    reverse=True))
+        vehicle_lanes = list(vehicle_lead.lanes_at_state(time_step))
         reference_lane = vehicle_lead.get_lane(time_step)
         # get the Cartesian coordinate of the safe distance
         safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(unsafe_s, 0)
@@ -499,6 +497,8 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
         def fun(renderer):
             self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
+            if time_step >= 14:
+                a= 1
             unsafe_s = latest_value_unscaled + s_start
             self.visualize_unsafe_region(renderer.ax, time_step, unsafe_s, world.vehicle_by_id(vehicle_ids[1]))
         return (fun,)
