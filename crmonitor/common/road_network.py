@@ -1,7 +1,6 @@
 from typing import List, Set, Dict
 
 import numpy as np
-
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_dc.geometry.util import chaikins_corner_cutting, \
     resample_polyline

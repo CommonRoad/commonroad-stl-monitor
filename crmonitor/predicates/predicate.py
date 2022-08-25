@@ -500,8 +500,6 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
         def fun(renderer):
             self._plot_red_arrow(renderer.ax, points_cartesian[:,0], points_cartesian[:,1])
-            if time_step >= 14:
-                a= 1
             unsafe_s = latest_value_unscaled + s_start
             self.visualize_unsafe_region(renderer.ax, time_step, unsafe_s, world.vehicle_by_id(vehicle_ids[1]))
         return (fun,)
