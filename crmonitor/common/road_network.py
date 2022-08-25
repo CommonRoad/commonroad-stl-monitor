@@ -215,12 +215,7 @@ class RoadNetwork:
         lanes = []
         lane_lanelets = []
         start_lanelets = []
-        # sort the lanelets to let the id increase with the lateral position
-        if self.lanelet_network.lanelets[0].adj_left is None:
-            lanelets_sorted = sorted(self.lanelet_network.lanelets, key=lambda x: x.lanelet_id, reverse=False)
-        else:
-            lanelets_sorted = sorted(self.lanelet_network.lanelets, key=lambda x: x.lanelet_id, reverse=True)
-        for lanelet in lanelets_sorted:
+        for lanelet in self.lanelet_network.lanelets:
             if len(lanelet.predecessor) == 0:
                 start_lanelets.append(lanelet)
             else:
