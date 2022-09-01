@@ -1,13 +1,18 @@
 image: python:3.8
 
+cache:
+  paths:
+    - .venv
+
 stages:
   - test
   - deploy
 
 before_script:
   - pip install poetry
-  - poetry config virtualenvs.create false
+  - poetry config virtualenvs.in-project true
   - poetry install
+  - source .venv/bin/activate
 
 unittest:
   stage: test
