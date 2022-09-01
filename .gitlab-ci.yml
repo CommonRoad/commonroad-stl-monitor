@@ -12,7 +12,7 @@ before_script:
 unittest:
   stage: test
   script:
-    - poetry run unittest
+    - python -m unittest
 
 deploy_master:
   stage: deploy
