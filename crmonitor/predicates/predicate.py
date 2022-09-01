@@ -448,21 +448,30 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         reference_left = np.vstack(vehicle_lanes[0].clcs_left.reference_path())
         vertices_left = reference_left[(reference_left[:, 0] > safe_pos_left_cart[0]) & (
                     reference_left[:, 0] < front_rear_left_cart[0]), :]
-        vertices_left = np.concatenate(([safe_pos_left_cart], vertices_left, [front_rear_left_cart]))
-        # right vertices
+        vertices_left = np.concatenate(([safe_pos_left_cart],
+                                        vertices_left,
+                                        [front_rear_left_cart]))        # right vertices
         lead_rear_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(
             vehicle_lead.rear_s(time_step), 0.0)
         safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(unsafe_s, 0)
         reference_right = np.vstack(vehicle_lanes[-1].clcs_right.reference_path())
         vertices_right = reference_right[(reference_right[:, 0] > safe_pos_left_cart[0]) & (
                     reference_right[:, 0] < front_rear_left_cart[0]), :]
-        vertices_right = np.concatenate(([safe_pos_right_cart], vertices_right, [lead_rear_right_cart]))
+        vertices_right = np.concatenate(([safe_pos_right_cart],
+                                         vertices_right,
+                                         [lead_rear_right_cart]))
         # concatenate vertices
-        vertices_total = np.concatenate(([safe_pos_cart],
-                                         vertices_left,
-                                         [lead_rear_cart],
-                                         np.flip(vertices_right, 0),
-                                         [safe_pos_cart])).tolist()
+        vertices_total = list(np.concatenate(([safe_pos_cart],
+                                              vertices_left,
+                                              [lead_rear_cart],
+                                              vertices_right,
+                                              [safe_pos_cart])))
+        # compute centroid
+        cent = (sum([v[0] for v in vertices_total]) / len(vertices_total),
+                sum([v[1] for v in vertices_total]) / len(vertices_total))
+        # sort by polar angle
+        vertices_total.sort(key=lambda v: math.atan2(v[1] - cent[1], v[0] - cent[0]))
+
         unsafe_region = Polygon(vertices_total)
         ax.fill(*unsafe_region.exterior.xy, zorder=30, alpha=0.2, facecolor='red', edgecolor=None)
 
