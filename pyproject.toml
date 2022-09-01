@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "commonroad-stl-monitor"
+version = "0.1.0"
+description = ""
+authors = ["Luis Gressenbuch <luis.gressenbuch@tum.de>"]
+readme = "README.md"
+packages = [{include = "crmonitor"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+rtamt = "0.3"
+commonroad-io = "2022.1"
+commonroad-vehicle-models = ">=2"
+ruamel-yaml = ">=0.16.12"
+commonroad-drivability-checker = ">=2021.4"
+antlr4-python3-runtime = ">=4.6,<=4.8"
+numba = "^0.56.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
