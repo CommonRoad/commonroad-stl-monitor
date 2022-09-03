@@ -22,15 +22,9 @@ unittest:
 deploy_master:
   stage: deploy
   script:
-    - git lfs install
-    - pip install twine bump2version
-    - git config --global user.email "${GITLAB_USER_EMAIL}"
-    - git config --global user.name "${GITLAB_USER_NAME}"
-    - bump2version --verbose minor
-    - python setup.py sdist bdist_wheel --universal
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
-    - git remote set-url origin "https://gitlab-ci-token:${VERSION_BUMP_PUSH_TOKEN}@gitlab.lrz.de/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}.git"
-    - git push -o ci.skip origin HEAD:${CI_COMMIT_REF_NAME}
+    - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+    - poetry build
+    - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
   only:
     - master
   except:
