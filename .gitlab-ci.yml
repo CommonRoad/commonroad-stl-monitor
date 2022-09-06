@@ -1,4 +1,4 @@
-image: continuumio/anaconda3
+image: python:3.8
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
@@ -12,19 +12,10 @@ variables:
 cache:
   paths:
     - .cache/pip
-#    - anaconda3/envs
 
 stages:
   - test
   - deploy
-
-before_script:
-  - apt-get update && apt-get install -y git-lfs build-essential
-  - conda init bash
-  - conda env create -n stl-crmonitor python=3.7
-  - source activate stl-crmonitor
-  - conda info
-#  - conda develop $CI_PROJECT_DIR
 
 unittest:
   stage: test

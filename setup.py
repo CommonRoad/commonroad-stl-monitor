@@ -11,13 +11,13 @@ setup(
     ),
     version="0.0.0.dev4",
     install_requires=[
-        "rtamt==0.3",
+        "rtamt @ https://github.com/cirrostratus1/rtamt/archive/6ef48e956837f5b60f514011d3d6eabf6307e042.zip",
         "numba==0.51.2",
         "commonroad-io==2022.1",
         "commonroad-vehicle-models==2.0.0",
         "ruamel-yaml>=0.16.12",
         "commonroad-drivability-checker>=2021.4",
-        "antlr4-python3-runtime>=4.6,<=4.8"
+        "antlr4-python3-runtime>=4.5,<4.6"
     ],
     package_data={'crmonitor': ['*.yaml']},
 )

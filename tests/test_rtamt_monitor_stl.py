@@ -27,7 +27,7 @@ class TestRtamtStlMonitor(TestCase):
         self.assertGreaterEqual(rob, 0.0)
 
         rob = mon.evaluate_monitor_online(3, [("predicate", -1.0)])
-        self.assertGreaterEqual(rob, 0.0)
+        self.assertGreaterEqual(rob, 0.0, "Issue #83 of rtamt is present!")
 
         rob = mon.evaluate_monitor_online(4, [("predicate", -1.0)])
         self.assertGreater(0.0, rob)
