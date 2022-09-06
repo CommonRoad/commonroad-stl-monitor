@@ -14,7 +14,7 @@ pip install git+git@gitlab.lrz.de:cps/commonroad-stl-monitor
 - Clone and enter the repository
 - Create the environment and install the dependencies by
 ```
-conda env create -f environment.yml
+conda env create -n stl-crmonitor python=3.8
 ```
 - Activate the created environment
 ```
@@ -22,6 +22,7 @@ conda activate stl-crmonitor
 ```
 - Install package to development path
 ```
+pip install -f requirements.txt
 conda develop .
 ```
 

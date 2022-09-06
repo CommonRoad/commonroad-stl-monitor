@@ -7,7 +7,6 @@ from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
 import numpy as np
-import pandas as pd
 import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -694,11 +693,6 @@ def flatten_nested_dict(data, path=tuple()):
         else:
             entries.append(path + (key, val))
     return entries
-
-
-def pandas_from_nested_dict(data, level_names):
-    entries = flatten_nested_dict(data)
-    return pd.DataFrame(entries, columns=level_names)
 
 
 @numba.njit(fastmath=True)
