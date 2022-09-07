@@ -12,7 +12,7 @@ from crmonitor.monitor.monitor_node import (
     ExistMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
-from crmonitor.predicates.rule import (
+from crmonitor.monitor.rule import (
     RuleNode,
     ExistNode,
     PredicateNode,

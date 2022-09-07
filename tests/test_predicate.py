@@ -13,8 +13,9 @@ from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.predicate import (PredCutIn, PredInSameLane, PredSafeDistPrec, PredInFrontOf, PredSingleLane,
-                                            PredLaneSpeedLimit, PredPreceding, )
+from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredPreceding, PredSafeDistPrec, PredInFrontOf
+from crmonitor.predicates.velocity import PredLaneSpeedLimit
+from crmonitor.predicates.general import PredCutIn
 from tests.util import parallel_lanes
 
 

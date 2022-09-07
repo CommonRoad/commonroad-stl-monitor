@@ -15,7 +15,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.predicates.rule import parse_rule, RuleNode, PredicateNode, ExistNode, AllNode
+from crmonitor.monitor.rule import parse_rule, RuleNode, PredicateNode, ExistNode, AllNode
 from tests.util import parallel_lanes
 
 logging.basicConfig(

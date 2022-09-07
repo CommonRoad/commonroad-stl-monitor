@@ -4,17 +4,23 @@ import re
 import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+from os.path import dirname, basename, isfile, join
+import glob
 
+# by setting __all__ in __init__.py, all relevant modules are imported
+from crmonitor.predicates import *
 from crmonitor.monitor.monitor_node import MonitorNode
 
 
 def get_all_predicate_evaluators():
-    mod_name = "crmonitor.predicates.predicate"
-    # noinspection PyUnresolvedReferences
-    import crmonitor.predicates.predicate
-
-    classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
-    classes = list(filter(lambda p: "Pred" in p[0], classes))
+    # list all python files
+    modules = glob.glob(join(dirname(__file__), "../predicates/*.py"))
+    classes = []
+    for mod_name in modules:
+        if isfile(mod_name) and not basename(mod_name).startswith('_'):
+            classes += inspect.getmembers(sys.modules['crmonitor.predicates.' + basename(mod_name)[:-3]],
+                                          inspect.isclass)
+    classes = list(filter(lambda p: p[0][:4] == 'Pred', classes))
     d = {}
     for name, cls in classes:
         d[cls.predicate_name] = cls
@@ -28,11 +34,8 @@ class IOType(Enum):
 
 def parse_rule(full_rule_str, config, name=None):
     full_predicate_pattern = re.compile(
-        r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))"
-    )
-    quantification_pattern = re.compile(
-        r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$"
-    )
+            r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))")
+    quantification_pattern = re.compile(r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$")
     subrule_pattern = re.compile(r"[AE]\sa\d+:\s\(.*\)")
     if name is None:
         name = full_rule_str
@@ -54,11 +57,7 @@ def parse_rule(full_rule_str, config, name=None):
         sub_rules = []
         m = subrule_pattern.search(mod_rule_str)
         while m is not None:
-            mod_rule_str = (
-                mod_rule_str[: m.start()]
-                + f"g{len(sub_rules)}"
-                + mod_rule_str[m.end() :]
-            )
+            mod_rule_str = (mod_rule_str[: m.start()] + f"g{len(sub_rules)}" + mod_rule_str[m.end():])
             sub_rule_str = m[0]
             sub_rules.append(parse_rule(sub_rule_str, config, f"g{len(sub_rules)}"))
             m = subrule_pattern.match(mod_rule_str)
@@ -81,12 +80,8 @@ def parse_rule(full_rule_str, config, name=None):
                 io_type = IOType.INPUT
                 full_name = m.group("pred_name") + "_" + m.group("agents") + "_i"
             assert evaluator is not None
-            p = PredicateNode(
-                full_name,
-                predicate_agent_placeholders,
-                evaluator(config["traffic_rules_param"]),
-                io_type,
-            )
+            p = PredicateNode(full_name, predicate_agent_placeholders, evaluator(config["traffic_rules_param"]),
+                    io_type, )
             mod_rule_str = mod_rule_str.replace(m.group(0), p.name)
             predicate_assignment.add(p)
         node = RuleNode(sub_rules + list(predicate_assignment), mod_rule_str, name)
@@ -137,8 +132,8 @@ class PredicateNode(MonitorNode, VisitorNode):
 
     def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
         assert (
-            len(agent_placeholders) == evaluator.arity
-        ), f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
+                len(agent_placeholders) == evaluator.arity), f"The arity of the evaluator for {full_name} should be " \
+                                                             f"{len(agent_placeholders)}, but is {evaluator.arity}!"
         super().__init__(full_name)
         self.agent_placeholders = tuple(agent_placeholders)
         self.evaluator = evaluator

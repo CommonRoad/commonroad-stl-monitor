@@ -1,0 +1,143 @@
+from enum import Enum
+import logging
+from typing import List, Tuple, Dict, Callable
+import matplotlib.colors
+import numpy as np
+
+from matplotlib import pyplot as plt
+
+from crmonitor.common.world import World
+from crmonitor.predicates.position import PredInSameLane, PredSingleLane
+from crmonitor.predicates.base import BasePredicateEvaluator
+
+logger = logging.getLogger(__name__)
+
+
+class GeneralPredicates(str, Enum):
+    CutIn = "cut_in"
+
+
+class PredCutIn(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.CutIn
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_lane_evaluator = PredInSameLane(config)
+        self._single_lane_evaluator = PredSingleLane(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
+
+        single_lane = self._single_lane_evaluator.evaluate_boolean(world, time_step, [vehicle_ids[0]])
+        if single_lane:
+            return False
+        same_lane = self._same_lane_evaluator.evaluate_boolean(world, time_step, vehicle_ids)
+        if not same_lane:
+            return False
+        cutting_lane = cutting_vehicle.get_lane(time_step)
+        cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
+        cutting_lat = cutting_vehicle.get_lat_state(time_step)
+        d_p = cutted_lat.d
+        d_k = cutting_lat.d
+        orient_k = cutting_lat.theta
+
+        result = (d_k < d_p and orient_k > self.eps) or (
+            d_k > d_p and orient_k < -self.eps
+        )
+        return result
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
+
+        single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(world, time_step,
+                                                                                 [vehicle_ids[0], ])
+        same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+
+        cutting_lane = cutting_vehicle.get_lane(time_step)
+        cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
+        cutting_lat = cutting_vehicle.get_lat_state(time_step)
+        r_l_dist = (
+                cutted_lat.d
+                - cutting_lat.d
+        )
+        r_l_orient = cutting_lat.theta - self.eps
+        l_r_dist = (
+            cutting_lat.d
+            - cutted_lat.d
+        )
+        l_r_orient = -self.eps - cutting_lat.theta
+
+        r_l_dist = self._scale_lat_dist(r_l_dist)
+        l_r_dist = self._scale_lat_dist(l_r_dist)
+        r_l_orient = self._scale_angle(r_l_orient)
+        l_r_orient = self._scale_angle(l_r_orient)
+
+        rob = min(
+            -single_lane,
+            same_lane,
+            max(min(r_l_dist, r_l_orient), min(l_r_dist, l_r_orient)),
+        )
+        return rob
+
+    @staticmethod
+    def _get_color_map():
+        return plt.get_cmap("bwr")
+
+    def visualize(
+        self,
+        vehicle_ids: List[int],
+        add_vehicle_draw_params: Callable[[int, any], None],
+        world: World,
+        time_step: int,
+        predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    ):
+        self._gather_predicate_values_to_plot(
+            vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
+        )
+
+        latest_value = self.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
+        latest_value_normalized = (latest_value + 1) / 2
+        violation_color = self._get_color_map()(latest_value_normalized)
+        violation_color_hex = matplotlib.colors.rgb2hex(violation_color)
+
+        vehicle = vehicle_ids[0]
+        draw_params = {
+            "dynamic_obstacle": {
+                "vehicle_shape": {
+                    "occupancy": {
+                        "shape": {"rectangle": {"facecolor": violation_color_hex}}
+                    }
+                }
+            }
+        }
+        add_vehicle_draw_params(vehicle, draw_params)
+
+        draw_functions1 = self._same_lane_evaluator.visualize(
+            vehicle_ids,
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
+        draw_functions2 = self._single_lane_evaluator.visualize(
+            [vehicle],
+            add_vehicle_draw_params,
+            world,
+            time_step,
+            predicate_names2vehicle_ids2values,
+        )
+
+        return () + draw_functions1 + draw_functions2
+
+    @staticmethod
+    def plot_predicate_visualization_legend(ax):
+        points = np.linspace(0, 1, 256)
+        points = np.vstack((points, points))
+        ax.imshow(points, cmap=PredCutIn._get_color_map(), extent=[-1, 1, 0, 1])
+        ax.get_yaxis().set_ticks([])
+        ax.set_ylabel('vehicle color')

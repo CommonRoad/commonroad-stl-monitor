@@ -6,7 +6,7 @@ import rtamt
 from rtamt import Language
 from rtamt.evaluator.stl.online_evaluator import STLOnlineEvaluator
 
-from crmonitor.predicates.rule import IOType, RuleNode
+from crmonitor.monitor.rule import IOType, RuleNode
 
 
 class OutputType(Enum):
