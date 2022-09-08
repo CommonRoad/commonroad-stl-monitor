@@ -6,6 +6,8 @@ from typing import List, Tuple, Set, Iterable, Dict, Callable
 from shapely.geometry.polygon import Polygon
 import numpy as np
 
+from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
+
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.helper import union_set
@@ -14,7 +16,7 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 
 from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
-from crmonitor.predicates.utils import distance_to_bounds
+from crmonitor.predicates.utils import distance_to_bounds, lanelets_left_of_vehicle
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,8 @@ class PositionPredicates(str, Enum):
     SingleLane = "single_lane"
     KeepsSafeDistancePrec = "keeps_safe_distance_prec"
     Precedes = "precedes"
+    # newly added besides the ones for R_G1-R_G3
+    RightOfBroadLaneMarking = "right_of_broad_lane_marking"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -339,3 +343,51 @@ class PredPreceding(BasePredicateEvaluator):
             self._scale_lon_dist(dist_pred),
         )
         return rob
+
+
+class PredRightOfBroadLaneMarking(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.RightOfBroadLaneMarking
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if (
+                lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED
+                or lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID
+            ):
+                return False
+
+        lanelets_left_of_veh = lanelets_left_of_vehicle(time_step, vehicle, world.road_network.lanelet_network)
+        for lanelet in lanelets_left_of_veh:
+            if (
+                lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED
+                or lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID
+            ):
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if (
+                lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED
+                or lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID
+            ):
+                _, d_right = distance_to_bounds(vehicle, [l_id], world, time_step)
+                d_right = np.min(d_right) if d_right.size > 0 else np.inf
+                return self._scale_lat_dist(d_right)
+        lanelets_left_of_veh = lanelets_left_of_vehicle(time_step, vehicle, world.road_network.lanelet_network)
+        for lanelet in lanelets_left_of_veh:
+            if (
+                lanelet.line_marking_right_vertices is LineMarking.BROAD_DASHED
+                or lanelet.line_marking_right_vertices is LineMarking.BROAD_SOLID
+            ):
+                d_left, _ = distance_to_bounds(vehicle, [lanelet.lanelet_id], world, time_step)
+                d_left = -np.min(d_left) if d_left.size > 0 else np.inf
+                return self._scale_lat_dist(d_left)
+        return self._scale_lat_dist(-np.inf)
