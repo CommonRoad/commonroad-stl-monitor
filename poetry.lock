@@ -1,7 +1,7 @@
 [[package]]
 name = "antlr4-python3-runtime"
-version = "4.8"
-description = "ANTLR 4.8 runtime for Python 3.7"
+version = "4.5.3"
+description = "ANTLR 4.5.3 runtime for Python 3.4.0"
 category = "main"
 optional = false
 python-versions = "*"
@@ -251,14 +251,21 @@ six = ">=1.5"
 
 [[package]]
 name = "rtamt"
-version = "0.3"
+version = "0.2.6"
 description = "Library for specification-based online monitoring."
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=2.7"
+develop = false
 
 [package.dependencies]
-antlr4-python3-runtime = ">=4.5"
+antlr4-python3-runtime = {version = ">=4.5,<4.6", markers = "python_version >= \"3\""}
+
+[package.source]
+type = "git"
+url = "https://github.com/cirrostratus1/rtamt.git"
+reference = "6ef48e956837f5b60f514011d3d6eabf6307e042"
+resolved_reference = "6ef48e956837f5b60f514011d3d6eabf6307e042"
 
 [[package]]
 name = "Rtree"
@@ -376,11 +383,12 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "0e0bfd642e41d8f9e1ce891e14cd59e33c99b630d45ae110389a99d992b5d29b"
+content-hash = "b6df24573633e3b1f4aa16bd9644c4c23d9b3e4dc9808eaf051074cf9cd591fe"
 
 [metadata.files]
 antlr4-python3-runtime = [
-    {file = "antlr4-python3-runtime-4.8.tar.gz", hash = "sha256:15793f5d0512a372b4e7d2284058ad32ce7dd27126b105fb0b2245130445db33"},
+    {file = "antlr4-python3-runtime-4.5.3.macosx-10.10-x86_64.exe", hash = "sha256:fa539e98d5e801c38d14ce8932a62a708841609ce28c80f8200fbbe288fc6490"},
+    {file = "antlr4-python3-runtime-4.5.3.tar.gz", hash = "sha256:d490754e5774e58b4e870a7eba3f97086c1f3793deb08cfb92307f287dfd4ff2"},
 ]
 commonroad-drivability-checker = [
     {file = "commonroad-drivability-checker-2022.1.tar.gz", hash = "sha256:099d6325c7827c4f9ef340c5dc04852e8597e6c5f1e15fffda218e1fb3e42ad2"},
@@ -759,10 +767,7 @@ python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
 ]
-rtamt = [
-    {file = "rtamt-0.3-py3-none-any.whl", hash = "sha256:ee3d0e6aa85e9f116655622358169e34a2ba81081167af706ac698e8e403e8e5"},
-    {file = "rtamt-0.3.tar.gz", hash = "sha256:8411f0234f6227bc5c63ef4b148c7ac44c84dcf894e0910bb7f8be06392dee6d"},
-]
+rtamt = []
 Rtree = [
     {file = "Rtree-1.0.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:757bbf9ca38c241e34812a646f16ffda2cabd535bcd815041b83fe091df7a85c"},
     {file = "Rtree-1.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fe3954a51d691d3938cbac42ac97f4acacbea8ea622a375df901318a5c4ab0e9"},
