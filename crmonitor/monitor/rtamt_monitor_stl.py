@@ -3,10 +3,10 @@ from enum import Enum
 from typing import List, Tuple
 
 import rtamt
+from rtamt import Language
 from rtamt.evaluator.stl.online_evaluator import STLOnlineEvaluator
 
 from crmonitor.predicates.rule import IOType, RuleNode
-from rtamt import Language
 
 
 class OutputType(Enum):
