@@ -5,6 +5,7 @@ cache:
     - .venv
 
 stages:
+  - style
   - test
   - deploy
 
@@ -18,6 +19,27 @@ unittest:
   stage: test
   script:
     - python -m unittest
+
+flake8:
+  stage: style
+  needs: [ ]
+  image: python:3.8-buster
+  before_script: [ ]
+  cache: [ ]
+  allow_failure: true
+  script:
+    - pip install flake8 flake8-todo
+    - flake8 crmonitor
+
+black:
+  stage: style
+  needs: [ ]
+  image: pyfound/black:22.6.0
+  before_script: [ ]
+  cache: [ ]
+  allow_failure: true
+  script:
+    - black --check --verbose --diff --color crmonitor
 
 deploy_master:
   stage: deploy
