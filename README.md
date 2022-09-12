@@ -10,33 +10,13 @@ pip install git+git@gitlab.lrz.de:cps/commonroad-stl-monitor
 
 
 ## Development setup
-- Install [anconda](https://www.anaconda.com/)
-- Clone and enter the repository
-- Create the environment and install the dependencies by
-```
-conda env create -f environment.yml
-```
-- Activate the created environment
-```
-conda activate stl-crmonitor
-```
-- Install package to development path
-```
-conda develop .
-```
+This project uses [poetry](https://python-poetry.org/). Please follow the instructions to create the virtual development environment.
 
 ## Run the tests
 ```
 cd crmonitor/tests
 python -m unittest
 ```
-
-## Doing a version bump
-
-Version numbers are automatically bumbed using `bump2version` tool. It autmatically updates the version number in the
-setup.py file. Version numbering schema: `{major}.{minor}.{patch}-{release}{build}`. The version of each component can
-be bumped by e.g. `bump2version major` or `bump2version minor`. Merges to the development branch are automatically packaged,
-deployed and the build number is bumped.
 
 ## Getting Started
 Checkout the [minimum working example](tutorials/monitor_scenario.py)
