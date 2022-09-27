@@ -32,6 +32,9 @@ class PositionPredicates(str, Enum):
     RightOfBroadLaneMarking = "right_of_broad_lane_marking"
     LeftOfBroadLaneMarking = "left_of_broad_lane_marking"
     OnAccessRamp = "on_access_ramp"
+    OnShoulder = "on_shoulder"
+    OnMainCarriageWay = "on_main_carriage_way"
+    OnExitRamp = "on_exit_ramp" # not used
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -463,5 +466,61 @@ class PredOnAccessRamp(BasePredicateEvaluator):
                                                          find_lanelet_by_id(l_id).lanelet_type]
         if len(access_ramp_ids) > 0:
             return self._scale_lat_dist(distance_to_lanes(vehicle, access_ramp_ids, world, time_step))
+        else:
+            return self._scale_lat_dist(-np.inf)
+
+
+class PredOnShoulder(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle is on a shoulder lane.
+    """
+    predicate_name = PositionPredicates.OnShoulder
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.SHOULDER in lanelet.lanelet_type:
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        shoulder_ids = [l_id for l_id in lanelet_ids_occ if
+                        LaneletType.SHOULDER in world.road_network.lanelet_network.find_lanelet_by_id(
+                            l_id).lanelet_type]
+        if len(shoulder_ids) > 0:
+            return self._scale_lat_dist(distance_to_lanes(vehicle, shoulder_ids, world, time_step))
+        else:
+            return self._scale_lat_dist(-np.inf)
+
+
+class PredOnMainCarriageWay(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle is on a main carriage way.
+    """
+    predicate_name = PositionPredicates.OnMainCarriageWay
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        main_carriage_way_ids = [l_id for l_id in lanelet_ids_occ if
+                                 LaneletType.MAIN_CARRIAGE_WAY in world.road_network.lanelet_network.find_lanelet_by_id(
+                                     l_id).lanelet_type]
+        if len(main_carriage_way_ids) > 0:
+            return self._scale_lat_dist(distance_to_lanes(vehicle, main_carriage_way_ids, world, time_step))
         else:
             return self._scale_lat_dist(-np.inf)
