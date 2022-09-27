@@ -384,6 +384,7 @@ class PredRightOfBroadLaneMarking(BasePredicateEvaluator):
             ):
                 _, d_right = distance_to_bounds(vehicle, [l_id], world, time_step)
                 d_right = np.min(d_right) if d_right.size > 0 else np.inf
+                # the abs function is to prevent the distance to be positive but the robustness is violated
                 return self._scale_lat_dist(-abs(d_right))
         lanelets_left_of_veh = lanelets_left_of_vehicle(time_step, vehicle, world.road_network.lanelet_network)
         for lanelet in lanelets_left_of_veh:
@@ -429,6 +430,7 @@ class PredLeftOfBroadLaneMarking(BasePredicateEvaluator):
                     lanelet.line_marking_left_vertices is LineMarking.BROAD_SOLID):
                 d_left, _ = distance_to_bounds(vehicle, [l_id], world, time_step)
                 d_left = -np.max(d_left) if d_left.size > 0 else np.inf
+                # the abs function is to prevent the distance to be positive but the robustness is violated
                 return self._scale_lat_dist(-abs(d_left))
         lanelets_right_of_veh = lanelets_right_of_vehicle(time_step, vehicle, world.road_network.lanelet_network)
         for lanelet in lanelets_right_of_veh:
