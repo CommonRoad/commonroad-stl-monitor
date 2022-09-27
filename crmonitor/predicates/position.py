@@ -609,3 +609,72 @@ class PredMainCarriageWayRightLane(BasePredicateEvaluator):
                                                       l.adj_right).lanelet_type)]
         dis_to_lane = distance_to_lanes(vehicle, main_carriageway_right_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
+
+
+class PredLeftOf(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.LeftOf
+    arity = 2
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        """
+        Evaluates if the kth vehicle is left of the pth vehicle
+        """
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        # share the same lane as the reference, otherwise the comparison does not make sense
+        lane_share = list(world.road_network.find_lanes_by_lanelets(
+            vehicle_k.lanelet_assignment[time_step]
+        ))[0]
+        if not vehicle_p.left_d(time_step, lane_share) < vehicle_k.right_d(time_step, lane_share):
+            return False
+        else:
+            if (
+                vehicle_p.rear_s(time_step, lane_share)
+                <= vehicle_k.front_s(time_step, lane_share)
+                <= vehicle_p.front_s(time_step, lane_share)
+            ):
+                return True
+            if (
+                vehicle_p.rear_s(time_step, lane_share)
+                <= vehicle_k.rear_s(time_step, lane_share)
+                <= vehicle_p.front_s(time_step, lane_share)
+            ):
+                return True
+            if vehicle_k.rear_s(time_step, lane_share) < vehicle_p.rear_s(time_step, lane_share) and vehicle_p.front_s(
+                    time_step, lane_share) < vehicle_k.front_s(time_step, lane_share):
+                return True
+            else:
+                return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        # share the same lane as the reference, otherwise the comparison does not make sense
+        lane_share = list(world.road_network.find_lanes_by_lanelets(
+            vehicle_k.lanelet_assignment[time_step]
+        ))[0]
+        left_p = vehicle_p.left_d(time_step, lane_share)
+        right_k = vehicle_k.right_d(time_step, lane_share)
+        rear_p = vehicle_p.rear_s(time_step, lane_share)
+        rear_k = vehicle_k.rear_s(time_step, lane_share)
+        front_p = vehicle_p.front_s(time_step, lane_share)
+        front_k = vehicle_k.front_s(time_step, lane_share)
+
+        #  pred = (left_p < right_k) and (
+        #         (rear_p <= rear_k and rear_k <= front_p) or (front_p < front_k and rear_k < rear_p) or (
+        #         rear_p <= front_k and front_k <= front_p))
+
+        left_p_less_than_right_k = self._scale_lat_dist(right_k - left_p)
+        rear_p_less_than_rear_k = self._scale_lon_dist(rear_k - rear_p)
+        rear_k_less_than_front_p = self._scale_lon_dist(front_p - rear_k)
+        front_p_less_than_front_k = self._scale_lon_dist(front_k - front_p)
+        rear_k_less_than_rear_p = self._scale_lon_dist(rear_p - rear_k)
+        rear_p_less_than_front_k = self._scale_lon_dist(front_k - rear_p)
+        front_k_less_than_front_p = self._scale_lon_dist(front_p - front_k)
+
+        rob = min(left_p_less_than_right_k, max(min(rear_p_less_than_rear_k, rear_k_less_than_front_p),
+                                                min(front_p_less_than_front_k, rear_k_less_than_rear_p),
+                                                min(rear_p_less_than_front_k, front_k_less_than_front_p)))
+        return rob
