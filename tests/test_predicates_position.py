@@ -26,7 +26,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredInSameLane, PredSingleLane, PredPreceding, PredSafeDistPrec,
                                            PredInFrontOf, PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking,
                                            PredOnAccessRamp, PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
-                                           PredInLeftmostLane)
+                                           PredInLeftmostLane, PredMainCarriageWayRightLane)
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
 from crmonitor.predicates.general import PredCutIn
 from tests.util import parallel_lanes
@@ -318,8 +318,44 @@ class TestPositionPredicates(unittest.TestCase):
 
         world = World({self.ego_vehicle}, self.road_network)
 
-        # Left of broad lane markings
         pred = PredOnMainCarriageway(self.config)
+        vehicle_ids = [self.ego_vehicle.id]
+
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
+        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+
+    def PredMainCarriageWayRightLane(self):
+        exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
+        exp_sol_monitor_mode_2 = False  # no specific type
+        exp_sol_monitor_mode_3 = True  # ego vehicle on main carriageway (the right one)
+        exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
+        exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
+
+        world = World({self.ego_vehicle}, self.road_network)
+
+        pred = PredMainCarriageWayRightLane(self.config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)

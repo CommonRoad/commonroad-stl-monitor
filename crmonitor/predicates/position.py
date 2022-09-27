@@ -555,6 +555,7 @@ class PredInRightmostLane(BasePredicateEvaluator):
         dis_to_lane = distance_to_lanes(vehicle, rightmost_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
 
+
 class PredInLeftmostLane(BasePredicateEvaluator):
     """
     check if any assigned lanelet of ego vehicle is in leftmost lane
@@ -576,4 +577,35 @@ class PredInLeftmostLane(BasePredicateEvaluator):
         leftmost_lanelet_ids = [l.lanelet_id for l in world.road_network.lanelet_network.lanelets if
                                 l.adj_left_same_direction is None]
         dis_to_lane = distance_to_lanes(vehicle, leftmost_lanelet_ids, world, time_step)
+        return self._scale_lat_dist(dis_to_lane)
+
+
+class PredMainCarriageWayRightLane(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle occupies the rightmost main carriageway lane.
+    """
+    predicate_name = PositionPredicates.MainCarriagewayRightLane
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type and (
+                not lanelet.adj_right_same_direction
+                or LaneletType.MAIN_CARRIAGE_WAY
+                not in world.road_network.lanelet_network.find_lanelet_by_id(lanelet.adj_right).lanelet_type
+            ):
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        main_carriageway_right_lanelet_ids = [l.lanelet_id for l in world.road_network.lanelet_network.lanelets if
+                                              LaneletType.MAIN_CARRIAGE_WAY in l.lanelet_type and (
+                                                      not l.adj_right_same_direction or LaneletType.MAIN_CARRIAGE_WAY
+                                                      not in world.road_network.lanelet_network.find_lanelet_by_id(
+                                                      l.adj_right).lanelet_type)]
+        dis_to_lane = distance_to_lanes(vehicle, main_carriageway_right_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
