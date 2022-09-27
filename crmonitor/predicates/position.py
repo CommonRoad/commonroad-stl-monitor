@@ -504,7 +504,7 @@ class PredOnShoulder(BasePredicateEvaluator):
             return self._scale_lat_dist(-np.inf)
 
 
-class PredOnMainCarriageWay(BasePredicateEvaluator):
+class PredOnMainCarriageway(BasePredicateEvaluator):
     """
     Evaluates if a vehicle is on a main carriage way.
     """
@@ -530,3 +530,30 @@ class PredOnMainCarriageWay(BasePredicateEvaluator):
             return self._scale_lat_dist(distance_to_lanes(vehicle, main_carriage_way_ids, world, time_step))
         else:
             return self._scale_lat_dist(-np.inf)
+
+
+class PredInRightmostLane(BasePredicateEvaluator):
+    """
+    check if any assigned lanelet of ego vehicle is in rightmost lane
+    """
+    predicate_name = PositionPredicates.InRightmostLane
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if lanelet.adj_right_same_direction is None:
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        # distance from right edge of the vehicle to the left edge of rightmost lane
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        rightmost_lanelet_ids = [l.lanelet_id for l in world.road_network.lanelet_network.lanelets if
+                                 l.adj_right_same_direction is None]
+        dis_to_lane = distance_to_lanes(vehicle, rightmost_lanelet_ids, world, time_step)
+        return self._scale_lat_dist(dis_to_lane)
+
