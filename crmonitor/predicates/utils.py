@@ -50,15 +50,32 @@ def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) 
     return left_lanelets
 
 
+def lanelets_right_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+    """
+    Extracts all lanelet IDs right of a given lanelet based on adjacency relations
+
+    :param lanelet: given lanelet
+    :param lanelet_network: lanelet network
+    :returns set of lanelet objects
+    """
+    right_lanelets = set()
+    tmp_lanelet = lanelet
+    while tmp_lanelet.adj_right is not None:
+        tmp_lanelet = lanelet_network.find_lanelet_by_id(tmp_lanelet.adj_right)
+        right_lanelets.add(tmp_lanelet)
+
+    return right_lanelets
+
+
 def lanelets_left_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
     """
-        Extracts all lanelets left of a vehicle
+    Extracts all lanelets left of a vehicle
 
-        :param vehicle: vehicle of interest
-        :param time_step: time step of interest
-        :param lanelet_network: lanelet network
-        :returns set of lanelet objects
-        """
+    :param vehicle: vehicle of interest
+    :param time_step: time step of interest
+    :param lanelet_network: lanelet network
+    :returns set of lanelet objects
+    """
     left_lanelets = set()
     occupied_lanelets = vehicle.lanelet_assignment[time_step]
     for occ_l in occupied_lanelets:
@@ -67,3 +84,22 @@ def lanelets_left_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: 
             left_lanelets.add(lanelet)
 
     return left_lanelets
+
+
+def lanelets_right_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+    """
+    Extracts all lanelets right of a vehicle
+
+    :param vehicle: vehicle of interest
+    :param time_step: time step of interest
+    :param lanelet_network: lanelet network
+    :returns set of lanelet objects
+    """
+    right_lanelets = set()
+    occupied_lanelets = vehicle.lanelet_assignment[time_step]
+    for occ_l in occupied_lanelets:
+        new_lanelets = lanelets_right_of_lanelet(lanelet_network.find_lanelet_by_id(occ_l), lanelet_network)
+        for lanelet in new_lanelets:
+            right_lanelets.add(lanelet)
+
+    return right_lanelets
