@@ -32,6 +32,11 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
 
     return d_left, d_right
 
+def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, time_step):
+    d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world, time_step)
+    d_left = -np.min(d_left) if d_left.size > 0 else np.inf
+    d_right = np.max(d_right) if d_right.size > 0 else np.inf
+    return np.fmin(d_left, d_right)
 
 def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
     """

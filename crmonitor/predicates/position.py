@@ -16,7 +16,8 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 
 from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
-from crmonitor.predicates.utils import distance_to_bounds, lanelets_left_of_vehicle, lanelets_right_of_vehicle
+from crmonitor.predicates.utils import (distance_to_bounds, distance_to_lanes,
+                                        lanelets_left_of_vehicle, lanelets_right_of_vehicle)
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class PositionPredicates(str, Enum):
     # newly added besides the ones for R_G1-R_G3
     RightOfBroadLaneMarking = "right_of_broad_lane_marking"
     LeftOfBroadLaneMarking = "left_of_broad_lane_marking"
+    OnAccessRamp = "on_access_ramp"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -68,12 +70,6 @@ class PredInSameLane(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int]):
-            d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world, time_step)
-            d_left = -np.min(d_left) if d_left.size > 0 else np.inf
-            d_right = np.max(d_right) if d_right.size > 0 else np.inf
-            return np.fmin(d_left, d_right)
-
         lanelet_ids_k = union_set(
             [l.contained_lanelets for l in vehicle_k.lanes_at_state(time_step)]
         )
@@ -81,8 +77,8 @@ class PredInSameLane(BasePredicateEvaluator):
             [l.contained_lanelets for l in vehicle_p.lanes_at_state(time_step)]
         )
         rob = np.fmin(
-            distance_to_lanes(vehicle_k, lanelet_ids_p),
-            distance_to_lanes(vehicle_p, lanelet_ids_k),
+            distance_to_lanes(vehicle_k, lanelet_ids_p, world, time_step),
+            distance_to_lanes(vehicle_p, lanelet_ids_k, world, time_step),
         )
         return self._scale_lat_dist(rob)
 
@@ -441,3 +437,31 @@ class PredLeftOfBroadLaneMarking(BasePredicateEvaluator):
                 d_right = np.min(d_right) if d_right.size > 0 else np.inf
                 return self._scale_lat_dist(d_right)
         return self._scale_lat_dist(-np.inf)
+
+
+class PredOnAccessRamp(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle is on an access ramp.
+    """
+    predicate_name = PositionPredicates.OnAccessRamp
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        access_ramp_ids = [l_id for l_id in lanelet_ids_occ
+                           if LaneletType.ACCESS_RAMP in world.road_network.lanelet_network.\
+                                                         find_lanelet_by_id(l_id).lanelet_type]
+        if len(access_ramp_ids) > 0:
+            return self._scale_lat_dist(distance_to_lanes(vehicle, access_ramp_ids, world, time_step))
+        else:
+            return self._scale_lat_dist(-np.inf)
