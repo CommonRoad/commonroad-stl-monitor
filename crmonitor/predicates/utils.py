@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from typing import List, Tuple, Set, Iterable, Dict, Callable
+from typing import List, Tuple, Set, Iterable, Dict, Callable, Union
 
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
@@ -32,11 +32,13 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
 
     return d_left, d_right
 
+
 def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, time_step):
     d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world, time_step)
     d_left = -np.min(d_left) if d_left.size > 0 else np.inf
     d_right = np.max(d_right) if d_right.size > 0 else np.inf
     return np.fmin(d_left, d_right)
+
 
 def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
     """
@@ -108,3 +110,97 @@ def lanelets_right_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network:
             right_lanelets.add(lanelet)
 
     return right_lanelets
+
+
+def vehicles_adjacent(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+    """
+     Searches for vehicles adjacent to a vehicle
+
+    :param vehicle: vehicle object
+    :param other_vehicles: other vehicles in scenario
+    :param time_step: time step of interest
+    :returns list of adjacent vehicles of a vehicle
+    """
+    vehicles_adj = []
+    lane_share = vehicle.get_lane(time_step)
+    for veh in other_vehicles:
+        if veh.get_lon_state(time_step, lane_share) is None:
+            continue
+        if (veh.rear_s(time_step, lane_share) < vehicle.front_s(time_step, lane_share) < veh.front_s(time_step,
+                                                                                                     lane_share)):
+            vehicles_adj.append(veh)
+            continue
+        if (veh.rear_s(time_step, lane_share) < vehicle.rear_s(time_step, lane_share) < veh.front_s(time_step,
+                                                                                                    lane_share)):
+            vehicles_adj.append(veh)
+            continue
+        if vehicle.rear_s(time_step, lane_share) <= veh.rear_s(time_step, lane_share) and veh.front_s(time_step,
+                                                                                                      lane_share) <= \
+                vehicle.front_s(time_step, lane_share):
+            vehicles_adj.append(veh)
+            continue
+    return vehicles_adj
+
+
+def vehicles_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+    """
+    Searches for vehicles left of a vehicle
+
+    :param vehicle: vehicle object
+    :param other_vehicles: other vehicles in scenario
+    :param time_step: time step of interest
+    :returns list of vehicles left of a vehicle
+    """
+    vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
+    lane_share = vehicle.get_lane(time_step)
+    vehicles_left = [veh for veh in vehicles_adj if
+                     veh.right_d(time_step, lane_share) > vehicle.left_d(time_step, lane_share)]
+    return vehicles_left
+
+
+def vehicle_directly_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+    vehicle_left = vehicles_left(time_step, vehicle, other_vehicles)
+    if len(vehicle_left) == 0:
+        return None
+    elif len(vehicle_left) == 1:
+        return vehicle_left[0]
+    else:
+        vehicle_directly_left = vehicle_left[0]
+        for veh in vehicle_left:
+            lane_share = veh.get_lane(time_step)
+            if (veh.get_lat_state(time_step, lane_share).d < vehicle_directly_left.get_lat_state(time_step,
+                                                                                                 lane_share).d):
+                vehicle_directly_left = veh
+        return vehicle_directly_left
+
+
+def vehicles_right(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+    """
+    Searches for vehicles right of a vehicle
+
+    :param vehicle: vehicle object
+    :param other_vehicles: other vehicles in scenario
+    :param time_step: time step of interest
+    :returns list of vehicles left of a vehicle
+    """
+    vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
+    lane_share = vehicle.get_lane(time_step)
+    vehicles_right = [veh for veh in vehicles_adj if
+                      veh.left_d(time_step, lane_share) < vehicle.right_d(time_step, lane_share)]
+    return vehicles_right
+
+
+def vehicle_directly_right(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+    vehicle_right = vehicles_right(time_step, vehicle, other_vehicles)
+    if len(vehicle_right) == 0:
+        return None
+    elif len(vehicle_right) == 1:
+        return vehicle_right[0]
+    else:
+        vehicle_directly_right = vehicle_right[0]
+        for veh in vehicle_right:
+            lane_share = veh.get_lane(time_step)
+            if (veh.get_lat_state(time_step, lane_share).d > vehicle_directly_right.get_lat_state(time_step,
+                                                                                                  lane_share).d):
+                vehicle_directly_right = veh
+        return vehicle_directly_right

@@ -26,7 +26,8 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredInSameLane, PredSingleLane, PredPreceding, PredSafeDistPrec,
                                            PredInFrontOf, PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking,
                                            PredOnAccessRamp, PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
-                                           PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf)
+                                           PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
+                                           PredDrivesLeftmost, PredDrivesRightmost)
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
 from crmonitor.predicates.general import PredCutIn
 from tests.util import parallel_lanes
@@ -529,7 +530,7 @@ class TestPositionPredicates(unittest.TestCase):
                                   CurvilinearStateManager(self.road_network), lanelet_assignments_other_1)
 
 
-        # other vehicle 3
+        # other vehicle 2
         cr_state_list_other_2 = {4: State(position=[40, 4], time_step=0, orientation=0, velocity=10),
                                  10: State(position=[100, -4], time_step=1, orientation=0, velocity=10)}
         lanelet_assignments_other_2 = {4: {4}, 10: {2}}
@@ -597,3 +598,160 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_11, sol_monitor_mode_11)
         self.assertEqual(exp_sol_monitor_mode_11, sol_robustness_monitor_mode_11 >= 0)
 
+    def test_drives_leftmost(self):
+        self.config["close_to_lane_border"] = 0.2
+        self.config["close_to_other_vehicle"] = 0.5
+
+        # expected solutions for leftmost
+        exp_sol_monitor_mode_1 = True
+        exp_sol_monitor_mode_2 = False
+        exp_sol_monitor_mode_3 = True
+        exp_sol_monitor_mode_4 = False
+        exp_sol_monitor_mode_5 = False
+
+        lanelet_network = LaneletNetwork()
+        lanelet_network.add_lanelet(self._lanelet_1)
+        lanelet_network.add_lanelet(self._lanelet_2)
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+
+        # ego vehicle
+        cr_state_list_ego = {0: State(position=[0, 8], time_step=0, orientation=0, velocity=10),
+                             1: State(position=[10, 6.5], time_step=1, orientation=0, velocity=10),
+                             2: State(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
+                             3: State(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+                             4: State(position=[40, 2], time_step=4, orientation=0, velocity=10)}
+        lanelet_assignments_ego = {0: {2}, 1: {2}, 2: {1, 2}, 3: {1, 2}, 4: {1}}
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(road_network), lanelet_assignments_ego)
+
+        # fix the lanelet assignment
+        for time, lanelet in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation))
+
+        # other vehicle 1
+        cr_state_list_other_1 = {2: State(position=[20, 6.7], time_step=2, orientation=0, velocity=10),
+                                 3: State(position=[30, 6], time_step=3, orientation=0, velocity=10)}
+        lanelet_assignments_other_1 = {2: {2}, 3: {2}}
+
+        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
+                                  CurvilinearStateManager(road_network), lanelet_assignments_other_1)
+
+        for time, lanelet in other_vehicle_1.lanelet_assignment.items():
+            shape = other_vehicle_1.shape
+            state = other_vehicle_1.states_cr[time]
+
+            other_vehicle_1.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation))
+
+        pred = PredDrivesLeftmost(self.config)
+        vehicle_ids = [ego_vehicle.id]
+
+        world = World({ego_vehicle, other_vehicle_1}, road_network)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
+        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+
+    def test_drives_rightmost(self):
+        self.config["close_to_lane_border"] = 0.2
+        self.config["close_to_other_vehicle"] = 0.5
+
+        # expected solutions for rightmost
+        exp_sol_monitor_mode_1 = True
+        exp_sol_monitor_mode_2 = False
+        exp_sol_monitor_mode_3 = True
+        exp_sol_monitor_mode_4 = False
+        exp_sol_monitor_mode_5 = False
+
+        lanelet_network = LaneletNetwork()
+        lanelet_network.add_lanelet(self._lanelet_1)
+        lanelet_network.add_lanelet(self._lanelet_2)
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+
+        # ego vehicle
+        cr_state_list_ego = {0: State(position=[0, 1.0], time_step=0, orientation=0, velocity=10),
+                             1: State(position=[10, 2.5], time_step=1, orientation=0, velocity=10),
+                             2: State(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
+                             3: State(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+                             4: State(position=[40, 7], time_step=4, orientation=0, velocity=10)}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1, 2}, 3: {1, 2}, 4: {2}}
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(road_network), lanelet_assignments_ego)
+
+        # fix the lanelet assignment
+        for time, lanelet in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation))
+
+        # other vehicle 1
+        cr_state_list_other_1 = {2: State(position=[20, 2.4], time_step=2, orientation=0, velocity=10),
+                                 3: State(position=[30, 2.0], time_step=3, orientation=0, velocity=10)}
+        lanelet_assignments_other_1 = {2: {1}, 3: {1}}
+
+        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
+                                  CurvilinearStateManager(road_network), lanelet_assignments_other_1)
+
+        for time, lanelet in other_vehicle_1.lanelet_assignment.items():
+            shape = other_vehicle_1.shape
+            state = other_vehicle_1.states_cr[time]
+
+            other_vehicle_1.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation))
+
+        pred = PredDrivesRightmost(self.config)
+        vehicle_ids = [ego_vehicle.id]
+
+        world = World({ego_vehicle, other_vehicle_1}, road_network)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
+        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
+        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
