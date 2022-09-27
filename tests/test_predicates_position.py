@@ -1,36 +1,19 @@
-import math
 import unittest
 from pathlib import Path
-
 import numpy as np
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork
-from commonroad.scenario.obstacle import ObstacleType
-from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany, TrafficSignElement, )
-from commonroad.scenario.trajectory import State
+
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork, LineMarking, Lanelet, LaneletType
 from commonroad.scenario.obstacle import State, ObstacleType
-from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.helper import load_yaml
-from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import StateLongitudinal, StateLateral, Vehicle, CurvilinearStateManager
+from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredPreceding, PredSafeDistPrec, PredInFrontOf
-from crmonitor.predicates.velocity import PredLaneSpeedLimit
-from crmonitor.predicates.general import PredCutIn
-from crmonitor.common.world import World
-from crmonitor.predicates.position import (PredInSameLane, PredSingleLane, PredPreceding, PredSafeDistPrec,
-                                           PredInFrontOf, PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking,
-                                           PredOnAccessRamp, PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
+from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking, PredOnAccessRamp,
+                                           PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
                                            PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
                                            PredDrivesLeftmost, PredDrivesRightmost)
-from crmonitor.predicates.velocity import PredLaneSpeedLimit
-from crmonitor.predicates.general import PredCutIn
-from tests.util import parallel_lanes
 
 
 class TestPositionPredicates(unittest.TestCase):
@@ -134,7 +117,6 @@ class TestPositionPredicates(unittest.TestCase):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         self.ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
                                    CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
-
 
     def test_Left_right_of_broad_lane_marking(self):
         # expected solutions
@@ -365,7 +347,7 @@ class TestPositionPredicates(unittest.TestCase):
             state = self.ego_vehicle.states_cr[time]
 
             self.ego_vehicle.lanelet_assignment[time] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation))
+                    shape.rotate_translate_local(state.position, state.orientation))
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
@@ -411,7 +393,7 @@ class TestPositionPredicates(unittest.TestCase):
             state = self.ego_vehicle.states_cr[time]
 
             self.ego_vehicle.lanelet_assignment[time] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation))
+                    shape.rotate_translate_local(state.position, state.orientation))
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
@@ -457,7 +439,7 @@ class TestPositionPredicates(unittest.TestCase):
             state = self.ego_vehicle.states_cr[time]
 
             self.ego_vehicle.lanelet_assignment[time] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation))
+                    shape.rotate_translate_local(state.position, state.orientation))
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
@@ -509,8 +491,8 @@ class TestPositionPredicates(unittest.TestCase):
                              8: State(position=[80, 0], time_step=8, orientation=0, velocity=10),
                              9: State(position=[90, 0], time_step=9, orientation=0, velocity=10),
                              10: State(position=[100, 0], time_step=10, orientation=0, velocity=10)}
-        lanelet_assignments_ego = {0: {3}, 1: {3}, 2: {3}, 3: {3}, 4: {3}, 5: {3}, 6: {3}, 7: {3}, 8: {3},
-                                   9: {3}, 10: {3}}
+        lanelet_assignments_ego = {0: {3}, 1: {3}, 2: {3}, 3: {3}, 4: {3}, 5: {3}, 6: {3}, 7: {3}, 8: {3}, 9: {3},
+                                   10: {3}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
                               CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
@@ -528,7 +510,6 @@ class TestPositionPredicates(unittest.TestCase):
         lanelet_assignments_other_1 = {0: {4}, 1: {4}, 2: {4}, 3: {4}, 5: {3}, 6: {2}, 7: {2}, 8: {2}, 9: {2}}
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
                                   CurvilinearStateManager(self.road_network), lanelet_assignments_other_1)
-
 
         # other vehicle 2
         cr_state_list_other_2 = {4: State(position=[40, 4], time_step=0, orientation=0, velocity=10),
@@ -631,7 +612,7 @@ class TestPositionPredicates(unittest.TestCase):
             state = ego_vehicle.states_cr[time]
 
             ego_vehicle.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation))
+                    shape.rotate_translate_local(state.position, state.orientation))
 
         # other vehicle 1
         cr_state_list_other_1 = {2: State(position=[20, 6.7], time_step=2, orientation=0, velocity=10),
@@ -646,7 +627,7 @@ class TestPositionPredicates(unittest.TestCase):
             state = other_vehicle_1.states_cr[time]
 
             other_vehicle_1.lanelet_assignment[time] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation))
+                    shape.rotate_translate_local(state.position, state.orientation))
 
         pred = PredDrivesLeftmost(self.config)
         vehicle_ids = [ego_vehicle.id]

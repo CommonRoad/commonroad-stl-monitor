@@ -2,11 +2,11 @@ from enum import Enum
 import logging
 import math
 import operator
-from typing import List, Tuple, Set, Iterable, Dict, Callable
+from typing import List, Tuple, Set, Dict, Callable
 from shapely.geometry.polygon import Polygon
 import numpy as np
 
-from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
+from commonroad.scenario.lanelet import LaneletType, LineMarking
 
 from ruamel.yaml.comments import CommentedMap
 
