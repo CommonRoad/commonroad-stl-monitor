@@ -33,8 +33,14 @@ class PositionPredicates(str, Enum):
     LeftOfBroadLaneMarking = "left_of_broad_lane_marking"
     OnAccessRamp = "on_access_ramp"
     OnShoulder = "on_shoulder"
-    OnMainCarriageWay = "on_main_carriage_way"
-    OnExitRamp = "on_exit_ramp" # not used
+    OnMainCarriageway = "on_main_carriage_way"
+    OnExitRamp = "on_exit_ramp"  # not used
+    InRightmostLane = "in_rightmost_lane"
+    InLeftmostLane = "in_leftmost_lane"
+    MainCarriagewayRightLane = "main_carriageway_right_lane"
+    LeftOf = "left_of"
+    DrivesLeftmost = "drives_leftmost"
+    DrivesRightmost = "drives_rightmost"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -502,7 +508,7 @@ class PredOnMainCarriageWay(BasePredicateEvaluator):
     """
     Evaluates if a vehicle is on a main carriage way.
     """
-    predicate_name = PositionPredicates.OnMainCarriageWay
+    predicate_name = PositionPredicates.OnMainCarriageway
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:

@@ -280,7 +280,7 @@ class TestPositionPredicates(unittest.TestCase):
         world = World({self.ego_vehicle}, self.road_network)
 
         # Left of broad lane markings
-        pred = PredOnAccessRamp(self.config)
+        pred = PredOnShoulder(self.config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
