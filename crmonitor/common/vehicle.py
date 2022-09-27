@@ -232,6 +232,47 @@ class Vehicle:
         front_s = np.max(calc_s(s, w, l, theta))
         return front_s
 
+    def left_d(self, time_step: int, lane: Lane=None) -> float:
+        """
+        Calculates left d-coordinate of vehicle
+
+        :param time_step: time step to consider
+        :returns left d-coordinate [m]
+        """
+        lane = lane or self.get_lane(time_step)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
+        d = state_lat.d
+        width = self.shape.width
+        length = self.shape.length
+        theta = state_lat.theta
+        return max(
+            (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+        )
+
+    def right_d(self, time_step: int, lane: Lane=None) -> float:
+        """
+        Calculates right d-coordinate of vehicle
+
+        :param time_step: time step to consider
+        :returns right d-coordinate [m]
+        """
+        lane = lane or self.get_lane(time_step)
+        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
+        d = state_lat.d
+        width = self.shape.width
+        length = self.shape.length
+        theta = state_lat.theta
+        return min(
+            (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
+            (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
+        )
+
+
     def get_lat_state(self, time_step: int, lane: Lane=None):
         lane = lane or self.get_lane(time_step)
         state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
@@ -336,42 +377,4 @@ class DynamicObstacleVehicle(Vehicle):
     # @property
     # def states_lat(self) -> Dict[int, StateLateral]:
     #     return self._states_lat
-
-    # def right_d(self, time_step: int) -> float:
-    #     """
-    #     Calculates right d-coordinate of vehicle
-    #
-    #     :param time_step: time step to consider
-    #     :returns right d-coordinate [m]
-    #     """
-    #     s = self._states_lon[time_step].s
-    #     d = self.states_lat[time_step].d
-    #     width = self.shape.width
-    #     length = self.shape.length
-    #     theta = self.states_lat[time_step].theta
-    #     return min(
-    #         (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-    #         (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-    #         (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-    #         (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-    #     )
-    #
-    # def left_d(self, time_step: int) -> float:
-    #     """
-    #     Calculates left d-coordinate of vehicle
-    #
-    #     :param time_step: time step to consider
-    #     :returns left d-coordinate [m]
-    #     """
-    #     s = self._states_lon[time_step].s
-    #     d = self.states_lat[time_step].d
-    #     width = self.shape.width
-    #     length = self.shape.length
-    #     theta = self.states_lat[time_step].theta
-    #     return max(
-    #         (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-    #         (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-    #         (-width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
-    #         (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
-    #     )
 
