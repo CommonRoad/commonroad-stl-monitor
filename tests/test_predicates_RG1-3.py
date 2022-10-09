@@ -80,7 +80,7 @@ class TestPredicate(unittest.TestCase):
         cr_state_list_other_2 = {1: State(position=(10, 10), velocity=10, orientation=0, time_step=1)}
         lanelet_assignments_other_2 = {1: {3}}
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
-                                CurvilinearStateManager(road_network), lanelet_assignments_other_2)
+                                  CurvilinearStateManager(road_network), lanelet_assignments_other_2)
 
         world = World(
                 {ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network

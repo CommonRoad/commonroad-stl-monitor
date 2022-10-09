@@ -10,11 +10,18 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import PredInSameLane, PredSingleLane
 from crmonitor.predicates.base import BasePredicateEvaluator
 
+from crmonitor.predicates.utils import cal_road_width
+
 logger = logging.getLogger(__name__)
 
 
 class GeneralPredicates(str, Enum):
     CutIn = "cut_in"
+    InterstateBroadEnough = "interstate_broad_enough"
+    InCongestion = "in_congestion"
+    InSlowMovingTraffic = "in_slow_moving_traffic"
+    InQueueOfVehicles = "in_queue_of_vehicles"
+    MakesUTurn = "makes_u_turn"
 
 
 class PredCutIn(BasePredicateEvaluator):
@@ -141,3 +148,36 @@ class PredCutIn(BasePredicateEvaluator):
         ax.imshow(points, cmap=PredCutIn._get_color_map(), extent=[-1, 1, 0, 1])
         ax.get_yaxis().set_ticks([])
         ax.set_ylabel('vehicle color')
+
+
+class PredInterstateBroadEnough(BasePredicateEvaluator):
+    """
+    Evaluates if an interstate is broad enough to build a standard emergency lane.
+    """
+    predicate_name = GeneralPredicates.InterstateBroadEnough
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        s = vehicle.get_lon_state(time_step).s
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if cal_road_width(lanelet, world.road_network, s) <= self.config["min_interstate_width"]:
+                return False
+        return True
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        s = vehicle.get_lon_state(time_step).s
+        comparison_list = []
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            comparison_list.append(
+                    self._scale_lat_dist(
+                            cal_road_width(lanelet, world.road_network, s) - self.config["min_interstate_width"]
+                    )
+            )
+        return min(comparison_list)
+

@@ -8,6 +8,7 @@ from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, Lanel
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from crmonitor.common.road_network import RoadNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -204,3 +205,35 @@ def vehicle_directly_right(time_step: int, vehicle: Vehicle, other_vehicles: Lis
                                                                                                   lane_share).d):
                 vehicle_directly_right = veh
         return vehicle_directly_right
+
+
+def _adjacent_lanelets(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+    """
+    Returns all lanelet which are adjacent to a lanelet and the lanelet itself
+
+    :param lanelet: CommonRoad lanelet
+    :returns set of adjacent lanelets
+    """
+    lanelets = {lanelet}
+    la = lanelet
+    while la is not None and la.adj_left is not None:
+        la = lanelet_network.find_lanelet_by_id(la.adj_left)
+        if la is not None:
+            lanelets.add(la)
+    la = lanelet
+    while la is not None and la.adj_right is not None:
+        la = lanelet_network.find_lanelet_by_id(la.adj_right)
+        if la is not None:
+            lanelets.add(la)
+    return lanelets
+
+
+def cal_road_width(lanelet: Lanelet, road_network: RoadNetwork, position: float) -> float:
+    """
+    Calculates width of road given a lanelet and a longitudinal position
+    """
+    adj_lanelets = _adjacent_lanelets(lanelet, road_network.lanelet_network)
+    road_width = 0.0
+    for lanelet in list(adj_lanelets):
+        road_width += road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
+    return road_width
