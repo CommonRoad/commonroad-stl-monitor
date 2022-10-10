@@ -1,21 +1,18 @@
+import math
 import unittest
 from pathlib import Path
 import numpy as np
 
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork, LineMarking, Lanelet, LaneletType
+from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.obstacle import State, ObstacleType
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking, PredOnAccessRamp,
-                                           PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
-                                           PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
-                                           PredDrivesLeftmost, PredDrivesRightmost)
 from crmonitor.predicates.general import (PredInterstateBroadEnough, PredInCongestion, PredInSlowMovingTraffic,
-                                          PredInQueueOfVehicles)
+                                          PredInQueueOfVehicles, PredMakesUTurn)
 
 
 class TestGeneralPredicates(unittest.TestCase):
@@ -289,6 +286,50 @@ class TestGeneralPredicates(unittest.TestCase):
         vehicle_ids = [ego_vehicle.id]
 
         world = World({ego_vehicle, other_vehicle_1, other_vehicle_2, other_vehicle_3}, self.road_network)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+    def test_makes_u_turn(self):
+        self.config["u_turn"] = 1.57
+
+        exp_sol_monitor_mode_1 = False  # theta = 0
+        exp_sol_monitor_mode_2 = False  # theta = (1/8) * math.pi
+        exp_sol_monitor_mode_3 = True  # theta = (1/2) * math.pi
+        exp_sol_monitor_mode_4 = True  # theta = (3/4) * math.pi
+
+
+        # ego vehicle
+        cr_state_list_ego = {0: State(position=[0, 0], time_step=0, orientation=0, velocity=15),
+                             1: State(position=[10, 0], time_step=1, orientation=(1 / 8) * math.pi, velocity=15),
+                             2: State(position=[20, 0], time_step=2, orientation=(1 / 2) * math.pi, velocity=15),
+                             3: State(position=[30, 0], time_step=3, orientation=(3 / 4) * math.pi, velocity=15)}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
+
+        pred = PredMakesUTurn(self.config)
+        vehicle_ids = [ego_vehicle.id]
+
+        world = World({ego_vehicle}, self.road_network)
+
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)

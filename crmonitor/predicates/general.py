@@ -336,3 +336,31 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
+
+
+class PredMakesUTurn(BasePredicateEvaluator):
+    """
+    Predicate which evaluates if vehicle makes U-turn
+    """
+    predicate_name = GeneralPredicates.MakesUTurn
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        for la in lanes:
+            if self.config["u_turn"] <= abs(vehicle.get_lat_state(time_step, la).theta - la.orientation(
+                    vehicle.get_lon_state(time_step, la).s
+            )):
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        robustness_values = []
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        for la in lanes:
+            robustness_values.append(self._scale_angle(
+                    abs(vehicle.get_lat_state(time_step, la).theta -
+                        la.orientation(vehicle.get_lon_state(time_step, la).s)) - self.config["u_turn"]))
+        return max(robustness_values)
