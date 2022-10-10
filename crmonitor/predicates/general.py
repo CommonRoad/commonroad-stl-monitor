@@ -284,3 +284,55 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
+
+
+class PredInQueueOfVehicles(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle is part of a queue of vehicles
+    """
+    predicate_name = GeneralPredicates.InQueueOfVehicles
+    arity = 1
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._in_front_of_evaluator = PredInFrontOf(config)
+        self._same_lane_evaluator = PredInSameLane(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
+                          v_id != vehicle.id]
+        num_vehicles = 0
+        for veh_o in other_vehicles:
+            if veh_o.get_lon_state(time_step) is None:
+                continue
+            if self._in_front_of_evaluator.evaluate_boolean(world, time_step,
+                                                            [vehicle_ids[0], veh_o.id]) and \
+                    self._same_lane_evaluator.evaluate_boolean(world, time_step,
+                                                               [vehicle_ids[0], veh_o.id]) and\
+                    veh_o.get_lon_state(time_step).v <= self.config["max_queue_of_vehicles_velocity"]:
+                num_vehicles += 1
+        if num_vehicles >= self.config["num_veh_queue_of_vehicles"]:
+            return True
+        else:
+            return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
+                          v_id != vehicle.id]
+
+        rob_cong_veh_list = [self._scale_speed(-np.inf)]
+        for veh_o in other_vehicles:
+            if veh_o.get_lon_state(time_step) is None:
+                rob_cong_veh_list.append(self._scale_speed(-np.inf))
+            rob_cong_veh_list.append(
+                    min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
+                        self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
+                        self._scale_speed(
+                            self.config["max_queue_of_vehicles_velocity"] - veh_o.get_lon_state(time_step).v)))
+        # values are already normalized
+        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_queue_of_vehicles"]:
+            return min(rob for rob in rob_cong_veh_list if rob > 0)
+        else:
+            return max(rob for rob in rob_cong_veh_list if rob < 0)
