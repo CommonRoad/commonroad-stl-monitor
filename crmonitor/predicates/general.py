@@ -176,7 +176,7 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             comparison_list.append(
                     self._scale_lat_dist(
-                            cal_road_width(lanelet, world.road_network, s) - self.config["min_interstate_width"]
+                            cal_road_width(lanelet, world.road_network, s) - self.config["min_interstate_width"] - 1.0e-17
                     )
             )
         return min(comparison_list)
@@ -226,7 +226,7 @@ class PredInCongestion(BasePredicateEvaluator):
                     min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._scale_speed(
-                                self.config["max_congestion_velocity"] - veh_o.get_lon_state(time_step).v)))
+                                self.config["max_congestion_velocity"] - veh_o.get_lon_state(time_step).v - 1.0e-17)))
         # values are already normalized
         if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_congestion"]:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
@@ -278,7 +278,7 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
                     min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._scale_speed(
-                            self.config["max_slow_moving_traffic_velocity"] - veh_o.get_lon_state(time_step).v)))
+                            self.config["max_slow_moving_traffic_velocity"] - veh_o.get_lon_state(time_step).v - 1.0e-17)))
         # values are already normalized
         if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_slow_moving_traffic"]:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
@@ -330,7 +330,7 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
                     min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
                         self._scale_speed(
-                            self.config["max_queue_of_vehicles_velocity"] - veh_o.get_lon_state(time_step).v)))
+                            self.config["max_queue_of_vehicles_velocity"] - veh_o.get_lon_state(time_step).v  - 1.0e-17)))
         # values are already normalized
         if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_queue_of_vehicles"]:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
@@ -362,5 +362,5 @@ class PredMakesUTurn(BasePredicateEvaluator):
         for la in lanes:
             robustness_values.append(self._scale_angle(
                     abs(vehicle.get_lat_state(time_step, la).theta -
-                        la.orientation(vehicle.get_lon_state(time_step, la).s)) - self.config["u_turn"]))
+                        la.orientation(vehicle.get_lon_state(time_step, la).s)) - self.config["u_turn"] - 1.0e-17))
         return max(robustness_values)

@@ -495,6 +495,39 @@ class RuleTest(unittest.TestCase):
                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
             )
 
+    def test_overtaking_right_congestion(self):
+        # one vehicle which overtakes a congestion slightly faster (1000)
+        # one vehicle which overtakes a congestion too fast (1001)
+        # all other vehicles a part of a congestion
+
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_overtaking_right_congestion.xml")
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        exp_result = [
+            (1000, {1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+            (1001, {1000: True, 1002: True, 1003: False, 1004: False, 1005: False, 1006: False, 1007: False, 1008: False}),
+            (1002, {1000: True, 1001: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+            (1003, {1000: True, 1001: True, 1002: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+            (1004, {1000: True, 1001: True, 1002: True, 1003: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+            (1005, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1006: True, 1007: True, 1008: True}),
+            (1006, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1007: True, 1008: True}),
+            (1007, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1008: True}),
+            (1008, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True})]
+
+        exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
+
+        for ego_id, exp_violation in exp_floating:
+            world = World.create_from_scenario(scenario)
+            ego_vehicle = world.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I2", use_boolean=True)
+
+            rule_robustness = []
+            for i in range(ego_vehicle.end_time + 1):
+                rob = rule_eval.update()
+                rule_robustness.append(rob)
+            rule_robustness = np.array(rule_robustness)
+            bool_value = rule_robustness >= 0.0
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)
         # one vehicle which drives always reversely (1001)

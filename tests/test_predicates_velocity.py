@@ -12,7 +12,8 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.velocity import (PredReverses, PredSlowLeadingVehicle, PredPreservesTrafficFlow,
-                                           PredInStandStill, PredExistStandingLeadingVehicle)
+                                           PredInStandStill, PredExistStandingLeadingVehicle, PredDrivesFaster,
+                                           PredDrivesWithSlightlyHigherSpeed)
 
 
 class TestVelocityPredicates(unittest.TestCase):
@@ -329,6 +330,103 @@ class TestVelocityPredicates(unittest.TestCase):
 
         world = World({ego_vehicle, other_vehicle_1, other_vehicle_2, other_vehicle_3, other_vehicle_4},
                       self.road_network)
+
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+    def test_drives_faster(self):
+        # expected solutions
+        exp_sol_monitor_mode_1 = False  # ego vehicle has lower velocity
+        exp_sol_monitor_mode_2 = False  # ego vehicle has same velocity
+        exp_sol_monitor_mode_3 = True  # ego vehicle drives with higher speed
+
+        # ego vehicle
+        cr_state_list_ego = {0: State(position=[0, 0], time_step=0, orientation=0, velocity=5),
+                             1: State(position=[5, 0], time_step=1, orientation=0, velocity=20),
+                             2: State(position=[25, 0], time_step=2, orientation=0, velocity=35)}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}}
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
+
+        # other vehicle 1
+        cr_state_list_other_1 = {0: State(position=[10, 0], time_step=0, orientation=0, velocity=10),
+                                 1: State(position=[20, 0], time_step=1, orientation=0, velocity=20),
+                                 2: State(position=[40, 0], time_step=2, orientation=0, velocity=30)}
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}}
+        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
+                                  CurvilinearStateManager(self.road_network), lanelet_assignments_other_1)
+
+        pred = PredDrivesFaster(self.config)
+        vehicle_ids = [ego_vehicle.id, other_vehicle_1.id]
+
+        world = World({ego_vehicle, other_vehicle_1},
+                      self.road_network)
+
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+
+    def test_drives_with_slightly_higher_speed(self):
+        self.config["slightly_higher_speed_difference"] = 5.55
+
+        # expected solutions
+        exp_sol_monitor_mode_1 = False  # ego vehicle has lower velocity
+        exp_sol_monitor_mode_2 = False  # ego vehicle has same velocity
+        exp_sol_monitor_mode_3 = True  # ego vehicle drives with only slightly higher speed
+        exp_sol_monitor_mode_4 = False  # ego vehicle drives too fast
+
+        # ego vehicle
+        cr_state_list_ego = {0: State(position=[0, 0], time_step=0, orientation=0, velocity=5),
+                             1: State(position=[5, 0], time_step=1, orientation=0, velocity=10),
+                             2: State(position=[15, 0], time_step=2, orientation=0, velocity=15),
+                             3: State(position=[30, 0], time_step=3, orientation=0, velocity=20)}
+        lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3:{1}}
+        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
+                              CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
+
+        # other vehicle 1
+        cr_state_list_other_1 = {0: State(position=[10, 0], time_step=0, orientation=0, velocity=10),
+                                 1: State(position=[20, 0], time_step=1, orientation=0, velocity=10),
+                                 2: State(position=[30, 0], time_step=2, orientation=0, velocity=10),
+                                 3: State(position=[40, 0], time_step=3, orientation=0, velocity=10)}
+        lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
+                                  CurvilinearStateManager(self.road_network), lanelet_assignments_other_1)
+
+        pred = PredDrivesWithSlightlyHigherSpeed(self.config)
+        vehicle_ids = [ego_vehicle.id, other_vehicle_1.id]
+
+        world = World({ego_vehicle, other_vehicle_1}, self.road_network)
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)

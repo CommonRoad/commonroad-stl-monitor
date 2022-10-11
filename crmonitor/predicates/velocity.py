@@ -29,6 +29,8 @@ class VelocityPredicates(str, Enum):
     PreservesTrafficFlow = "preserves_traffic_flow"
     ExistStandingLeadingVehicle = "exist_standing_leading_vehicle"
     InStandstill = "in_standstill"
+    DrivesFaster = "drives_faster"
+    DrivesWithSlightlyHigherSpeed = "drives_with_slightly_higher_speed"
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):
@@ -126,7 +128,7 @@ class PredReverses(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         return self._scale_speed(
-                -self.config['standstill_error'] - vehicle.get_lon_state(time_step).v
+                -self.config['standstill_error'] - vehicle.get_lon_state(time_step).v - 1.0e-17
         )
 
 
@@ -190,7 +192,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             ]
             v_max = min(v for v in v_list if v is not None)
             rob_slow_leading_list.append(
-                self._scale_speed(v_max - veh_o.get_lon_state(time_step).v - self.config["min_velocity_dif"]))
+                self._scale_speed(v_max - veh_o.get_lon_state(time_step).v - self.config["min_velocity_dif"] - 1.0e-17))
         return max(rob_slow_leading_list)
 
 
@@ -240,7 +242,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
                 v for v in v_list if v is not None
         )
         return self._scale_speed(
-                self.config["min_velocity_dif"] - v_max + vehicle.get_lon_state(time_step).v
+                self.config["min_velocity_dif"] - v_max + vehicle.get_lon_state(time_step).v - 1.0e-17
         )
 
 
@@ -264,7 +266,7 @@ class PredInStandStill(BasePredicateEvaluator):
         return self._scale_speed(
                 min(
                     vehicle.get_lon_state(time_step).v + self.config["standstill_error"],
-                    self.config["standstill_error"] - vehicle.get_lon_state(time_step).v
+                    self.config["standstill_error"] - vehicle.get_lon_state(time_step).v - 1.0e-17
         ))
 
 
@@ -314,3 +316,35 @@ class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
             rob_standstill_list.append(
                 self._in_standstill_evaluator.evaluate_robustness(world, time_step, [veh_o.id]))
         return max(rob_standstill_list)
+
+
+class PredDrivesFaster(BasePredicateEvaluator):
+    """
+    Predicate which checks if the kth vehicle drives faster than the pth vehicle
+    """
+    predicate_name = VelocityPredicates.DrivesFaster
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        return self._scale_speed(
+                vehicle_k.get_lon_state(time_step).v - vehicle_p.get_lon_state(time_step).v - 1.0e-17
+        )
+
+
+class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
+    """
+    Predicate which checks if the kth vehicle drives maximum with slightly higher speed than the pth vehicle
+    """
+    predicate_name = VelocityPredicates.DrivesWithSlightlyHigherSpeed
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        return self._scale_speed(
+                min(vehicle_k.get_lon_state(time_step).v - vehicle_p.get_lon_state(time_step).v - 1.0e-17,
+                    self.config["slightly_higher_speed_difference"] - vehicle_k.get_lon_state(time_step).v +
+                    vehicle_p.get_lon_state(time_step).v - 1.0e-17)
+        )

@@ -343,7 +343,7 @@ class PredRightOfBroadLaneMarking(BasePredicateEvaluator):
 
 
 class PredLeftOfBroadLaneMarking(BasePredicateEvaluator):
-    predicate_name = PositionPredicates.RightOfBroadLaneMarking
+    predicate_name = PositionPredicates.LeftOfBroadLaneMarking
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
