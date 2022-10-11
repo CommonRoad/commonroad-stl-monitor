@@ -20,6 +20,7 @@ class VelocityPredicates(str, Enum):
     KeepsTypeSpeedLimit = "keeps_type_speed_limit"
     KeepsFovSpeedLimit = "keeps_fov_speed_limit"
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
+    reverses = "reverses"
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):
@@ -98,3 +99,25 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
         if speed_limit is None:
             speed_limit = self.config["desired_interstate_velocity"]
         return speed_limit
+
+
+class PredReverses(BasePredicateEvaluator):
+    """
+    Evaluates if a vehicle drives backwards
+    """
+    predicate_name = VelocityPredicates.reverses
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        if vehicle.get_lon_state(time_step).v < - self.config['standstill_error']:
+            return True
+        else:
+            return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        return self._scale_speed(
+                -self.config['standstill_error'] - vehicle.get_lon_state(time_step).v
+        )
+    
