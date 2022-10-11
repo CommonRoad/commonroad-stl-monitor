@@ -19,6 +19,7 @@ class BasePredicateEvaluator(abc.ABC):
     """
     Base class for the predicate evaluator
     """
+
     predicate_name = "interface"
 
     def __init__(self, config: CommentedMap):
@@ -49,13 +50,19 @@ class BasePredicateEvaluator(abc.ABC):
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         pass
 
-    def evaluate_robustness_with_cache(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness_with_cache(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         vehicle_ids_tuple = tuple(vehicle_ids)
-        value = vehicle.predicate_cache.get_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:])
+        value = vehicle.predicate_cache.get_robustness(
+            time_step, self.predicate_name, vehicle_ids_tuple[1:]
+        )
         if value is None:
             logger.debug(
                 "Evaluating predicate %s , t=%d, ids=%s",
@@ -64,7 +71,9 @@ class BasePredicateEvaluator(abc.ABC):
                 vehicle_ids_tuple,
             )
             value = self.evaluate_robustness(world, time_step, vehicle_ids)
-            vehicle.predicate_cache.set_robustness(time_step, self.predicate_name, vehicle_ids_tuple[1:], value)
+            vehicle.predicate_cache.set_robustness(
+                time_step, self.predicate_name, vehicle_ids_tuple[1:], value
+            )
         return value
 
     def visualize(

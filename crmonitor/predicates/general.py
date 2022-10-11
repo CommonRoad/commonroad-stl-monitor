@@ -37,10 +37,14 @@ class PredCutIn(BasePredicateEvaluator):
         cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
 
-        single_lane = self._single_lane_evaluator.evaluate_boolean(world, time_step, [vehicle_ids[0]])
+        single_lane = self._single_lane_evaluator.evaluate_boolean(
+            world, time_step, [vehicle_ids[0]]
+        )
         if single_lane:
             return False
-        same_lane = self._same_lane_evaluator.evaluate_boolean(world, time_step, vehicle_ids)
+        same_lane = self._same_lane_evaluator.evaluate_boolean(
+            world, time_step, vehicle_ids
+        )
         if not same_lane:
             return False
         cutting_lane = cutting_vehicle.get_lane(time_step)
@@ -55,26 +59,29 @@ class PredCutIn(BasePredicateEvaluator):
         )
         return result
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
 
-        single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(world, time_step,
-                                                                                 [vehicle_ids[0], ])
-        same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
+            world,
+            time_step,
+            [
+                vehicle_ids[0],
+            ],
+        )
+        same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
 
         cutting_lane = cutting_vehicle.get_lane(time_step)
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
-        r_l_dist = (
-                cutted_lat.d
-                - cutting_lat.d
-        )
+        r_l_dist = cutted_lat.d - cutting_lat.d
         r_l_orient = cutting_lat.theta - self.eps
-        l_r_dist = (
-            cutting_lat.d
-            - cutted_lat.d
-        )
+        l_r_dist = cutting_lat.d - cutted_lat.d
         l_r_orient = -self.eps - cutting_lat.theta
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
@@ -147,13 +154,14 @@ class PredCutIn(BasePredicateEvaluator):
         points = np.vstack((points, points))
         ax.imshow(points, cmap=PredCutIn._get_color_map(), extent=[-1, 1, 0, 1])
         ax.get_yaxis().set_ticks([])
-        ax.set_ylabel('vehicle color')
+        ax.set_ylabel("vehicle color")
 
 
 class PredInterstateBroadEnough(BasePredicateEvaluator):
     """
     Evaluates if an interstate is broad enough to build a standard emergency lane.
     """
+
     predicate_name = GeneralPredicates.InterstateBroadEnough
     arity = 1
 
@@ -163,11 +171,16 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
         s = vehicle.get_lon_state(time_step).s
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if cal_road_width(lanelet, world.road_network, s) <= self.config["min_interstate_width"]:
+            if (
+                cal_road_width(lanelet, world.road_network, s)
+                <= self.config["min_interstate_width"]
+            ):
                 return False
         return True
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         s = vehicle.get_lon_state(time_step).s
@@ -175,9 +188,11 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             comparison_list.append(
-                    self._scale_lat_dist(
-                            cal_road_width(lanelet, world.road_network, s) - self.config["min_interstate_width"] - 1.0e-17
-                    )
+                self._scale_lat_dist(
+                    cal_road_width(lanelet, world.road_network, s)
+                    - self.config["min_interstate_width"]
+                    - 1.0e-17
+                )
             )
         return min(comparison_list)
 
@@ -186,6 +201,7 @@ class PredInCongestion(BasePredicateEvaluator):
     """
     Evaluates if a vehicle is in a congestion.
     """
+
     predicate_name = GeneralPredicates.InCongestion
     arity = 1
 
@@ -196,39 +212,65 @@ class PredInCongestion(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
         num_vehicles = 0
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 continue
-            if self._in_front_of_evaluator.evaluate_boolean(world, time_step,
-                                                            [vehicle_ids[0], veh_o.id]) and \
-                    self._same_lane_evaluator.evaluate_boolean(world, time_step,
-                                                               [vehicle_ids[0], veh_o.id]) and \
-                    veh_o.get_lon_state(time_step).v <= self.config["max_congestion_velocity"]:
+            if (
+                self._in_front_of_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and self._same_lane_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and veh_o.get_lon_state(time_step).v
+                <= self.config["max_congestion_velocity"]
+            ):
                 num_vehicles += 1
         if num_vehicles >= self.config["num_veh_congestion"]:
             return True
         else:
             return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
 
         rob_cong_veh_list = [self._scale_speed(-np.inf)]
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 rob_cong_veh_list.append(self._scale_speed(-np.inf))
             rob_cong_veh_list.append(
-                    min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._scale_speed(
-                                self.config["max_congestion_velocity"] - veh_o.get_lon_state(time_step).v - 1.0e-17)))
+                min(
+                    self._in_front_of_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._same_lane_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._scale_speed(
+                        self.config["max_congestion_velocity"]
+                        - veh_o.get_lon_state(time_step).v
+                        - 1.0e-17
+                    ),
+                )
+            )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_congestion"]:
+        if (
+            sum(rob > 0 for rob in rob_cong_veh_list)
+            >= self.config["num_veh_congestion"]
+        ):
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -238,6 +280,7 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
     """
     Evaluates if a vehicle is part of slow moving traffic.
     """
+
     predicate_name = GeneralPredicates.InSlowMovingTraffic
     arity = 1
 
@@ -248,39 +291,65 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
         num_vehicles = 0
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 continue
-            if self._in_front_of_evaluator.evaluate_boolean(world, time_step,
-                                                            [vehicle_ids[0], veh_o.id]) and \
-                    self._same_lane_evaluator.evaluate_boolean(world, time_step,
-                                                               [vehicle_ids[0], veh_o.id]) and\
-                    veh_o.get_lon_state(time_step).v <= self.config["max_slow_moving_traffic_velocity"]:
+            if (
+                self._in_front_of_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and self._same_lane_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and veh_o.get_lon_state(time_step).v
+                <= self.config["max_slow_moving_traffic_velocity"]
+            ):
                 num_vehicles += 1
         if num_vehicles >= self.config["num_veh_slow_moving_traffic"]:
             return True
         else:
             return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
 
         rob_cong_veh_list = [self._scale_speed(-np.inf)]
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 rob_cong_veh_list.append(self._scale_speed(-np.inf))
             rob_cong_veh_list.append(
-                    min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._scale_speed(
-                            self.config["max_slow_moving_traffic_velocity"] - veh_o.get_lon_state(time_step).v - 1.0e-17)))
+                min(
+                    self._in_front_of_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._same_lane_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._scale_speed(
+                        self.config["max_slow_moving_traffic_velocity"]
+                        - veh_o.get_lon_state(time_step).v
+                        - 1.0e-17
+                    ),
+                )
+            )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_slow_moving_traffic"]:
+        if (
+            sum(rob > 0 for rob in rob_cong_veh_list)
+            >= self.config["num_veh_slow_moving_traffic"]
+        ):
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -290,6 +359,7 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
     """
     Evaluates if a vehicle is part of a queue of vehicles
     """
+
     predicate_name = GeneralPredicates.InQueueOfVehicles
     arity = 1
 
@@ -300,39 +370,65 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
         num_vehicles = 0
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 continue
-            if self._in_front_of_evaluator.evaluate_boolean(world, time_step,
-                                                            [vehicle_ids[0], veh_o.id]) and \
-                    self._same_lane_evaluator.evaluate_boolean(world, time_step,
-                                                               [vehicle_ids[0], veh_o.id]) and\
-                    veh_o.get_lon_state(time_step).v <= self.config["max_queue_of_vehicles_velocity"]:
+            if (
+                self._in_front_of_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and self._same_lane_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]
+                )
+                and veh_o.get_lon_state(time_step).v
+                <= self.config["max_queue_of_vehicles_velocity"]
+            ):
                 num_vehicles += 1
         if num_vehicles >= self.config["num_veh_queue_of_vehicles"]:
             return True
         else:
             return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
-                          v_id != vehicle.id]
+        other_vehicles = [
+            world.vehicle_by_id(v_id)
+            for v_id in world.vehicle_ids_for_time_step(time_step)
+            if v_id != vehicle.id
+        ]
 
         rob_cong_veh_list = [self._scale_speed(-np.inf)]
         for veh_o in other_vehicles:
             if veh_o.get_lon_state(time_step) is None:
                 rob_cong_veh_list.append(self._scale_speed(-np.inf))
             rob_cong_veh_list.append(
-                    min(self._in_front_of_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._same_lane_evaluator.evaluate_robustness(world, time_step, [vehicle_ids[0], veh_o.id]),
-                        self._scale_speed(
-                            self.config["max_queue_of_vehicles_velocity"] - veh_o.get_lon_state(time_step).v  - 1.0e-17)))
+                min(
+                    self._in_front_of_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._same_lane_evaluator.evaluate_robustness(
+                        world, time_step, [vehicle_ids[0], veh_o.id]
+                    ),
+                    self._scale_speed(
+                        self.config["max_queue_of_vehicles_velocity"]
+                        - veh_o.get_lon_state(time_step).v
+                        - 1.0e-17
+                    ),
+                )
+            )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_queue_of_vehicles"]:
+        if (
+            sum(rob > 0 for rob in rob_cong_veh_list)
+            >= self.config["num_veh_queue_of_vehicles"]
+        ):
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -342,25 +438,40 @@ class PredMakesUTurn(BasePredicateEvaluator):
     """
     Predicate which evaluates if vehicle makes U-turn
     """
+
     predicate_name = GeneralPredicates.MakesUTurn
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        lanes = world.road_network.find_lanes_by_lanelets(
+            vehicle.lanelet_assignment[time_step]
+        )
         for la in lanes:
-            if self.config["u_turn"] <= abs(vehicle.get_lat_state(time_step, la).theta - la.orientation(
-                    vehicle.get_lon_state(time_step, la).s
-            )):
+            if self.config["u_turn"] <= abs(
+                vehicle.get_lat_state(time_step, la).theta
+                - la.orientation(vehicle.get_lon_state(time_step, la).s)
+            ):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
         robustness_values = []
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        lanes = world.road_network.find_lanes_by_lanelets(
+            vehicle.lanelet_assignment[time_step]
+        )
         for la in lanes:
-            robustness_values.append(self._scale_angle(
-                    abs(vehicle.get_lat_state(time_step, la).theta -
-                        la.orientation(vehicle.get_lon_state(time_step, la).s)) - self.config["u_turn"] - 1.0e-17))
+            robustness_values.append(
+                self._scale_angle(
+                    abs(
+                        vehicle.get_lat_state(time_step, la).theta
+                        - la.orientation(vehicle.get_lon_state(time_step, la).s)
+                    )
+                    - self.config["u_turn"]
+                    - 1.0e-17
+                )
+            )
         return max(robustness_values)

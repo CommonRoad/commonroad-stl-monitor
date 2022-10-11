@@ -1,1 +1,1 @@
-__all__ = ['position', 'velocity', 'acceleration', 'general']
+__all__ = ["position", "velocity", "acceleration", "general"]

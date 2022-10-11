@@ -3,7 +3,12 @@ import numpy as np
 from typing import List, Tuple, Set, Iterable, Dict, Callable, Union
 
 from commonroad.geometry.transform import rotate_translate
-from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
+from commonroad.scenario.lanelet import (
+    LaneletType,
+    LineMarking,
+    Lanelet,
+    LaneletNetwork,
+)
 
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.vehicle import Vehicle
@@ -13,20 +18,41 @@ from crmonitor.common.road_network import RoadNetwork
 logger = logging.getLogger(__name__)
 
 
-def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
+def distance_to_bounds(
+    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
+):
     state = vehicle_i.states_cr[time_step]
-    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
-    lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
-    left_bounds = tuple([l.left_vertices for l in lanelets if l.adj_left is not None and l.adj_left not in lanelet_ids])
+    occ_points = rotate_translate(
+        vehicle_i.shape.vertices[:-1], state.position, state.orientation
+    )
+    lanelets = [
+        world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids
+    ]
+    left_bounds = tuple(
+        [
+            l.left_vertices
+            for l in lanelets
+            if l.adj_left is not None and l.adj_left not in lanelet_ids
+        ]
+    )
     right_bounds = tuple(
-            [l.right_vertices for l in lanelets if l.adj_right is not None and l.adj_right not in lanelet_ids])
+        [
+            l.right_vertices
+            for l in lanelets
+            if l.adj_right is not None and l.adj_right not in lanelet_ids
+        ]
+    )
     if len(left_bounds) > 0:
-        d_left = np.array(cartesian_to_curvilinear(left_bounds, occ_points))[..., 1].ravel()
+        d_left = np.array(cartesian_to_curvilinear(left_bounds, occ_points))[
+            ..., 1
+        ].ravel()
         d_left = d_left[~np.isnan(d_left)]
     else:
         d_left = np.array([])
     if len(right_bounds) > 0:
-        d_right = np.array(cartesian_to_curvilinear(right_bounds, occ_points))[..., 1].ravel()
+        d_right = np.array(cartesian_to_curvilinear(right_bounds, occ_points))[
+            ..., 1
+        ].ravel()
         d_right = d_right[~np.isnan(d_right)]
     else:
         d_right = np.array([])
@@ -41,7 +67,9 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
     return np.fmin(d_left, d_right)
 
 
-def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+def lanelets_left_of_lanelet(
+    lanelet: Lanelet, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
     """
     Extracts all lanelet IDs left of a given lanelet based on adjacency relations
 
@@ -58,7 +86,9 @@ def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) 
     return left_lanelets
 
 
-def lanelets_right_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+def lanelets_right_of_lanelet(
+    lanelet: Lanelet, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
     """
     Extracts all lanelet IDs right of a given lanelet based on adjacency relations
 
@@ -75,7 +105,9 @@ def lanelets_right_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork)
     return right_lanelets
 
 
-def lanelets_left_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+def lanelets_left_of_vehicle(
+    time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
     """
     Extracts all lanelets left of a vehicle
 
@@ -87,14 +119,18 @@ def lanelets_left_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: 
     left_lanelets = set()
     occupied_lanelets = vehicle.lanelet_assignment[time_step]
     for occ_l in occupied_lanelets:
-        new_lanelets = lanelets_left_of_lanelet(lanelet_network.find_lanelet_by_id(occ_l), lanelet_network)
+        new_lanelets = lanelets_left_of_lanelet(
+            lanelet_network.find_lanelet_by_id(occ_l), lanelet_network
+        )
         for lanelet in new_lanelets:
             left_lanelets.add(lanelet)
 
     return left_lanelets
 
 
-def lanelets_right_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+def lanelets_right_of_vehicle(
+    time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
     """
     Extracts all lanelets right of a vehicle
 
@@ -106,14 +142,18 @@ def lanelets_right_of_vehicle(time_step: int, vehicle: Vehicle, lanelet_network:
     right_lanelets = set()
     occupied_lanelets = vehicle.lanelet_assignment[time_step]
     for occ_l in occupied_lanelets:
-        new_lanelets = lanelets_right_of_lanelet(lanelet_network.find_lanelet_by_id(occ_l), lanelet_network)
+        new_lanelets = lanelets_right_of_lanelet(
+            lanelet_network.find_lanelet_by_id(occ_l), lanelet_network
+        )
         for lanelet in new_lanelets:
             right_lanelets.add(lanelet)
 
     return right_lanelets
 
 
-def vehicles_adjacent(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+def vehicles_adjacent(
+    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+) -> List[Vehicle]:
     """
      Searches for vehicles adjacent to a vehicle
 
@@ -127,23 +167,33 @@ def vehicles_adjacent(time_step: int, vehicle: Vehicle, other_vehicles: List[Veh
     for veh in other_vehicles:
         if veh.get_lon_state(time_step, lane_share) is None:
             continue
-        if (veh.rear_s(time_step, lane_share) < vehicle.front_s(time_step, lane_share) < veh.front_s(time_step,
-                                                                                                     lane_share)):
+        if (
+            veh.rear_s(time_step, lane_share)
+            < vehicle.front_s(time_step, lane_share)
+            < veh.front_s(time_step, lane_share)
+        ):
             vehicles_adj.append(veh)
             continue
-        if (veh.rear_s(time_step, lane_share) < vehicle.rear_s(time_step, lane_share) < veh.front_s(time_step,
-                                                                                                    lane_share)):
+        if (
+            veh.rear_s(time_step, lane_share)
+            < vehicle.rear_s(time_step, lane_share)
+            < veh.front_s(time_step, lane_share)
+        ):
             vehicles_adj.append(veh)
             continue
-        if vehicle.rear_s(time_step, lane_share) <= veh.rear_s(time_step, lane_share) and veh.front_s(time_step,
-                                                                                                      lane_share) <= \
-                vehicle.front_s(time_step, lane_share):
+        if vehicle.rear_s(time_step, lane_share) <= veh.rear_s(
+            time_step, lane_share
+        ) and veh.front_s(time_step, lane_share) <= vehicle.front_s(
+            time_step, lane_share
+        ):
             vehicles_adj.append(veh)
             continue
     return vehicles_adj
 
 
-def vehicles_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+def vehicles_left(
+    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+) -> List[Vehicle]:
     """
     Searches for vehicles left of a vehicle
 
@@ -154,12 +204,17 @@ def vehicles_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle
     """
     vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
     lane_share = vehicle.get_lane(time_step)
-    vehicles_left = [veh for veh in vehicles_adj if
-                     veh.right_d(time_step, lane_share) > vehicle.left_d(time_step, lane_share)]
+    vehicles_left = [
+        veh
+        for veh in vehicles_adj
+        if veh.right_d(time_step, lane_share) > vehicle.left_d(time_step, lane_share)
+    ]
     return vehicles_left
 
 
-def vehicle_directly_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+def vehicle_directly_left(
+    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+) -> Union[Vehicle, None]:
     vehicle_left = vehicles_left(time_step, vehicle, other_vehicles)
     if len(vehicle_left) == 0:
         return None
@@ -169,13 +224,17 @@ def vehicle_directly_left(time_step: int, vehicle: Vehicle, other_vehicles: List
         vehicle_directly_left = vehicle_left[0]
         for veh in vehicle_left:
             lane_share = veh.get_lane(time_step)
-            if (veh.get_lat_state(time_step, lane_share).d < vehicle_directly_left.get_lat_state(time_step,
-                                                                                                 lane_share).d):
+            if (
+                veh.get_lat_state(time_step, lane_share).d
+                < vehicle_directly_left.get_lat_state(time_step, lane_share).d
+            ):
                 vehicle_directly_left = veh
         return vehicle_directly_left
 
 
-def vehicles_right(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> List[Vehicle]:
+def vehicles_right(
+    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+) -> List[Vehicle]:
     """
     Searches for vehicles right of a vehicle
 
@@ -186,12 +245,17 @@ def vehicles_right(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicl
     """
     vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
     lane_share = vehicle.get_lane(time_step)
-    vehicles_right = [veh for veh in vehicles_adj if
-                      veh.left_d(time_step, lane_share) < vehicle.right_d(time_step, lane_share)]
+    vehicles_right = [
+        veh
+        for veh in vehicles_adj
+        if veh.left_d(time_step, lane_share) < vehicle.right_d(time_step, lane_share)
+    ]
     return vehicles_right
 
 
-def vehicle_directly_right(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]) -> Union[Vehicle, None]:
+def vehicle_directly_right(
+    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+) -> Union[Vehicle, None]:
     vehicle_right = vehicles_right(time_step, vehicle, other_vehicles)
     if len(vehicle_right) == 0:
         return None
@@ -201,13 +265,17 @@ def vehicle_directly_right(time_step: int, vehicle: Vehicle, other_vehicles: Lis
         vehicle_directly_right = vehicle_right[0]
         for veh in vehicle_right:
             lane_share = veh.get_lane(time_step)
-            if (veh.get_lat_state(time_step, lane_share).d > vehicle_directly_right.get_lat_state(time_step,
-                                                                                                  lane_share).d):
+            if (
+                veh.get_lat_state(time_step, lane_share).d
+                > vehicle_directly_right.get_lat_state(time_step, lane_share).d
+            ):
                 vehicle_directly_right = veh
         return vehicle_directly_right
 
 
-def _adjacent_lanelets(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+def _adjacent_lanelets(
+    lanelet: Lanelet, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
     """
     Returns all lanelet which are adjacent to a lanelet and the lanelet itself
 
@@ -228,12 +296,16 @@ def _adjacent_lanelets(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set
     return lanelets
 
 
-def cal_road_width(lanelet: Lanelet, road_network: RoadNetwork, position: float) -> float:
+def cal_road_width(
+    lanelet: Lanelet, road_network: RoadNetwork, position: float
+) -> float:
     """
     Calculates width of road given a lanelet and a longitudinal position
     """
     adj_lanelets = _adjacent_lanelets(lanelet, road_network.lanelet_network)
     road_width = 0.0
     for lanelet in list(adj_lanelets):
-        road_width += road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
+        road_width += road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(
+            position
+        )
     return road_width
