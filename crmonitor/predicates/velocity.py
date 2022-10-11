@@ -27,6 +27,8 @@ class VelocityPredicates(str, Enum):
     Reverses = "reverses"
     SlowLeadingVehicle = "slow_leading_vehicle"
     PreservesTrafficFlow = "preserves_traffic_flow"
+    ExistStandingLeadingVehicle = "exist_standing_leading_vehicle"
+    InStandstill = "in_standstill"
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator):
@@ -154,8 +156,8 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                     self._same_lane_evaluator.evaluate_boolean(
                     world, time_step, [vehicle_ids[0], veh_o.id]):
                 continue
-            v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, [vehicle_ids[0], veh_o.id])
-            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [vehicle_ids[0], veh_o.id])
+            v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
+            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
                 vehicle.vehicle_param.get("road_condition_speed_limit"),
                 v_max_lane,
@@ -179,8 +181,8 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                     self._same_lane_evaluator.evaluate_boolean(
                     world, time_step, [vehicle_ids[0], veh_o.id]):
                 continue
-            v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, [vehicle_ids[0], veh_o.id])
-            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [vehicle_ids[0], veh_o.id])
+            v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
+            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
                 vehicle.vehicle_param.get("road_condition_speed_limit"),
                 v_max_lane,
@@ -240,3 +242,75 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         return self._scale_speed(
                 self.config["min_velocity_dif"] - v_max + vehicle.get_lon_state(time_step).v
         )
+
+
+class PredInStandStill(BasePredicateEvaluator):
+    """
+    Evaluation if vehicle is standing
+    """
+    predicate_name = VelocityPredicates.InStandstill
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+
+        if -self.config["standstill_error"] < vehicle.get_lon_state(time_step).v < self.config["standstill_error"]:
+            return True
+        else:
+            return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        return self._scale_speed(
+                min(
+                    vehicle.get_lon_state(time_step).v + self.config["standstill_error"],
+                    self.config["standstill_error"] - vehicle.get_lon_state(time_step).v
+        ))
+
+
+class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
+    """
+    Predicate which checks if a standing leading vehicle exist in front of a vehicle
+    """
+    predicate_name = VelocityPredicates.ExistStandingLeadingVehicle
+    arity = 1
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._in_front_of_evaluator = PredInFrontOf(config)
+        self._same_lane_evaluator = PredInSameLane(config)
+        self._in_standstill_evaluator = PredInStandStill(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
+                          v_id != vehicle.id]
+        for veh_o in other_vehicles:
+            if veh_o.get_lon_state(time_step) is None:
+                continue
+            if not self._in_front_of_evaluator.evaluate_boolean(world, time_step, [vehicle_ids[0],
+                                                                                   veh_o.id]) or not \
+                    self._same_lane_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]):
+                continue
+            if self._in_standstill_evaluator.evaluate_boolean(world, time_step, [veh_o.id]):
+                return True
+        return False
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        rob_standstill_list = [self._scale_speed(-np.inf)]
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicles = [world.vehicle_by_id(v_id) for v_id in world.vehicle_ids_for_time_step(time_step) if
+                          v_id != vehicle.id]
+        for veh_o in other_vehicles:
+            if veh_o.get_lon_state(time_step) is None:
+                continue
+            if not self._in_front_of_evaluator.evaluate_boolean(world, time_step, [vehicle_ids[0],
+                                                                                   veh_o.id]) or not \
+                    self._same_lane_evaluator.evaluate_boolean(
+                    world, time_step, [vehicle_ids[0], veh_o.id]):
+                continue
+
+            rob_standstill_list.append(
+                self._in_standstill_evaluator.evaluate_robustness(world, time_step, [veh_o.id]))
+        return max(rob_standstill_list)

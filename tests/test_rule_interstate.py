@@ -464,6 +464,37 @@ class RuleTest(unittest.TestCase):
                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
             )
 
+    def test_standstill(self):
+        # one vehicle which is in standstill with a leading vehicle in standstill(1000)
+        # one vehicle which is in standstill without a leading vehicle in standstill and which is not
+        # part of a congestion a leading vehicle in standstill (1001)
+        # one vehicle which drives with higher velocity (1002)
+        # seven vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1008, 1009,
+        # 1010)
+        # one vehicle which is in standstill and part of a congestion (1005)
+        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_standstill.xml")
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        exp_result = {1000: True, 1001: False, 1002: True, 1003: True,
+                      1004: True, 1005: True, 1006: True, 1007: True,
+                      1008: True, 1009: True, 1010: True}
+
+        world = World.create_from_scenario(scenario)
+
+        for ego_id, exp_violation in exp_result.items():
+            ego_vehicle = world.vehicle_by_id(ego_id)
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I1")
+            rule = rule_eval._rule
+            self.assertTrue(isinstance(rule, RuleNode))
+            rule_robustness = []
+            for i in range(ego_vehicle.end_time + 1):
+                rob = rule_eval.update()
+                rule_robustness.append(rob)
+            rule_robustness = np.array(rule_robustness)
+            bool_value = rule_robustness >= 0.0
+            self.assertEqual(
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+            )
+
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)
         # one vehicle which drives always reversely (1001)
