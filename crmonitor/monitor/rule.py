@@ -4,8 +4,6 @@ import re
 import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from os.path import dirname, basename, isfile, join
-import glob
 
 # by setting __all__ in __init__.py, all relevant modules are imported
 from crmonitor.predicates import *
@@ -13,20 +11,13 @@ from crmonitor.monitor.monitor_node import MonitorNode
 
 
 def get_all_predicate_evaluators():
-    # list all python files
-    modules = glob.glob(join(dirname(__file__), "../predicates/*.py"))
+    modules = inspect.getmembers(sys.modules["crmonitor.predicates"], inspect.ismodule)
     classes = []
-    for mod_name in modules:
-        if isfile(mod_name) and not basename(mod_name).startswith("_"):
-            classes += inspect.getmembers(
-                sys.modules["crmonitor.predicates." + basename(mod_name)[:-3]],
-                inspect.isclass,
-            )
+    for _, module in modules:
+        classes += inspect.getmembers(module, inspect.isclass)
     classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
-    d = {}
-    for name, cls in classes:
-        d[cls.predicate_name] = cls
-    return d
+    predicate_class_map = {cls.predicate_name: cls for name, cls in classes if len(name) > 4 and name[:4] == "Pred"}
+    return predicate_class_map
 
 
 class IOType(Enum):
