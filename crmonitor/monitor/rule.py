@@ -5,20 +5,19 @@ import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+# by setting __all__ in __init__.py, all relevant modules are imported
+from crmonitor.predicates import *
 from crmonitor.monitor.monitor_node import MonitorNode
 
 
 def get_all_predicate_evaluators():
-    mod_name = "crmonitor.predicates.predicate"
-    # noinspection PyUnresolvedReferences
-    import crmonitor.predicates.predicate
-
-    classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
-    classes = list(filter(lambda p: "Pred" in p[0], classes))
-    d = {}
-    for name, cls in classes:
-        d[cls.predicate_name] = cls
-    return d
+    modules = inspect.getmembers(sys.modules["crmonitor.predicates"], inspect.ismodule)
+    classes = []
+    for _, module in modules:
+        classes += inspect.getmembers(module, inspect.isclass)
+    classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
+    predicate_class_map = {cls.predicate_name: cls for name, cls in classes if len(name) > 4 and name[:4] == "Pred"}
+    return predicate_class_map
 
 
 class IOType(Enum):
@@ -94,7 +93,6 @@ def parse_rule(full_rule_str, config, name=None):
 
 
 class VisitorNode(metaclass=ABCMeta):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -134,11 +132,11 @@ class ExistNode(VisitorNode):
 
 
 class PredicateNode(MonitorNode, VisitorNode):
-
     def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
-        assert (
-            len(agent_placeholders) == evaluator.arity
-        ), f"The arity of the evaluator for {full_name} should be {len(agent_placeholders)}, but is {evaluator.arity}!"
+        assert len(agent_placeholders) == evaluator.arity, (
+            f"The arity of the evaluator for {full_name} should be "
+            f"{len(agent_placeholders)}, but is {evaluator.arity}!"
+        )
         super().__init__(full_name)
         self.agent_placeholders = tuple(agent_placeholders)
         self.evaluator = evaluator
@@ -153,7 +151,9 @@ class PredicateNode(MonitorNode, VisitorNode):
         return value
 
     def evaluate_robustness(self, world, time_step, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        value = self.evaluator.evaluate_robustness_with_cache(
+            world, time_step, vehicle_ids
+        )
         self.latest_value = value
         self.latest_vehicle_ids = tuple(vehicle_ids)
         return value

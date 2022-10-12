@@ -15,8 +15,8 @@ from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, Evalua
                                           PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
                                           PredicateVisualizerMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.predicate import BasePredicateEvaluator
-from crmonitor.predicates.rule import VisitorNode, parse_rule
+from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.monitor.rule import VisitorNode, parse_rule
 
 logger = logging.getLogger(__name__)
 
