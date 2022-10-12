@@ -230,7 +230,7 @@ def plot_rule_visualization(scenario: Scenario,
     if scenario_plot_limits:
         plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles_by_position_intervals(
                 [Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
-                 Interval(scenario_plot_limits[2], scenario_plot_limits[3])])]
+                 Interval(scenario_plot_limits[2], scenario_plot_limits[3])], time_step=time_step)]
     else:
         plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles]
     for i in plot_veh_ids:
