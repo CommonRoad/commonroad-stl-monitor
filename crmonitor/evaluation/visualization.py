@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 from crmonitor.common.helper import merge_dicts_recursively
-from crmonitor.predicates.predicate import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator
 
 
 EGO_VEHICLE_DRAW_PARAMS = {

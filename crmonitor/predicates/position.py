@@ -221,13 +221,10 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         Plots the unsafe region starting from the rear of the front vehicle
         """
         # the ids of lanes are increasing together with the d-coordinate
-        vehicle_lanes = list(
-            sorted(
-                vehicle_lead.lanes_at_state(time_step),
-                key=operator.attrgetter("lane_id"),
-                reverse=True,
-            )
-        )
+        vehicle_lanes = list(vehicle_lead.lanes_at_state(time_step))
+        # the upper the lane in the road network is, the smaller the index in the list as
+        if vehicle_lanes[0].lanelet.center_vertices[0][1] < vehicle_lanes[-1].lanelet.center_vertices[0][1]:
+            vehicle_lanes = vehicle_lanes[::-1]
         reference_lane = vehicle_lead.get_lane(time_step)
         # get the Cartesian coordinate of the safe distance
         safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(unsafe_s, 0)
@@ -267,15 +264,19 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             ([safe_pos_right_cart], vertices_right, [lead_rear_right_cart])
         )
         # concatenate vertices
-        vertices_total = np.concatenate(
-            (
+        vertices_total = list(
+            np.concatenate((
                 [safe_pos_cart],
                 vertices_left,
                 [lead_rear_cart],
-                np.flip(vertices_right, 0),
-                [safe_pos_cart],
-            )
-        ).tolist()
+                vertices_right,
+                [safe_pos_cart])))
+        # compute centroid
+        cent = (sum([v[0] for v in vertices_total]) / len(vertices_total),
+                sum([v[1] for v in vertices_total]) / len(vertices_total))
+        # sort by polar angle
+        vertices_total.sort(key=lambda v: math.atan2(v[1] - cent[1], v[0] - cent[0]))
+
         unsafe_region = Polygon(vertices_total)
         ax.fill(
             *unsafe_region.exterior.xy,
