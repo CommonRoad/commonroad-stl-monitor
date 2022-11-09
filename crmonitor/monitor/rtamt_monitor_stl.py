@@ -26,8 +26,6 @@ class RtamtStlMonitor:
             logic_formula = logic_formula.replace(el, replacements[el])
         # Workaround for rtamt when working with output-robustness and input vacuity
         mod_formula = logic_formula
-        for pred in predicates:
-            mod_formula = mod_formula.replace(pred[0].name, f"({pred[0].name} >= 0)")
         return mod_formula
 
     @staticmethod
