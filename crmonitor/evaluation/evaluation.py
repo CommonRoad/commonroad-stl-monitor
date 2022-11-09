@@ -123,6 +123,15 @@ class RuleEvaluator:
             robustness_values.append(self.update())
         return np.array(robustness_values)
 
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._last_evaluation_time_step + 1 < self._ego_vehicle.end_time + 1:
+            return self.update()
+        else:
+            raise StopIteration
+
     def visualize_predicates(
         self,
         vehicle2draw_params: Dict,
