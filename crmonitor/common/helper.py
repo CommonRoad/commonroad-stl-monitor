@@ -763,7 +763,7 @@ def get_curvilinear_coordinate_system(ref_path: np.ndarray) -> Callable[[np.ndar
     m_b = to_local_frame(tangents[:-1])
     m_b = m_b[..., 1] / m_b[..., 0]
     m_t = to_local_frame(tangents[1:])
-    m_t = m_t[:, 1] / m_t[:, 0]
+    m_t = m_t[..., 1] / m_t[..., 0]
 
     def fn(cartesian_points: np.ndarray) -> np.ndarray:
         # Dimensions (cart pts, segs, xy)
@@ -779,7 +779,7 @@ def get_curvilinear_coordinate_system(ref_path: np.ndarray) -> Callable[[np.ndar
         distance = np.linalg.norm(pseudo_normal, axis=-1)
         # Get the signed lateral distance
         # Dimensions (cart pts, segs)
-        signed_distance = -np.copysign(distance, pseudo_normal[..., 1])
+        signed_distance = np.copysign(distance, cartesian_points_seg_local[..., 1])
 
         # Sort by lateral distance
         idx = np.argsort(distance, axis=-1)
