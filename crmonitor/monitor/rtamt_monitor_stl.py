@@ -6,6 +6,8 @@ import rtamt
 from rtamt import Language
 from rtamt.evaluator.stl.online_evaluator import STLOnlineEvaluator
 
+from crmonitor import nodedict
+
 from crmonitor.monitor.rule import IOType, RuleNode
 
 
@@ -33,9 +35,10 @@ class RtamtStlMonitor:
     @staticmethod
     def construct_monitor(formula, output_type: OutputType, predicates, dt) -> rtamt.STLSpecification:
         logic_formula = RtamtStlMonitor._reconstruct_logic_formula(formula, predicates)
-        monitor = rtamt.STLDiscreteTimeSpecification(
-            semantics=output_type, language=Language.PYTHON
-        )
+        #monitor = rtamt.STLDiscreteTimeSpecification(
+        #    semantics=output_type, language=Language.PYTHON
+        #)
+        monitor = nodedict.StlDiscreteTimeSpecificationDict()
         for var, io_type in predicates:
             monitor.declare_var(var.name, "float")
             if io_type == IOType.INPUT:
@@ -69,10 +72,10 @@ class RtamtStlMonitor:
             self.specs[(rule_str, output_type, dt)] = spec
         # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
         self._monitor = copy.copy(spec)
-        self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
-        self._monitor.top.accept(self._monitor.online_evaluator)
-        self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
-        self._monitor.reset()
+        #self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
+        #self._monitor.top.accept(self._monitor.online_evaluator)
+        #self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
+        #self._monitor.reset()
 
     def reset_monitor(self):
         self._monitor.reset()

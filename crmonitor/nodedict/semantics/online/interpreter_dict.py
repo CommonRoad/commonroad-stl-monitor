@@ -1,0 +1,7 @@
+from crmonitor.nodedict.semantics.abstract_discrete_time_online_interpreter_dict import discrete_time_online_interpreter_factory
+from crmonitor.nodedict.semantics.online.ast_visitor_dict import StlDiscreteTimeOnlineAstVisitorDict
+
+
+def StlDiscreteTimeOnlineInterpreterDict():
+    stlDiscreteTimeOnlineInterpreterDict = discrete_time_online_interpreter_factory(StlDiscreteTimeOnlineAstVisitorDict)()
+    return stlDiscreteTimeOnlineInterpreterDict

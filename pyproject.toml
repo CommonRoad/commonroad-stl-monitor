@@ -12,9 +12,11 @@ commonroad-io = "2022.1"
 commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2021.4"
-antlr4-python3-runtime = ">=4.5,<4.6"
+antlr4-python3-runtime = ">=4.7"
 numba = "^0.56.0"
-rtamt = {git = "https://github.com/cirrostratus1/rtamt.git", rev = "6ef48e956837f5b60f514011d3d6eabf6307e042"}
+rtamt = {git = "https://github.com/nickovic/rtamt.git"}
+
+#, rev = "6ef48e956837f5b60f514011d3d6eabf6307e042"}
 
 [tool.poetry.group.test]
 optional = true

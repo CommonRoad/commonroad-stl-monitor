@@ -86,6 +86,21 @@ class RuleEvaluator:
         predicate_values = dict(self._monitor.visit(self._collector_visitor))
         return predicate_values
 
+    def get_node_dicts(self):
+        node_dicts = self.get_node_dicts3()
+        node_dicts.append(self.get_node_dicts2())
+        return node_dicts
+
+    def get_node_dicts2(self):
+       return self._monitor.children[0].monitor._monitor.online_interpreter.nodeDict
+
+    def get_node_dicts3(self):
+        monitors = list(self._monitor.monitors.values())
+        node_dicts = []
+        for m in monitors:
+            node_dicts.append(m.monitor._monitor.online_interpreter.nodeDict)
+        return node_dicts
+
     def update(self):
         """
         Advance the monitor state by one time step and return the corresponding rule evaluation value.
