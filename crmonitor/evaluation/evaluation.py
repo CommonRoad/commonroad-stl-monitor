@@ -82,6 +82,10 @@ class RuleEvaluator:
     def current_time(self) -> int:
         return self._last_evaluation_time_step
 
+    @property
+    def ego_vehicle(self) -> Vehicle:
+        return self._ego_vehicle
+
     def get_predicates(self) -> Dict[str, float]:
         predicate_values = dict(self._monitor.visit(self._collector_visitor))
         return predicate_values
