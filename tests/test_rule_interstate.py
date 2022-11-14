@@ -16,7 +16,7 @@ from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.monitor.rule import parse_rule, RuleNode, PredicateNode, ExistNode, AllNode
-from tests.util import parallel_lanes
+from util import parallel_lanes
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",

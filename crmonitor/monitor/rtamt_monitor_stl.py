@@ -53,6 +53,7 @@ class RtamtStlMonitor:
         monitor.set_sampling_period(dt * 1000.0, 'ms')
         monitor.parse()
         monitor.pastify()
+        monitor.online_interpreter.set_ast(monitor.ast) #new ast of online interpreter is not set until the update method of AbstractOnlineSpecification is called
 
         return monitor
 
@@ -71,11 +72,12 @@ class RtamtStlMonitor:
             spec = self.specs.setdefault((rule_str, output_type, dt), self.construct_monitor(rule_str, output_type, predicates, dt))
             self.specs[(rule_str, output_type, dt)] = spec
         # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
+        self._monitor = spec
         self._monitor = copy.copy(spec)
         #self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
         #self._monitor.top.accept(self._monitor.online_evaluator)
         #self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
-        #self._monitor.reset()
+        self._monitor.reset()
 
     def reset_monitor(self):
         self._monitor.reset()
