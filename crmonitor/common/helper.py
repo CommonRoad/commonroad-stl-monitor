@@ -738,15 +738,20 @@ def get_curvilinear_coordinate_system(ref_path: np.ndarray) -> Callable[[np.ndar
     :return: function taking an array of cartesian points, mapping to curvilinear points w.r.t. the reference path.
     """
 
-    tangents = np.append(ref_path[1:], ref_path[-1:], axis=0) - np.insert(ref_path[:-1], 0, ref_path[0], axis=0)
-    tangents = tangents / np.linalg.norm(tangents, axis=1)[:, None]
-
-    # Segment start points
-    seg_start = ref_path[:-1]
     # Segment directions
     seg_dir = ref_path[1:] - ref_path[:-1]
     # Segment lengths
     seg_length = np.sqrt(np.sum(seg_dir * seg_dir, axis=-1))
+    seg_dir = seg_dir[seg_length > 0]
+    # Segment start points
+    seg_start = ref_path[:-1][seg_length > 0]
+    # Segment end points
+    seg_end = ref_path[1:][seg_length > 0]
+    seg_length = seg_length[seg_length > 0]
+
+    tangents = np.append(seg_end, seg_end[-1:], axis=0) - np.insert(seg_start, 0, seg_start[0], axis=0)
+    tangents = tangents / np.linalg.norm(tangents, axis=1)[:, None]
+
     # Cumulated segment length offsets
     cumsum_seg_length = np.concatenate((np.zeros(1), np.cumsum(seg_length)))
     # Segment direction with length 1
