@@ -17,7 +17,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
 from crmonitor.predicates.base import BasePredicateEvaluator
 
-from crmonitor.predicates.utils import cal_road_width, distance_to_bounds
+from crmonitor.predicates.utils import cal_road_width, distance_to_bounds, distance_to_left_bounds
 
 logger = logging.getLogger(__name__)
 
@@ -655,10 +655,8 @@ class PredOnRightTurn(BasePredicateEvaluator):
         start_s, _ = lane.clcs.convert_to_curvilinear_coords(*lanelet.center_vertices[0])
         end_s, _ = lane.clcs.convert_to_curvilinear_coords(*lanelet.center_vertices[-1])
         if start_s <= front_s and rear_s <= end_s:
-            d_left, d_right = distance_to_bounds(vehicle, incoming.successors_right, world, time_step)
-            d_left = -np.max(d_left, initial=-np.inf)
-            d_right = np.min(d_right, initial=np.inf)
-            rob = np.fmin(d_left, d_right)
+            d_left = distance_to_left_bounds(vehicle, incoming.successors_right, world, time_step)
+            rob = -np.max(d_left, initial=-np.inf)
             rob = self._scale_lat_dist(rob)
         elif front_s < start_s:
             rob = self._scale_lon_dist(front_s - start_s)
