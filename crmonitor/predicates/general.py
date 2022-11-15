@@ -515,7 +515,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
                               intersection_lanelets])
             dist_succ = end_s - front_s
             dist = min(dist, dist_succ)
-        return float(dist)
+        return self._scale_lon_dist(dist)
 
 
 class PredInIntersection(BasePredicateEvaluator):
@@ -574,7 +574,7 @@ class PredInIntersection(BasePredicateEvaluator):
                 dist_pred = front_s - end_s
                 dist_pred = np.min(dist_pred[dist_pred > 0], initial=np.inf)
                 dist = min(dist, dist_succ, dist_pred)
-            return dist
+            return self._scale_lon_dist(dist)
 
 
 class PredTrafficLightRed(BasePredicateEvaluator):
