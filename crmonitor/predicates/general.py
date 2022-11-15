@@ -633,8 +633,7 @@ class PredOnRightTurn(BasePredicateEvaluator):
                 break
         return incoming
 
-    def _get_right_turning_lanes(self, ego_id, world: World):
-        incoming = self._get_incoming(ego_id, world)
+    def _get_right_turning_lanes(self, ego_id, world: World, incoming: IntersectionIncomingElement):
         incoming_lanelet_ids = incoming.incoming_lanelets
         right_turning_lanelet_ids = incoming.successors_right
         right_turning_lanes = []
@@ -667,9 +666,12 @@ class PredOnRightTurn(BasePredicateEvaluator):
         return rob
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        incoming = self._get_incoming(vehicle_ids[0], world)
+        if incoming is None:
+            return self._scale_lon_dist(-np.inf)
         ego = world.vehicle_by_id(vehicle_ids[0])
-        right_turning_lanes, right_turning_lanelets, incoming = self._get_right_turning_lanes(vehicle_ids[0], world)
+        right_turning_lanes, right_turning_lanelets, incoming = self._get_right_turning_lanes(vehicle_ids[0], world, incoming)
         rob = []
         for lane, lanelet in zip(right_turning_lanes, right_turning_lanelets):
             rob.append(self._robustness_on_lane(world, ego, time_step, lane, lanelet, incoming))
-        return min(rob, default=np.inf)
+        return min(rob, default=self._scale_lon_dist(-np.inf))
