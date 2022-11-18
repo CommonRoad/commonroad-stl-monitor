@@ -87,19 +87,29 @@ class RuleEvaluator:
         return predicate_values
 
     def get_node_dicts(self):
-        node_dicts = self.get_node_dicts3()
-        node_dicts.append(self.get_node_dicts2())
+        node_dicts = self.get_node_dicts_2()
+        node_dicts.append(self.get_node_dicts_3())
+        node_dicts.append(self.get_node_dict_last_selected())
         return node_dicts
 
-    def get_node_dicts2(self):
-       return self._monitor.children[0].monitor._monitor.online_interpreter.nodeDict
 
-    def get_node_dicts3(self):
+    def get_node_dict_last_selected(self):
+        node_dict_last_selected = self._monitor.last_selected.monitor._monitor.online_interpreter.nodeDict
+        return node_dict_last_selected
+
+
+    def get_node_dicts_2(self):
+        #self is RuleEvaluator. _monitor is AllMonitorNode. monitors are RuleMonitorNodes 1001 to 1010.
         monitors = list(self._monitor.monitors.values())
         node_dicts = []
         for m in monitors:
             node_dicts.append(m.monitor._monitor.online_interpreter.nodeDict)
         return node_dicts
+
+    def get_node_dicts_3(self):
+        #self is RuleEvaluator. _monitor is AllMonitorNode. has only one child and it is RuleMonitorNode
+        return self._monitor.children[0].monitor._monitor.online_interpreter.nodeDict
+
 
     def update(self):
         """
