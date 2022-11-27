@@ -48,9 +48,9 @@ class PositionPredicates(str, Enum):
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
     OnLaneletWithType = "on_lanelet_with_type"
-    OnDirLaneletWithType  = "on_dir_lanelet_with_type"
     OnIncomingLeftOf = "on_incoming_left_of"
     OnOncomOf = "on_oncom_of"
+    InIntersectionConflictArea = "in_intersection_conflict_area"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -1005,11 +1005,11 @@ class PredOnLaneletWithType(BasePredicateEvaluator):
     ) -> float:
         return self._scale_lat_dist(100)
     
-class PredOnDirLaneletWithType(BasePredicateEvaluator):
+class PredInIntersectionConflictArea(BasePredicateEvaluator):
     """
-    evaluates if a vehicle is on a lanelet in driving direction with a specific type.
+    evaluates if the first vehicle is in the conflict area of the second vehicle.
     """
-    predicate_name = PositionPredicates.OnDirLaneletWithType
+    predicate_name = PositionPredicates.InIntersectionConflictArea
     arity = 2
 
     # TODO
@@ -1023,7 +1023,7 @@ class PredOnDirLaneletWithType(BasePredicateEvaluator):
     
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
     """
-    evaluates if a vehicle is approaching an intersection from the left of another vehicle.
+    evaluates if the first vehicle is approaching an intersection from the left of the second vehicle.
     """
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
@@ -1039,7 +1039,7 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
     
 class PredOnOncomOf(BasePredicateEvaluator):
     """
-    evaluates if a vehicle occupies an oncoming lanelet of another vehicle.
+    evaluates if the first vehicle occupies an oncoming lanelet of the second vehicle.
     """
     predicate_name = PositionPredicates.OnOncomOf
     arity = 2

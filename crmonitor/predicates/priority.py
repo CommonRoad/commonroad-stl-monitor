@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class PriorityPredicates(str, Enum):
     SamePriority = "same_priority"
     RelevantTrafficLight = "relevant_traffic_light"
-
+    HasPriority = "has_priority"
 
 class PredSamePriority(BasePredicateEvaluator):
     """
@@ -36,6 +36,23 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     """
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+
+
+class PredHasPriority(BasePredicateEvaluator):
+    """
+    evaluates if the first vehicle has priority over the second vehicle.
+    """
+    predicate_name = PriorityPredicates.HasPriority
+    arity = 4
 
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
