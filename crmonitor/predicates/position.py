@@ -47,6 +47,10 @@ class PositionPredicates(str, Enum):
     LeftOf = "left_of"
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
+    OnLaneletWithType = "on_lanelet_with_type"
+    OnDirLaneletWithType  = "on_dir_lanelet_with_type"
+    OnIncomingLeftOf = "on_incoming_left_of"
+    OnOncomOf = "on_oncom_of"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -984,3 +988,55 @@ class PredDrivesRightmost(BasePredicateEvaluator):
                     )
                 )
             return min(comparison_list)
+
+class PredOnLaneletWithType(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.OnLaneletWithType
+    arity = 2
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+    
+class PredOnDirLaneletWithType(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.OnDirLaneletWithType
+    arity = 2
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+    
+class PredOnIncomingLeftOf(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.OnIncomingLeftOf
+    arity = 2
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+    
+class PredOnOncomOf(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.OnOncomOf
+    arity = 2
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
