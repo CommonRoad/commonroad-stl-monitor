@@ -22,6 +22,10 @@ class GeneralPredicates(str, Enum):
     InSlowMovingTraffic = "in_slow_moving_traffic"
     InQueueOfVehicles = "in_queue_of_vehicles"
     MakesUTurn = "makes_u_turn"
+    NotEndangerIntersection = "not_endanger_intersection"
+    TurningLeft = "turning_left"
+    TurningRight = "turning_right"
+    GoingStraight = "going_straight"
 
 
 class PredCutIn(BasePredicateEvaluator):
@@ -475,3 +479,59 @@ class PredMakesUTurn(BasePredicateEvaluator):
                 )
             )
         return max(robustness_values)
+
+
+class PredNotEndangerIntersection(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.NotEndangerIntersection
+    arity = 2
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+
+
+class PredTurningLeft(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.TurningLeft
+    arity = 1
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+
+
+class PredTurningRight(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.TurningRight
+    arity = 1
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
+
+
+class PredGoingStraight(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.GoingStraight
+    arity = 1
+
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        return self._scale_lat_dist(100)
