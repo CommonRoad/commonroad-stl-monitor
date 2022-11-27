@@ -990,6 +990,9 @@ class PredDrivesRightmost(BasePredicateEvaluator):
             return min(comparison_list)
 
 class PredOnLaneletWithType(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is on a lanelet with a specific type.
+    """
     predicate_name = PositionPredicates.OnLaneletWithType
     arity = 2
 
@@ -1003,6 +1006,9 @@ class PredOnLaneletWithType(BasePredicateEvaluator):
         return self._scale_lat_dist(100)
     
 class PredOnDirLaneletWithType(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is on a lanelet in driving direction with a specific type.
+    """
     predicate_name = PositionPredicates.OnDirLaneletWithType
     arity = 2
 
@@ -1016,6 +1022,9 @@ class PredOnDirLaneletWithType(BasePredicateEvaluator):
         return self._scale_lat_dist(100)
     
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is approaching an intersection from the left of another vehicle.
+    """
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
 
@@ -1029,6 +1038,9 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         return self._scale_lat_dist(100)
     
 class PredOnOncomOf(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle occupies an oncoming lanelet of another vehicle.
+    """
     predicate_name = PositionPredicates.OnOncomOf
     arity = 2
 

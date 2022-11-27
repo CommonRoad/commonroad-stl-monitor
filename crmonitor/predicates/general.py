@@ -482,6 +482,9 @@ class PredMakesUTurn(BasePredicateEvaluator):
 
 
 class PredNotEndangerIntersection(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle located in the conflict area does not endanger another vehicle
+    """
     predicate_name = GeneralPredicates.NotEndangerIntersection
     arity = 2
 
@@ -496,6 +499,9 @@ class PredNotEndangerIntersection(BasePredicateEvaluator):
 
 
 class PredTurningLeft(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is turning left
+    """
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
 
@@ -510,6 +516,9 @@ class PredTurningLeft(BasePredicateEvaluator):
 
 
 class PredTurningRight(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is turning right
+    """
     predicate_name = GeneralPredicates.TurningRight
     arity = 1
 
@@ -524,6 +533,9 @@ class PredTurningRight(BasePredicateEvaluator):
 
 
 class PredGoingStraight(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is going straight
+    """
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 

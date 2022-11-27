@@ -14,6 +14,9 @@ class PriorityPredicates(str, Enum):
 
 
 class PredSamePriority(BasePredicateEvaluator):
+    """
+    evaluates if two vehicles have the same priority
+    """
     predicate_name = PriorityPredicates.SamePriority
     arity = 4
 
@@ -28,6 +31,9 @@ class PredSamePriority(BasePredicateEvaluator):
 
 
 class PredRelevantTrafficLight(BasePredicateEvaluator):
+    """
+    evaluates if an upcoming intersection is regulated by traffic lights
+    """
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
