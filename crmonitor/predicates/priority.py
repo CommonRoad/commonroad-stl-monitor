@@ -1,6 +1,6 @@
 from enum import Enum
 import logging
-from typing import List
+from typing import List, Set
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 
@@ -29,7 +29,6 @@ class PredSamePriority(BasePredicateEvaluator):
     ) -> float:
         return self._scale_lat_dist(100)
 
-
 class PredRelevantTrafficLight(BasePredicateEvaluator):
     """
     evaluates if an upcoming intersection is regulated by traffic lights
@@ -44,8 +43,27 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+        """
+        idea 1 (trivial):  
+        for l in lanelets_dir(x_k):
+            for succ in reachsuc(l):
+                if len(active_tls_by_lanelet(succ)) > 0:
+                    return 1
+        return -1
+        
+        def active_tls_by_lanelet(l: lanelet): 
+            return list(set(lambda tl:statetl(tl) != inactive, traffic_light(l)))
+        """
+        
+        """
+        idea 2:  
+        lanelets_to_tl = calculates_lanelets_away_from_tl(...) #returns -1 if no relevant tl is found
+        return 100/lanelets_to_tl if lanelets_to_tl >= 0 else -1
+        # robustness is larger if tl is nearer, could have chosen any number instead of 100 but whatever
+        """
         return self._scale_lat_dist(100)
 
+    
 
 class PredHasPriority(BasePredicateEvaluator):
     """
