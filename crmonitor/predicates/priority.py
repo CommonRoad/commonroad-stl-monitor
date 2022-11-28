@@ -55,25 +55,29 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                     return 1
         return -1
 
-        def active_tls_by_lanelet(l: lanelet): 
-            return list(set(lambda tl : statetl(tl) != inactive, traffic_light(l)))
         """
+        rob = -1
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            successors = lanelet.find_lanelet_successors_in_range(world.road_network, max_length=150) 
+            for succ in successors:
+                # TODO: how to access traffic_lights of a lanelet
+                active_tls = set(filter(lambda tl: tl.get_state_at_time_step(time_step) != TrafficLightState.INACTIVE, succ.traffic_lights))
+                if(len(active_tls)>0):
+                    rob = 1
+        return self._scale_lat_dist(rob)
+
         """
         idea 2:  
         lanelets_to_tl = calculates_lanelets_away_from_tl(...) #returns -1 if no relevant tl is found
         return 100/lanelets_to_tl if lanelets_to_tl >= 0 else -1
         # robustness is larger if tl is nearer, could have chosen any number instead of 100 but whatever
         """
-        return self._scale_lat_dist(100)
+        
 
-    def active_tls_by_lanelet(l: lanelet, time_step):
-        """
-        returns a set of active traffic lights for a given lanelet
-        """
-        # TODO
-        # how to access traffic_lights of a lanelet
-        return set(filter(lambda tl: tl.get_state_at_time_step(time_step) != TrafficLightState.INACTIVE, l.traffic_lights))
-
+    
 
 class PredHasPriority(BasePredicateEvaluator):
     """
