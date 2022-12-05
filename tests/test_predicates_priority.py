@@ -16,7 +16,6 @@ from crmonitor.predicates.priority import (PredRelevantTrafficLight)
 
 class TestPriorityPredicates(unittest.TestCase):
 
-
     def setUp(self) -> None:
         super().setUp()
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"

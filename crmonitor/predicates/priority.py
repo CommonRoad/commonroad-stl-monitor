@@ -1,5 +1,6 @@
 from enum import Enum
 import logging
+import numpy as np
 from typing import List, Set
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -44,42 +45,37 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
     # TODO
+
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         """
-        idea 1 (trivial):  
-        for l in lanelets_dir(x_k):
-            for succ in reachsuc(l):
-                if len(active_tls_by_lanelet(succ)) > 0:
-                    return 1
-        return -1
-
+        returns the distance to the nearest active traffic light
         """
-        rob = -1
+
         vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
+        vehicle_position = vehicle.get_lon_state(time_step)[0];  
+        distance_from_nearest_tl = -1
         # lanelet_ids_occ = lanelets(x_ego) #TODO lanelets_dir(x_ego)
+
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
-        active_relevant_tls_ids = []
+        lanelet_network = world.road_network.lanelet_network
         for l_id in lanelet_ids_occ:
-            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            lanelet = lanelet_network.find_lanelet_by_id(l_id)
             successors_paths = lanelet.find_lanelet_successors_in_range(
                 world.road_network, max_length=150)
             for successors_path in successors_paths:
                 for successor_id in successors_path:
                     # TODO: how to access traffic_lights of a lanelet
-                    active_relevant_tls_ids.append(set(filter(lambda tl_id: world.road_network.lanelet_network.find_traffic_light_by_id(tl_id).get_state_at_time_step(
-                        time_step) != TrafficLightState.INACTIVE, world.road_network.lanelet_network.find_lanelet_by_id(successor_id).traffic_lights)))
-        if(len(active_relevant_tls_ids) == 0):
-            return -1
-        return rob
-
-        """
-        idea 2:  
-        lanelets_to_tl = calculates_lanelets_away_from_tl(...) #returns -1 if no relevant tl is found
-        return 100/lanelets_to_tl if lanelets_to_tl >= 0 else -1
-        # robustness is larger if tl is nearer, could have chosen any number instead of 100 but whatever
-        """
+                    successor = lanelet_network.find_lanelet_by_id(successor_id)
+                    traffic_lights = successor.traffic_lights
+                    for tl_id in traffic_lights:
+                        tl = lanelet_network.find_traffic_light_by_id(tl_id)
+                        if tl.active:
+                            distance_to_ego = np.sqrt((tl.position[0]-vehicle_position[0])**2 + (tl.position[1]-vehicle_position[1])**2)
+                            if(distance_to_ego <distance_from_nearest_tl or distance_from_nearest_tl==-1):
+                                distance_from_nearest_tl = distance_to_ego;                  
+        return distance_from_nearest_tl
 
 
 class PredHasPriority(BasePredicateEvaluator):
