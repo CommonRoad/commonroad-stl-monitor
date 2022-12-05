@@ -57,17 +57,22 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
 
         """
         rob = -1
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
+        # lanelet_ids_occ = lanelets(x_ego) #TODO lanelets_dir(x_ego)
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        active_relevant_tls_ids = []
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
-            successors = lanelet.find_lanelet_successors_in_range(world.road_network, max_length=150) 
-            for succ in successors:
-                # TODO: how to access traffic_lights of a lanelet
-                active_tls = set(filter(lambda tl: tl.get_state_at_time_step(time_step) != TrafficLightState.INACTIVE, succ.traffic_lights))
-                if(len(active_tls)>0):
-                    rob = 1
-        return self._scale_lat_dist(rob)
+            successors_paths = lanelet.find_lanelet_successors_in_range(
+                world.road_network, max_length=150)
+            for successors_path in successors_paths:
+                for successor_id in successors_path:
+                    # TODO: how to access traffic_lights of a lanelet
+                    active_relevant_tls_ids.append(set(filter(lambda tl_id: world.road_network.lanelet_network.find_traffic_light_by_id(tl_id).get_state_at_time_step(
+                        time_step) != TrafficLightState.INACTIVE, world.road_network.lanelet_network.find_lanelet_by_id(successor_id).traffic_lights)))
+        if(len(active_relevant_tls_ids) == 0):
+            return -1
+        return rob
 
         """
         idea 2:  
@@ -75,9 +80,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         return 100/lanelets_to_tl if lanelets_to_tl >= 0 else -1
         # robustness is larger if tl is nearer, could have chosen any number instead of 100 but whatever
         """
-        
 
-    
 
 class PredHasPriority(BasePredicateEvaluator):
     """
