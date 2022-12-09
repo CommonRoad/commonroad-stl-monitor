@@ -10,11 +10,15 @@ from crmonitor.monitor.rule import IOType, RuleNode
 from rtamt.node.ltl.implies import Implies
 from rtamt.node.ltl.conjunction import Conjunction
 from rtamt.node.ltl.disjunction import Disjunction
+from rtamt.node.stl.timed_historically import TimedHistorically
+from rtamt.node.stl.timed_eventually import TimedEventually
+from rtamt.node.stl.timed_always import TimedAlways
 from rtamt.node.stl.timed_once import TimedOnce
 from rtamt.node.ltl.previous import Previous
 from rtamt.node.ltl.neg import Neg
 from rtamt.node.ltl.predicate import Predicate
 from rtamt.node.unary_node import UnaryNode
+
 
 class OutputType(Enum):
     STANDARD = rtamt.Semantics.STANDARD
@@ -80,15 +84,14 @@ class RtamtStlMonitor:
         self._monitor.top.accept(self._monitor.online_evaluator)
         self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
         self._monitor.reset()
-        self._props = None
+        self._propositions = {}
 
     def reset_monitor(self):
         self._monitor.reset()
-        
 
-    def collect_prop_rob(self,top_node = None, prop_list = None):
+    def collect_prop_rob(self, top_node=None, prop_list=None):
         """ 
-        Collects the propositions (abstractions) recursively to pass them to the monitor wrapper of the repairer.
+        Collects the propositions (abstractions) recursively to pass them to the monitor wrapper.
         If a sub-formula is encapsulated by an LTL/STL indicator, it constitutes a proposition.
         If negations exist, the non-negated formula that follows the negation is considered.
         If a predicate is not encapsulated by an LTL/STL indicator, it constitutes a proposition alone.
@@ -103,17 +106,20 @@ class RtamtStlMonitor:
         if isinstance(top_node, UnaryNode):
             if isinstance(top_node, Neg):
                 self.collect_prop_rob(top_node.children[0], prop_list)
-            if isinstance(top_node, TimedOnce) or isinstance(top_node, Previous):
+            if isinstance(top_node, TimedOnce) or isinstance(top_node, Previous) or isinstance(top_node, TimedAlways) or\
+                    isinstance(top_node, TimedHistorically) or isinstance(top_node, TimedEventually):
                 prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
         elif isinstance(top_node, Predicate):
             prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
         else:
             if isinstance(top_node, Implies):
                 if isinstance(top_node.children[0], Predicate):
-                    prop_list[top_node.children[0].name] = self._monitor.online_evaluator.evaluate(top_node.children[0], [])
+                    prop_list[top_node.children[0].name] = self._monitor.online_evaluator.evaluate(top_node.children[0],
+                                                                                                   [])
                     self.collect_prop_rob(top_node.children[1], prop_list)
                 elif isinstance(top_node.children[1], Predicate):
-                    prop_list[top_node.children[1].name] = self._monitor.online_evaluator.evaluate(top_node.children[1], [])
+                    prop_list[top_node.children[1].name] = self._monitor.online_evaluator.evaluate(top_node.children[1],
+                                                                                                   [])
                     self.collect_prop_rob(top_node.children[0], prop_list)
             if isinstance(top_node, Conjunction) or isinstance(top_node, Disjunction):
                 self.collect_prop_rob(top_node.children[0], prop_list)
@@ -121,11 +127,8 @@ class RtamtStlMonitor:
          
     def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
         time = time_step * self.dt * 1000.0
-        top_node = self._monitor.top
-        prop_list = {}
         rob = self._monitor.update(time, predicates)
-        self.collect_prop_rob(top_node, prop_list)
-        self._props = prop_list
+        self.collect_prop_rob(self._monitor.top, self._propositions)
         return rob
     
     def copy(self):
