@@ -5,10 +5,17 @@ import operator
 from typing import List, Tuple, Set, Dict, Callable
 from shapely.geometry.polygon import Polygon
 import numpy as np
+from commonroad.scenario import lanelet
 
-from commonroad.scenario.lanelet import LaneletType, LineMarking
-
+from commonroad.scenario.lanelet import (
+    LaneletType,
+    LineMarking,
+    Lanelet,
+    LaneletNetwork,
+)
 from ruamel.yaml.comments import CommentedMap
+from typing import Optional
+from commonroad.scenario.intersection import (Intersection, IntersectionIncomingElement)
 
 from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
@@ -23,6 +30,7 @@ from crmonitor.predicates.utils import (
     lanelets_right_of_vehicle,
     vehicle_directly_left,
     vehicle_directly_right,
+    lanelets_left_of_lanelet,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +55,7 @@ class PositionPredicates(str, Enum):
     LeftOf = "left_of"
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
-
+    OnIncomingLeftOf = "on_incoming_left_of"
 
 class PredInSameLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.InSameLane
@@ -104,7 +112,7 @@ class PredInSameLane(BasePredicateEvaluator):
 class PredInFrontOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.InFrontOf
     arity = 2
-
+    
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
@@ -114,6 +122,62 @@ class PredInFrontOf(BasePredicateEvaluator):
             front.rear_s(time_step, rear.get_lane(time_step)) - rear.front_s(time_step)
         )
 
+class PredOnIncomingLeftOf (BasePredicateEvaluator):
+    predicate_name = PositionPredicates.DrivesLeftmost
+    arity = 2
+    
+    def get_incoming(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
+        """Get the incoming element of a lanelet."""
+        intersection = lanelet_network.map_inc_lanelets_to_intersections.get(lanelet.lanelet_id)
+        if intersection is None:
+            return None
+        return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
+    
+    def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
+        incoming = get_incoming(lanelet, lanelet_network)
+        if incoming is None:
+            return set()
+        intersection, incoming = incoming
+        left_incoming = [inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of][0]
+        
+        return left_incoming.incoming_lanelets
+    
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return len() > 0
+    '''get p's lanelets, verify its left. if it's equal to k's
+    lanelet return 1 '''
+    
+    def evaluate_robustness(self, world, time_step, vehicle_ids) -> Set[Lane]:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        lane_p  = world.road_network.find_lanes_by_lanelets(
+            vehicle_p.lanelet_assignment[time_step]
+        ) 
+        lane_k = world.road_network.find_lanes_by_lanelets(
+            vehicle_p.lanelet_assignment[time_step]
+        ) 
+        result = 1 
+        
+        lal_left_of_k = lanelets_left_of_vehicle (time_step, 
+            vehicle_k, world.road_network.lanelet_network)
+        lal_left_of_p = lanelets_left_of_vehicle(time_step, 
+            vehicle_p, world.road_network.lanelet_network)
+        for lalk in lal_left_of_p:
+            for lalp in lal_left_of_k:
+                if (lalp != lalk):
+                    result = 0
+                    break
+
+    
+        '''idea 2 : look for the vehicle left of p, if found return1 '''
+        result = -1 
+        vehicle_left_of_p = vehicle_directly_left(time_step, vehicle_p, [vehicle_k])
+        if (vehicle_left_of_p == 1):
+            result = 1
+            
+        return result
+  
+      
 
 class PredSingleLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.SingleLane
@@ -152,6 +216,7 @@ class PredSingleLane(BasePredicateEvaluator):
         d_left = -np.max(d_left) if d_left.size > 0 else np.inf
         d_right = np.min(d_right) if d_right.size > 0 else np.inf
         rob = np.fmin(d_left, d_right)
+        
         return self._scale_lat_dist(rob)
 
 

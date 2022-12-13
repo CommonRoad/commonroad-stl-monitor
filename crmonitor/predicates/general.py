@@ -23,7 +23,6 @@ class GeneralPredicates(str, Enum):
     InQueueOfVehicles = "in_queue_of_vehicles"
     MakesUTurn = "makes_u_turn"
 
-
 class PredCutIn(BasePredicateEvaluator):
     predicate_name = GeneralPredicates.CutIn
     arity = 2
