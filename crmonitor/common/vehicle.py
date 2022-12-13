@@ -3,6 +3,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Union, Dict, List, Tuple, Optional, Set
+from commonroad.common.util import subtract_orientations
+
 
 import numba
 import numpy as np
@@ -200,6 +202,31 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
+           
+    def lanelets_dir_ids(self, time_step) -> List[int]:
+        """
+        Get the occupied lanelets by the vehicle that are in the same in its same driving direction
+        aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]  
+        """
+        lanelet_ids = self.lanelet_assignment[time_step]
+        vehicle_position = self.get_lon_state[0]    #"s"
+        vehicle_orientation = self.get_lat_state[1] #"theta"
+        
+        def compute_lanelet_relative_orientation(lanelet_id):
+            lanelet = self.find_lanelet_by_id(lanelet_id)   #lanelet object
+            lanelet_orientation = lanelet.orientation_by_position(vehicle_position)   #lanelet_orientation 
+            return np.abs(subtract_orientations(lanelet_orientation, vehicle_orientation))    #return the
+
+        lanelets_in_vehicle_direction = []
+        for lanelet_id in lanelet_ids:
+            if(compute_lanelet_relative_orientation(lanelet_id)<= 45):
+                #considers car and lanelet in same direction if the orientation difference is <= 45 degrees  
+                lanelets_in_vehicle_direction.append(lanelet_id)
+                
+        return lanelets_in_vehicle_direction 
+    
+    
+    
     def rear_s(self, time_step: int, lane: Lane=None) -> float:
         """
         Calculates rear s-coordinate of vehicle

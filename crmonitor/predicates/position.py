@@ -55,7 +55,10 @@ class PositionPredicates(str, Enum):
     LeftOf = "left_of"
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
+    OnLaneletWithType = "on_lanelet_with_type"
     OnIncomingLeftOf = "on_incoming_left_of"
+    OnOncomOf = "on_oncom_of"
+    InIntersectionConflictArea = "in_intersection_conflict_area"
 
 class PredInSameLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.InSameLane
@@ -142,6 +145,7 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
         
         return left_incoming.incoming_lanelets
     
+    #TODO: still not done
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return len() > 0
     '''get p's lanelets, verify its left. if it's equal to k's
