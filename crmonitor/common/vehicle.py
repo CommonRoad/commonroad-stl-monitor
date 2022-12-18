@@ -219,8 +219,8 @@ class Vehicle:
 
         lanelets_in_vehicle_direction = []
         for lanelet_id in lanelet_ids:
-            if(compute_lanelet_relative_orientation(lanelet_id)<= 45):
-                #considers car and lanelet in same direction if the orientation difference is <= 45 degrees  
+            if(compute_lanelet_relative_orientation(lanelet_id)<= np.deg2rad(45)):
+                #considers car and lanelet in same direction if the orientation difference is <= 45 rad  
                 lanelets_in_vehicle_direction.append(lanelet_id)
                 
         return lanelets_in_vehicle_direction 

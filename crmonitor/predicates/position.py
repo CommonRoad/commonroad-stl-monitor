@@ -1019,7 +1019,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        return self._scale_lat_dist(100)
+        return 1.0
     
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
     """

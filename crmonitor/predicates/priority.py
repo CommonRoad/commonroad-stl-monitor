@@ -10,7 +10,6 @@ from commonroad.scenario.traffic_sign import TrafficLight
 
 logger = logging.getLogger(__name__)
 
-
 class PriorityPredicates(str, Enum):
     SamePriority = "same_priority"
     RelevantTrafficLight = "relevant_traffic_light"
@@ -71,6 +70,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                     for tl_id in traffic_lights:
                         tl = lanelet_network.find_traffic_light_by_id(tl_id)
                         if tl.active:
+                            #New idea:
                             stop_line_center = [(successor.stop_line.start[0]+successor.stop_line.end[0])/2 , (successor.stop_line.start[1]+successor.stop_line.end[1])/2 ]           
                             #old idea: distance to the traffic light's position
                             #distance_to_ego = np.sqrt((tl.position[0]-vehicle_position[0])**2 + (tl.position[1]-vehicle_position[1])**2)
