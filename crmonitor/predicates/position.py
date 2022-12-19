@@ -51,6 +51,8 @@ class PositionPredicates(str, Enum):
     OnIncomingLeftOf = "on_incoming_left_of"
     OnOncomOf = "on_oncom_of"
     InIntersectionConflictArea = "in_intersection_conflict_area"
+    SameIncom = "same_incom"
+
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -1052,3 +1054,12 @@ class PredOnOncomOf(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         return self._scale_lat_dist(100)
+    
+class PredSameIncom(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.SameIncom
+    arity = 2
+
+    #def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    #def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+     
