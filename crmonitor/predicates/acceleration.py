@@ -1,7 +1,7 @@
 from enum import Enum
 import logging
 from typing import List
-
+import numpy as np
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 
@@ -49,8 +49,19 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
-    # TODO
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        return self._scale_lat_dist(100)
+        #TODO: Thresholds :
+        d_br = 10
+        a_br = 10
+        rob = 0
+        vehicle_k = vehicle_ids[0]
+        vehicle_p = vehicle_ids[1]
+        rear_k = vehicle_k.rear_s(time_step)
+        front_p = vehicle_p.front_s(time_step)
+        d = rear_k - front_p
+        a = vehicle_p.get_lon_state(time_step).a
+        rob = np.minimum((d - d_br) , (a - a_br))
+        #TODO: does rob need scaling ? 
+        return rob
