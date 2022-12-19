@@ -3,7 +3,7 @@ import math
 from decimal import Decimal
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Union, List, Tuple, Iterable, Sequence
+from typing import Dict, Union, List, Tuple, Iterable, Sequence, Set
 
 import numba
 import numpy as np
@@ -779,3 +779,28 @@ def merge_dicts_recursively(*dicts):
             else:
                 result[k] = v
     return result
+
+
+def reach_pre_ids(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.0) -> Set[int]:
+    """
+    Finds all possible predecessor lanelet IDs within max_length.
+    :param lanelet_network: lanelet network
+    :param max_length: abort once length of path is reached
+    :return: set of lanelet IDs
+    """
+    ids = set(lanelet.predecessor)
+    while ids:
+        ids_next = set()
+        for id in ids:
+            predecessors = lanelet_network.find_lanelet_by_id(id).predecessor
+            if not predecessors:
+                continue
+            for pre in predecessors:
+                if pre in ids or pre == lanelet.lanelet_id:
+                    continue
+
+                length = lanelet_network.find_lanelet_by_id(pre).distance[0]
+                if length < max_length:
+                    ids_next.add(pre)
+        ids = ids_next
+    return ids
