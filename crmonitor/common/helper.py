@@ -816,7 +816,7 @@ def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int
     return left_incoming.incoming_lanelets
 
 
-def reach_pre_ids(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.0) -> Set[int]:
+def reach_pre(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.0) -> Set[int]:
     """
     Finds all possible predecessor lanelet IDs within max_length.
     :param lanelet_network: lanelet network

@@ -203,7 +203,7 @@ class Vehicle:
         self.predicate_cache = predicate_cache or PredicateCache()
 
            
-    def lanelets_dir_ids(self, time_step) -> List[int]:
+    def lanelets_dir(self, time_step) -> List[int]:
         """
         Get the occupied lanelets by the vehicle that are in the same in its same driving direction
         aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]  
