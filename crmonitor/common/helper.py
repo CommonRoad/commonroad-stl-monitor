@@ -839,3 +839,23 @@ def reach_pre_ids(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.
                     ids_next.add(pre)
         ids = ids_next
     return ids
+
+
+
+def get_latest_predecessors_path(lanelet: Lanelet, road_network : LaneletNetwork, predecessors=[] ) -> List[int]:
+    if len(lanelet.predecessor == 1):
+        predecessors.extend(lanelet.predecessor)
+        return get_latest_predecessors_path(road_network.find_lanelet_by_id(lanelet.predecessor[0]), road_network, predecessors)
+    else:
+        return predecessors
+    
+def ref_path_lanelets(vehicle: Vehicle , road_network : LaneletNetwork) -> List[List[int]]:
+    vehicle_position = vehicle.get_lon_state[0]
+    lanelet = road_network.find_lanelet_by_position(vehicle_position)
+    latest_predecessors = get_latest_predecessors_path(lanelet, road_network)
+    successors_paths = lanelet.find_lanelet_successors_in_range( road_network, max_length=150)
+    
+    for path in successors_paths:
+        path[:0] = latest_predecessors
+        
+    return successors_paths
