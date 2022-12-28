@@ -143,41 +143,37 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
         intersection, incoming = incoming
         left_incoming = [inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of][0]
         
-        return left_incoming.incoming_lanelets
+        return left_incoming.incoming_lanelets #returns set of IDs of incoming lanelets
     
     #TODO: still not done
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return len() > 0
-    '''get p's lanelets, verify its left. if it's equal to k's
-    lanelet return 1 '''
+    
+    
+    '''get p's lanelets, verify its left. '''
     
     def evaluate_robustness(self, world, time_step, vehicle_ids) -> Set[Lane]:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        lane_p  = world.road_network.find_lanes_by_lanelets(
-            vehicle_p.lanelet_assignment[time_step]
-        ) 
-        lane_k = world.road_network.find_lanes_by_lanelets(
-            vehicle_p.lanelet_assignment[time_step]
-        ) 
-        result = 1 
-        
-        lal_left_of_k = lanelets_left_of_vehicle (time_step, 
-            vehicle_k, world.road_network.lanelet_network)
-        lal_left_of_p = lanelets_left_of_vehicle(time_step, 
-            vehicle_p, world.road_network.lanelet_network)
-        for lalk in lal_left_of_p:
-            for lalp in lal_left_of_k:
-                if (lalp != lalk):
-                    result = 0
-                    break
 
-    
-        '''idea 2 : look for the vehicle left of p, if found return1 '''
-        result = -1 
-        vehicle_left_of_p = vehicle_directly_left(time_step, vehicle_p, [vehicle_k])
-        if (vehicle_left_of_p == 1):
-            result = 1
+        result = 1 
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir_ids(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir_ids(time_step)
+        
+        
+        for lak in lanelets_dir_ids_of_p:
+            successors_paths_p = lak.find_lanelet_successors_in_range(
+                world.road_network, max_length=150)
+            for lap in lanelets_dir_ids_of_k:
+                successors_paths_k = lanelet.find_lanelet_successors_in_range(
+                world.road_network, max_length=150)
+                for successors_lanelet_of_k in successors_paths_k:
+                    succ_of_lak =inc_la_left_of(successors_lanelet_of_k, world.road_network.lanelet_network)
+                    for successors_lanelet_of_p in successors_paths_p:
+                        for succ_lak in succ_of_lak:
+                            if (successors_lanelet_of_p == succ_lak):
+                                #this is last step: lap included in inc_la_left_of(lak)
+                                
             
         return result
   

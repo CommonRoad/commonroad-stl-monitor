@@ -7,11 +7,11 @@ from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
 import numpy as np
-import ruamel.yaml
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
+from ruamel.yaml import YAML
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
@@ -25,8 +25,7 @@ class OperatingMode(enum.Enum):
     MONITOR = "monitor"
     ROBUSTNESS = "robustness"
 
-def create_ego_vehicle_param(ego_vehicle_param: Dict,
-                             simulation_param: Dict) -> Dict:
+def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
     """
     Update ego vehicle parameters
 
@@ -50,7 +49,7 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict,
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
     if (not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(
-            str(simulation_param.get("dt")))) <= 1e-12):
+            str(dt))) <= 1e-12):
         raise ValueError("Reaction time must be multiple of time step size.")
 
     return ego_vehicle_param
@@ -552,13 +551,8 @@ def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
     :param file_name: name of the yaml file
     """
     file_name = Path(file_name)
-    with file_name.open("r") as stream:
-        try:
-            config = ruamel.yaml.round_trip_load(stream, preserve_quotes=True)
-            return config
-        except ruamel.yaml.YAMLError as exc:
-            print(exc)
-            return None
+    config = YAML().load(file_name)
+    return config
 
 
 def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,

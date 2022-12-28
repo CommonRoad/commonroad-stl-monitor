@@ -8,7 +8,7 @@ import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
 import crmonitor
-from crmonitor.common.helper import load_yaml, merge_dicts_recursively
+from crmonitor.common.helper import load_yaml, merge_dicts_recursively, create_ego_vehicle_param
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
@@ -30,6 +30,15 @@ def get_traffic_rule_config():
     return traffic_rules_config
 
 
+@lru_cache(maxsize=None)
+def get_evaluation_config():
+    with pkg_resources.path(
+        crmonitor, "config.yaml"
+    ) as traffic_rules_path:
+        traffic_rules_config = load_yaml(traffic_rules_path)
+    return traffic_rules_config
+
+
 class RuleEvaluator:
     @classmethod
     def create_from_config(
@@ -44,6 +53,8 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
+        ego_vehicle.vehicle_param = create_ego_vehicle_param(get_evaluation_config().get("ego_vehicle_param"),
+                                                             world.dt)
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(
             rule_set,
@@ -122,6 +133,15 @@ class RuleEvaluator:
         ):
             robustness_values.append(self.update())
         return np.array(robustness_values)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._last_evaluation_time_step + 1 < self._ego_vehicle.end_time + 1:
+            return self.update()
+        else:
+            raise StopIteration
 
     def visualize_predicates(
         self,
