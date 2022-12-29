@@ -998,15 +998,22 @@ class PredOnLaneletWithType(BasePredicateEvaluator):
     """
     predicate_name = PositionPredicates.OnLaneletWithType
     arity = 2
-
+    ty = LaneletType.INTERSECTION #all rules only call this predicate with type intersection.
+    
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
     # TODO
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-        return self._scale_lat_dist(100)
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        #evaluate robustness
+        # returns 1 or -1 
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelets  = vehicle.lanelet_assignment[time_step]
+        for l in lanelets:
+            for type in world.road_network.lanelet_network.find_lanelet_by_id(l).lanelet_type:
+                if type == PredOnLaneletWithType.ty:
+                    return 1.0
+        return -1.0
 
 
 class PredInIntersectionConflictArea(BasePredicateEvaluator):
