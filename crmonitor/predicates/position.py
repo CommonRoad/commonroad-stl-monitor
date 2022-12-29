@@ -1058,6 +1058,11 @@ class PredOnOncomOf(BasePredicateEvaluator):
 class PredSameIncom(BasePredicateEvaluator):
     predicate_name = PositionPredicates.SameIncom
     arity = 2
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        #same_incom
+        # for all lak in reachpre(lk) : 
 
     #def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 

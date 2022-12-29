@@ -859,3 +859,6 @@ def ref_path_lanelets(vehicle: Vehicle , road_network : LaneletNetwork) -> List[
         path[:0] = latest_predecessors
         
     return successors_paths
+
+def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork) -> bool: 
+    return get_incoming(lanelet_k, lanelet_network) == get_incoming(lanelet_p, lanelet_network)

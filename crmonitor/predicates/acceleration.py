@@ -52,7 +52,7 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        #TODO: Thresholds :
+        #TODO: Thresholds : yaml file ? 
         d_br = 10
         a_br = 10
         rob = 0
