@@ -4,13 +4,14 @@ from decimal import Decimal
 from functools import reduce
 from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence, Set, Optional
+from itertools import chain
 
 import numba
 import numpy as np
 import ruamel.yaml
 from commonroad.scenario.intersection import IntersectionIncomingElement
 # TODO IntersectionIncomingElement
-from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection
+from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
@@ -862,3 +863,16 @@ def ref_path_lanelets(vehicle: Vehicle , road_network : LaneletNetwork) -> List[
 
 def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork) -> bool: 
     return get_incoming(lanelet_k, lanelet_network) == get_incoming(lanelet_p, lanelet_network)
+
+def get_stop_line_from_incoming(incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork) -> StopLine:
+    #get the incoming lanelets as Set[int]
+    lanelets = incoming.incoming_lanelets 
+    #declare a variable successor
+    successor : Lanelet = None
+    #iterate over the set, if successor is not a successor of current lanelet, make current lanelet the new successor.
+    for lanelet in lanelets:
+        current_successors = set(list(chain(*successor.find_lanelet_successors_in_range( lanelet_network, max_length=150))))
+        if successor == None or lanelet in current_successors:
+            successor = lanelet
+    #return stop line of the successor
+    return successor.stop_line

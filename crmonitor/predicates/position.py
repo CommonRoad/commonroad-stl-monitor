@@ -1061,6 +1061,8 @@ class PredSameIncom(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+        #TODO
+        return 1.0
         #same_incom
         # for all lak in reachpre(lk) : 
 
