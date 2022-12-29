@@ -843,18 +843,18 @@ def reach_pre(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.0) -
 
 
 
-def get_latest_predecessors_path(lanelet: Lanelet, road_network : LaneletNetwork, predecessors=[] ) -> List[int]:
+def get_latest_predecessors_path(lanelet: Lanelet, lanelet_network : LaneletNetwork, predecessors=[] ) -> List[int]:
     if len(lanelet.predecessor == 1):
         predecessors.extend(lanelet.predecessor)
-        return get_latest_predecessors_path(road_network.find_lanelet_by_id(lanelet.predecessor[0]), road_network, predecessors)
+        return get_latest_predecessors_path(lanelet_network.find_lanelet_by_id(lanelet.predecessor[0]), lanelet_network, predecessors)
     else:
         return predecessors
     
-def ref_path_lanelets(vehicle: Vehicle , road_network : LaneletNetwork) -> List[List[int]]:
+def ref_path_lanelets(vehicle: Vehicle , lanelet_network : LaneletNetwork) -> List[List[int]]:
     vehicle_position = vehicle.get_lon_state[0]
-    lanelet = road_network.find_lanelet_by_position(vehicle_position)
-    latest_predecessors = get_latest_predecessors_path(lanelet, road_network)
-    successors_paths = lanelet.find_lanelet_successors_in_range( road_network, max_length=150)
+    lanelet = lanelet_network.find_lanelet_by_position(vehicle_position)
+    latest_predecessors = get_latest_predecessors_path(lanelet, lanelet_network)
+    successors_paths = lanelet.find_lanelet_successors_in_range( lanelet_network, max_length=150)
     
     for path in successors_paths:
         path[:0] = latest_predecessors
@@ -876,3 +876,14 @@ def get_stop_line_from_incoming(incoming : IntersectionIncomingElement, lanelet_
             successor = lanelet
     #return stop line of the successor
     return successor.stop_line
+
+def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_step) -> float:
+    #TODO: find a better way to calculate the distance
+	"""
+	calculates the euclidean distance from a vehicle position to the center point of a stop line
+	"""
+	vehicle_position = vehicle.get_lon_state(time_step)[0]
+	stop_line_center = [(stop_line.start[0]+stop_line.end[0])/2 , (stop_line.start[1]+stop_line.end[1])/2 ]           
+	#second idea: distance from vehicle to the center point of the stop line.
+	distance = np.sqrt((stop_line_center[0]-vehicle_position[0])**2 + (stop_line_center[1]-vehicle_position[1])**2)
+                       
