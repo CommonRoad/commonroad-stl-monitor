@@ -1029,7 +1029,6 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
 
     # TODO
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        # TODO: fix lanelet VS lanelet_ids for this predicate
         b = -1  # boolean evaluation
 
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
@@ -1069,17 +1068,10 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         incoming_p = helper.get_incoming(
             first_lanelet_dir_p_obj, world.road_network.lanelet_network)
 
-        #	- find the stop line associated with this incoming
-        #		potentially pass vehicles as arguments and change get_stop_line_from_incoming accordingly, wait for yuanfei's answer.
-        stop_line_k = helper.get_stop_line_from_incoming(
-            incoming_k, world.road_network.lanelet_network)
-        stop_line_p = helper.get_stop_line_from_incoming(
-            incoming_p, world.road_network.lanelet_network)
-
-        #	- calculate the distance between the car and the stop line
-        d1 = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
-        d2 = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
-
+        #	- find the stop line associated with this incoming, return the closest stop line to each vehicle along with the distance between the vehicle and the sl
+        stop_line_k, d1 = helper.get_stop_line_from_incoming(vehicle_k, incoming_k, world.road_network.lanelet_network, time_step)
+        stop_line_p, d2 = helper.get_stop_line_from_incoming(vehicle_p, incoming_p, world.road_network.lanelet_network, time_step)
+        
         # 2. rob = max(d1 + d2) * b
         rob = np.maximum(d1, d2) * b
         return rob

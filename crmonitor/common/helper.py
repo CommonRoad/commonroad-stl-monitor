@@ -864,7 +864,7 @@ def ref_path_lanelets(vehicle: Vehicle , lanelet_network : LaneletNetwork) -> Li
 def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork) -> bool: 
     return get_incoming(lanelet_k, lanelet_network) == get_incoming(lanelet_p, lanelet_network)
 
-def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork, time_step) -> StopLine:
+def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork, time_step):
     """
     finds all stop lines in an intersection incoming element, and returns the stop line that is closest to the passed vehicle
     """
@@ -880,7 +880,7 @@ def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomin
             stop_lines.add(lanelet_obj.stop_line)
             if min_distance == -1.0 or distance_vehicle_to_stop_line(vehicle, lanelet_obj.stop_line, time_step) < min_distance:
                 closest_stop_line = lanelet_obj.stop_line
-    return closest_stop_line
+    return (closest_stop_line , min_distance)
 
 
 def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_step) -> float:
