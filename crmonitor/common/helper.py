@@ -887,3 +887,10 @@ def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_s
 	#second idea: distance from vehicle to the center point of the stop line.
 	distance = np.sqrt((stop_line_center[0]-vehicle_position[0])**2 + (stop_line_center[1]-vehicle_position[1])**2)
                        
+def oncom(lanelet: Lanelet) -> Set[int] : 
+    #TODO
+    return []
+
+def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle ) -> float : 
+    #TODO
+    return 0.0
