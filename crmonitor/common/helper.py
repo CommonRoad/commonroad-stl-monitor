@@ -897,6 +897,8 @@ def oncom(lanelet: Lanelet) -> Set[int] :
     #TODO
     return []
 
-def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle ) -> float : 
-    #TODO
-    return 0.0
+def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
+    #TODO: Find a better way to calculate the distance_between_vehicles.
+    p1 = vehicle_k.get_lon_state(time_step)[0]
+    p2 = vehicle_p.get_lon_state(time_step)[0]
+    return np.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)

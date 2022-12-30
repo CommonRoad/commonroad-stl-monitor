@@ -1133,7 +1133,7 @@ class PredOnOncomOf(BasePredicateEvaluator):
                         b = 1
                         break
         # at this point we have the boolean evaluation. we can now calculate the robustness.
-        d = helper.distance_between_vehicles(vehicle_k, vehicle_p)
+        d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         return b * d
 
 
