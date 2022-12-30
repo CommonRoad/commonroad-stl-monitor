@@ -864,18 +864,24 @@ def ref_path_lanelets(vehicle: Vehicle , lanelet_network : LaneletNetwork) -> Li
 def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork) -> bool: 
     return get_incoming(lanelet_k, lanelet_network) == get_incoming(lanelet_p, lanelet_network)
 
-def get_stop_line_from_incoming(incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork) -> StopLine:
+def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork, time_step) -> StopLine:
+    """
+    finds all stop lines in an intersection incoming element, and returns the stop line that is closest to the passed vehicle
+    """
     #get the incoming lanelets as Set[int]
     lanelets = incoming.incoming_lanelets 
-    #declare a variable successor
-    successor : Lanelet = None
-    #iterate over the set, if successor is not a successor of current lanelet, make current lanelet the new successor.
+    stop_lines = set()
+    closest_stop_line = None
+    min_distance = -1.0
+    
     for lanelet in lanelets:
-        current_successors = set(list(chain(*successor.find_lanelet_successors_in_range( lanelet_network, max_length=150))))
-        if successor == None or lanelet in current_successors:
-            successor = lanelet
-    #return stop line of the successor
-    return successor.stop_line
+        lanelet_obj =  lanelet_network.find_lanelet_by_id(lanelet)
+        if lanelet_obj.stop_line != None:
+            stop_lines.add(lanelet_obj.stop_line)
+            if min_distance == -1.0 or distance_vehicle_to_stop_line(vehicle, lanelet_obj.stop_line, time_step) < min_distance:
+                closest_stop_line = lanelet_obj.stop_line
+    return closest_stop_line
+
 
 def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_step) -> float:
     #TODO: find a better way to calculate the distance
