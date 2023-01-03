@@ -817,7 +817,7 @@ def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int
     return left_incoming.incoming_lanelets
 
 
-def reach_pre(lanelet: Lanelet, lanelet_network: RoadNetwork, max_length=50.0) -> Set[int]:
+def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork, max_length=50.0) -> Set[int]:
     """
     Finds all possible predecessor lanelet IDs within max_length.
     :param lanelet_network: lanelet network
@@ -892,11 +892,29 @@ def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_s
 	stop_line_center = [(stop_line.start[0]+stop_line.end[0])/2 , (stop_line.start[1]+stop_line.end[1])/2 ]           
 	#second idea: distance from vehicle to the center point of the stop line.
 	distance = np.sqrt((stop_line_center[0]-vehicle_position[0])**2 + (stop_line_center[1]-vehicle_position[1])**2)
+ 
+def lanelets_same_direction(lanelet1: Lanelet, lanelet2: Lanelet) -> bool:
+     #TODO
+     return True
                        
-def oncom(lanelet: Lanelet) -> Set[int] : 
-    #TODO
-    return []
-
+def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int] : 
+    opposite_adjacent = incoming
+    
+    # iterate over left adjacent lanelets, until a left adjacent lanelet with opposite direction is found. 
+    while opposite_adjacent.adj_left_same_direction is not None:
+        found_opposite = opposite_adjacent.adj_left_same_direction is False 
+        opposite_adjacent = lanelet_network.find_lanelet_by_id(opposite_adjacent.adj_left)
+        if found_opposite:
+            break
+    
+    # take the predecessors of this opposite adjacent, and remove the opposite adjacent itself 
+    predecessors = reach_pre(opposite_adjacent, lanelet_network, max_length=50)         
+    predecessors.remove(opposite_adjacent)
+    
+    # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets 
+    return list(filter(lambda lanelet: lanelets_same_direction(lanelet, opposite_adjacent), predecessors))
+    
+    
 def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
     #TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = vehicle_k.get_lon_state(time_step)[0]
