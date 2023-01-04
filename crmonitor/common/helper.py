@@ -909,10 +909,10 @@ def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int] :
     
     # take the predecessors of this opposite adjacent, and remove the opposite adjacent itself 
     predecessors = reach_pre(opposite_adjacent, lanelet_network, max_length=50)         
-    predecessors.remove(opposite_adjacent)
+    predecessors.remove(opposite_adjacent.lanelet_id)
     
     # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets 
-    return list(filter(lambda lanelet: lanelets_same_direction(lanelet, opposite_adjacent), predecessors))
+    return list(filter(lambda lanelet_id: lanelets_same_direction(lanelet_network.find_lanelet_by_id(lanelet_id), opposite_adjacent), predecessors))
     
     
 def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
