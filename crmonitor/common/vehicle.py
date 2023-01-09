@@ -203,7 +203,7 @@ class Vehicle:
         self.predicate_cache = predicate_cache or PredicateCache()
 
            
-    def lanelets_dir_ids(self, time_step) -> List[int]:
+    def lanelets_dir(self, time_step) -> List[int]:
         """
         Get the occupied lanelets by the vehicle that are in the same in its same driving direction
         aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]  
@@ -219,8 +219,8 @@ class Vehicle:
 
         lanelets_in_vehicle_direction = []
         for lanelet_id in lanelet_ids:
-            if(compute_lanelet_relative_orientation(lanelet_id)<= 45):
-                #considers car and lanelet in same direction if the orientation difference is <= 45 degrees  
+            if(compute_lanelet_relative_orientation(lanelet_id)<= np.deg2rad(45)):
+                #considers car and lanelet in same direction if the orientation difference is <= 45 rad  
                 lanelets_in_vehicle_direction.append(lanelet_id)
                 
         return lanelets_in_vehicle_direction 
