@@ -123,13 +123,12 @@ class RuleEvaluator:
                 other_id = self._eval_visitor.other_ids[-1]
                 props = self._monitor.monitor._propositions
                 quant_nodes = [node for node in self._monitor.children if hasattr(node, 'monitors')]
-                for quant_node in quant_nodes:
-                    for key in [key for key in props.keys() if quant_node.name in key]:
-                        props.pop(key)
-                    props.update(quant_node.monitors[other_id].monitor._propositions)
+                #for quant_node in quant_nodes:
+                #    for key in [key for key in props.keys() if quant_node.name in key]:
+                #        props.pop(key)
+                #    props.update(quant_node.monitors[other_id].monitor._props)
             else:
-                props = self._monitor.monitor._propositions
-                
+                props = self._monitor.monitor._props
         return props, other_id, self._last_evaluation_time_step
 
     def update(self):
