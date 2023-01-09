@@ -5,21 +5,10 @@ import operator
 from typing import List, Tuple, Set, Dict, Callable
 from shapely.geometry.polygon import Polygon
 import numpy as np
-<<<<<<< HEAD
-from commonroad.scenario import lanelet
-
-from commonroad.scenario.lanelet import (
-    LaneletType,
-    LineMarking,
-    Lanelet,
-    LaneletNetwork,
-)
-=======
 from crmonitor.common import helper
 
 from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
 
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from commonroad.scenario.intersection import (Intersection, IntersectionIncomingElement)
@@ -136,7 +125,7 @@ class PredInFrontOf(BasePredicateEvaluator):
 class PredOnIncomingLeftOf (BasePredicateEvaluator):
     predicate_name = PositionPredicates.DrivesLeftmost
     arity = 2
-    
+    #TODO: get_incoming and inc la left of should be deleted from here
     def get_incoming(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
         """Get the incoming element of a lanelet."""
         intersection = lanelet_network.map_inc_lanelets_to_intersections.get(lanelet.lanelet_id)
@@ -201,9 +190,7 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
         distance_to_endline_from_p = np.sqrt((stop_line_center[0]-vehicle_p_position[0])**2 + (stop_line_center[1]-vehicle_p_position[1])**2)
         
         return (distance_to_endline_from_p + distance_to_endline_from_k) / 2 
-        
-  
-      
+              
 
 class PredSingleLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.SingleLane
@@ -1075,8 +1062,6 @@ class PredDrivesRightmost(BasePredicateEvaluator):
                     )
                 )
             return min(comparison_list)
-<<<<<<< HEAD
-=======
 
 
 class PredOnLaneletWithType(BasePredicateEvaluator):
@@ -1239,4 +1224,3 @@ class PredSameIncom(BasePredicateEvaluator):
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
     # def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
