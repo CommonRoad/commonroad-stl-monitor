@@ -145,18 +145,11 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
         
         return left_incoming.incoming_lanelets #returns set of IDs of incoming lanelets
     
-    #TODO: still not done
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return len() > 0
-    
-    
-    '''get p's lanelets, verify its left. '''
-    
-    def evaluate_robustness(self, world, time_step, vehicle_ids) -> Set[Lane]:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        result = 1 
+        result = -1 
         lanelets_dir_ids_of_p = vehicle_p.lanelets_dir_ids(time_step)
         lanelets_dir_ids_of_k = vehicle_k.lanelets_dir_ids(time_step)
         
@@ -168,14 +161,39 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
                 successors_paths_k = lanelet.find_lanelet_successors_in_range(
                 world.road_network, max_length=150)
                 for successors_lanelet_of_k in successors_paths_k:
-                    succ_of_lak =inc_la_left_of(successors_lanelet_of_k, world.road_network.lanelet_network)
+                    succ_of_lak = inc_la_left_of(successors_lanelet_of_k, world.road_network.lanelet_network)
                     for successors_lanelet_of_p in successors_paths_p:
                         for succ_lak in succ_of_lak:
                             if (successors_lanelet_of_p == succ_lak):
-                                #this is last step: lap included in inc_la_left_of(lak)
-                                
-            
+                                result = 1
         return result
+    
+    
+    '''get p's lanelets, verify its left. '''
+    
+    def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        
+        incoming = inc_la_left_of(lanelet, world.road_network.lanelet_network)                               
+        
+        #max_value will store the last lanelet
+        max_value = incoming.pop()
+        #for element in incoming:
+           # if element in lanelet.successor(max_value):
+            #    max_value = element
+        #here the function of mehdi will be called twice on the two cars
+        
+        vehicle_k_position = vehicle_k.get_lon_state(time_step)[0]
+        vehicle_p_position = vehicle_p.get_lon_state(time_step)[1]
+        
+        stop_line_center = [(max_value.stop_line.start[0]+ max_value.stop_line.end[0])/2 , (max_value.stop_line.start[1]+max_value.stop_line.end[1])/2 ]           
+        
+        distance_to_endline_from_k = np.sqrt((stop_line_center[0]-vehicle_k_position[0])**2 + (stop_line_center[1]-vehicle_k_position[1])**2)
+        distance_to_endline_from_p = np.sqrt((stop_line_center[0]-vehicle_p_position[0])**2 + (stop_line_center[1]-vehicle_p_position[1])**2)
+        
+        return (distance_to_endline_from_p + distance_to_endline_from_k) / 2 
+        
   
       
 
