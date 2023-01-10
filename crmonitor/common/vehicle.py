@@ -208,6 +208,8 @@ class Vehicle:
         :returns rear s-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
+        if lane is None:
+            return None
         curvi_state = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         if curvi_state is None:
             return None
