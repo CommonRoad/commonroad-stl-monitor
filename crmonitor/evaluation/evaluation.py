@@ -113,7 +113,6 @@ class RuleEvaluator:
         other_id (int): The vehicle against which the values were obtained. Ego if the rule concerns the ego vehicle.
         time (int): Timestep at which the values were obtained.
         """
-        
         other_id = self._eval_visitor.other_ids[-1] if self._eval_visitor.other_ids is not () else self._ego_vehicle.id
         if hasattr(self._monitor, 'monitors'):
             other_id = self._eval_visitor.other_ids[-1]
@@ -128,7 +127,7 @@ class RuleEvaluator:
                 #        props.pop(key)
                 #    props.update(quant_node.monitors[other_id].monitor._props)
             else:
-                props = self._monitor.monitor._props
+                props = self._monitor.monitor._propositions
         return props, other_id, self._last_evaluation_time_step
 
     def update(self):
