@@ -7,7 +7,7 @@ from shapely.geometry.polygon import Polygon
 import numpy as np
 from crmonitor.common import helper
 
-from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
+from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
 
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional

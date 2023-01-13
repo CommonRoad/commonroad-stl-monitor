@@ -8,23 +8,18 @@ from itertools import chain
 
 import numba
 import numpy as np
-<<<<<<< HEAD
-from commonroad.scenario.lanelet import Lanelet, LaneletType
-=======
-import ruamel.yaml
-from commonroad.scenario.intersection import IntersectionIncomingElement
-# TODO IntersectionIncomingElement
+
 from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
+from commonroad.scenario.intersection import IntersectionIncomingElement
+
 from ruamel.yaml import YAML
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
-# TODO fix the import errors.
 from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle
 
@@ -34,13 +29,7 @@ class OperatingMode(enum.Enum):
     MONITOR = "monitor"
     ROBUSTNESS = "robustness"
 
-<<<<<<< HEAD
 def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
-=======
-
-def create_ego_vehicle_param(ego_vehicle_param: Dict,
-                             simulation_param: Dict) -> Dict:
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
     """
     Update ego vehicle parameters
 
@@ -85,7 +74,7 @@ def create_other_vehicles_param(other_vehicles_param: Dict) -> Dict:
         other_vehicles_param["dynamics_param"] = parameters_vehicle3()
     else:
         raise ValueError(
-            "Wrong vehicle number for leading vehicle in config file defined.")
+                "Wrong vehicle number for leading vehicle in config file defined.")
 
     return other_vehicles_param
 
@@ -119,7 +108,7 @@ def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
     emergency_profile = ego_vehicle_param.get("emergency_profile")
     (a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance,
      t_react, v_max, v_min,) = init_v_max_calculation(a_min, ego_vehicle_param,
-                                                      emergency_profile, simulation_param, v_ego)
+            emergency_profile, simulation_param, v_ego)
     while (dist_offset <= 0 or dist_offset >= 0.5 and not (
             v_max == ego_vehicle_param.get(
             "dynamics_param").longitudinal.v_max and dist_offset > 0.5)):
@@ -134,8 +123,8 @@ def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
         if v_max < v_min:
             v_max = v_min
         stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt,
-                                                  t_react, a_min, a_max, j_max, v_min, v_max, a_corr,
-                                                  emergency_profile, )
+                t_react, a_min, a_max, j_max, v_min, v_max, a_corr,
+                emergency_profile, )
         dist_offset = (ego_vehicle_param.get(
             "fov") - stopping_distance - ego_vehicle_param.get(
             "const_dist_offset"))
@@ -144,7 +133,7 @@ def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
 
 
 def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict,
-                       traffic_rule_param: Dict) -> int:
+        traffic_rule_param: Dict) -> int:
     """
     Calculates braking based maximum allowed velocity rounded to next lower integer value
 
@@ -154,14 +143,14 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict,
     :returns maximum allowed velocity
     """
     v_max_delta = ego_vehicle_param.get(
-        "dynamics_param").longitudinal.v_max - traffic_rule_param.get(
+            "dynamics_param").longitudinal.v_max - traffic_rule_param.get(
         "max_velocity_limit_free_driving")
     v_ego = v_max_delta
     a_min = traffic_rule_param.get("a_abrupt")
     emergency_profile = 2500 * [traffic_rule_param.get("j_abrupt")]
     (a_corr, a_ego, a_max, dist_offset, dt, j_max, s_ego, stopping_distance,
      t_react, v_max, v_min,) = init_v_max_calculation(a_min, ego_vehicle_param,
-                                                      emergency_profile, simulation_param, v_ego)
+            emergency_profile, simulation_param, v_ego)
     while (dist_offset <= 0 or dist_offset >= 0.5 and not (
             v_max == v_max_delta and dist_offset > 0.5)):
         if ego_vehicle_param.get("fov") - stopping_distance < 0:
@@ -173,8 +162,8 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict,
         if v_max < v_min:
             v_max = v_min
         stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt,
-                                                  t_react, a_min, a_max, j_max, v_min, v_max, a_corr,
-                                                  emergency_profile, )
+                t_react, a_min, a_max, j_max, v_min, v_max, a_corr,
+                emergency_profile, )
         dist_offset = (ego_vehicle_param.get(
             "fov") - stopping_distance - ego_vehicle_param.get(
             "const_dist_offset"))
@@ -184,7 +173,7 @@ def calc_v_max_braking(ego_vehicle_param: Dict, simulation_param: Dict,
 
 
 def init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile,
-                           simulation_param, v_ego):
+        simulation_param, v_ego):
     """
     Helper function to initialize values for calculation of maximum velocity based on field of view and braking
 
@@ -206,7 +195,7 @@ def init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile,
     v_min = ego_vehicle_param.get("v_min")
     v_max = ego_vehicle_param.get("dynamics_param").longitudinal.v_max
     stopping_distance = emg_stopping_distance(s_ego, v_ego, a_ego, dt, t_react,
-                                              a_min, a_max, j_max, v_min, v_max, a_corr, emergency_profile, )
+            a_min, a_max, j_max, v_min, v_max, a_corr, emergency_profile, )
     dist_offset = (ego_vehicle_param.get(
         "fov") - stopping_distance - ego_vehicle_param.get("const_dist_offset"))
 
@@ -215,8 +204,8 @@ def init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile,
 
 
 def emg_stopping_distance(s: float, v: float, a: float, dt: float,
-                          t_react: float, a_min: float, a_max: float, j_max: float, v_min: float,
-                          v_max: float, a_corr: float, emergency_profile: List[float], ) -> float:
+        t_react: float, a_min: float, a_max: float, j_max: float, v_min: float,
+        v_max: float, a_corr: float, emergency_profile: List[float], ) -> float:
     """
     Calculates stopping distance of a vehicle which applies predefined emergency jerk profile
      and considering reaction time
@@ -251,15 +240,15 @@ def emg_stopping_distance(s: float, v: float, a: float, dt: float,
         if v == v_max:
             a = 0
         s, v, a = vehicle_dynamics_jerk(s, v, a, emergency_profile[index],
-                                        v_min, v_max, a_min, a_max, dt)
+                v_min, v_max, a_min, a_max, dt)
         index = index + 1
 
     return s
 
 
 def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float,
-                          v_min: float, v_max: float, a_min: float, a_max: float, dt: float, ) -> \
-        Tuple[float, float, float]:
+        v_min: float, v_max: float, a_min: float, a_max: float, dt: float, ) -> \
+Tuple[float, float, float]:
     """
     Applying vehicle dynamics for one times step with jerk as input
 
@@ -310,7 +299,7 @@ def vehicle_dynamics_jerk(s_0: float, v_0: float, a_0: float, j_input: float,
         a_new = 0
 
     s_new = s_0 + v_0 * t_v + 0.5 * a_0 * t_a ** 2 + (
-        1 / 6) * j_input * t_a ** 3
+                1 / 6) * j_input * t_a ** 3
 
     return s_new, v_new, a_new
 
@@ -332,7 +321,6 @@ def calculate_tv(a_0, j_input, v_0, v_max):
 
     return t_v
 
-
 def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_network: RoadNetwork):
     lanelets = obs.initial_shape_lanelet_ids
     lanes = road_network.find_lanes_by_lanelets(lanelets)
@@ -350,8 +338,8 @@ def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_netwo
 
 
 def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
-                   road_network: RoadNetwork, dt: float,
-                   ego_vehicle: Vehicle = None, create_robust_lanelet_assignment=False) -> Vehicle:
+        road_network: RoadNetwork, dt: float,
+        ego_vehicle: Vehicle = None, create_robust_lanelet_assignment=False) -> Vehicle:
     """
     Transforms a CommonRoad obstacle to a vehicle object
 
@@ -363,21 +351,21 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
     :return: vehicle object
     """
     acceleration = _compute_acceleration(obstacle.initial_state.velocity,
-                                         obstacle.prediction.trajectory.state_list[0].velocity, dt, )
+            obstacle.prediction.trajectory.state_list[0].velocity, dt, )
     jerk = _compute_jerk(acceleration, 0, dt)
     if ego_vehicle is None:
         initial_lanelets = [
-            road_network.lanelet_network.find_lanelet_by_id(lanelet_id) for
-            lanelet_id in obstacle.initial_shape_lanelet_ids]
+                road_network.lanelet_network.find_lanelet_by_id(lanelet_id) for
+                lanelet_id in obstacle.initial_shape_lanelet_ids]
         if LaneletType.ACCESS_RAMP in initial_lanelets[0].lanelet_type:
             main_carriage_way_lanelet_id = _find_main_carriage_way_lanelet_id(
-                initial_lanelets[0], road_network)
+                    initial_lanelets[0], road_network)
             lane = road_network.find_lane_by_obstacle(
-                [main_carriage_way_lanelet_id], [])
+                    [main_carriage_way_lanelet_id], [])
         else:
             lane = road_network.find_lane_by_obstacle(
-                list(obstacle.initial_center_lanelet_ids),
-                list(obstacle.initial_shape_lanelet_ids), )
+                    list(obstacle.initial_center_lanelet_ids),
+                    list(obstacle.initial_shape_lanelet_ids), )
         reference_lane = lane
     else:
         lane = road_network.find_lane_by_obstacle(
@@ -386,9 +374,9 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         reference_lane = ego_vehicle.lane
 
     state_lon, state_lat = create_curvilinear_states(
-        obstacle.initial_state.position, obstacle.initial_state.velocity,
-        acceleration, jerk, obstacle.initial_state.orientation,
-        reference_lane, )
+            obstacle.initial_state.position, obstacle.initial_state.velocity,
+            acceleration, jerk, obstacle.initial_state.orientation,
+            reference_lane, )
 
     initial_time_step = obstacle.initial_state.time_step
     state_list_lon = {initial_time_step: state_lon}
@@ -396,10 +384,9 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
     state_list_cr = {initial_time_step: obstacle.initial_state}
     signal_series = {initial_time_step: obstacle.initial_signal_state}
     lanelet_assignments = {
-        initial_time_step: obstacle.initial_shape_lanelet_ids}
+            initial_time_step: obstacle.initial_shape_lanelet_ids}
     if create_robust_lanelet_assignment:
-        robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(
-            obstacle.initial_state, obstacle, road_network)}
+        robust_lanelet_assginment = {initial_time_step: get_robust_lanelet_assignment(obstacle.initial_state, obstacle, road_network)}
     else:
         robust_lanelet_assignment = None
     for state in obstacle.prediction.trajectory.state_list:
@@ -409,23 +396,22 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
         else:  # previous state out of projection domain
             previous_acceleration = 0.0
         jerk = _compute_jerk(acceleration, previous_acceleration,
-                             dt)  # TODO: why calculating jerk without previous acceleration?
+                dt)  # TODO: why calculating jerk without previous acceleration?
 
         state_lon, state_lat = create_curvilinear_states(state.position,
-                                                         state.velocity, acceleration, jerk, state.orientation,
-                                                         reference_lane, )
+                state.velocity, acceleration, jerk, state.orientation,
+                reference_lane, )
         if state_lon is None or state_lat is None:
             break
         state_list_lon[state.time_step] = state_lon
         state_list_lat[state.time_step] = state_lat
         state_list_cr[state.time_step] = state
         signal_series[state.time_step] = obstacle.signal_state_at_time_step(
-            state.time_step)
+                state.time_step)
         lanelet_assignments[state.time_step] = \
-            obstacle.prediction.shape_lanelet_assignment[state.time_step]
+        obstacle.prediction.shape_lanelet_assignment[state.time_step]
         if create_robust_lanelet_assignment:
-            robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(
-                state, obstacle, road_network)
+            robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(state, obstacle, road_network)
 
     vehicle = Vehicle(state_list_lon, state_list_lat, obstacle.obstacle_shape, state_list_cr, obstacle.obstacle_id,
                       obstacle.obstacle_type, vehicle_param, lanelet_assignments, signal_series, lane,
@@ -434,7 +420,7 @@ def create_vehicle(obstacle: DynamicObstacle, vehicle_param: Dict,
 
 
 def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int,
-                     road_network: RoadNetwork) -> bool:
+        road_network: RoadNetwork) -> bool:
     """
     Evaluates if a vehicle is in a to the ego vehicle adjacent lane
 
@@ -450,12 +436,12 @@ def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int,
     while (
             current_lanelet.adj_left_same_direction is not None and current_lanelet.adj_left_same_direction is True):
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_left)
+                current_lanelet.adj_left)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     while (
             current_lanelet.adj_right_same_direction is not None and current_lanelet.adj_right_same_direction is True):
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_right)
+                current_lanelet.adj_right)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     for lanelet_id in list(adjacent_lanelet_ids):
         lane = road_network.find_lane_by_lanelet(lanelet_id)
@@ -476,13 +462,13 @@ def _find_main_carriage_way_lanelet_id(lanelet: Lanelet, road_network) -> int:
         return current_lanelet.lanelet_id
     while current_lanelet.adj_left_same_direction is not None:
         current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_left)
+                current_lanelet.adj_left)
         if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
             return current_lanelet.lanelet_id
 
 
 def _compute_jerk(current_acceleration: float, previous_acceleration: float,
-                  dt: float) -> float:
+        dt: float) -> float:
     """
     Computes jerk given acceleration
 
@@ -510,10 +496,10 @@ def _compute_acceleration(previous_velocity: float, current_velocity: float,
 
 
 def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
-                             ego_vehicle_param: Dict, other_vehicles_param: Dict,
-                             road_network: RoadNetwork,
-                             dynamic_obstacles: List[DynamicObstacle],
-                             obstacle_vehicle_curvi_states_dict: Union[Dict, None] = None) -> Tuple[Vehicle, List[Vehicle]]:
+        ego_vehicle_param: Dict, other_vehicles_param: Dict,
+        road_network: RoadNetwork,
+        dynamic_obstacles: List[DynamicObstacle],
+        obstacle_vehicle_curvi_states_dict: Union[Dict, None] = None) -> Tuple[Vehicle, List[Vehicle]]:
     """
     Creates vehicles object for all obstacles within a CommonRoad scenario given
 
@@ -550,8 +536,7 @@ def create_scenario_vehicles(dt: float, ego_obstacle: DynamicObstacle,
             signal_series = {initial_time_step: obs.initial_signal_state}
             for state in obs.prediction.trajectory.state_list:
                 state_list_cr[state.time_step] = state
-                signal_series[state.time_step] = obs.signal_state_at_time_step(
-                    state.time_step)
+                signal_series[state.time_step] = obs.signal_state_at_time_step(state.time_step)
                 lanelet_assignments[state.time_step] = obs.prediction.shape_lanelet_assignment[state.time_step]
             lane = road_network.find_lane_by_obstacle(list(obs.initial_center_lanelet_ids),
                                                       list(obs.initial_shape_lanelet_ids))
@@ -575,7 +560,7 @@ def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
 
 
 def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
-                   reference_lane: Lane, vehicle: Vehicle, ) -> Vehicle:
+        reference_lane: Lane, vehicle: Vehicle, ) -> Vehicle:
     """
     Append state to Vehicle according to current CommonRoad Obstacle State
     :param obstacle: CommonRoad Obstacle which contains TrajectoryPrediction
@@ -618,22 +603,22 @@ def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
     # compute jerk from current and previous acceleration
     jerk = _compute_jerk(acceleration, previous_a, dt)
     state_lon, state_lat = create_curvilinear_states(obstacle_state.position,
-                                                     obstacle_state.velocity, acceleration, jerk,
-                                                     obstacle_state.orientation, reference_lane, )
+            obstacle_state.velocity, acceleration, jerk,
+            obstacle_state.orientation, reference_lane, )
     if state_lon is None or state_lat is None:  # out of projection
         return vehicle
     else:
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment[time_step]
         vehicle.append_time_step(time_step, state_lon, state_lat,
-                                 obstacle_state, lanelet_assignment, signal_state=None, )
+                obstacle_state, lanelet_assignment, signal_state=None, )
         return vehicle
 
 
 def update_scenario_vehicles(dt: float, time_step: int,
-                             ego_obstacle: DynamicObstacle, dynamic_obstacles: List[DynamicObstacle],
-                             ego_vehicle: Vehicle, dynamic_vehicles: Dict[int, Vehicle],
-                             other_vehicles_param: Dict, road_network: RoadNetwork,
-                             obstacle_vehicle_dict: Union[Dict, None] = None, ) -> Tuple[Vehicle, List[Vehicle]]:
+        ego_obstacle: DynamicObstacle, dynamic_obstacles: List[DynamicObstacle],
+        ego_vehicle: Vehicle, dynamic_vehicles: Dict[int, Vehicle],
+        other_vehicles_param: Dict, road_network: RoadNetwork,
+        obstacle_vehicle_dict: Union[Dict, None] = None, ) -> Tuple[Vehicle, List[Vehicle]]:
     """
     Append states for all Vehicles according to CommmonRoad Obstacle States
     :param dt: time step size
@@ -647,8 +632,7 @@ def update_scenario_vehicles(dt: float, time_step: int,
     :return: updated ego and dynamic vehicles
     """
     # update ego vehicle # TODO: ego_vehicle.lane is not updated
-    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step,
-                                 ego_vehicle.lane, ego_vehicle)
+    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step, ego_vehicle.lane, ego_vehicle)
 
     # update obstacle vehicles
     other_vehicles = []
@@ -658,11 +642,10 @@ def update_scenario_vehicles(dt: float, time_step: int,
             if obstacle_vehicle_dict is None:
                 if o.obstacle_id in dynamic_vehicles:
                     updated_vehicle = update_vehicle(o, dt, time_step,
-                                                     ego_vehicle.lane, dynamic_vehicles[o.obstacle_id])
+                            ego_vehicle.lane, dynamic_vehicles[o.obstacle_id])
                 else:
                     # vehicle was not created yet, create new vehicle
-                    updated_vehicle = create_vehicle(
-                        o, other_vehicles_param, road_network, dt, ego_vehicle)
+                    updated_vehicle = create_vehicle(o, other_vehicles_param, road_network, dt, ego_vehicle)
             else:
                 if o.obstacle_id not in dynamic_vehicles:
                     vehicle = obstacle_vehicle_dict[o.obstacle_id][ego_vehicle.lane.lanelet.lanelet_id]
@@ -761,8 +744,7 @@ def cartesian_to_curvilinear(reference_paths: Iterable[np.ndarray], cartesian_po
         seg_normal_normalized[:, 1] *= -1
 
         # Calculate the normalized segment arc length value
-        s_norm_segment = (
-            (cartesian_points[:, np.newaxis] - seg_start[np.newaxis]) * seg_dir_normalized).sum(axis=-1)
+        s_norm_segment = ((cartesian_points[:, np.newaxis] - seg_start[np.newaxis]) * seg_dir_normalized).sum(axis=-1)
         # Calculate the arc length relative to the segment length
         s = s_norm_segment / seg_length[np.newaxis, :]
         # Determine the segment with the lowest index to which the points can be projected (0 <= s <= 1)
@@ -770,11 +752,9 @@ def cartesian_to_curvilinear(reference_paths: Iterable[np.ndarray], cartesian_po
         idx = np.argmax((0 <= s) & (s <= 1), axis=-1)
         arc_length = s_norm_segment[np.arange(start=0, stop=len(idx)), idx]
         # Get the projected point on the line
-        projected_points = ref_path[idx] + \
-            seg_dir_normalized[idx] * arc_length[:, np.newaxis]
+        projected_points = ref_path[idx] + seg_dir_normalized[idx] * arc_length[:, np.newaxis]
         # Get the signed lateral distance
-        lateral_dist = -((cartesian_points - projected_points) *
-                         seg_normal_normalized[idx]).sum(axis=-1)
+        lateral_dist = -((cartesian_points - projected_points) * seg_normal_normalized[idx]).sum(axis=-1)
         # Offset arc lengths by the arc length of the segment start
         arc_length = arc_length + cumsum_seg_length[idx]
         # Assemble curvilinear coordinate array
@@ -793,12 +773,17 @@ def merge_dicts_recursively(*dicts):
                 if isinstance(result[k], dict) and isinstance(v, dict):
                     result[k] = merge_dicts_recursively(result[k], v)
                 else:
-                    # in case of two different values take the one later added
-                    result[k] = v
+                    result[k] = v  # in case of two different values take the one later added
             else:
                 result[k] = v
     return result
 
+
+
+
+######################################################
+### Our work starts here.
+######################################################
 
 def get_incoming(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
@@ -845,8 +830,6 @@ def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork, max_length=50.0
         ids = ids_next
     return ids
 
-
-
 def get_latest_predecessors_path(lanelet: Lanelet, lanelet_network : LaneletNetwork, predecessors=[] ) -> List[int]:
     if len(lanelet.predecessor == 1):
         predecessors.extend(lanelet.predecessor)
@@ -886,7 +869,6 @@ def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomin
                 closest_stop_line = lanelet_obj.stop_line
     return (closest_stop_line , min_distance)
 
-
 def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_step) -> float:
     #TODO: find a better way to calculate the distance
 	"""
@@ -917,8 +899,7 @@ def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int] :
     
     # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets 
     return list(filter(lambda lanelet_id: lanelets_same_direction(lanelet_network.find_lanelet_by_id(lanelet_id), opposite_adjacent), predecessors))
-    
-    
+      
 def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
     #TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = vehicle_k.get_lon_state(time_step)[0]
