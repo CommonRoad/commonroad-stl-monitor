@@ -748,7 +748,4 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(1, 1)
         
     def on_oncom_of(self):
-        self.assertEqual(1, 1)
-        
-    def same_incom(self):
-        self.assertEqual(1, 1)
+        self.assertEqual(1, 2)

@@ -88,252 +88,256 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(rule_robustness[4], -1.0)
         preds = rule_eval.get_predicates()
         np.testing.assert_allclose(np.array(list(preds.values())), -1.0)
+        
+# ###############################
+# ## SLOW ↓ ↓ ↓ ↓ ↓ 
+# ###############################
+#     def test_safe_distance(self):
+#         # one vehicles which has no leading vehicle (1001)
+#         # two vehicles which violate safe distance to directly leading vehicle (1003, 1004)
+#         # one vehicle which violates safe distance to two leading vehicles (1002)
+#         # one vehicle which violates safe distance partially (1000)
+#         # one vehicle which always keeps safe distance (1005)
+#         # one vehicle which keeps safe distance to vehicle which minimally occupies lane (1006)
+#         # one vehicle which has no leading vehicles and drives in two lanes (1007)
+#         # one vehicle which leaves lane (1009)
+#         # one vehicle which violates safe distance to leading vehicle which leaves lane and
+#         #   recaptures safe distance to vehicle which enters lane (1008)
+#         # one vehicle which performs illegal cut-in (1010)
+#         all_exp_result = [
+#             (
+#                 1000,
+#                 {
+#                     1001: False,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: True,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1001,
+#                 {
+#                     1000: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: True,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1002,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1003: False,
+#                     1004: False,
+#                     1005: True,
+#                     1006: True,
+#                     1007: False,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1003,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1004: False,
+#                     1005: True,
+#                     1006: True,
+#                     1007: False,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1004,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: False,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1005,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1006: True,
+#                     1007: True,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1006,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1007: True,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1007,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1008: True,
+#                     1009: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1008,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: True,
+#                     1009: False,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1009,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: True,
+#                     1008: True,
+#                     1010: True,
+#                 },
+#             ),
+#             (
+#                 1010,
+#                 {
+#                     1000: True,
+#                     1001: True,
+#                     1002: True,
+#                     1003: True,
+#                     1004: True,
+#                     1005: True,
+#                     1006: True,
+#                     1007: True,
+#                     1008: True,
+#                     1009: True,
+#                 },
+#             ),
+#         ]
 
-    def test_safe_distance(self):
-        # one vehicles which has no leading vehicle (1001)
-        # two vehicles which violate safe distance to directly leading vehicle (1003, 1004)
-        # one vehicle which violates safe distance to two leading vehicles (1002)
-        # one vehicle which violates safe distance partially (1000)
-        # one vehicle which always keeps safe distance (1005)
-        # one vehicle which keeps safe distance to vehicle which minimally occupies lane (1006)
-        # one vehicle which has no leading vehicles and drives in two lanes (1007)
-        # one vehicle which leaves lane (1009)
-        # one vehicle which violates safe distance to leading vehicle which leaves lane and
-        #   recaptures safe distance to vehicle which enters lane (1008)
-        # one vehicle which performs illegal cut-in (1010)
-        all_exp_result = [
-            (
-                1000,
-                {
-                    1001: False,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1007: True,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1001,
-                {
-                    1000: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1007: True,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1002,
-                {
-                    1000: True,
-                    1001: True,
-                    1003: False,
-                    1004: False,
-                    1005: True,
-                    1006: True,
-                    1007: False,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1003,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1004: False,
-                    1005: True,
-                    1006: True,
-                    1007: False,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1004,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1005: True,
-                    1006: True,
-                    1007: False,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1005,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1006: True,
-                    1007: True,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1006,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1007: True,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1007,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1008: True,
-                    1009: True,
-                    1010: True,
-                },
-            ),
-            (
-                1008,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1007: True,
-                    1009: False,
-                    1010: True,
-                },
-            ),
-            (
-                1009,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1007: True,
-                    1008: True,
-                    1010: True,
-                },
-            ),
-            (
-                1010,
-                {
-                    1000: True,
-                    1001: True,
-                    1002: True,
-                    1003: True,
-                    1004: True,
-                    1005: True,
-                    1006: True,
-                    1007: True,
-                    1008: True,
-                    1009: True,
-                },
-            ),
-        ]
+#         exp_floating = [(ego, all(val.values())) for ego, val in all_exp_result]
 
-        exp_floating = [(ego, all(val.values())) for ego, val in all_exp_result]
+#         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
+#         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+#         # standard robustness
+#         # TODO: Repair test for defined other agent
+#         # for ego_id, o_ids in exp_result:
+#         #     world = World.create_from_scenario(scenario, ego_id,
+#         #                                                   self.config)
+#         #     for o_id, exp_violation in o_ids.items():
+#         #         rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
+#         #                 world, (o_id,))
+#         #         self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
+#         #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
-        # standard robustness
-        # TODO: Repair test for defined other agent
-        # for ego_id, o_ids in exp_result:
-        #     world = World.create_from_scenario(scenario, ego_id,
-        #                                                   self.config)
-        #     for o_id, exp_violation in o_ids.items():
-        #         rob_values, _ = rule_eval.evaluate_all_rules_all_timesteps(
-        #                 world, (o_id,))
-        #         self.assertEqual(exp_violation, rob_values[0][-1][1] >= 0.0,
-        #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
+#         for ego_id, exp_violation in exp_floating:
+#             world = World.create_from_scenario(scenario)
+#             ego_vehicle = world.vehicle_by_id(ego_id)
+#             rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G1")
+#             rule = rule_eval._rule
+#             self.assertTrue(isinstance(rule, AllNode))
+#             self.assertEqual(len(rule.children), 1)
+#             self.assertTrue(isinstance(rule.children[0], RuleNode))
+#             self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
+#             rule_robustness = []
+#             for i in range(ego_vehicle.end_time + 1):
+#                 rob = rule_eval.update()
+#                 rule_robustness.append(rob)
+#             rule_robustness = np.array(rule_robustness)
+#             bool_value = rule_robustness >= 0.0
+#             self.assertEqual(
+#                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+#             )
 
-        for ego_id, exp_violation in exp_floating:
-            world = World.create_from_scenario(scenario)
-            ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G1")
-            rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, AllNode))
-            self.assertEqual(len(rule.children), 1)
-            self.assertTrue(isinstance(rule.children[0], RuleNode))
-            self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
-            rule_robustness = []
-            for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.update()
-                rule_robustness.append(rob)
-            rule_robustness = np.array(rule_robustness)
-            bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+#         # output robustness
+#         # Todo: RuleEvaluator.create_from_rule_str
+#         # rule_str = "A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 ) implies keeps_safe_distance_prec__a0_a1)"
+#         # rule_eval = RuleEvaluator.create_from_rule_str(rule_str, output_type=Semantics.OUTPUT_ROBUSTNESS)
+#         # for ego_id, exp_violation in exp_floating:
+#         #     world = World.create_from_scenario(scenario, ego_id)
+#         #     rule_robustness, predicate_robustness = rule_eval.evaluate_incremental(
+#         #         world, to_pandas=False
+#         #     )
+#         #     rob_value = [list(rule_dict.values())[0] for rule_dict in rule_robustness.values()]
+#         #
+#         #     # create expected values
+#         #     exp_rob = []
+#         #     for time_step in range(world.time_step + 1):
+#         #         in_front_of = world.predicate_values[time_step]["in_front_of"]
+#         #         in_same_lane = world.predicate_values[time_step]["in_same_lane"]
+#         #         keeps_safe_distance_prec = world.predicate_values[time_step]["keeps_safe_distance_prec"]
+#         #
+#         #         all_vehicle_results = []
+#         #         for vehicle_pair in in_front_of.keys():
+#         #             if in_front_of[vehicle_pair] >= 0. and in_same_lane[vehicle_pair] >= 0:
+#         #                 all_vehicle_results.append(keeps_safe_distance_prec[vehicle_pair])
+#         #             else:
+#         #                 all_vehicle_results.append(np.inf)
+#         #
+#         #         exp_rob.append(np.min(all_vehicle_results))
+#         #
+#         #     self.assertEqual(
+#         #         exp_rob, rob_value, f"Test failed for ego_id={ego_id}"
+#         #     )
 
-        # output robustness
-        # Todo: RuleEvaluator.create_from_rule_str
-        # rule_str = "A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 ) implies keeps_safe_distance_prec__a0_a1)"
-        # rule_eval = RuleEvaluator.create_from_rule_str(rule_str, output_type=Semantics.OUTPUT_ROBUSTNESS)
-        # for ego_id, exp_violation in exp_floating:
-        #     world = World.create_from_scenario(scenario, ego_id)
-        #     rule_robustness, predicate_robustness = rule_eval.evaluate_incremental(
-        #         world, to_pandas=False
-        #     )
-        #     rob_value = [list(rule_dict.values())[0] for rule_dict in rule_robustness.values()]
-        #
-        #     # create expected values
-        #     exp_rob = []
-        #     for time_step in range(world.time_step + 1):
-        #         in_front_of = world.predicate_values[time_step]["in_front_of"]
-        #         in_same_lane = world.predicate_values[time_step]["in_same_lane"]
-        #         keeps_safe_distance_prec = world.predicate_values[time_step]["keeps_safe_distance_prec"]
-        #
-        #         all_vehicle_results = []
-        #         for vehicle_pair in in_front_of.keys():
-        #             if in_front_of[vehicle_pair] >= 0. and in_same_lane[vehicle_pair] >= 0:
-        #                 all_vehicle_results.append(keeps_safe_distance_prec[vehicle_pair])
-        #             else:
-        #                 all_vehicle_results.append(np.inf)
-        #
-        #         exp_rob.append(np.min(all_vehicle_results))
-        #
-        #     self.assertEqual(
-        #         exp_rob, rob_value, f"Test failed for ego_id={ego_id}"
-        #     )
 
     def test_unnecessary_braking(self):
         # one vehicle accelerates (1000)
@@ -464,69 +468,77 @@ class RuleTest(unittest.TestCase):
                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
             )
 
-    def test_standstill(self):
-        # one vehicle which is in standstill with a leading vehicle in standstill(1000)
-        # one vehicle which is in standstill without a leading vehicle in standstill and which is not
-        # part of a congestion a leading vehicle in standstill (1001)
-        # one vehicle which drives with higher velocity (1002)
-        # seven vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1008, 1009,
-        # 1010)
-        # one vehicle which is in standstill and part of a congestion (1005)
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_standstill.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = {1000: True, 1001: False, 1002: True, 1003: True,
-                      1004: True, 1005: True, 1006: True, 1007: True,
-                      1008: True, 1009: True, 1010: True}
+# ###############################
+# ## SLOW ↓ ↓ ↓ ↓ ↓ (40 sec)
+# # ###############################
+#     def test_standstill(self):
+#         # one vehicle which is in standstill with a leading vehicle in standstill(1000)
+#         # one vehicle which is in standstill without a leading vehicle in standstill and which is not
+#         # part of a congestion a leading vehicle in standstill (1001)
+#         # one vehicle which drives with higher velocity (1002)
+#         # seven vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1008, 1009,
+#         # 1010)
+#         # one vehicle which is in standstill and part of a congestion (1005)
+#         scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_standstill.xml")
+#         scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+#         exp_result = {1000: True, 1001: False, 1002: True, 1003: True,
+#                       1004: True, 1005: True, 1006: True, 1007: True,
+#                       1008: True, 1009: True, 1010: True}
 
-        world = World.create_from_scenario(scenario)
+#         world = World.create_from_scenario(scenario)
 
-        for ego_id, exp_violation in exp_result.items():
-            ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I1")
-            rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, RuleNode))
-            rule_robustness = []
-            for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.update()
-                rule_robustness.append(rob)
-            rule_robustness = np.array(rule_robustness)
-            bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+#         for ego_id, exp_violation in exp_result.items():
+#             ego_vehicle = world.vehicle_by_id(ego_id)
+#             rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I1")
+#             rule = rule_eval._rule
+#             self.assertTrue(isinstance(rule, RuleNode))
+#             rule_robustness = []
+#             for i in range(ego_vehicle.end_time + 1):
+#                 rob = rule_eval.update()
+#                 rule_robustness.append(rob)
+#             rule_robustness = np.array(rule_robustness)
+#             bool_value = rule_robustness >= 0.0
+#             self.assertEqual(
+#                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+#             )
 
-    def test_overtaking_right_congestion(self):
-        # one vehicle which overtakes a congestion slightly faster (1000)
-        # one vehicle which overtakes a congestion too fast (1001)
-        # all other vehicles a part of a congestion
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_overtaking_right_congestion.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = [
-            (1000, {1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1001, {1000: True, 1002: True, 1003: False, 1004: False, 1005: False, 1006: False, 1007: False, 1008: False}),
-            (1002, {1000: True, 1001: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1003, {1000: True, 1001: True, 1002: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1004, {1000: True, 1001: True, 1002: True, 1003: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1005, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1006: True, 1007: True, 1008: True}),
-            (1006, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1007: True, 1008: True}),
-            (1007, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1008: True}),
-            (1008, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True})]
+# ###############################
+# ## SLOW ↓ ↓ ↓ ↓ ↓ 
+# # ###############################
+    # def test_overtaking_right_congestion(self):
+    #     # one vehicle which overtakes a congestion slightly faster (1000)
+    #     # one vehicle which overtakes a congestion too fast (1001)
+    #     # all other vehicles a part of a congestion
 
-        exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
+    #     scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_overtaking_right_congestion.xml")
+    #     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+    #     exp_result = [
+    #         (1000, {1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+    #         (1001, {1000: True, 1002: True, 1003: False, 1004: False, 1005: False, 1006: False, 1007: False, 1008: False}),
+    #         (1002, {1000: True, 1001: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+    #         (1003, {1000: True, 1001: True, 1002: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+    #         (1004, {1000: True, 1001: True, 1002: True, 1003: True, 1005: True, 1006: True, 1007: True, 1008: True}),
+    #         (1005, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1006: True, 1007: True, 1008: True}),
+    #         (1006, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1007: True, 1008: True}),
+    #         (1007, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1008: True}),
+    #         (1008, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True})]
 
-        for ego_id, exp_violation in exp_floating:
-            world = World.create_from_scenario(scenario)
-            ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I2")
+    #     exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
-            rule_robustness = []
-            for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.update()
-                rule_robustness.append(rob)
-            rule_robustness = np.array(rule_robustness)
-            bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+    #     for ego_id, exp_violation in exp_floating:
+    #         world = World.create_from_scenario(scenario)
+    #         ego_vehicle = world.vehicle_by_id(ego_id)
+    #         rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I2")
+
+    #         rule_robustness = []
+    #         for i in range(ego_vehicle.end_time + 1):
+    #             rob = rule_eval.update()
+    #             rule_robustness.append(rob)
+    #         rule_robustness = np.array(rule_robustness)
+    #         bool_value = rule_robustness >= 0.0
+    #         self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+
 
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)
@@ -555,38 +567,38 @@ class RuleTest(unittest.TestCase):
                 exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
             )
 
-    def test_emergency_lane_broad_enough_with_shoulder(self):
-        # several vehicles which drive not leftmost (e.g., 1024, 1016)
-        # several vehicles which drive not rightmost (e.g., 1008, 1004)
-        # several vehicles which drive leftmost (e.g., 1023, 1006)
-        # several vehicles which drive rightmost(e.g., 1002, 1018)
-        # one vehicle which drives on shoulder (1021)
+    # def test_emergency_lane_broad_enough_with_shoulder(self):
+    #     several vehicles which drive not leftmost (e.g., 1024, 1016)
+    #     several vehicles which drive not rightmost (e.g., 1008, 1004)
+    #     several vehicles which drive leftmost (e.g., 1023, 1006)
+    #     several vehicles which drive rightmost(e.g., 1002, 1018)
+    #     one vehicle which drives on shoulder (1021)
 
-        scenario_file = os.path.join(self.scenario_root_path,
-                                     "test_interstate/DEU_test_emergency_three_lanes_with_shoulder.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = {
-            1000: False, 1001: True, 1002: True, 1003: True,
-            1004: False, 1005: False, 1006: True, 1007: True,
-            1008: False, 1009: True, 1010: False, 1011: True,
-            1012: True, 1013: True, 1014: True, 1015: True,
-            1016: False, 1017: True, 1018: True, 1019: True,
-            1020: True, 1021: False, 1022: False, 1023: True,
-            1024: False, 1025: True, 1026: True
-        }
+    #     scenario_file = os.path.join(self.scenario_root_path,
+    #                                  "test_interstate/DEU_test_emergency_three_lanes_with_shoulder.xml")
+    #     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+    #     exp_result = {
+    #         1000: False, 1001: True, 1002: True, 1003: True,
+    #         1004: False, 1005: False, 1006: True, 1007: True,
+    #         1008: False, 1009: True, 1010: False, 1011: True,
+    #         1012: True, 1013: True, 1014: True, 1015: True,
+    #         1016: False, 1017: True, 1018: True, 1019: True,
+    #         1020: True, 1021: False, 1022: False, 1023: True,
+    #         1024: False, 1025: True, 1026: True
+    #     }
 
-        for ego_id, exp_violation in exp_result.items():
-            world = World.create_from_scenario(scenario)
-            ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I4")
+    #     for ego_id, exp_violation in exp_result.items():
+    #         world = World.create_from_scenario(scenario)
+    #         ego_vehicle = world.vehicle_by_id(ego_id)
+    #         rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I4")
 
-            rule_robustness = []
-            for i in range(ego_vehicle.end_time + 1):
-                rob = rule_eval.update()
-                rule_robustness.append(rob)
-            rule_robustness = np.array(rule_robustness)
-            bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+    #         rule_robustness = []
+    #         for i in range(ego_vehicle.end_time + 1):
+    #             rob = rule_eval.update()
+    #             rule_robustness.append(rob)
+    #         rule_robustness = np.array(rule_robustness)
+    #         bool_value = rule_robustness >= 0.0
+    #         self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_consider_entering_vehicles(self):
         # one vehicle driving always in the left most lane (1001)

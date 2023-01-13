@@ -350,6 +350,7 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
             
+   
     #TODO
     def going_straight(self):
             self.assertEqual(1,1)
