@@ -572,7 +572,6 @@ class PredTurningLeft(BasePredicateEvaluator):
         return min(rob, default=self._scale_lon_dist(-np.inf))
 
 
-
 class PredTurningRight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning right

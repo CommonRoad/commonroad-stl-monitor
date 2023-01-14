@@ -8,14 +8,10 @@ from itertools import chain
 
 import numba
 import numpy as np
-<<<<<<< HEAD
-from commonroad.scenario.lanelet import Lanelet, LaneletType
-=======
 import ruamel.yaml
 from commonroad.scenario.intersection import IntersectionIncomingElement
 # TODO IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
@@ -34,13 +30,9 @@ class OperatingMode(enum.Enum):
     MONITOR = "monitor"
     ROBUSTNESS = "robustness"
 
-<<<<<<< HEAD
-def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
-=======
 
 def create_ego_vehicle_param(ego_vehicle_param: Dict,
                              simulation_param: Dict) -> Dict:
->>>>>>> 7d33d7cc79697135a87710fe769f5806ae965cf3
     """
     Update ego vehicle parameters
 
@@ -918,7 +910,8 @@ def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int] :
     # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets 
     return list(filter(lambda lanelet_id: lanelets_same_direction(lanelet_network.find_lanelet_by_id(lanelet_id), opposite_adjacent), predecessors))
     
-    
+
+   
 def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
     #TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = vehicle_k.get_lon_state(time_step)[0]

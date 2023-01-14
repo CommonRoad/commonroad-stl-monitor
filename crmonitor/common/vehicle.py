@@ -201,7 +201,6 @@ class Vehicle:
         self.ccosy_cache = ccosy_cache
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
-
            
     def lanelets_dir(self, time_step) -> List[int]:
         """

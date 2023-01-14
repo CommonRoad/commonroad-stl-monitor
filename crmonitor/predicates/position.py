@@ -17,6 +17,9 @@ from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
+
+from crmonitor.common.helper import cartesian_to_curvilinear
 
 from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
 from crmonitor.predicates.utils import (
@@ -27,6 +30,7 @@ from crmonitor.predicates.utils import (
     vehicle_directly_left,
     vehicle_directly_right,
     lanelets_left_of_lanelet,
+    
 )
 
 logger = logging.getLogger(__name__)
@@ -165,7 +169,6 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
                                 result = 1
         return result
     
-    
     '''get p's lanelets, verify its left. '''
     
     def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
@@ -190,7 +193,6 @@ class PredOnIncomingLeftOf (BasePredicateEvaluator):
         distance_to_endline_from_p = np.sqrt((stop_line_center[0]-vehicle_p_position[0])**2 + (stop_line_center[1]-vehicle_p_position[1])**2)
         
         return (distance_to_endline_from_p + distance_to_endline_from_k) / 2 
-              
 
 class PredSingleLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.SingleLane
