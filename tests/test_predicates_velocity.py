@@ -12,7 +12,7 @@ from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.velocity import (PredReverses, PredSlowLeadingVehicle, PredPreservesTrafficFlow,
                                            PredInStandStill, PredExistStandingLeadingVehicle, PredDrivesFaster,
-                                           PredDrivesWithSlightlyHigherSpeed)
+                                           PredDrivesWithSlightlyHigherSpeed )
 
 
 class TestVelocityPredicates(unittest.TestCase):

@@ -13,7 +13,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking, PredOnAccessRamp,
                                            PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
                                            PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
-                                           PredDrivesLeftmost, PredDrivesRightmost)
+                                           PredDrivesLeftmost, PredDrivesRightmost, PredOnLaneletWithType, PredInIntersectionConflictArea,PredOnIncomingLeftOf, PredOnOncomOf)
 
 
 class TestPositionPredicates(unittest.TestCase):

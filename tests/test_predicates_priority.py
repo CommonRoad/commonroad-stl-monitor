@@ -11,7 +11,7 @@ from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.priority import (PredRelevantTrafficLight)
+from crmonitor.predicates.priority import (PredRelevantTrafficLight, PredSamePriority, PredHasPriority, PredRelevantTrafficLight)
 
 
 

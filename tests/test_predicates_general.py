@@ -12,7 +12,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.general import (PredInterstateBroadEnough, PredInCongestion, PredInSlowMovingTraffic,
-                                          PredInQueueOfVehicles, PredMakesUTurn)
+                                          PredInQueueOfVehicles, PredMakesUTurn, PredTurningLeft, PredTurningRight, PredGoingStraight)
 
 
 class TestGeneralPredicates(unittest.TestCase):
