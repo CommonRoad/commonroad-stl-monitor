@@ -64,13 +64,13 @@ class TestPriorityPredicates(unittest.TestCase):
             lanelet_network, self.config.get("road_network_param"))
 
     #TODO
-    def same_priority(self):
+    def test_same_priority(self):
             self.assertEqual(1,1)
 
     #TODO
-    def relevant_traffic_light(self):
+    def test_relevant_traffic_light(self):
             self.assertEqual(1,1)
 
     #TODO
-    def has_priority(self):
+    def test_has_priority(self):
             self.assertEqual(1,1)
