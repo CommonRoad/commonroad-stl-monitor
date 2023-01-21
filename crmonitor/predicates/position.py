@@ -51,11 +51,13 @@ class PositionPredicates(str, Enum):
     LeftOf = "left_of"
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
-    OnLaneletWithType = "on_lanelet_with_type"
+    OnLaneletWithTypeIntersection = "on_lanelet_with_type_intersection"
+
     OnIncomingLeftOf = "on_incoming_left_of"
     OnOncomOf = "on_oncom_of"
     InIntersectionConflictArea = "in_intersection_conflict_area"
     SameIncom = "same_incom"
+    
 
 class PredInSameLane(BasePredicateEvaluator):
     predicate_name = PositionPredicates.InSameLane
@@ -1063,15 +1065,13 @@ class PredDrivesRightmost(BasePredicateEvaluator):
                 )
             return min(comparison_list)
 
-
-class PredOnLaneletWithType(BasePredicateEvaluator):
+    
+class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     """
     evaluates if a vehicle is on a lanelet with a specific type.
     """
-    predicate_name = PositionPredicates.OnLaneletWithType
+    predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
     arity = 2
-    # all rules only call this predicate with type intersection.
-    ty = LaneletType.INTERSECTION
 
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
@@ -1084,7 +1084,7 @@ class PredOnLaneletWithType(BasePredicateEvaluator):
         lanelets = vehicle.lanelet_assignment[time_step]
         for l in lanelets:
             for type in world.road_network.lanelet_network.find_lanelet_by_id(l).lanelet_type:
-                if type == PredOnLaneletWithType.ty:
+                if type == LaneletType.INTERSECTION:
                     return 1.0
         return -1.0
 
