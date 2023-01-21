@@ -1,15 +1,14 @@
 from enum import Enum
 import logging
-import numpy as np
 from typing import List, Set
 from crmonitor.common.world import World
-from crmonitor.common import helper
 from crmonitor.predicates.base import BasePredicateEvaluator
 from commonroad.scenario.traffic_sign import TrafficLightState
 from commonroad.scenario import lanelet
 from commonroad.scenario.traffic_sign import TrafficLight
 
 logger = logging.getLogger(__name__)
+
 
 class PriorityPredicates(str, Enum):
     SamePriority = "same_priority"
@@ -41,41 +40,44 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
+    # TODO
+    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+    # TODO
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         """
-        returns the distance to the nearest active traffic light
+        idea 1 (trivial):  
+        for l in lanelets_dir(x_k):
+            for succ in reachsuc(l):
+                if len(active_tls_by_lanelet(succ)) > 0:
+                    return 1
+        return -1
+
+        """
+        rob = -1
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        for l_id in lanelet_ids_occ:
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+            successors = lanelet.find_lanelet_successors_in_range(world.road_network, max_length=150) 
+            for succ in successors:
+                # TODO: how to access traffic_lights of a lanelet
+                active_tls = set(filter(lambda tl: tl.get_state_at_time_step(time_step) != TrafficLightState.INACTIVE, succ.traffic_lights))
+                if(len(active_tls)>0):
+                    rob = 1
+        return self._scale_lat_dist(rob)
+
+        """
+        idea 2:  
+        lanelets_to_tl = calculates_lanelets_away_from_tl(...) #returns -1 if no relevant tl is found
+        return 100/lanelets_to_tl if lanelets_to_tl >= 0 else -1
+        # robustness is larger if tl is nearer, could have chosen any number instead of 100 but whatever
         """
         
-        #current implemented idea: return distance to tl position
-        #   robustness = distance(ego_vehicle, tl )
-        
-        #TODO: 
-        # project distance from vehicle to stop line along vehicle path.
-        
-        vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
-        distance_from_nearest_tl = -1
-        
-        lanelets_dir_ids = vehicle.lanelets_dir_ids(time_step)
-        lanelet_network = world.road_network.lanelet_network
-        for l_id in lanelets_dir_ids:
-            lanelet = lanelet_network.find_lanelet_by_id(l_id)
-            successors_paths = lanelet.find_lanelet_successors_in_range(
-                world.road_network, max_length=150)
-            for successors_path in successors_paths:
-                for successor_id in successors_path:
-                    successor = lanelet_network.find_lanelet_by_id(successor_id)
-                    traffic_lights = successor.traffic_lights
-                    for tl_id in traffic_lights:
-                        tl = lanelet_network.find_traffic_light_by_id(tl_id)
-                        if tl.active:
-                            stop_line = successor.stop_line
-                            distance_to_ego = helper.distance_vehicle_to_stop_line(vehicle, stop_line,time_step)
-                            if(distance_to_ego <distance_from_nearest_tl or distance_from_nearest_tl==-1):
-                                distance_from_nearest_tl = distance_to_ego;                  
-        return distance_from_nearest_tl
 
+    
 
 class PredHasPriority(BasePredicateEvaluator):
     """
@@ -86,6 +88,7 @@ class PredHasPriority(BasePredicateEvaluator):
 
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
     # TODO
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]

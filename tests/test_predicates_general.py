@@ -12,11 +12,10 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.general import (PredInterstateBroadEnough, PredInCongestion, PredInSlowMovingTraffic,
-                                          PredInQueueOfVehicles, PredMakesUTurn, PredTurningLeft, PredTurningRight, PredGoingStraight)
+                                          PredInQueueOfVehicles, PredMakesUTurn)
 
 
 class TestGeneralPredicates(unittest.TestCase):
-    
     def setUp(self) -> None:
         super().setUp()
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
@@ -240,7 +239,6 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
-
     def test_in_queue_of_vehicles(self):
         self.config["num_veh_queue_of_vehicles"] = 3
         self.config["max_queue_of_vehicles_velocity"] = 16.67
@@ -351,20 +349,3 @@ class TestGeneralPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-      
-  
-    #TODO
-    def test_going_straight(self):
-        self.assertEqual(1,1)
-
-    #TODO
-    def test_turning_right(self):
-        
-        self.assertEqual(1,1)
-
-    #TODO
-    def test_turning_left(self):
-        self.assertEqual(1,1)
-            
-if __name__ == '__main__':
-    unittest.main()

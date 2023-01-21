@@ -13,7 +13,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking, PredOnAccessRamp,
                                            PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
                                            PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
-                                           PredDrivesLeftmost, PredDrivesRightmost, PredOnLaneletWithTypeIntersection, PredInIntersectionConflictArea,PredOnIncomingLeftOf, PredOnOncomOf)
+                                           PredDrivesLeftmost, PredDrivesRightmost)
 
 
 class TestPositionPredicates(unittest.TestCase):
@@ -114,7 +114,6 @@ class TestPositionPredicates(unittest.TestCase):
                              5: State(position=[50, -2], time_step=5, orientation=0),
                              6: State(position=[60, -2], time_step=6, orientation=0)}
         lanelet_assignments_ego = {0: {1}, 1: {2}, 2: {3}, 3: {4}, 4: {5}, 5: {2, 3}, 6: {2, 3}}
-        
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         self.ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
                                    CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
@@ -492,8 +491,8 @@ class TestPositionPredicates(unittest.TestCase):
                              8: State(position=[80, 0], time_step=8, orientation=0, velocity=10),
                              9: State(position=[90, 0], time_step=9, orientation=0, velocity=10),
                              10: State(position=[100, 0], time_step=10, orientation=0, velocity=10)}
-        lanelet_assignments_ego = {0: {3}, 1: {3}, 2: {3}, 3: {3}, 4: {3}, 5: {3}, 6: {3}, 7: {3}, 8: {3}, 9: {3}, 10: {3}}
-        
+        lanelet_assignments_ego = {0: {3}, 1: {3}, 2: {3}, 3: {3}, 4: {3}, 5: {3}, 6: {3}, 7: {3}, 8: {3}, 9: {3},
+                                   10: {3}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
                               CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
@@ -737,17 +736,3 @@ class TestPositionPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
-        
-    
-    # TODO 	
-    def test_on_lanelet_with_type_intersection(self):
-        self.assertEqual(1,1)
-        
-    def test_in_intersection_conflict_area(self):
-        self.assertEqual(1, 1)
-        
-    def test_on_incoming_left_of(self):
-        self.assertEqual(1, 1)
-        
-    def test_on_oncom_of(self):
-        self.assertEqual(1, 1)

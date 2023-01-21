@@ -3,19 +3,15 @@ import math
 from decimal import Decimal
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Union, List, Tuple, Iterable, Sequence, Set, Optional
-from itertools import chain
+from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
 import numba
 import numpy as np
-
-from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
+import ruamel.yaml
+from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
-from commonroad.scenario.intersection import IntersectionIncomingElement
-
-from ruamel.yaml import YAML
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
@@ -29,7 +25,8 @@ class OperatingMode(enum.Enum):
     MONITOR = "monitor"
     ROBUSTNESS = "robustness"
 
-def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
+def create_ego_vehicle_param(ego_vehicle_param: Dict,
+                             simulation_param: Dict) -> Dict:
     """
     Update ego vehicle parameters
 
@@ -53,7 +50,7 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
     if (not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(
-            str(dt))) <= 1e-12):
+            str(simulation_param.get("dt")))) <= 1e-12):
         raise ValueError("Reaction time must be multiple of time step size.")
 
     return ego_vehicle_param
@@ -555,8 +552,13 @@ def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
     :param file_name: name of the yaml file
     """
     file_name = Path(file_name)
-    config = YAML().load(file_name)
-    return config
+    with file_name.open("r") as stream:
+        try:
+            config = ruamel.yaml.round_trip_load(stream, preserve_quotes=True)
+            return config
+        except ruamel.yaml.YAMLError as exc:
+            print(exc)
+            return None
 
 
 def update_vehicle(obstacle: DynamicObstacle, dt: float, time_step: int,
@@ -777,131 +779,3 @@ def merge_dicts_recursively(*dicts):
             else:
                 result[k] = v
     return result
-
-
-
-
-######################################################
-### Our work starts here.
-######################################################
-
-def get_incoming(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
-) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
-    """Get the incoming element of a lanelet."""
-    intersection = lanelet_network.map_inc_lanelets_to_intersections.get(
-        lanelet.lanelet_id)
-    if intersection is None:
-        return None
-    return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
-
-
-def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
-    incoming = get_incoming(lanelet, lanelet_network)
-    if incoming is None:
-        return set()
-    intersection, incoming = incoming
-    left_incoming = [
-        inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of][0]
-    return left_incoming.incoming_lanelets
-
-
-def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork, max_length=50.0) -> Set[int]:
-    """
-    Finds all possible predecessor lanelet IDs within max_length.
-    :param lanelet_network: lanelet network
-    :param max_length: abort once length of path is reached
-    :return: set of lanelet IDs
-    """
-    ids = set(lanelet.predecessor)
-    while ids:
-        ids_next = set()
-        for id in ids:
-            predecessors = lanelet_network.find_lanelet_by_id(id).predecessor
-            if not predecessors:
-                continue
-            for pre in predecessors:
-                if pre in ids or pre == lanelet.lanelet_id:
-                    continue
-
-                length = lanelet_network.find_lanelet_by_id(pre).distance[0]
-                if length < max_length:
-                    ids_next.add(pre)
-        ids = ids_next
-    return ids
-
-def get_latest_predecessors_path(lanelet: Lanelet, lanelet_network : LaneletNetwork, predecessors=[] ) -> List[int]:
-    if len(lanelet.predecessor == 1):
-        predecessors.extend(lanelet.predecessor)
-        return get_latest_predecessors_path(lanelet_network.find_lanelet_by_id(lanelet.predecessor[0]), lanelet_network, predecessors)
-    else:
-        return predecessors
-    
-def ref_path_lanelets(vehicle: Vehicle , lanelet_network : LaneletNetwork) -> List[List[int]]:
-    vehicle_position = vehicle.get_lon_state[0]
-    lanelet = lanelet_network.find_lanelet_by_position(vehicle_position)
-    latest_predecessors = get_latest_predecessors_path(lanelet, lanelet_network)
-    successors_paths = lanelet.find_lanelet_successors_in_range( lanelet_network, max_length=150)
-    
-    for path in successors_paths:
-        path[:0] = latest_predecessors
-        
-    return successors_paths
-
-def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork) -> bool: 
-    return get_incoming(lanelet_k, lanelet_network) == get_incoming(lanelet_p, lanelet_network)
-
-def get_stop_line_from_incoming(vehicle: Vehicle, incoming : IntersectionIncomingElement, lanelet_network: LaneletNetwork, time_step):
-    """
-    finds all stop lines in an intersection incoming element, and returns the stop line that is closest to the passed vehicle
-    """
-    #get the incoming lanelets as Set[int]
-    lanelets = incoming.incoming_lanelets 
-    stop_lines = set()
-    closest_stop_line = None
-    min_distance = -1.0
-    
-    for lanelet in lanelets:
-        lanelet_obj =  lanelet_network.find_lanelet_by_id(lanelet)
-        if lanelet_obj.stop_line != None:
-            stop_lines.add(lanelet_obj.stop_line)
-            if min_distance == -1.0 or distance_vehicle_to_stop_line(vehicle, lanelet_obj.stop_line, time_step) < min_distance:
-                closest_stop_line = lanelet_obj.stop_line
-    return (closest_stop_line , min_distance)
-
-def distance_vehicle_to_stop_line(vehicle : Vehicle, stop_line: StopLine, time_step) -> float:
-    #TODO: find a better way to calculate the distance
-	"""
-	calculates the euclidean distance from a vehicle position to the center point of a stop line
-	"""
-	vehicle_position = vehicle.get_lon_state(time_step)[0]
-	stop_line_center = [(stop_line.start[0]+stop_line.end[0])/2 , (stop_line.start[1]+stop_line.end[1])/2 ]           
-	#second idea: distance from vehicle to the center point of the stop line.
-	distance = np.sqrt((stop_line_center[0]-vehicle_position[0])**2 + (stop_line_center[1]-vehicle_position[1])**2)
- 
-def lanelets_same_direction(lanelet1: Lanelet, lanelet2: Lanelet) -> bool:
-     #TODO
-     return True
-                       
-def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int] : 
-    opposite_adjacent = incoming
-    
-    # iterate over left adjacent lanelets, until a left adjacent lanelet with opposite direction is found. 
-    while opposite_adjacent.adj_left_same_direction is not None:
-        found_opposite = opposite_adjacent.adj_left_same_direction is False 
-        opposite_adjacent = lanelet_network.find_lanelet_by_id(opposite_adjacent.adj_left)
-        if found_opposite:
-            break
-    
-    # take the predecessors of this opposite adjacent, and remove the opposite adjacent itself 
-    predecessors = reach_pre(opposite_adjacent, lanelet_network, max_length=50)         
-    predecessors.remove(opposite_adjacent.lanelet_id)
-    
-    # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets 
-    return list(filter(lambda lanelet_id: lanelets_same_direction(lanelet_network.find_lanelet_by_id(lanelet_id), opposite_adjacent), predecessors))
-      
-def distance_between_vehicles(vehicle_k: Vehicle , vehicle_p: Vehicle, time_step) -> float : 
-    #TODO: Find a better way to calculate the distance_between_vehicles.
-    p1 = vehicle_k.get_lon_state(time_step)[0]
-    p2 = vehicle_p.get_lon_state(time_step)[0]
-    return np.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)

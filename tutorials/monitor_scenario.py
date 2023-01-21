@@ -3,7 +3,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 
-scenario_path = "/home/adam/commonroad-stl-monitor/scenarios/test_interstate/CHN_SinDD-831_1_T-9.xml"
+scenario_path = "../scenarios/test_interstate/DEU_test_safe_distance.xml"
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -16,8 +16,7 @@ world = World.create_from_scenario(scenario)
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
-#rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
-rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
+rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
 
 # Either step through time steps sequentially
 robustness = rule_evaluator.update()
