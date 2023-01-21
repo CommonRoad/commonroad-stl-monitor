@@ -5,6 +5,7 @@
 #   - R_G1: safe distance preceding, considering cut-in vehicles
 #   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
+
 traffic_rules:
     R_G1: "A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 and !once[0, 3s](cut_in_i__a1_a0 and prev(not cut_in_i__a1_a0))) implies keeps_safe_distance_prec__a0_a1)"
     R_G2: "brakes_abruptly_i__a0 implies E a1: (precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or not rel_brakes_abruptly_i__a0_a1))"
@@ -17,6 +18,20 @@ traffic_rules:
     R_I3 : "not makes_u_turn__a0 and not reverses__a0"
     R_I4 : "in_congestion_i__a0 or in_slow_moving_traffic_i__a0 implies (interstate_broad_enough__a0 implies not on_shoulder__a0 and (in_leftmost_lane__a0 implies drives_leftmost__a0 and single_lane__a0) and (not in_leftmost_lane__a0 implies drives_rightmost__a0)) and (not interstate_broad_enough__a0 implies drives_rightmost__a0 and in_rightmost_lane__a0 and single_lane__a0)"
     R_I5: "A a1: ((on_main_carriage_way_i__a0 and in_front_of_i__a0_a1 and on_access_ramp_i__a1 and eventually[0, 5s](on_main_carriage_way__a1)) implies (not(not(main_carriageway_right_lane__a0) and eventually[0, 5s](main_carriageway_right_lane__a0))))"
+
+
+######################
+## Intersection Rules
+######################
+
+META_1: "A a1 A a2: in_intersection_conflict_area__a1_a2 implies (not causes_braking_intersection__a1_a2 and not eventually[0,1s](in_intersection_conflict_area__a2_a1)) "
+
+R_IN3 : "A a1 : G((on_incoming_left_of__a0_a1) and not relevant_traffic_light__a0 and ( turning_right__a0 and turning_right__a1 and same_priority_right_right__a1_a0 or turning_right__a0 and turning_left__a1 and same_priority_right_left__a1_a0 or turning_right__a0 and going_straight__a1 and same_priority_right_straight__a1_a0 or turning_left__a0 and turning_right__a1 and same_priority_left_right__a1_a0 or turning_left__a0 and turning_left__a1 and same_priority_left_left__a1_a0 or going_straight__a0 and turning_right__a1 and same_priority_straight_right__a1_a0 or going_straight__a0 and turning_left__a1 and same_priority_straight_left__a1_a0 or going_straight__a0 and going_straight__a1 and same_priority_straight_straight__a1_a0 or turning_left__a0 and going_straight__a1 and same_priority_left_straight__a1_a0)) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection__a0)"
+
+R_IN4: "A a1 : G(( turning_right__a1 and turning_right__a0 and has_priority_right_right__a1_a0 or turning_right__a1 and going_straight__a0 and has_priority_right_straight__a1_a0 or turning_left__a1 and turning_right__a0 and has_priority_left_right__a1_a0 or turning_left__a1 and turning_left__a0 and has_priority_left_left__a1_a0 or turning_left__a1 and going_straight__a0 and has_priority_left_straight__a1_a0 or going_straight__a1 and turning_right__a0 and has_priority_straight_right__a1_a0 or going_straight__a1 and going_straight__a0 and has_priority_straight_straight__a1_a0 or turning_right__a1 and turning_left__a0 and has_priority_right_left__a1_a0 and not on_oncom_of__a0_a1 or going_straight__a1 and turning_left__a0 and has_priority_straight_left__a1_a0 and not on_oncom_of__a0_a1) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection(xego,intersection)))"
+
+R-IN5: "A a1 : G((turning_left__a0 and (going_straight__a1 and not has_priority_left_straight__a0_a1 and on_oncom_of__a0_a1) or (turning_right__a1 and not has_priority_left_right__a0_a1 and on_oncom_of__a0_a1)) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection__a0))"
+
 
 
 # Parameters for traffic rules
@@ -55,4 +70,14 @@ traffic_rules_param:
     u_turn: 1.57
     country: "DEU"
     above_centerline_th: 0.1
-    max_interstate_speed_truck: 22.22
+    max_interstate_speed_truck: 22.22 
+    
+    #parameters from intersection paper
+    t_iB: 1.0
+    d_sl: 1.0
+    a_br: -1.0
+    z_ia: 0.5
+    d_br: 15.0
+    a_pos: -4.0
+    t_slw: 3.0
+    v_err: 0.1
