@@ -638,7 +638,7 @@ class PredTurningRight(BasePredicateEvaluator):
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
         ego = world.vehicle_by_id(vehicle_ids[0])
-        right_turning_lanes, right_turning_lanelnets, incoming = self._get_right_turning_lanes(vehicle_ids[0], world, incoming)
+        right_turning_lanes, right_turning_lanelets, incoming = self._get_right_turning_lanes(vehicle_ids[0], world, incoming)
         rob = []
         for lane, lanelet in zip(right_turning_lanes, right_turning_lanelets):
             rob.append(self._robustness_on_lane(world, ego, time_step, lane, lanelet, incoming))

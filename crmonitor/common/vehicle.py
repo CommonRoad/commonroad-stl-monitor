@@ -202,7 +202,8 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
-           
+    
+    #TODO review !!!!! and move to helper.py      
     def lanelets_dir(self, time_step) -> List[int]:
         """
         Get the occupied lanelets by the vehicle that are in the same in its same driving direction
