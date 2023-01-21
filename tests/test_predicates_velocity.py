@@ -446,3 +446,7 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        
+    #TODO
+    def test_causes_braking_intersection(self):
+            self.assertEqual(1,1)

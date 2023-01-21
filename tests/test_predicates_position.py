@@ -13,7 +13,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking, PredOnAccessRamp,
                                            PredOnShoulder, PredOnMainCarriageway, PredInRightmostLane,
                                            PredInLeftmostLane, PredMainCarriageWayRightLane, PredLeftOf,
-                                           PredDrivesLeftmost, PredDrivesRightmost)
+                                           PredDrivesLeftmost, PredDrivesRightmost, PredOnLaneletWithTypeIntersection, PredInIntersectionConflictArea,PredOnIncomingLeftOf, PredOnOncomOf)
 
 
 class TestPositionPredicates(unittest.TestCase):
@@ -736,3 +736,16 @@ class TestPositionPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+
+    # TODO 	
+    def test_on_lanelet_with_type_intersection(self):
+        self.assertEqual(1,1)
+        
+    def test_in_intersection_conflict_area(self):
+        self.assertEqual(1, 1)
+        
+    def test_on_incoming_left_of(self):
+        self.assertEqual(1, 1)
+        
+    def test_on_oncom_of(self):
+        self.assertEqual(1, 1)

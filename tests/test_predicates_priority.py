@@ -14,7 +14,6 @@ from crmonitor.common.world import World
 from crmonitor.predicates.priority import (PredRelevantTrafficLight, PredSamePriority, PredHasPriority, PredRelevantTrafficLight)
 
 
-
 class TestPriorityPredicates(unittest.TestCase):
 
     def setUp(self) -> None:

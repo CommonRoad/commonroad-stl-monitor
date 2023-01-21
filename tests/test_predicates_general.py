@@ -12,7 +12,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.general import (PredInterstateBroadEnough, PredInCongestion, PredInSlowMovingTraffic,
-                                          PredInQueueOfVehicles, PredMakesUTurn)
+                                          PredInQueueOfVehicles, PredMakesUTurn, PredTurningLeft, PredTurningRight, PredGoingStraight)
 
 
 class TestGeneralPredicates(unittest.TestCase):
@@ -350,4 +350,15 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
         
+    #TODO
+    def test_going_straight(self):
+        self.assertEqual(1,1)
+
+    #TODO
+    def test_turning_right(self):
         
+        self.assertEqual(1,1)
+
+    #TODO
+    def test_turning_left(self):
+        self.assertEqual(1,1)
