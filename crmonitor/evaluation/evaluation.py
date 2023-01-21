@@ -11,9 +11,13 @@ import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
-                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
-                                          PredicateVisualizerMonitorTreeVisitor, )
+from crmonitor.evaluation.visitor import (
+    MonitorCreationRuleTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
+)
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.monitor.rule import VisitorNode, parse_rule
@@ -127,7 +131,12 @@ class RuleEvaluator:
         self,
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
-    ) -> Tuple[Dict[str, BasePredicateEvaluator], Dict[Any, Dict], List, List[Callable[[MPRenderer],None]]]:
+    ) -> Tuple[
+        Dict[str, BasePredicateEvaluator],
+        Dict[Any, Dict],
+        List,
+        List[Callable[[MPRenderer], None]],
+    ]:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -169,7 +178,12 @@ class RuleEvaluator:
             visualization_config,
         )
 
-        return predicate_name2predicate_evaluator, predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
+        return (
+            predicate_name2predicate_evaluator,
+            predicate_names2vehicle_ids2values,
+            self._rule_value_course,
+            draw_functions,
+        )
 
     @property
     def other_ids(self) -> Tuple[int]:

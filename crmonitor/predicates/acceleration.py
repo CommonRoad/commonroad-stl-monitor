@@ -46,6 +46,7 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     """
     evaluates if the first vehicle causes the braking of the second vehicle.
     """
+
     predicate_name = AccelerationPredicates.CausesBrakingIntersection
     arity = 2
 
@@ -56,7 +57,7 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        #TODO: Thresholds : yaml file ? 
+        # TODO: Thresholds : yaml file ?
         d_br = 10
         a_br = 10
         rob = 0
@@ -66,6 +67,6 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
         front_p = vehicle_p.front_s(time_step)
         d = rear_k - front_p
         a = vehicle_p.get_lon_state(time_step).a
-        rob = np.minimum((d - d_br) , (a - a_br))
-        #TODO: does rob need scaling ? 
+        rob = np.minimum((d - d_br), (a - a_br))
+        # TODO: does rob need scaling ?
         return rob
