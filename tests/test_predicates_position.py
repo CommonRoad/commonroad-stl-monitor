@@ -736,3 +736,16 @@ class TestPositionPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    
+    # TODO 	
+    def on_lanelet_with_type(self):
+        self.assertEqual(1, 1)
+        
+    def in_intersection_conflict_area(self):
+        self.assertEqual(1, 1)
+        
+    def on_incoming_left_of(self):
+        self.assertEqual(1, 1)
+        
+    def on_oncom_of(self):
+        self.assertEqual(1, 2)

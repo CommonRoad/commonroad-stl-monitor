@@ -7,7 +7,7 @@ from shapely.geometry.polygon import Polygon
 import numpy as np
 from crmonitor.common import helper
 
-from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet
+from commonroad.scenario.lanelet import LaneletType, LineMarking, Lanelet, LaneletNetwork
 
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
@@ -1210,19 +1210,3 @@ class PredOnOncomOf(BasePredicateEvaluator):
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         return b * d
 
-
-class PredSameIncom(BasePredicateEvaluator):
-    predicate_name = PositionPredicates.SameIncom
-    arity = 2
-
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-        # TODO
-        return 1.0
-        # same_incom
-        # for all lak in reachpre(lk) :
-
-    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-
-    # def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
