@@ -22,6 +22,9 @@ from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from commonroad.scenario.lanelet import Lanelet, LaneletType, LaneletNetwork, Intersection, StopLine
+
+from crmonitor.common.helper import cartesian_to_curvilinear
 
 from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
 from crmonitor.predicates.utils import (
@@ -32,6 +35,7 @@ from crmonitor.predicates.utils import (
     vehicle_directly_left,
     vehicle_directly_right,
     lanelets_left_of_lanelet,
+    
 )
 
 logger = logging.getLogger(__name__)
