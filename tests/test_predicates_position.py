@@ -1172,7 +1172,77 @@ class TestPositionPredicates(unittest.TestCase):
 
     # TODO
     def test_on_lanelet_with_type_intersection(self):
-        self.assertEqual(1, 1)
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
+
+        world = World.create_from_scenario(scenario)
+
+        exp_sol_monitor_mode_1 = True  # inside intersection
+        exp_sol_monitor_mode_2 = True  # inside intersection
+        exp_sol_monitor_mode_3 = False  # outside intersection
+
+        # ego vehicle
+        cr_state_list_ego = {
+            0: State(
+                position=[25.5, 2],
+                time_step=0,
+                orientation=(1) * math.pi,
+                velocity=15,
+            ),
+            1: State(
+                position=[25, 0],
+                time_step=1,
+                # orientation=(1 / 2) * math.pi, #straight
+                # orientation=(3 / 4) * math.pi, #left
+                orientation=(0) * math.pi,  # right
+                velocity=15,
+            ),
+            2: State(
+                position=[36, 0],
+                time_step=2,
+                orientation=(0) * math.pi,
+                velocity=15,
+            ),
+        }
+
+        lanelet_assignments_ego = {0: {11}, 1: {3}, 2: {9}}
+
+        ego_vehicle = Vehicle(
+            0,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            None,
+            CurvilinearStateManager(self.road_network),
+            lanelet_assignments_ego,
+        )
+
+        pred = PredOnLaneletWithTypeIntersection(self.config)
+
+        world.add_vehicle(ego_vehicle)
+        # world = World({ego_vehicle}, self.road_network)
+
+        # ts = 0 : still in incoming => false
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0])
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, [0])
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
+
+        # ts = 1 : inside the intersection on a lanelet going right => true
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0])
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, [0])
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        # ts = 2 : outside incoming => false
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0])
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, [0])
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
 
     def test_in_intersection_conflict_area(self):
         scenario, _ = CommonRoadFileReader(
@@ -1305,17 +1375,17 @@ class TestPositionPredicates(unittest.TestCase):
 
         cr_state_list_p = {
             0: State(
-                position=[38,3],
+                position=[38, 3],
                 time_step=0,
                 orientation=(1) * math.pi,
             ),
             1: State(
-                position=[38,3],
+                position=[38, 3],
                 time_step=1,
                 orientation=(1) * math.pi,
             ),
             2: State(
-                position=[38,3],
+                position=[38, 3],
                 time_step=2,
                 orientation=(1) * math.pi,
             ),
@@ -1323,17 +1393,17 @@ class TestPositionPredicates(unittest.TestCase):
 
         cr_state_list_k = {
             0: State(
-                position=[27,-8],
+                position=[27, -8],
                 time_step=0,
-                orientation=(1/2) * math.pi,
+                orientation=(1 / 2) * math.pi,
             ),
             1: State(
-                position=[23,13],
+                position=[23, 13],
                 time_step=1,
-                orientation=(3/2) * math.pi,
+                orientation=(3 / 2) * math.pi,
             ),
             2: State(
-                position=[10,0],
+                position=[10, 0],
                 time_step=2,
                 orientation=(0) * math.pi,
             ),
