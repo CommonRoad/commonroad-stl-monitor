@@ -1,3 +1,4 @@
+import math
 import unittest
 from pathlib import Path
 import numpy as np
@@ -7,6 +8,7 @@ from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.obstacle import State, ObstacleType
 
 from crmonitor.common.helper import load_yaml
+from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
@@ -19,6 +21,7 @@ from crmonitor.predicates.velocity import (
     PredDrivesFaster,
     PredDrivesWithSlightlyHigherSpeed,
 )
+from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
 
 
 class TestVelocityPredicates(unittest.TestCase):
@@ -822,4 +825,126 @@ class TestVelocityPredicates(unittest.TestCase):
 
     # TODO
     def test_causes_braking_intersection(self):
-        self.assertEqual(1, 1)
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
+
+        world = World.create_from_scenario(scenario)
+
+        exp_sol_monitor_mode_1 = True  # all conditions met
+        exp_sol_monitor_mode_2 = False  # a_p > a_br
+        exp_sol_monitor_mode_3 = False  # d > d_br
+        exp_sol_monitor_mode_4 = False  # d < 0
+
+        # ego vehicle
+        cr_state_list_p = {
+            0: State(
+                position=[4, 0],
+                time_step=0,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+            1: State(
+                position=[4, 0],
+                time_step=1,
+                orientation=(0) * math.pi,
+                acceleration=1,
+            ),
+            2: State(
+                position=[4, 0],
+                time_step=2,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+            3: State(
+                position=[6, 0],
+                time_step=3,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+        }
+
+        cr_state_list_k = {
+            0: State(
+                position=[6, 0],
+                time_step=0,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+            1: State(
+                position=[6, 0],
+                time_step=1,
+                orientation=(0) * math.pi,
+                acceleration=1,
+            ),
+            2: State(
+                position=[15, 0],
+                time_step=2,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+            3: State(
+                position=[4, 0],
+                time_step=3,
+                orientation=(0) * math.pi,
+                acceleration=-2,
+            ),
+        }
+
+        lanelet_assignments_p = {0: {0}, 1: {0}, 2: {0}, 3: {0}}
+        lanelet_assignments_k = {0: {0}, 1: {0}, 2: {0}, 3: {0}}
+
+        # TODO: Params
+        # ego_vehicle_param = self.config.get("ego_vehicle_param")
+
+        vehicle_p = Vehicle(
+            0,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_p,
+            None,
+            CurvilinearStateManager(self.road_network),
+            lanelet_assignments_p,
+        )
+        vehicle_k = Vehicle(
+            1,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_k,
+            None,
+            CurvilinearStateManager(self.road_network),
+            lanelet_assignments_k,
+        )
+
+        vehicles = [0, 1]
+
+        pred = PredCausesBrakingIntersection(self.config)
+
+        world.add_vehicle(vehicle_p)
+        world.add_vehicle(vehicle_k)
+        # world = World({ego_vehicle}, self.road_network)
+
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
+
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+
+        # ts = 2 : outside incoming => false
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
+
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 < 0)
