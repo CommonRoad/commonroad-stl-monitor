@@ -5,7 +5,7 @@ The toolbox is installable as a regular pypi package. However, it is currently n
 Installation by:
 
 ```bash
-pip install git+ssh://git@gitlab.lrz.de/cps/commonroad-stl-monitor
+pip install git+git@gitlab.lrz.de:cps/commonroad-stl-monitor
 ```
 
 

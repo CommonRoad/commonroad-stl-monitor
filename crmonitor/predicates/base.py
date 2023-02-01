@@ -49,14 +49,12 @@ class BasePredicateEvaluator(abc.ABC):
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
-    #overwrite this method below
-    
     @abc.abstractmethod
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         pass
-    
+
     def evaluate_robustness_with_cache(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
