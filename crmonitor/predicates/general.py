@@ -708,7 +708,7 @@ class PredTurningRight(BasePredicateEvaluator):
         ego = world.vehicle_by_id(vehicle_ids[0])
         (
             right_turning_lanes,
-            right_turning_lanelnets,
+            right_turning_lanelets,
             incoming,
         ) = self._get_right_turning_lanes(vehicle_ids[0], world, incoming)
         rob = []
