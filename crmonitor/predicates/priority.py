@@ -140,7 +140,8 @@ class PredHasPriority(BasePredicateEvaluator):
 
             value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-        list_of_keys = [key for key, list_of_values in PredHasPriority.sign_id_priority.items() if value in list_of_values][0]
+        list_of_keys = [key for key, list_of_values in PredHasPriority.sign_id_priority.items()
+                        if value in list_of_values][0]
         priority_all = PredHasPriority.sign_id_priority[list_of_keys]
 
         priority_left = priority_all[0]
