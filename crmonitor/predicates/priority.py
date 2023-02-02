@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from typing import List, Set
 from crmonitor.common.world import World
-from crmonitor.common import helper
+from crmonitor.common import helper, world, vehicle
 from crmonitor.predicates.base import BasePredicateEvaluator
 from commonroad.scenario.traffic_sign import TrafficLightState
 from commonroad.scenario import lanelet
@@ -26,14 +26,44 @@ class PredSamePriority(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.SamePriority
     arity = 4
 
-    # TODO
-    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir_ids(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir_ids(time_step)
+
+        priority_p = PredHasPriority.get_priority(lanelets_dir_ids_of_p)
+        priority_k = PredHasPriority.get_priority(lanelets_dir_ids_of_k)
+
+        if priority_p == priority_k:
+            rob = True
+        else:
+            rob = False
+
+        return rob
 
     # TODO
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         return self._scale_lat_dist(100)
+
+    def same_priority_dir(self, world: World, time_step, vehicle_ids: List[int], vehicle_dir_p: str, vehicle_dir_k: str) -> bool:
+
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+
+        priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, vehicle_dir_p)
+        priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, vehicle_dir_k)
+
+        if priority_p == priority_k:
+            rob = True
+        else:
+            rob = False
+
+        return rob
 
 
 class PredRelevantTrafficLight(BasePredicateEvaluator):
@@ -44,9 +74,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         """
         returns the distance to the nearest active traffic light
         """
@@ -64,9 +92,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         lanelet_network = world.road_network.lanelet_network
         for l_id in lanelets_dir_ids:
             lanelet = lanelet_network.find_lanelet_by_id(l_id)
-            successors_paths = lanelet.find_lanelet_successors_in_range(
-                world.road_network, max_length=150
-            )
+            successors_paths = lanelet.find_lanelet_successors_in_range(world.road_network, max_length=150)
             for successors_path in successors_paths:
                 for successor_id in successors_path:
                     successor = lanelet_network.find_lanelet_by_id(successor_id)
@@ -75,13 +101,8 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                         tl = lanelet_network.find_traffic_light_by_id(tl_id)
                         if tl.active:
                             stop_line = successor.stop_line
-                            distance_to_ego = helper.distance_vehicle_to_stop_line(
-                                vehicle, stop_line, time_step
-                            )
-                            if (
-                                distance_to_ego < distance_from_nearest_tl
-                                or distance_from_nearest_tl == -1
-                            ):
+                            distance_to_ego = helper.distance_vehicle_to_stop_line(vehicle, stop_line, time_step)
+                            if (distance_to_ego < distance_from_nearest_tl or distance_from_nearest_tl == -1):
                                 distance_from_nearest_tl = distance_to_ego
         return distance_from_nearest_tl
 
@@ -94,10 +115,118 @@ class PredHasPriority(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriority
     arity = 4
 
-    # TODO
-    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-    # TODO
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    sign_id_priority = {'306': [4, 5, 4, 11],
+                        '301': [4, 5, 4, 12],
+                        '205': [2, 2, 2, 13],
+                        '206': [1, 1, 1, 14],
+                        '102': [3, 3, 3, 15]
+                        }
+
+    def get_priority(lanelets_dir_ids):
+
+        for l_id in lanelets_dir_ids:
+            l_sign_id = lanelet.traffic_sign_id(l_id)
+
+            if len(l_sign_id):
+                l_sign_id = l_sign_id
+            else:
+                l_sign_id = {102}
+
+            for sign_id in l_sign_id:
+                sign_priority = PredHasPriority.sign_id_priority[sign_id]
+                eval_idx = sign_priority[3]
+                eval_idx_arr = []
+                eval_idx_arr = + [eval_idx]
+
+            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+
+        list_of_keys = [key for key, list_of_values in PredHasPriority.sign_id_priority.items() if value in list_of_values][0]
+        priority_all = PredHasPriority.sign_id_priority[list_of_keys]
+
+        priority_left = priority_all[0]
+        priority_straight = priority_all[1]
+        priority_right = priority_all[2]
+
+        orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
+
+        if orient >= np.deg2rad(45):
+            priority_veh = priority_left
+        elif orient <= np.deg2rad(-45):
+            priority_veh = priority_right
+        else:
+            priority_veh = priority_straight
+
+        return priority_veh
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+
+        priority_p = self.get_priority(lanelets_dir_ids_of_p)
+        priority_k = self.get_priority(lanelets_dir_ids_of_k)
+
+        if priority_p <= priority_k:
+            rob = False
+        else:
+            rob = True
+
+        return rob
+
+    def get_priority_dir(lanelets_dir_ids, vehicle_dir: str) -> int:
+
+        for l_id in lanelets_dir_ids:
+            l_sign_id = lanelet.traffic_sign_id(l_id)
+
+            if len(l_sign_id):
+                l_sign_id = l_sign_id
+            else:
+                l_sign_id = {102}
+
+            for sign_id in l_sign_id:
+                sign_priority = PredHasPriority.sign_id_priority[sign_id]
+                eval_idx = sign_priority[3]
+                eval_idx_arr = []
+                eval_idx_arr = + [eval_idx]
+
+        value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+
+        list_of_keys = [key for key, list_of_values in PredHasPriority.sign_id_priority.items() if value in list_of_values][0]
+        priority_all = PredHasPriority.sign_id_priority[list_of_keys]
+
+        priority_left = priority_all[0]
+        priority_straight = priority_all[1]
+        priority_right = priority_all[2]
+
+        if vehicle_dir == 'left':
+            priority_veh = priority_left
+        elif vehicle_dir == 'right':
+            priority_veh = priority_right
+        else:
+            priority_veh = priority_straight
+
+        return priority_veh
+
+    def has_priority_dir(self, world: World, time_step, vehicle_ids: List[int], vehicle_dir_p: str, vehicle_dir_k: str) -> bool:
+
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+
+        priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, vehicle_dir_p)
+        priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, vehicle_dir_k)
+
+        if priority_p <= priority_k:
+            rob = False
+        else:
+            rob = True
+
+        return rob
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         return self._scale_lat_dist(100)
