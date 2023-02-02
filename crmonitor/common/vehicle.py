@@ -252,8 +252,8 @@ class Vehicle:
         aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
         """
         lanelet_ids = self.lanelet_assignment[time_step]
-        vehicle_position = self.get_lon_state[0]  # "s"
-        vehicle_orientation = self.get_lat_state[1]  # "theta"
+        vehicle_position = self.get_lon_state(time_step).s  # "s"
+        vehicle_orientation = self.get_lat_state(time_step).theta  # "theta"
 
         def compute_lanelet_relative_orientation(lanelet_id):
             lanelet = self.find_lanelet_by_id(lanelet_id)  # lanelet object
