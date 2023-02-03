@@ -246,31 +246,34 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
-    def lanelets_dir(self, time_step) -> List[int]:
+    def lanelets_dir(self, time_step, road_network: RoadNetwork) -> List[int]:
         """
         Get the occupied lanelets by the vehicle that are in the same in its same driving direction
         aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
         """
-        lanelet_ids = self.lanelet_assignment[time_step]
-        vehicle_position = self.get_lon_state(time_step).s  # "s"
-        vehicle_orientation = self.get_lat_state(time_step).theta  # "theta"
-
-        def compute_lanelet_relative_orientation(lanelet_id):
-            lanelet = self.find_lanelet_by_id(lanelet_id)  # lanelet object
-            lanelet_orientation = lanelet.orientation_by_position(
-                vehicle_position
-            )  # lanelet_orientation
-            return np.abs(
-                subtract_orientations(lanelet_orientation, vehicle_orientation)
-            )  # return the
-
-        lanelets_in_vehicle_direction = []
+        vehicle = self
+        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        lanelets_dir_ids = []
         for lanelet_id in lanelet_ids:
-            if compute_lanelet_relative_orientation(lanelet_id) <= np.deg2rad(45):
-                # considers car and lanelet in same direction if the orientation difference is <= 45 rad
-                lanelets_in_vehicle_direction.append(lanelet_id)
+            if lanelet_id in lanelets_dir_ids:
+                continue
+            lanes = road_network.find_lanes_by_lanelets([lanelet_id])
+            for lane in lanes:
+                if lane is None:
+                    continue
 
-        return lanelets_in_vehicle_direction
+                state_lon, state_lat = vehicle.ccosy_cache.get_curvilinear_state(
+                    vehicle.states_cr[time_step], lane
+                )
+                lanelet_orientation = lane.orientation(state_lon.s)
+                vehicle_orientation = state_lat.theta
+                if np.abs(
+                    subtract_orientations(lanelet_orientation, vehicle_orientation)
+                ) <= np.deg2rad(45):
+                    lanelets_dir_ids.append(lanelet_id)
+                    continue
+
+        return lanelets_dir_ids
 
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """

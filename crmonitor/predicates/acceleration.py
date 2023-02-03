@@ -61,10 +61,14 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
         d_br = 10
         a_br = 10
         rob = 0
-        vehicle_k = vehicle_ids[0]
-        vehicle_p = vehicle_ids[1]
-        rear_k = vehicle_k.rear_s(time_step)
-        front_p = vehicle_p.front_s(time_step)
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        lane_k = vehicle_k.get_lane(time_step)
+        lane_p = vehicle_p.get_lane(time_step)
+
+        rear_k = vehicle_k.rear_s(time_step, lane_k)
+        front_p = vehicle_p.front_s(time_step, lane_p)
         d = rear_k - front_p
         a = vehicle_p.get_lon_state(time_step).a
         rob = np.minimum((d - d_br), (a - a_br))
