@@ -28,12 +28,16 @@ class TestPriorityPredicates(unittest.TestCase):
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = False
 
-        scenario, _ = CommonRoadFileReader(str("scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml")).open(True)
-        
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
+
         self.scenario = scenario
-        self.road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
-
-
+        self.road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
 
     # TODO
     def test_same_priority(self):
@@ -42,7 +46,7 @@ class TestPriorityPredicates(unittest.TestCase):
     # TODO
     def test_relevant_traffic_light(self):
         world = World.create_from_scenario(self.scenario)
-        
+
         exp_sol_monitor_mode_1 = False  # traffic light inactive
         exp_sol_monitor_mode_2 = True
         exp_sol_monitor_mode_3 = False  # no traffic light
@@ -93,7 +97,7 @@ class TestPriorityPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0])
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, [0])
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
 
         # ts = 1 : inside the intersection on a lanelet going right => true
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0])
@@ -105,10 +109,8 @@ class TestPriorityPredicates(unittest.TestCase):
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0])
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, [0])
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
 
     # TODO
     def test_has_priority(self):
         self.assertEqual(1, 1)
-
-

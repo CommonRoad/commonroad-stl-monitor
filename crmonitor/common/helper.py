@@ -1150,11 +1150,10 @@ def get_stop_line_from_incoming(
 def distance_vehicle_to_stop_line(
     vehicle: Vehicle, stop_line: StopLine, time_step
 ) -> float:
-    # TODO: find a better way to calculate the distance
     """
     calculates the euclidean distance from a vehicle position to the center point of a stop line
     """
-    vehicle_position = vehicle.get_lon_state(time_step)[0]
+    vehicle_position = vehicle.state_list_cr[time_step].position
     stop_line_center = [
         (stop_line.start[0] + stop_line.end[0]) / 2,
         (stop_line.start[1] + stop_line.end[1]) / 2,
@@ -1164,6 +1163,7 @@ def distance_vehicle_to_stop_line(
         (stop_line_center[0] - vehicle_position[0]) ** 2
         + (stop_line_center[1] - vehicle_position[1]) ** 2
     )
+    return distance
 
 
 def lanelets_same_direction(lanelet1: Lanelet, lanelet2: Lanelet) -> bool:

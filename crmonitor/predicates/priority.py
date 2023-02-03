@@ -86,6 +86,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+
         """
         returns the distance to the nearest active traffic light
         """
@@ -100,18 +101,31 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         distance_from_nearest_tl = -1
 
         lanelets_dir_ids = vehicle.lanelets_dir(time_step, world.road_network)
+
+        # print("lanelets_dir_ids")
+        # for l in lanelets_dir_ids:
+        # print(l)
+
         lanelet_network = world.road_network.lanelet_network
         for l_id in lanelets_dir_ids:
             lanelet = lanelet_network.find_lanelet_by_id(l_id)
             successors_paths = lanelet.find_lanelet_successors_in_range(
-                world.road_network, max_length=150
+                world.road_network.lanelet_network, max_length=150
             )
             for successors_path in successors_paths:
+                # find lanelet successors in range excludes the current lanelet, so we add it again
+                successors_path.insert(0, l_id)
                 for successor_id in successors_path:
+                    print(successor_id)
                     successor = lanelet_network.find_lanelet_by_id(successor_id)
+
                     traffic_lights = successor.traffic_lights
+                    # print("traffic lights:")
                     for tl_id in traffic_lights:
+                        # print(f"tl_id: {tl_id}")
+
                         tl = lanelet_network.find_traffic_light_by_id(tl_id)
+
                         if tl.active:
                             stop_line = successor.stop_line
                             distance_to_ego = helper.distance_vehicle_to_stop_line(
