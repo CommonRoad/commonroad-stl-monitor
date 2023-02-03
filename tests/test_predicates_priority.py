@@ -24,6 +24,16 @@ from crmonitor.predicates.priority import (
 class TestPriorityPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
+        self.config = load_yaml(str(config_path))
+        self.config["scale_rob"] = False
+
+        scenario, _ = CommonRoadFileReader(str("scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml")).open(True)
+        
+        self.scenario = scenario
+        self.road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+
+
 
     # TODO
     def test_same_priority(self):
@@ -31,14 +41,8 @@ class TestPriorityPredicates(unittest.TestCase):
 
     # TODO
     def test_relevant_traffic_light(self):
-        scenario, _ = CommonRoadFileReader(
-            str(
-                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
-            )
-        ).open(True)
-
-        world = World.create_from_scenario(scenario)
-
+        world = World.create_from_scenario(self.scenario)
+        
         exp_sol_monitor_mode_1 = False  # traffic light inactive
         exp_sol_monitor_mode_2 = True
         exp_sol_monitor_mode_3 = False  # no traffic light
@@ -106,3 +110,5 @@ class TestPriorityPredicates(unittest.TestCase):
     # TODO
     def test_has_priority(self):
         self.assertEqual(1, 1)
+
+
