@@ -848,28 +848,28 @@ class TestVelocityPredicates(unittest.TestCase):
                 position=[4, 0],
                 time_step=0,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
             1: State(
                 position=[4, 0],
                 time_step=1,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=1,
             ),
             2: State(
                 position=[4, 0],
                 time_step=2,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
             3: State(
                 position=[6, 0],
                 time_step=3,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
         }
@@ -879,34 +879,34 @@ class TestVelocityPredicates(unittest.TestCase):
                 position=[6, 0],
                 time_step=0,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
             1: State(
                 position=[6, 0],
                 time_step=1,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=1,
             ),
             2: State(
                 position=[15, 0],
                 time_step=2,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
             3: State(
                 position=[4, 0],
                 time_step=3,
                 orientation=(0) * math.pi,
-                velocity = 10,
+                velocity=10,
                 acceleration=-2,
             ),
         }
 
-        lanelet_assignments_p = {0: {0}, 1: {0}, 2: {0}, 3: {0}}
-        lanelet_assignments_k = {0: {0}, 1: {0}, 2: {0}, 3: {0}}
+        lanelet_assignments_p = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
+        lanelet_assignments_k = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
 
         # TODO: Params
         # ego_vehicle_param = self.config.get("ego_vehicle_param")
