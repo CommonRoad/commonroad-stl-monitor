@@ -1089,9 +1089,10 @@ def get_latest_predecessors_path(
 
 
 def ref_path_lanelets(
-    vehicle: Vehicle, lanelet_network: LaneletNetwork
+    vehicle: Vehicle, lanelet_network: LaneletNetwork, time_step
 ) -> List[List[int]]:
-    vehicle_position = vehicle.get_lon_state[0]
+
+    vehicle_position = vehicle.get_lon_state(time_step, vehicle.get_lane(time_step)).s
     lanelet = lanelet_network.find_lanelet_by_position(vehicle_position)
     latest_predecessors = get_latest_predecessors_path(lanelet, lanelet_network)
     successors_paths = lanelet.find_lanelet_successors_in_range(
@@ -1197,6 +1198,6 @@ def distance_between_vehicles(
     vehicle_k: Vehicle, vehicle_p: Vehicle, time_step
 ) -> float:
     # TODO: Find a better way to calculate the distance_between_vehicles.
-    p1 = vehicle_k.get_lon_state(time_step)[0]
-    p2 = vehicle_p.get_lon_state(time_step)[0]
+    p1 = vehicle_k.get_lon_state(time_step, vehicle_k.get_lane).s
+    p2 = vehicle_p.get_lon_state(time_step, vehicle_p.get_lane).s
     return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
