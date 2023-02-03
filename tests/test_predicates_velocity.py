@@ -825,6 +825,8 @@ class TestVelocityPredicates(unittest.TestCase):
 
     # TODO
     def test_causes_braking_intersection(self):
+        self.config["d_br"] = 15.0
+        self.config["a_br"] = -1.0
         scenario, _ = CommonRoadFileReader(
             str(
                 "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
@@ -845,21 +847,21 @@ class TestVelocityPredicates(unittest.TestCase):
         # ego vehicle
         cr_state_list_p = {
             0: State(
-                position=[4, 0],
+                position=[1, 0],
                 time_step=0,
                 orientation=(0) * math.pi,
                 velocity=10,
                 acceleration=-2,
             ),
             1: State(
-                position=[4, 0],
+                position=[1, 0],
                 time_step=1,
                 orientation=(0) * math.pi,
                 velocity=10,
                 acceleration=1,
             ),
             2: State(
-                position=[4, 0],
+                position=[0.5, 0],
                 time_step=2,
                 orientation=(0) * math.pi,
                 velocity=10,
@@ -876,21 +878,21 @@ class TestVelocityPredicates(unittest.TestCase):
 
         cr_state_list_k = {
             0: State(
-                position=[6, 0],
+                position=[7, 0],
                 time_step=0,
                 orientation=(0) * math.pi,
                 velocity=10,
                 acceleration=-2,
             ),
             1: State(
-                position=[6, 0],
+                position=[7, 0],
                 time_step=1,
                 orientation=(0) * math.pi,
                 velocity=10,
                 acceleration=1,
             ),
             2: State(
-                position=[15, 0],
+                position=[25, 0],
                 time_step=2,
                 orientation=(0) * math.pi,
                 velocity=10,
@@ -911,18 +913,8 @@ class TestVelocityPredicates(unittest.TestCase):
         # TODO: Params
         # ego_vehicle_param = self.config.get("ego_vehicle_param")
 
-        vehicle_p = Vehicle(
-            0,
-            ObstacleType.CAR,
-            None,
-            Rectangle(5, 2),
-            cr_state_list_p,
-            None,
-            CurvilinearStateManager(road_network),
-            lanelet_assignments_p,
-        )
         vehicle_k = Vehicle(
-            1,
+            0,
             ObstacleType.CAR,
             None,
             Rectangle(5, 2),
@@ -930,6 +922,16 @@ class TestVelocityPredicates(unittest.TestCase):
             None,
             CurvilinearStateManager(road_network),
             lanelet_assignments_k,
+        )
+        vehicle_p = Vehicle(
+            1,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_p,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_p,
         )
 
         vehicles = [0, 1]
@@ -943,7 +945,7 @@ class TestVelocityPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
@@ -952,11 +954,12 @@ class TestVelocityPredicates(unittest.TestCase):
 
         # ts = 2 : outside incoming => false
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
+
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 < 0)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)

@@ -1023,7 +1023,7 @@ def merge_dicts_recursively(*dicts):
 ### Our work starts here.
 ######################################################
 
-
+# TODO: get_incoming and inc la left of should be deleted from here
 def get_incoming(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
@@ -1037,14 +1037,15 @@ def get_incoming(
 
 
 def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
-    incoming = get_incoming(lanelet, lanelet_network)
-    if incoming is None:
+    intersection_incoming = get_incoming(lanelet, lanelet_network)
+    if intersection_incoming is None:
         return set()
-    intersection, incoming = incoming
+    intersection, incoming = intersection_incoming
     left_incoming = [
         inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
     ][0]
-    return left_incoming.incoming_lanelets
+
+    return left_incoming.incoming_lanelets  # returns set of IDs of incoming lanelets
 
 
 def reach_pre(

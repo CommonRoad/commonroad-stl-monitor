@@ -1173,49 +1173,24 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
 
-    # TODO: get_incoming and inc la left of should be deleted from here
-    def get_incoming(
-        lanelet: Lanelet, lanelet_network: LaneletNetwork
-    ) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
-        """Get the incoming element of a lanelet."""
-        intersection = lanelet_network.map_inc_lanelets_to_intersections.get(
-            lanelet.lanelet_id
-        )
-        if intersection is None:
-            return None
-        return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
-
-    def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
-        incoming = get_incoming(lanelet, lanelet_network)
-        if incoming is None:
-            return set()
-        intersection, incoming = incoming
-        left_incoming = [
-            inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
-        ][0]
-
-        return (
-            left_incoming.incoming_lanelets
-        )  # returns set of IDs of incoming lanelets
-
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         result = -1
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir_ids(time_step)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir_ids(time_step)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step,world.road_network)
 
         for lak in lanelets_dir_ids_of_p:
             successors_paths_p = lak.find_lanelet_successors_in_range(
                 world.road_network, max_length=150
             )
             for lap in lanelets_dir_ids_of_k:
-                successors_paths_k = lanelet.find_lanelet_successors_in_range(
+                successors_paths_k = lap.find_lanelet_successors_in_range(
                     world.road_network, max_length=150
                 )
                 for successors_lanelet_of_k in successors_paths_k:
-                    succ_of_lak = inc_la_left_of(
+                    succ_of_lak = helper.inc_la_left_of(
                         successors_lanelet_of_k, world.road_network.lanelet_network
                     )
                     for successors_lanelet_of_p in successors_paths_p:
@@ -1230,10 +1205,10 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        incoming = inc_la_left_of(lanelet, world.road_network.lanelet_network)
+        incoming = helper.inc_la_left_of(lanelet, world.road_network.lanelet_network)
 
-        # max_value will store the last lanelet
-        max_value = incoming.pop()
+        last_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(incoming.pop)
+        
         # for element in incoming:
         # if element in lanelet.successor(max_value):
         #    max_value = element
@@ -1243,8 +1218,8 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         vehicle_p_position = vehicle_p.get_lon_state(time_step)[1]
 
         stop_line_center = [
-            (max_value.stop_line.start[0] + max_value.stop_line.end[0]) / 2,
-            (max_value.stop_line.start[1] + max_value.stop_line.end[1]) / 2,
+            (last_lanelet.stop_line.start[0] + last_lanelet.stop_line.end[0]) / 2,
+            (last_lanelet.stop_line.start[1] + last_lanelet.stop_line.end[1]) / 2,
         ]
 
         distance_to_endline_from_k = np.sqrt(
