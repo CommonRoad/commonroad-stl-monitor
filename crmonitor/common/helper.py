@@ -1095,27 +1095,35 @@ def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[in
 
 
 def ref_path_lanelets(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
+    vehicle: Vehicle, lanelet_network: LaneletNetwork, time_step
 ) -> List[List[int]]:
     """
     finds all possible paths in which this lanelet exists.
     """
-    succ_paths = reach_succ(lanelet, lanelet_network)
-    pre_paths = reach_pre(lanelet, lanelet_network)
-    l_id = lanelet.lanelet_id
-    paths = []
-    for pre_path in pre_paths:
-        for succ_path in succ_paths:
-            paths.append(pre_path + [l_id] + succ_path)
-    return paths
+    lanelets = vehicle.lanelet_assignment[time_step]
+    # TODO: fix this: how to deal with multiple lanelets in lanelet assignment
+    for lanelet in lanelets:
+        succ_paths = reach_succ(
+            lanelet_network.find_lanelet_by_id(lanelet), lanelet_network
+        )
+        pre_paths = reach_pre(
+            lanelet_network.find_lanelet_by_id(lanelet), lanelet_network
+        )
+        paths = []
+        for pre_path in pre_paths:
+            for succ_path in succ_paths:
+                paths.append(pre_path + [lanelet] + succ_path)
+        return paths
 
 
 def same_incom(
     lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork
 ) -> bool:
-    return get_incoming(lanelet_k, lanelet_network) == get_incoming(
-        lanelet_p, lanelet_network
-    )
+    incom1 = get_incoming(lanelet_k, lanelet_network)
+    incom2 = get_incoming(lanelet_p, lanelet_network)
+    if incom1 == None or incom2 == None:
+        return False
+    return incom1 == incom2
 
 
 def orientation_of_lanelet_center_veritices(
