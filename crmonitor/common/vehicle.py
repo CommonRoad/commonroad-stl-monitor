@@ -257,6 +257,7 @@ class Vehicle:
         for lanelet_id in lanelet_ids:
             if lanelet_id in lanelets_dir_ids:
                 continue
+
             lanes = road_network.find_lanes_by_lanelets([lanelet_id])
             for lane in lanes:
                 if lane is None:

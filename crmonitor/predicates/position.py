@@ -1140,30 +1140,19 @@ class PredOnOncomOf(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+
         b = -1
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
         lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
         lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
 
-        # on_oncom_of(xk, xp) \iff \exists lk \in lanelets_dir(xk) , \exists lp \in lanelets_dir(xp) : \exists lap \in reachpre(lp) : lk \in oncom(lap)
+        for i in range(1, 21):
+            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(i)
+            print(
+                f"lanelet{i} orientation: {math.degrees(helper.orientation_of_lanelet_center_point(lanelet, world.road_network))}"
+            )
 
-        for lp in lanelets_dir_p:
-            if b == 1:
-                break
-            lp_obj = world.road_network.lanelet_network.find_lanelet_by_id(lp)
-            reach_pre_lp = helper.reach_pre(lp_obj, world.road_network, max_length=50)
-            for lap in reach_pre_lp:
-                if b == 1:
-                    break
-                lap_obj = world.road_network.lanelet_network.find_lanelet_by_id(lap)
-                oncom_lap = helper.oncom(lap_obj)
-                for lk in lanelets_dir_k:
-                    if b == 1:
-                        break
-                    if lk in oncom_lap:
-                        b = 1
-                        break
         # at this point we have the boolean evaluation. we can now calculate the robustness.
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         return b * d
@@ -1179,7 +1168,7 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 
         result = -1
         lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step,world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
         for lak in lanelets_dir_ids_of_p:
             successors_paths_p = lak.find_lanelet_successors_in_range(
@@ -1207,8 +1196,10 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 
         incoming = helper.inc_la_left_of(lanelet, world.road_network.lanelet_network)
 
-        last_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(incoming.pop)
-        
+        last_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
+            incoming.pop
+        )
+
         # for element in incoming:
         # if element in lanelet.successor(max_value):
         #    max_value = element

@@ -1048,33 +1048,6 @@ def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int
     return left_incoming.incoming_lanelets  # returns set of IDs of incoming lanelets
 
 
-def reach_pre(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork, max_length=50.0
-) -> Set[int]:
-    """
-    Finds all possible predecessor lanelet IDs within max_length.
-    :param lanelet_network: lanelet network
-    :param max_length: abort once length of path is reached
-    :return: set of lanelet IDs
-    """
-    ids = set(lanelet.predecessor)
-    while ids:
-        ids_next = set()
-        for id in ids:
-            predecessors = lanelet_network.find_lanelet_by_id(id).predecessor
-            if not predecessors:
-                continue
-            for pre in predecessors:
-                if pre in ids or pre == lanelet.lanelet_id:
-                    continue
-
-                length = lanelet_network.find_lanelet_by_id(pre).distance[0]
-                if length < max_length:
-                    ids_next.add(pre)
-        ids = ids_next
-    return ids
-
-
 def get_latest_predecessors_path(
     lanelet: Lanelet, lanelet_network: LaneletNetwork, predecessors=[]
 ) -> List[int]:
@@ -1089,24 +1062,51 @@ def get_latest_predecessors_path(
         return predecessors
 
 
+# TODO: set limits for searching successors
+def reach_succ(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[int]]:
+    successors = lanelet.successor
+    if len(successors) == 0:
+        return [[]]
+    paths = []
+    for succ in successors:
+        succ_lanelet = lanelet_network.find_lanelet_by_id(succ)
+        succ_paths = reach_succ(succ_lanelet, lanelet_network)
+        for succ_path in succ_paths:
+            succ_path.insert(0, succ)
+            paths.append(succ_path)
+    return paths
+
+
+# TODO: set limits for searching predecessors
+def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[int]]:
+    predecessors = lanelet.predecessor
+    if len(predecessors) == 0:
+        return [[]]
+
+    paths = []
+    for pre in predecessors:
+        pre_lanelet = lanelet_network.find_lanelet_by_id(pre)
+        pre_paths = reach_pre(pre_lanelet, lanelet_network)
+        for pre_path in pre_paths:
+            pre_path.append(pre)
+            paths.append(pre_path)
+    return paths
+
+
 def ref_path_lanelets(
-    vehicle: Vehicle, lanelet_network: LaneletNetwork, time_step
+    lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> List[List[int]]:
-
-    # vehicle_position = vehicle.get_lon_state(time_step, vehicle.get_lane(time_step)).s
-
-    vehicle_position = np.array(vehicle.states_cr[time_step].position)
-
-    lanelet = lanelet_network.find_lanelet_by_position(vehicle_position)
-    latest_predecessors = get_latest_predecessors_path(lanelet, lanelet_network)
-    successors_paths = lanelet.find_lanelet_successors_in_range(
-        lanelet_network, max_length=150
-    )
-
-    for path in successors_paths:
-        path[:0] = latest_predecessors
-
-    return successors_paths
+    """
+    finds all possible paths in which this lanelet exists.
+    """
+    succ_paths = reach_succ(lanelet, lanelet_network)
+    pre_paths = reach_pre(lanelet, lanelet_network)
+    l_id = lanelet.lanelet_id
+    paths = []
+    for pre_path in pre_paths:
+        for succ_path in succ_paths:
+            paths.append(pre_path + [l_id] + succ_path)
+    return paths
 
 
 def same_incom(
@@ -1115,6 +1115,16 @@ def same_incom(
     return get_incoming(lanelet_k, lanelet_network) == get_incoming(
         lanelet_p, lanelet_network
     )
+
+
+def orientation_of_lanelet_center_point(lanelet: Lanelet, road_network: RoadNetwork) -> float:
+    lanes = road_network.find_lanes_by_lanelets([lanelet.lanelet_id])
+
+    for lane in lanes:
+        # size = int(len(center_v) / 2)
+        angles = lane._compute_orientation_from_polyline(lanelet.center_vertices)
+
+        return angles[int((len(angles)) / 2)]
 
 
 def get_stop_line_from_incoming(
@@ -1170,8 +1180,10 @@ def lanelets_same_direction(lanelet1: Lanelet, lanelet2: Lanelet) -> bool:
     # TODO
     return True
 
-
 def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
+    """
+    returning the set of oncoming lanelets belonging to an incoming lanelet
+    """
     opposite_adjacent = incoming
 
     # iterate over left adjacent lanelets, until a left adjacent lanelet with opposite direction is found.
