@@ -1229,37 +1229,24 @@ def lanelets_opposite_direction(
     mean_angle2 = math.degrees(
         mean_orientation_of_lanelet_center(lanelet2, road_network)
     )
-    diff = np.abs(mean_angle1 - mean_angle2) 
+    diff = np.abs(mean_angle1 - mean_angle2)
     return diff >= 180 - e and diff <= 180 + e
 
-def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
+
+def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
     """
     returning the set of oncoming lanelets belonging to an incoming lanelet
     """
-    opposite_adjacent = incoming
-
-    # iterate over left adjacent lanelets, until a left adjacent lanelet with opposite direction is found.
-    while opposite_adjacent.adj_left_same_direction is not None:
-        found_opposite = opposite_adjacent.adj_left_same_direction is False
-        opposite_adjacent = lanelet_network.find_lanelet_by_id(
-            opposite_adjacent.adj_left
-        )
-        if found_opposite:
-            break
-
-    # take the predecessors of this opposite adjacent, and remove the opposite adjacent itself
-    predecessors = reach_pre(opposite_adjacent, lanelet_network, max_length=50)
-    predecessors.remove(opposite_adjacent.lanelet_id)
-
-    # only leave the predecessors with the same direction as the opposite adjacent, and return them as our oncoming lanelets
-    return list(
-        filter(
-            lambda lanelet_id: lanelets_same_direction(
-                lanelet_network.find_lanelet_by_id(lanelet_id), opposite_adjacent
-            ),
-            predecessors,
-        )
-    )
+    oncom = set()
+    lanelet_network = road_network.lanelet_network
+    possible_successors = reach_succ(incoming, lanelet_network)
+    merged_possible_successors = set().union(*possible_successors)
+    for succ in merged_possible_successors:
+        opp_adj_of_succ = indirect_opposite_adjacents(lanelet_network.find_lanelet_by_id(succ),lanelet_network)
+        for opp in opp_adj_of_succ:
+            if lanelets_opposite_direction(incoming, lanelet_network.find_lanelet_by_id(opp), road_network):
+                oncom.add(opp)
+    return oncom
 
 
 def distance_between_vehicles(
@@ -1269,3 +1256,28 @@ def distance_between_vehicles(
     p1 = np.array(vehicle_k.states_cr[time_step].position)
     p2 = np.array(vehicle_k.states_cr[time_step].position)
     return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+
+def indirect_opposite_adjacents(
+    lanelet1: Lanelet,  lanelet_network: LaneletNetwork
+) -> List[int]:
+    current = lanelet1.adj_left
+    left = False
+    if lanelet1.adj_left_same_direction:
+        left = True
+
+    adj_dir = []
+    adj_opp = []
+
+    while current != None:
+        current_lanelet = lanelet_network.find_lanelet_by_id(current)
+        if left:
+            adj_dir.append(current)
+            if not current_lanelet.adj_left_same_direction:
+                left = False
+            current = current_lanelet.adj_left
+        else:
+            adj_opp.append(current)
+            current = current_lanelet.adj_right
+
+    return adj_opp

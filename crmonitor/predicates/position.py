@@ -1147,11 +1147,9 @@ class PredOnOncomOf(BasePredicateEvaluator):
         lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
         lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
 
-        for i in range(1, 21):
-            lanelet = world.road_network.lanelet_network.find_lanelet_by_id(i)
-            print(
-                f"lanelet{i} orientation: {math.degrees(helper.orientation_of_lanelet_center_point(lanelet, world.road_network))}"
-            )
+        lanelet16 = world.road_network.lanelet_network.find_lanelet_by_id(16)
+        oncom = helper.oncom(lanelet16, world.road_network)
+        print(oncom)
 
         # at this point we have the boolean evaluation. we can now calculate the robustness.
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
