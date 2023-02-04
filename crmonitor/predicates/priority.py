@@ -8,6 +8,7 @@ from crmonitor.predicates.base import BasePredicateEvaluator
 from commonroad.scenario.traffic_sign import TrafficLightState
 from commonroad.scenario import lanelet
 from commonroad.scenario.traffic_sign import TrafficLight
+from crmonitor.common.road_network import Lane, RoadNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +62,8 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, RoadNetwork)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, RoadNetwork)
 
         priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, vehicle_dir_p)
         priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, vehicle_dir_k)
@@ -200,8 +201,8 @@ class PredHasPriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, RoadNetwork)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, RoadNetwork)
 
         priority_p = self.get_priority(lanelets_dir_ids_of_p)
         priority_k = self.get_priority(lanelets_dir_ids_of_k)
