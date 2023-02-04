@@ -1142,18 +1142,42 @@ class PredOnOncomOf(BasePredicateEvaluator):
     ) -> float:
 
         b = -1
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+
+        vehicle_k = world.vehicle_by_id(1)
+        vehicle_p = world.vehicle_by_id(0)
+
+        lane_ass = vehicle_k.lanelet_assignment[time_step]
         lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
         lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
 
-        lanelet16 = world.road_network.lanelet_network.find_lanelet_by_id(16)
-        oncom = helper.oncom(lanelet16, world.road_network)
-        print(oncom)
+        for lk in lanelets_dir_k:
+            if b == 1:
+                break
+            for lp in lanelets_dir_p:
+                if b == 1:
+                    break
+                lp_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(lp)
+
+                reach_pre = helper.reach_pre(
+                    lp_lanelet, world.road_network.lanelet_network
+                )
+
+                merged_reach_pre = set().union(*reach_pre)
+                merged_reach_pre.add(lp)
+                for lap in merged_reach_pre:
+                    if b == 1:
+                        break
+                    lap_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
+                        lap
+                    )
+                    oncom_lap = helper.oncom(lap_lanelet, world.road_network)
+                    if lk in oncom_lap:
+                        b = 1
 
         # at this point we have the boolean evaluation. we can now calculate the robustness.
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
-        return b * d
+        rob = b * d
+        return rob
 
 
 class PredOnIncomingLeftOf(BasePredicateEvaluator):

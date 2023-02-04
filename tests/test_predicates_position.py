@@ -1373,7 +1373,7 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_3 = False  # right
         exp_sol_monitor_mode_4 = False  # adjacent
 
-        cr_state_list_p = {
+        cr_state_list_k = {
             0: State(
                 position=[23, 13],
                 time_step=0,
@@ -1397,7 +1397,7 @@ class TestPositionPredicates(unittest.TestCase):
             ),
         }
 
-        cr_state_list_k = {
+        cr_state_list_p = {
             0: State(
                 position=[26.5, -9],
                 time_step=0,
@@ -1424,8 +1424,8 @@ class TestPositionPredicates(unittest.TestCase):
             ),
         }
 
-        lanelet_assignments_p = {0: {8}, 1: {13}, 2: {10}, 3: {15}}
-        lanelet_assignments_k = {0: {16}, 1: {16}, 2: {16}, 3: {16}}
+        lanelet_assignments_k = {0: {8}, 1: {13}, 2: {10}, 3: {15}}
+        lanelet_assignments_p = {0: {16}, 1: {16}, 2: {16}, 3: {16}}
 
         # TODO: Params
         # ego_vehicle_param = self.config.get("ego_vehicle_param")
@@ -1451,12 +1451,13 @@ class TestPositionPredicates(unittest.TestCase):
             lanelet_assignments_k,
         )
 
+        # TODO: switch k and p vehicle
         vehicles = [0, 1]
 
         pred = PredOnOncomOf(self.config)
 
-        world.add_vehicle(vehicle_p)
         world.add_vehicle(vehicle_k)
+        world.add_vehicle(vehicle_p)
         # world = World({ego_vehicle}, self.road_network)
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)

@@ -5,7 +5,7 @@ from functools import partial
 from typing import Union, Dict, List, Tuple, Optional, Set
 from commonroad.common.util import subtract_orientations
 
-
+import math
 import numba
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
@@ -246,14 +246,14 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
-    def lanelets_dir(self, time_step, road_network: RoadNetwork) -> List[int]:
+    def lanelets_dir(self, time_step, road_network: RoadNetwork) -> Set[int]:
         """
         Get the occupied lanelets by the vehicle that are in the same in its same driving direction
         aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
         """
         vehicle = self
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        lanelets_dir_ids = []
+        lanelets_dir_ids = set()
         for lanelet_id in lanelet_ids:
             if lanelet_id in lanelets_dir_ids:
                 continue
@@ -267,11 +267,17 @@ class Vehicle:
                     vehicle.states_cr[time_step], lane
                 )
                 lanelet_orientation = lane.orientation(state_lon.s)
-                vehicle_orientation = state_lat.theta
-                if np.abs(
+                vehicle_orientation = vehicle.state_list_cr[time_step].orientation
+
+                if lanelet_orientation < 0:
+                    lanelet_orientation += 2 * math.pi
+
+                diff = np.abs(
                     subtract_orientations(lanelet_orientation, vehicle_orientation)
-                ) <= np.deg2rad(45):
-                    lanelets_dir_ids.append(lanelet_id)
+                )
+                
+                if diff <= np.deg2rad(45) or diff >= np.deg2rad(360 - 45):
+                    lanelets_dir_ids.add(lanelet_id)
                     continue
 
         return lanelets_dir_ids

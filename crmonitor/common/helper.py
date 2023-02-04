@@ -1196,15 +1196,6 @@ def distance_vehicle_to_stop_line(
     return distance
 
 
-def same_or_opposite_direction(angle1, angle2, e):
-    diff = abs(angle1 - angle2)
-    if diff <= e or diff >= (360 - e):
-        return "same direction"
-    if diff >= 180 - e and diff <= 180 + e:
-        return "opposite direction"
-    return "neither same nor opposite direction"
-
-
 def lanelets_same_direction(
     lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
 ) -> bool:
@@ -1242,9 +1233,13 @@ def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
     possible_successors = reach_succ(incoming, lanelet_network)
     merged_possible_successors = set().union(*possible_successors)
     for succ in merged_possible_successors:
-        opp_adj_of_succ = indirect_opposite_adjacents(lanelet_network.find_lanelet_by_id(succ),lanelet_network)
+        opp_adj_of_succ = indirect_opposite_adjacents(
+            lanelet_network.find_lanelet_by_id(succ), lanelet_network
+        )
         for opp in opp_adj_of_succ:
-            if lanelets_opposite_direction(incoming, lanelet_network.find_lanelet_by_id(opp), road_network):
+            if lanelets_opposite_direction(
+                incoming, lanelet_network.find_lanelet_by_id(opp), road_network
+            ):
                 oncom.add(opp)
     return oncom
 
@@ -1254,12 +1249,12 @@ def distance_between_vehicles(
 ) -> float:
     # TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = np.array(vehicle_k.states_cr[time_step].position)
-    p2 = np.array(vehicle_k.states_cr[time_step].position)
+    p2 = np.array(vehicle_p.states_cr[time_step].position)
     return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
 
 def indirect_opposite_adjacents(
-    lanelet1: Lanelet,  lanelet_network: LaneletNetwork
+    lanelet1: Lanelet, lanelet_network: LaneletNetwork
 ) -> List[int]:
     current = lanelet1.adj_left
     left = False
