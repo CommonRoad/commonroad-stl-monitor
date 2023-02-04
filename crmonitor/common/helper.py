@@ -29,6 +29,7 @@ from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle
+from commonroad.common.util import subtract_orientations
 
 
 @enum.unique
@@ -1117,14 +1118,33 @@ def same_incom(
     )
 
 
-def orientation_of_lanelet_center_point(lanelet: Lanelet, road_network: RoadNetwork) -> float:
+def orientation_of_lanelet_center_veritices(
+    lanelet: Lanelet, road_network: RoadNetwork
+) -> np.ndarray:
     lanes = road_network.find_lanes_by_lanelets([lanelet.lanelet_id])
 
     for lane in lanes:
         # size = int(len(center_v) / 2)
         angles = lane._compute_orientation_from_polyline(lanelet.center_vertices)
+        return angles
 
-        return angles[int((len(angles)) / 2)]
+
+def mean_orientation_of_lanelet_center(
+    lanelet: Lanelet, road_network: RoadNetwork
+) -> float:
+    angles = orientation_of_lanelet_center_veritices(lanelet, road_network)
+    size = len(angles)
+    if size == 1:
+        return angles[0]
+
+    sum = 0.0
+
+    # TODO: why first orientation sometimes 0 ??
+    for i in range(1, size):
+        sum += angles[i]
+
+    mean = sum / (size - 1)
+    return mean
 
 
 def get_stop_line_from_incoming(
@@ -1176,9 +1196,41 @@ def distance_vehicle_to_stop_line(
     return distance
 
 
-def lanelets_same_direction(lanelet1: Lanelet, lanelet2: Lanelet) -> bool:
-    # TODO
-    return True
+def same_or_opposite_direction(angle1, angle2, e):
+    diff = abs(angle1 - angle2)
+    if diff <= e or diff >= (360 - e):
+        return "same direction"
+    if diff >= 180 - e and diff <= 180 + e:
+        return "opposite direction"
+    return "neither same nor opposite direction"
+
+
+def lanelets_same_direction(
+    lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
+) -> bool:
+    e = 10
+    mean_angle1 = math.degrees(
+        mean_orientation_of_lanelet_center(lanelet1, road_network)
+    )
+    mean_angle2 = math.degrees(
+        mean_orientation_of_lanelet_center(lanelet2, road_network)
+    )
+    diff = np.abs(mean_angle1 - mean_angle2)
+    return diff <= e or diff >= (360 - e)
+
+
+def lanelets_opposite_direction(
+    lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
+) -> bool:
+    e = 10
+    mean_angle1 = math.degrees(
+        mean_orientation_of_lanelet_center(lanelet1, road_network)
+    )
+    mean_angle2 = math.degrees(
+        mean_orientation_of_lanelet_center(lanelet2, road_network)
+    )
+    diff = np.abs(mean_angle1 - mean_angle2) 
+    return diff >= 180 - e and diff <= 180 + e
 
 def oncom(incoming: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
     """
