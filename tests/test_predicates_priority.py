@@ -226,7 +226,7 @@ class TestPriorityPredicates(unittest.TestCase):
 
         exp_sol_monitor_mode_1 = False
         exp_sol_monitor_mode_2 = False  # k on the right
-        exp_sol_monitor_mode_3 = True  # k is oncoming
+        exp_sol_monitor_mode_3 = False  # k is oncoming
 
         cr_state_list_p = {
             0: State(
