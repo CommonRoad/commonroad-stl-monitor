@@ -159,7 +159,7 @@ class PredHasPriority(BasePredicateEvaluator):
             sign_priority = PredHasPriority.sign_id_priority[sign_id]
             eval_idx = sign_priority[3]
             eval_idx_arr = eval_idx_arr.extend([eval_idx])
-            return eval_idx_arr
+        return eval_idx_arr
 
     def get_priority(self, lanelets_dir_ids, road_network):
 
