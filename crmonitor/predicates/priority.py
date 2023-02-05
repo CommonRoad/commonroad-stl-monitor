@@ -154,7 +154,7 @@ class PredHasPriority(BasePredicateEvaluator):
     def get_priority(self, lanelets_dir_ids):
 
         for l_id in lanelets_dir_ids:
-            l_sign_id = lanelet.traffic_sign_ref(l_id)
+            l_sign_id = lanelet.traffic_sign(l_id)
 
             if len(l_sign_id):
                 l_sign_id = l_sign_id
