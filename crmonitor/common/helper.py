@@ -1044,8 +1044,6 @@ def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int
         return set()
     intersection, incoming = intersection_incoming
 
-    print(f"incoming.left_of : {incoming.left_of}")
-
     left_incoming = [
         inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
     ][0]
@@ -1315,7 +1313,6 @@ def get_closest_stop_line_from_lanelet(
 
     min_distance = math.inf
     min_stopline = None
-    print(f"lanelet.lanelet_id: {lanelet.lanelet_id}")
     pre_paths = reach_pre(lanelet, road_network.lanelet_network)
     succ_paths = reach_succ(lanelet, road_network.lanelet_network)
     merged_succ = set().union(*succ_paths)
