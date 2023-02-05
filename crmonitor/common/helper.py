@@ -1039,9 +1039,13 @@ def get_incoming(
 
 def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
     intersection_incoming = get_incoming(lanelet, lanelet_network)
+
     if intersection_incoming is None:
         return set()
     intersection, incoming = intersection_incoming
+
+    print(f"incoming.left_of : {incoming.left_of}")
+
     left_incoming = [
         inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
     ][0]
@@ -1284,3 +1288,45 @@ def indirect_opposite_adjacents(
             current = current_lanelet.adj_right
 
     return adj_opp
+
+
+def distance_lanelet_front_to_stop_line(lanelet: Lanelet, stop_line: StopLine) -> float:
+    center_vertices = lanelet.center_vertices
+    final_center_point = center_vertices[len(center_vertices) - 1]
+    stop_line_center = [
+        (stop_line.start[0] + stop_line.end[0]) / 2,
+        (stop_line.start[1] + stop_line.end[1]) / 2,
+    ]
+    # second idea: distance from vehicle to the center point of the stop line.
+    distance = np.sqrt(
+        (stop_line_center[0] - final_center_point[0]) ** 2
+        + (stop_line_center[1] - final_center_point[1]) ** 2
+    )
+    return distance
+
+
+def get_closest_stop_line_from_lanelet(
+    lanelet: Lanelet, road_network: RoadNetwork
+) -> Tuple[StopLine, float]:
+    if lanelet.stop_line != None:
+        return lanelet.stop_line, distance_lanelet_front_to_stop_line(
+            lanelet, lanelet.stop_line
+        )
+
+    min_distance = math.inf
+    min_stopline = None
+    print(f"lanelet.lanelet_id: {lanelet.lanelet_id}")
+    pre_paths = reach_pre(lanelet, road_network.lanelet_network)
+    succ_paths = reach_succ(lanelet, road_network.lanelet_network)
+    merged_succ = set().union(*succ_paths)
+    merged_pre = set().union(*pre_paths)
+    lanelets = merged_pre.union(merged_succ)
+
+    for l in lanelets:
+        l_obj = road_network.lanelet_network.find_lanelet_by_id(l)
+        if l_obj.stop_line != None:
+            distance = distance_lanelet_front_to_stop_line(lanelet, l_obj.stop_line)
+            if distance < min_distance:
+                min_distance = distance
+                min_stopline = l_obj.stop_line
+    return min_stopline, min_distance

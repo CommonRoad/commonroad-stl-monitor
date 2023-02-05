@@ -1340,7 +1340,6 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
 
-
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -1357,234 +1356,224 @@ class TestPositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
-    # def test_on_oncom_of(self):
-    #     scenario, _ = CommonRoadFileReader(
-    #         str(
-    #             "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
-    #         )
-    #     ).open(True)
+    def test_on_oncom_of(self):
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
 
-    #     world = World.create_from_scenario(scenario)
-    #     road_network = RoadNetwork(
-    #         scenario.lanelet_network, self.config.get("road_network_param")
-    #     )
+        world = World.create_from_scenario(scenario)
+        road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
 
-    #     exp_sol_monitor_mode_1 = True  # oncoming
-    #     exp_sol_monitor_mode_2 = True  # oncoming
-    #     exp_sol_monitor_mode_3 = False  # right
-    #     exp_sol_monitor_mode_4 = False  # adjacent
+        exp_sol_monitor_mode_1 = True  # oncoming
+        exp_sol_monitor_mode_2 = True  # oncoming
+        exp_sol_monitor_mode_3 = False  # right
+        exp_sol_monitor_mode_4 = False  # adjacent
 
-    #     cr_state_list_k = {
-    #         0: State(
-    #             position=[23, 13],
-    #             time_step=0,
-    #             orientation=(3 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #         1: State(
-    #             position=[23.5, 0],
-    #             time_step=1,
-    #             orientation=(3 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #         2: State(
-    #             position=[38, 3], time_step=2, orientation=(1) * math.pi, velocity=42
-    #         ),
-    #         3: State(
-    #             position=[23.5, -9],
-    #             time_step=3,
-    #             orientation=(3 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #     }
+        cr_state_list_k = {
+            0: State(
+                position=[23, 13],
+                time_step=0,
+                orientation=(3 / 2) * math.pi,
+                velocity=42,
+            ),
+            1: State(
+                position=[23.5, 0],
+                time_step=1,
+                orientation=(3 / 2) * math.pi,
+                velocity=42,
+            ),
+            2: State(
+                position=[38, 3], time_step=2, orientation=(1) * math.pi, velocity=42
+            ),
+            3: State(
+                position=[23.5, -9],
+                time_step=3,
+                orientation=(3 / 2) * math.pi,
+                velocity=42,
+            ),
+        }
 
-    #     cr_state_list_p = {
-    #         0: State(
-    #             position=[26.5, -9],
-    #             time_step=0,
-    #             orientation=(1 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #         1: State(
-    #             position=[26.5, -9],
-    #             time_step=1,
-    #             orientation=(1 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #         2: State(
-    #             position=[26.5, -9],
-    #             time_step=2,
-    #             orientation=(1 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #         3: State(
-    #             position=[26.5, -9],
-    #             time_step=3,
-    #             orientation=(1 / 2) * math.pi,
-    #             velocity=42,
-    #         ),
-    #     }
+        cr_state_list_p = {
+            0: State(
+                position=[26.5, -9],
+                time_step=0,
+                orientation=(1 / 2) * math.pi,
+                velocity=42,
+            ),
+            1: State(
+                position=[26.5, -9],
+                time_step=1,
+                orientation=(1 / 2) * math.pi,
+                velocity=42,
+            ),
+            2: State(
+                position=[26.5, -9],
+                time_step=2,
+                orientation=(1 / 2) * math.pi,
+                velocity=42,
+            ),
+            3: State(
+                position=[26.5, -9],
+                time_step=3,
+                orientation=(1 / 2) * math.pi,
+                velocity=42,
+            ),
+        }
 
-    #     lanelet_assignments_k = {0: {8}, 1: {13}, 2: {10}, 3: {15}}
-    #     lanelet_assignments_p = {0: {16}, 1: {16}, 2: {16}, 3: {16}}
+        lanelet_assignments_k = {0: {8}, 1: {13}, 2: {10}, 3: {15}}
+        lanelet_assignments_p = {0: {16}, 1: {16}, 2: {16}, 3: {16}}
 
-    #     # TODO: Params
-    #     # ego_vehicle_param = self.config.get("ego_vehicle_param")
+        # TODO: Params
+        # ego_vehicle_param = self.config.get("ego_vehicle_param")
 
-    #     vehicle_p = Vehicle(
-    #         0,
-    #         ObstacleType.CAR,
-    #         None,
-    #         Rectangle(5, 2),
-    #         cr_state_list_p,
-    #         None,
-    #         CurvilinearStateManager(road_network),
-    #         lanelet_assignments_p,
-    #     )
-    #     vehicle_k = Vehicle(
-    #         1,
-    #         ObstacleType.CAR,
-    #         None,
-    #         Rectangle(5, 2),
-    #         cr_state_list_k,
-    #         None,
-    #         CurvilinearStateManager(road_network),
-    #         lanelet_assignments_k,
-    #     )
+        vehicle_p = Vehicle(
+            0,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_p,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_p,
+        )
+        vehicle_k = Vehicle(
+            1,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_k,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_k,
+        )
 
-    #     # TODO: switch k and p vehicle
-    #     vehicles = [0, 1]
+        # TODO: switch k and p vehicle
+        vehicles = [0, 1]
 
-    #     pred = PredOnOncomOf(self.config)
+        pred = PredOnOncomOf(self.config)
 
-    #     world.add_vehicle(vehicle_k)
-    #     world.add_vehicle(vehicle_p)
-    #     # world = World({ego_vehicle}, self.road_network)
+        world.add_vehicle(vehicle_k)
+        world.add_vehicle(vehicle_p)
+        # world = World({ego_vehicle}, self.road_network)
 
-    #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
-    #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
 
-    #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
-    #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
 
-    #     # ts = 2 : outside incoming => false
-    #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
-    #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        # ts = 2 : outside incoming => false
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
 
-    #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
-    #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
-    # def test_on_incoming_left_of(self):
-    #     scenario, _ = CommonRoadFileReader(
-    #         str(
-    #             "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
-    #         )
-    #     ).open(True)
-    #     road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+    def test_on_incoming_left_of(self):
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
+        road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
 
-    #     world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario)
 
-    #     exp_sol_monitor_mode_1 = True
-    #     exp_sol_monitor_mode_2 = False  # k on the right
-    #     exp_sol_monitor_mode_3 = False  # k is oncoming
+        exp_sol_monitor_mode_1 = True
+        exp_sol_monitor_mode_2 = False  # k on the right
+        exp_sol_monitor_mode_3 = False  # k is oncoming
 
-    #     cr_state_list_p = {
-    #         0: State(
-    #             position=[38, 3],
-    #             time_step=0,
-    #             orientation=(1) * math.pi,
-    #             velocity = 42
-    #         ),
-    #         1: State(
-    #             position=[38, 3],
-    #             time_step=1,
-    #             orientation=(1) * math.pi,
-    #             velocity = 42
-    #         ),
-    #         2: State(
-    #             position=[38, 3],
-    #             time_step=2,
-    #             orientation=(1) * math.pi,
-    #             velocity = 42
-    #         ),
-    #     }
+        cr_state_list_p = {
+            0: State(
+                position=[38, 3], time_step=0, orientation=(1) * math.pi, velocity=42
+            ),
+            1: State(
+                position=[38, 3], time_step=1, orientation=(1) * math.pi, velocity=42
+            ),
+            2: State(
+                position=[38, 3], time_step=2, orientation=(1) * math.pi, velocity=42
+            ),
+        }
 
-    #     cr_state_list_k = {
-    #         0: State(
-    #             position=[27, -8],
-    #             time_step=0,
-    #             orientation=(1 / 2) * math.pi,
-    #             velocity = 42
-    #         ),
-    #         1: State(
-    #             position=[23, 13],
-    #             time_step=1,
-    #             orientation=(3 / 2) * math.pi,
-    #             velocity = 42
-    #         ),
-    #         2: State(
-    #             position=[10, 0],
-    #             time_step=2,
-    #             orientation=(0) * math.pi,
-    #             velocity = 42
-    #         ),
-    #     }
+        cr_state_list_k = {
+            0: State(
+                position=[27, -8],
+                time_step=0,
+                orientation=(1 / 2) * math.pi,
+                velocity=42,
+            ),
+            1: State(
+                position=[23, 13],
+                time_step=1,
+                orientation=(3 / 2) * math.pi,
+                velocity=42,
+            ),
+            2: State(
+                position=[10, 0], time_step=2, orientation=(0) * math.pi, velocity=42
+            ),
+        }
 
-    #     lanelet_assignments_p = {0: {10}, 1: {10}, 2: {10}}
-    #     lanelet_assignments_k = {0: {16}, 1: {8}, 2: {1}}
+        lanelet_assignments_p = {0: {10}, 1: {10}, 2: {10}}
+        lanelet_assignments_k = {0: {16}, 1: {8}, 2: {1}}
 
-    #     # TODO: Params
-    #     # ego_vehicle_param = self.config.get("ego_vehicle_param")
+        # TODO: Params
+        # ego_vehicle_param = self.config.get("ego_vehicle_param")
 
-    #     vehicle_p = Vehicle(
-    #         0,
-    #         ObstacleType.CAR,
-    #         None,
-    #         Rectangle(5, 2),
-    #         cr_state_list_p,
-    #         None,
-    #         CurvilinearStateManager(road_network),
-    #         lanelet_assignments_p,
-    #     )
-    #     vehicle_k = Vehicle(
-    #         1,
-    #         ObstacleType.CAR,
-    #         None,
-    #         Rectangle(5, 2),
-    #         cr_state_list_k,
-    #         None,
-    #         CurvilinearStateManager(road_network),
-    #         lanelet_assignments_k,
-    #     )
+        vehicle_p = Vehicle(
+            0,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_p,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_p,
+        )
+        vehicle_k = Vehicle(
+            1,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_k,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_k,
+        )
 
-    #     vehicles = [0, 1]
+        vehicles = [0, 1]
 
-    #     pred = PredOnIncomingLeftOf(self.config)
+        pred = PredOnIncomingLeftOf(self.config)
 
-    #     world.add_vehicle(vehicle_p)
-    #     world.add_vehicle(vehicle_k)
-    #     # world = World({ego_vehicle}, self.road_network)
+        world.add_vehicle(vehicle_p)
+        world.add_vehicle(vehicle_k)
+        # world = World({ego_vehicle}, self.road_network)
 
-    #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
-    #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
 
-    #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
-    #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
 
-    #     # ts = 2 : outside incoming => false
-    #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
-    #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
+        # ts = 2 : outside incoming => false
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)

@@ -1065,6 +1065,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         b = -1  # boolean evaluation
 
         lanelet_network = world.road_network.lanelet_network
+
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
@@ -1075,6 +1076,18 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
 
         lanelets_k = vehicle_k.lanelet_assignment[time_step]
         lanelets_p = vehicle_p.lanelet_assignment[time_step]
+
+        stop_line_k, _ = helper.get_closest_stop_line_from_lanelet(
+            lanelet_network.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
+        )
+        coef_k = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
+
+        stop_line_p, _ = helper.get_closest_stop_line_from_lanelet(
+            lanelet_network.find_lanelet_by_id(list(lanelets_p)[0]), world.road_network
+        )
+        coef_p = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
+
+        coef = np.minimum(coef_k, coef_p)  # will be used to calculate the robustness
 
         for lk in lanelets_k:
             if b == 1:
@@ -1097,66 +1110,10 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
                             b = 1
                             break
 
-        # vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        # vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        # old idea: distance between vehicles as coefficent for robustness.
+        # coef = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
 
-        # lanelets_k = vehicle_k.lanelet_assignment[time_step]
-        # lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
-        # # will be used later to calculate the robustness.
-        # lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
-        # ref_path_lanelets_p = helper.ref_path_lanelets(
-        #     vehicle_p, world.road_network.lanelet_network, time_step
-        # )
-
-        # for lap in ref_path_lanelets_p:
-        #     same_incom = False
-        #     for lak in lanelets_dir_k:
-        #         lanelet_network = world.road_network.lanelet_network
-        #         if helper.same_incom(lanelet_network.find_lanelet_by_id(lak), lanelet_network.find_lanelet_by_id(), lanelet_network):
-        #             same_incom = True
-        #             break
-        #     if same_incom == True:
-        #         continue
-        #     lap_obj = world.road_network.lanelet_network.find_lanelet_by_id(lap)
-        #     if (
-        #         lap in lanelets_k
-        #         and lap_obj.lanelet_type == LaneletType.INTERSECTION
-        #         and lap not in lanelets_dir_k
-        #     ):
-        #         b = 1
-        #         break
-
-        # at this point we have the boolean evaluation for our predicate. Now we can use it to compute the robustness
-        # We can follow these steps to calculate to robustness:
-        # 1. for each car:
-        # 	- find the corresponding incoming element
-        # # 		we can do that by taking the first lanelet in lanelets_dir, and use get_incoming for this lanelet.
-        # first_lanelet_dir_k_obj = world.road_network.lanelet_network.find_lanelet_by_id(
-        #     list(lanelets_dir_k)[0]
-        # )
-        # first_lanelet_dir_p_obj = world.road_network.lanelet_network.find_lanelet_by_id(
-        #     list(lanelets_dir_p)[0]
-        # )
-        # incoming_k = helper.get_incoming(
-        #     first_lanelet_dir_k_obj, world.road_network.lanelet_network
-        # )
-        # incoming_p = helper.get_incoming(
-        #     first_lanelet_dir_p_obj, world.road_network.lanelet_network
-        # )
-
-        # # 	- find the stop line associated with this incoming, return the closest stop line to each vehicle along with the distance between the vehicle and the sl
-        # stop_line_k, d1 = helper.get_stop_line_from_incoming(
-        #     vehicle_k, incoming_k, world.road_network.lanelet_network, time_step
-        # )
-        # stop_line_p, d2 = helper.get_stop_line_from_incoming(
-        #     vehicle_p, incoming_p, world.road_network.lanelet_network, time_step
-        # )
-
-        # # 2. rob = max(d1 + d2) * b
-        # rob = np.maximum(d1, d2) * b
-        distance = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
-        rob = b * distance
-        print(f"rob = {rob}")
+        rob = b * coef
         return rob
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
@@ -1221,64 +1178,54 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-
-        result = -1
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
-
-        for lak in lanelets_dir_ids_of_p:
-            successors_paths_p = lak.find_lanelet_successors_in_range(
-                world.road_network, max_length=150
-            )
-            for lap in lanelets_dir_ids_of_k:
-                successors_paths_k = lap.find_lanelet_successors_in_range(
-                    world.road_network, max_length=150
-                )
-                for successors_lanelet_of_k in successors_paths_k:
-                    succ_of_lak = helper.inc_la_left_of(
-                        successors_lanelet_of_k, world.road_network.lanelet_network
-                    )
-                    for successors_lanelet_of_p in successors_paths_p:
-                        for succ_lak in succ_of_lak:
-                            if successors_lanelet_of_p == succ_lak:
-                                result = 1
-        return result
-
-    """get p's lanelets, verify its left. """
-
     def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
+
+        lnet = world.road_network.lanelet_network
+
+        inc_la_left_of_16 = helper.inc_la_left_of(lnet.find_lanelet_by_id(16), lnet)
+        print(f"inc_la_left_of_16 : {inc_la_left_of_16}")
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        incoming = helper.inc_la_left_of(lanelet, world.road_network.lanelet_network)
+        lanelets_k = vehicle_k.lanelet_assignment[time_step]
+        lanelets_p = vehicle_p.lanelet_assignment[time_step]
 
-        last_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
-            incoming.pop
+        stop_line_k, _ = helper.get_closest_stop_line_from_lanelet(
+            lnet.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
         )
+        coef_k = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
 
-        # for element in incoming:
-        # if element in lanelet.successor(max_value):
-        #    max_value = element
-        # here the function of mehdi will be called twice on the two cars
-
-        vehicle_k_position = vehicle_k.get_lon_state(time_step)[0]
-        vehicle_p_position = vehicle_p.get_lon_state(time_step)[1]
-
-        stop_line_center = [
-            (last_lanelet.stop_line.start[0] + last_lanelet.stop_line.end[0]) / 2,
-            (last_lanelet.stop_line.start[1] + last_lanelet.stop_line.end[1]) / 2,
-        ]
-
-        distance_to_endline_from_k = np.sqrt(
-            (stop_line_center[0] - vehicle_k_position[0]) ** 2
-            + (stop_line_center[1] - vehicle_k_position[1]) ** 2
+        stop_line_p, _ = helper.get_closest_stop_line_from_lanelet(
+            lnet.find_lanelet_by_id(list(lanelets_p)[0]), world.road_network
         )
-        distance_to_endline_from_p = np.sqrt(
-            (stop_line_center[0] - vehicle_p_position[0]) ** 2
-            + (stop_line_center[1] - vehicle_p_position[1]) ** 2
-        )
+        coef_p = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
 
-        return (distance_to_endline_from_p + distance_to_endline_from_k) / 2
+        coef = np.minimum(coef_k, coef_p)  # will be used to calculate the robustness
+
+        b = -1
+
+        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        for lk in lanelets_dir_k:
+            if b == 1:
+                break
+            reach_suc_lk = helper.reach_succ(lnet.find_lanelet_by_id(lk), lnet)
+            merged_reach_suc_lk = set().union(*reach_suc_lk)
+            merged_reach_suc_lk.add(lk)
+            for lp in lanelets_dir_p:
+                if b == 1:
+                    break
+                reach_suc_lp = helper.reach_succ(lnet.find_lanelet_by_id(lp), lnet)
+                merged_reach_suc_lp = set().union(*reach_suc_lp)
+                merged_reach_suc_lp.add(lp)
+                for lap in merged_reach_suc_lp:
+                    if b == 1:
+                        break
+                    for lak in merged_reach_suc_lk:
+                        if lap in helper.inc_la_left_of(
+                            lnet.find_lanelet_by_id(lak), lnet
+                        ):
+                            b = 1
+                            break
+
+        return b * coef
