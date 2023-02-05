@@ -31,8 +31,8 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
         priority_p = PredHasPriority.get_priority(lanelets_dir_ids_of_p)
         priority_k = PredHasPriority.get_priority(lanelets_dir_ids_of_k)
@@ -62,8 +62,8 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, RoadNetwork)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, RoadNetwork)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
 
         priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, vehicle_dir_p)
         priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, vehicle_dir_k)
@@ -151,7 +151,7 @@ class PredHasPriority(BasePredicateEvaluator):
         "102": [3, 3, 3, 15],
     }
 
-    def get_priority(lanelets_dir_ids):
+    def get_priority(self, lanelets_dir_ids):
 
         for l_id in lanelets_dir_ids:
             l_sign_id = lanelet.traffic_sign_id(l_id)
@@ -166,38 +166,39 @@ class PredHasPriority(BasePredicateEvaluator):
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
                 eval_idx_arr = +[eval_idx]
+                value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+                return value
 
-            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+            list_of_keys = [
+                key
+                for key, list_of_values in self.sign_id_priority.items()
+                if value in list_of_values
+            ][0]
+            priority_all = PredHasPriority.sign_id_priority[list_of_keys]
 
-        list_of_keys = [
-            key
-            for key, list_of_values in PredHasPriority.sign_id_priority.items()
-            if value in list_of_values
-        ][0]
-        priority_all = PredHasPriority.sign_id_priority[list_of_keys]
+            priority_left = priority_all[0]
+            priority_straight = priority_all[1]
+            priority_right = priority_all[2]
 
-        priority_left = priority_all[0]
-        priority_straight = priority_all[1]
-        priority_right = priority_all[2]
-
-        orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
-
-        if orient >= np.deg2rad(45):
-            priority_veh = priority_left
-        elif orient <= np.deg2rad(-45):
-            priority_veh = priority_right
-        else:
             priority_veh = priority_straight
+            # orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
+            #
+            # if orient >= np.deg2rad(45):
+            #     priority_veh = priority_left
+            # elif orient <= np.deg2rad(-45):
+            #     priority_veh = priority_right
+            # else:
+            #     priority_veh = priority_straight
 
-        return priority_veh
+            return priority_veh
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, RoadNetwork)
-        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, RoadNetwork)
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
         priority_p = self.get_priority(lanelets_dir_ids_of_p)
         priority_k = self.get_priority(lanelets_dir_ids_of_k)
