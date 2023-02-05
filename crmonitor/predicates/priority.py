@@ -153,6 +153,7 @@ class PredHasPriority(BasePredicateEvaluator):
 
     def get_priority(self, lanelets_dir_ids):
 
+        global value
         for l_id in lanelets_dir_ids:
             l_sign_id = lanelet.traffic_sign_id(l_id)
 
@@ -166,7 +167,6 @@ class PredHasPriority(BasePredicateEvaluator):
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
                 eval_idx_arr = +[eval_idx]
-                global value
                 value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
             list_of_keys = [
