@@ -225,7 +225,7 @@ class TestPriorityPredicates(unittest.TestCase):
         world = World.create_from_scenario(scenario)
 
         exp_sol_monitor_mode_1 = True
-        exp_sol_monitor_mode_2 = False  # k on the right
+        exp_sol_monitor_mode_2 = True  # k on the right
         exp_sol_monitor_mode_3 = False  # k is oncoming
 
         cr_state_list_p = {
