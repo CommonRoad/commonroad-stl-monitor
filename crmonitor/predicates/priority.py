@@ -172,7 +172,9 @@ class PredHasPriority(BasePredicateEvaluator):
             else:
                 traffic_signs = {102}
 
-            value = self.arg_min(traffic_signs)
+            value1 = self.arg_min(traffic_signs)
+            value = value1[(np.argmin(value1))]
+
             list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
                             if value in list_of_values][0]
 
