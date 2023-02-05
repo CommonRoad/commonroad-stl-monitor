@@ -163,23 +163,23 @@ class PredHasPriority(BasePredicateEvaluator):
             else:
                 traffic_signs = {102}
 
-                for sign_id in traffic_signs:
-                    sign_priority = PredHasPriority.sign_id_priority[sign_id]
-                    eval_idx = sign_priority[3]
-                    global eval_idx_arr
-                    eval_idx_arr.extend([eval_idx])
+            for sign_id in traffic_signs:
+                sign_priority = PredHasPriority.sign_id_priority[sign_id]
+                eval_idx = sign_priority[3]
+                global eval_idx_arr
+                eval_idx_arr.extend([eval_idx])
 
-                value = eval_idx_arr
-                list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
-                                if value in list_of_values][0]
+            value = eval_idx_arr
+            list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
+                            if value in list_of_values][0]
 
-                priority_all = self.sign_id_priority[list_of_keys]
+            priority_all = self.sign_id_priority[list_of_keys]
 
-                priority_left = priority_all[0]
-                priority_straight = priority_all[1]
-                priority_right = priority_all[2]
+            priority_left = priority_all[0]
+            priority_straight = priority_all[1]
+            priority_right = priority_all[2]
 
-                priority_veh = priority_straight
+            priority_veh = priority_straight
             # orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
             #
             # if orient >= np.deg2rad(45):
