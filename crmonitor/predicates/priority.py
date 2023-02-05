@@ -144,11 +144,11 @@ class PredHasPriority(BasePredicateEvaluator):
     arity = 4
 
     sign_id_priority = {
-        "306": [4, 5, 4, 11],
-        "301": [4, 5, 4, 12],
-        "205": [2, 2, 2, 13],
-        "206": [1, 1, 1, 14],
-        "102": [3, 3, 3, 15],
+        306: [4, 5, 4, 11],
+        301: [4, 5, 4, 12],
+        205: [2, 2, 2, 13],
+        206: [1, 1, 1, 14],
+        102: [3, 3, 3, 15],
     }
 
     def get_priority(self, lanelets_dir_ids):
@@ -168,11 +168,9 @@ class PredHasPriority(BasePredicateEvaluator):
                 eval_idx_arr = +[eval_idx]
                 value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-                list_of_keys = [
-                    key
-                    for key, list_of_values in self.sign_id_priority.items()
-                    if value in list_of_values
-                ][0]
+                list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
+                                if value in list_of_values][0]
+
                 priority_all = self.sign_id_priority[list_of_keys]
 
                 priority_left = priority_all[0]
