@@ -151,14 +151,13 @@ class PredHasPriority(BasePredicateEvaluator):
         102: [3, 3, 3, 15]
     }
 
-    def arg_min(self, traffic_signs):
-
-        eval_idx_arr = []
-        for sign_id in traffic_signs:
-            sign_priority = PredHasPriority.sign_id_priority[sign_id]
-            eval_idx = sign_priority[3]
-            eval_idx_arr = eval_idx_arr.extend([eval_idx])
-        return eval_idx_arr
+    #def arg_min(self, traffic_signs):
+        #
+        # for sign_id in traffic_signs:
+        #     sign_priority = PredHasPriority.sign_id_priority[sign_id]
+        #     eval_idx = sign_priority[3]
+        #     eval_idx_arr = eval_idx_arr.extend(eval_idx)
+        # return eval_idx_arr
 
     def get_priority(self, lanelets_dir_ids, road_network):
 
@@ -166,15 +165,21 @@ class PredHasPriority(BasePredicateEvaluator):
             lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
             traffic_signs = lanelet.traffic_signs
 
-            if traffic_signs != {None}:
+            if traffic_signs:
                 traffic_signs = traffic_signs
             else:
-                traffic_signs = {102}
+                traffic_signs = [102]
 
-            value1 = self.arg_min(traffic_signs)
-            value = value1[(np.argmin(value1))]
+            eval_idx_arr = list()
+            for sign_id in traffic_signs:
+                sign_priority = self.sign_id_priority[sign_id]
+                eval_idx = sign_priority[3]
+                eval_idx_arr.append(eval_idx)
 
-            list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
+            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+
+            list_of_keys = [key
+                            for key, list_of_values in self.sign_id_priority.items()
                             if value in list_of_values][0]
 
             priority_all = self.sign_id_priority[list_of_keys]
@@ -182,6 +187,7 @@ class PredHasPriority(BasePredicateEvaluator):
             priority_left = priority_all[0]
             priority_straight = priority_all[1]
             priority_right = priority_all[2]
+
 
             priority_veh = priority_straight
             # orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
