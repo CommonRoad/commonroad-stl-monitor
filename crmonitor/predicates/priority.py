@@ -151,10 +151,9 @@ class PredHasPriority(BasePredicateEvaluator):
         102: [3, 3, 3, 15]
     }
 
-
     def arg_min(self, traffic_signs):
 
-        global eval_idx_arr
+        eval_idx_arr = []
         for sign_id in traffic_signs:
             sign_priority = PredHasPriority.sign_id_priority[sign_id]
             eval_idx = sign_priority[3]
