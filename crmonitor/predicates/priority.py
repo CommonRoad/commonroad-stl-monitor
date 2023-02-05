@@ -171,7 +171,7 @@ class PredHasPriority(BasePredicateEvaluator):
 
             list_of_keys = [
                 key
-                for key, list_of_values in PredHasPriority.sign_id_priority.items()
+                for key, list_of_values in self.sign_id_priority.items()
                 if value in list_of_values
             ][0]
             priority_all = PredHasPriority.sign_id_priority[list_of_keys]
@@ -180,14 +180,15 @@ class PredHasPriority(BasePredicateEvaluator):
             priority_straight = priority_all[1]
             priority_right = priority_all[2]
 
-            orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
-
-            if orient >= np.deg2rad(45):
-                priority_veh = priority_left
-            elif orient <= np.deg2rad(-45):
-                priority_veh = priority_right
-            else:
-                priority_veh = priority_straight
+            priority_veh = priority_straight
+            # orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
+            #
+            # if orient >= np.deg2rad(45):
+            #     priority_veh = priority_left
+            # elif orient <= np.deg2rad(-45):
+            #     priority_veh = priority_right
+            # else:
+            #     priority_veh = priority_straight
 
             return priority_veh
 
