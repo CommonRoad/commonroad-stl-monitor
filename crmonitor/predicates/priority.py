@@ -203,6 +203,16 @@ class PredHasPriority(BasePredicateEvaluator):
         priority_p = self.get_priority(lanelets_dir_ids_of_p)
         priority_k = self.get_priority(lanelets_dir_ids_of_k)
 
+        if priority_p == None:
+            priority_p = 3
+        else:
+            break
+
+        if priority_k == None:
+            priority_k = 3
+        else:
+            break
+
         if priority_p <= priority_k:
             rob = False
         else:
