@@ -265,7 +265,7 @@ class TestPriorityPredicates(unittest.TestCase):
         # ego_vehicle_param = self.config.get("ego_vehicle_param")
 
         vehicle_p = Vehicle(
-            1,
+            0,
             ObstacleType.CAR,
             None,
             Rectangle(5, 2),
@@ -275,7 +275,7 @@ class TestPriorityPredicates(unittest.TestCase):
             lanelet_assignments_p,
         )
         vehicle_k = Vehicle(
-            0,
+            1,
             ObstacleType.CAR,
             None,
             Rectangle(5, 2),
