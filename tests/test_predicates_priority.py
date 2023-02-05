@@ -191,21 +191,23 @@ class TestPriorityPredicates(unittest.TestCase):
 
         pred = PredHasPriority(self.config)
 
+        vehicles = [0, 1]
+
         world.add_vehicle(k_vehicle)
 
         world.add_vehicle(p_vehicle)
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0, 1])
-        sol_robustness_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0, 1])
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
+        sol_robustness_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 < 0)
 
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0, 1])
-        sol_robustness_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0, 1])
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
+        sol_robustness_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
         self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
 
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0, 1])
-        sol_robustness_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0, 1])
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
+        sol_robustness_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 < 0)
