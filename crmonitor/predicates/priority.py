@@ -151,9 +151,18 @@ class PredHasPriority(BasePredicateEvaluator):
         102: [3, 3, 3, 15]
     }
 
-    def get_priority(self, lanelets_dir_ids, road_network):
+
+    def arg_min(self, traffic_signs):
 
         global eval_idx_arr
+        for sign_id in traffic_signs:
+            sign_priority = PredHasPriority.sign_id_priority[sign_id]
+            eval_idx = sign_priority[3]
+            eval_idx_arr = eval_idx_arr.extend([eval_idx])
+            return eval_idx_arr
+
+    def get_priority(self, lanelets_dir_ids, road_network):
+
         for l_id in lanelets_dir_ids:
             lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
             traffic_signs = lanelet.traffic_signs
@@ -163,13 +172,7 @@ class PredHasPriority(BasePredicateEvaluator):
             else:
                 traffic_signs = {102}
 
-            for sign_id in traffic_signs:
-                sign_priority = PredHasPriority.sign_id_priority[sign_id]
-                eval_idx = sign_priority[3]
-                eval_idx_arr = []
-                eval_idx_arr = eval_idx_arr.extend([eval_idx])
-
-            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+            value = self.arg_min(traffic_signs)
             list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
                             if value in list_of_values][0]
 
