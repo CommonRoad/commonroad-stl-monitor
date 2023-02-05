@@ -1327,3 +1327,63 @@ def get_closest_stop_line_from_lanelet(
                 min_distance = distance
                 min_stopline = l_obj.stop_line
     return min_stopline, min_distance
+
+
+def has_type_intersection(lanelet: Lanelet) -> bool:
+    if lanelet.stop_line == None:
+        return False
+    else:
+        return True
+
+
+def is_turning_right(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+    """
+    returns whether a lanelet is turning right by computing the orientations of center vertices.
+    i.e. orientations are decreasing
+    """
+    lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
+    orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
+
+    # TODO: solution for first orientation, always has a problem
+    current = orientations[1]
+    for i in range(2, len(orientations) - 1):
+        if orientations[i] >= current:
+            return False
+        current = orientations[i]
+    return True
+
+
+def is_turning_left(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+    """
+    returns whether a lanelet is turning left by computing the orientations of center vertices.
+    i.e. orientations are increasing
+    """
+    lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
+    orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
+
+    # TODO: solution for first orientation, always has a problem
+    current = orientations[1]
+    for i in range(2, len(orientations) - 1):
+        if orientations[i] <= current:
+            return False
+        current = orientations[i]
+    return True
+
+
+def is_going_straight(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+    """
+    returns whether a lanelet is going straight by computing the orientations of center vertices.
+    i.e. orientations are constant
+    """
+
+    e = 0.01
+    lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
+    orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
+
+    # TODO: solution for first orientation, always has a problem
+    current = orientations[1]
+    for i in range(2, len(orientations) - 1):
+        if np.abs(orientations[i] - current) > e:
+            return False
+        current = orientations[i]
+    return True
