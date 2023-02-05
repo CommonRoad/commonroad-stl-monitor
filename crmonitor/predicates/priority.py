@@ -166,10 +166,11 @@ class PredHasPriority(BasePredicateEvaluator):
                 sign_priority = PredHasPriority.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
-                eval_idx_arr = +[eval_idx]
+                eval_idx_arr = eval_idx_arr.append(eval_idx)
+
                 value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-                list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
+            list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
                                 if value in list_of_values][0]
 
                 priority_all = self.sign_id_priority[list_of_keys]
