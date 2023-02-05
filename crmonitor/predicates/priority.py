@@ -162,7 +162,7 @@ class PredHasPriority(BasePredicateEvaluator):
             else:
                 traffic_signs = {102}
 
-            for sign_id in l_sign_id:
+            for sign_id in traffic_signs:
                 sign_priority = PredHasPriority.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
