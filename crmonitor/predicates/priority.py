@@ -151,15 +151,16 @@ class PredHasPriority(BasePredicateEvaluator):
         102: [3, 3, 3, 15],
     }
 
-    def get_priority(self, lanelets_dir_ids):
+    def get_priority(self, lanelets_dir_ids, road_network):
 
         for l_id in lanelets_dir_ids:
-            l_sign_id = lanelet.traffic_signs(l_id)
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+            traffic_signs = lanelet.traffic_signs
 
-            if l_sign_id != {None}:
-                l_sign_id = l_sign_id
+            if traffic_signs != {None}:
+                traffic_signs = traffic_signs
             else:
-                l_sign_id = {102}
+                traffic_signs = {102}
 
             for sign_id in l_sign_id:
                 sign_priority = PredHasPriority.sign_id_priority[sign_id]
@@ -191,14 +192,15 @@ class PredHasPriority(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
+        road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
         lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
-        priority_p = self.get_priority(lanelets_dir_ids_of_p)
-        priority_k = self.get_priority(lanelets_dir_ids_of_k)
+        priority_p = self.get_priority(lanelets_dir_ids_of_p, road_network)
+        priority_k = self.get_priority(lanelets_dir_ids_of_k, road_network)
 
         if priority_p <= priority_k:
             rob = False
