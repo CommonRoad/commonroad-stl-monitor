@@ -148,7 +148,7 @@ class PredHasPriority(BasePredicateEvaluator):
         34: [4, 5, 4, 12],
         29: [2, 2, 2, 13],
         27: [1, 1, 1, 14],
-        102: [3, 3, 3, 15],
+        102: [3, 3, 3, 15]
     }
 
     def get_priority(self, lanelets_dir_ids, road_network):
