@@ -6,7 +6,7 @@ from crmonitor.common.world import World
 from crmonitor.common import helper, world, vehicle
 from crmonitor.predicates.base import BasePredicateEvaluator
 from commonroad.scenario.traffic_sign import TrafficLightState
-from commonroad.scenario import lanelet
+from commonroad.scenario import lanelet, traffic_sign
 from commonroad.scenario.traffic_sign import TrafficLight
 from crmonitor.common.road_network import Lane, RoadNetwork
 
@@ -154,7 +154,7 @@ class PredHasPriority(BasePredicateEvaluator):
     def get_priority(self, lanelets_dir_ids):
 
         for l_id in lanelets_dir_ids:
-            l_sign_id = lanelet.traffic_sign_id(l_id)
+            l_sign_id = traffic_sign.traffic_sign_id(l_id)
 
             if len(l_sign_id):
                 l_sign_id = l_sign_id
