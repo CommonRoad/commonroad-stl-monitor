@@ -166,30 +166,30 @@ class PredHasPriority(BasePredicateEvaluator):
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
                 eval_idx_arr = +[eval_idx]
+                global value
+                value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+            list_of_keys = [
+                key
+                for key, list_of_values in PredHasPriority.sign_id_priority.items()
+                if value in list_of_values
+            ][0]
+            priority_all = PredHasPriority.sign_id_priority[list_of_keys]
 
-        list_of_keys = [
-            key
-            for key, list_of_values in PredHasPriority.sign_id_priority.items()
-            if value in list_of_values
-        ][0]
-        priority_all = PredHasPriority.sign_id_priority[list_of_keys]
+            priority_left = priority_all[0]
+            priority_straight = priority_all[1]
+            priority_right = priority_all[2]
 
-        priority_left = priority_all[0]
-        priority_straight = priority_all[1]
-        priority_right = priority_all[2]
+            orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
 
-        orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
+            if orient >= np.deg2rad(45):
+                priority_veh = priority_left
+            elif orient <= np.deg2rad(-45):
+                priority_veh = priority_right
+            else:
+                priority_veh = priority_straight
 
-        if orient >= np.deg2rad(45):
-            priority_veh = priority_left
-        elif orient <= np.deg2rad(-45):
-            priority_veh = priority_right
-        else:
-            priority_veh = priority_straight
-
-        return priority_veh
+            return priority_veh
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
