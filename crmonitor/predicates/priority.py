@@ -163,7 +163,8 @@ class PredHasPriority(BasePredicateEvaluator):
                 traffic_signs = {102}
 
             for sign_id in traffic_signs:
-                sign_priority = PredHasPriority.sign_id_priority[sign_id]
+                sign_element = lanelet.traffic_sign_id(sign_id)
+                sign_priority = PredHasPriority.sign_id_priority[sign_element]
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
                 eval_idx_arr = +[eval_idx]
