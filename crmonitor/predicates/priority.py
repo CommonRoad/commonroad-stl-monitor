@@ -166,7 +166,6 @@ class PredHasPriority(BasePredicateEvaluator):
             for sign_id in traffic_signs:
                 sign_priority = PredHasPriority.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
-                global eval_idx_arr
                 eval_idx_arr.extend([eval_idx])
 
             value = eval_idx_arr
