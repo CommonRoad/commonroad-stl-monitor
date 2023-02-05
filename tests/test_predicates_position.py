@@ -423,49 +423,49 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1_right, sol_monitor_mode_1)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_1_right, sol_robustness_monitor_mode_1 > 0
+    #         exp_sol_monitor_mode_1_right, sol_robustness_monitor_mode_1 >= 0
     #     )
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2_right, sol_monitor_mode_2)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_2_right, sol_robustness_monitor_mode_2 > 0
+    #         exp_sol_monitor_mode_2_right, sol_robustness_monitor_mode_2 >= 0
     #     )
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3_right, sol_monitor_mode_3)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_3_right, sol_robustness_monitor_mode_3 > 0
+    #         exp_sol_monitor_mode_3_right, sol_robustness_monitor_mode_3 >= 0
     #     )
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4_right, sol_monitor_mode_4)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_4_right, sol_robustness_monitor_mode_4 > 0
+    #         exp_sol_monitor_mode_4_right, sol_robustness_monitor_mode_4 >= 0
     #     )
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5_right, sol_monitor_mode_5)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_5_right, sol_robustness_monitor_mode_5 > 0
+    #         exp_sol_monitor_mode_5_right, sol_robustness_monitor_mode_5 >= 0
     #     )
 
     #     sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids)
     #     sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_6_right, sol_monitor_mode_6)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_6_right, sol_robustness_monitor_mode_6 > 0
+    #         exp_sol_monitor_mode_6_right, sol_robustness_monitor_mode_6 >= 0
     #     )
 
     #     sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids)
     #     sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_7_right, sol_monitor_mode_7)
     #     self.assertEqual(
-    #         exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 > 0
+    #         exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 >= 0
     #     )
 
     #     # Left of broad lane markings
@@ -475,37 +475,37 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1_left, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1_left, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1_left, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2_left, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2_left, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2_left, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3_left, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3_left, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3_left, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4_left, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4_left, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4_left, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5_left, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5_left, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5_left, sol_robustness_monitor_mode_5 >= 0)
 
     #     sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids)
     #     sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_6_left, sol_monitor_mode_6)
-    #     self.assertEqual(exp_sol_monitor_mode_6_left, sol_robustness_monitor_mode_6 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_6_left, sol_robustness_monitor_mode_6 >= 0)
 
     #     sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids)
     #     sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_7_left, sol_monitor_mode_7)
-    #     self.assertEqual(exp_sol_monitor_mode_7_left, sol_robustness_monitor_mode_7 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_7_left, sol_robustness_monitor_mode_7 >= 0)
 
     # def test_on_access_ramp(self):
     #     exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
@@ -523,27 +523,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_on_shoulder(self):
     #     exp_sol_monitor_mode_1 = True  # ego vehicle on shoulder
@@ -561,27 +561,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_on_main_carriage_way(self):
     #     exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
@@ -598,27 +598,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def PredMainCarriageWayRightLane(self):
     #     exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
@@ -646,27 +646,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_in_rightmost_lane(self):
     #     # expected solutions
@@ -695,27 +695,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_in_leftmost_lane(self):
     #     # expected solutions
@@ -744,27 +744,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_left_of(self):
     #     exp_sol_monitor_mode_1 = False  # other vehicle in left lane but not adjacent
@@ -1041,27 +1041,27 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
     # def test_drives_rightmost(self):
     #     self.config["close_to_lane_border"] = 0.2
@@ -1148,104 +1148,104 @@ class TestPositionPredicates(unittest.TestCase):
     #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
     #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
     #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
     #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
     #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
     #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     #     sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
     #     sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     #     sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
     #     sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
     #     self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+    #     self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
-    # # TODO
-    # def test_on_lanelet_with_type_intersection(self):
-    #     scenario, _ = CommonRoadFileReader(
-    #         str(
-    #             "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
-    #         )
-    #     ).open(True)
+    # TODO
+    def test_on_lanelet_with_type_intersection(self):
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
+            )
+        ).open(True)
 
-    #     world = World.create_from_scenario(scenario)
-    #     road_network = RoadNetwork(
-    #         scenario.lanelet_network, self.config.get("road_network_param")
-    #     )
+        world = World.create_from_scenario(scenario)
+        road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
 
-    #     exp_sol_monitor_mode_1 = True  # inside intersection
-    #     exp_sol_monitor_mode_2 = True  # inside intersection
-    #     exp_sol_monitor_mode_3 = False  # outside intersection
+        exp_sol_monitor_mode_1 = True  # inside intersection
+        exp_sol_monitor_mode_2 = True  # inside intersection
+        exp_sol_monitor_mode_3 = False  # outside intersection
 
-    #     # ego vehicle
-    #     cr_state_list_ego = {
-    #         0: State(
-    #             position=[25.5, 2],
-    #             time_step=0,
-    #             orientation=(1) * math.pi,
-    #             velocity=15,
-    #         ),
-    #         1: State(
-    #             position=[25, 0],
-    #             time_step=1,
-    #             # orientation=(1 / 2) * math.pi, #straight
-    #             # orientation=(3 / 4) * math.pi, #left
-    #             orientation=(0) * math.pi,  # right
-    #             velocity=15,
-    #         ),
-    #         2: State(
-    #             position=[36, 0],
-    #             time_step=2,
-    #             orientation=(0) * math.pi,
-    #             velocity=15,
-    #         ),
-    #     }
+        # ego vehicle
+        cr_state_list_ego = {
+            0: State(
+                position=[25.5, 2],
+                time_step=0,
+                orientation=(1) * math.pi,
+                velocity=15,
+            ),
+            1: State(
+                position=[25, 0],
+                time_step=1,
+                # orientation=(1 / 2) * math.pi, #straight
+                # orientation=(3 / 4) * math.pi, #left
+                orientation=(0) * math.pi,  # right
+                velocity=15,
+            ),
+            2: State(
+                position=[36, 0],
+                time_step=2,
+                orientation=(0) * math.pi,
+                velocity=15,
+            ),
+        }
 
-    #     lanelet_assignments_ego = {0: {11}, 1: {3}, 2: {9}}
+        lanelet_assignments_ego = {0: {11}, 1: {3}, 2: {9}}
 
-    #     ego_vehicle = Vehicle(
-    #         0,
-    #         ObstacleType.CAR,
-    #         None,
-    #         Rectangle(5, 2),
-    #         cr_state_list_ego,
-    #         None,
-    #         CurvilinearStateManager(road_network),
-    #         lanelet_assignments_ego,
-    #     )
+        ego_vehicle = Vehicle(
+            0,
+            ObstacleType.CAR,
+            None,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_ego,
+        )
 
-    #     pred = PredOnLaneletWithTypeIntersection(self.config)
+        pred = PredOnLaneletWithTypeIntersection(self.config)
 
-    #     world.add_vehicle(ego_vehicle)
-    #     # world = World({ego_vehicle}, self.road_network)
+        world.add_vehicle(ego_vehicle)
+        # world = World({ego_vehicle}, self.road_network)
 
-    #     # ts = 0 : still in incoming => false
-    #     sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0])
-    #     sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, [0])
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-    #     self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        # ts = 0 : still in incoming => false
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0])
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, [0])
+        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
-    #     # ts = 1 : inside the intersection on a lanelet going right => true
-    #     sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0])
-    #     sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, [0])
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-    #     self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        # ts = 1 : inside the intersection on a lanelet going right => true
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0])
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, [0])
+        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
-    #     # ts = 2 : outside incoming => false
-    #     sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0])
-    #     sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, [0])
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-    #     self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        # ts = 2 : outside incoming => false
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [0])
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, [0])
+        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     def test_in_intersection_conflict_area(self):
         scenario, _ = CommonRoadFileReader(
@@ -1338,23 +1338,23 @@ class TestPositionPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
         # ts = 2 : outside incoming => false
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     def test_on_oncom_of(self):
         scenario, _ = CommonRoadFileReader(
@@ -1463,23 +1463,23 @@ class TestPositionPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
         # ts = 2 : outside incoming => false
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicles)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicles)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
     def test_on_incoming_left_of(self):
         scenario, _ = CommonRoadFileReader(
@@ -1565,15 +1565,15 @@ class TestPositionPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicles)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicles)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
         # ts = 2 : outside incoming => false
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicles)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicles)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
