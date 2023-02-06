@@ -144,40 +144,52 @@ class PredHasPriority(BasePredicateEvaluator):
     arity = 4
 
     sign_id_priority = {
-        306: [4, 5, 4, 11],
-        301: [4, 5, 4, 12],
-        205: [2, 2, 2, 13],
-        206: [1, 1, 1, 14],
-        102: [3, 3, 3, 15],
+        26: [4, 5, 4, 11],
+        34: [4, 5, 4, 12],
+        29: [2, 2, 2, 13],
+        27: [1, 1, 1, 14],
+        102: [3, 3, 3, 15]
     }
 
-    def get_priority(self, lanelets_dir_ids):
+    #def arg_min(self, traffic_signs):
+        #
+        # for sign_id in traffic_signs:
+        #     sign_priority = PredHasPriority.sign_id_priority[sign_id]
+        #     eval_idx = sign_priority[3]
+        #     eval_idx_arr = eval_idx_arr.extend(eval_idx)
+        # return eval_idx_arr
+
+    def get_priority(self, lanelets_dir_ids, road_network):
 
         for l_id in lanelets_dir_ids:
-            l_sign_id = lanelet.traffic_sign(l_id)
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+            traffic_signs = lanelet.traffic_signs
 
-            if len(l_sign_id):
-                l_sign_id = l_sign_id
+            if traffic_signs:
+                traffic_signs = traffic_signs
             else:
-                l_sign_id = {102}
+                traffic_signs = [102]
 
-            for sign_id in l_sign_id:
-                sign_priority = PredHasPriority.sign_id_priority[sign_id]
+            eval_idx_arr = list()
+            for sign_id in traffic_signs:
+                sign_priority = self.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
-                eval_idx_arr = []
-                eval_idx_arr = +[eval_idx]
-                value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+                eval_idx_arr.append(eval_idx)
 
-                list_of_keys = [key for key, list_of_values in self.sign_id_priority.items()
-                                if value in list_of_values][0]
+            value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-                priority_all = self.sign_id_priority[list_of_keys]
+            list_of_keys = [key
+                            for key, list_of_values in self.sign_id_priority.items()
+                            if value in list_of_values][0]
 
-                priority_left = priority_all[0]
-                priority_straight = priority_all[1]
-                priority_right = priority_all[2]
+            priority_all = self.sign_id_priority[list_of_keys]
 
-                priority_veh = priority_straight
+            priority_left = priority_all[0]
+            priority_straight = priority_all[1]
+            priority_right = priority_all[2]
+
+
+            priority_veh = priority_straight
             # orient = vehicle.Vehicle.compute_lanelet_relative_orientation(lanelets_dir_ids)
             #
             # if orient >= np.deg2rad(45):
@@ -187,18 +199,19 @@ class PredHasPriority(BasePredicateEvaluator):
             # else:
             #     priority_veh = priority_straight
 
-                return priority_veh
+            return priority_veh
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
 
+        road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
         lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
-        priority_p = self.get_priority(lanelets_dir_ids_of_p)
-        priority_k = self.get_priority(lanelets_dir_ids_of_k)
+        priority_p = self.get_priority(lanelets_dir_ids_of_p, road_network)
+        priority_k = self.get_priority(lanelets_dir_ids_of_k, road_network)
 
         if priority_p <= priority_k:
             rob = False
@@ -221,29 +234,29 @@ class PredHasPriority(BasePredicateEvaluator):
                 sign_priority = PredHasPriority.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
                 eval_idx_arr = []
-                eval_idx_arr = +[eval_idx]
+                eval_idx_arr.extend([eval_idx])
 
-        value = eval_idx_arr[(np.argmin(eval_idx_arr))]
+                value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-        list_of_keys = [
-            key
-            for key, list_of_values in PredHasPriority.sign_id_priority.items()
-            if value in list_of_values
-        ][0]
-        priority_all = PredHasPriority.sign_id_priority[list_of_keys]
+                list_of_keys = [
+                    key
+                    for key, list_of_values in PredHasPriority.sign_id_priority.items()
+                    if value in list_of_values
+                ][0]
+                priority_all = PredHasPriority.sign_id_priority[list_of_keys]
 
-        priority_left = priority_all[0]
-        priority_straight = priority_all[1]
-        priority_right = priority_all[2]
+                priority_left = priority_all[0]
+                priority_straight = priority_all[1]
+                priority_right = priority_all[2]
 
-        if vehicle_dir == "left":
-            priority_veh = priority_left
-        elif vehicle_dir == "right":
-            priority_veh = priority_right
-        else:
-            priority_veh = priority_straight
+                if vehicle_dir == "left":
+                    priority_veh = priority_left
+                elif vehicle_dir == "right":
+                    priority_veh = priority_right
+                else:
+                    priority_veh = priority_straight
 
-        return priority_veh
+                return priority_veh
 
     def has_priority_dir(
         self,
