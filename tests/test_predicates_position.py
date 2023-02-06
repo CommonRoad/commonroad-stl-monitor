@@ -1224,6 +1224,17 @@ class TestPositionPredicates(unittest.TestCase):
             lanelet_assignments_ego,
         )
 
+        # fixing the lanelet assignmenet
+        for time, _ in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
         pred = PredOnLaneletWithTypeIntersection(self.config)
 
         world.add_vehicle(ego_vehicle)
@@ -1327,6 +1338,27 @@ class TestPositionPredicates(unittest.TestCase):
             lanelet_assignments_k,
         )
 
+        # fixing lanelet assignement according to spatial occupancy
+        for time, _ in vehicle_p.lanelet_assignment.items():
+            shape = vehicle_p.shape
+            state = vehicle_p.states_cr[time]
+
+            vehicle_p.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
+        for time, _ in vehicle_k.lanelet_assignment.items():
+            shape = vehicle_k.shape
+            state = vehicle_k.states_cr[time]
+
+            vehicle_k.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
         vehicles = [0, 1]
 
         pred = PredInIntersectionConflictArea(self.config)
@@ -1427,9 +1459,6 @@ class TestPositionPredicates(unittest.TestCase):
         lanelet_assignments_k = {0: {8}, 1: {13}, 2: {10}, 3: {15}}
         lanelet_assignments_p = {0: {16}, 1: {16}, 2: {16}, 3: {16}}
 
-        # TODO: Params
-        # ego_vehicle_param = self.config.get("ego_vehicle_param")
-
         vehicle_p = Vehicle(
             0,
             ObstacleType.CAR,
@@ -1450,6 +1479,27 @@ class TestPositionPredicates(unittest.TestCase):
             CurvilinearStateManager(road_network),
             lanelet_assignments_k,
         )
+
+        # fixing lanelet assignement according to spatial occupancy
+        for time, _ in vehicle_p.lanelet_assignment.items():
+            shape = vehicle_p.shape
+            state = vehicle_p.states_cr[time]
+
+            vehicle_p.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
+        for time, _ in vehicle_k.lanelet_assignment.items():
+            shape = vehicle_k.shape
+            state = vehicle_k.states_cr[time]
+
+            vehicle_k.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
 
         # TODO: switch k and p vehicle
         vehicles = [0, 1]
@@ -1553,6 +1603,27 @@ class TestPositionPredicates(unittest.TestCase):
             CurvilinearStateManager(road_network),
             lanelet_assignments_k,
         )
+
+        # fixing lanelet assignement according to spatial occupancy
+        for time, _ in vehicle_p.lanelet_assignment.items():
+            shape = vehicle_p.shape
+            state = vehicle_p.states_cr[time]
+
+            vehicle_p.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
+        for time, _ in vehicle_k.lanelet_assignment.items():
+            shape = vehicle_k.shape
+            state = vehicle_k.states_cr[time]
+
+            vehicle_k.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
 
         vehicles = [0, 1]
 

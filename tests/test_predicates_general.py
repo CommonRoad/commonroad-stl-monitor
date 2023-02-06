@@ -762,6 +762,16 @@ class TestGeneralPredicates(unittest.TestCase):
             lanelet_assignments_ego,
         )
 
+        for time, _ in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
+
         pred = PredGoingStraight(self.config)
 
         world.add_vehicle(ego_vehicle)
@@ -844,6 +854,17 @@ class TestGeneralPredicates(unittest.TestCase):
             CurvilinearStateManager(road_network),
             lanelet_assignments_ego,
         )
+
+        #    fix the lanelet assignment
+        for time, _ in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
 
         pred = PredTurningRight(self.config)
 
@@ -929,6 +950,15 @@ class TestGeneralPredicates(unittest.TestCase):
             lanelet_assignments_ego,
         )
 
+        for time, _ in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
+
+            ego_vehicle.lanelet_assignment[
+                time
+            ] = road_network.lanelet_network.find_lanelet_by_shape(
+                shape.rotate_translate_local(state.position, state.orientation)
+            )
         pred = PredTurningLeft(self.config)
 
         world.add_vehicle(ego_vehicle)
