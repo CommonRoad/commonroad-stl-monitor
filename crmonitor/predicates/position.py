@@ -1026,7 +1026,7 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     """
 
     predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
-    arity = 2
+    arity = 1
 
     # TODO
     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
