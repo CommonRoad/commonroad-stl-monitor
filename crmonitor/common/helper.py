@@ -1025,6 +1025,53 @@ def merge_dicts_recursively(*dicts):
 ######################################################
 
 
+def get_priority(
+    lanelets_dir_ids: List[int], road_network: RoadNetwork, direction: str
+):
+
+    sign_id_priority = {
+        # sign_id :[prio_left, prio_straight, prio_right, evaluation_index]
+        "306": [4, 5, 4, 11],  # TrafficSignIDGermany.PRIORITY
+        "301": [4, 5, 4, 12],  # TrafficSignIDGermany.RIGHT_OF_WAY
+        "205": [2, 2, 2, 13],  # TrafficSignIDGermany.YIELD
+        "206": [1, 1, 1, 14],  # TrafficSignIDGermany.STOP
+        "102": [3, 3, 3, 15],  # TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT
+    }
+
+    direction_index_dic = {"LEFT": 0, "STRAIGHT": 1, "RIGHT": 2}
+    direction_index = direction_index_dic[direction.upper()]
+
+    for l_id in lanelets_dir_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+        traffic_sign_ids = lanelet.traffic_signs
+        # traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
+
+        traffic_ids = list()
+        for ts_id in traffic_sign_ids:
+            traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(
+                ts_id
+            )
+            traffic_sign_elements = traffic_sign_object.traffic_sign_elements
+            for ts_element in traffic_sign_elements:
+                ts_element_id = ts_element.traffic_sign_element_id
+                traffic_ids.append(ts_element_id.value)
+
+        if len(traffic_ids) == 0:
+            traffic_ids.append("102")
+
+        print(f"traffic_ids: {traffic_ids}")
+
+        min_priority = 3  # 3 by default is the priority for '102'
+        min_evaluation_index = 15
+
+        for id in traffic_ids:
+            if sign_id_priority[id][3] < min_evaluation_index:
+                min_evaluation_index = sign_id_priority[id][3]
+                min_priority = sign_id_priority[id][direction_index]
+
+        return min_priority
+
+
 def lanelets_dir(vehicle: Vehicle, time_step, road_network: RoadNetwork) -> Set[int]:
     """
     Get the occupied lanelets by the vehicle that are in the same in its same driving direction
