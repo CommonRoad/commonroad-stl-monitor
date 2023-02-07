@@ -1187,25 +1187,6 @@ def get_stop_line_from_incoming(
     return (closest_stop_line, min_distance)
 
 
-def distance_vehicle_to_stop_line(
-    vehicle: Vehicle, stop_line: StopLine, time_step
-) -> float:
-    """
-    calculates the euclidean distance from a vehicle position to the center point of a stop line
-    """
-    vehicle_position = vehicle.state_list_cr[time_step].position
-    stop_line_center = [
-        (stop_line.start[0] + stop_line.end[0]) / 2,
-        (stop_line.start[1] + stop_line.end[1]) / 2,
-    ]
-    # second idea: distance from vehicle to the center point of the stop line.
-    distance = np.sqrt(
-        (stop_line_center[0] - vehicle_position[0]) ** 2
-        + (stop_line_center[1] - vehicle_position[1]) ** 2
-    )
-    return distance
-
-
 def lanelets_same_direction(
     lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
 ) -> bool:
@@ -1254,13 +1235,43 @@ def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
     return oncom
 
 
+def distance_between_two_points(p1: np.ndarray, p2: np.ndarray) -> float:
+    return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+
 def distance_between_vehicles(
     vehicle_k: Vehicle, vehicle_p: Vehicle, time_step
 ) -> float:
     # TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = np.array(vehicle_k.states_cr[time_step].position)
     p2 = np.array(vehicle_p.states_cr[time_step].position)
-    return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+    return distance_between_two_points(p1, p2)
+
+
+def distance_vehicle_to_stop_line(
+    vehicle: Vehicle, stop_line: StopLine, time_step
+) -> float:
+    """
+    calculates the euclidean distance from a vehicle position to the center point of a stop line
+    """
+    vehicle_position = vehicle.state_list_cr[time_step].position
+    stop_line_center = [
+        (stop_line.start[0] + stop_line.end[0]) / 2,
+        (stop_line.start[1] + stop_line.end[1]) / 2,
+    ]
+
+    return distance_between_two_points(stop_line_center, vehicle_position)
+
+
+def distance_lanelet_front_to_stop_line(lanelet: Lanelet, stop_line: StopLine) -> float:
+    center_vertices = lanelet.center_vertices
+    final_center_point = center_vertices[len(center_vertices) - 1]
+    stop_line_center = [
+        (stop_line.start[0] + stop_line.end[0]) / 2,
+        (stop_line.start[1] + stop_line.end[1]) / 2,
+    ]
+    # second idea: distance from vehicle to the center point of the stop line.
+    return distance_between_two_points(stop_line_center, final_center_point)
 
 
 def indirect_opposite_adjacents(
@@ -1286,21 +1297,6 @@ def indirect_opposite_adjacents(
             current = current_lanelet.adj_right
 
     return adj_opp
-
-
-def distance_lanelet_front_to_stop_line(lanelet: Lanelet, stop_line: StopLine) -> float:
-    center_vertices = lanelet.center_vertices
-    final_center_point = center_vertices[len(center_vertices) - 1]
-    stop_line_center = [
-        (stop_line.start[0] + stop_line.end[0]) / 2,
-        (stop_line.start[1] + stop_line.end[1]) / 2,
-    ]
-    # second idea: distance from vehicle to the center point of the stop line.
-    distance = np.sqrt(
-        (stop_line_center[0] - final_center_point[0]) ** 2
-        + (stop_line_center[1] - final_center_point[1]) ** 2
-    )
-    return distance
 
 
 def get_closest_stop_line_from_lanelet(
@@ -1330,13 +1326,10 @@ def get_closest_stop_line_from_lanelet(
 
 
 def has_type_intersection(lanelet: Lanelet) -> bool:
-    if lanelet.stop_line == None:
-        return False
-    else:
-        return True
+    return LaneletType.INTERSECTION in lanelet.lanelet_type
 
 
-def is_turning_right(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+def right_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is turning right by computing the orientations of center vertices.
     i.e. orientations are decreasing
@@ -1353,7 +1346,7 @@ def is_turning_right(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     return True
 
 
-def is_turning_left(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+def left_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is turning left by computing the orientations of center vertices.
     i.e. orientations are increasing
@@ -1370,7 +1363,7 @@ def is_turning_left(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     return True
 
 
-def is_going_straight(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+def straight_going_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is going straight by computing the orientations of center vertices.
     i.e. orientations are constant
@@ -1387,3 +1380,31 @@ def is_going_straight(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
             return False
         current = orientations[i]
     return True
+
+
+def orientation_difference_vehicle_lanelet(
+    vehicle: Vehicle, lanelet: Lanelet, rnet: RoadNetwork, time_step
+) -> float:
+    """
+    finds closest center point of lanelet to vehicle, and returns orientation difference between this point and the vehicle.
+    returns tuple[center_point, distance_to_vehicle]
+    """
+    center_vertices = lanelet.center_vertices
+    lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
+    orientations = lane._compute_orientation_from_polyline(center_vertices)
+    vehicle_position = vehicle.state_list_cr[time_step].position
+    vehicle_orientation = vehicle.state_list_cr[time_step].orientation
+
+    min_index = -1
+    min_distance = math.inf
+    for i in range(len(center_vertices) - 1):
+        distance = distance_between_two_points(center_vertices[i], vehicle_position)
+        if distance < min_distance:
+            min_distance = distance
+            min_index = i
+
+    orientation_of_closest_point = orientations[min_index]
+    orientation_difference = np.abs(
+        subtract_orientations(orientation_of_closest_point, vehicle_orientation)
+    )
+    return orientation_difference

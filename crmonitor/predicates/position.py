@@ -1182,32 +1182,6 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 
         lnet = world.road_network.lanelet_network
 
-        print("================================================")
-        for i in range(1, 21):
-            print(f"lanelet{i}:")
-            lanelet = lnet.find_lanelet_by_id(i)
-            right = helper.is_turning_right(lanelet, world.road_network)
-            left = helper.is_turning_left(lanelet, world.road_network)
-            straight = helper.is_going_straight(lanelet, world.road_network)
-            print(f"right = {right}\tleft = {left}\tstraight = {straight}\t")
-            # if i in {5, 11, 17, 19}:
-            #     direction = "left"
-            # elif i in {6, 12, 18, 20}:
-            #     direction = "right"
-            # else:
-            #     direction = "straight"
-            # print(f"lanelet{i}\t{direction}")
-            # lane = world.road_network.find_lane_by_lanelet(i)
-            # orientations = lane._compute_orientation_from_polyline(
-            #     lnet.find_lanelet_by_id(i).center_vertices
-            # )
-
-            # print("[", end=" ")
-            # for ori in orientations:
-            #     print(f"%.2f," % math.degrees(ori), end=" ")
-            # print("]")
-
-        print("================================================")
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 

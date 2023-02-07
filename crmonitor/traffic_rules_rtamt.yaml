@@ -26,9 +26,9 @@ traffic_rules:
   and single_lane__a0)"
   R_I5: "A a1: ((on_main_carriage_way_i__a0 and in_front_of_i__a0_a1 and on_access_ramp_i__a1 and eventually[0, 5s](on_main_carriage_way__a1)) implies (not(not(main_carriageway_right_lane__a0) and eventually[0, 5s](main_carriageway_right_lane__a0))))"
 
-######################
-## Intersection Rules
-######################
+  ######################
+  ## Intersection Rules
+  ######################
 
   META_1: "A a1 A a2: 
                     (
