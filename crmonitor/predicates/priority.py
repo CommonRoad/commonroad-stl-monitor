@@ -19,7 +19,6 @@ class PriorityPredicates(str, Enum):
     HasPriority = "has_priority"
     SamePriorityRightRight = "same_priority_right_right"
 
-
 class PredSamePriority(BasePredicateEvaluator):
     """
     evaluates if two vehicles have the same priority
