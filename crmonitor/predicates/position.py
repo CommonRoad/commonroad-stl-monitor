@@ -1035,12 +1035,11 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        
-        
+
         # robustness: # returns 1 or -1
         # limitations: not dynamic
         # future work: same as turning left
-        
+
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelets = vehicle.lanelet_assignment[time_step]
         for l in lanelets:
@@ -1050,7 +1049,6 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
                 if type == LaneletType.INTERSECTION:
                     return 1.0
         return -1.0
-
 
 
 class PredInIntersectionConflictArea(BasePredicateEvaluator):
@@ -1146,8 +1144,8 @@ class PredOnOncomOf(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(1)
         vehicle_p = world.vehicle_by_id(0)
 
-        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
-        lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
 
         for lk in lanelets_dir_k:
             if b == 1:
@@ -1207,8 +1205,8 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 
         b = -1
 
-        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
-        lanelets_dir_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
         for lk in lanelets_dir_k:
             if b == 1:
                 break

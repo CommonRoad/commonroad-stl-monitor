@@ -541,6 +541,7 @@ class PredTurningRight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning right
     """
+
     # same idea as turning left, also same limitations and same idea for future work
 
     predicate_name = GeneralPredicates.TurningRight
@@ -571,8 +572,8 @@ class PredGoingStraight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is going straight
     """
-        # same idea as turning left, also same limitations and same idea for future work
 
+    # same idea as turning left, also same limitations and same idea for future work
 
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
