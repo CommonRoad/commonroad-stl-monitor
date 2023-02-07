@@ -1024,6 +1024,41 @@ def merge_dicts_recursively(*dicts):
 ### Our work starts here.
 ######################################################
 
+
+def lanelets_dir(vehicle: Vehicle, time_step, road_network: RoadNetwork) -> Set[int]:
+    """
+    Get the occupied lanelets by the vehicle that are in the same in its same driving direction
+    aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
+
+    1. get the lanelets assignemnet of the vehicle
+    2. orientation_difference_vehicle_lanelet to for each lanelet
+    3. lanelet_min = lanelet with minimum orientation difference
+    4. return lanelet_min
+    """
+    rnet = road_network
+    l_assignments = vehicle.lanelet_assignment[time_step]
+    min_or = np.inf
+    l_min = -1
+    for l in l_assignments:
+        or_diff = orientation_difference_vehicle_lanelet(
+            vehicle, rnet.lanelet_network.find_lanelet_by_id(l), rnet, time_step
+        )
+        if or_diff < min_or:
+            min_or = or_diff
+            l_min = l
+    return [l_min]
+
+    # TODO: improve
+    #
+    # limitations:
+    # just returns the lanelet having the smallest orientation difference to the vehicle:
+    # how to improve: should get the ref_path_lanelets, and return the intersection between ref_path_lanelets and lanelets_assignmenet.
+    # why we did not implement it this way: we did not implement ref path lanelet in a deterministic way
+    # future work : find a way to make ref path lanelet deterministic, and reimplement lanelets_dir accordingly
+
+    return lanelets_dir
+
+
 # TODO: get_incoming and inc la left of should be deleted from here
 def get_incoming(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
@@ -1111,6 +1146,7 @@ def ref_path_lanelets(
         pre_paths = reach_pre(
             lanelet_network.find_lanelet_by_id(lanelet), lanelet_network
         )
+
         paths = []
         for pre_path in pre_paths:
             for succ_path in succ_paths:

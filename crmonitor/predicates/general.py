@@ -496,6 +496,23 @@ class PredTurningLeft(BasePredicateEvaluator):
     evaluates if a vehicle is turning left
     """
 
+    # how the robustness is calculated :
+    # checks lanelets dir until it finds a left turning lanelet
+    # returns the orientation difference between this lanelet and the vehicle.
+
+    # limitations:
+    #  - not a smooth robustness definition
+    #   -> as long as vehicle on turning left lanelet, the orientation difference will always be close to zero
+    #   -> as soon as the vehicle completely exits the turning left lanelet, the robustness immediately drops to -1
+    # Future work :
+    # - improve robustness:
+    # -> idea1:  1/orientation_difference , because smaller or_diff means better robustness
+    # -> idea2: s1: car_front - lanelet_start of the closest turning left lanelet
+    #           s2: lanelet_end - car_rear of the closest turning left lanelet
+    #           robustness is min(s1,s2)
+    #           if there is no successor turning left lanelet => return -np.inf
+    #           challenge : finding the closest turning left lanelet from the reachable successors
+
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
 
@@ -503,17 +520,20 @@ class PredTurningLeft(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
+        rnet = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
+
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
+
         for l_id in lanelets_dir_k:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if helper.left_turning_lanelet(lanelet, world.road_network):
                 return self._scale_angle(
-                    helper.orientation_difference_vehicle_lanelet(
+                    1
+                    + helper.orientation_difference_vehicle_lanelet(
                         vehicle_k, lanelet, world.road_network, time_step
                     )
                 )
-
         return self._scale_lon_dist(-np.inf)
 
 
@@ -521,6 +541,7 @@ class PredTurningRight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning right
     """
+    # same idea as turning left, also same limitations and same idea for future work
 
     predicate_name = GeneralPredicates.TurningRight
     arity = 1
@@ -528,17 +549,21 @@ class PredTurningRight(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+
+        rnet = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
+
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
+
         for l_id in lanelets_dir_k:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if helper.right_turning_lanelet(lanelet, world.road_network):
                 return self._scale_angle(
-                    helper.orientation_difference_vehicle_lanelet(
+                    1
+                    + helper.orientation_difference_vehicle_lanelet(
                         vehicle_k, lanelet, world.road_network, time_step
                     )
                 )
-
         return self._scale_lon_dist(-np.inf)
 
 
@@ -546,6 +571,8 @@ class PredGoingStraight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is going straight
     """
+        # same idea as turning left, also same limitations and same idea for future work
+
 
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
@@ -554,7 +581,7 @@ class PredGoingStraight(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        lanelets_dir_k = vehicle_k.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
         for l_id in lanelets_dir_k:
 
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)

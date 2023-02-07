@@ -1035,8 +1035,12 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        # evaluate robustness
-        # returns 1 or -1
+        
+        
+        # robustness: # returns 1 or -1
+        # limitations: not dynamic
+        # future work: same as turning left
+        
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelets = vehicle.lanelet_assignment[time_step]
         for l in lanelets:
@@ -1046,6 +1050,7 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
                 if type == LaneletType.INTERSECTION:
                     return 1.0
         return -1.0
+
 
 
 class PredInIntersectionConflictArea(BasePredicateEvaluator):

@@ -8,7 +8,6 @@ from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.common.file_reader import CommonRoadFileReader
 
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
@@ -698,6 +697,11 @@ class TestGeneralPredicates(unittest.TestCase):
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
+    #####################
+    ## intersection tests
+    #####################
+
+#TODO: debug going straight (compare with old, print lanelets ... )
     def test_going_straight(self):
 
         scenario, _ = CommonRoadFileReader(
@@ -950,6 +954,7 @@ class TestGeneralPredicates(unittest.TestCase):
             lanelet_assignments_ego,
         )
 
+        # fix lanelet assignement
         for time, _ in ego_vehicle.lanelet_assignment.items():
             shape = ego_vehicle.shape
             state = ego_vehicle.states_cr[time]
@@ -964,6 +969,10 @@ class TestGeneralPredicates(unittest.TestCase):
         world.add_vehicle(ego_vehicle)
         # world = World({ego_vehicle}, self.road_network)
 
+        lanes = road_network.find_lanes_by_lanelets(
+            list(ego_vehicle.lanelet_assignment[1])
+        )
+
         # ts = 0 : still in incoming => false
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [0])
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, [0])
@@ -973,6 +982,7 @@ class TestGeneralPredicates(unittest.TestCase):
         # ts = 1 : inside the intersection on a lanelet going left => true
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [0])
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, [0])
+
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
         self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 

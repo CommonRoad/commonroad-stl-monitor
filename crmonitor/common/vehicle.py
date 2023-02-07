@@ -246,41 +246,6 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
-    def lanelets_dir(self, time_step, road_network: RoadNetwork) -> Set[int]:
-        """
-        Get the occupied lanelets by the vehicle that are in the same in its same driving direction
-        aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
-        """
-        vehicle = self
-        lanelet_ids = vehicle.lanelet_assignment[time_step]
-        lanelets_dir_ids = set()
-        for lanelet_id in lanelet_ids:
-            if lanelet_id in lanelets_dir_ids:
-                continue
-
-            lanes = road_network.find_lanes_by_lanelets([lanelet_id])
-            for lane in lanes:
-                if lane is None:
-                    continue
-
-                state_lon, state_lat = vehicle.ccosy_cache.get_curvilinear_state(
-                    vehicle.states_cr[time_step], lane
-                )
-                lanelet_orientation = lane.orientation(state_lon.s)
-                vehicle_orientation = vehicle.state_list_cr[time_step].orientation
-
-                if lanelet_orientation < 0:
-                    lanelet_orientation += 2 * math.pi
-
-                diff = np.abs(
-                    subtract_orientations(lanelet_orientation, vehicle_orientation)
-                )
-                
-                if diff <= np.deg2rad(45) or diff >= np.deg2rad(360 - 45):
-                    lanelets_dir_ids.add(lanelet_id)
-                    continue
-
-        return lanelets_dir_ids
 
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
