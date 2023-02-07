@@ -1029,6 +1029,13 @@ def get_priority(
     lanelets_dir_ids: List[int], road_network: RoadNetwork, direction: str
 ):
 
+    # limitations:
+    # -> "306 indicates priority until signs 205, 206, or 307" is not covered
+    # -> only 5 german traffic signs are covered (present in the paper)
+    # future work:
+    # -> 306 indicates priority until signs 205, 206, or 307.
+    # -> cover the rest of the german traffic signs
+
     sign_id_priority = {
         # sign_id :[prio_left, prio_straight, prio_right, evaluation_index]
         "306": [4, 5, 4, 11],  # TrafficSignIDGermany.PRIORITY

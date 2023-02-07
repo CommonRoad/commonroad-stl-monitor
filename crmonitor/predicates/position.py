@@ -1117,7 +1117,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         # coef = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
 
         rob = b * coef
-        return rob
+        return self._scale_lon_dist(rob)
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0
@@ -1174,7 +1174,8 @@ class PredOnOncomOf(BasePredicateEvaluator):
         # at this point we have the boolean evaluation. we can now calculate the robustness.
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         rob = b * d
-        return rob
+
+        return self._scale_lon_dist(rob)
 
 
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
@@ -1229,4 +1230,4 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             b = 1
                             break
 
-        return b * coef
+        return self._scale_lon_dist(b * coef)
