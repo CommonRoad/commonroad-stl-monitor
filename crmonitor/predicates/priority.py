@@ -194,7 +194,7 @@ class PredSamePriorityRightRight(BasePredicateEvaluator):
     vehicle_dir_p = "right"
 
     predicate_name = PriorityPredicates.SamePriorityRightRight
-    arity = 4
+    arity = 2
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
