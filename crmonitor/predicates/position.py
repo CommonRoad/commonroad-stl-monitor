@@ -1141,8 +1141,8 @@ class PredOnOncomOf(BasePredicateEvaluator):
 
         b = -1
 
-        vehicle_k = world.vehicle_by_id(1)
-        vehicle_p = world.vehicle_by_id(0)
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
         lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
