@@ -36,6 +36,7 @@ class PriorityPredicates(str, Enum):
     HasPriorityLeftLeft = "has_priority_left_left"
     HasPriorityStraightStraight = "has_priority_straight_straight"
 
+
 class PredSamePriority(BasePredicateEvaluator):
     """
     evaluates if two vehicles have the same priority
@@ -581,17 +582,27 @@ class PredHasPriorityRightRight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityRightRight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -612,17 +623,27 @@ class PredHasPriorityRightLeft(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityRightLeft
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -643,17 +664,27 @@ class PredHasPriorityLeftRight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityLeftRight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -674,17 +705,27 @@ class PredHasPriorityRightStraight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityRightStraight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -705,17 +746,27 @@ class PredHasPriorityStraightRight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityStraightRight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -736,17 +787,27 @@ class PredHasPriorityLeftStraight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityLeftStraight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -767,17 +828,27 @@ class PredHasPriorityStraightLeft(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityStraightLeft
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -798,17 +869,27 @@ class PredHasPriorityLeftLeft(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityLeftLeft
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
@@ -829,17 +910,27 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.HasPriorityStraightStraight
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
 
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
-        lanelets_dir_ids_of_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_ids_of_p = helper.lanelets_dir(
+            vehicle_p, time_step, world.road_network
+        )
+        lanelets_dir_ids_of_k = helper.lanelets_dir(
+            vehicle_k, time_step, world.road_network
+        )
 
-        priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
+        priority_p = helper.get_priority(
+            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
+        )  # '102'
+        priority_k = helper.get_priority(
+            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
+        )
 
         if priority_k <= priority_p:
             rob = 1
