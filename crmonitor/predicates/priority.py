@@ -193,10 +193,10 @@ class PredHasPriority(BasePredicateEvaluator):
         )  #'102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, "right")
 
-        if priority_k <= priority_p:
-            rob = -1
-        else:
+        if priority_k > priority_p:
             rob = 1
+        else:
+            rob = -1
 
         return rob
 
@@ -593,7 +593,7 @@ class PredHasPriorityRightRight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -624,7 +624,7 @@ class PredHasPriorityRightLeft(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -655,7 +655,7 @@ class PredHasPriorityLeftRight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -686,7 +686,7 @@ class PredHasPriorityRightStraight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -717,7 +717,7 @@ class PredHasPriorityStraightRight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -748,7 +748,7 @@ class PredHasPriorityLeftStraight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -779,7 +779,7 @@ class PredHasPriorityStraightLeft(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -810,7 +810,7 @@ class PredHasPriorityLeftLeft(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -841,7 +841,7 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
         priority_p = helper.get_priority(lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p)  # '102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k)
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
