@@ -1078,32 +1078,39 @@ def lanelets_dir(vehicle: Vehicle, time_step, road_network: RoadNetwork) -> Set[
     aka the "D" component in the six-dimentional state x = [s , d , v , a , theta , D]
 
     1. get the lanelets assignemnet of the vehicle
-    2. orientation_difference_vehicle_lanelet to for each lanelet
-    3. lanelet_min = lanelet with minimum orientation difference
-    4. return lanelet_min
+    2. orientation_difference_vehicle_lanelet to for each lanelet (orientation_difference(state.orientation, closest_lanelet_center_point_to_vehicle))
+    3. if the or_diff is smaller than a threshold, this lanelet is added to lanelets dir
+    4. if lanelets_dir is not empty, return it. Otherwise just return the lanelet with the minimum or_diff
     """
+    # TODO: improve
+    #
+    # limitations:
+    #   - orientation threshold is chosen randomly. (just thought of a small threshold and used it)
+    #   - how to improve: should get the ref_path_lanelets, and return the intersection between ref_path_lanelets and lanelets_assignmenet.
+    #     -> why we did not implement it this way: we did not implement ref path lanelet in a deterministic way
+    # future work :
+    #   - find a way to make ref path lanelet deterministic, and reimplement lanelets_dir accordingly
+    #   - if decided to still use the current idea, think of a meaningful way to choose the threshold
+
+    or_diff_threshold = math.radians(5)
     rnet = road_network
     l_assignments = vehicle.lanelet_assignment[time_step]
     min_or = np.inf
     l_min = -1
+    lanelets_dir_ids = list()
     for l in l_assignments:
         or_diff = orientation_difference_vehicle_lanelet(
             vehicle, rnet.lanelet_network.find_lanelet_by_id(l), rnet, time_step
         )
+        if or_diff < or_diff_threshold:
+            lanelets_dir_ids.append(l)
         if or_diff < min_or:
             min_or = or_diff
             l_min = l
+    if len(lanelets_dir_ids) > 0:
+        return lanelets_dir_ids
+
     return [l_min]
-
-    # TODO: improve
-    #
-    # limitations:
-    # just returns the lanelet having the smallest orientation difference to the vehicle:
-    # how to improve: should get the ref_path_lanelets, and return the intersection between ref_path_lanelets and lanelets_assignmenet.
-    # why we did not implement it this way: we did not implement ref path lanelet in a deterministic way
-    # future work : find a way to make ref path lanelet deterministic, and reimplement lanelets_dir accordingly
-
-    return lanelets_dir
 
 
 # TODO: get_incoming and inc la left of should be deleted from here
@@ -1469,8 +1476,7 @@ def orientation_difference_vehicle_lanelet(
     vehicle: Vehicle, lanelet: Lanelet, rnet: RoadNetwork, time_step
 ) -> float:
     """
-    finds closest center point of lanelet to vehicle, and returns orientation difference between this point and the vehicle.
-    returns tuple[center_point, distance_to_vehicle]
+    finds closest center point of lanelet to vehicle, and returns orientation difference in Rad between this point and the vehicle.
     """
     center_vertices = lanelet.center_vertices
     lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)

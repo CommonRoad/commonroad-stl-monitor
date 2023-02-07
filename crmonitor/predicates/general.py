@@ -583,9 +583,12 @@ class PredGoingStraight(BasePredicateEvaluator):
     ) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
+
         for l_id in lanelets_dir_k:
+            print(f"lanelet_dir_k: {l_id}")
 
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+
             if not (helper.has_type_intersection(lanelet)):
                 continue
             if helper.straight_going_lanelet(lanelet, world.road_network):

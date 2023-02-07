@@ -701,7 +701,7 @@ class TestGeneralPredicates(unittest.TestCase):
     ## intersection tests
     #####################
 
-#TODO: debug going straight (compare with old, print lanelets ... )
+    # TODO: debug going straight (compare with old, print lanelets ... )
     def test_going_straight(self):
 
         scenario, _ = CommonRoadFileReader(
