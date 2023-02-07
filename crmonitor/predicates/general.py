@@ -585,7 +585,6 @@ class PredGoingStraight(BasePredicateEvaluator):
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
 
         for l_id in lanelets_dir_k:
-            print(f"lanelet_dir_k: {l_id}")
 
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
 

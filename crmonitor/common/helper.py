@@ -1066,8 +1066,6 @@ def get_priority(
         if len(traffic_ids) == 0:
             traffic_ids.append("102")
 
-        print(f"traffic_ids: {traffic_ids}")
-
         min_priority = 3  # 3 by default is the priority for '102'
         min_evaluation_index = 15
 

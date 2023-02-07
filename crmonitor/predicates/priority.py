@@ -230,7 +230,7 @@ class PredSamePriorityRightRight(BasePredicateEvaluator):
 
         priority_p = helper.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
-        )  #'102'
+        )
         priority_k = helper.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
