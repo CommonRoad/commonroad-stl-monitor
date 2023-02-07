@@ -27,18 +27,12 @@ class PredSamePriority(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.SamePriority
     arity = 4
 
-    road = RoadNetwork()
-
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
-            vehicle_p, time_step, world.road_network
-        )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
-            vehicle_k, time_step, world.road_network
-        )
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
         priority_p = PredHasPriority.get_priority(lanelets_dir_ids_of_p)
         priority_k = PredHasPriority.get_priority(lanelets_dir_ids_of_k)
@@ -68,12 +62,8 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
-            vehicle_p, time_step, world.road_network
-        )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
-            vehicle_k, time_step, world.road_network
-        )
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step)
 
         priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, vehicle_dir_p)
         priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, vehicle_dir_k)
@@ -111,7 +101,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
         distance_from_nearest_tl = -1
 
-        lanelets_dir_ids = helper.lanelets_dir(vehicle, time_step, world.road_network)
+        lanelets_dir_ids = vehicle.lanelets_dir(time_step, world.road_network)
 
         # for l in lanelets_dir_ids:
 
@@ -161,13 +151,13 @@ class PredHasPriority(BasePredicateEvaluator):
         102: [3, 3, 3, 15]
     }
 
-    # def arg_min(self, traffic_signs):
-    #
-    # for sign_id in traffic_signs:
-    #     sign_priority = PredHasPriority.sign_id_priority[sign_id]
-    #     eval_idx = sign_priority[3]
-    #     eval_idx_arr = eval_idx_arr.extend(eval_idx)
-    # return eval_idx_arr
+    #def arg_min(self, traffic_signs):
+        #
+        # for sign_id in traffic_signs:
+        #     sign_priority = PredHasPriority.sign_id_priority[sign_id]
+        #     eval_idx = sign_priority[3]
+        #     eval_idx_arr = eval_idx_arr.extend(eval_idx)
+        # return eval_idx_arr
 
     def get_priority(self, lanelets_dir_ids, road_network):
 
@@ -193,11 +183,9 @@ class PredHasPriority(BasePredicateEvaluator):
 
             value = eval_idx_arr[(np.argmin(eval_idx_arr))]
 
-            list_of_keys = [
-                key
-                for key, list_of_values in self.sign_id_priority.items()
-                if value in list_of_values
-            ][0]
+            list_of_keys = [key
+                            for key, list_of_values in self.sign_id_priority.items()
+                            if value in list_of_values][0]
 
             priority_all = self.sign_id_priority[list_of_keys]
 
@@ -215,14 +203,8 @@ class PredHasPriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        possible_lanelet_dir_p = helper.possible_lanelets_dir(
-            vehicle_p, time_step, road_network
-        )
-        possible_lanelet_dir_k = helper.possible_lanelets_dir(
-            vehicle_k, time_step, road_network
-        )
-
-        possible_robustness_values = []
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, world.road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, world.road_network)
 
         priority_p = self.get_priority(lanelets_dir_ids_of_p, road_network)
         priority_k = self.get_priority(lanelets_dir_ids_of_k, road_network)
@@ -276,12 +258,8 @@ class PredHasPriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
-            vehicle_p, time_step, world.road_network
-        )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
-            vehicle_k, time_step, world.road_network
-        )
+        lanelets_dir_ids_of_p = vehicle_p.lanelets_dir(time_step, road_network)
+        lanelets_dir_ids_of_k = vehicle_k.lanelets_dir(time_step, road_network)
 
         priority_p = self.get_priority_dir(lanelets_dir_ids_of_p, road_network, vehicle_dir_p)
         priority_k = self.get_priority_dir(lanelets_dir_ids_of_k, road_network, vehicle_dir_k)
