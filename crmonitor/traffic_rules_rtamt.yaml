@@ -14,23 +14,135 @@ traffic_rules:
   R_G4: "not slow_leading_vehicle_i__a0 implies preserves_traffic_flow__a0"
 
   R_I1: "not(in_congestion_i__a0 or exist_standing_leading_vehicle_i__a0) implies not in_standstill__a0"
-  R_I2: "A a1: (left_of_i__a1_a0 and drives_faster_i__a0_a1 implies ((in_congestion__a1 or in_slow_moving_traffic__a1 or in_queue_of_vehicles__a1) and drives_with_slightly_higher_speed__a0_a1) or (right_of_broad_lane_marking__a0 and left_of_broad_lane_marking__a1) or (on_access_ramp__a0 and on_main_carriage_way__a1 and not (in_congestion__a1 or in_slow_moving_traffic__a1 or in_queue_of_vehicles__a1)))"
+  R_I2: "A a1: (left_of_i__a1_a0 and drives_faster_i__a0_a1 implies 
+  ((in_congestion__a1 or in_slow_moving_traffic__a1 or in_queue_of_vehicles__a1)
+   and drives_with_slightly_higher_speed__a0_a1) or (right_of_broad_lane_marking__a0 and left_of_broad_lane_marking__a1) or (on_access_ramp__a0 and on_main_carriage_way__a1 and not (in_congestion__a1 or in_slow_moving_traffic__a1 or in_queue_of_vehicles__a1)))"
+ 
   R_I3: "not makes_u_turn__a0 and not reverses__a0"
-  R_I4: "in_congestion_i__a0 or in_slow_moving_traffic_i__a0 implies (interstate_broad_enough__a0 implies not on_shoulder__a0 and (in_leftmost_lane__a0 implies drives_leftmost__a0 and single_lane__a0) and (not in_leftmost_lane__a0 implies drives_rightmost__a0)) and (not interstate_broad_enough__a0 implies drives_rightmost__a0 and in_rightmost_lane__a0 and single_lane__a0)"
+  R_I4: "in_congestion_i__a0 or in_slow_moving_traffic_i__a0 implies (interstate_broad_enough__a0 implies not on_shoulder__a0 
+  and (in_leftmost_lane__a0 implies drives_leftmost__a0 and single_lane__a0) 
+  and (not in_leftmost_lane__a0 implies drives_rightmost__a0)) 
+  and (not interstate_broad_enough__a0 implies drives_rightmost__a0 and in_rightmost_lane__a0 
+  and single_lane__a0)"
   R_I5: "A a1: ((on_main_carriage_way_i__a0 and in_front_of_i__a0_a1 and on_access_ramp_i__a1 and eventually[0, 5s](on_main_carriage_way__a1)) implies (not(not(main_carriageway_right_lane__a0) and eventually[0, 5s](main_carriageway_right_lane__a0))))"
 
 ######################
 ## Intersection Rules
 ######################
 
-META_1: "A a1 A a2: in_intersection_conflict_area__a1_a2 implies (not causes_braking_intersection__a1_a2 and not eventually[0,1s](in_intersection_conflict_area__a2_a1)) "
+  META_1: "A a1 A a2: 
+                    (
+                      in_intersection_conflict_area__a1_a2 implies
+                      (
+                        not causes_braking_intersection__a1_a2 and
+                        not eventually[0,1s](in_intersection_conflict_area__a2_a1)
+                      )
+                    )"
 
-R_IN3: "A a1 : G((on_incoming_left_of__a0_a1) and not relevant_traffic_light__a0 and ( turning_right__a0 and turning_right__a1 and same_priority_right_right__a1_a0 or turning_right__a0 and turning_left__a1 and same_priority_right_left__a1_a0 or turning_right__a0 and going_straight__a1 and same_priority_right_straight__a1_a0 or turning_left__a0 and turning_right__a1 and same_priority_left_right__a1_a0 or turning_left__a0 and turning_left__a1 and same_priority_left_left__a1_a0 or going_straight__a0 and turning_right__a1 and same_priority_straight_right__a1_a0 or going_straight__a0 and turning_left__a1 and same_priority_straight_left__a1_a0 or going_straight__a0 and going_straight__a1 and same_priority_straight_straight__a1_a0 or turning_left__a0 and going_straight__a1 and same_priority_left_straight__a1_a0)) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection__a0)"
+  # R_IN3: "A a1: ((on_incoming_left_of__a0_a1) and not relevant_traffic_light__a0 and 
+  # ( turning_righta0 and turning_righta1 and same_priority_right_righta1__a0 or 
+  # turning_righta0 and turning_lefta1 and same_priority_right_lefta1_a0 or 
+  #turning_righta0 and 
+  # going_straighta1 and same_priority_right_straighta1_a0 or
+  #  turning_lefta0 and 
+  #  turning_righta1 and 
+  #  same_priority_left_righta1_a0 or 
+  
+  # turning_lefta0 and 
+  # turning_lefta1 and 
+  # same_priority_left_lefta1_a0 or 
 
-R_IN4: "A a1 : G(( turning_right__a1 and turning_right__a0 and has_priority_right_right__a1_a0 or turning_right__a1 and going_straight__a0 and has_priority_right_straight__a1_a0 or turning_left__a1 and turning_right__a0 and has_priority_left_right__a1_a0 or turning_left__a1 and turning_left__a0 and has_priority_left_left__a1_a0 or turning_left__a1 and going_straight__a0 and has_priority_left_straight__a1_a0 or going_straight__a1 and turning_right__a0 and has_priority_straight_right__a1_a0 or going_straight__a1 and going_straight__a0 and has_priority_straight_straight__a1_a0 or turning_right__a1 and turning_left__a0 and has_priority_right_left__a1_a0 and not on_oncom_of__a0_a1 or going_straight__a1 and turning_left__a0 and has_priority_straight_left__a1_a0 and not on_oncom_of__a0_a1) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection(xego,intersection)))"
+  # going_straighta0 and 
+  # turning_righta1 and 
+  # same_priority_straight_righta1_a0 or 
 
-R-IN5: "A a1 : G((turning_left__a0 and (going_straight__a1 and not has_priority_left_straight__a0_a1 and on_oncom_of__a0_a1) or (turning_right__a1 and not has_priority_left_right__a0_a1 and on_oncom_of__a0_a1)) implies (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection__a0))"
+  # going_straighta0 and 
+  # turning_lefta1 and 
+  # same_priority_straight_lefta1_a0 or 
 
+  # going_straighta0 and 
+  # going_straighta1 and 
+  # same_priority_straight_straighta1_a0 or 
+  # turning_lefta0 and going_straighta1 and same_priority_left_straighta1_a0)) 
+  # implies (G(not_endanger_intersectiona0_a1) or not on_lanelet_with_type_intersectiona0)"
+
+  R_IN3: "A a1: (
+                  (
+                    on_incoming_left_of__a0_a1 and 
+                    not relevant_traffic_light__a0 and 
+                    (
+                      turning_right__a0 and 
+                      turning_right__a1  or
+                      turning_right__a0 and
+                      turning_left__a1 or
+                      turning_right__a0 and
+                      going_straight__a1 or 
+                      turning_left__a0 and 
+                      turning_left__a1 or
+                      turning_left__a0 and
+                      turning_right__a1 or
+                      turning_left__a0 and
+                      going_straight__a1 or
+                      going_straight__a0 and
+                      turning_right__a1 or
+                      going_straight__a0 and
+                      turning_left__a1 or
+                      going_straight__a0 and
+                      going_straight__a1
+                    )) implies
+                    (
+                      (
+                      in_intersection_conflict_area__a0_a1 implies
+                      (
+                        not causes_braking_intersection__a0_a1 and
+                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                      )
+                      )or 
+                      not on_lanelet_with_type_intersection__a0
+                    )
+                  )"
+
+
+  # R_IN4: "A a1: (( turning_right__a1 and turning_right__a0 and 
+  # has_priority_right_right__a1_a0 or turning_right__a1 and
+  # going_straight__a0 and has_priority_right_straight__a1_a0 or 
+  # turning_left__a1 and 
+  #   turning_right__a0 and has_priority_left_right__a1_a0 or 
+  #   turning_left__a1 and turning_left__a0 and has_priority_left_left__a1_a0 
+  # or turning_left__a1 and going_straight__a0 and has_priority_left_straight__a1_a0 or
+  # going_straight__a1 and turning_right__a0 and has_priority_straight_right__a1_a0 or 
+  # going_straight__a1 and going_straight__a0 and has_priority_straight_straight__a1_a0 or 
+  # turning_right__a1 and turning_left__a0 and has_priority_right_left__a1_a0 and 
+  # not on_oncom_of__a0_a1 or going_straight__a1 and turning_left__a0 and
+  # has_priority_straight_left__a1_a0 and not on_oncom_of__a0_a1) implies
+  #  (G(not_endanger_intersection__a0_a1) or not on_lanelet_with_type_intersection(xego,intersection)))"
+
+  R_IN4: "A a1: ((turning_right__a1 and turning_right__a0 or turning_right__a1 and going_straight__a0 or turning_left__a1 and turning_right__a0 or turning_left__a1 and turning_left__a0 or turning_left__a1 and going_straight__a0 or going_straight__a1 and turning_right__a0 or going_straight__a1 and going_straight__a0 or turning_right__a1 and turning_left__a0 and not on_oncom_of__a1_a0 or going_straight__a1 and turning_left__a0 and not on_oncom_of__a1_a0 ) implies ((in_intersection_conflict_area__a0_a1 implies (not causes_braking_intersection__a0_a1 and not eventually[0,1s](in_intersection_conflict_area__a1_a0))) or not on_lanelet_with_type_intersection__a0))"
+
+  R_IN5: "A a1: ((
+                    (
+                      turning_left__a0 and 
+                      (going_straight__a1 ) and
+                      on_oncom_of__a1_a0
+                    ) or
+                    (
+                      turning_right__a1 and 
+                      on_oncom_of__a1_a0
+                    )
+                  ) implies 
+                  (
+                    ( 
+                      (
+                      in_intersection_conflict_area__a0_a1 implies
+                      (
+                        not causes_braking_intersection__a0_a1 and
+                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                      )
+                      )
+                    ) or 
+                    not on_lanelet_with_type_intersection__a0
+                  ))
+                  "
 # Parameters for traffic rules
 ###
 # .. code-block:: yaml
