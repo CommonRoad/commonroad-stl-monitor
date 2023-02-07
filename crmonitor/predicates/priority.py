@@ -163,7 +163,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                                 or distance_from_nearest_tl == -1
                             ):
                                 distance_from_nearest_tl = distance_to_ego
-        return distance_from_nearest_tl
+        return self._scale_lon_dist(distance_from_nearest_tl)
 
 
 class PredHasPriority(BasePredicateEvaluator):
@@ -194,10 +194,10 @@ class PredHasPriority(BasePredicateEvaluator):
         )  #'102'
         priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, "right")
 
-        if priority_k <= priority_p:
-            rob = -1
-        else:
+        if priority_k > priority_p:
             rob = 1
+        else:
+            rob = -1
 
         return rob
 
@@ -604,7 +604,7 @@ class PredHasPriorityRightRight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -645,7 +645,7 @@ class PredHasPriorityRightLeft(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -686,7 +686,7 @@ class PredHasPriorityLeftRight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -727,7 +727,7 @@ class PredHasPriorityRightStraight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -768,7 +768,7 @@ class PredHasPriorityStraightRight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -809,7 +809,7 @@ class PredHasPriorityLeftStraight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -850,7 +850,7 @@ class PredHasPriorityStraightLeft(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -891,7 +891,7 @@ class PredHasPriorityLeftLeft(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1
@@ -932,7 +932,7 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
-        if priority_k <= priority_p:
+        if priority_k > priority_p:
             rob = 1
         else:
             rob = -1

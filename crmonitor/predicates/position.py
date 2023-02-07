@@ -1230,4 +1230,4 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             b = 1
                             break
 
-        return b * coef
+        return self._scale_lon_dist(b * coef)
