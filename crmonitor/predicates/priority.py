@@ -144,7 +144,7 @@ class PredHasPriority(BasePredicateEvaluator):
     arity = 4
 
     sign_id_priority = {
-        26: [4, 5, 4, 11],
+        306: [4, 5, 4, 11],
         34: [4, 5, 4, 12],
         29: [2, 2, 2, 13],
         27: [1, 1, 1, 14],
@@ -165,13 +165,18 @@ class PredHasPriority(BasePredicateEvaluator):
             lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
             traffic_signs = lanelet.traffic_signs
 
-            if traffic_signs:
-                traffic_signs = traffic_signs
+            traffic_id = list()
+            for traffic_sign in traffic_signs:
+                traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign)
+                traffic_id.append(traffic_sign_object)
+
+            if traffic_id:
+                traffic_id = traffic_id
             else:
-                traffic_signs = [102]
+                traffic_id = [102]
 
             eval_idx_arr = list()
-            for sign_id in traffic_signs:
+            for sign_id in traffic_id:
                 sign_priority = self.sign_id_priority[sign_id]
                 eval_idx = sign_priority[3]
                 eval_idx_arr.append(eval_idx)
@@ -188,10 +193,7 @@ class PredHasPriority(BasePredicateEvaluator):
             priority_straight = priority_all[1]
             priority_right = priority_all[2]
 
-
             priority_veh = priority_straight
-
-
 
             return priority_veh
 
