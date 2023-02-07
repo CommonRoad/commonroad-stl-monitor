@@ -162,7 +162,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                                 or distance_from_nearest_tl == -1
                             ):
                                 distance_from_nearest_tl = distance_to_ego
-        return distance_from_nearest_tl
+        return self._scale_lon_dist(distance_from_nearest_tl)
 
 
 class PredHasPriority(BasePredicateEvaluator):
