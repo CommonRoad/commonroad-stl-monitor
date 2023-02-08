@@ -1140,18 +1140,19 @@ class PredOnOncomOf(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
+        # if the predicate evaluate to false, the robustness is -1 
+        # if the predicate evaluates to true, the robustness is the distance between the two vehicles
         b = -1
         
-        
-        
-        
-
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
         lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
 
+        #checking if 
+        
+        
         for lk in lanelets_dir_k:
             if b == 1:
                 break
@@ -1177,14 +1178,15 @@ class PredOnOncomOf(BasePredicateEvaluator):
                         b = 1
 
         # at this point we have the boolean evaluation. we can now calculate the robustness.
-        #TODO: idea: 
-        # d1 = distance inc to closest stop line 
         
+        if(b==-1):
+            return self._scale_lon_dist(-(math.inf))
+                
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         if(b==1):
             return self._scale_lon_dist(d)
         
-        return self._scale_lon_dist(-(math.inf))
+        
 
         
 
