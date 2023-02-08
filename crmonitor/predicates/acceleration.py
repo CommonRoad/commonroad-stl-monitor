@@ -70,10 +70,13 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
 
         rear_k = vehicle_k.rear_s(time_step, lane_k)
         front_p = vehicle_p.front_s(time_step, lane_p)
-
+        print("front_p ", front_p)
+        print("front_p ",rear_k)
+        
         posk = vehicle_k.state_list_cr[time_step].position
         posp = vehicle_p.state_list_cr[time_step].position
-
+        # an error comes up randomly in d = rear_k - front_p: TypeError: unsupported operand type(s) for -: 'float' and 'NoneType'
+        # it 's never known when it happens or at which time step, it just gets randomly 
         d = rear_k - front_p
         a = vehicle_p.get_lon_state(time_step, lane_p).a
 

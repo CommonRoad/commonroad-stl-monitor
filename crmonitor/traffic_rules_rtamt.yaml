@@ -39,33 +39,6 @@ traffic_rules:
                       )
                     )"
 
-  # R_IN3: "A a1: ((on_incoming_left_of__a0_a1) and not relevant_traffic_light__a0 and 
-  # ( turning_righta0 and turning_righta1 and same_priority_right_righta1__a0 or 
-  # turning_righta0 and turning_lefta1 and same_priority_right_lefta1_a0 or 
-  #turning_righta0 and 
-  # going_straighta1 and same_priority_right_straighta1_a0 or
-  #  turning_lefta0 and 
-  #  turning_righta1 and 
-  #  same_priority_left_righta1_a0 or 
-  
-  # turning_lefta0 and 
-  # turning_lefta1 and 
-  # same_priority_left_lefta1_a0 or 
-
-  # going_straighta0 and 
-  # turning_righta1 and 
-  # same_priority_straight_righta1_a0 or 
-
-  # going_straighta0 and 
-  # turning_lefta1 and 
-  # same_priority_straight_lefta1_a0 or 
-
-  # going_straighta0 and 
-  # going_straighta1 and 
-  # same_priority_straight_straighta1_a0 or 
-  # turning_lefta0 and going_straighta1 and same_priority_left_straighta1_a0)) 
-  # implies (G(not_endanger_intersectiona0_a1) or not on_lanelet_with_type_intersectiona0)"
-
   R_IN3: "A a1: (
                   (
                     on_incoming_left_of__a0_a1 and 
@@ -111,8 +84,6 @@ traffic_rules:
                     )
                   )"
 
-
-  # R_IN4: "A a1: ((turning_right__a1 and turning_right__a0 or turning_right__a1 and going_straight__a0 or turning_left__a1 and turning_right__a0 or turning_left__a1 and turning_left__a0 or turning_left__a1 and going_straight__a0 or going_straight__a1 and turning_right__a0 or going_straight__a1 and going_straight__a0 or turning_right__a1 and turning_left__a0 and not on_oncom_of__a1_a0 or going_straight__a1 and turning_left__a0 and not on_oncom_of__a1_a0 ) implies ((in_intersection_conflict_area__a0_a1 implies (not causes_braking_intersection__a0_a1 and not eventually[0,1s](in_intersection_conflict_area__a1_a0))) or not on_lanelet_with_type_intersection__a0))"
   R_IN4: "A a1: ((
                     turning_right__a1 and
                     turning_right__a0 and 
