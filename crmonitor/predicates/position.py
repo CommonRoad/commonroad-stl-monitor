@@ -66,7 +66,6 @@ class PositionPredicates(str, Enum):
     DrivesLeftmost = "drives_leftmost"
     DrivesRightmost = "drives_rightmost"
     OnLaneletWithTypeIntersection = "on_lanelet_with_type_intersection"
-
     OnIncomingLeftOf = "on_incoming_left_of"
     OnOncomOf = "on_oncom_of"
     InIntersectionConflictArea = "in_intersection_conflict_area"
@@ -1059,12 +1058,13 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
     predicate_name = PositionPredicates.InIntersectionConflictArea
     arity = 2
 
-    # TODO
-
-    # TODO
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+
+        # TODO :
+        # right robustness descripption + linitations
+
         b = -1  # boolean evaluation
 
         lanelet_network = world.road_network.lanelet_network
@@ -1080,6 +1080,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         lanelets_k = vehicle_k.lanelet_assignment[time_step]
         lanelets_p = vehicle_p.lanelet_assignment[time_step]
 
+        # TODO  use lanelets dir instead of assignmenet
         stop_line_k, _ = helper.get_closest_stop_line_from_lanelet(
             lanelet_network.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
         )
@@ -1140,6 +1141,10 @@ class PredOnOncomOf(BasePredicateEvaluator):
     ) -> float:
 
         b = -1
+        
+        
+        
+        
 
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
@@ -1172,15 +1177,24 @@ class PredOnOncomOf(BasePredicateEvaluator):
                         b = 1
 
         # at this point we have the boolean evaluation. we can now calculate the robustness.
+        #TODO: idea: 
+        # d1 = distance inc to closest stop line 
+        
         d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
-        rob = b * d
+        if(b==1):
+            return self._scale_lon_dist(d)
+        
+        return self._scale_lon_dist(-(math.inf))
 
-        return self._scale_lon_dist(rob)
+        
 
 
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
+
+    # TODO :
+    # robustness description + limitations
 
     def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
 
