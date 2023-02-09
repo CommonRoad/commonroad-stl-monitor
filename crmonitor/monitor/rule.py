@@ -43,7 +43,6 @@ def parse_rule(full_rule_str, config, name=None):
     if m is not None:
         # Quantification on top level
         sub_rule_str = m["rule"]
-        print(sub_rule_str)
         children = parse_rule(sub_rule_str, config, "g0")
         quantified_vehicle = int(m.group("veh_id"))
         if m.group("quant") == "E":

@@ -50,40 +50,37 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     predicate_name = AccelerationPredicates.CausesBrakingIntersection
     arity = 2
 
-    # TODO
-    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    # TODO:
+    # describe robustness
+    #
 
-    # TODO
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        # TODO: Thresholds : yaml file ?
         d_br = self.config["d_br"]
         a_br = self.config["a_br"]
         rob = 0
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        # TODO: get_lane doesn't work
         lane_k = vehicle_k.get_lane(time_step)
         lane_p = vehicle_p.get_lane(time_step)
 
-        rear_k = vehicle_k.rear_s(time_step, lane_k)
-        front_p = vehicle_p.front_s(time_step, lane_p)
+        rear_k = vehicle_k.rear_s(time_step)
+        front_p = vehicle_p.front_s(time_step)
 
-        posk = vehicle_k.state_list_cr[time_step].position
-        posp = vehicle_p.state_list_cr[time_step].position
-
+        # TODO: does d need scaling ?
         d = rear_k - front_p
-        a = vehicle_p.get_lon_state(time_step, lane_p).a
+        a = vehicle_p.get_lon_state(time_step).a
 
         # d_br - d : how well d is far from the threshold
         # a_br - a : how well a is far from the threshold
         # d : d shouldn't be negative
         rob = np.minimum(
-            np.minimum(self._scale_lon_dist((d_br - d)), self._scale_acc((a_br - a))),
+            np.minimum(self._scale_lon_dist(d_br - d), self._scale_acc(a_br - a)),
             self._scale_lon_dist(d),
         )
 
-        # TODO: does rob need scaling ?
+
+
         return rob

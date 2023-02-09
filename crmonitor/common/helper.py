@@ -1314,7 +1314,15 @@ def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
     """
     returning the set of oncoming lanelets belonging to an incoming lanelet
     """
+    # TODO: old implementation of reach succ
+    # TODO: check if parameter lanelet is incoming first, otherwise return empty set
+
     oncom = set()
+    if incoming.stop_line == None:
+        return oncom
+
+    # checks if
+
     lanelet_network = road_network.lanelet_network
     possible_successors = reach_succ(incoming, lanelet_network)
     merged_possible_successors = set().union(*possible_successors)
@@ -1328,6 +1336,16 @@ def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
             ):
                 oncom.add(opp)
     return oncom
+
+
+def get_lanelet_center_endpoint(lanelet: Lanelet):
+    center_vertices = lanelet.center_vertices
+    return center_vertices[len(center_vertices) - 1]
+
+
+def get_lanelet_center_startpoint(lanelet: Lanelet):
+    center_vertices = lanelet.center_vertices
+    return center_vertices[0]
 
 
 def distance_between_two_points(p1: np.ndarray, p2: np.ndarray) -> float:
@@ -1372,6 +1390,9 @@ def distance_lanelet_front_to_stop_line(lanelet: Lanelet, stop_line: StopLine) -
 def indirect_opposite_adjacents(
     lanelet1: Lanelet, lanelet_network: LaneletNetwork
 ) -> List[int]:
+    """
+    returns a list for all adjacent lanelets and their adjacent lanelets, having opposite direction to parameter lanelet
+    """
     current = lanelet1.adj_left
     left = False
     if lanelet1.adj_left_same_direction:
@@ -1463,7 +1484,7 @@ def straight_going_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     returns whether a lanelet is going straight by computing the orientations of center vertices.
     i.e. orientations are constant
     """
-
+    # TODO: set a meaningful error
     e = 0.01
     lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
     orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
