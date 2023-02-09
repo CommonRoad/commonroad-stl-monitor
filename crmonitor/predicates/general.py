@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 import logging
 from typing import List, Tuple, Dict, Callable
 import matplotlib.colors
@@ -491,27 +492,21 @@ class PredMakesUTurn(BasePredicateEvaluator):
         return max(robustness_values)
 
 
+##############
+# intersection
+##############
+
+
 class PredTurningLeft(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning left
     """
 
     # how the robustness is calculated :
-    # checks lanelets dir until it finds a left turning lanelet
-    # returns the orientation difference between this lanelet and the vehicle.
-
-    # limitations:
-    #  - not a smooth robustness definition
-    #   -> as long as vehicle on turning left lanelet, the orientation difference will always be close to zero
-    #   -> as soon as the vehicle completely exits the turning left lanelet, the robustness immediately drops to -1
-    # Future work :
-    # - improve robustness:
-    # -> idea1:  1/orientation_difference , because smaller or_diff means better robustness
-    # -> idea2: s1: car_front - lanelet_start of the closest turning left lanelet
-    #           s2: lanelet_end - car_rear of the closest turning left lanelet
-    #           robustness is min(s1,s2)
-    #           if there is no successor turning left lanelet => return -np.inf
-    #           challenge : finding the closest turning left lanelet from the reachable successors
+    # finds the closest endpoint or startpoint of a left_turning_lanelet (looks into predecessors and successors)
+    # d =  the distance from this point to the vehicle state's position
+    # b = 1 if boolean evaluation is true, b=-1 otherwise
+    # rob = d * b
 
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
@@ -520,21 +515,69 @@ class PredTurningLeft(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
+        b = -1
         rnet = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        left_turning_lanelet = None
 
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
 
         for l_id in lanelets_dir_k:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if helper.left_turning_lanelet(lanelet, world.road_network):
-                return self._scale_angle(
-                    1
-                    + helper.orientation_difference_vehicle_lanelet(
-                        vehicle_k, lanelet, world.road_network, time_step
+                b = 1
+                left_turning_lanelet = lanelet
+
+        # if b ==1 , that means the vehicle is on a left turning lanelet.
+        # we can return the min(distance_behicle_to_endpoint_of_lanelet, distance_behicle_to_startpoint_of_lanelet)
+        if b == 1:
+            endpoint = helper.get_lanelet_center_endpoint(left_turning_lanelet)
+            startpoint = helper.get_lanelet_center_startpoint(left_turning_lanelet)
+            vehicle_state_position = vehicle_k.state_list_cr[time_step].position
+            d_end = helper.distance_between_two_points(vehicle_state_position, endpoint)
+            s_start = helper.distance_between_two_points(
+                vehicle_state_position, startpoint
+            )
+            return self._scale_lon_dist(np.minimum(d_end, s_start))
+
+        # else, find closest left_turing_lanelet from predecessors and successors.
+        # TODO: does it matter which one of lanelets_dir ? why take first one ?
+        succ_paths = helper.reach_succ(
+            rnet.lanelet_network.find_lanelet_by_id(lanelets_dir_k[0]),
+            rnet.lanelet_network,
+        )
+        pre_paths = helper.reach_pre(
+            rnet.lanelet_network.find_lanelet_by_id(lanelets_dir_k[0]),
+            rnet.lanelet_network,
+        )
+
+        # find the nearest left turning successor lanelet
+        min_dist_succ = math.inf
+        for succ_path in succ_paths:
+            for succ in succ_path:
+                succ_lanelet = rnet.lanelet_network.find_lanelet_by_id(succ)
+                if helper.left_turning_lanelet(succ_lanelet, rnet):
+                    dist = helper.distance_between_two_points(
+                        vehicle_k.state_list_cr[time_step].position,
+                        succ_lanelet.center_vertices[0],
                     )
-                )
-        return self._scale_lon_dist(-np.inf)
+                    if dist < min_dist_succ:
+                        min_dist_succ = dist
+
+        # find the nearest left turning predecessor lanelet
+        min_dist_pred = math.inf
+        for pred_path in pre_paths:
+            for pred in pred_path:
+                pred_lanelet = rnet.lanelet_network.find_lanelet_by_id(pred)
+                if helper.left_turning_lanelet(pred_lanelet, rnet):
+                    dist = helper.distance_between_two_points(
+                        vehicle_k.state_list_cr[time_step].position,
+                        pred_lanelet.center_vertices[0],
+                    )
+                    if dist < min_dist_pred:
+                        min_dist_pred = dist
+
+        return self._scale_lon_dist((-1) * np.minimum(min_dist_pred, min_dist_succ))
 
 
 class PredTurningRight(BasePredicateEvaluator):
@@ -551,21 +594,69 @@ class PredTurningRight(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
+        b = -1
         rnet = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        left_turning_lanelet = None
 
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
 
         for l_id in lanelets_dir_k:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if helper.right_turning_lanelet(lanelet, world.road_network):
-                return self._scale_angle(
-                    1
-                    + helper.orientation_difference_vehicle_lanelet(
-                        vehicle_k, lanelet, world.road_network, time_step
+                b = 1
+                left_turning_lanelet = lanelet
+
+        # if b ==1 , that means the vehicle is on a left turning lanelet.
+        # we can return the min(distance_behicle_to_endpoint_of_lanelet, distance_behicle_to_startpoint_of_lanelet)
+        if b == 1:
+            endpoint = helper.get_lanelet_center_endpoint(left_turning_lanelet)
+            startpoint = helper.get_lanelet_center_startpoint(left_turning_lanelet)
+            vehicle_state_position = vehicle_k.state_list_cr[time_step].position
+            d_end = helper.distance_between_two_points(vehicle_state_position, endpoint)
+            s_start = helper.distance_between_two_points(
+                vehicle_state_position, startpoint
+            )
+            return self._scale_lon_dist(np.minimum(d_end, s_start))
+
+        # else, find closest left_turing_lanelet from predecessors and successors.
+        # TODO: does it matter which one of lanelets_dir ? why take first one ?
+        succ_paths = helper.reach_succ(
+            rnet.lanelet_network.find_lanelet_by_id(lanelets_dir_k[0]),
+            rnet.lanelet_network,
+        )
+        pre_paths = helper.reach_pre(
+            rnet.lanelet_network.find_lanelet_by_id(lanelets_dir_k[0]),
+            rnet.lanelet_network,
+        )
+
+        # find the nearest left turning successor lanelet
+        min_dist_succ = math.inf
+        for succ_path in succ_paths:
+            for succ in succ_path:
+                succ_lanelet = rnet.lanelet_network.find_lanelet_by_id(succ)
+                if helper.right_turning_lanelet(succ_lanelet, rnet):
+                    dist = helper.distance_between_two_points(
+                        vehicle_k.state_list_cr[time_step].position,
+                        succ_lanelet.center_vertices[0],
                     )
-                )
-        return self._scale_lon_dist(-np.inf)
+                    if dist < min_dist_succ:
+                        min_dist_succ = dist
+
+        # find the nearest left turning predecessor lanelet
+        min_dist_pred = math.inf
+        for pred_path in pre_paths:
+            for pred in pred_path:
+                pred_lanelet = rnet.lanelet_network.find_lanelet_by_id(pred)
+                if helper.right_turning_lanelet(pred_lanelet, rnet):
+                    dist = helper.distance_between_two_points(
+                        vehicle_k.state_list_cr[time_step].position,
+                        pred_lanelet.center_vertices[0],
+                    )
+                    if dist < min_dist_pred:
+                        min_dist_pred = dist
+
+        return self._scale_lon_dist((-1) * np.minimum(min_dist_pred, min_dist_succ))
 
 
 class PredGoingStraight(BasePredicateEvaluator):
