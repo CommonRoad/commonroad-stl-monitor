@@ -1034,20 +1034,13 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-
-        # robustness: # returns 1 or -1
-        # limitations: not dynamic
-        # future work: same as turning left
-
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelets = vehicle.lanelet_assignment[time_step]
-        for l in lanelets:
-            for type in world.road_network.lanelet_network.find_lanelet_by_id(
-                l
-            ).lanelet_type:
-                if type == LaneletType.INTERSECTION:
-                    return 1.0
-        return -1.0
+        # first step : test if it is inside intersection, if not return distance to closest intersection
+        lanelet_type = LaneletType.INTERSECTION
+        return self._scale_lon_dist(
+            helper.get_robustness_wrt_lanelet_type(
+                world, time_step, vehicle_ids, lanelet_type
+            )
+        )
 
 
 class PredInIntersectionConflictArea(BasePredicateEvaluator):
@@ -1073,7 +1066,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         non_merged_ref_path_lanelets_p = helper.ref_path_lanelets(
-            vehicle_p, lanelet_network, time_step
+            vehicle_p, world.road_network, time_step
         )
         ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
 
@@ -1140,18 +1133,16 @@ class PredOnOncomOf(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
-        # if the predicate evaluate to false, the robustness is -1 
+        # if the predicate evaluate to false, the robustness is -1
         # if the predicate evaluates to true, the robustness is the distance between the two vehicles
         b = -1
-        
+
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
         lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
         lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
 
-        
-        
         for lk in lanelets_dir_k:
             if b == 1:
                 break
@@ -1173,27 +1164,21 @@ class PredOnOncomOf(BasePredicateEvaluator):
                         lap
                     )
                     oncom_lap = helper.oncom(lap_lanelet, world.road_network)
-                
+
                     if lk in oncom_lap:
                         b = 1
-                        
-        # at this point we have the boolean evaluation. we can now calculate the robustness.
-        
-        # if p is in intersection, get the stop line of the predecessor
-        # if p is incoming, get the stop line of the 
-        
-        if(b==-1):
-            return self._scale_lon_dist(-(math.inf))
-        
-        
-                
-        d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
-        if(b==1):
-            return self._scale_lon_dist(d)
-            
-        
 
-        
+        # at this point we have the boolean evaluation. we can now calculate the robustness.
+
+        # if p is in intersection, get the stop line of the predecessor
+        # if p is incoming, get the stop line of the current lanelet
+
+        if b == -1:
+            return self._scale_lon_dist(-(math.inf))
+
+        d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
+        if b == 1:
+            return self._scale_lon_dist(d)
 
 
 class PredOnIncomingLeftOf(BasePredicateEvaluator):

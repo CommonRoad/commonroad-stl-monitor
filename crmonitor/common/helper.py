@@ -5,6 +5,7 @@ from functools import reduce
 from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence, Set, Optional
 
+
 # from itertools import chain
 
 import numba
@@ -1118,26 +1119,75 @@ def lanelets_dir(vehicle: Vehicle, time_step, road_network: RoadNetwork) -> Set[
     return [l_min]
 
 
-# TODO: get_incoming and inc la left of should be deleted from here
+def get_robustness_wrt_lanelet_type(
+    world, time_step, vehicle_ids: List[int], lanelet_type
+) -> float:
+    b = -1
+    rnet = world.road_network
+    vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+    lanelet_of_type = None
+
+    lanelets_dir_k = lanelets_dir(vehicle_k, time_step, rnet)
+
+    for l_id in lanelets_dir_k:
+        lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
+        # lanelet must be of type and also in intersection
+        if is_lanelet_of_type(
+            lanelet, lanelet_type, world.road_network
+        ) and is_lanelet_of_type(lanelet, LaneletType.INTERSECTION, world.road_network):
+            b = 1
+            lanelet_of_type = lanelet
+
+    # if b ==1 , that means the vehicle is on a lanelet with type.
+    # we can return the min(distance_behicle_to_endpoint_of_lanelet, distance_behicle_to_startpoint_of_lanelet)
+    if b == 1:
+        endpoint = get_lanelet_center_endpoint(lanelet_of_type)
+        startpoint = get_lanelet_center_startpoint(lanelet_of_type)
+        vehicle_state_position = vehicle_k.state_list_cr[time_step].position
+        d_end = distance_between_two_points(vehicle_state_position, endpoint)
+        s_start = distance_between_two_points(vehicle_state_position, startpoint)
+        return np.minimum(d_end, s_start)
+
+    # else: the vehicle is not on a lanelet of type or a is not in an intersection
+    else:
+        _, min_dist = get_closest_lanelet_of_type(
+            vehicle_k, time_step, LaneletType.INTERSECTION, rnet
+        )
+        return (-1) * min_dist
+
+
 def get_incoming(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
-    """Get the incoming element of a lanelet."""
+    """Get the incoming element of a lanelet.
+    :returns: Optional[Tuple[intersection to which lanelet belongs, IncomingElement to which lanelet belongs]]
+    """
+
+    # get the intersection to which our lanelet is an incoming element
     intersection = lanelet_network.map_inc_lanelets_to_intersections.get(
         lanelet.lanelet_id
     )
+
+    # if our lanelet is not an incoming element -> return none
     if intersection is None:
         return None
+
+    # Tuple[Intersection to which lanelet belongs, IncomingElement to which lanelet belongs]
     return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
 
 
 def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
     intersection_incoming = get_incoming(lanelet, lanelet_network)
 
+    # return empty set if lanelet is no incoming element.
     if intersection_incoming is None:
         return set()
+
+    # Intersection to which lanelet belongs, IncomingElement to which lanelet belongs
     intersection, incoming = intersection_incoming
 
+    # get all IncomingElements leftof our lanelet's IncomingElement
+    # TODO: Q: why list[0] if incoming.left_of returns only one id anyway ? why not get it directly?
     left_incoming = [
         inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
     ][0]
@@ -1191,31 +1241,45 @@ def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[in
 
 
 def ref_path_lanelets(
-    vehicle: Vehicle, lanelet_network: LaneletNetwork, time_step
+    vehicle: Vehicle, road_network: RoadNetwork, time_step
 ) -> List[List[int]]:
     """
-    finds all possible paths in which this lanelet exists.
+    returns all possible paths for each lanelet in lanelets_dir(vehicle)
     """
-    lanelets = vehicle.lanelet_assignment[time_step]
-    # TODO: fix this: how to deal with multiple lanelets in lanelet assignment
-    for lanelet in lanelets:
-        succ_paths = reach_succ(
-            lanelet_network.find_lanelet_by_id(lanelet), lanelet_network
-        )
-        pre_paths = reach_pre(
-            lanelet_network.find_lanelet_by_id(lanelet), lanelet_network
-        )
 
-        paths = []
-        for pre_path in pre_paths:
-            for succ_path in succ_paths:
-                paths.append(pre_path + [lanelet] + succ_path)
-        return paths
+    lanelets = lanelets_dir(vehicle, time_step, road_network)
+
+    # iterates over lanelets_dir and finds possible paths
+    all_paths = []
+    for l_id in lanelets:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+        paths = get_lanelet_paths(lanelet, road_network)
+        if paths is not []:
+            all_paths.append(paths)
+    return all_paths
+
+
+def get_lanelet_paths(lanelet: Lanelet, road_network: RoadNetwork) -> List[List[int]]:
+    """
+    return a list of all possible paths in which lanelet exists
+    """
+
+    succ_paths = reach_succ(lanelet, road_network.lanelet_network)
+    pre_paths = reach_pre(lanelet, road_network.lanelet_network)
+    paths = []
+
+    for pre_path in pre_paths:
+        for succ_path in succ_paths:
+            paths.append(pre_path + [lanelet] + succ_path)
+    return paths
 
 
 def same_incom(
     lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork
 ) -> bool:
+    """
+    returns true if two lanelets belong to the same incoming element.
+    """
     incom1 = get_incoming(lanelet_k, lanelet_network)
     incom2 = get_incoming(lanelet_p, lanelet_network)
     if incom1 == None or incom2 == None:
@@ -1441,6 +1505,98 @@ def get_closest_stop_line_from_lanelet(
     return min_stopline, min_distance
 
 
+class HelperLaneletTypes(enum.Enum):
+    """
+    Enum describing useful types of lanelets, not included in LaneletType
+    """
+
+    INCOMING = "incoming"
+    LEFT_TURNING = "left_turning"
+    RIGHT_TURING = "right_turning"
+    STRAIGHT_GOING = "straight_going"
+
+
+def get_closest_lanelet_of_type(
+    vehicle: Vehicle,
+    time_step: int,
+    lanelet_type: HelperLaneletTypes,
+    rnet: RoadNetwork,
+) -> Optional[Tuple[Lanelet, float]]:
+    """
+    finds the closest lanelet of type lanelet_type by searching ref_path_lanelets (possible successors and predecessors)
+    returns none if none is found, or a tuple[ closest_lanelet, distance]
+    """
+    l_dir = lanelets_dir(vehicle, time_step, rnet)
+
+    # TODO: how to decide which lanelet to search generally ?
+    # current: just pop one element from the set of lanelets_dir
+    # idea: most occupied lanelet.
+    l_id = l_dir.pop()
+
+    succ_paths = reach_succ(
+        rnet.lanelet_network.find_lanelet_by_id(l_id), rnet.lanelet_network
+    )
+    pre_paths = reach_pre(
+        rnet.lanelet_network.find_lanelet_by_id(l_id), rnet.lanelet_network
+    )
+
+    # find the nearest left turning successor lanelet
+    # TODO: find better way to get the nearest lanelet:
+    # current implementation
+
+    closest_lanelet = None
+    min_dist = math.inf
+    for succ_path in succ_paths:
+        for succ in succ_path:
+            succ_lanelet = rnet.lanelet_network.find_lanelet_by_id(succ)
+            if is_lanelet_of_type(succ_lanelet, lanelet_type, rnet):
+                # TODO: find better way to calculate distance !!!
+                # current: euclidean distance between vehicle state position and first center vertex of successor
+                # idea: project distance along the path
+                dist = distance_between_two_points(
+                    vehicle.state_list_cr[time_step].position,
+                    succ_lanelet.center_vertices[0],
+                )
+                if dist < min_dist:
+                    closest_lanelet = succ_lanelet
+                    min_dist = dist
+
+    # find the nearest left turning predecessor lanelet
+    for pred_path in pre_paths:
+        for pred in pred_path:
+            pred_lanelet = rnet.lanelet_network.find_lanelet_by_id(pred)
+            if is_lanelet_of_type(pred_lanelet, lanelet_type, rnet):
+                dist = distance_between_two_points(
+                    vehicle.state_list_cr[time_step].position,
+                    pred_lanelet.center_vertices[0],
+                )
+                if dist < min_dist:
+                    closest_lanelet = pred_lanelet
+                    min_dist = dist
+
+    return closest_lanelet, min_dist
+
+
+def is_lanelet_of_type(
+    lanelet: Lanelet,
+    lanelet_type: Union[HelperLaneletTypes, LaneletType],
+    rnet: RoadNetwork,
+) -> bool:
+    """ "
+    evaluates to true, if lanelet has type lanelet_type
+    """
+    if lanelet_type is LaneletType.INTERSECTION:
+        return lanelet_type in lanelet.lanelet_type
+    elif lanelet_type is HelperLaneletTypes.LEFT_TURNING:
+        return left_turning_lanelet(lanelet, rnet)
+    elif lanelet_type is HelperLaneletTypes.STRAIGHT_GOING:
+        return straight_going_lanelet(lanelet, rnet)
+    elif lanelet_type is HelperLaneletTypes.RIGHT_TURING:
+        return right_turning_lanelet(lanelet, rnet)
+    elif lanelet is HelperLaneletTypes.INCOMING:
+        return get_incoming(lanelet, rnet.lanelet_network) is not None
+
+
 def has_type_intersection(lanelet: Lanelet) -> bool:
     return LaneletType.INTERSECTION in lanelet.lanelet_type
 
@@ -1448,7 +1604,7 @@ def has_type_intersection(lanelet: Lanelet) -> bool:
 def right_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is turning right by computing the orientations of center vertices.
-    i.e. orientations are decreasing
+    i.e. orientations are decreasing (curvature has a Clockwise direction)
     """
     lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
     orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
@@ -1465,12 +1621,13 @@ def right_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
 def left_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is turning left by computing the orientations of center vertices.
-    i.e. orientations are increasing
+    i.e. orientations are increasing. (curvature has a counterclockwise direction)
     """
     lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
     orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
 
-    # TODO: solution for first orientation, always has a problem
+    # TODO: find a solution for this:
+    # first orientation is skipped, always set to 0 has a problem (most likely because of crdesigner)
     current = orientations[1]
     for i in range(2, len(orientations) - 1):
         if orientations[i] <= current:
@@ -1482,17 +1639,20 @@ def left_turning_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
 def straight_going_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns whether a lanelet is going straight by computing the orientations of center vertices.
-    i.e. orientations are constant
+    i.e. orientations are constant (no curvature)
     """
-    # TODO: set a meaningful error
-    e = 0.01
+    # TODO: set a meaningful error. 0.1 is chosen wihtout any convincing reason.
+    e = 0.2
     lane = rnet.find_lane_by_lanelet(lanelet.lanelet_id)
     orientations = lane._compute_orientation_from_polyline(lanelet.center_vertices)
 
-    # TODO: solution for first orientation, always has a problem
+    # TODO: find a solution for this:
+    # first orientation is skipped, always set to 0 has a problem (most likely because of crdesigner)
     current = orientations[1]
     for i in range(2, len(orientations) - 1):
+
         if np.abs(orientations[i] - current) > e:
+            print(f"orientations[{i}] , {orientations[i] }\tcurrent: {current}")
             return False
         current = orientations[i]
     return True
