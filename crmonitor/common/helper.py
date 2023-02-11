@@ -13,6 +13,7 @@ import numpy as np
 
 from commonroad.scenario.lanelet import (
     Lanelet,
+    TrafficLight,
     LaneletType,
     LaneletNetwork,
     Intersection,
@@ -1119,10 +1120,37 @@ def lanelets_dir(vehicle: Vehicle, time_step, road_network: RoadNetwork) -> Set[
     return [l_min]
 
 
+def get_robustness_inside_lanelet(
+    vehicle: Vehicle, time_step, lanelet: Lanelet, only_successors: False
+):
+    # limitation: euclidean distance from car state position.
+    # not a good indicator of how well the car is inside the lanelet
+    # a good indicator would be the lateral and longitudinal distance to the vehicle shape boundaries
+    endpoint = get_lanelet_center_endpoint(lanelet)
+    startpoint = get_lanelet_center_startpoint(lanelet)
+    vehicle_state_position = vehicle.state_list_cr[time_step].position
+    d_end = distance_between_two_points(vehicle_state_position, endpoint)
+    s_start = distance_between_two_points(vehicle_state_position, startpoint)
+    return np.minimum(d_end, s_start)
+
+
 def get_robustness_wrt_lanelet_type(
-    world, time_step, vehicle_ids: List[int], lanelet_type
+    world,
+    time_step,
+    vehicle_ids: List[int],
+    lanelet_type,
+    inside_intersection: bool,
+    only_successors: bool = False,
 ) -> float:
-    b = -1
+    """
+    get robustness based on desired lanelet type.
+    :param: inside intersection: is intersection type addtionally required for the predicate ?
+    """
+    # abs: true if a lanelet of lanelet_type is found in the successors
+    # this guarantees the correctness of the robustness of relevant_traffic_light
+
+    abs = False
+    on_type = False
     rnet = world.road_network
     vehicle_k = world.vehicle_by_id(vehicle_ids[0])
     lanelet_of_type = None
@@ -1131,29 +1159,49 @@ def get_robustness_wrt_lanelet_type(
 
     for l_id in lanelets_dir_k:
         lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
-        # lanelet must be of type and also in intersection
-        if is_lanelet_of_type(
-            lanelet, lanelet_type, world.road_network
-        ) and is_lanelet_of_type(lanelet, LaneletType.INTERSECTION, world.road_network):
-            b = 1
+        # lanelet must be of type lanelet_type and also in intersection
+        if is_lanelet_of_type(lanelet, lanelet_type, world.road_network):
+            on_type = True
             lanelet_of_type = lanelet
 
-    # if b ==1 , that means the vehicle is on a lanelet with type.
-    # we can return the min(distance_behicle_to_endpoint_of_lanelet, distance_behicle_to_startpoint_of_lanelet)
-    if b == 1:
-        endpoint = get_lanelet_center_endpoint(lanelet_of_type)
-        startpoint = get_lanelet_center_startpoint(lanelet_of_type)
-        vehicle_state_position = vehicle_k.state_list_cr[time_step].position
-        d_end = distance_between_two_points(vehicle_state_position, endpoint)
-        s_start = distance_between_two_points(vehicle_state_position, startpoint)
-        return np.minimum(d_end, s_start)
+    # vehicle is on a lanelet with type lanelet_type.
+    # lanelet must also be of type intersection
 
-    # else: the vehicle is not on a lanelet of type or a is not in an intersection
-    else:
-        _, min_dist = get_closest_lanelet_of_type(
-            vehicle_k, time_step, LaneletType.INTERSECTION, rnet
-        )
-        return (-1) * min_dist
+    if on_type:
+        if inside_intersection and not is_lanelet_of_type(
+            lanelet_of_type, LaneletType.INTERSECTION, world.road_network
+        ):
+            _, min_dist, abs = get_closest_lanelet_of_type(
+                vehicle_k, time_step, LaneletType.INTERSECTION, rnet
+            )
+            rob = (-1) * min_dist
+            # if there is a successor that has active traffic light, robustness should be positive
+            if abs and lanelet_type is HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT:
+                rob = np.abs(rob)
+            return rob
+        else:
+            # current lanelet has desired type.
+            return get_robustness_inside_lanelet(
+                vehicle_k, time_step, lanelet_of_type, only_successors
+            )
+    else:  # not on type lanelet_type
+        if inside_intersection:
+            _, min_dist, abs = get_closest_lanelet_of_type(
+                vehicle_k, time_step, LaneletType.INTERSECTION, rnet
+            )
+            rob = (-1) * min_dist
+            # if there is a successor that has active traffic light, robustness should be positive
+            if abs and lanelet_type is HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT:
+                rob = np.abs(rob)
+            return rob
+        else:
+            _, min_dist, abs = get_closest_lanelet_of_type(
+                vehicle_k, time_step, lanelet_type, rnet
+            )
+            # if there is a successor that has active traffic light, robustness should be positive
+            if abs and lanelet_type is HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT:
+                rob = np.abs(rob)
+            return rob
 
 
 def get_incoming(
@@ -1514,6 +1562,7 @@ class HelperLaneletTypes(enum.Enum):
     LEFT_TURNING = "left_turning"
     RIGHT_TURING = "right_turning"
     STRAIGHT_GOING = "straight_going"
+    RELEVANT_TRAFFIC_LIGHT = "relevant_traffic_light"
 
 
 def get_closest_lanelet_of_type(
@@ -1521,11 +1570,14 @@ def get_closest_lanelet_of_type(
     time_step: int,
     lanelet_type: HelperLaneletTypes,
     rnet: RoadNetwork,
-) -> Optional[Tuple[Lanelet, float]]:
+) -> Optional[Tuple[Lanelet, float, bool]]:
     """
     finds the closest lanelet of type lanelet_type by searching ref_path_lanelets (possible successors and predecessors)
-    returns none if none is found, or a tuple[ closest_lanelet, distance]
+    returns none if none is found, or a tuple[ closest_lanelet, distance, exists_in_successors]
     """
+    # this var tells us if a lanelet having the property was found in successors
+    exists_in_successors = False
+
     l_dir = lanelets_dir(vehicle, time_step, rnet)
 
     # TODO: how to decide which lanelet to search generally ?
@@ -1533,6 +1585,7 @@ def get_closest_lanelet_of_type(
     # idea: most occupied lanelet.
     l_id = l_dir.pop()
 
+    # PS: succ_paths and
     succ_paths = reach_succ(
         rnet.lanelet_network.find_lanelet_by_id(l_id), rnet.lanelet_network
     )
@@ -1558,6 +1611,7 @@ def get_closest_lanelet_of_type(
                     succ_lanelet.center_vertices[0],
                 )
                 if dist < min_dist:
+                    exists_in_successors = True
                     closest_lanelet = succ_lanelet
                     min_dist = dist
 
@@ -1574,7 +1628,19 @@ def get_closest_lanelet_of_type(
                     closest_lanelet = pred_lanelet
                     min_dist = dist
 
-    return closest_lanelet, min_dist
+    return closest_lanelet, min_dist, exists_in_successors
+
+
+def has_active_light(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
+    """
+    returns true if lanelet has an active traffic light
+    """
+    light_ids = lanelet.traffic_lights
+    for light_id in light_ids:
+        tl = rnet.lanelet_network.find_traffic_light_by_id(light_id)
+        if tl.active:
+            return True
+    return False
 
 
 def is_lanelet_of_type(
@@ -1593,8 +1659,10 @@ def is_lanelet_of_type(
         return straight_going_lanelet(lanelet, rnet)
     elif lanelet_type is HelperLaneletTypes.RIGHT_TURING:
         return right_turning_lanelet(lanelet, rnet)
-    elif lanelet is HelperLaneletTypes.INCOMING:
+    elif lanelet_type is HelperLaneletTypes.INCOMING:
         return get_incoming(lanelet, rnet.lanelet_network) is not None
+    elif lanelet_type is HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT:
+        return has_active_light(lanelet, rnet)
 
 
 def has_type_intersection(lanelet: Lanelet) -> bool:

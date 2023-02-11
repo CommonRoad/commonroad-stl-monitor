@@ -502,12 +502,6 @@ class PredTurningLeft(BasePredicateEvaluator):
     evaluates if a vehicle is turning left
     """
 
-    # how the robustness is calculated :
-    # finds the closest endpoint or startpoint of a left_turning_lanelet (looks into predecessors and successors)
-    # d =  the distance from this point to the vehicle state's position
-    # b = 1 if boolean evaluation is true, b=-1 otherwise
-    # rob = d * b
-
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
 
@@ -518,7 +512,7 @@ class PredTurningLeft(BasePredicateEvaluator):
         lanelet_type = helper.HelperLaneletTypes.LEFT_TURNING
         return self._scale_lon_dist(
             helper.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type
+                world, time_step, vehicle_ids, lanelet_type, True
             )
         )
 
@@ -540,7 +534,7 @@ class PredTurningRight(BasePredicateEvaluator):
         lanelet_type = helper.HelperLaneletTypes.RIGHT_TURING
         return self._scale_lon_dist(
             helper.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type
+                world, time_step, vehicle_ids, lanelet_type, True
             )
         )
 
@@ -559,10 +553,10 @@ class PredGoingStraight(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
-        # first step : test if it is inside intersection, if not return distance to closest intersection 
+        # first step : test if it is inside intersection, if not return distance to closest intersection
         lanelet_type = helper.HelperLaneletTypes.STRAIGHT_GOING
         return self._scale_lon_dist(
             helper.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type
+                world, time_step, vehicle_ids, lanelet_type, True
             )
         )
