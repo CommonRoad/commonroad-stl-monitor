@@ -1198,6 +1198,7 @@ def get_robustness_wrt_lanelet_type(
             _, min_dist, abs = get_closest_lanelet_of_type(
                 vehicle_k, time_step, lanelet_type, rnet
             )
+            rob = (-1) * min_dist
             # if there is a successor that has active traffic light, robustness should be positive
             if abs and lanelet_type is HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT:
                 rob = np.abs(rob)
@@ -1225,6 +1226,10 @@ def get_incoming(
 
 
 def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
+    """
+    returns setof lanelets located on the left of the passed lanalet
+    """
+    # Implementation by Luis
     intersection_incoming = get_incoming(lanelet, lanelet_network)
 
     # return empty set if lanelet is no incoming element.

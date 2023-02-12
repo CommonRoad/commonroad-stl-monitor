@@ -1038,7 +1038,7 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
         lanelet_type = LaneletType.INTERSECTION
         return self._scale_lon_dist(
             helper.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type
+                world, time_step, vehicle_ids, lanelet_type, False, False
             )
         )
 
@@ -1185,35 +1185,50 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
 
-    # TODO :
-    # robustness description + limitations
+    # idea: rob parameters: d1, d2 and b
+    # 1. stop_line_p: find stop line corresponding to the incoming element of p
+    # 2. d1 : distance(p, stop_line_p)
+    # 3. stop_line_k: find stop line corresponding to the LEFT incoming element of p
+    # 4. d2 = distance(k, stop_line_k)
+    # 5. b = boolean evaluation (1 or -1)
+    # 6. robustness = min(b*d1, b*d2)
 
     def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
 
         lnet = world.road_network.lanelet_network
+        rnet = world.road_network
 
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
+        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, rnet)
 
-        lanelets_k = vehicle_k.lanelet_assignment[time_step]
-        lanelets_p = vehicle_p.lanelet_assignment[time_step]
+        # TODO: how to decide which lanelet in lanelets_dir to work with ?
+        # current: next(iter(lanelet_dir))
+        # idea: if we find a way to predict ref_path_lanelets or to make it deterministic => problem solved
+        l_dir_p = next(iter(lanelets_dir_p))
 
-        stop_line_k, _ = helper.get_closest_stop_line_from_lanelet(
-            lnet.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
+        left_of_p_ids = helper.inc_la_left_of(lnet.find_lanelet_by_id(l_dir_p), lnet)
+        _, incom_p = helper.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
+
+        # find stop line of p:
+        stop_line_p = helper.get_stop_line_from_incoming(
+            vehicle_p, incom_p, lnet, time_step
         )
-        coef_k = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
 
-        stop_line_p, _ = helper.get_closest_stop_line_from_lanelet(
-            lnet.find_lanelet_by_id(list(lanelets_p)[0]), world.road_network
-        )
-        coef_p = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
+        # find stop line of left incoming :
+        stop_line_k = None
+        for left_inc in left_of_p_ids:
+            left_lanelet = lnet.find_lanelet_by_id(left_inc)
+            if left_lanelet.stop_line is not None:
+                stop_line_k = left_lanelet.stop_line
+                break
 
-        coef = np.minimum(coef_k, coef_p)  # will be used to calculate the robustness
+        d1 = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p)
+        d2 = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k)
 
         b = -1
 
-        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
-        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
         for lk in lanelets_dir_k:
             if b == 1:
                 break
@@ -1236,4 +1251,4 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             b = 1
                             break
 
-        return self._scale_lon_dist(b * coef)
+        return self._scale_lon_dist(math.min(b * d1, b * d2))
