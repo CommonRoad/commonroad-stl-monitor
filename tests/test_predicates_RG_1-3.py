@@ -7,7 +7,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import (TrafficSign, TrafficSignIDGermany, TrafficSignElement, )
-from commonroad.scenario.trajectory import State
+from commonroad.scenario.state import CustomState
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -53,10 +53,10 @@ class TestPredicate(unittest.TestCase):
         # ego vehicle
         # Constant velocity, Lane switches 1 -> 1, 2 -> 2 -> 2, 1 with 45 degree
         cr_state_list_ego = {
-            0: State(position=(10, 2),velocity=10, orientation=0, time_step=0),
-            1: State(position=(20, 4),velocity=10, orientation=(1 / 4) * math.pi, time_step=1),
-            2: State(position=(30, 6),velocity=10, orientation=0, time_step=2),
-            3: State(position=(40, 4),velocity=10, orientation=-(1 / 4) * math.pi, time_step=3),
+            0: CustomState(position=(10, 2),velocity=10, orientation=0, time_step=0),
+            1: CustomState(position=(20, 4),velocity=10, orientation=(1 / 4) * math.pi, time_step=1),
+            2: CustomState(position=(30, 6),velocity=10, orientation=0, time_step=2),
+            3: CustomState(position=(40, 4),velocity=10, orientation=-(1 / 4) * math.pi, time_step=3),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1, 2}}
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
@@ -65,10 +65,10 @@ class TestPredicate(unittest.TestCase):
         # other vehicle 1
         # Constant velocity, lane keeping on lane 2
         cr_state_list_other_1 = {
-            0: State(position=(0, 6), orientation=0, velocity=0,time_step=0),
-            1: State(position=(10, 6),orientation=0, velocity=0, time_step=1),
-            2: State(position=(20, 6),orientation=0, velocity=0, time_step=2),
-            3: State(position=(30, 6),orientation=0, velocity=0, time_step=3),
+            0: CustomState(position=(0, 6), orientation=0, velocity=0,time_step=0),
+            1: CustomState(position=(10, 6),orientation=0, velocity=0, time_step=1),
+            2: CustomState(position=(20, 6),orientation=0, velocity=0, time_step=2),
+            3: CustomState(position=(30, 6),orientation=0, velocity=0, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}}
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
@@ -77,7 +77,7 @@ class TestPredicate(unittest.TestCase):
         # other vehicle 2
         # Constant velocity, lane keeping on lane 3
         # Only defined at time step 1
-        cr_state_list_other_2 = {1: State(position=(10, 10), velocity=10, orientation=0, time_step=1)}
+        cr_state_list_other_2 = {1: CustomState(position=(10, 10), velocity=10, orientation=0, time_step=1)}
         lanelet_assignments_other_2 = {1: {3}}
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                   CurvilinearStateManager(road_network), lanelet_assignments_other_2)
@@ -123,14 +123,14 @@ class TestPredicate(unittest.TestCase):
 
         # ego vehicle
         cr_state_list_ego = {
-            0: State(position=(0, 2), time_step=0,    velocity=10, orientation=0),
-            1: State(position=(10, 3.5), time_step=1, velocity=10, orientation=0),
-            2: State(position=(20, 2), time_step=2,   velocity=10, orientation=0),
-            3: State(position=(30, 2), time_step=3,   velocity=10, orientation=0),
-            4: State(position=(40, 2), time_step=4,   velocity=10, orientation=0),
-            5: State(position=(50, 3.5), time_step=5, velocity=10, orientation=0),
-            6: State(position=(60, 3.5), time_step=6, velocity=10, orientation=0),
-            7: State(position=(70, 4.5), time_step=7, velocity=10, orientation=0),
+            0: CustomState(position=(0, 2), time_step=0,    velocity=10, orientation=0),
+            1: CustomState(position=(10, 3.5), time_step=1, velocity=10, orientation=0),
+            2: CustomState(position=(20, 2), time_step=2,   velocity=10, orientation=0),
+            3: CustomState(position=(30, 2), time_step=3,   velocity=10, orientation=0),
+            4: CustomState(position=(40, 2), time_step=4,   velocity=10, orientation=0),
+            5: CustomState(position=(50, 3.5), time_step=5, velocity=10, orientation=0),
+            6: CustomState(position=(60, 3.5), time_step=6, velocity=10, orientation=0),
+            7:CustomState(position=(70, 4.5), time_step=7, velocity=10, orientation=0),
         }
         lanelet_assignments_ego = {
             0: {1},
@@ -147,10 +147,10 @@ class TestPredicate(unittest.TestCase):
 
         # other vehicle 1
         cr_state_list_other_1 = {
-            0: State(position=(10, 2), time_step=0, velocity=10,orientation=0),
-            1: State(position=(20, 2), time_step=1, velocity=10,orientation=0),
-            2: State(position=(30, 4), time_step=2, velocity=10,orientation=0),
-            3: State(position=(40, 6), time_step=3, velocity=10,orientation=0),
+            0:CustomState(position=(10, 2), time_step=0, velocity=10,orientation=0),
+            1:CustomState(position=(20, 2), time_step=1, velocity=10,orientation=0),
+            2:CustomState(position=(30, 4), time_step=2, velocity=10,orientation=0),
+            3:CustomState(position=(40, 6), time_step=3, velocity=10,orientation=0),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
@@ -158,10 +158,10 @@ class TestPredicate(unittest.TestCase):
 
         # other vehicle 2
         cr_state_list_other_2 = {
-            4: State(position=(20, 2), time_step=4, velocity=10, orientation=0),
-            5: State(position=(30, 4), time_step=5, velocity=10, orientation=0),
-            6: State(position=(40, 6), time_step=6, velocity=10, orientation=0),
-            7: State(position=(50, 6), time_step=7, velocity=10, orientation=0),
+            4:CustomState(position=(20, 2), time_step=4, velocity=10, orientation=0),
+            5:CustomState(position=(30, 4), time_step=5, velocity=10, orientation=0),
+            6:CustomState(position=(40, 6), time_step=6, velocity=10, orientation=0),
+            7:CustomState(position=(50, 6), time_step=7, velocity=10, orientation=0),
         }
         lanelet_assignments_other_2 = {4: {1}, 5: {1, 2}, 6: {2}, 7: {2}}
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
@@ -209,24 +209,24 @@ class TestPredicate(unittest.TestCase):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
         cr_state_list_ego = {
-            0: State(acceleration=-1, time_step=0, orientation=0, velocity=20, position=[0, 0]),
-            1: State(acceleration=0, time_step=1, orientation=0, velocity=20, position=[20, 0]),
+            0:CustomState(acceleration=-1, time_step=0, orientation=0, velocity=20, position=[0, 0]),
+            1:CustomState(acceleration=0, time_step=1, orientation=0, velocity=20, position=[20, 0]),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}}
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
                               lanelet_assignments_ego)
 
         state_list_lon_other = {
-            0: StateLongitudinal(s=20, v=20),
-            1: StateLongitudinal(s=30, v=0),
+            0:CustomStateLongitudinal(s=20, v=20),
+            1:CustomStateLongitudinal(s=30, v=0),
         }
         state_list_lat_other = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0, theta=0),
+            0:CustomStateLateral(d=0, theta=0),
+            1:CustomStateLateral(d=0, theta=0),
         }
         cr_state_list_other = {
-            0: State(acceleration=-1, time_step=0, position=[20, 0], velocity=20, orientation=0),
-            1: State(acceleration=0, time_step=1, position=[30, 0], velocity=0, orientation=0),
+            0:CustomState(acceleration=-1, time_step=0, position=[20, 0], velocity=20, orientation=0),
+            1:CustomState(acceleration=0, time_step=1, position=[30, 0], velocity=0, orientation=0),
         }
         lanelet_assignments_other = {0: {1}, 1: {1}}
         other_vehicle = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other, None,
@@ -278,11 +278,11 @@ class TestPredicate(unittest.TestCase):
 
         # ego vehicle
         cr_state_list_ego = {
-            0: State(position=[0, 0], velocity=10,orientation=0, time_step=0),
-            1: State(position=[10, 0],velocity=4 ,orientation=0, time_step=1),
-            2: State(position=[14, 0],velocity=10,orientation=0, time_step=2),
-            3: State(position=[24, 0],velocity=5 ,orientation=0, time_step=3),
-            4: State(position=[29, 0],velocity=5 ,orientation=0, time_step=4),
+            0:CustomState(position=[0, 0], velocity=10,orientation=0, time_step=0),
+            1:CustomState(position=[10, 0],velocity=4 ,orientation=0, time_step=1),
+            2:CustomState(position=[14, 0],velocity=10,orientation=0, time_step=2),
+            3:CustomState(position=[24, 0],velocity=5 ,orientation=0, time_step=3),
+            4:CustomState(position=[29, 0],velocity=5 ,orientation=0, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
@@ -290,17 +290,17 @@ class TestPredicate(unittest.TestCase):
 
         # other vehicle 1
         cr_state_list_other_1 = {
-            0: State(position=[ 8, 0], orientation=0,velocity=2, time_step=1),
-            1: State(position=[10, 0], orientation=0,velocity=2, time_step=1),
-            2: State(position=[12, 0], orientation=0,velocity=2, time_step=2),
-            3: State(position=[14, 0], orientation=0,velocity=2, time_step=3),
+            0:CustomState(position=[ 8, 0], orientation=0,velocity=2, time_step=1),
+            1:CustomState(position=[10, 0], orientation=0,velocity=2, time_step=1),
+            2:CustomState(position=[12, 0], orientation=0,velocity=2, time_step=2),
+            3:CustomState(position=[14, 0], orientation=0,velocity=2, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_1)
 
         # other vehicle 2
-        cr_state_list_other_2 = {4: State(position=[10, 4], velocity=10, orientation=0, time_step=4)}
+        cr_state_list_other_2 = {4:CustomState(position=[10, 4], velocity=10, orientation=0, time_step=4)}
         lanelet_assignments_other_2 = {4: {2}}
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                 CurvilinearStateManager(road_network), lanelet_assignments_other_2)
@@ -357,13 +357,13 @@ class TestPredicate(unittest.TestCase):
         # ego vehicle
         # ego vehicle
         cr_state_list_ego = {
-            0: State(position=(0, 1), time_step=0,   velocity=10, orientation=0),
-            1: State(position=(10, 2), time_step=1,  velocity=10, orientation=0),
-            2: State(position=(20, 3), time_step=2,  velocity=10, orientation=0),
-            3: State(position=(30, 3.5), time_step=3,velocity=10, orientation=0),
-            4: State(position=(40, 4), time_step=4,  velocity=10, orientation=0),
-            5: State(position=(50, 4.5), time_step=5,velocity=10, orientation=0),
-            6: State(position=(50, 100), time_step=5,velocity=10, orientation=0),
+            0:CustomState(position=(0, 1), time_step=0,   velocity=10, orientation=0),
+            1:CustomState(position=(10, 2), time_step=1,  velocity=10, orientation=0),
+            2:CustomState(position=(20, 3), time_step=2,  velocity=10, orientation=0),
+            3:CustomState(position=(30, 3.5), time_step=3,velocity=10, orientation=0),
+            4:CustomState(position=(40, 4), time_step=4,  velocity=10, orientation=0),
+            5:CustomState(position=(50, 4.5), time_step=5,velocity=10, orientation=0),
+            6:CustomState(position=(50, 100), time_step=5,velocity=10, orientation=0),
         }
         lanelet_assignments_ego = {
             0: {1},
@@ -425,14 +425,14 @@ class TestPredicate(unittest.TestCase):
 
         # ego vehicle
         state_list_lon_ego = {
-            0: StateLongitudinal(s=0, v=45),
-            1: StateLongitudinal(s=45, v=50),
-            2: StateLongitudinal(s=95, v=55),
-            3: StateLongitudinal(s=150, v=45),
+            0:CustomStateLongitudinal(s=0, v=45),
+            1:CustomStateLongitudinal(s=45, v=50),
+            2:CustomStateLongitudinal(s=95, v=55),
+            3:CustomStateLongitudinal(s=150, v=45),
         }
         state_list_lat_ego = {
-            0: StateLateral(d=0, theta=0),
-            1: StateLateral(d=0, theta=0),
+            0:CustomStateLateral(d=0, theta=0),
+            1:CustomStateLateral(d=0, theta=0),
             2: StateLateral(d=0, theta=0),
             3: StateLateral(d=4, theta=0),
         }
