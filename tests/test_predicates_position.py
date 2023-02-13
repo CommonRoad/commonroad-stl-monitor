@@ -4,7 +4,9 @@ import numpy as np
 
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork, LineMarking, Lanelet, LaneletType
-from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.obstacle import ObstacleType
+from commonroad.scenario.state import CustomState
+
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -106,13 +108,13 @@ class TestPositionPredicates(unittest.TestCase):
         self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
-        cr_state_list_ego = {0: State(position=[0, 0], time_step=0, orientation=0),
-                             1: State(position=[10, 4], time_step=1, orientation=0),
-                             2: State(position=[20, 8], time_step=2, orientation=0),
-                             3: State(position=[30, 12], time_step=3, orientation=0),
-                             4: State(position=[40, 16], time_step=4, orientation=0),
-                             5: State(position=[50, -2], time_step=5, orientation=0),
-                             6: State(position=[60, -2], time_step=6, orientation=0)}
+        cr_state_list_ego = {0: CustomState(position=[0, 0], time_step=0, orientation=0),
+                             1: CustomState(position=[10, 4], time_step=1, orientation=0),
+                             2: CustomState(position=[20, 8], time_step=2, orientation=0),
+                             3: CustomState(position=[30, 12], time_step=3, orientation=0),
+                             4: CustomState(position=[40, 16], time_step=4, orientation=0),
+                             5: CustomState(position=[50, -2], time_step=5, orientation=0),
+                             6: CustomState(position=[60, -2], time_step=6, orientation=0)}
         lanelet_assignments_ego = {0: {1}, 1: {2}, 2: {3}, 3: {4}, 4: {5}, 5: {2, 3}, 6: {2, 3}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         self.ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
@@ -480,17 +482,17 @@ class TestPositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_11 = True  # other vehicle partially right of in front and behind
 
         # ego vehicle
-        cr_state_list_ego = {0: State(position=[0, 0], time_step=0, orientation=0, velocity=10),
-                             1: State(position=[10, 0], time_step=1, orientation=0, velocity=10),
-                             2: State(position=[20, 0], time_step=2, orientation=0, velocity=10),
-                             3: State(position=[30, 0], time_step=3, orientation=0, velocity=10),
-                             4: State(position=[40, 0], time_step=4, orientation=0, velocity=10),
-                             5: State(position=[50, 0], time_step=5, orientation=0, velocity=10),
-                             6: State(position=[60, 0], time_step=6, orientation=0, velocity=10),
-                             7: State(position=[70, 0], time_step=7, orientation=0, velocity=10),
-                             8: State(position=[80, 0], time_step=8, orientation=0, velocity=10),
-                             9: State(position=[90, 0], time_step=9, orientation=0, velocity=10),
-                             10: State(position=[100, 0], time_step=10, orientation=0, velocity=10)}
+        cr_state_list_ego = {0:CustomState(position=[0, 0], time_step=0, orientation=0, velocity=10),
+                             1:CustomState(position=[10, 0], time_step=1, orientation=0, velocity=10),
+                             2:CustomState(position=[20, 0], time_step=2, orientation=0, velocity=10),
+                             3:CustomState(position=[30, 0], time_step=3, orientation=0, velocity=10),
+                             4:CustomState(position=[40, 0], time_step=4, orientation=0, velocity=10),
+                             5:CustomState(position=[50, 0], time_step=5, orientation=0, velocity=10),
+                             6:CustomState(position=[60, 0], time_step=6, orientation=0, velocity=10),
+                             7:CustomState(position=[70, 0], time_step=7, orientation=0, velocity=10),
+                             8:CustomState(position=[80, 0], time_step=8, orientation=0, velocity=10),
+                             9:CustomState(position=[90, 0], time_step=9, orientation=0, velocity=10),
+                             10:CustomState(position=[100, 0], time_step=10, orientation=0, velocity=10)}
         lanelet_assignments_ego = {0: {3}, 1: {3}, 2: {3}, 3: {3}, 4: {3}, 5: {3}, 6: {3}, 7: {3}, 8: {3}, 9: {3},
                                    10: {3}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
@@ -498,22 +500,22 @@ class TestPositionPredicates(unittest.TestCase):
                               CurvilinearStateManager(self.road_network), lanelet_assignments_ego)
 
         # other vehicle 1
-        cr_state_list_other_1 = {0: State(position=[5, 4], time_step=0, orientation=0, velocity=10),
-                                 1: State(position=[10, 4], time_step=1, orientation=0, velocity=10),
-                                 2: State(position=[21, 4], time_step=2, orientation=0, velocity=10),
-                                 3: State(position=[29, 4], time_step=3, orientation=0, velocity=10),
-                                 5: State(position=[55, 0], time_step=5, orientation=0, velocity=10),
-                                 6: State(position=[65, -4], time_step=6, orientation=0, velocity=10),
-                                 7: State(position=[70, -4], time_step=7, orientation=0, velocity=10),
-                                 8: State(position=[81, -4], time_step=8, orientation=0, velocity=10),
-                                 9: State(position=[89, -4], time_step=9, orientation=0, velocity=10)}
+        cr_state_list_other_1 = {0:CustomState(position=[5, 4], time_step=0, orientation=0, velocity=10),
+                                 1:CustomState(position=[10, 4], time_step=1, orientation=0, velocity=10),
+                                 2:CustomState(position=[21, 4], time_step=2, orientation=0, velocity=10),
+                                 3:CustomState(position=[29, 4], time_step=3, orientation=0, velocity=10),
+                                 5:CustomState(position=[55, 0], time_step=5, orientation=0, velocity=10),
+                                 6:CustomState(position=[65, -4], time_step=6, orientation=0, velocity=10),
+                                 7:CustomState(position=[70, -4], time_step=7, orientation=0, velocity=10),
+                                 8:CustomState(position=[81, -4], time_step=8, orientation=0, velocity=10),
+                                 9:CustomState(position=[89, -4], time_step=9, orientation=0, velocity=10)}
         lanelet_assignments_other_1 = {0: {4}, 1: {4}, 2: {4}, 3: {4}, 5: {3}, 6: {2}, 7: {2}, 8: {2}, 9: {2}}
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
                                   CurvilinearStateManager(self.road_network), lanelet_assignments_other_1)
 
         # other vehicle 2
-        cr_state_list_other_2 = {4: State(position=[40, 4], time_step=0, orientation=0, velocity=10),
-                                 10: State(position=[100, -4], time_step=1, orientation=0, velocity=10)}
+        cr_state_list_other_2 = {4:CustomState(position=[40, 4], time_step=0, orientation=0, velocity=10),
+                                 10:CustomState(position=[100, -4], time_step=1, orientation=0, velocity=10)}
         lanelet_assignments_other_2 = {4: {4}, 10: {2}}
         other_vehicle_2 = Vehicle(2, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_2, None,
                                   CurvilinearStateManager(self.road_network), lanelet_assignments_other_2)
@@ -596,11 +598,11 @@ class TestPositionPredicates(unittest.TestCase):
         road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
-        cr_state_list_ego = {0: State(position=[0, 8], time_step=0, orientation=0, velocity=10),
-                             1: State(position=[10, 6.5], time_step=1, orientation=0, velocity=10),
-                             2: State(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
-                             3: State(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
-                             4: State(position=[40, 2], time_step=4, orientation=0, velocity=10)}
+        cr_state_list_ego = {0:CustomState(position=[0, 8], time_step=0, orientation=0, velocity=10),
+                             1:CustomState(position=[10, 6.5], time_step=1, orientation=0, velocity=10),
+                             2:CustomState(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
+                             3:CustomState(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+                             4:CustomState(position=[40, 2], time_step=4, orientation=0, velocity=10)}
         lanelet_assignments_ego = {0: {2}, 1: {2}, 2: {1, 2}, 3: {1, 2}, 4: {1}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
@@ -615,8 +617,8 @@ class TestPositionPredicates(unittest.TestCase):
                     shape.rotate_translate_local(state.position, state.orientation))
 
         # other vehicle 1
-        cr_state_list_other_1 = {2: State(position=[20, 6.7], time_step=2, orientation=0, velocity=10),
-                                 3: State(position=[30, 6], time_step=3, orientation=0, velocity=10)}
+        cr_state_list_other_1 = {2:CustomState(position=[20, 6.7], time_step=2, orientation=0, velocity=10),
+                                 3:CustomState(position=[30, 6], time_step=3, orientation=0, velocity=10)}
         lanelet_assignments_other_1 = {2: {2}, 3: {2}}
 
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
@@ -675,11 +677,11 @@ class TestPositionPredicates(unittest.TestCase):
         road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
-        cr_state_list_ego = {0: State(position=[0, 1.0], time_step=0, orientation=0, velocity=10),
-                             1: State(position=[10, 2.5], time_step=1, orientation=0, velocity=10),
-                             2: State(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
-                             3: State(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
-                             4: State(position=[40, 7], time_step=4, orientation=0, velocity=10)}
+        cr_state_list_ego = {0:CustomState(position=[0, 1.0], time_step=0, orientation=0, velocity=10),
+                             1:CustomState(position=[10, 2.5], time_step=1, orientation=0, velocity=10),
+                             2:CustomState(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
+                             3:CustomState(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+                             4:CustomState(position=[40, 7], time_step=4, orientation=0, velocity=10)}
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1, 2}, 3: {1, 2}, 4: {2}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None,
@@ -694,8 +696,8 @@ class TestPositionPredicates(unittest.TestCase):
                     shape.rotate_translate_local(state.position, state.orientation))
 
         # other vehicle 1
-        cr_state_list_other_1 = {2: State(position=[20, 2.4], time_step=2, orientation=0, velocity=10),
-                                 3: State(position=[30, 2.0], time_step=3, orientation=0, velocity=10)}
+        cr_state_list_other_1 = {2:CustomState(position=[20, 2.4], time_step=2, orientation=0, velocity=10),
+                                 3:CustomState(position=[30, 2.0], time_step=3, orientation=0, velocity=10)}
         lanelet_assignments_other_1 = {2: {1}, 3: {1}}
 
         other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
