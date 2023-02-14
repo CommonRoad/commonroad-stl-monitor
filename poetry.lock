@@ -1,22 +1,22 @@
 [[package]]
 name = "antlr4-python3-runtime"
-version = "4.5.3"
-description = "ANTLR 4.5.3 runtime for Python 3.4.0"
+version = "4.9.3"
+description = "ANTLR 4.9.3 runtime for Python 3.4.0"
 category = "main"
 optional = false
 python-versions = "*"
 
 [[package]]
 name = "commonroad-drivability-checker"
-version = "2022.1"
+version = "2022.2.1"
 description = "Drivability checker for CommonRoad scenarios."
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-commonroad-io = ">=2020.3"
-commonroad-vehicle-models = ">=1.0.0"
+commonroad-io = ">=2022.3"
+commonroad-vehicle-models = ">=3.0.0"
 matplotlib = ">=3.2.2"
 numpy = ">=1.19"
 polygon3 = ">=3.0.8"
@@ -25,14 +25,14 @@ shapely = ">=1.6.4"
 
 [[package]]
 name = "commonroad-io"
-version = "2022.1"
+version = "2022.3"
 description = "Python tool to read, write, and visualize CommonRoad scenarios and solutions for automated vehicles."
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
-commonroad-vehicle-models = ">=2.0.0"
+commonroad-vehicle-models = ">=3.0.0"
 iso3166 = ">=1.0.1"
 lxml = ">=4.2.2"
 matplotlib = ">=3.0.0"
@@ -50,7 +50,7 @@ tutorials = ["cvxpy (==0.4.9)", "jupyter (>=1.0.0)"]
 
 [[package]]
 name = "commonroad-vehicle-models"
-version = "2.0.0"
+version = "3.0.0"
 description = "Implementation of vehicle models with varying abstraction levels ranging from kinematic single track model to a multi-body model."
 category = "main"
 optional = false
