@@ -32,7 +32,7 @@ optional = false
 python-versions = "*"
 
 [package.dependencies]
-commonroad-vehicle-models = ">=3.0.0"
+commonroad-vehicle-models = ">=3.0.2"
 iso3166 = ">=1.0.1"
 lxml = ">=4.2.2"
 matplotlib = ">=3.0.0"
@@ -50,7 +50,7 @@ tutorials = ["cvxpy (==0.4.9)", "jupyter (>=1.0.0)"]
 
 [[package]]
 name = "commonroad-vehicle-models"
-version = "3.0.0"
+version = "3.0.2"
 description = "Implementation of vehicle models with varying abstraction levels ranging from kinematic single track model to a multi-body model."
 category = "main"
 optional = false
@@ -401,25 +401,7 @@ antlr4-python3-runtime = [
     {file = "antlr4-python3-runtime-4.5.3.macosx-10.10-x86_64.exe", hash = "sha256:fa539e98d5e801c38d14ce8932a62a708841609ce28c80f8200fbbe288fc6490"},
     {file = "antlr4-python3-runtime-4.5.3.tar.gz", hash = "sha256:d490754e5774e58b4e870a7eba3f97086c1f3793deb08cfb92307f287dfd4ff2"},
 ]
-commonroad-drivability-checker = [
-    {file = "commonroad-drivability-checker-2022.1.tar.gz", hash = "sha256:099d6325c7827c4f9ef340c5dc04852e8597e6c5f1e15fffda218e1fb3e42ad2"},
-    {file = "commonroad_drivability_checker-2022.1-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:e39d46cc54fb9a263126ace71011fedf2479a65e7f44dd2aa4a9aa58ca7f3a4d"},
-    {file = "commonroad_drivability_checker-2022.1-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:810958646f388aa55fea1b816888d4646121681f0f0aac4ab59da6d1803e9afd"},
-    {file = "commonroad_drivability_checker-2022.1-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:f9d5cf059675c02156e015f22253b5e2accdace3a3ee1d8f07751ad189a01973"},
-    {file = "commonroad_drivability_checker-2022.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:22972aa5df0dcd657fe902ed959d9b065cfc7cda678f0a60d94837e602420fe3"},
-    {file = "commonroad_drivability_checker-2022.1-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:0bbb5513d02973c03253391236d75f366cdb8479f2aa50e53106019e6224ff99"},
-    {file = "commonroad_drivability_checker-2022.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bd4a85ad0e514ef509487a60d9257ba6c9642c314d881f6236b0ac1bb15574d2"},
-    {file = "commonroad_drivability_checker-2022.1-cp39-cp39-macosx_10_13_x86_64.whl", hash = "sha256:a40f5c0d1730ea7b9ecea68447a599555be21c03f727203e3897c60c175d7f95"},
-    {file = "commonroad_drivability_checker-2022.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c51d4ee9d8282fd50824420dc84c3f114986708ae836cd796249df50c4d577a8"},
-]
-commonroad-io = [
-    {file = "commonroad-io-2022.1.tar.gz", hash = "sha256:58de478088675ee23694b16c46e665650094943beb639e67c727e143881feaff"},
-    {file = "commonroad_io-2022.1-py3-none-any.whl", hash = "sha256:e45610374bc7e1d8a0fac0aefc9421fa5e83a8efa0bbe81f054ccab77a858eb8"},
-]
-commonroad-vehicle-models = [
-    {file = "commonroad-vehicle-models-2.0.0.tar.gz", hash = "sha256:80fa57b8c71303464a255aa1c98510d876f1f81a1665ca7512785b6105f7e754"},
-    {file = "commonroad_vehicle_models-2.0.0-py3-none-any.whl", hash = "sha256:c7fe7eff02c2c144553ce83715baad99594973da6447e1ef832aa9b85a3d9f1e"},
-]
+
 coverage = [
     {file = "coverage-6.5.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ef8674b0ee8cc11e2d574e3e2998aea5df5ab242e012286824ea3c6970580e53"},
     {file = "coverage-6.5.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:784f53ebc9f3fd0e2a3f6a78b2be1bd1f5575d7863e10c6e12504f240fd06660"},
