@@ -6,6 +6,8 @@ from typing import List, Tuple, Set, Dict, Callable
 from shapely.geometry.polygon import Polygon
 import numpy as np
 from crmonitor.common import helper
+import itertools
+
 
 from commonroad.scenario.lanelet import (
     LaneletType,
@@ -1021,6 +1023,11 @@ class PredDrivesRightmost(BasePredicateEvaluator):
             return min(comparison_list)
 
 
+##################
+## intersection ##
+##################
+
+
 class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     """
     evaluates if a vehicle is on a lanelet with a specific type.
@@ -1056,10 +1063,6 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-
-        # TODO :
-        # right robustness descripption + linitations
-
         b = -1  # boolean evaluation
 
         lanelet_network = world.road_network.lanelet_network
@@ -1070,12 +1073,15 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         non_merged_ref_path_lanelets_p = utils.ref_path_lanelets(
             vehicle_p, world.road_network, time_step
         )
-        ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
+        # ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
+
+        ref_path_lanelets_p: List[int] = [
+            l for path in non_merged_ref_path_lanelets_p for l in path
+        ]
 
         lanelets_k = vehicle_k.lanelet_assignment[time_step]
         lanelets_p = vehicle_p.lanelet_assignment[time_step]
 
-        # TODO  use lanelets dir instead of assignmenet
         stop_line_k, _ = utils.get_closest_stop_line_from_lanelet(
             lanelet_network.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
         )
@@ -1214,7 +1220,7 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         _, incom_p = utils.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
 
         # find stop line of p:
-        stop_line_p = utils.get_stop_line_from_incoming(
+        stop_line_p, _ = utils.get_stop_line_from_incoming(
             vehicle_p, incom_p, lnet, time_step
         )
 
@@ -1226,8 +1232,8 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                 stop_line_k = left_lanelet.stop_line
                 break
 
-        d1 = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p)
-        d2 = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k)
+        d1 = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
+        d2 = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
 
         b = -1
 
@@ -1253,4 +1259,4 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             b = 1
                             break
 
-        return self._scale_lon_dist(math.min(b * d1, b * d2))
+        return self._scale_lon_dist(np.minimum(b * d1, b * d2))

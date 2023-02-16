@@ -827,7 +827,10 @@ class TestVelocityPredicates(unittest.TestCase):
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
     #     self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
-    # # TODO
+    ##################
+    ## intersection ##
+    ##################
+
     def test_causes_braking_intersection(self):
         self.config["d_br"] = 15.0
         self.config["a_br"] = -1.0
@@ -914,9 +917,6 @@ class TestVelocityPredicates(unittest.TestCase):
         lanelet_assignments_p = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         lanelet_assignments_k = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
 
-        # TODO: Params
-        # ego_vehicle_param = self.config.get("ego_vehicle_param")
-
         vehicle_k = Vehicle(
             0,
             ObstacleType.CAR,
@@ -962,146 +962,8 @@ class TestVelocityPredicates(unittest.TestCase):
 
         pred = PredCausesBrakingIntersection(self.config)
 
-        ####################
-        ## for visualization
-        ####################
-
-        # x_p = 1
-        # lanelets_p_vis = dict()
-        # cr_states_p_vis = dict()
-        # for ts in range(30):
-        #     state = State(
-        #         position=[x_p, 0],
-        #         time_step=ts,
-        #         orientation=0,
-        #         velocity=10,
-        #         acceleration=-100,
-        #     )
-        #     cr_states_p_vis[ts] = state
-        #     lanelets_p_vis[ts] = 1
-        #     x_p = x_p + random.uniform(1.5, 2.5)
-
-        # step_k = 1
-        # x_k = 20
-        # cr_states_k_vis = dict()
-        # lanelets_k_vis = dict()
-        # for ts in range(30):
-        #     state = State(
-        #         position=[x_k, 0],
-        #         time_step=ts,
-        #         orientation=0,
-        #         velocity=10,
-        #         acceleration=-100,
-        #     )
-        #     cr_states_k_vis[ts] = state
-        #     lanelets_k_vis[ts] = 1
-        #     x_k = x_k + random.uniform(0.0, 1.0)
-
-        # vehicle_k_vis = Vehicle(
-        #     100,
-        #     ObstacleType.CAR,
-        #     None,
-        #     Rectangle(1, 1),
-        #     cr_states_k_vis,
-        #     None,
-        #     CurvilinearStateManager(road_network),
-        #     lanelets_k_vis,
-        # )
-        # vehicle_p_vis = Vehicle(
-        #     101,
-        #     ObstacleType.CAR,
-        #     None,
-        #     Rectangle(1, 1),
-        #     cr_states_p_vis,
-        #     None,
-        #     CurvilinearStateManager(road_network),
-        #     lanelets_p_vis,
-        # )
-
-        # for time, _ in vehicle_p_vis.lanelet_assignment.items():
-        #     shape = vehicle_p_vis.shape
-        #     state = vehicle_p_vis.states_cr[time]
-
-        #     vehicle_p_vis.lanelet_assignment[
-        #         time
-        #     ] = self.road_network.lanelet_network.find_lanelet_by_shape(
-        #         shape.rotate_translate_local(state.position, state.orientation)
-        #     )
-
-        # for time, _ in vehicle_k_vis.lanelet_assignment.items():
-        #     shape = vehicle_k_vis.shape
-        #     state = vehicle_k_vis.states_cr[time]
-
-        #     vehicle_k_vis.lanelet_assignment[
-        #         time
-        #     ] = self.road_network.lanelet_network.find_lanelet_by_shape(
-        #         shape.rotate_translate_local(state.position, state.orientation)
-        #     )
-
-        # world.add_vehicle(vehicle_k_vis)
-        # world.add_vehicle(vehicle_p_vis)
-        # vehicles_vis = [100, 101]
-        # time = range(20)
-        # robs = list()
-        # k_x = list()
-        # k_y = list()
-        # p_x = list()
-        # p_y = list()
-        # for ts in range(20):
-        #     rob = pred.evaluate_robustness(world, ts, vehicles_vis)
-        #     print(f"ts: {ts}\trob: {rob}")
-
-        #     robs.append(rob)
-        #     k_p = vehicle_k_vis.state_list_cr[ts].position
-        #     p_p = vehicle_p_vis.state_list_cr[ts].position
-
-        #     print(f"pos_k:{k_p}\tpos_p:{p_p}\n")
-
-        #     kp0 = list(k_p)[0]
-        #     kp1 = list(k_p)[1]
-        #     pp0 = list(p_p)[0]
-        #     pp1 = list(p_p)[1]
-
-        #     k_x.append(kp0)
-        #     k_y.append(kp1)
-
-        #     p_x.append(pp0)
-        #     p_y.append(pp1)
-
-        # for ts in range(20):
-        #     print(f"kx[{ts}] = {k_x[ts]}")
-        #     print(f"ky[{ts}] = {k_y[ts]}")
-        #     print(f"px[{ts}] = {p_x[ts]}")
-        #     print(f"py[{ts}] = {p_y[ts]}")
-
-        # # plt.plot(time, robs)
-        # # plt.axhline(y=0, color="gray", linestyle="--")
-        # # plt.xlabel("Time step")
-        # # plt.ylabel("Robustness")
-        # # plt.title("Robustness of causes_breaking_intersection")
-        # # plt.show()
-
-        # plt.plot(k_x, k_y)
-        # plt.axhline(y=0, color="gray", linestyle="--")
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-        # plt.title("k positions")
-        # plt.show()
-
-        # plt.plot(p_x, p_y)
-        # plt.axhline(y=0, color="gray", linestyle="--")
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-        # plt.title("p positions")
-        # plt.show()
-
-        ####################
-        ## end visualization
-        ####################
-
         world.add_vehicle(vehicle_p)
         world.add_vehicle(vehicle_k)
-        # world = World({ego_vehicle}, self.road_network)
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicles)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicles)

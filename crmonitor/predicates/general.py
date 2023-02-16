@@ -12,12 +12,7 @@ from crmonitor.predicates import utils
 from crmonitor.common.world import World
 from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
 from crmonitor.predicates.base import BasePredicateEvaluator
-from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
-from crmonitor.common.road_network import Lane
-from crmonitor.common.vehicle import Vehicle
 from crmonitor.predicates.utils import cal_road_width
-from crmonitor.common.helper import cartesian_to_curvilinear
-from crmonitor.common import helper
 from crmonitor.predicates.utils import (
     cal_road_width,
     distance_to_left_bounds,
