@@ -352,10 +352,12 @@ def _adjacent_lanelets(
     """
     lanelets = {lanelet}
     la = lanelet
+
     while la is not None and la.adj_left is not None:
         la = lanelet_network.find_lanelet_by_id(la.adj_left)
         if la is not None:
             lanelets.add(la)
+
     la = lanelet
     while la is not None and la.adj_right is not None:
         la = lanelet_network.find_lanelet_by_id(la.adj_right)
@@ -382,6 +384,47 @@ def cal_road_width(
 ######################################################
 ### Our work starts here.
 ######################################################
+
+
+def adjacent_lanelets_same_direction(
+    lanelet: Lanelet, lanelet_network: LaneletNetwork
+) -> Set[Lanelet]:
+    """
+    Returns all lanelet which are adjacent to a lanelet and the lanelet itself
+
+    :param lanelet: CommonRoad lanelet
+    :returns set of adjacent lanelets
+    """
+    lanelets = {lanelet}
+    la = lanelet
+    left_opp = None
+
+    while la is not None and la.adj_left is not None:
+        if la.adj_left_same_direction:
+            la = lanelet_network.find_lanelet_by_id(la.adj_left)
+            if la is not None:
+                lanelets.add(la)
+        else:
+            left_opp = lanelet_network.find_lanelet_by_id(la.adj_left)
+            if left_opp is not None:
+                lanelets.add(left_opp)
+            break
+
+    while la is not None and la.adj_right is not None and la.adj_right_same_direction:
+        la = lanelet_network.find_lanelet_by_id(la.adj_right)
+        if la is not None:
+            lanelets.add(la)
+
+    while (
+        left_opp is not None
+        and left_opp.adj_right is not None
+        and left_opp.adj_right_same_direction
+    ):
+        left_opp = lanelet_network.find_lanelet_by_id(left_opp.adj_right)
+        if left_opp is not None:
+            lanelets.add(left_opp)
+
+    return lanelets
 
 
 def get_priority(
@@ -665,7 +708,7 @@ def ref_path_lanelets(
         lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
         paths = get_lanelet_paths(lanelet, road_network)
         if paths is not []:
-            all_paths.append(paths)
+            all_paths = all_paths + paths
     return all_paths
 
 
@@ -680,21 +723,47 @@ def get_lanelet_paths(lanelet: Lanelet, road_network: RoadNetwork) -> List[List[
 
     for pre_path in pre_paths:
         for succ_path in succ_paths:
-            paths.append(pre_path + [lanelet] + succ_path)
+            paths.append(pre_path + [lanelet.lanelet_id] + succ_path)
     return paths
 
 
-def same_incom(
-    lanelet_k: Lanelet, lanelet_p: Lanelet, lanelet_network: LaneletNetwork
-) -> bool:
+def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, rnet: RoadNetwork) -> bool:
     """
     returns true if two lanelets belong to the same incoming element.
     """
-    incom1 = get_incoming(lanelet_k, lanelet_network)
-    incom2 = get_incoming(lanelet_p, lanelet_network)
-    if incom1 == None or incom2 == None:
-        return False
-    return incom1 == incom2
+
+    # limitations: reach_pre is not deterministic, returns all possible predecessor paths
+    # current hack: just iterate over all possible reachable predecessors
+    # TODO: access past time steps to fix reach_pre ??
+    reach_pre_k = reach_pre(lanelet_k, rnet.lanelet_network)
+
+    reach_pre_p = reach_pre(lanelet_p, rnet.lanelet_network)
+    reach_pre_k_flat: List[int] = [
+        pre for reach_pre_path in reach_pre_k for pre in reach_pre_path
+    ] + [lanelet_k.lanelet_id]
+
+    reach_pre_p_flat: List[int] = [
+        pre for reach_pre_path in reach_pre_p for pre in reach_pre_path
+    ] + [lanelet_p.lanelet_id]
+
+    for lak in reach_pre_k_flat:
+        if not is_lanelet_of_type(
+            rnet.lanelet_network.find_lanelet_by_id(lak),
+            HelperLaneletTypes.INCOMING,
+            rnet,
+        ):
+            continue
+        adj_lanelets_lak_lanelets = adjacent_lanelets_same_direction(
+            rnet.lanelet_network.find_lanelet_by_id(lak), rnet.lanelet_network
+        )
+
+        adj_lanelets_lak = list(
+            map(lambda lanelet: lanelet.lanelet_id, adj_lanelets_lak_lanelets)
+        )
+        if set(adj_lanelets_lak).intersection(set(reach_pre_p_flat)):
+            return True
+
+    return False
 
 
 def orientation_of_lanelet_center_veritices(
@@ -1082,7 +1151,6 @@ def straight_going_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
     for i in range(2, len(orientations) - 1):
 
         if np.abs(orientations[i] - current) > e:
-            print(f"orientations[{i}] , {orientations[i] }\tcurrent: {current}")
             return False
         current = orientations[i]
     return True
