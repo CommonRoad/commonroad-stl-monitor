@@ -9,6 +9,7 @@ from commonroad.scenario.traffic_sign import TrafficLightState
 from commonroad.scenario import lanelet, traffic_sign
 from commonroad.scenario.traffic_sign import TrafficLight, TrafficSignIDGermany
 from crmonitor.common.road_network import Lane, RoadNetwork
+from crmonitor.predicates import utils
 
 logger = logging.getLogger(__name__)
 
@@ -53,17 +54,17 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, "right"
         )  #'102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, "right")
+        priority_k = utils.get_priority(lanelets_dir_ids_of_k, road_network, "right")
 
         if priority_p == priority_k:
             rob = 1
@@ -85,17 +86,17 @@ class PredSamePriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, vehicle_dir_k
         )
 
@@ -132,7 +133,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         # vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
         # distance_from_nearest_tl = -1
 
-        # lanelets_dir_ids = helper.lanelets_dir(vehicle, time_step, world.road_network)
+        # lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
 
         # # for l in lanelets_dir_ids:
 
@@ -155,7 +156,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
 
         #                 if tl.active:
         #                     stop_line = successor.stop_line
-        #                     distance_to_ego = helper.distance_vehicle_to_stop_line(
+        #                     distance_to_ego = utils.distance_vehicle_to_stop_line(
         #                         vehicle, stop_line, time_step
         #                     )
         #                     if (
@@ -165,9 +166,9 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         #                         distance_from_nearest_tl = distance_to_ego
         # return self._scale_lon_dist(distance_from_nearest_tl)
 
-        lanelet_type = helper.HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT
+        lanelet_type = utils.HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT
         return self._scale_lon_dist(
-            helper.get_robustness_wrt_lanelet_type(
+            utils.get_robustness_wrt_lanelet_type(
                 world, time_step, vehicle_ids, lanelet_type, False, True
             )
         )
@@ -189,17 +190,17 @@ class PredHasPriority(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, "right"
         )  #'102'
-        priority_k = helper.get_priority(lanelets_dir_ids_of_k, road_network, "right")
+        priority_k = utils.get_priority(lanelets_dir_ids_of_k, road_network, "right")
 
         if priority_k > priority_p:
             rob = 1
@@ -228,17 +229,17 @@ class PredSamePriorityRightRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -269,17 +270,17 @@ class PredSamePriorityRightLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -310,17 +311,17 @@ class PredSamePriorityLeftRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -351,17 +352,17 @@ class PredSamePriorityRightStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -392,17 +393,17 @@ class PredSamePriorityStraightRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -433,17 +434,17 @@ class PredSamePriorityLeftStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -474,17 +475,17 @@ class PredSamePriorityStraightLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -515,17 +516,17 @@ class PredSamePriorityLeftLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -556,17 +557,17 @@ class PredSamePriorityStraightStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  #'102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -597,17 +598,17 @@ class PredHasPriorityRightRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -638,17 +639,17 @@ class PredHasPriorityRightLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -679,17 +680,17 @@ class PredHasPriorityLeftRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -720,17 +721,17 @@ class PredHasPriorityRightStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -761,17 +762,17 @@ class PredHasPriorityStraightRight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -802,17 +803,17 @@ class PredHasPriorityLeftStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -843,17 +844,17 @@ class PredHasPriorityStraightLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -884,17 +885,17 @@ class PredHasPriorityLeftLeft(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 
@@ -925,17 +926,17 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_ids_of_p = helper.lanelets_dir(
+        lanelets_dir_ids_of_p = utils.lanelets_dir(
             vehicle_p, time_step, world.road_network
         )
-        lanelets_dir_ids_of_k = helper.lanelets_dir(
+        lanelets_dir_ids_of_k = utils.lanelets_dir(
             vehicle_k, time_step, world.road_network
         )
 
-        priority_p = helper.get_priority(
+        priority_p = utils.get_priority(
             lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
         )  # '102'
-        priority_k = helper.get_priority(
+        priority_k = utils.get_priority(
             lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
         )
 

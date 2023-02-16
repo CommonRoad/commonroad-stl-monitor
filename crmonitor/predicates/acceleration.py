@@ -7,6 +7,8 @@ from typing import List
 
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates import utils
+
 
 logger = logging.getLogger(__name__)
 

@@ -6,6 +6,8 @@ import matplotlib.colors
 import numpy as np
 from typing import Optional
 from matplotlib import pyplot as plt
+from crmonitor.predicates import utils
+
 
 from crmonitor.common.world import World
 from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
@@ -509,9 +511,9 @@ class PredTurningLeft(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
-        lanelet_type = helper.HelperLaneletTypes.LEFT_TURNING
+        lanelet_type = utils.HelperLaneletTypes.LEFT_TURNING
         return self._scale_lon_dist(
-            helper.get_robustness_wrt_lanelet_type(
+            utils.get_robustness_wrt_lanelet_type(
                 world, time_step, vehicle_ids, lanelet_type, True
             )
         )
@@ -531,9 +533,9 @@ class PredTurningRight(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
 
-        lanelet_type = helper.HelperLaneletTypes.RIGHT_TURING
+        lanelet_type = utils.HelperLaneletTypes.RIGHT_TURING
         return self._scale_lon_dist(
-            helper.get_robustness_wrt_lanelet_type(
+            utils.get_robustness_wrt_lanelet_type(
                 world, time_step, vehicle_ids, lanelet_type, True
             )
         )
@@ -554,9 +556,9 @@ class PredGoingStraight(BasePredicateEvaluator):
     ) -> float:
 
         # first step : test if it is inside intersection, if not return distance to closest intersection
-        lanelet_type = helper.HelperLaneletTypes.STRAIGHT_GOING
+        lanelet_type = utils.HelperLaneletTypes.STRAIGHT_GOING
         return self._scale_lon_dist(
-            helper.get_robustness_wrt_lanelet_type(
+            utils.get_robustness_wrt_lanelet_type(
                 world, time_step, vehicle_ids, lanelet_type, True
             )
         )

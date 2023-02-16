@@ -14,6 +14,8 @@ from commonroad.scenario.lanelet import (
     LaneletNetwork,
 )
 
+from crmonitor.predicates import utils
+
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
@@ -1037,7 +1039,7 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
         # first step : test if it is inside intersection, if not return distance to closest intersection
         lanelet_type = LaneletType.INTERSECTION
         return self._scale_lon_dist(
-            helper.get_robustness_wrt_lanelet_type(
+            utils.get_robustness_wrt_lanelet_type(
                 world, time_step, vehicle_ids, lanelet_type, False, False
             )
         )
@@ -1065,7 +1067,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        non_merged_ref_path_lanelets_p = helper.ref_path_lanelets(
+        non_merged_ref_path_lanelets_p = utils.ref_path_lanelets(
             vehicle_p, world.road_network, time_step
         )
         ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
@@ -1074,15 +1076,15 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         lanelets_p = vehicle_p.lanelet_assignment[time_step]
 
         # TODO  use lanelets dir instead of assignmenet
-        stop_line_k, _ = helper.get_closest_stop_line_from_lanelet(
+        stop_line_k, _ = utils.get_closest_stop_line_from_lanelet(
             lanelet_network.find_lanelet_by_id(list(lanelets_k)[0]), world.road_network
         )
-        coef_k = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
+        coef_k = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
 
-        stop_line_p, _ = helper.get_closest_stop_line_from_lanelet(
+        stop_line_p, _ = utils.get_closest_stop_line_from_lanelet(
             lanelet_network.find_lanelet_by_id(list(lanelets_p)[0]), world.road_network
         )
-        coef_p = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
+        coef_p = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
 
         coef = np.minimum(coef_k, coef_p)  # will be used to calculate the robustness
 
@@ -1096,10 +1098,10 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
                 if b == 1:
                     break
                 lanelet_p = lanelet_network.find_lanelet_by_id(lp)
-                same_direction = helper.lanelets_same_direction(
+                same_direction = utils.lanelets_same_direction(
                     lanelet_k, lanelet_p, world.road_network
                 )
-                same_incom = helper.same_incom(lanelet_k, lanelet_p, lanelet_network)
+                same_incom = utils.same_incom(lanelet_k, lanelet_p, lanelet_network)
 
                 if not (same_direction or same_incom):
                     for lap in ref_path_lanelets_p:
@@ -1108,7 +1110,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
                             break
 
         # old idea: distance between vehicles as coefficent for robustness.
-        # coef = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
+        # coef = utils.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
 
         rob = b * coef
         return self._scale_lon_dist(rob)
@@ -1140,8 +1142,8 @@ class PredOnOncomOf(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
-        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, world.road_network)
-        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, world.road_network)
+        lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, world.road_network)
+        lanelets_dir_p = utils.lanelets_dir(vehicle_p, time_step, world.road_network)
 
         for lk in lanelets_dir_k:
             if b == 1:
@@ -1151,7 +1153,7 @@ class PredOnOncomOf(BasePredicateEvaluator):
                     break
                 lp_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(lp)
 
-                reach_pre = helper.reach_pre(
+                reach_pre = utils.reach_pre(
                     lp_lanelet, world.road_network.lanelet_network
                 )
 
@@ -1163,7 +1165,7 @@ class PredOnOncomOf(BasePredicateEvaluator):
                     lap_lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
                         lap
                     )
-                    oncom_lap = helper.oncom(lap_lanelet, world.road_network)
+                    oncom_lap = utils.oncom(lap_lanelet, world.road_network)
 
                     if lk in oncom_lap:
                         b = 1
@@ -1176,7 +1178,7 @@ class PredOnOncomOf(BasePredicateEvaluator):
         if b == -1:
             return self._scale_lon_dist(-(math.inf))
 
-        d = helper.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
+        d = utils.distance_between_vehicles(vehicle_k, vehicle_p, time_step)
         if b == 1:
             return self._scale_lon_dist(d)
 
@@ -1200,19 +1202,19 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        lanelets_dir_k = helper.lanelets_dir(vehicle_k, time_step, rnet)
-        lanelets_dir_p = helper.lanelets_dir(vehicle_p, time_step, rnet)
+        lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, rnet)
+        lanelets_dir_p = utils.lanelets_dir(vehicle_p, time_step, rnet)
 
         # TODO: how to decide which lanelet in lanelets_dir to work with ?
         # current: next(iter(lanelet_dir))
         # idea: if we find a way to predict ref_path_lanelets or to make it deterministic => problem solved
         l_dir_p = next(iter(lanelets_dir_p))
 
-        left_of_p_ids = helper.inc_la_left_of(lnet.find_lanelet_by_id(l_dir_p), lnet)
-        _, incom_p = helper.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
+        left_of_p_ids = utils.inc_la_left_of(lnet.find_lanelet_by_id(l_dir_p), lnet)
+        _, incom_p = utils.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
 
         # find stop line of p:
-        stop_line_p = helper.get_stop_line_from_incoming(
+        stop_line_p = utils.get_stop_line_from_incoming(
             vehicle_p, incom_p, lnet, time_step
         )
 
@@ -1224,28 +1226,28 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                 stop_line_k = left_lanelet.stop_line
                 break
 
-        d1 = helper.distance_vehicle_to_stop_line(vehicle_p, stop_line_p)
-        d2 = helper.distance_vehicle_to_stop_line(vehicle_k, stop_line_k)
+        d1 = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p)
+        d2 = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k)
 
         b = -1
 
         for lk in lanelets_dir_k:
             if b == 1:
                 break
-            reach_suc_lk = helper.reach_succ(lnet.find_lanelet_by_id(lk), lnet)
+            reach_suc_lk = utils.reach_succ(lnet.find_lanelet_by_id(lk), lnet)
             merged_reach_suc_lk = set().union(*reach_suc_lk)
             merged_reach_suc_lk.add(lk)
             for lp in lanelets_dir_p:
                 if b == 1:
                     break
-                reach_suc_lp = helper.reach_succ(lnet.find_lanelet_by_id(lp), lnet)
+                reach_suc_lp = utils.reach_succ(lnet.find_lanelet_by_id(lp), lnet)
                 merged_reach_suc_lp = set().union(*reach_suc_lp)
                 merged_reach_suc_lp.add(lp)
                 for lap in merged_reach_suc_lp:
                     if b == 1:
                         break
                     for lak in merged_reach_suc_lk:
-                        if lap in helper.inc_la_left_of(
+                        if lap in utils.inc_la_left_of(
                             lnet.find_lanelet_by_id(lak), lnet
                         ):
                             b = 1
