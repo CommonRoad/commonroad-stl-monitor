@@ -55,14 +55,14 @@ class TestPriorityPredicates(unittest.TestCase):
             scenario.lanelet_network, self.config.get("road_network_param")
         )
 
-    # # # TODO
+
     def test_relevant_traffic_light(self):
 
         world = World.create_from_scenario(self.scenario)
 
         exp_sol_monitor_mode_1 = False  # traffic light inactive
         exp_sol_monitor_mode_2 = True
-        exp_sol_monitor_mode_3 = False  # no traffic light
+        exp_sol_monitor_mode_3 = False  # incoming lanelet has no traffic light
 
         # ego vehicle
         cr_state_list_ego = {
@@ -478,8 +478,8 @@ class TestPriorityPredicates(unittest.TestCase):
 
         world = World.create_from_scenario(self.scenario)
 
-        exp_sol_monitor_mode_1 = True  # rightright
-        exp_sol_monitor_mode_2 = False  # rightright
+        exp_sol_monitor_mode_1 = True  # right_right
+        exp_sol_monitor_mode_2 = False  # right_right
         exp_sol_monitor_mode_3 = True  # right_straight
         exp_sol_monitor_mode_4 = False  # right_straight
         exp_sol_monitor_mode_5 = True  # left_straight
