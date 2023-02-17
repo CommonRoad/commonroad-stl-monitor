@@ -13,6 +13,7 @@ commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2022.2"
 numba = "^0.56.0"
+shapely = "^1.8"
 rtamt = {git = "https://github.com/cirrostratus1/rtamt.git", rev = "adafd0c73884fe260d7a59b678ac4e452cbf73c9"}
 
 [tool.poetry.group.test]
@@ -22,6 +23,13 @@ optional = true
 coverage = "^6.5.0"
 # To run the tests, we necessarily need this commonroad-io version
 commonroad-io = ">=2022.2"
+
+[tool.poetry.group.doc]
+optional = true
+
+[tool.poetry.group.doc.dependencies]
+sphinx = "^5.3.0"
+myst-parser = "^0.18.1"
 
 [build-system]
 requires = ["poetry-core"]
