@@ -4,7 +4,7 @@ import shelve
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import partial, lru_cache
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import Optional, Set, Union
 
@@ -12,17 +12,14 @@ import numpy as np
 from commonroad.scenario.scenario import Scenario
 
 import crmonitor
-from crmonitor.common.helper import (
-    create_other_vehicles_param,
-    load_yaml,
-)
+from crmonitor.common.helper import create_other_vehicles_param, load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (
-    Vehicle,
-    DynamicObstacleVehicle,
-    CurvilinearStateManager,
-    PredicateCache,
     ControlledVehicle,
+    CurvilinearStateManager,
+    DynamicObstacleVehicle,
+    PredicateCache,
+    Vehicle,
 )
 
 

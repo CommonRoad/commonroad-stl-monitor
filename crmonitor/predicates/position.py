@@ -1,7 +1,7 @@
 import logging
 import math
 from enum import Enum
-from typing import List, Tuple, Set, Dict, Callable
+from typing import Callable, Dict, List, Set, Tuple
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletType, LineMarking
@@ -12,7 +12,7 @@ from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
+from crmonitor.predicates.base import MAX_LONG_DIST, BasePredicateEvaluator
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,

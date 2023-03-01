@@ -3,7 +3,7 @@ import math
 from decimal import Decimal
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Union, List, Tuple, Iterable, Sequence
+from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 import numba
 import numpy as np
@@ -16,7 +16,7 @@ from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
-from crmonitor.common.road_network import RoadNetwork, Lane
+from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 
 

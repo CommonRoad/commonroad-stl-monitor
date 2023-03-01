@@ -1,7 +1,7 @@
 import abc
 import logging
 import math
-from typing import List, Tuple, Dict, Callable
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 from commonroad.visualization.renderer import IRenderer

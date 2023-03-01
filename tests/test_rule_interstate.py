@@ -12,15 +12,15 @@ from commonroad.scenario.state import CustomState
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.monitor.rule import (
-    parse_rule,
-    RuleNode,
-    PredicateNode,
-    ExistNode,
     AllNode,
+    ExistNode,
+    PredicateNode,
+    RuleNode,
+    parse_rule,
 )
 from tests.util import parallel_lanes
 

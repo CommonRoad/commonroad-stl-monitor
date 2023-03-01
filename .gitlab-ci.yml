@@ -43,7 +43,7 @@ flake8:
 black:
   stage: style
   needs: [ ]
-  image: pyfound/black:22.6.0
+  image: pyfound/black:23.1.0
   before_script: [ ]
   cache: [ ]
   script:

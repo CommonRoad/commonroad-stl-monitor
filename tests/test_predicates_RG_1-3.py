@@ -9,25 +9,21 @@ from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from commonroad.scenario.traffic_sign import (
     TrafficSign,
-    TrafficSignIDGermany,
     TrafficSignElement,
+    TrafficSignIDGermany,
 )
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import (
-    StateLateral,
-    Vehicle,
-    CurvilinearStateManager,
-)
+from crmonitor.common.vehicle import CurvilinearStateManager, StateLateral, Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
+    PredInFrontOf,
     PredInSameLane,
-    PredSingleLane,
     PredPreceding,
     PredSafeDistPrec,
-    PredInFrontOf,
+    PredSingleLane,
 )
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
 from tests.util import parallel_lanes
