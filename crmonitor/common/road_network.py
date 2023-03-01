@@ -1,7 +1,7 @@
-from typing import List, Set, Dict
+from typing import Dict, List, Set
 
 import numpy as np
-from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
+from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
 from commonroad_dc.geometry.util import chaikins_corner_cutting, resample_polyline
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 

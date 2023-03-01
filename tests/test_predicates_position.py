@@ -4,30 +4,30 @@ from pathlib import Path
 import numpy as np
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import (
-    LaneletNetwork,
-    LineMarking,
     Lanelet,
+    LaneletNetwork,
     LaneletType,
+    LineMarking,
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.position import (
-    PredRightOfBroadLaneMarking,
-    PredLeftOfBroadLaneMarking,
-    PredOnAccessRamp,
-    PredOnShoulder,
-    PredOnMainCarriageway,
-    PredInRightmostLane,
-    PredInLeftmostLane,
-    PredMainCarriageWayRightLane,
-    PredLeftOf,
     PredDrivesLeftmost,
     PredDrivesRightmost,
+    PredInLeftmostLane,
+    PredInRightmostLane,
+    PredLeftOf,
+    PredLeftOfBroadLaneMarking,
+    PredMainCarriageWayRightLane,
+    PredOnAccessRamp,
+    PredOnMainCarriageway,
+    PredOnShoulder,
+    PredRightOfBroadLaneMarking,
 )
 
 

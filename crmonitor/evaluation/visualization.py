@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import groupby
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd

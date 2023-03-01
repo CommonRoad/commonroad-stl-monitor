@@ -1,11 +1,11 @@
-from typing import List, Tuple, Set
+from typing import List, Set, Tuple
 
 import bezier
 import matplotlib.pyplot as plt
 import numpy as np
-from commonroad.scenario.lanelet import Lanelet, LineMarking, LaneletType, RoadUser
+from commonroad.scenario.lanelet import Lanelet, LaneletType, LineMarking, RoadUser
 from commonroad.scenario.obstacle import DynamicObstacle
-from commonroad.scenario.scenario import Scenario, Tag, Location
+from commonroad.scenario.scenario import Location, Scenario, Tag
 
 
 def create_access_ramp_start(lanelet_length: int, l_id: int) -> Lanelet:
@@ -434,7 +434,6 @@ def create_straight_scenario(
     lanelet_types: List[Set[LaneletType]],
     lane_width: List[float],
 ):
-
     # desired number of lanes and parameters
     lanelet_length = int(road_length / num_lanelets_per_lane)
     scenario = create_scenario(commonroad_benchmark_id, dt)

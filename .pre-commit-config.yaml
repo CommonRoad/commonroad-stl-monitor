@@ -7,14 +7,14 @@ repos:
         name: isort (python)
         args: [ "--profile", "black", "--filter-files" ]
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 23.1.0
     hooks:
       - id: black
         language_version: python3.8
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.9
-    hooks:
-      - id: flake8
+#  - repo: https://gitlab.com/pycqa/flake8
+#    rev: 3.7.9
+#    hooks:
+#      - id: flake8
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v2.5.0
     hooks:

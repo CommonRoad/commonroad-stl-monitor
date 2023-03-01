@@ -7,12 +7,12 @@ from ruamel.yaml import YAML
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.monitor.rule import (
-    parse_rule,
     AllNode,
-    RuleNode,
     ExistNode,
-    PredicateNode,
     IOType,
+    PredicateNode,
+    RuleNode,
+    parse_rule,
 )
 
 

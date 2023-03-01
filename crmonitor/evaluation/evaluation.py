@@ -2,25 +2,25 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Tuple, Dict, Any, List, Callable
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
 import crmonitor
 from crmonitor.common.helper import (
+    create_ego_vehicle_param,
     load_yaml,
     merge_dicts_recursively,
-    create_ego_vehicle_param,
 )
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
     EvaluationMonitorTreeVisitor,
+    MonitorCreationRuleTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
-    ResetMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.monitor.rule import VisitorNode, parse_rule

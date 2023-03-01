@@ -2,11 +2,11 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Union, Dict, List, Tuple, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numba
 import numpy as np
-from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 
@@ -36,7 +36,7 @@ class StateLongitudinal:
 
     def __init__(self, **kwargs):
         """Elements of state vector are determined during runtime."""
-        for (field, value) in kwargs.items():
+        for field, value in kwargs.items():
             setattr(self, field, value)
 
     @property
@@ -68,7 +68,7 @@ class StateLateral:
 
     def __init__(self, **kwargs):
         """Elements of state vector are determined during runtime."""
-        for (field, value) in kwargs.items():
+        for field, value in kwargs.items():
             setattr(self, field, value)
 
     @property
