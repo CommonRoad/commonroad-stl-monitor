@@ -1,40 +1,24 @@
 import math
 import unittest
 from pathlib import Path
-import numpy as np
 
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
-from commonroad.scenario.obstacle import State, ObstacleType
 from commonroad.common.file_reader import CommonRoadFileReader
-
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.obstacle import State, ObstacleType
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.priority import (
+from crmonitor.predicates.priority import (  # not covered
     PredRelevantTrafficLight,  # not covered
-    PredRelevantTrafficLight,  # not covered
-    PredHasPriorityRightRight,
-    PredHasPriorityRightLeft,
-    PredHasPriorityRightStraight,
-    PredHasPriorityLeftRight,  # not covered
-    PredHasPriorityLeftLeft,  # not covered
-    PredHasPriorityLeftStraight,
-    PredHasPriorityStraightRight,
-    PredHasPriorityStraightLeft,  # not covered
-    PredHasPriorityStraightStraight,
-    PredSamePriorityRightRight,
-    PredSamePriorityRightLeft,
-    PredSamePriorityRightStraight,
-    PredSamePriorityLeftRight,
-    PredSamePriorityLeftLeft,  # not covered
-    PredSamePriorityLeftStraight,
-    PredSamePriorityStraightRight,
-    PredSamePriorityStraightLeft,  # not covered
-    PredSamePriorityStraightStraight,
-)
+    PredHasPriorityRightRight, PredHasPriorityRightLeft, PredHasPriorityRightStraight,  # not covered
+    # not covered
+    PredHasPriorityLeftStraight, PredHasPriorityStraightRight,  # not covered
+    PredHasPriorityStraightStraight, PredSamePriorityRightRight, PredSamePriorityRightLeft,
+    PredSamePriorityRightStraight,  # not covered
+    PredSamePriorityLeftStraight, PredSamePriorityStraightRight,  # not covered
+    PredSamePriorityStraightStraight, )
 
 
 class TestPriorityPredicates(unittest.TestCase):

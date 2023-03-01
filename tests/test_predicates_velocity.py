@@ -1,30 +1,17 @@
 import math
 import unittest
 from pathlib import Path
+
 import numpy as np
-import matplotlib.pyplot as plt
-import random
-
-
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.obstacle import State, ObstacleType
-from commonroad.scenario.scenario import Scenario
 
 from crmonitor.common.helper import load_yaml
-from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.velocity import (
-    PredReverses,
-    PredSlowLeadingVehicle,
-    PredPreservesTrafficFlow,
-    PredInStandStill,
-    PredExistStandingLeadingVehicle,
-    PredDrivesFaster,
-    PredDrivesWithSlightlyHigherSpeed,
-)
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
 
 

@@ -7,16 +7,11 @@ import numpy as np
 from commonroad.common.util import subtract_orientations
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.lanelet import (
-    Intersection,
-    Lanelet,
-    LaneletNetwork,
-    LaneletType,
-    StopLine,
-)
-from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
-from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
-from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
+from commonroad.scenario.lanelet import (Intersection,
+                                         Lanelet,
+                                         LaneletNetwork,
+                                         LaneletType,
+                                         StopLine, )
 
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.road_network import RoadNetwork

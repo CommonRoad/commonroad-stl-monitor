@@ -1,42 +1,20 @@
 import math
 import unittest
 from pathlib import Path
+
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-import matplotlib.pyplot as plt
-import random
-
-
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.lanelet import (
-    LaneletNetwork,
-    LineMarking,
-    Lanelet,
-    LaneletType,
-)
+from commonroad.scenario.lanelet import (LaneletNetwork, LineMarking, Lanelet, LaneletType, )
 from commonroad.scenario.obstacle import State, ObstacleType
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.position import (
-    PredRightOfBroadLaneMarking,
-    PredLeftOfBroadLaneMarking,
-    PredOnAccessRamp,
-    PredOnShoulder,
-    PredOnMainCarriageway,
-    PredInRightmostLane,
-    PredInLeftmostLane,
-    PredMainCarriageWayRightLane,
-    PredLeftOf,
-    PredDrivesLeftmost,
-    PredDrivesRightmost,
-    PredOnLaneletWithTypeIntersection,
-    PredInIntersectionConflictArea,
-    PredOnIncomingLeftOf,
-    PredOnOncomOf,
-)
+from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking,
+                                           PredOnLaneletWithTypeIntersection, PredInIntersectionConflictArea,
+                                           PredOnIncomingLeftOf, PredOnOncomOf, )
 
 
 class TestPositionPredicates(unittest.TestCase):

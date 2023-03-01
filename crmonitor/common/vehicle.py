@@ -3,9 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Union, Dict, List, Tuple, Optional, Set
-from commonroad.common.util import subtract_orientations
 
-import math
 import numba
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle

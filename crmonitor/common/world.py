@@ -12,18 +12,10 @@ import numpy as np
 from commonroad.scenario.scenario import Scenario
 
 import crmonitor
-from crmonitor.common.helper import (
-    create_other_vehicles_param,
-    load_yaml,
-)
+from crmonitor.common.helper import (create_other_vehicles_param, load_yaml, )
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import (
-    Vehicle,
-    DynamicObstacleVehicle,
-    CurvilinearStateManager,
-    PredicateCache,
-    ControlledVehicle,
-)
+from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache,
+                                      ControlledVehicle, )
 
 
 @lru_cache(maxsize=None)

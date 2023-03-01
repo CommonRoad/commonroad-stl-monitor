@@ -1,10 +1,8 @@
 import logging
-import os
 import unittest
 from pathlib import Path
 
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
@@ -15,13 +13,7 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (
-    parse_rule,
-    RuleNode,
-    PredicateNode,
-    ExistNode,
-    AllNode,
-)
+from crmonitor.monitor.rule import (parse_rule, )
 from tests.util import parallel_lanes
 
 logging.basicConfig(

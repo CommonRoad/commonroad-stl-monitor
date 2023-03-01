@@ -1,14 +1,11 @@
-from enum import Enum
 import logging
-import numpy as np
-
+from enum import Enum
 from typing import List
 
+import numpy as np
 
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.predicates import utils
-
 
 logger = logging.getLogger(__name__)
 

@@ -5,18 +5,12 @@ from functools import reduce
 from pathlib import Path
 from typing import Dict, Union, List, Tuple, Iterable, Sequence
 
-
 import numba
 import numpy as np
-
-from commonroad.scenario.lanelet import (
-    Lanelet,
-    LaneletType,
-)
+from commonroad.scenario.lanelet import (Lanelet, LaneletType, )
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
-
 from ruamel.yaml import YAML
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2

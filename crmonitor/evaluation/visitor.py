@@ -5,20 +5,9 @@ from typing import Union
 import numpy as np
 
 from crmonitor.common.helper import gather
-from crmonitor.monitor.monitor_node import (
-    MonitorNode,
-    RuleMonitorNode,
-    AllMonitorNode,
-    ExistMonitorNode,
-)
+from crmonitor.monitor.monitor_node import (MonitorNode, RuleMonitorNode, AllMonitorNode, ExistMonitorNode, )
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
-from crmonitor.monitor.rule import (
-    RuleNode,
-    ExistNode,
-    PredicateNode,
-    AllNode,
-    IOType,
-)
+from crmonitor.monitor.rule import (RuleNode, ExistNode, PredicateNode, AllNode, IOType, )
 
 
 class RuleTreeVisitor(ABC):

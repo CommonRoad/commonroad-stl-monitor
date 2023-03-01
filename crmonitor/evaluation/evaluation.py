@@ -11,16 +11,12 @@ import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
-    EvaluationMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
-    ResetMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
-)
+from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
+                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
+                                          PredicateVisualizerMonitorTreeVisitor, )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.monitor.rule import VisitorNode, parse_rule
+from crmonitor.predicates.base import BasePredicateEvaluator
 
 logger = logging.getLogger(__name__)
 

@@ -1,24 +1,16 @@
-from enum import Enum
-import math
 import logging
+from enum import Enum
 from typing import List, Tuple, Dict, Callable
+
 import matplotlib.colors
 import numpy as np
-from typing import Optional
 from matplotlib import pyplot as plt
-from crmonitor.predicates import utils
-
 
 from crmonitor.common.world import World
-from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
+from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.predicates.utils import cal_road_width
-from crmonitor.predicates.utils import (
-    cal_road_width,
-    distance_to_left_bounds,
-    distance_to_right_bounds,
-)
-
+from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
+from crmonitor.predicates.utils import (cal_road_width, )
 
 logger = logging.getLogger(__name__)
 

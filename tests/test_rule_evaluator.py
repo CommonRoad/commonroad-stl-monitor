@@ -1,19 +1,9 @@
 import unittest
 from pathlib import Path
 
-from commonroad.common.file_reader import CommonRoadFileReader
 from ruamel.yaml import YAML
 
-from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (
-    parse_rule,
-    AllNode,
-    RuleNode,
-    ExistNode,
-    PredicateNode,
-    IOType,
-)
+from crmonitor.monitor.rule import (parse_rule, AllNode, RuleNode, ExistNode, PredicateNode, IOType, )
 
 
 class TestRuleEvaluator(unittest.TestCase):

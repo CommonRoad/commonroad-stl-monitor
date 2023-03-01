@@ -1,15 +1,10 @@
-from enum import Enum
 import logging
-import numpy as np
-from typing import List, Set
+from enum import Enum
+from typing import List
+
 from crmonitor.common.world import World
-from crmonitor.common import helper, world, vehicle
-from crmonitor.predicates.base import BasePredicateEvaluator
-from commonroad.scenario.traffic_sign import TrafficLightState
-from commonroad.scenario import lanelet, traffic_sign
-from commonroad.scenario.traffic_sign import TrafficLight, TrafficSignIDGermany
-from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.predicates import utils
+from crmonitor.predicates.base import BasePredicateEvaluator
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,6 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 
 # by setting __all__ in __init__.py, all relevant modules are imported
-from crmonitor.predicates import *
 from crmonitor.monitor.monitor_node import MonitorNode
 
 

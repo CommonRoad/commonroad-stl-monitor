@@ -1,51 +1,22 @@
-from enum import Enum
 import logging
 import math
-import operator
+from enum import Enum
 from typing import List, Tuple, Set, Dict, Callable
-from shapely.geometry.polygon import Polygon
+
 import numpy as np
-from crmonitor.common import helper
-import itertools
-
-
-from commonroad.scenario.lanelet import (
-    LaneletType,
-    LineMarking,
-    Lanelet,
-    LaneletNetwork,
-)
-
-from crmonitor.predicates import utils
-
+from commonroad.scenario.lanelet import (LaneletType, )
+from commonroad.scenario.lanelet import (LineMarking, )
 from ruamel.yaml.comments import CommentedMap
-from typing import Optional
-from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
+from shapely.geometry.polygon import Polygon
 
 from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from commonroad.scenario.lanelet import (
-    Lanelet,
-    LaneletType,
-    LaneletNetwork,
-    Intersection,
-    StopLine,
-)
-
-from crmonitor.common.helper import cartesian_to_curvilinear
-
+from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
-from crmonitor.predicates.utils import (
-    distance_to_bounds,
-    distance_to_lanes,
-    lanelets_left_of_vehicle,
-    lanelets_right_of_vehicle,
-    vehicle_directly_left,
-    vehicle_directly_right,
-    lanelets_left_of_lanelet,
-)
+from crmonitor.predicates.utils import (distance_to_bounds, distance_to_lanes, lanelets_left_of_vehicle,
+                                        lanelets_right_of_vehicle, vehicle_directly_left, vehicle_directly_right, )
 
 logger = logging.getLogger(__name__)
 
