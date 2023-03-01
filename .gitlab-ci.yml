@@ -46,9 +46,9 @@ black:
   image: pyfound/black:22.6.0
   before_script: [ ]
   cache: [ ]
-  allow_failure: true
   script:
     - black --check --verbose --diff --color crmonitor
+    - black --check --verbose --diff --color tests
 
 deploy_master:
   stage: deploy

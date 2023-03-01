@@ -2,8 +2,7 @@ from typing import List, Set, Dict
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad_dc.geometry.util import chaikins_corner_cutting, \
-    resample_polyline
+from commonroad_dc.geometry.util import chaikins_corner_cutting, resample_polyline
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 
 
@@ -50,7 +49,9 @@ class Lane:
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
-        return tuple(sorted(self.contained_lanelets)) < tuple(sorted(other.contained_lanelets))
+        return tuple(sorted(self.contained_lanelets)) < tuple(
+            sorted(other.contained_lanelets)
+        )
 
     @property
     def lanelet(self) -> Lanelet:
@@ -127,7 +128,7 @@ class Lane:
         y_d = np.gradient(polyline[:, 1])
         y_dd = np.gradient(y_d)
 
-        return (x_d * y_dd - x_dd * y_d) / ((x_d ** 2 + y_d ** 2) ** (3.0 / 2.0))
+        return (x_d * y_dd - x_dd * y_d) / ((x_d**2 + y_d**2) ** (3.0 / 2.0))
 
     @staticmethod
     def _compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:

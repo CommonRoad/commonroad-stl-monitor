@@ -1,20 +1,17 @@
-from enum import Enum
 import logging
 import math
+from enum import Enum
 from typing import List
 
 import numpy as np
-
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
-
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
-
 
 logger = logging.getLogger(__name__)
 
