@@ -246,7 +246,6 @@ class Vehicle:
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
 
-
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
         Calculates rear s-coordinate of vehicle

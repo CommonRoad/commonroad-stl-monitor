@@ -159,6 +159,7 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
 
+
 #     def test_same_lane(self):
 #         # expected solutions
 #         exp_sol_monitor_mode_1 = 3.0  # vehicles completely on same lane

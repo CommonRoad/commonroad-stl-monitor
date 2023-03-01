@@ -993,4 +993,3 @@ class TestGeneralPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, [0])
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
-

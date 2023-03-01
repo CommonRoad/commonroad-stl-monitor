@@ -1070,7 +1070,6 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
             vehicle_p, world.road_network, time_step
         )
 
-
         # ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
 
         ref_path_lanelets_p: List[int] = [
@@ -1081,13 +1080,11 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
 
         lanelets_k = set(vehicle_k.lanelet_assignment[time_step])
 
-
         lanelets_k_path_p = set()
 
         for lk in lanelets_k:
             if lk in ref_path_lanelets_p:
                 lanelets_k_path_p.add(lk)
-
 
         for lk in lanelets_k_path_p:
             lanelet_k = world.road_network.lanelet_network.find_lanelet_by_id(lk)

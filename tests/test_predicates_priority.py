@@ -55,7 +55,6 @@ class TestPriorityPredicates(unittest.TestCase):
             scenario.lanelet_network, self.config.get("road_network_param")
         )
 
-
     def test_relevant_traffic_light(self):
 
         world = World.create_from_scenario(self.scenario)

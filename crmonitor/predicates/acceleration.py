@@ -30,6 +30,7 @@ class PredAbruptBreaking(BasePredicateEvaluator):
         rob = self.config["a_abrupt"] - accel
         return self._scale_acc(rob)
 
+
 class PredRelAbruptBreaking(BasePredicateEvaluator):
     predicate_name = AccelerationPredicates.RelBrakesAbruptly
     arity = 2
@@ -41,6 +42,7 @@ class PredRelAbruptBreaking(BasePredicateEvaluator):
         accel_p = world.vehicle_by_id(vehicle_ids[1]).states_cr[time_step].acceleration
         rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)
+
 
 class PredCausesBrakingIntersection(BasePredicateEvaluator):
     """
@@ -80,7 +82,5 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
             np.minimum(self._scale_lon_dist(d_br - d), self._scale_acc(a_br - a)),
             self._scale_lon_dist(d),
         )
-
-
 
         return rob
