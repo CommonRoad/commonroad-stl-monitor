@@ -8,15 +8,23 @@ import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
 import crmonitor
-from crmonitor.common.helper import load_yaml, merge_dicts_recursively, create_ego_vehicle_param
+from crmonitor.common.helper import (
+    load_yaml,
+    merge_dicts_recursively,
+    create_ego_vehicle_param,
+)
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
-                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
-                                          PredicateVisualizerMonitorTreeVisitor, )
+from crmonitor.evaluation.visitor import (
+    MonitorCreationRuleTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
+)
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.monitor.rule import VisitorNode, parse_rule
+from crmonitor.predicates.base import BasePredicateEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +40,7 @@ def get_traffic_rule_config():
 
 @lru_cache(maxsize=None)
 def get_evaluation_config():
-    with pkg_resources.path(
-        crmonitor, "config.yaml"
-    ) as traffic_rules_path:
+    with pkg_resources.path(crmonitor, "config.yaml") as traffic_rules_path:
         traffic_rules_config = load_yaml(traffic_rules_path)
     return traffic_rules_config
 
@@ -53,8 +59,9 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
-        ego_vehicle.vehicle_param = create_ego_vehicle_param(get_evaluation_config().get("ego_vehicle_param"),
-                                                             world.dt)
+        ego_vehicle.vehicle_param = create_ego_vehicle_param(
+            get_evaluation_config().get("ego_vehicle_param"), world.dt
+        )
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(
             rule_set,
@@ -147,7 +154,12 @@ class RuleEvaluator:
         self,
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
-    ) -> Tuple[Dict[str, BasePredicateEvaluator], Dict[Any, Dict], List, List[Callable[[MPRenderer],None]]]:
+    ) -> Tuple[
+        Dict[str, BasePredicateEvaluator],
+        Dict[Any, Dict],
+        List,
+        List[Callable[[MPRenderer], None]],
+    ]:
         """
         Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
         predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
@@ -189,7 +201,12 @@ class RuleEvaluator:
             visualization_config,
         )
 
-        return predicate_name2predicate_evaluator, predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
+        return (
+            predicate_name2predicate_evaluator,
+            predicate_names2vehicle_ids2values,
+            self._rule_value_course,
+            draw_functions,
+        )
 
     @property
     def other_ids(self) -> Tuple[int]:

@@ -2,12 +2,12 @@ import abc
 import logging
 import math
 from typing import List, Tuple, Dict, Callable
+
 import numpy as np
+from commonroad.visualization.renderer import IRenderer
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
-
-from commonroad.visualization.renderer import IRenderer
 
 logger = logging.getLogger(__name__)
 
