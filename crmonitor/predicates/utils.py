@@ -1,19 +1,17 @@
 import logging
-import numpy as np
-from typing import List, Tuple, Set, Iterable, Dict, Callable, Union
+from typing import List, Set, Iterable, Union
 
+import numpy as np
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.lanelet import (
-    LaneletType,
-    LineMarking,
     Lanelet,
     LaneletNetwork,
 )
 
 from crmonitor.common.helper import cartesian_to_curvilinear
+from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.common.road_network import RoadNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,9 @@ def distance_to_left_bounds(
         [
             l.left_vertices
             for l in lanelets
-            if l.adj_left is None or l.adj_left not in lanelet_ids and l.adj_left_same_direction
+            if l.adj_left is None
+            or l.adj_left not in lanelet_ids
+            and l.adj_left_same_direction
         ]
     )
     if len(left_bounds) > 0:
