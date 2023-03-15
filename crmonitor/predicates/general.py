@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import List, Tuple, Dict, Callable, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 import matplotlib.colors
 import numpy as np
@@ -14,7 +14,7 @@ from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
+from crmonitor.predicates.position import PredInFrontOf, PredInSameLane, PredSingleLane
 from crmonitor.predicates.utils import cal_road_width, distance_to_left_bounds
 
 logger = logging.getLogger(__name__)
@@ -507,7 +507,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
             for l in world.road_network.lanelet_network.lanelets
             if l.stop_line is not None
         ]
-        dist = np.inf
+        robustness = -np.inf
         # For all possible paths of the vehicle
         for lane in lanes:
             # Get the set of lanelets in the current path, that have a stop line
@@ -520,9 +520,8 @@ class PredStopLineInFront(BasePredicateEvaluator):
             # Get the front longitudinal value of the vehicle
             front_s = ego.front_s(time_step, lane) or -np.inf
             # It doesn't matter if we take the left or right point of the stop line
-            # as we only consider the longitudinal
-            # component.
-            end_s = np.array(
+            # as we only consider the longitudinal component.
+            stop_line_s = np.array(
                 [
                     lane.clcs.convert_to_curvilinear_coords(
                         *world.road_network.lanelet_network.find_lanelet_by_id(
@@ -533,11 +532,12 @@ class PredStopLineInFront(BasePredicateEvaluator):
                 ]
             )
             # Get the distance to the stop lines
-            dist_succ = end_s - front_s
-            # TODO: Make more general. Just taking the minimum only works if we
-            #  expect only one stop line per lane!
-            dist = min(dist, dist_succ)
-        return self._scale_lon_dist(float(dist))
+            stop_line_distance = stop_line_s - front_s
+            stop_line_robustness = np.fmin(
+                self.config["d_sl"] - np.abs(stop_line_distance), stop_line_distance
+            )
+            robustness = max(robustness, stop_line_robustness)
+        return self._scale_lon_dist(float(robustness))
 
 
 class PredInIntersection(BasePredicateEvaluator):
