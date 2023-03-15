@@ -8,7 +8,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
-from commonroad.scenario.trajectory import State
+from commonroad.scenario.state import CustomState
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -53,11 +53,11 @@ class RuleTest(unittest.TestCase):
 
         # ego vehicle
         cr_state_list_ego = {
-            0: State(position=(0, 0), orientation=0, velocity=10, time_step=0),
-            1: State(position=(10, 0), orientation=0, velocity=4, time_step=1),
-            2: State(position=(14, 0), orientation=0, velocity=10, time_step=2),
-            3: State(position=(24, 0), orientation=0, velocity=5, time_step=3),
-            4: State(position=(29, 0), orientation=0, velocity=5, time_step=4),
+            0: CustomState(position=(0, 0), orientation=0, velocity=10, time_step=0),
+            1: CustomState(position=(10, 0), orientation=0, velocity=4, time_step=1),
+            2: CustomState(position=(14, 0), orientation=0, velocity=10, time_step=2),
+            3: CustomState(position=(24, 0), orientation=0, velocity=5, time_step=3),
+            4: CustomState(position=(29, 0), orientation=0, velocity=5, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
         ego_vehicle = Vehicle(
@@ -72,10 +72,10 @@ class RuleTest(unittest.TestCase):
         )
 
         cr_state_list_other_1 = {
-            0: State(position=(10, 0), orientation=0, velocity=2, time_step=0),
-            1: State(position=(10, 0), orientation=0, velocity=2, time_step=1),
-            2: State(position=(20, 0), orientation=0, velocity=2, time_step=2),
-            3: State(position=(30, 0), orientation=0, velocity=2, time_step=3),
+            0: CustomState(position=(10, 0), orientation=0, velocity=2, time_step=0),
+            1: CustomState(position=(10, 0), orientation=0, velocity=2, time_step=1),
+            2: CustomState(position=(20, 0), orientation=0, velocity=2, time_step=2),
+            3: CustomState(position=(30, 0), orientation=0, velocity=2, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         other_vehicle_1 = Vehicle(

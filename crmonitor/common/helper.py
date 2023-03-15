@@ -26,7 +26,7 @@ class OperatingMode(enum.Enum):
     ROBUSTNESS = "robustness"
 
 
-def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) -> Dict:
+def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
     """
     Update ego vehicle parameters
 
@@ -51,10 +51,7 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, simulation_param: Dict) ->
 
     if (
         not -1e-12
-        <= (
-            Decimal(str(ego_vehicle_param.get("t_react")))
-            % Decimal(str(simulation_param.get("dt")))
-        )
+        <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(str(dt)))
         <= 1e-12
     ):
         raise ValueError("Reaction time must be multiple of time step size.")

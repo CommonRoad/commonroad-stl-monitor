@@ -511,6 +511,10 @@ class DynamicObstacleVehicle(Vehicle):
             predicate_cache,
         )
 
-    # @property  # def states_lon(self) -> Dict[int, StateLongitudinal]:  #
-    # return self._states_lon  #  #  #   #  # @property  # def states_lat(self) ->
-    # Dict[int, StateLateral]:  #     return self._states_lat
+    # @property
+    # def states_lon(self) -> Dict[int, StateLongitudinal]:
+    #     return self._states_lon
+    #
+    # @property
+    # def states_lat(self) -> Dict[int, StateLateral]:
+    #     return self._states_lat

@@ -8,7 +8,8 @@ from enum import Enum
 from crmonitor.monitor.monitor_node import MonitorNode
 
 # by setting __all__ in __init__.py, all relevant modules are imported
-from crmonitor.predicates import *
+# noinspection PyUnresolvedReferences
+from crmonitor.predicates import *  # noqa: F401,F403
 
 
 def get_all_predicate_evaluators():
@@ -32,7 +33,8 @@ class IOType(Enum):
 
 def parse_rule(full_rule_str, config, name=None):
     full_predicate_pattern = re.compile(
-        r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)?_(?P<agents>(_a(\d)+)+)))"
+        r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)"
+        r"?_(?P<agents>(_a(\d)+)+)))"
     )
     quantification_pattern = re.compile(
         r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$"

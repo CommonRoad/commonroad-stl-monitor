@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "commonroad-stl-monitor"
-version = "0.1.0"
+version = "2022.3"
 description = ""
 authors = ["Luis Gressenbuch <luis.gressenbuch@tum.de>"]
 readme = "README.md"
@@ -8,19 +8,28 @@ packages = [{include = "crmonitor"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-commonroad-io = "2022.1"
+commonroad-io = ">=2020"
 commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
-commonroad-drivability-checker = "2022.1"
-antlr4-python3-runtime = ">=4.5,<4.6"
+commonroad-drivability-checker = ">=2022.2"
 numba = "^0.56.0"
-rtamt = {git = "https://github.com/cirrostratus1/rtamt.git", rev = "6ef48e956837f5b60f514011d3d6eabf6307e042"}
+shapely = "^1.8"
+rtamt = {git = "https://github.com/cirrostratus1/rtamt.git", rev = "adafd0c73884fe260d7a59b678ac4e452cbf73c9"}
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
 coverage = "^6.5.0"
+# To run the tests, we necessarily need this commonroad-io version
+commonroad-io = ">=2022.2"
+
+[tool.poetry.group.doc]
+optional = true
+
+[tool.poetry.group.doc.dependencies]
+sphinx = "^5.3.0"
+myst-parser = "^0.18.1"
 
 [build-system]
 requires = ["poetry-core"]
