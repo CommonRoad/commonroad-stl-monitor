@@ -10,7 +10,7 @@ from commonroad.scenario.lanelet import LaneletType
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (parse_rule, )
+from crmonitor.monitor.rule import parse_rule
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
