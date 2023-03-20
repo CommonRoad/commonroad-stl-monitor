@@ -11,9 +11,14 @@ import crmonitor
 from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (MonitorCreationRuleTreeVisitor, EvaluationMonitorTreeVisitor,
-                                          PredicateCollectorMonitorTreeVisitor, ResetMonitorTreeVisitor,
-                                          PredicateVisualizerMonitorTreeVisitor, )
+from crmonitor.evaluation.visitor import (
+    MonitorCreationRuleTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
+    AstNodeValueCollectorMonitorTreeVisitor,
+)
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.monitor.rule import VisitorNode, parse_rule
@@ -65,7 +70,10 @@ class RuleEvaluator:
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = rule.visit(visitor)
-        self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._ast_node_value_collector_visitor = (
+            AstNodeValueCollectorMonitorTreeVisitor()
+        )
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         self._eval_visitor = EvaluationMonitorTreeVisitor(
             use_boolean=use_boolean, output_type=output_type
@@ -83,37 +91,17 @@ class RuleEvaluator:
         return self._last_evaluation_time_step
 
     def get_predicates(self) -> Dict[str, float]:
-        predicate_values = dict(self._monitor.visit(self._collector_visitor))
+        predicate_values = dict(self._monitor.visit(self._predicate_collector_visitor))
         return predicate_values
 
-    def get_node_dicts(self):
-        node_dicts = self.get_node_dicts_2()
-        node_dicts.append(self.get_node_dicts_3())
-        node_dicts.append(self.get_node_dict_last_selected())
-        return node_dicts
+    def ast_node_values(self) -> Dict[str, float]:
+        node_values = dict(self._monitor.visit(self._ast_node_value_collector_visitor))
+        return node_values
 
-
-    def get_node_dict_last_selected(self):
-        node_dict_last_selected = self._monitor.last_selected.monitor._monitor.online_interpreter.nodeDict
-        return node_dict_last_selected
-
-
-    def get_node_dicts_2(self):
-        #self is RuleEvaluator. _monitor is AllMonitorNode. monitors are RuleMonitorNodes 1001 to 1010.
-        monitors = list(self._monitor.monitors.values())
-        node_dicts = []
-        for m in monitors:
-            node_dicts.append(m.monitor._monitor.online_interpreter.nodeDict)
-        return node_dicts
-
-    def get_node_dicts_3(self):
-        #self is RuleEvaluator. _monitor is AllMonitorNode. has only one child and it is RuleMonitorNode
-        return self._monitor.children[0].monitor._monitor.online_interpreter.nodeDict
-
-
-    def update(self):
+    def update(self) -> float:
         """
-        Advance the monitor state by one time step and return the corresponding rule evaluation value.
+        Advance the monitor state by one time step and return the corresponding
+        rule evaluation value.
 
         :return: robustness or boolean rule value
         """
@@ -135,11 +123,13 @@ class RuleEvaluator:
 
     def evaluate(self) -> np.ndarray:
         """
-        Evaluate the rule exhaustively until the final time step of the vehicle object is reached.
+        Evaluate the rule exhaustively until the final time step of the vehicle object
+        is reached.
 
         Caution: This will change the time step of the world object!
 
-        :return: Array of all rule values for all time steps of the vehicle's known trajectory
+        :return: Array of all rule values for all time steps of the vehicle's known
+            trajectory
         """
         robustness_values = []
         for i in range(
@@ -152,26 +142,40 @@ class RuleEvaluator:
         self,
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
-    ) -> Tuple[Dict[str, BasePredicateEvaluator], Dict[Any, Dict], List, List[Callable[[MPRenderer],None]]]:
+    ) -> Tuple[
+        Dict[str, BasePredicateEvaluator],
+        Dict[Any, Dict],
+        List,
+        List[Callable[[MPRenderer], None]],
+    ]:
         """
-        Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
-        predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
-        considered rule are visualized; here, "effective group" denotes the group giving the minimum resp. maximum
+        Renders a scenario visualization using the MPRenderer and adds plots of the
+        predicates. In general, only
+        predicate instances belonging to an effective group within all enclosing all-
+        and exist-quantifiers of the
+        considered rule are visualized; here, "effective group" denotes the group
+        giving the minimum resp. maximum
         value for an all- resp. exist-quantifier.
         :visualization_config: predicate-name | 'default' -> {
-            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]], # show predicate value for certain
+            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]],
+            # show predicate value for certain
             # vehicle-ids
         }. Allows predicate-type wise configuration of the visualization
-        :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
+        :plot_scenario_legend: whether the legend for the scenario visualization
+        should be plotted. If None, it is
         plotted for the first time-step only
         :scenario_fig_size: figure size of the scenario only
-        :scenario_scale_compared_to_other_plots: scale describing how much larger than the other bar-chart and the
+        :scenario_scale_compared_to_other_plots: scale describing how much larger
+        than the other bar-chart and the
         rule-robustness chart the scenario should be drawn
-        :plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
-        predicate instances included in the visualization are the same as the ones shown in the scenario visualization
+        :plot_predicate_bar_chart: whether a bar chart showing the predicate values
+        should be plotted. The
+        predicate instances included in the visualization are the same as the ones
+        shown in the scenario visualization
         :bar_chart_plot_limits: minimum and maximum value of the bar-chart
         :plot_rule_robustness_course: whether the rule robustness should be plotted
-        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
+        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule
+        robustness course
         :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
         """
 
@@ -194,7 +198,12 @@ class RuleEvaluator:
             visualization_config,
         )
 
-        return predicate_name2predicate_evaluator, predicate_names2vehicle_ids2values, self._rule_value_course, draw_functions
+        return (
+            predicate_name2predicate_evaluator,
+            predicate_names2vehicle_ids2values,
+            self._rule_value_course,
+            draw_functions,
+        )
 
     @property
     def other_ids(self) -> Tuple[int]:

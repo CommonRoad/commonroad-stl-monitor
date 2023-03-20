@@ -1,7 +1,7 @@
 import copy
 from enum import Enum
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 import rtamt
 
@@ -17,12 +17,15 @@ class OutputType(Enum):
 
 
 @lru_cache(None)
-def construct_monitor(
+def _template_spec(
     logic_formula: str, output_type: OutputType, predicates, dt
 ) -> rtamt.STLSpecification:
-    # Workaround for rtamt when working with output-robustness and input vacuity
-    for pred in predicates:
-        logic_formula = logic_formula.replace(pred[0].name, f"({pred[0].name} >= 0)")
+    if output_type != OutputType.STANDARD:
+        # Workaround for rtamt when working with output-robustness and input vacuity
+        for pred in predicates:
+            logic_formula = logic_formula.replace(
+                pred[0].name, f"({pred[0].name} >= 0)"
+            )
 
     spec = stl_discrete_time_online_specification_factory(semantics=output_type.value)
     for var, io_type in predicates:
@@ -46,6 +49,22 @@ def construct_monitor(
     return spec
 
 
+def _create_spec(
+    rule_str: str, output_type: OutputType, predicates: List[Tuple[str, Any]], dt: float
+) -> rtamt.STLSpecification:
+    template_spec = _template_spec(rule_str, output_type, tuple(predicates), dt)
+    # The dynamic part of the template spec has to be replaced.
+    spec = copy.copy(template_spec)
+    # Create a dummy spec to obtain a new interpreter
+    dummy_spec = stl_discrete_time_online_specification_factory(output_type.value)
+    spec.online_interpreter = dummy_spec.online_interpreter
+    # new ast of online interpreter is not set until the
+    # update method of AbstractOnlineSpecification is called
+    spec.online_interpreter.set_ast(spec.ast)
+    spec.reset()
+    return spec
+
+
 class RtamtStlMonitor:
     """
     Represents single formalized STL rule
@@ -65,32 +84,29 @@ class RtamtStlMonitor:
         self._rule = rule_str
         self._predicates = predicates
         self._output_type = output_type
-        self.dt = dt
-        spec = construct_monitor(rule_str, output_type, tuple(predicates), dt)
+        self._dt = dt
+
         # Flat copy spec and only recreate the online evaluator to
         # avoid parsing the rule.
-        self._monitor = spec
-        self._monitor = copy.copy(spec)
-        # Create a dummy spec to obtain a new interpreter
-        dummy_spec = stl_discrete_time_online_specification_factory(output_type.value)
-        self._monitor.online_interpreter = dummy_spec.online_interpreter
-        # new ast of online interpreter is not set until the
-        # update method of AbstractOnlineSpecification is called
-        self._monitor.online_interpreter.set_ast(self._monitor.ast)
-        self._monitor.reset()
+        self._spec = _create_spec(rule_str, output_type, predicates, dt)
 
-    def reset_monitor(self):
-        self._monitor.reset()
+    @property
+    def dt(self) -> float:
+        return self._dt
+
+    @property
+    def ast_node_values(self) -> Dict[str, float]:
+        return self._spec.online_interpreter.updateVisitor.ast_node_values
 
     def evaluate_monitor_online(
         self, time_step: int, predicates: List[Tuple[str, float]]
     ):
         time = time_step * self.dt * 1000.0
-        rob = self._monitor.update(time, predicates)
+        rob = self._spec.update(time, predicates)
         return rob
 
     def copy(self):
         return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)
 
     def reset(self):
-        self._monitor.reset()
+        self._spec.reset()

@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 from collections import defaultdict
+from typing import Sequence, Any
 
 
 class MonitorNode(ABC):
@@ -26,7 +27,7 @@ class MonitorNode(ABC):
 
 
 class RuleMonitorNode(MonitorNode):
-    def __init__(self, name, children, monitor):
+    def __init__(self, name: str, children: Sequence[Any], monitor):
         super().__init__(name, children)
         self.monitor = monitor
 
