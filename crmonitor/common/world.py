@@ -4,7 +4,7 @@ import shelve
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import partial, lru_cache
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import Optional, Set, Union
 
@@ -12,10 +12,15 @@ import numpy as np
 from commonroad.scenario.scenario import Scenario
 
 import crmonitor
-from crmonitor.common.helper import (create_other_vehicles_param, load_yaml, )
+from crmonitor.common.helper import create_other_vehicles_param, load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import (Vehicle, DynamicObstacleVehicle, CurvilinearStateManager, PredicateCache,
-                                      ControlledVehicle, )
+from crmonitor.common.vehicle import (
+    ControlledVehicle,
+    CurvilinearStateManager,
+    DynamicObstacleVehicle,
+    PredicateCache,
+    Vehicle,
+)
 
 
 @lru_cache(maxsize=None)
@@ -33,8 +38,12 @@ class World:
     cache: Union[None, shelve.Shelf, dict] = None
 
     def _warn_persistent_cache(self):
-        if len(self.controlled_vehicle_ids) > 0 and isinstance(self.cache, shelve.Shelf):
-            warnings.warn("Using controlled vehicles with persistent caching may result in inconsistent caches and is therfore discouraged!")
+        if len(self.controlled_vehicle_ids) > 0 and isinstance(
+            self.cache, shelve.Shelf
+        ):
+            warnings.warn(
+                "Using controlled vehicles with persistent caching may result in inconsistent caches and is therfore discouraged!"
+            )
 
     def __post_init__(self):
         self._warn_persistent_cache()
@@ -63,7 +72,12 @@ class World:
             cache = {}
         for obs in scenario.dynamic_obstacles:
             # Skip obstacles that go out of the road
-            if any(map(lambda a: len(a) == 0, obs.prediction.shape_lanelet_assignment.values())):
+            if any(
+                map(
+                    lambda a: len(a) == 0,
+                    obs.prediction.shape_lanelet_assignment.values(),
+                )
+            ):
                 continue
             cls.augment_state_acceleration_jerk(scenario.dt, obs)
             curvi_cache, predicate_dict = cache.setdefault(
@@ -81,7 +95,11 @@ class World:
 
     @property
     def controlled_vehicle_ids(self) -> Set[int]:
-        return {vehicle.id for vehicle in self.vehicles if isinstance(vehicle, ControlledVehicle)}
+        return {
+            vehicle.id
+            for vehicle in self.vehicles
+            if isinstance(vehicle, ControlledVehicle)
+        }
 
     def vehicle_ids_for_time_step(self, time_step: int):
         return [v.id for v in self.vehicles if v.is_valid(time_step)]
@@ -132,4 +150,3 @@ class World:
         if isinstance(self.cache, shelve.Shelf):
             logging.info("Cache close!")
             self.cache.close()
-

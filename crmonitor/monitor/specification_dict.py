@@ -1,9 +1,6 @@
 from typing import Dict
 
-from rtamt import (
-    StlDiscreteTimeSpecification,
-    Language,
-)
+from rtamt import Language, StlDiscreteTimeSpecification
 from rtamt.semantics.abstract_discrete_time_online_interpreter import (
     DiscreteTimeOnlineUpdateVisitor,
 )

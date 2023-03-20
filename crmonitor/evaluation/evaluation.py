@@ -2,7 +2,7 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Tuple, Dict, Any, List, Callable
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
@@ -12,16 +12,16 @@ from crmonitor.common.helper import load_yaml, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
-    EvaluationMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
-    ResetMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
     AstNodeValueCollectorMonitorTreeVisitor,
+    EvaluationMonitorTreeVisitor,
+    MonitorCreationRuleTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
+    ResetMonitorTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.monitor.rule import VisitorNode, parse_rule
+from crmonitor.predicates.base import BasePredicateEvaluator
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Sequence, Any
+from typing import Any, Sequence
 
 
 class MonitorNode(ABC):

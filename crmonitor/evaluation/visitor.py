@@ -1,24 +1,18 @@
 import itertools
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
 
 from crmonitor.common.helper import gather
 from crmonitor.monitor.monitor_node import (
-    MonitorNode,
     AllMonitorNode,
     ExistMonitorNode,
+    MonitorNode,
     RuleMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
-from crmonitor.monitor.rule import (
-    RuleNode,
-    ExistNode,
-    PredicateNode,
-    AllNode,
-    IOType,
-)
+from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
+from crmonitor.monitor.rule import AllNode, ExistNode, IOType, PredicateNode, RuleNode
 
 
 class RuleTreeVisitor(ABC):

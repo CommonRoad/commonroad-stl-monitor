@@ -1,21 +1,19 @@
-from enum import Enum
 import logging
 import math
 import operator
-from typing import List, Tuple, Set, Dict, Callable
-from shapely.geometry.polygon import Polygon
+from enum import Enum
+from typing import Callable, Dict, List, Set, Tuple
+
 import numpy as np
-
 from commonroad.scenario.lanelet import LaneletType, LineMarking
-
 from ruamel.yaml.comments import CommentedMap
+from shapely.geometry.polygon import Polygon
 
 from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-
-from crmonitor.predicates.base import BasePredicateEvaluator, MAX_LONG_DIST
+from crmonitor.predicates.base import MAX_LONG_DIST, BasePredicateEvaluator
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,
@@ -223,7 +221,10 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         # the ids of lanes are increasing together with the d-coordinate
         vehicle_lanes = list(vehicle_lead.lanes_at_state(time_step))
         # the upper the lane in the road network is, the smaller the index in the list as
-        if vehicle_lanes[0].lanelet.center_vertices[0][1] < vehicle_lanes[-1].lanelet.center_vertices[0][1]:
+        if (
+            vehicle_lanes[0].lanelet.center_vertices[0][1]
+            < vehicle_lanes[-1].lanelet.center_vertices[0][1]
+        ):
             vehicle_lanes = vehicle_lanes[::-1]
         reference_lane = vehicle_lead.get_lane(time_step)
         # get the Cartesian coordinate of the safe distance
@@ -265,15 +266,21 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         )
         # concatenate vertices
         vertices_total = list(
-            np.concatenate((
-                [safe_pos_cart],
-                vertices_left,
-                [lead_rear_cart],
-                vertices_right,
-                [safe_pos_cart])))
+            np.concatenate(
+                (
+                    [safe_pos_cart],
+                    vertices_left,
+                    [lead_rear_cart],
+                    vertices_right,
+                    [safe_pos_cart],
+                )
+            )
+        )
         # compute centroid
-        cent = (sum([v[0] for v in vertices_total]) / len(vertices_total),
-                sum([v[1] for v in vertices_total]) / len(vertices_total))
+        cent = (
+            sum([v[0] for v in vertices_total]) / len(vertices_total),
+            sum([v[1] for v in vertices_total]) / len(vertices_total),
+        )
         # sort by polar angle
         vertices_total.sort(key=lambda v: math.atan2(v[1] - cent[1], v[0] - cent[0]))
 

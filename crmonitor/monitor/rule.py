@@ -5,9 +5,10 @@ import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+from crmonitor.monitor.monitor_node import MonitorNode
+
 # by setting __all__ in __init__.py, all relevant modules are imported
 from crmonitor.predicates import *
-from crmonitor.monitor.monitor_node import MonitorNode
 
 
 def get_all_predicate_evaluators():
@@ -16,7 +17,11 @@ def get_all_predicate_evaluators():
     for _, module in modules:
         classes += inspect.getmembers(module, inspect.isclass)
     classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
-    predicate_class_map = {cls.predicate_name: cls for name, cls in classes if len(name) > 4 and name[:4] == "Pred"}
+    predicate_class_map = {
+        cls.predicate_name: cls
+        for name, cls in classes
+        if len(name) > 4 and name[:4] == "Pred"
+    }
     return predicate_class_map
 
 

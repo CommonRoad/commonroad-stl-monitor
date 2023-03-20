@@ -1,14 +1,13 @@
 import copy
 from enum import Enum
 from functools import lru_cache
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
 import rtamt
 
 from crmonitor.monitor.rule import IOType, RuleNode
-from .specification_dict import (
-    stl_discrete_time_online_specification_factory,
-)
+
+from .specification_dict import stl_discrete_time_online_specification_factory
 
 
 class OutputType(Enum):
