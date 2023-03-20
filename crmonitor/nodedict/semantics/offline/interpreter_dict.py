@@ -1,7 +1,0 @@
-from rtamt.semantics.abstract_discrete_time_offline_interpreter import discrete_time_offline_interpreter_factory
-from crmonitor.nodedict.semantics.offline.ast_visitor_dict import StlDiscreteTimeOfflineAstVisitorDict
-
-
-def StlDiscreteTimeOfflineInterpreterDict():
-    stlDiscreteTimeOfflineInterpreterDict = discrete_time_offline_interpreter_factory(StlDiscreteTimeOfflineAstVisitorDict)()
-    return stlDiscreteTimeOfflineInterpreterDict
