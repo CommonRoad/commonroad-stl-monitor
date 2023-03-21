@@ -1,6 +1,5 @@
 import logging
 import math
-import operator
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
 

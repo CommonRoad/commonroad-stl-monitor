@@ -252,9 +252,12 @@ class Vehicle:
         :returns rear s-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
+        curvi_state = self.ccosy_cache.get_curvilinear_state(
             self.states_cr[time_step], lane
         )
+        if curvi_state is None:
+            return None
+        state_lon, state_lat = curvi_state
         s = state_lon.s
         w = self.shape.width
         l = self.shape.length
@@ -270,9 +273,12 @@ class Vehicle:
         :returns front s-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
+        curvi_state = self.ccosy_cache.get_curvilinear_state(
             self.states_cr[time_step], lane
         )
+        if curvi_state is None:
+            return None
+        state_lon, state_lat = curvi_state
         s = state_lon.s
         w = self.shape.width
         l = self.shape.length
@@ -333,10 +339,8 @@ class Vehicle:
 
     def get_lon_state(self, time_step: int, lane: Lane = None):
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
-        return state_lon
+        states = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
+        return states[0] if states is not None else None
 
     def occupancy_at_time_step(self, time_step):
         state = self.states_cr[time_step]

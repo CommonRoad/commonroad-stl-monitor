@@ -43,12 +43,12 @@ flake8:
 black:
   stage: style
   needs: []
-  image: pyfound/black:22.6.0
+  image: pyfound/black:23.1.0
   before_script: []
   cache: []
-  allow_failure: true
   script:
   - black --check --verbose --diff --color crmonitor
+  - black --check --verbose --diff --color tests
 
 deploy_master:
   stage: deploy
@@ -60,3 +60,24 @@ deploy_master:
   - master
   except:
   - tags
+
+
+sphinx:
+  stage: test
+  needs: []
+  script:
+  - poetry install --with doc
+  - cd docs/source && sphinx-build -b html -W . ../build
+
+pages:
+  stage: deploy
+  needs:
+  - sphinx
+  script:
+  - poetry install --with doc
+  - cd docs/source && sphinx-build -b html . ../../public
+  artifacts:
+    paths:
+    - public
+  only:
+  - development

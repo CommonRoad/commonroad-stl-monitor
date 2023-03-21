@@ -1,14 +1,9 @@
 import logging
-from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Iterable, List, Set, Union
 
 import numpy as np
 from commonroad.geometry.transform import rotate_translate
-from commonroad.scenario.lanelet import (
-    Lanelet,
-    LaneletNetwork,
-    LaneletType,
-    LineMarking,
-)
+from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.road_network import RoadNetwork
