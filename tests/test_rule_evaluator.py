@@ -46,6 +46,8 @@ class TestRuleEvaluator(unittest.TestCase):
             ego_vehicle = ws.vehicle_by_id(1001)
             evaluator = RuleEvaluator(rule, ego_vehicle, ws)
             rob = evaluator.update()
+            predicates = evaluator.get_predicates()
+            node_values = evaluator.ast_node_values()
 
         evaluator.reset(ego_vehicle, ws)
 

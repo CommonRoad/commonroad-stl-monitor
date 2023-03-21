@@ -47,7 +47,7 @@ ego_vehicle_param:
   fov: 200
   v_min: 0
   const_dist_offset: 0
-  emergency_profile: [ ]
+  emergency_profile: []
   emergency_profile_num_steps_fb: 200
   fov_speed_limit: 50 # compute with calc_v_max_fov(ego_vehicle_param, simulation_param)
   braking_speed_limit: 43 # compute with calc_v_max_braking(ego_vehicle_param, simulation_param, traffic_rule_param)
