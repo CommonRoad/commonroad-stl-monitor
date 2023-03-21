@@ -59,6 +59,7 @@ def _create_spec(
     spec.online_interpreter = dummy_spec.online_interpreter
     # new ast of online interpreter is not set until the
     # update method of AbstractOnlineSpecification is called
+    dummy_spec.online_interpreter.set_sampling_period(dt * 1000.0, "ms")
     spec.online_interpreter.set_ast(spec.ast)
     spec.reset()
     return spec
