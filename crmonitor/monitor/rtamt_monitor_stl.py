@@ -36,9 +36,9 @@ def _template_spec(
     spec.declare_var("out", "float")
 
     spec.iosem = output_type
-    spec.unit = "ms"
+    spec.unit = "s"
     spec.spec = f"out = {logic_formula}"
-    spec.set_sampling_period(dt * 1000.0, "ms")
+    spec.set_sampling_period(dt, "s")
     spec.parse()
     spec.pastify()
     # new ast of online interpreter is not set until the update method
@@ -59,7 +59,7 @@ def _create_spec(
     spec.online_interpreter = dummy_spec.online_interpreter
     # new ast of online interpreter is not set until the
     # update method of AbstractOnlineSpecification is called
-    dummy_spec.online_interpreter.set_sampling_period(dt * 1000.0, "ms")
+    dummy_spec.online_interpreter.set_sampling_period(dt, "s")
     spec.online_interpreter.set_ast(spec.ast)
     spec.reset()
     return spec
@@ -101,7 +101,7 @@ class RtamtStlMonitor:
     def evaluate_monitor_online(
         self, time_step: int, predicates: List[Tuple[str, float]]
     ):
-        time = time_step * self.dt * 1000.0
+        time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob
 
