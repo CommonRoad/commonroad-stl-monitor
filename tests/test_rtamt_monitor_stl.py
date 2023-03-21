@@ -5,7 +5,7 @@ from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.monitor.rule import IOType
 
 
-@dataclass
+@dataclass(frozen=True)
 class DummyPredicate:
     name: str
 
