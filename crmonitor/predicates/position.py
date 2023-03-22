@@ -44,6 +44,7 @@ class PositionPredicates(str, Enum):
     OnIncomingLeftOf = "on_incoming_left_of"
     OnOncomOf = "on_oncom_of"
     InIntersectionConflictArea = "in_intersection_conflict_area"
+    StopLineInFront = "stop_line_in_front"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -1209,3 +1210,41 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             break
 
         return self._scale_lon_dist(np.minimum(b * d1, b * d2))
+
+
+class PredStopLineInFront(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.StopLineInFront
+    arity = 1
+    d_sl = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        """
+        If there is no stop line along the reference path, return false.
+        If there is a stop line along the reference path and the distance to the stop line smaller than d_sl
+        and stop line is in front of vehicle, return True. Otherwise, return False
+        """
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
+        lanelet_ids = np.unique(ref_path)
+        d_stop_line = utils.distance_to_stop_line(vehicle, lanelet_ids, world, time_step) * -1
+        if d_stop_line is None:
+            boolean_eval = False
+            return boolean_eval
+        return (d_stop_line <= self.d_sl) & (d_stop_line >= 0)
+
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        """
+        If there is no stop line along the reference path, return -1.
+        If there is a stop line along the reference path return difference between d_sl and the distance to stop line.
+        """
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
+        lanelet_ids = np.unique(ref_path)
+        d_stop_line = utils.distance_to_stop_line(vehicle, lanelet_ids, world, time_step) * -1
+        if d_stop_line is None:
+            return -1
+        if d_stop_line > 0:
+            diff_d = self.d_sl - d_stop_line
+        else:
+            diff_d = d_stop_line - self.d_sl
+        return self._scale_lon_dist(diff_d)

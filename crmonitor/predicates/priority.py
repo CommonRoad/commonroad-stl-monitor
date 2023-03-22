@@ -2,6 +2,9 @@ import logging
 from enum import Enum
 from typing import List
 
+import numpy as np
+import math
+
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -31,6 +34,7 @@ class PriorityPredicates(str, Enum):
     HasPriorityStraightLeft = "has_priority_straight_left"
     HasPriorityLeftLeft = "has_priority_left_left"
     HasPriorityStraightStraight = "has_priority_straight_straight"
+    AtTrafficSign = "at_traffic_sign"
 
 
 class PredSamePriority(BasePredicateEvaluator):
@@ -110,6 +114,28 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
 
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
+    lanelet_type = utils.HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        """
+        check if there is an active traffic light in lanelet_dir or successors
+        """
+        boolean_eval = False
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
+        for lanelet_id in lanelet_dir_ids:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            if utils.is_lanelet_of_type(lanelet, self.lanelet_type, world.road_network):
+                boolean_eval = True
+                return boolean_eval
+            reach_suc_id = utils.reach_succ(lanelet, road_network.lanelet_network)
+            for l_id in np.unique(reach_suc_id):
+                lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if utils.is_lanelet_of_type(lanelet_suc, self.lanelet_type, world.road_network):
+                    boolean_eval = True
+                    return boolean_eval
+        return boolean_eval
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -161,10 +187,9 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         #                         distance_from_nearest_tl = distance_to_ego
         # return self._scale_lon_dist(distance_from_nearest_tl)
 
-        lanelet_type = utils.HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT
         return self._scale_lon_dist(
             utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type, False, True
+                world, time_step, vehicle_ids, self.lanelet_type, False, True
             )
         )
 
@@ -941,3 +966,47 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
             rob = -1
 
         return rob
+
+class PredAtTrafficSign(BasePredicateEvaluator):
+    predicate_name = PriorityPredicates.AtTrafficSign
+    arity = 1
+    stop_traffic_sign = '206'
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        """
+        If the vehicle locates at the lanelet with a stop traffic sign (206), return True, otherwise, return False.
+        """
+        traffic_sign_elements = list()
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
+        for lanelet_id in lanelets_dir_ids:
+            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+        if len(traffic_sign_elements) == 0:
+            boolean_eval = False
+        else:
+            boolean_eval = True
+        return boolean_eval
+
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        """
+        If the vehicle locates at the lanelet with a stop traffic sign (206), return distance to the start of lanelet,
+        otherwise, return -1.
+        idea to improve: use reference path of vehicle, so that the lanelet with a stop traffic sign in the reference
+        path can be found, even though current occupied lanelets have no traffic sign.
+        """
+        d_start_lanelet = list()
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
+        for lanelet_id in lanelets_dir_ids:
+            traffic_sign_elements = (utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
+            if len(traffic_sign_elements) != 0:
+                d_start_lanelet.append(utils.distance_start_lanelet(vehicle, lanelet_id, road_network, time_step))
+            else:
+                d_start_lanelet.append(math.inf * -1)
+        return self._scale_lon_dist(np.max(d_start_lanelet))
+

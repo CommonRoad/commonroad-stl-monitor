@@ -1176,3 +1176,98 @@ def orientation_difference_vehicle_lanelet(
         subtract_orientations(orientation_of_closest_point, vehicle_orientation)
     )
     return orientation_difference
+
+
+def distance_to_stop_line(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
+    stop_line = get_stop_line(lanelet_ids, world.road_network)
+    """
+    find the distance between stop line and the front of vehicle
+    """
+    if stop_line is None:
+        return None
+    stop_line_path = np.array([stop_line.start, stop_line.end])
+    state = vehicle_i.states_cr[time_step]
+    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
+    d_stop_line = np.array(cartesian_to_curvilinear(tuple([stop_line_path]), occ_points))[
+            ..., 1
+        ].ravel()
+    d_stop_line = d_stop_line[~np.isnan(d_stop_line)]
+    return np.max(d_stop_line)
+
+
+def get_stop_line(
+    lanelet_ids: Iterable[int], road_network: RoadNetwork
+) -> StopLine:
+    """
+    find the stop line according to occupied lanelet
+    """
+    for lanelet_id in lanelet_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        if lanelet.stop_line is not None:
+            return lanelet.stop_line
+    return None
+
+
+def traffic_sign_type(lanelet_id: int, road_network: RoadNetwork):
+    """
+
+    :param lanelet_id:
+    :param road_network:
+    :return: the set of traffic sign types assigned to a lanelet
+    """
+    traffic_sign_ids = list()
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    ts_element_ids = lanelet.traffic_signs
+    for ts_element_id in ts_element_ids:
+        traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
+        for ts_element in traffic_sign_object.traffic_sign_elements:
+            traffic_sign_ids.append(ts_element.traffic_sign_element_id.value)
+    return traffic_sign_ids
+
+
+def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwork):
+    """
+
+    :param lanelet_id:
+    :param given_traffic_sign_id:
+    :param road_network:
+    :return: the traffic sign element of a given type assigned to a lanelet
+    """
+    traffic_sign_elements = list()
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    ts_element_ids = lanelet.traffic_signs
+    for ts_element_id in ts_element_ids:
+        traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
+        for ts_element in traffic_sign_object.traffic_sign_elements:
+            if ts_element.traffic_sign_element_id.value == given_traffic_sign_id:
+                traffic_sign_elements.append(ts_element)
+    return traffic_sign_elements
+
+
+def distance_start_lanelet(vehicle: Vehicle, lanelet_id: int, road_network: RoadNetwork, time_step):
+    """
+
+    :param vehicle:
+    :param lanelet_id:
+    :param road_network:
+    :param time_step:
+    :return: the distance between start of lanelet and the front of vehicle
+    """
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    lanlet_start_line = get_lanelet_start_line(lanelet)
+    state = vehicle.states_cr[time_step]
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
+    d_start_lanelet = np.array(cartesian_to_curvilinear(tuple([lanlet_start_line]), occ_points))[..., 1].ravel()
+    d_start_lanelet = d_start_lanelet[~np.isnan(d_start_lanelet)]
+    return np.max(d_start_lanelet)
+
+def get_lanelet_start_line(lanelet: Lanelet):
+    right_start_vertice = lanelet.right_vertices[0, :]
+    left_start_vertice = lanelet.left_vertices[0, :]
+    return np.array([left_start_vertice, right_start_vertice])
+
+
+def get_lanelet_end_line(lanelet: Lanelet):
+    right_start_vertice = lanelet.right_vertices[-1, :]
+    left_start_vertice = lanelet.left_vertices[-1, :]
+    return np.array([left_start_vertice, right_start_vertice])
