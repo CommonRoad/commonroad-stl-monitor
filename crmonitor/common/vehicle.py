@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 import numba
 import numpy as np
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
+from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 
@@ -342,7 +343,7 @@ class Vehicle:
         states = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         return states[0] if states is not None else None
 
-    def occupancy_at_time_step(self, time_step):
+    def occupancy_at_time_step(self, time_step) -> Rectangle:
         state = self.states_cr[time_step]
         orientation = state.orientation
         shape = self.shape.rotate_translate_local(state.position, orientation)
