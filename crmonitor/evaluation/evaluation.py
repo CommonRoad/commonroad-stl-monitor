@@ -123,6 +123,7 @@ class RuleEvaluator:
             self._last_evaluation_time_step,
             self._ego_vehicle,
         )
+        rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
         return rule_value
 
