@@ -5,11 +5,11 @@ from typing import Callable, Dict, List, Optional, Tuple
 import matplotlib.colors
 import numpy as np
 from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.lanelet import LaneletType
+from commonroad.scenario.lanelet import LaneletType, LineMarking
 from commonroad.scenario.traffic_sign import TrafficLightState
 from matplotlib import pyplot as plt
 
-from crmonitor.common.helper import cartesian_to_curvilinear
+from crmonitor.common.helper import cartesian_to_curvilinear, get_curvilinear_coordinate_system
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -503,42 +503,35 @@ class PredStopLineInFront(BasePredicateEvaluator):
         lanes = ego.ref_path_lanes(time_step)
         # Find all lanelets in the map that have a stop line
         lanelets_with_stop_line = [
-            l.lanelet_id
+            l
             for l in world.road_network.lanelet_network.lanelets
-            if l.stop_line is not None
+            if l.stop_line is not None and l.stop_line.line_marking is LineMarking.BROAD_SOLID
         ]
         robustness = -np.inf
         # For all possible paths of the vehicle
         for lane in lanes:
             # Get the set of lanelets in the current path, that have a stop line
-            intersection_lanelets = lane.contained_lanelets.intersection(
-                lanelets_with_stop_line
-            )
+            relevant_lanelet_ids_with_stop_line = [
+                l
+                for l in lanelets_with_stop_line
+                if l.lanelet_id in lane.contained_lanelets
+            ]
             # If there is none, continue
-            if len(intersection_lanelets) == 0:
+            if len(relevant_lanelet_ids_with_stop_line) == 0:
                 continue
-            # Get the front longitudinal value of the vehicle
-            front_s = ego.front_s(time_step, lane) or -np.inf
-            # It doesn't matter if we take the left or right point of the stop line
-            # as we only consider the longitudinal component.
-            stop_line_s = np.array(
-                [
-                    lane.clcs.convert_to_curvilinear_coords(
-                        *world.road_network.lanelet_network.find_lanelet_by_id(
-                            l
-                        ).stop_line.start
-                    )[0]
-                    for l in intersection_lanelets
-                ]
-            )
-            # Get the distance to the stop lines
-            stop_line_distance = stop_line_s - front_s
+            
+            ccs = get_curvilinear_coordinate_system(lane.lanelet.center_vertices)
+            curvi_occ = ccs(ego.occupancy_at_time_step(time_step).vertices)
+            stop_line_pts = np.array([[l.stop_line.start, l.stop_line.end] for l in relevant_lanelet_ids_with_stop_line])
+            curvi_stop_line = ccs(stop_line_pts.reshape(-1, 2)).reshape(-1, 2, 2)
+
+            occ_stop_line_ccs = cartesian_to_curvilinear(curvi_stop_line, curvi_occ, limit_start_end=False)
+            stop_line_distance = np.nanmin(occ_stop_line_ccs[..., 1], axis=-1, initial=np.inf)
             stop_line_robustness = np.fmin(
                 self.config["d_sl"] - np.abs(stop_line_distance), stop_line_distance
             )
             robustness = max(robustness, stop_line_robustness)
         return self._scale_lon_dist(float(robustness))
-
 
 class PredInIntersection(BasePredicateEvaluator):
     """Evaluate if a vehicle occupancy is intersecting with an intersection lanelet."""
