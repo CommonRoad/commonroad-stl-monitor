@@ -945,6 +945,7 @@ def union_set(s: Iterable):
 
 def get_curvilinear_coordinate_system(
     ref_path: np.ndarray,
+    limit_start_end: bool = True
 ) -> Callable[[np.ndarray], np.ndarray]:
     """
     Create a function that maps from cartesian to curvilinear coordinates.
@@ -958,6 +959,7 @@ def get_curvilinear_coordinate_system(
     Note, that the sign of the lateral distance is opposite to the commonroad-drivability-checker!
 
     :param ref_path: array of vertices of the reference path.
+    :param limit_start_end: Do not allow points before the start and beyond the end point.
     :return: function taking an array of cartesian points, mapping to curvilinear points w.r.t. the reference path.
     """
 
@@ -1020,26 +1022,33 @@ def get_curvilinear_coordinate_system(
         idx = np.argsort(distance, axis=-1)
         s_sorted = np.take_along_axis(s, idx, axis=-1)
         point_idx = np.arange(len(idx))
+
         # Determine the segment with the lowest index to which the points can be projected (0 <= s <= 1)
         idx = idx[point_idx, np.argmax((0 <= s_sorted) & (s_sorted <= 1), axis=-1)]
+
+        if not limit_start_end:
+            idx = np.where(np.any((0 <= s_sorted) & (s_sorted <= 1), axis=-1), idx, np.where(s_sorted[..., 0] < 0, 0, s_sorted.shape[-1] - 1))
+
         # Offset arc lengths by the arc length of the segment start
         arc_length = s[point_idx, idx] * seg_length[idx] + cumsum_seg_length[idx]
         lateral_dist = signed_distance[point_idx, idx]
         # Assemble curvilinear coordinate array
         cc = np.stack((arc_length, lateral_dist), axis=1)
-        # Set points beyond start or end of the line to nan
-        cc[np.sum((0 <= s) & (s <= 1), axis=1) == 0] = np.nan
+        if limit_start_end:
+            # Set points beyond start or end of the line to nan
+            cc[np.sum((0 <= s) & (s <= 1), axis=1) == 0] = np.nan
         return cc
 
     return fn
 
 
 def cartesian_to_curvilinear(
-    reference_paths: Iterable[np.ndarray], cartesian_points: np.ndarray
+    reference_paths: Iterable[np.ndarray], cartesian_points: np.ndarray,
+    limit_start_end: bool = True
 ) -> np.ndarray:
     curvilinear_coords = []
     for ref_path in reference_paths:
-        fn = get_curvilinear_coordinate_system(ref_path)
+        fn = get_curvilinear_coordinate_system(ref_path, limit_start_end)
         curvilinear_coords.append(fn(cartesian_points))
 
     return np.array(curvilinear_coords)
