@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, Set, Union
 
 import numpy as np
-from commonroad.scenario.scenario import Scenario
+from commonroad.scenario.scenario import Scenario, ObstacleType
 
 import crmonitor
 from crmonitor.common.helper import create_other_vehicles_param, load_yaml
@@ -70,7 +70,7 @@ class World:
             cache = shelve.open(str(cache_file), writeback=True)
         else:
             cache = {}
-        for obs in scenario.dynamic_obstacles:
+        for obs in filter(lambda o: o.obstacle_type in [ObstacleType.CAR, ObstacleType.BUS, ObstacleType.TRUCK, ObstacleType.MOTORCYCLE, ObstacleType.TAXI] , scenario.dynamic_obstacles):
             # Skip obstacles that go out of the road
             if any(
                 map(
