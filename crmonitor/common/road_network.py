@@ -214,7 +214,11 @@ class RoadNetwork:
         """
         lanes = []
         lane_lanelets = []
-        start_lanelets = [lanelet for lanelet in self.lanelet_network.lanelets if len(lanelet.predecessor) == 0]
+        start_lanelets = [
+            lanelet
+            for lanelet in self.lanelet_network.lanelets
+            if len(lanelet.predecessor) == 0
+        ]
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
                 lanelet_type = LaneletType.ACCESS_RAMP

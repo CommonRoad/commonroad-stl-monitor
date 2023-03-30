@@ -6,8 +6,8 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numba
 import numpy as np
+from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.geometry.shape import Shape, Rectangle
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 

@@ -944,8 +944,7 @@ def union_set(s: Iterable):
 
 
 def get_curvilinear_coordinate_system(
-    ref_path: np.ndarray,
-    limit_start_end: bool = True
+    ref_path: np.ndarray, limit_start_end: bool = True
 ) -> Callable[[np.ndarray], np.ndarray]:
     """
     Create a function that maps from cartesian to curvilinear coordinates.
@@ -1027,7 +1026,11 @@ def get_curvilinear_coordinate_system(
         idx = idx[point_idx, np.argmax((0 <= s_sorted) & (s_sorted <= 1), axis=-1)]
 
         if not limit_start_end:
-            idx = np.where(np.any((0 <= s_sorted) & (s_sorted <= 1), axis=-1), idx, np.where(s_sorted[..., 0] < 0, 0, s_sorted.shape[-1] - 1))
+            idx = np.where(
+                np.any((0 <= s_sorted) & (s_sorted <= 1), axis=-1),
+                idx,
+                np.where(s_sorted[..., 0] < 0, 0, s_sorted.shape[-1] - 1),
+            )
 
         # Offset arc lengths by the arc length of the segment start
         arc_length = s[point_idx, idx] * seg_length[idx] + cumsum_seg_length[idx]
@@ -1043,8 +1046,9 @@ def get_curvilinear_coordinate_system(
 
 
 def cartesian_to_curvilinear(
-    reference_paths: Iterable[np.ndarray], cartesian_points: np.ndarray,
-    limit_start_end: bool = True
+    reference_paths: Iterable[np.ndarray],
+    cartesian_points: np.ndarray,
+    limit_start_end: bool = True,
 ) -> np.ndarray:
     curvilinear_coords = []
     for ref_path in reference_paths:

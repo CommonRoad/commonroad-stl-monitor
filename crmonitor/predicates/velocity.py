@@ -303,9 +303,7 @@ class PredInStandStill(BasePredicateEvaluator):
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         speed = abs(vehicle.states_cr[time_step].velocity)
-        return self._scale_speed(
-            self.config["standstill_error"] - speed
-        )
+        return self._scale_speed(self.config["standstill_error"] - speed)
 
 
 class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
