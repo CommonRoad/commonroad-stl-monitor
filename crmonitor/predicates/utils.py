@@ -29,7 +29,7 @@ def distance_to_left_bounds(
             for l in lanelets
             if l.adj_left is None
             or l.adj_left not in lanelet_ids
-            and l.adj_left_same_direction
+            and not l.adj_left_same_direction
         ]
     )
     if len(left_bounds) > 0:
