@@ -9,7 +9,10 @@ from commonroad.scenario.lanelet import LaneletType, LineMarking
 from commonroad.scenario.traffic_sign import TrafficLightState
 from matplotlib import pyplot as plt
 
-from crmonitor.common.helper import cartesian_to_curvilinear, get_curvilinear_coordinate_system
+from crmonitor.common.helper import (
+    cartesian_to_curvilinear,
+    get_curvilinear_coordinate_system,
+)
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -505,7 +508,8 @@ class PredStopLineInFront(BasePredicateEvaluator):
         lanelets_with_stop_line = [
             l
             for l in world.road_network.lanelet_network.lanelets
-            if l.stop_line is not None and l.stop_line.line_marking is LineMarking.BROAD_SOLID
+            if l.stop_line is not None
+            and l.stop_line.line_marking is LineMarking.BROAD_SOLID
         ]
         robustness = -np.inf
         # For all possible paths of the vehicle
@@ -519,19 +523,35 @@ class PredStopLineInFront(BasePredicateEvaluator):
             # If there is none, continue
             if len(relevant_lanelet_ids_with_stop_line) == 0:
                 continue
-            
+
             ccs = get_curvilinear_coordinate_system(lane.lanelet.center_vertices)
             curvi_occ = ccs(ego.occupancy_at_time_step(time_step).vertices)
-            stop_line_pts = np.array([[l.stop_line.start, l.stop_line.end] for l in relevant_lanelet_ids_with_stop_line])
-            curvi_stop_line = ccs(stop_line_pts.reshape(-1, 2)).reshape(-1, 2, 2)
+            stop_line_pts = np.array(
+                [
+                    [l.stop_line.start, l.stop_line.end]
+                    for l in relevant_lanelet_ids_with_stop_line
+                ]
+            )
+            curvi_stop_line = ccs(stop_line_pts.reshape((-1, 2))).reshape((-1, 2, 2))
+            # Order stop line points from right to left
+            curvi_stop_line = np.where(
+                curvi_stop_line[:, 0, 1] < curvi_stop_line[:, 0, 1],
+                curvi_stop_line,
+                curvi_stop_line[:, ::-1],
+            )
 
-            occ_stop_line_ccs = cartesian_to_curvilinear(curvi_stop_line, curvi_occ, limit_start_end=False)
-            stop_line_distance = np.nanmin(occ_stop_line_ccs[..., 1], axis=-1, initial=np.inf)
+            occ_stop_line_ccs = cartesian_to_curvilinear(
+                curvi_stop_line, curvi_occ, limit_start_end=False
+            )
+            stop_line_distance = np.nanmin(
+                occ_stop_line_ccs[..., 1], axis=-1, initial=np.inf
+            )
             stop_line_robustness = np.fmin(
                 self.config["d_sl"] - np.abs(stop_line_distance), stop_line_distance
             )
             robustness = max(robustness, stop_line_robustness)
         return self._scale_lon_dist(float(robustness))
+
 
 class PredInIntersection(BasePredicateEvaluator):
     """Evaluate if a vehicle occupancy is intersecting with an intersection lanelet."""
@@ -648,30 +668,44 @@ class PredTrafficLightRed(BasePredicateEvaluator):
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        tl_states = self._get_tl_states(time_step, vehicle_ids, world)
+        return TrafficLightState.RED in tl_states
+
+    @staticmethod
+    def _get_tl_states(time_step, vehicle_ids, world):
         ego = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids = ego.lanelet_assignment[time_step]
         lanelets = [
             world.scenario.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids
         ]
+        tl_states = []
         for lanelet in lanelets:
             if len(lanelet.traffic_lights) == 0:
                 continue
             # TODO: Only works for one traffic light per lanelet!
-            assert len(lanelet.traffic_lights) == 1, (
-                "TODO: Only works for one " "traffic light per lanelet!"
-            )
+            assert (
+                len(lanelet.traffic_lights) == 1
+            ), "TODO: Only works for one traffic light per lanelet!"
             tl = world.scenario.lanelet_network.find_traffic_light_by_id(
                 list(lanelet.traffic_lights)[0]
             )
-            state = tl.get_state_at_time_step(time_step)
-            if state == TrafficLightState.RED:
-                return True
-        return False
+            tl_states.append(tl.get_state_at_time_step(time_step))
+        return tl_states
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        return 1.0 if self.evaluate_boolean(world, time_step, vehicle_ids) else -1.0
+        tl_states = self._get_tl_states(time_step, vehicle_ids, world)
+        if TrafficLightState.RED in tl_states:
+            robustness = 1.0
+        elif (
+            TrafficLightState.YELLOW in tl_states
+            or TrafficLightState.RED_YELLOW in tl_states
+        ):
+            robustness = -0.5
+        else:
+            robustness = -1.0
+        return robustness
 
 
 class PredOnRightTurn(BasePredicateEvaluator):
