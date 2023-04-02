@@ -339,6 +339,45 @@ class Vehicle:
     def __hash__(self):
         return self.id
 
+#def from Luis
+# ---------------------------------------------------------------------#
+    def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
+        """
+        Determine all possible lanes for a vehicle from the given moment.
+
+        Idea: A vehicle should drive on a connected sequence of lanelets to get to
+        the current
+        position. Hence, the intersection of the initially occupied lanes (all paths
+        from the first state)
+        and the currently occupied lanes should not be empty and only contain the
+        lanes that have been driven on.
+
+        :param timestep:
+        :return:
+        """
+
+        initial_lanes = self.lanes_at_state(self.start_time)
+        current_lanes = self.lanes_at_state(timestep)
+
+        return tuple(initial_lanes.intersection(current_lanes))
+
+    def lanelets_dir(self, timestep: int) -> Tuple[int]:
+        """
+        Get the lanelets in driving direction occupied at the current time step.
+
+        Implementation: Intersect the current lanelets with the reference path.
+
+        :param self:
+        :param timestep:
+        :return:
+        """
+        ref_lanes = self.ref_path_lanes(timestep)
+        current_lanelets = self.lanelet_assignment[timestep]
+        ref_lanelets = set()
+        for lane in ref_lanes:
+            ref_lanelets.update(lane.contained_lanelets)
+        return tuple(ref_lanelets.intersection(current_lanelets))
+# ----------------------------------------------------------------#
 
 class ControlledVehicle(Vehicle):
 
