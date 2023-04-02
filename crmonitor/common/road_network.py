@@ -46,6 +46,10 @@ class Lane:
         self._width = self._compute_width_from_lanalet_boundary(
             merged_lanelet.left_vertices, merged_lanelet.right_vertices
         )
+        
+        self._adj_left = None
+        self._adj_right = None
+        
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
@@ -82,6 +86,20 @@ class Lane:
         :returns width of lane at a given position
         """
         return np.interp(s_position, self._path_length, self._width)
+
+    @property
+    def adj_left(self):
+        return self._adj_left
+
+    @property
+    def adj_right(self):
+        return self._adj_right
+
+    def set_adj_lanes(self,
+                      adj_left=None,
+                      adj_right=None):
+        self._adj_left = adj_left
+        self._adj_right = adj_right
 
     @staticmethod
     def _compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
@@ -250,6 +268,21 @@ class RoadNetwork:
                 lane_lanelets.append((merged_lanelets[idx], merge_jobs[idx]))
         for lane_element in lane_lanelets:
             lanes.append(Lane(lane_element[0], lane_element[1], road_network_param))
+        
+        lanes.sort(key=lambda x: x.lane_id)
+        
+        if len(lanes) == 0:
+            pass
+        elif len(lanes) == 1:
+            lanes[0].set_adj_lanes(None, None)
+        elif len(lanes) == 2:
+            lanes[0].set_adj_lanes(lanes[1], None)
+            lanes[-1].set_adj_lanes(None, lanes[-2])
+        else:
+            lanes[0].set_adj_lanes(lanes[1], None)
+            lanes[-1].set_adj_lanes(None, lanes[-2])
+            for k in range(1, len(lanes)-1):
+                lanes[k].set_adj_lanes(lanes[k+1], lanes[k-1])
 
         return lanes
 

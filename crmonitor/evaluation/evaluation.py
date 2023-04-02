@@ -82,9 +82,42 @@ class RuleEvaluator:
     def current_time(self) -> int:
         return self._last_evaluation_time_step
 
+    @property
+    def ego_vehicle(self) -> Vehicle:
+        return self._ego_vehicle
+
     def get_predicates(self) -> Dict[str, float]:
         predicate_values = dict(self._monitor.visit(self._collector_visitor))
         return predicate_values
+    
+    def get_propositions(self):
+        """
+        Calculates the proposition robustness (mainly used for trajectory repairing)
+        Calculations are done for the non-ego vehicle that conforms to the rule with the lowest feasibility.
+        
+        Returns:
+        props (dict{prop, value}): Robustness values of each proposition, obtained using _props attribute of the
+        RtamtStlMonitor, set using the RtamtStlMonitor.collect_prop_rob method. If quantifier nodes exist, the Monitor 
+        that monitors the ego vehicle against the worst-case non-ego vehicle is used.
+        other_id (int): The vehicle against which the values were obtained. Ego if the rule concerns the ego vehicle.
+        time (int): Timestep at which the values were obtained.
+        """
+        other_id = self._eval_visitor.other_ids[-1] if self._eval_visitor.other_ids is not () else self._ego_vehicle.id
+        if hasattr(self._monitor, 'monitors'):
+            other_id = self._eval_visitor.other_ids[-1]
+            props = self._monitor.monitors[other_id].monitor._propositions
+        else:
+            if any(hasattr(child, 'monitors') for child in self._monitor.children):
+                other_id = self._eval_visitor.other_ids[-1]
+                props = self._monitor.monitor._propositions
+                quant_nodes = [node for node in self._monitor.children if hasattr(node, 'monitors')]
+                #for quant_node in quant_nodes:
+                #    for key in [key for key in props.keys() if quant_node.name in key]:
+                #        props.pop(key)
+                #    props.update(quant_node.monitors[other_id].monitor._props)
+            else:
+                props = self._monitor.monitor._propositions
+        return props, other_id, self._last_evaluation_time_step
 
     def update(self):
         """

@@ -60,3 +60,24 @@ deploy_master:
     - master
   except:
     - tags
+
+
+sphinx:
+  stage: test
+  needs: [ ]
+  script:
+    - poetry install --with doc
+    - cd docs/source && sphinx-build -b html -W . ../build
+
+pages:
+  stage: deploy
+  needs:
+    - sphinx
+  script:
+    - poetry install --with doc
+    - cd docs/source && sphinx-build -b html . ../../public
+  artifacts:
+    paths:
+      - public
+  only:
+    - development

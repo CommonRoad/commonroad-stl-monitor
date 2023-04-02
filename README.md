@@ -1,3 +1,5 @@
+# Getting Started
+
 ## Toolbox installation
 
 The toolbox is installable as a regular pypi package. However, it is currently not available under the public index.
@@ -19,7 +21,7 @@ python -m unittest
 ```
 
 ## Getting Started
-Checkout the [minimum working example](tutorials/monitor_scenario.py)
+Checkout the minimum working example at `tutorials/monitor_scenario.py`
 
 ```python
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -53,9 +55,9 @@ predicate_robustness = rule_evaluator.get_predicates()
 robustness_array = rule_evaluator.evaluate()
 ```
 
-## Concepts
+# Concepts
 
-### Visitors
+## Visitors
 
 We view rules as abstract syntax trees (AST) which can be traversed by visitor objects. The AST has the following node types:
 
