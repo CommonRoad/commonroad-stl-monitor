@@ -1241,7 +1241,7 @@ def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwo
         traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
         for ts_element in traffic_sign_object.traffic_sign_elements:
             if ts_element.traffic_sign_element_id.value == given_traffic_sign_id:
-                traffic_sign_elements.append(ts_element)
+                traffic_sign_elements.append(traffic_sign_object)
     return traffic_sign_elements
 
 

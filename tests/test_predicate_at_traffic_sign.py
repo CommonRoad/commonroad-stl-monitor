@@ -26,7 +26,7 @@ from crmonitor.predicates.priority import (  # not covered
     PredHasPriorityStraightStraight, PredSamePriorityRightRight, PredSamePriorityRightLeft,
     PredSamePriorityRightStraight,  # not covered
     PredSamePriorityLeftStraight, PredSamePriorityStraightRight,  # not covered
-    PredSamePriorityStraightStraight, PredAtTrafficSign)
+    PredSamePriorityStraightStraight, PredAtTrafficSignStop)
 
 
 class TestPriorityPredicates(unittest.TestCase):
@@ -75,7 +75,7 @@ class TestPriorityPredicates(unittest.TestCase):
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
         ego_vehicle = world.vehicle_by_id(dynamic_obstacle_id)
 
-        pred = PredAtTrafficSign(self.config)
+        pred = PredAtTrafficSignStop(self.config)
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)

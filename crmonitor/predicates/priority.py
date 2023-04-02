@@ -34,7 +34,7 @@ class PriorityPredicates(str, Enum):
     HasPriorityStraightLeft = "has_priority_straight_left"
     HasPriorityLeftLeft = "has_priority_left_left"
     HasPriorityStraightStraight = "has_priority_straight_straight"
-    AtTrafficSign = "at_traffic_sign"
+    AtTrafficSignStop = "at_traffic_sign_stop"
 
 
 class PredSamePriority(BasePredicateEvaluator):
@@ -969,8 +969,8 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
 
 
 # --------------------------------------------------------------------------------------------------------------------#
-class PredAtTrafficSign(BasePredicateEvaluator):
-    predicate_name = PriorityPredicates.AtTrafficSign
+class PredAtTrafficSignStop(BasePredicateEvaluator):
+    predicate_name = PriorityPredicates.AtTrafficSignStop
     arity = 1
     stop_traffic_sign = '206'
 
@@ -1000,18 +1000,37 @@ class PredAtTrafficSign(BasePredicateEvaluator):
         idea to improve: use reference path of vehicle, so that the lanelet with a stop traffic sign in the reference
         path can be found, even though current occupied lanelets have no traffic sign.
         """
-        d_start_lanelet = list()
+        robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         ref_path = vehicle.ref_path_lanes(time_step)
-        # Find all lanelets in the map that have traffic signs
-
-        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
-        for lanelet_id in lanelets_dir_ids:
-            traffic_sign_elements = (utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
-            if len(traffic_sign_elements) != 0:
-                d_start_lanelet.append(utils.distance_start_lanelet(vehicle, lanelet_id, road_network, time_step))
-            else:
-                d_start_lanelet.append(math.inf * -1)
-        return self._scale_lon_dist(np.max(d_start_lanelet))
+        for lane in ref_path:
+            lanelet_with_ts_stop = list()
+            # find lanelets referencing stop traffic sign
+            for lanelet_id in lane.contained_lanelets:
+                traffic_sign_elements = (utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
+                if len(traffic_sign_elements) != 0:
+                    lanelet_with_ts_stop.append(lanelet_id)
+            if len(lanelet_with_ts_stop) == 0:
+                continue
+            # Get the front longitudinal value of the vehicle
+            front_s = vehicle.front_s(time_step, lane) or -np.inf
+            lanelet_start_s = np.array([lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
+                                        for l in lanelet_with_ts_stop])
+            lanelet_end_s = np.array([lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
+                                        for l in lanelet_with_ts_stop])
+            for i in range(lanelet_start_s.shape[0]):
+                # lanelet in front of vehicle
+                if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
+                    robustness = max(robustness, front_s - lanelet_start_s[i])
+                # vehicle in front of lanelet
+                elif (lanelet_end_s[i] - front_s) < 0 < (front_s - lanelet_start_s[i]):
+                    robustness = max(robustness, lanelet_end_s[i] - front_s)
+                # vehicle inside lanelet
+                else:
+                    distance_robustness = max(front_s - lanelet_start_s[i], lanelet_end_s[i] - front_s)
+                    robustness = max(robustness, distance_robustness)
+        return self._scale_lon_dist(float(robustness))
 
