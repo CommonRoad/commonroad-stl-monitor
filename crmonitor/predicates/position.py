@@ -1217,36 +1217,27 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
 class PredStopLineInFront(BasePredicateEvaluator):
     predicate_name = PositionPredicates.StopLineInFront
     arity = 1
-    d_sl = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         """
         A stop line is in front of a vehicle if any occupied lanelet references a stop line within a distance d_sl
-        If there is no stop line along the reference path, return false.
-        If there is a stop line along the reference path and the distance to the stop line smaller than d_sl
-        and stop line is in front of vehicle, return True. Otherwise, return False
         """
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
-        lanelet_ids = np.unique(ref_path)
-        d_stop_line = utils.distance_to_stop_line(vehicle, lanelet_ids, world, time_step) * -1
-        if d_stop_line is None:
-            boolean_eval = False
-            return boolean_eval
-        return (d_stop_line <= self.d_sl) & (d_stop_line >= 0)
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         """
         If there is no stop line along the reference path, return -1.
-        If there is a stop line along the reference path return difference between d_sl and the distance to stop line.
+        If there is a stop line along the reference path return minimum difference between d_sl and
+        the distance to stop line.
         """
         robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         #ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
         ref_path = vehicle.ref_path_lanes(time_step)
         # Find all lanelets in the map that have a stop line
-        lanelets_with_stop_line = [l.lanelet_id for l in world.road_network.lanelet_network.lanelets if
-            l.stop_line is not None]
+        lanelets_with_stop_line = [l.lanelet_id
+                                   for l in world.road_network.lanelet_network.lanelets
+                                   if l.stop_line is not None]
         for lane in ref_path:
             # Get the set of lanelets in the current path, that have a stop line
             intersection_lanelets = lane.contained_lanelets.intersection(lanelets_with_stop_line)
