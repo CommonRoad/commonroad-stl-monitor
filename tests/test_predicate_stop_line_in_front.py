@@ -31,6 +31,7 @@ class TestPositionPredicates(unittest.TestCase):
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
+        self.config["d_sl"] = 1.0
 
     def testStopLineInFront(self):
         scenario, _ = CommonRoadFileReader(
@@ -78,7 +79,7 @@ class TestPositionPredicates(unittest.TestCase):
 
         for time in range(ego_vehicle.end_time + 1):
             pred = PredStopLineInFront(self.config)
-            sol_monitor_1 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)
 
 
