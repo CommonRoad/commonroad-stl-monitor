@@ -380,7 +380,7 @@ def cal_road_width(
 ### Our work starts here.
 ######################################################
 
-# ----------------------------------------------------------------- #
+# -------------------------------------------------------------------------------------------------------------------- #
 # new from Mahdi Bayouli
 def adjacent_lanelets_same_direction(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
@@ -1177,7 +1177,7 @@ def orientation_difference_vehicle_lanelet(
         subtract_orientations(orientation_of_closest_point, vehicle_orientation)
     )
     return orientation_difference
-# -------------------------------------------------------------------------#
+# ---------------------------------------------------------------------------------------------------------------------#
 
 def distance_to_stop_line(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
     stop_line = get_stop_line(lanelet_ids, world.road_network)
