@@ -967,6 +967,8 @@ class PredHasPriorityStraightStraight(BasePredicateEvaluator):
 
         return rob
 
+
+# --------------------------------------------------------------------------------------------------------------------#
 class PredAtTrafficSign(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.AtTrafficSign
     arity = 1
@@ -1001,6 +1003,9 @@ class PredAtTrafficSign(BasePredicateEvaluator):
         d_start_lanelet = list()
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
+        ref_path = vehicle.ref_path_lanes(time_step)
+        # Find all lanelets in the map that have traffic signs
+
         lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
         for lanelet_id in lanelets_dir_ids:
             traffic_sign_elements = (utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
