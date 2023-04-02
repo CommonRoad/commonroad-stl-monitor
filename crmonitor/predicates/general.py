@@ -1,9 +1,9 @@
-import logging
 from enum import Enum
+import logging
 from typing import List, Tuple, Dict, Callable
-
 import matplotlib.colors
 import numpy as np
+
 from matplotlib import pyplot as plt
 
 from crmonitor.common.world import World
@@ -485,7 +485,8 @@ class PredMakesUTurn(BasePredicateEvaluator):
 # intersection
 ##############
 
-
+# ----------------------------------------------------------------------- #
+# new predicate from Mahdi Bayouli
 class PredTurningLeft(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning left
@@ -549,3 +550,5 @@ class PredGoingStraight(BasePredicateEvaluator):
                 world, time_step, vehicle_ids, lanelet_type, True
             )
         )
+
+#----------------------------------------------------------------------#

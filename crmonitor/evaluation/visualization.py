@@ -1,12 +1,15 @@
+from typing import Dict, List, Tuple, Union, Optional
 from collections import defaultdict
 from itertools import groupby
 from typing import Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import pandas as pd
+
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
+from commonroad.scenario.scenario import Scenario
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
@@ -26,7 +29,7 @@ def plot_rule_robustness_course(
     rule_robustness_course: List[Tuple[int, float]],
     ax,
     plot_limits: Tuple[float, float],
-    rules: List[str],
+    rules: List[str]
 ):
     np_rule_robustness_course = np.array(rule_robustness_course)
     rob_values = np_rule_robustness_course[:, 1]

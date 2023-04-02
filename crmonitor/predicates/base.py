@@ -9,6 +9,8 @@ from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 
+from commonroad.visualization.renderer import IRenderer
+
 logger = logging.getLogger(__name__)
 
 MAX_LONG_DIST = 200.0

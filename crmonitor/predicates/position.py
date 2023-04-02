@@ -998,7 +998,8 @@ class PredDrivesRightmost(BasePredicateEvaluator):
 ## intersection ##
 ##################
 
-
+# --------------------------------------------------------------------- #
+# new predicate from Mahdi Bayouli
 class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     """
     evaluates if a vehicle is on a lanelet with a specific type.
@@ -1210,7 +1211,7 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
                             break
 
         return self._scale_lon_dist(np.minimum(b * d1, b * d2))
-
+# -------------------------------------------------------------------------#
 
 class PredStopLineInFront(BasePredicateEvaluator):
     predicate_name = PositionPredicates.StopLineInFront

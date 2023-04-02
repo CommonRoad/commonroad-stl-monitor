@@ -40,7 +40,8 @@ class PredRelAbruptBreaking(BasePredicateEvaluator):
         rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)
 
-
+# ------------------------------------------------------------------------ #
+# new predicate from Mahdi Bayouli
 class PredCausesBrakingIntersection(BasePredicateEvaluator):
     """
     evaluates if the first vehicle causes the braking of the second vehicle.
