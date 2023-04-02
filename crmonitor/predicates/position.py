@@ -1240,15 +1240,27 @@ class PredStopLineInFront(BasePredicateEvaluator):
         If there is no stop line along the reference path, return -1.
         If there is a stop line along the reference path return difference between d_sl and the distance to stop line.
         """
+        robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         #ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
         ref_path = vehicle.ref_path_lanes(time_step)
-        lanelet_ids = np.unique(ref_path)
-        d_stop_line = utils.distance_to_stop_line(vehicle, lanelet_ids, world, time_step) * -1
-        if d_stop_line is None:
-            return -1
-        if d_stop_line > 0:
-            diff_d = self.d_sl - d_stop_line
-        else:
-            diff_d = d_stop_line - self.d_sl
-        return self._scale_lon_dist(diff_d)
+        # Find all lanelets in the map that have a stop line
+        lanelets_with_stop_line = [l.lanelet_id for l in world.road_network.lanelet_network.lanelets if
+            l.stop_line is not None]
+        for lane in ref_path:
+            # Get the set of lanelets in the current path, that have a stop line
+            intersection_lanelets = lane.contained_lanelets.intersection(lanelets_with_stop_line)
+            if len(intersection_lanelets) == 0:
+                continue
+            # Get the front longitudinal value of the vehicle
+            front_s = vehicle.front_s(time_step, lane) or -np.inf
+            # It doesn't matter if we take the left or right point of the stop line
+            # as we only consider the longitudinal component.
+            stop_line_s = np.array([lane.clcs.convert_to_curvilinear_coords(
+                    *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0] for l in
+                intersection_lanelets])
+            # Get the distance to the stop lines
+            stop_line_distance = stop_line_s - front_s
+            stop_line_robustness = np.fmin(self.config["d_sl"] - np.abs(stop_line_distance), stop_line_distance)
+            robustness = max(robustness, stop_line_robustness)
+        return self._scale_lon_dist(float(robustness))
