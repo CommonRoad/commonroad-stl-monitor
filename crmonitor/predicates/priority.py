@@ -897,9 +897,10 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         traffic_sign_elements = list()
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
+        lanelets_dir_ids = vehicle.lanelets_dir(time_step)
         for lanelet_id in lanelets_dir_ids:
-            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+            traffic_sign_elements.append(utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
+        traffic_sign_elements = [ts for ts in traffic_sign_elements if ts is not None]
         if len(traffic_sign_elements) == 0:
             boolean_eval = False
         else:
@@ -923,13 +924,14 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
             lanelet_with_ts_stop = list()
             # find lanelets referencing stop traffic sign
             for lanelet_id in lane.contained_lanelets:
-                traffic_sign_elements = (utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
-                if len(traffic_sign_elements) != 0:
+                traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+                if traffic_sign_elements is not None:
                     lanelet_with_ts_stop.append(lanelet_id)
             if len(lanelet_with_ts_stop) == 0:
                 continue
             # Get the front longitudinal value of the vehicle
             front_s = vehicle.front_s(time_step, lane) or -np.inf
+            rear_s = vehicle.rear_s(time_step, lane) or -np.inf
             lanelet_start_s = np.array([lane.clcs.convert_to_curvilinear_coords(
                     *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
                                         for l in lanelet_with_ts_stop])
@@ -941,11 +943,11 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
                 if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
                     robustness = max(robustness, front_s - lanelet_start_s[i])
                 # vehicle in front of lanelet
-                elif (lanelet_end_s[i] - front_s) < 0 < (front_s - lanelet_start_s[i]):
-                    robustness = max(robustness, lanelet_end_s[i] - front_s)
+                elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
+                    robustness = max(robustness, lanelet_end_s[i] - rear_s)
                 # vehicle inside lanelet
                 else:
-                    distance_robustness = max(front_s - lanelet_start_s[i], lanelet_end_s[i] - front_s)
+                    distance_robustness = max(front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s)
                     robustness = max(robustness, distance_robustness)
         return self._scale_lon_dist(float(robustness))
 

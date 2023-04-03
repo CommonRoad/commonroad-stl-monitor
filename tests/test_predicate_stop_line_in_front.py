@@ -82,4 +82,7 @@ class TestPositionPredicates(unittest.TestCase):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)
 
+            sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
+            print(sol_monitor_2)
+
 
