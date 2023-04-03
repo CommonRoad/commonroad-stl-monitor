@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 class PriorityPredicates(str, Enum):
     SamePriority = "same_priority"
-    RelevantTrafficLight = "relevant_traffic_light"
     HasPriority = "has_priority"
     SamePriorityRightRight = "same_priority_right_right"
     SamePriorityRightLeft = "same_priority_right_left"
@@ -35,6 +34,7 @@ class PriorityPredicates(str, Enum):
     HasPriorityLeftLeft = "has_priority_left_left"
     HasPriorityStraightStraight = "has_priority_straight_straight"
     AtTrafficSignStop = "at_traffic_sign_stop"
+    RelevantTrafficLight = "relevant_traffic_light"
 
 
 class PredSamePriority(BasePredicateEvaluator):

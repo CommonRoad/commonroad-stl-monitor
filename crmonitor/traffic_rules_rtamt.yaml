@@ -29,6 +29,7 @@ traffic_rules:
   ######################
   ## Intersection Rules
   ######################
+  R_IN1: "(stop_line_in_front__a0 and next(not stop_line_in_front__a0) and at_traffic_sign_stop__a0 and not relevant_traffic_light) implies (once[0, 3s](stop_line_in_front__a0 and in_standstill__a0))"
 
   META_1: "A a1 A a2: 
                     (
