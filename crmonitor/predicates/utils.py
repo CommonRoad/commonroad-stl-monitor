@@ -658,37 +658,6 @@ def get_latest_predecessors_path(
         return predecessors
 
 
-# TODO: set limits for searching successors
-def reach_succ(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[int]]:
-    successors = lanelet.successor
-    if len(successors) == 0:
-        return [[]]
-    paths = []
-    for succ in successors:
-        succ_lanelet = lanelet_network.find_lanelet_by_id(succ)
-        succ_paths = reach_succ(succ_lanelet, lanelet_network)
-        for succ_path in succ_paths:
-            succ_path.insert(0, succ)
-            paths.append(succ_path)
-    return paths
-
-
-# TODO: set limits for searching predecessors
-def reach_pre(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> List[List[int]]:
-    predecessors = lanelet.predecessor
-    if len(predecessors) == 0:
-        return [[]]
-
-    paths = []
-    for pre in predecessors:
-        pre_lanelet = lanelet_network.find_lanelet_by_id(pre)
-        pre_paths = reach_pre(pre_lanelet, lanelet_network)
-        for pre_path in pre_paths:
-            pre_path.append(pre)
-            paths.append(pre_path)
-    return paths
-
-
 def ref_path_lanelets(
     vehicle: Vehicle, road_network: RoadNetwork, time_step
 ) -> List[List[int]]:
@@ -1272,3 +1241,60 @@ def get_lanelet_end_line(lanelet: Lanelet):
     right_start_vertice = lanelet.right_vertices[-1, :]
     left_start_vertice = lanelet.left_vertices[-1, :]
     return np.array([left_start_vertice, right_start_vertice])
+
+
+def active_tls_by_lanelet(lanelet: Lanelet, road_network: RoadNetwork):
+    assert len(lanelet.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
+    tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet.traffic_lights)[0])
+    if tl.active:
+        return True
+    return False
+
+
+# TODO: set limits for searching successors
+def reach_suc(lanelet_id, road_network: RoadNetwork) -> np.array:
+    paths = lanes_suc(lanelet_id, road_network)
+    return np.unique(paths)
+
+
+def reach_pre(lanelet_id, road_network: RoadNetwork) -> np.array:
+    paths = lanes_pre(lanelet_id, road_network)
+    return np.unique(paths)
+
+
+# TODO: set limits for searching predecessors
+def lanes_pre(lanelet_id: int, road_network: RoadNetwork) -> List[List[int]]:
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    lanelet_ids = set()
+    lanelet_ids.add(lanelet_id)
+    lanelet_network = road_network.lanelet_network
+    predecessors = lanelet.predecessor
+    if len(predecessors) == 0:
+        return [[]]
+    paths = []
+    for pre in predecessors:
+        pre_lanelet = lanelet_network.find_lanelet_by_id(pre)
+        pre_paths = lanes_pre(pre_lanelet.lanelet_id, road_network)
+        for pre_path in pre_paths:
+            pre_path.append(pre)
+            paths.append(pre_path)
+    return paths
+
+
+def lanes_suc(lanelet_id, road_network: RoadNetwork) -> List[List[int]]:
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    lanelet_ids = set()
+    lanelet_ids.add(lanelet_id)
+    lanelet_network = road_network.lanelet_network
+    successors = lanelet.successor
+    if len(successors) == 0:
+        return [[]]
+    paths = []
+    for suc in successors:
+        suc_lanelet = lanelet_network.find_lanelet_by_id(suc)
+        suc_paths = lanes_suc(suc_lanelet.lanelet_id, road_network)
+        for suc_path in suc_paths:
+            suc_path.insert(0, suc)
+            paths.append(list(lanelet_ids.union(set(suc_path))))
+    return paths
+

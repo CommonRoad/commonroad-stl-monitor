@@ -116,10 +116,10 @@ class TestPriorityPredicates(unittest.TestCase):
 
         pred = PredRelevantTrafficLight(self.config)
         for time in range(ego_vehicle.end_time + 1):
-            sol_monitor_1 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)
 
         for time in range(ego_vehicle.end_time + 1):
-            sol_monitor_2 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
+            sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
             print(sol_monitor_2)
 

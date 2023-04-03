@@ -906,7 +906,6 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
             boolean_eval = True
         return boolean_eval
 
-
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
@@ -964,23 +963,22 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         """
         check if there is an active traffic light in lanelet_dir or successors
         """
-        boolean_eval = False
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
+        reach_suc_id = np.array([], dtype=int)
         # lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
         lanelet_dir_ids = vehicle.lanelets_dir(time_step)
         for lanelet_id in lanelet_dir_ids:
-            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            if utils.is_lanelet_of_type(lanelet, self.lanelet_type, world.road_network):
-                boolean_eval = True
-                return boolean_eval
-            reach_suc_id = utils.reach_succ(lanelet, road_network.lanelet_network)
-            for l_id in np.unique(reach_suc_id):
-                lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
-                if utils.is_lanelet_of_type(lanelet_suc, self.lanelet_type, world.road_network):
-                    boolean_eval = True
-                    return boolean_eval
-        return boolean_eval
+            reach_suc_id = np.append(reach_suc_id, utils.reach_suc(lanelet_id, road_network))
+        for l_id in np.unique(reach_suc_id):
+            lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if len(lanelet_suc.traffic_lights) == 0:
+                continue
+            assert len(lanelet_suc.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
+            tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet_suc.traffic_lights)[0])
+            if tl.active:
+                return True
+        return False
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -989,6 +987,37 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         """
         returns the distance to the nearest active traffic light
         """
+        robustness = -np.inf
+        road_network = world.road_network
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        ref_path = vehicle.ref_path_lanes(time_step)
+        for lane in ref_path:
+            lanelet_with_active_tl = list()
+            for lanelet_id in lane.contained_lanelets:
+                lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+                if len(lanelet.traffic_lights) == 0:
+                    continue
+                assert len(lanelet.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
+                tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet.traffic_lights)[0])
+                if tl.active:
+                    lanelet_with_active_tl.append(lanelet_id)
+            if len(lanelet_with_active_tl) == 0:
+                continue
+            # Get the front longitudinal value of the vehicle
+            rear_s = vehicle.rear_s(time_step, lane) or -np.inf
+            lanelet_start_s = np.array([lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
+                                      for l in lanelet_with_active_tl])
+            lanelet_end_s = np.array([lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
+                                      for l in lanelet_with_active_tl])
+            distance_end_s = lanelet_end_s - rear_s
+            nearest_index = np.argmin(abs(distance_end_s))
+            distance_start_s = lanelet_start_s - rear_s
+            distance_start_s[np.where((distance_start_s < 0) & (distance_end_s >= 0))] = -distance_start_s[np.where(
+                    (distance_start_s < 0) & (distance_end_s >= 0))]
+            robustness = max(robustness, max(distance_start_s[nearest_index], distance_end_s[nearest_index]))
+        return self._scale_lon_dist(float(robustness))
 
         # current implemented idea: return distance to tl position
         #   robustness = distance(ego_vehicle, tl )
@@ -1032,9 +1061,9 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         #                         distance_from_nearest_tl = distance_to_ego
         # return self._scale_lon_dist(distance_from_nearest_tl)
 
-        return self._scale_lon_dist(
-            utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, self.lanelet_type, False, True
-            )
-        )
+        # return self._scale_lon_dist(
+        #     utils.get_robustness_wrt_lanelet_type(
+        #         world, time_step, vehicle_ids, self.lanelet_type, False, True
+        #     )
+        # )
 
