@@ -50,12 +50,16 @@ class RuleTest(unittest.TestCase):
                                                      time_step=0)
         state_list_ego = []
         state_list_ego.append(CustomState(position=np.array([17, 0.0]), velocity=15, orientation=0.0, time_step=1))
-        state_list_ego.append(CustomState(position=np.array([23, 0.0]), velocity=15, orientation=0.0, time_step=2))
+        state_list_ego.append(CustomState(position=np.array([20, 0.0]), velocity=15, orientation=0.0, time_step=2))
+        state_list_ego.append(CustomState(position=np.array([21, 0.0]), velocity=10, orientation=0.0, time_step=3))
+        state_list_ego.append(CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=4))
+        state_list_ego.append(CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=5))
+        state_list_ego.append(CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=6))
         dynamic_obstacle_trajectory = Trajectory(1, state_list_ego)
         dynamic_obstacle_shape = Rectangle(width=2, length=5)
         dynamic_obstacle_prediction = TrajectoryPrediction(dynamic_obstacle_trajectory, dynamic_obstacle_shape)
-        dynamic_obstacle_prediction.shape_lanelet_assignment = {0: {1}, 1: {1}, 2: {3}}
-        dynamic_obstacle_prediction.center_lanelet_assignment = {0: {1}, 1: {1}, 2: {3}}
+        dynamic_obstacle_prediction.shape_lanelet_assignment = {0: {1}, 1: {1}, 2: {1, 3}, 3: {1, 3}, 4: {3}, 5: {3}, 6: {3}}
+        dynamic_obstacle_prediction.center_lanelet_assignment = {0: {1}, 1: {1}, 2: {1, 3}, 3: {1, 3}, 4: {3}, 5: {3}, 6: {3}}
         dynamic_obstacle_id = scenario.generate_object_id()
         dynamic_obstacle_type = ObstacleType.CAR
         dynamic_obstacle = DynamicObstacle(dynamic_obstacle_id, dynamic_obstacle_type, dynamic_obstacle_shape,
@@ -64,7 +68,7 @@ class RuleTest(unittest.TestCase):
         scenario.add_objects(dynamic_obstacle)
         # plt.figure(figsize=(25, 10))
         # rnd = MPRenderer()
-        # rnd.draw_params.time_begin = 2
+        # rnd.draw_params.time_begin = 3
         # scenario.draw(rnd)
         # rnd.render()
         # plt.show()
