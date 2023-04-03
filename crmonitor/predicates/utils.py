@@ -1211,7 +1211,10 @@ def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwo
         for ts_element in traffic_sign_object.traffic_sign_elements:
             if ts_element.traffic_sign_element_id.value == given_traffic_sign_id:
                 traffic_sign_elements.append(traffic_sign_object)
-    return traffic_sign_elements
+    if len(traffic_sign_elements) == 0:
+        return None
+    assert len(traffic_sign_elements) == 1, "TODO: Only works for one " "traffic sign type per lanelet!"
+    return traffic_sign_elements[0]
 
 
 def distance_start_lanelet(vehicle: Vehicle, lanelet_id: int, road_network: RoadNetwork, time_step):
