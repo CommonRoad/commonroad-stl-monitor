@@ -29,7 +29,7 @@ traffic_rules:
   ######################
   ## Intersection Rules
   ######################
-  R_IN1: "((not prev not stop_line_in_front__a0) and (not stop_line_in_front__a0) and at_traffic_sign_stop__a0 and (not relevant_traffic_light__a0)) implies once(historically[0, 3s](stop_line_in_front__a0 and in_standstill__a0))"
+  R_IN1: "((not prev (not stop_line_in_front__a0)) and (not stop_line_in_front__a0) and at_traffic_sign_stop__a0 and (not relevant_traffic_light__a0)) implies once(historically[0, 3s](stop_line_in_front__a0 and in_standstill__a0))"
 
   META_1: "A a1 A a2: 
                     (
