@@ -314,11 +314,17 @@ class PredInStandStill(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
+        ref_path = vehicle.ref_path_lanes(time_step)
+        velocity = list()
+        for lane in ref_path:
+            state = vehicle.get_lon_state(time_step, lane=lane)
+            if state is not None:
+                velocity.append(state.v)
         return self._scale_speed(
             min(
-                vehicle.get_lon_state(time_step).v + self.config["standstill_error"],
+                min(velocity) + self.config["standstill_error"],
                 self.config["standstill_error"]
-                - vehicle.get_lon_state(time_step).v
+                - min(velocity)
                 - 1.0e-17,
             )
         )
