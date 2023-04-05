@@ -300,10 +300,18 @@ class PredInStandStill(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
+        # avoid getting None of velocity
+        ref_path = vehicle.ref_path_lanes(time_step)
+        velocity = list()
+        for lane in ref_path:
+            state = vehicle.get_lon_state(time_step, lane=lane)
+            if state is not None:
+                velocity.append(state.v)
+        # ---------------------------------------------------
 
         if (
             -self.config["standstill_error"]
-            < vehicle.get_lon_state(time_step).v
+            < min(velocity)
             < self.config["standstill_error"]
         ):
             return True
