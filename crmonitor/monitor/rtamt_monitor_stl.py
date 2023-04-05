@@ -121,6 +121,9 @@ class RtamtStlMonitor:
                     prop_list[top_node.children[1].name] = self._monitor.online_evaluator.evaluate(top_node.children[1],
                                                                                                    [])
                     self.collect_prop_rob(top_node.children[0], prop_list)
+                else:
+                    self.collect_prop_rob(top_node.children[0], prop_list)
+                    self.collect_prop_rob(top_node.children[1], prop_list)
             if isinstance(top_node, Conjunction) or isinstance(top_node, Disjunction):
                 self.collect_prop_rob(top_node.children[0], prop_list)
                 self.collect_prop_rob(top_node.children[1], prop_list)
