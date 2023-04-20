@@ -894,18 +894,20 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         """
         If the vehicle locates at the lanelet with a stop traffic sign (206), return True, otherwise, return False.
         """
-        traffic_sign_elements = list()
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        lanelets_dir_ids = vehicle.lanelets_dir(time_step)
+        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
+        # find all traffic sign elements with type stop (206) in lanelets_dir
         for lanelet_id in lanelets_dir_ids:
-            traffic_sign_elements.append(utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network))
-        traffic_sign_elements = [ts for ts in traffic_sign_elements if ts is not None]
-        if len(traffic_sign_elements) == 0:
-            boolean_eval = False
-        else:
-            boolean_eval = True
-        return boolean_eval
+            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+            if traffic_sign_elements is None:
+                continue
+            # check if vehicle in this lanelet in lateral horizon
+            d_lane = utils.distance_to_lanes(vehicle, [lanelet_id], world, time_step)
+            if d_lane < 0:
+                continue
+            return True
+        return False
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -919,36 +921,48 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        ref_path = vehicle.ref_path_lanes(time_step)
-        for lane in ref_path:
-            lanelet_with_ts_stop = list()
-            # find lanelets referencing stop traffic sign
-            for lanelet_id in lane.contained_lanelets:
-                traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
-                if traffic_sign_elements is not None:
-                    lanelet_with_ts_stop.append(lanelet_id)
-            if len(lanelet_with_ts_stop) == 0:
+        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
+        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
+        reach_suc = np.array([], dtype=int)
+        # find successors of lanelets_dir
+        for lanelet_id in lanelets_dir_ids:
+            test = utils.reach_suc(lanelet_id, road_network)
+            reach_suc = np.append(reach_suc, utils.reach_suc(lanelet_id, road_network))
+        reach_suc = np.unique(reach_suc)
+        # intersection between reference path and successors of lanelets_dir
+        lanelets_ids = ref_path.contained_lanelets.intersection(set(reach_suc))
+        # find relevant lanelets with stop traffic sign
+        lanelet_with_ts_stop = list()
+        for lanelet_id in lanelets_ids:
+            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+            if traffic_sign_elements is not None:
+                lanelet_with_ts_stop.append(lanelet_id)
+        if len(lanelet_with_ts_stop) == 0:
+            return self._scale_lon_dist(float(robustness))
+        # Get the front and rear longitudinal value of the vehicle and lanelets with stop sign
+        front_s = vehicle.front_s(time_step, ref_path) or -np.inf
+        rear_s = vehicle.rear_s(time_step, ref_path) or -np.inf
+        lanelet_start_s = np.array([ref_path.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0] for l
+                                    in lanelet_with_ts_stop])
+        lanelet_end_s = np.array([ref_path.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0] for l
+                                  in lanelet_with_ts_stop])
+        for i in range(lanelet_start_s.shape[0]):
+            # check if vehicle in this lanelet in lateral horizon
+            d_lane = utils.distance_to_lanes(vehicle, [lanelet_with_ts_stop[i]], world, time_step)
+            if d_lane < 0:
                 continue
-            # Get the front longitudinal value of the vehicle
-            front_s = vehicle.front_s(time_step, lane) or -np.inf
-            rear_s = vehicle.rear_s(time_step, lane) or -np.inf
-            lanelet_start_s = np.array([lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
-                                        for l in lanelet_with_ts_stop])
-            lanelet_end_s = np.array([lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
-                                        for l in lanelet_with_ts_stop])
-            for i in range(lanelet_start_s.shape[0]):
-                # lanelet in front of vehicle
-                if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
-                    robustness = max(robustness, front_s - lanelet_start_s[i])
-                # vehicle in front of lanelet
-                elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
-                    robustness = max(robustness, lanelet_end_s[i] - rear_s)
-                # vehicle inside lanelet
-                else:
-                    distance_robustness = max(front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s)
-                    robustness = max(robustness, distance_robustness)
+            # lanelet in front of vehicle
+            if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
+                robustness = max(robustness, front_s - lanelet_start_s[i])
+            # vehicle in front of lanelet
+            elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
+                robustness = max(robustness, lanelet_end_s[i] - rear_s)
+            # vehicle inside lanelet
+            else:
+                distance_robustness = min(front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s)
+                robustness = max(robustness, distance_robustness)
         return self._scale_lon_dist(float(robustness))
 
 
@@ -968,8 +982,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         reach_suc_id = np.array([], dtype=int)
-        # lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
-        lanelet_dir_ids = vehicle.lanelets_dir(time_step)
+        lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
         for lanelet_id in lanelet_dir_ids:
             reach_suc_id = np.append(reach_suc_id, utils.reach_suc(lanelet_id, road_network))
         for l_id in np.unique(reach_suc_id):
@@ -977,6 +990,10 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
             if len(lanelet_suc.traffic_lights) == 0:
                 continue
             assert len(lanelet_suc.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
+            # check if vehicle in this lanelet in lateral horizon
+            d_lane = utils.distance_to_lanes(vehicle, [l_id], world, time_step)
+            if d_lane < 0:
+                continue
             tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet_suc.traffic_lights)[0])
             if tl.active:
                 return True
@@ -989,83 +1006,51 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         """
         returns the distance to the nearest active traffic light
         """
+        reach_suc_id = np.array([], dtype=int)
+        lanelet_with_active_tl = list()
         robustness = -np.inf
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        ref_path = vehicle.ref_path_lanes(time_step)
-        for lane in ref_path:
-            lanelet_with_active_tl = list()
-            for lanelet_id in lane.contained_lanelets:
-                lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-                if len(lanelet.traffic_lights) == 0:
-                    continue
-                assert len(lanelet.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
-                tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet.traffic_lights)[0])
-                if tl.active:
-                    lanelet_with_active_tl.append(lanelet_id)
-            if len(lanelet_with_active_tl) == 0:
+        lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
+        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
+        for lanelet_id in lanelet_dir_ids:
+            reach_suc_id = np.append(reach_suc_id, utils.reach_suc(lanelet_id, road_network))
+        reach_suc_id = np.unique(reach_suc_id)
+        # intersection between reference path and successors of lanelets_dir
+        lanelets_ids = ref_path.contained_lanelets.intersection(set(reach_suc_id))
+        for l_id in lanelets_ids:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+            if len(lanelet.traffic_lights) == 0:
                 continue
-            # Get the front longitudinal value of the vehicle
-            rear_s = vehicle.rear_s(time_step, lane) or -np.inf
-            lanelet_start_s = np.array([lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
-                                      for l in lanelet_with_active_tl])
-            lanelet_end_s = np.array([lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0]
-                                      for l in lanelet_with_active_tl])
-            distance_end_s = lanelet_end_s - rear_s
-            nearest_index = np.argmin(abs(distance_end_s))
-            distance_start_s = lanelet_start_s - rear_s
-            distance_start_s[np.where((distance_start_s < 0) & (distance_end_s >= 0))] = -distance_start_s[np.where(
-                    (distance_start_s < 0) & (distance_end_s >= 0))]
-            robustness = max(robustness, max(distance_start_s[nearest_index], distance_end_s[nearest_index]))
+            # check if vehicle in this lanelet in lateral horizon
+            d_lane = utils.distance_to_lanes(vehicle, [l_id], world, time_step)
+            if d_lane < 0:
+                continue
+            assert len(lanelet.traffic_lights) == 1, "TODO: Only works for one " "traffic light per lanelet!"
+            tl = road_network.lanelet_network.find_traffic_light_by_id(list(lanelet.traffic_lights)[0])
+            if tl.active:
+                lanelet_with_active_tl.append(l_id)
+        if len(lanelet_with_active_tl) == 0:
+            return self._scale_lon_dist(float(robustness))
+        # Get the front and rear longitudinal value of the vehicle and lanelets with traffic light
+        front_s = vehicle.front_s(time_step, ref_path) or -np.inf
+        rear_s = vehicle.rear_s(time_step, ref_path) or -np.inf
+        lanelet_start_s = np.array([ref_path.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0] for l
+                                    in lanelet_with_active_tl])
+        lanelet_end_s = np.array([ref_path.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(l))[0])[0] for l
+                                  in lanelet_with_active_tl])
+        for i in range(lanelet_start_s.shape[0]):
+            # lanelet in front of vehicle
+            if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
+                robustness = max(robustness, front_s - lanelet_start_s[i])
+            # vehicle in front of lanelet
+            elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
+                robustness = max(robustness, lanelet_end_s[i] - rear_s)
+            # vehicle inside lanelet
+            else:
+                distance_robustness = min(front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s)
+                robustness = max(robustness, distance_robustness)
         return self._scale_lon_dist(float(robustness))
-
-        # current implemented idea: return distance to tl position
-        #   robustness = distance(ego_vehicle, tl )
-
-        # TODO:
-        # project distance from vehicle to stop line along vehicle path.
-
-        # vehicle = world.vehicle_by_id(vehicle_ids[0])  # vehicle: x_ego
-        # distance_from_nearest_tl = -1
-
-        # lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
-
-        # # for l in lanelets_dir_ids:
-
-        # lanelet_network = world.road_network.lanelet_network
-        # for l_id in lanelets_dir_ids:
-        #     lanelet = lanelet_network.find_lanelet_by_id(l_id)
-        #     successors_paths = lanelet.find_lanelet_successors_in_range(
-        #         world.road_network.lanelet_network, max_length=150
-        #     )
-        #     for successors_path in successors_paths:
-        #         # find lanelet successors in range excludes the current lanelet, so we add it again
-        #         successors_path.insert(0, l_id)
-        #         for successor_id in successors_path:
-        #             successor = lanelet_network.find_lanelet_by_id(successor_id)
-
-        #             traffic_lights = successor.traffic_lights
-        #             for tl_id in traffic_lights:
-
-        #                 tl = lanelet_network.find_traffic_light_by_id(tl_id)
-
-        #                 if tl.active:
-        #                     stop_line = successor.stop_line
-        #                     distance_to_ego = utils.distance_vehicle_to_stop_line(
-        #                         vehicle, stop_line, time_step
-        #                     )
-        #                     if (
-        #                         distance_to_ego < distance_from_nearest_tl
-        #                         or distance_from_nearest_tl == -1
-        #                     ):
-        #                         distance_from_nearest_tl = distance_to_ego
-        # return self._scale_lon_dist(distance_from_nearest_tl)
-
-        # return self._scale_lon_dist(
-        #     utils.get_robustness_wrt_lanelet_type(
-        #         world, time_step, vehicle_ids, self.lanelet_type, False, True
-        #     )
-        # )
 
