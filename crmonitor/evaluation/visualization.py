@@ -261,37 +261,37 @@ def plot_rule_visualization(
                 )
             i += 1
     # after vehicle2draw_params is determined, draw the scenarios
-    scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
-
-    # plotting scenario and obstacles
-    if scenario_plot_limits:
-        plot_veh_ids = [
-            obs.obstacle_id
-            for obs in scenario.obstacles_by_position_intervals(
-                [
-                    Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
-                    Interval(scenario_plot_limits[2], scenario_plot_limits[3]),
-                ],
-                time_step=time_step,
-            )
-        ]
-    else:
-        plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles]
-    for i in plot_veh_ids:
-        if i != ego_vehicle_id:
-            draw_params = vehicle2draw_params.get(i, {})
-            scenario.obstacle_by_id(i).draw(
-                renderer,
-                draw_params=merge_dicts_recursively(general_draw_params, draw_params),
-            )
-
-    scenario.obstacle_by_id(ego_vehicle_id).draw(
-        renderer,
-        draw_params=merge_dicts_recursively(
-            general_draw_params, EGO_VEHICLE_DRAW_PARAMS
-        ),
-    )
-    renderer.render()
-
-    for f in all_draw_functions:
-        f(renderer)
+    # scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
+    #
+    # # plotting scenario and obstacles
+    # if scenario_plot_limits:
+    #     plot_veh_ids = [
+    #         obs.obstacle_id
+    #         for obs in scenario.obstacles_by_position_intervals(
+    #             [
+    #                 Interval(scenario_plot_limits[0], scenario_plot_limits[1]),
+    #                 Interval(scenario_plot_limits[2], scenario_plot_limits[3]),
+    #             ],
+    #             time_step=time_step,
+    #         )
+    #     ]
+    # else:
+    #     plot_veh_ids = [obs.obstacle_id for obs in scenario.obstacles]
+    # for i in plot_veh_ids:
+    #     if i != ego_vehicle_id:
+    #         draw_params = vehicle2draw_params.get(i, {})
+    #         scenario.obstacle_by_id(i).draw(
+    #             renderer,
+    #             draw_params=merge_dicts_recursively(general_draw_params, draw_params),
+    #         )
+    #
+    # scenario.obstacle_by_id(ego_vehicle_id).draw(
+    #     renderer,
+    #     draw_params=merge_dicts_recursively(
+    #         general_draw_params, EGO_VEHICLE_DRAW_PARAMS
+    #     ),
+    # )
+    # renderer.render()
+    #
+    # for f in all_draw_functions:
+    #     f(renderer)
