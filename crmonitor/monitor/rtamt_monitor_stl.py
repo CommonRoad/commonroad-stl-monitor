@@ -18,6 +18,7 @@ from rtamt.node.ltl.previous import Previous
 from rtamt.node.ltl.neg import Neg
 from rtamt.node.ltl.predicate import Predicate
 from rtamt.node.unary_node import UnaryNode
+from rtamt.node.ltl.once import Once
 
 
 class OutputType(Enum):
@@ -107,7 +108,8 @@ class RtamtStlMonitor:
             if isinstance(top_node, Neg):
                 self.collect_prop_rob(top_node.children[0], prop_list)
             if isinstance(top_node, TimedOnce) or isinstance(top_node, Previous) or isinstance(top_node, TimedAlways) or\
-                    isinstance(top_node, TimedHistorically) or isinstance(top_node, TimedEventually):
+                    isinstance(top_node, TimedHistorically) or isinstance(top_node, TimedEventually) or\
+                    isinstance(top_node, Once):
                 prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
         elif isinstance(top_node, Predicate):
             prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
