@@ -13,6 +13,8 @@ from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
+from crmonitor.predicates.utils import ref_path_lanelets
+
 logger = logging.getLogger(__name__)
 
 
@@ -301,17 +303,12 @@ class PredInStandStill(BasePredicateEvaluator):
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         # avoid getting None of velocity
-        ref_path = vehicle.ref_path_lanes(time_step)
-        velocity = list()
-        for lane in ref_path:
-            state = vehicle.get_lon_state(time_step, lane=lane)
-            if state is not None:
-                velocity.append(state.v)
+        ref_path = ref_path_lanelets(vehicle, world.road_network, time_step)
         # ---------------------------------------------------
 
         if (
             -self.config["standstill_error"]
-            < min(velocity)
+            < vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
             < self.config["standstill_error"]
         ):
             return True
@@ -322,17 +319,15 @@ class PredInStandStill(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        ref_path = vehicle.ref_path_lanes(time_step)
-        velocity = list()
-        for lane in ref_path:
-            state = vehicle.get_lon_state(time_step, lane=lane)
-            if state is not None:
-                velocity.append(state.v)
+        # avoid getting None of velocity
+        ref_path = ref_path_lanelets(vehicle, world.road_network, time_step)
+        # ---------------------------------------------------
+
         return self._scale_speed(
             min(
-                min(velocity) + self.config["standstill_error"],
+                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v + self.config["standstill_error"],
                 self.config["standstill_error"]
-                - min(velocity)
+                - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
                 - 1.0e-17,
             )
         )
