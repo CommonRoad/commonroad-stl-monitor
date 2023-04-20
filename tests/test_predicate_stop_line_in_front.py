@@ -34,8 +34,10 @@ class TestPositionPredicates(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testStopLineInFront(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
-            lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
+        #     lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         # scenario, _ = CommonRoadFileReader(
         #     str(
@@ -80,7 +82,11 @@ class TestPositionPredicates(unittest.TestCase):
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
         ego_vehicle = world.vehicle_by_id(31)
 
-        for time in range(20, ego_vehicle.end_time + 1):
+        for time in range(ego_vehicle.end_time + 1):
+            vehicle_states = ego_vehicle.state_list_cr
+            vehicle_state = vehicle_states[time]
+            test = ego_vehicle.state_list_cr[time]
+            vehicle_position = test.position
             pred = PredStopLineInFront(self.config)
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)
