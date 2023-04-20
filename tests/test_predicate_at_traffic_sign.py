@@ -82,15 +82,13 @@ class TestPriorityPredicates(unittest.TestCase):
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             print(sol_monitor_1)
-
-        for time in range(ego_vehicle.end_time + 1):
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
             print(sol_monitor_2)
 
     def testRelevantTrafficLight(self):
         scenario, _ = CommonRoadFileReader(
-                # str("../scenarios/test_intersection/DEU_TestRelevantTrafficLight-1_1_T-1.xml")).open(True)
-                str("../scenarios/test_intersection/DEU_TestStopLineInFront-1_1_T-1.xml")).open(True)
+                str("../scenarios/test_intersection/DEU_TestRelevantTrafficLight-1_1_T-1.xml")).open(True)
+                # str("../scenarios/test_intersection/DEU_TestStopLineInFront-1_1_T-1.xml")).open(True)
         dynamic_obstacle_initial_state = CustomState(position=np.array([5, 0.0]), velocity=15, orientation=0.0,
                                                      time_step=0)
         state_list_ego = []
