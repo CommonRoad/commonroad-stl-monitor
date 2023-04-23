@@ -37,8 +37,8 @@ class TestUtils(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testLaneletsDir(self):
-        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
-        #     lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
+            lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-2_1_T-1.xml")).open(
         #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestLaneletsdir-1_1_T-1.xml")).open(
@@ -47,8 +47,8 @@ class TestUtils(unittest.TestCase):
         #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_Ffb-2_2_I-1-1.xml")).open(
         #         lanelet_assignment=True)
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_test_turn_left_5.xml")).open(
-                lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_test_turn_left_5.xml")).open(
+        #         lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
 
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
