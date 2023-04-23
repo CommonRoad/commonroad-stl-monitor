@@ -39,16 +39,20 @@ class TestUtils(unittest.TestCase):
     def testLaneletsDir(self):
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
         #     lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-2_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestLaneletsdir-1_1_T-1.xml")).open(
         #         lanelet_assignment=True)
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
-                lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_Ffb-2_2_I-1-1.xml")).open(
         #         lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_test_turn_left_5.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
 
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
-        ego_vehicle = world.vehicle_by_id(31)
+        ego_vehicle = world.vehicle_by_id(1000)
 
         for time in range(ego_vehicle.end_time + 1):
             lanelets_dir_id = lanelets_dir(ego_vehicle, time, road_network)

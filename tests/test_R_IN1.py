@@ -45,7 +45,7 @@ class RuleTest(unittest.TestCase):
 
     def test_R_IN1(self):
         scenario, _ = CommonRoadFileReader(
-                str("../scenarios/test_intersection/DEU_TestRIN1-2_1_T-1.xml")).open(lanelet_assignment=True)
+                str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
 
         # scenario, _ = CommonRoadFileReader(
