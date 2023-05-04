@@ -24,7 +24,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.position import (PredRightOfBroadLaneMarking, PredLeftOfBroadLaneMarking,
                                            PredOnLaneletWithTypeIntersection, PredInIntersectionConflictArea,
                                            PredOnIncomingLeftOf, PredOnOncomOf, PredStopLineInFront)
-from crmonitor.predicates.utils import (lanelets_dir, ref_path_lanelets)
+from crmonitor.predicates.utils import (lanelets_dir, ref_path_lanelets, get_priority)
 
 
 class TestUtils(unittest.TestCase):
@@ -37,9 +37,11 @@ class TestUtils(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testLaneletsDir(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
-            lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
+        #     lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-2_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
         #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestLaneletsdir-1_1_T-1.xml")).open(
         #         lanelet_assignment=True)
@@ -49,18 +51,26 @@ class TestUtils(unittest.TestCase):
         #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_test_turn_left_5.xml")).open(
         #         lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(
+            str("../scenarios/test_intersection/DEU_TestGoingStraight-1_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
 
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
-        ego_vehicle = world.vehicle_by_id(1000)
+        ego_vehicle = world.vehicle_by_id(26)
+        position_ego = np.array([state.position for state in ego_vehicle.state_list_cr])
+        # target_vehicle = world.vehicle_by_id(30)
+        # position_target = np.array([state.position for state in target_vehicle.state_list_cr])
 
-        for time in range(ego_vehicle.end_time + 1):
-            lanelets_dir_id = lanelets_dir(ego_vehicle, time, road_network)
-            ref_path = ref_path_lanelets(ego_vehicle, road_network, time)
+        for time in range(20, ego_vehicle.end_time + 1):
+            lanelets_dir_ego = ego_vehicle.lanelets_dir
+            ref_path_ego = ego_vehicle.ref_path_lane
+            # lanelets_dir_target = target_vehicle.lanelets_dir
+            # ref_path_target = target_vehicle.ref_path_lane
             print('-------------------')
             print('time = ', time)
-            print(lanelets_dir_id)
-            print(ref_path.contained_lanelets)
             fig = plt.figure()
             ax = fig.gca()
             rnd = MPRenderer()
@@ -71,15 +81,33 @@ class TestUtils(unittest.TestCase):
 
             scenario.draw(rnd)
             rnd.render()
-            for lanelet_id in lanelets_dir_id:
+            # for lanelet_id in [14]:
+            #     lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            #     polygon = lanelet.polygon.vertices
+            #     ax.add_patch(patches.Polygon(polygon, edgecolor='#ea1d1d', fill=False, linewidth=2, zorder=1000000))
+            for lanelet_id in [10, 12, 7]:
                 lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
                 polygon = lanelet.polygon.vertices
-                ax.add_patch(patches.Polygon(polygon, edgecolor='#ea1d1d', fill=False, linewidth=1, zorder=1000000))
-            for lanelet_id in ref_path.contained_lanelets:
-                lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-                polygon = lanelet.polygon.vertices
-                ax.add_patch(patches.Polygon(polygon, edgecolor='blue', alpha=0.2, fill=True, linewidth=0.5, zorder=10000))
+                ax.add_patch(patches.Polygon(polygon, edgecolor='blue', alpha=0.2, fill=True, linewidth=0.5, zorder=10))
+                ax.plot(position_ego[time, 0], position_ego[time, 1], marker='x', color='red', markersize=5, linewidth=1.5, zorder=10000)
+            # for lanelet_id in ref_path_target.contained_lanelets:
+            #     lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            #     polygon = lanelet.polygon.vertices
+            #     ax.add_patch(patches.Polygon(polygon, edgecolor='red', facecolor='red', alpha=0.2, fill=True, linewidth=0.5, zorder=10))
+            ax.plot(position_ego[:, 0], position_ego[:, 1], marker='x', markersize=5, linewidth=1.5, zorder=1000)
+            # ax.plot(position_target[:, 0], position_target[:, 1], marker='x', markersize=5, linewidth=1.5, zorder=1000)
             plt.show()
+
+    def testGetPriority(self):
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
+                lanelet_assignment=True)
+        world = World.create_from_scenario(scenario)
+        road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+        ego_vehicle = world.vehicle_by_id(31)
+        priority = list()
+        for lanelet_id in ego_vehicle.lanelets_dir:
+            priority.append(get_priority(lanelet_id, road_network, 'right'))
+        print(priority)
 
 
 
