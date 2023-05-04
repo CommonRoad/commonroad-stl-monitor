@@ -485,8 +485,82 @@ class PredMakesUTurn(BasePredicateEvaluator):
 # intersection
 ##############
 
-# ----------------------------------------------------------------------- #
-# new predicate from Mahdi Bayouli
+# ---------------------------------------------------------------------- #
+class PredTurningRight(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is turning right
+    """
+
+    predicate_name = GeneralPredicates.TurningRight
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        rob = -1
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_dir = utils.lanelets_dir(vehicle, time_step, road_network)
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(set(lanelets_dir)))
+        incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
+        if incoming is None:
+            return self._scale_lon_dist(-np.inf)
+        # find corresponding right turn lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        right_turn_lane, right_turn_lanelet = utils.get_right_turn_lane(road_network, incoming)
+        # important bounds of vehicle and lanelet in Curvilinear Coordinate System
+        front_s = vehicle.front_s(time_step, right_turn_lane)
+        rear_s = vehicle.rear_s(time_step, right_turn_lane)
+        right_turn_start = right_turn_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(right_turn_lanelet)[0])[0]
+        right_turn_end = right_turn_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(right_turn_lanelet)[0])[0]
+        # case 1: vehicle only in incoming
+        if len(lanelets_assignment_current.intersection(incoming.incoming_lanelets)) > 0 \
+                and len(lanelets_assignment_current.intersection(incoming.successors_right)) == 0:
+            rob = self._scale_lon_dist(front_s - right_turn_start)
+        # case 2: vehicle occupies right turning at intersection
+        elif len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0:
+            state = vehicle.states_cr[time_step]
+            d_center_to_left = right_turn_lane.clcs_left.convert_to_curvilinear_coords(*state.position)[1]
+            if d_center_to_left > 0:
+                # out of right turning lanelet
+                d_left = utils.distance_to_left_bounds_clcs(vehicle, right_turn_lane, time_step)
+                if len(d_left) == 0:
+                    rob = -np.inf
+                else:
+                    rob = -np.max(d_left, initial=-np.inf)
+                rob = self._scale_lat_dist(rob)
+            else:
+                # in right turning lanelet
+                # TODO: should also consider distance from center to bound?
+                rob = np.min([front_s - right_turn_start, right_turn_end - rear_s])
+                rob = self._scale_lon_dist(rob)
+        # case 3: vehicle occupies left turning or straight lanelet at intersection instead of right turning
+        elif len(lanelets_assignment_current.intersection(incoming.successors_left)) > 0 \
+                or len(lanelets_assignment_current.intersection(incoming.successors_straight)) > 0:
+            d_left = utils.distance_to_left_bounds_clcs(vehicle, right_turn_lane, time_step)
+            if len(d_left) == 0:
+                rob = -np.inf
+            else:
+                rob = -np.max(d_left, initial=-np.inf)
+            rob = self._scale_lat_dist(rob)
+        # case 4: vehicle exits intersection
+        else:
+            incoming_right_turn = utils.get_right_turn_incoming(lanelets_assignment_current, road_network)
+            right_turn_lane, right_turn_lanelet = utils.get_right_turn_lane(road_network, incoming_right_turn)
+            rear_s = vehicle.rear_s(time_step, right_turn_lane)
+            right_turn_end = right_turn_lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(right_turn_lanelet)[0])[0]
+            rob = self._scale_lon_dist(right_turn_end - rear_s)
+        return rob
+
+
 class PredTurningLeft(BasePredicateEvaluator):
     """
     evaluates if a vehicle is turning left
@@ -495,38 +569,70 @@ class PredTurningLeft(BasePredicateEvaluator):
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-
-        lanelet_type = utils.HelperLaneletTypes.LEFT_TURNING
-        return self._scale_lon_dist(
-            utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type, True
-            )
-        )
-
-
-class PredTurningRight(BasePredicateEvaluator):
-    """
-    evaluates if a vehicle is turning right
-    """
-
-    # same idea as turning left, also same limitations and same idea for future work
-
-    predicate_name = GeneralPredicates.TurningRight
-    arity = 1
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-
-        lanelet_type = utils.HelperLaneletTypes.RIGHT_TURING
-        return self._scale_lon_dist(
-            utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type, True
-            )
-        )
+        rob = -1
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_dir = utils.lanelets_dir(vehicle, time_step, road_network)
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(set(lanelets_dir)))
+        incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
+        if incoming is None:
+            return self._scale_lon_dist(-np.inf)
+        # find corresponding left turn lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        left_turn_lane, left_turn_lanelet = utils.get_left_turn_lane(road_network, incoming)
+        # important bounds of vehicle and lanelet in Curvilinear Coordinate System
+        front_s = vehicle.front_s(time_step, left_turn_lane)
+        rear_s = vehicle.rear_s(time_step, left_turn_lane)
+        left_turn_start = left_turn_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(left_turn_lanelet)[0])[0]
+        left_turn_end = left_turn_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(left_turn_lanelet)[0])[0]
+        # case 1: vehicle only in incoming
+        if len(lanelets_assignment_current.intersection(incoming.incoming_lanelets)) > 0 \
+                and len(lanelets_assignment_current.intersection(incoming.successors_left)) == 0:
+            rob = self._scale_lon_dist(front_s - left_turn_start)
+        # case 2: vehicle occupies left turning at intersection
+        elif len(lanelets_assignment_current.intersection(incoming.successors_left)) > 0:
+            state = vehicle.states_cr[time_step]
+            d_center_to_right = left_turn_lane.clcs_right.convert_to_curvilinear_coords(*state.position)[1]
+            if d_center_to_right < 0:
+                # out of left turning lanelet
+                d_right = utils.distance_to_right_bounds_clcs(vehicle, left_turn_lane, time_step)
+                if len(d_right) == 0:
+                    rob = -np.inf
+                else:
+                    rob = np.min(d_right, initial=np.inf)
+                rob = self._scale_lat_dist(rob)
+            else:
+                # in left turning lanelet
+                rob = np.min([front_s - left_turn_start, left_turn_end - rear_s])
+                rob = self._scale_lon_dist(rob)
+        # case 3: vehicle occupies right turning or straight lanelet at intersection instead of right turning
+        elif len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0 \
+                or len(lanelets_assignment_current.intersection(incoming.successors_straight)) > 0:
+            d_right = utils.distance_to_right_bounds_clcs(vehicle, left_turn_lane, time_step)
+            if len(d_right) == 0:
+                rob = -np.inf
+            else:
+                rob = np.min(d_right, initial=np.inf)
+            rob = self._scale_lat_dist(rob)
+        # case 4: vehicle exits intersection
+        else:
+            incoming_left_turn = utils.get_left_turn_incoming(lanelets_assignment_current, road_network)
+            left_turn_lane, left_turn_lanelet = utils.get_left_turn_lane(road_network, incoming_left_turn)
+            rear_s = vehicle.rear_s(time_step, left_turn_lane)
+            left_turn_end = left_turn_lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(left_turn_lanelet)[0])[0]
+            rob = self._scale_lon_dist(left_turn_end - rear_s)
+        return rob
 
 
 class PredGoingStraight(BasePredicateEvaluator):
@@ -539,16 +645,82 @@ class PredGoingStraight(BasePredicateEvaluator):
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
+        rob = -1
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_dir = utils.lanelets_dir(vehicle, time_step, road_network)
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(set(lanelets_dir)))
+        incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
+        if incoming is None:
+            return self._scale_lon_dist(-np.inf)
+        # find corresponding left turn lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        straight_lane, straight_lanelet = utils.get_straight_going_lane(road_network, incoming)
+        # important bounds of vehicle and lanelet in Curvilinear Coordinate System
+        front_s = vehicle.front_s(time_step, straight_lane)
+        rear_s = vehicle.rear_s(time_step, straight_lane)
+        straight_start = straight_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(straight_lanelet)[0])[0]
+        straight_end = straight_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(straight_lanelet)[0])[0]
+        # case 1: vehicle only in incoming
+        if len(lanelets_assignment_current.intersection(incoming.incoming_lanelets)) > 0 and len(
+                lanelets_assignment_current.intersection(incoming.successors_straight)) == 0:
+            rob = self._scale_lon_dist(front_s - straight_start)
+        # case 2: vehicle occupies left turning at intersection
+        elif len(lanelets_assignment_current.intersection(incoming.successors_straight)) > 0:
+            state = vehicle.states_cr[time_step]
+            d_center_to_left = straight_lane.clcs_left.convert_to_curvilinear_coords(*state.position)[1]
+            d_center_to_right = straight_lane.clcs_right.convert_to_curvilinear_coords(*state.position)[1]
+            if d_center_to_left > 0:
+                # out of left turning lanelet
+                d_left = utils.distance_to_left_bounds_clcs(vehicle, straight_lane, time_step)
+                if len(d_left) == 0:
+                    rob = -np.inf
+                else:
+                    rob = -np.max(d_left, initial=-np.inf)
+                rob = self._scale_lat_dist(rob)
+            elif d_center_to_right < 0:
+                # out of left turning lanelet
+                d_right = utils.distance_to_right_bounds_clcs(vehicle, straight_lane, time_step)
+                if len(d_right) == 0:
+                    rob = -np.inf
+                else:
+                    rob = np.min(d_right, initial=np.inf)
+                rob = self._scale_lat_dist(rob)
+            else:
+                # in left turning lanelet
+                rob = np.min([front_s - straight_start, straight_end - rear_s])
+                rob = self._scale_lon_dist(rob)
+        # case 3: vehicle occupies right turning or straight lanelet at intersection instead of right turning
+        elif len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0 or len(
+                lanelets_assignment_current.intersection(incoming.successors_left)) > 0:
+            d_left = utils.distance_to_left_bounds_clcs(vehicle, straight_lane, time_step)
+            if len(d_left) == 0:
+                rob_left = -np.inf
+            else:
+                rob_left = -np.max(d_left, initial=-np.inf)
+            d_right = utils.distance_to_right_bounds_clcs(vehicle, straight_lane, time_step)
+            if len(d_right) == 0:
+                rob_right = -np.inf
+            else:
+                rob_right = np.min(d_right, initial=np.inf)
+            rob = self._scale_lat_dist(np.min([rob_left, rob_right]))
+        # case 4: vehicle exits intersection
+        else:
+            incoming_straight = utils.get_straight_going_incoming(lanelets_assignment_current, road_network)
+            straight_lane, straight_lanelet = utils.get_straight_going_lane(road_network, incoming_straight)
+            rear_s = vehicle.rear_s(time_step, straight_lane)
+            straight_end = straight_lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(straight_lanelet)[0])[0]
+            rob = self._scale_lon_dist(straight_end - rear_s)
+        return rob
 
-        # first step : test if it is inside intersection, if not return distance to closest intersection
-        lanelet_type = utils.HelperLaneletTypes.STRAIGHT_GOING
-        return self._scale_lon_dist(
-            utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type, True
-            )
-        )
-
-#----------------------------------------------------------------------#
