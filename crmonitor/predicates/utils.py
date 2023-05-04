@@ -18,11 +18,17 @@ from commonroad.scenario.lanelet import (Intersection,
                                          LaneletNetwork,
                                          LaneletType,
                                          StopLine, )
+from crmonitor.common.road_network import Lane
 
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+
+from commonroad_dc.geometry.util import (chaikins_corner_cutting, compute_curvature_from_polyline, resample_polyline,
+                                         compute_pathlength_from_polyline, compute_orientation_from_polyline)
+
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +50,7 @@ def distance_to_left_bounds(
             for l in lanelets
             if l.adj_left is None
             or l.adj_left not in lanelet_ids
-            and l.adj_left_same_direction
+            and not l.adj_left_same_direction
         ]
     )
     if len(left_bounds) > 0:
@@ -74,7 +80,7 @@ def distance_to_right_bounds(
             for l in lanelets
             if l.adj_right is None
             or l.adj_right not in lanelet_ids
-            and l.adj_left_same_direction
+            and not l.adj_left_same_direction
         ]
     )
     if len(right_bounds) > 0:
@@ -429,56 +435,56 @@ def adjacent_lanelets_same_direction(
     return lanelets
 
 
-def get_priority(
-    lanelets_dir_ids: List[int], road_network: RoadNetwork, direction: str
-):
-
-    # limitations:
-    # -> "306 indicates priority until signs 205, 206, or 307" is not covered
-    # -> only 5 german traffic signs are covered (present in the paper)
-    # future work:
-    # -> 306 indicates priority until signs 205, 206, or 307.
-    # -> cover the rest of the german traffic signs
-
-    sign_id_priority = {
-        # sign_id :[prio_left, prio_straight, prio_right, evaluation_index]
-        "306": [4, 5, 4, 11],  # TrafficSignIDGermany.PRIORITY
-        "301": [4, 5, 4, 12],  # TrafficSignIDGermany.RIGHT_OF_WAY
-        "205": [2, 2, 2, 13],  # TrafficSignIDGermany.YIELD
-        "206": [1, 1, 1, 14],  # TrafficSignIDGermany.STOP
-        "102": [3, 3, 3, 15],  # TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT
-    }
-
-    direction_index_dic = {"LEFT": 0, "STRAIGHT": 1, "RIGHT": 2}
-    direction_index = direction_index_dic[direction.upper()]
-
-    for l_id in lanelets_dir_ids:
-        lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
-        traffic_sign_ids = lanelet.traffic_signs
-        # traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
-
-        traffic_ids = list()
-        for ts_id in traffic_sign_ids:
-            traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(
-                ts_id
-            )
-            traffic_sign_elements = traffic_sign_object.traffic_sign_elements
-            for ts_element in traffic_sign_elements:
-                ts_element_id = ts_element.traffic_sign_element_id
-                traffic_ids.append(ts_element_id.value)
-
-        if len(traffic_ids) == 0:
-            traffic_ids.append("102")
-
-        min_priority = 3  # 3 by default is the priority for '102'
-        min_evaluation_index = 15
-
-        for id in traffic_ids:
-            if sign_id_priority[id][3] < min_evaluation_index:
-                min_evaluation_index = sign_id_priority[id][3]
-                min_priority = sign_id_priority[id][direction_index]
-
-        return min_priority
+# def get_priority(
+#     lanelets_dir_ids: List[int], road_network: RoadNetwork, direction: str
+# ):
+#
+#     # limitations:
+#     # -> "306 indicates priority until signs 205, 206, or 307" is not covered
+#     # -> only 5 german traffic signs are covered (present in the paper)
+#     # future work:
+#     # -> 306 indicates priority until signs 205, 206, or 307.
+#     # -> cover the rest of the german traffic signs
+#
+#     sign_id_priority = {
+#         # sign_id :[prio_left, prio_straight, prio_right, evaluation_index]
+#         "306": [4, 5, 4, 11],  # TrafficSignIDGermany.PRIORITY
+#         "301": [4, 5, 4, 12],  # TrafficSignIDGermany.RIGHT_OF_WAY
+#         "205": [2, 2, 2, 13],  # TrafficSignIDGermany.YIELD
+#         "206": [1, 1, 1, 14],  # TrafficSignIDGermany.STOP
+#         "102": [3, 3, 3, 15],  # TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT
+#     }
+#
+#     direction_index_dic = {"LEFT": 0, "STRAIGHT": 1, "RIGHT": 2}
+#     direction_index = direction_index_dic[direction.upper()]
+#
+#     for l_id in lanelets_dir_ids:
+#         lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
+#         traffic_sign_ids = lanelet.traffic_signs
+#         # traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
+#
+#         traffic_ids = list()
+#         for ts_id in traffic_sign_ids:
+#             traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(
+#                 ts_id
+#             )
+#             traffic_sign_elements = traffic_sign_object.traffic_sign_elements
+#             for ts_element in traffic_sign_elements:
+#                 ts_element_id = ts_element.traffic_sign_element_id
+#                 traffic_ids.append(ts_element_id.value)
+#
+#         if len(traffic_ids) == 0:
+#             traffic_ids.append("102")
+#
+#         min_priority = 3  # 3 by default is the priority for '102'
+#         min_evaluation_index = 15
+#
+#         for id in traffic_ids:
+#             if sign_id_priority[id][3] < min_evaluation_index:
+#                 min_evaluation_index = sign_id_priority[id][3]
+#                 min_priority = sign_id_priority[id][direction_index]
+#
+#         return min_priority
 
 
 def get_robustness_inside_lanelet(
@@ -566,47 +572,47 @@ def get_robustness_wrt_lanelet_type(
             return rob
 
 
-def get_incoming(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
-) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
-    """Get the incoming element of a lanelet.
-    :returns: Optional[Tuple[intersection to which lanelet belongs, IncomingElement to which lanelet belongs]]
-    """
+# def get_incoming(
+#     lanelet: Lanelet, lanelet_network: LaneletNetwork
+# ) -> Optional[Tuple[Intersection, IntersectionIncomingElement]]:
+#     """Get the incoming element of a lanelet.
+#     :returns: Optional[Tuple[intersection to which lanelet belongs, IncomingElement to which lanelet belongs]]
+#     """
+#
+#     # get the intersection to which our lanelet is an incoming element
+#     intersection = lanelet_network.map_inc_lanelets_to_intersections.get(
+#         lanelet.lanelet_id
+#     )
+#
+#     # if our lanelet is not an incoming element -> return none
+#     if intersection is None:
+#         return None
+#
+#     # Tuple[Intersection to which lanelet belongs, IncomingElement to which lanelet belongs]
+#     return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
 
-    # get the intersection to which our lanelet is an incoming element
-    intersection = lanelet_network.map_inc_lanelets_to_intersections.get(
-        lanelet.lanelet_id
-    )
 
-    # if our lanelet is not an incoming element -> return none
-    if intersection is None:
-        return None
-
-    # Tuple[Intersection to which lanelet belongs, IncomingElement to which lanelet belongs]
-    return intersection, intersection.map_incoming_lanelets[lanelet.lanelet_id]
-
-
-def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
-    """
-    returns setof lanelets located on the left of the passed lanalet
-    """
-    # Implementation by Luis
-    intersection_incoming = get_incoming(lanelet, lanelet_network)
-
-    # return empty set if lanelet is no incoming element.
-    if intersection_incoming is None:
-        return set()
-
-    # Intersection to which lanelet belongs, IncomingElement to which lanelet belongs
-    intersection, incoming = intersection_incoming
-
-    # get all IncomingElements leftof our lanelet's IncomingElement
-    # TODO: Q: why list[0] if incoming.left_of returns only one id anyway ? why not get it directly?
-    left_incoming = [
-        inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
-    ][0]
-
-    return left_incoming.incoming_lanelets  # returns set of IDs of incoming lanelets
+# def inc_la_left_of(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[int]:
+#     """
+#     returns setof lanelets located on the left of the passed lanalet
+#     """
+#     # Implementation by Luis
+#     intersection_incoming = get_incoming(lanelet, lanelet_network)
+#
+#     # return empty set if lanelet is no incoming element.
+#     if intersection_incoming is None:
+#         return set()
+#
+#     # Intersection to which lanelet belongs, IncomingElement to which lanelet belongs
+#     intersection, incoming = intersection_incoming
+#
+#     # get all IncomingElements leftof our lanelet's IncomingElement
+#     # TODO: Q: why list[0] if incoming.left_of returns only one id anyway ? why not get it directly?
+#     left_incoming = [
+#         inc for inc in intersection.incomings if inc.incoming_id == incoming.left_of
+#     ][0]
+#
+#     return left_incoming.incoming_lanelets  # returns set of IDs of incoming lanelets
 
 
 def get_latest_predecessors_path(
@@ -1180,6 +1186,7 @@ def distance_start_lanelet(vehicle: Vehicle, lanelet_id: int, road_network: Road
     d_start_lanelet = d_start_lanelet[~np.isnan(d_start_lanelet)]
     return np.max(d_start_lanelet)
 
+
 def get_lanelet_start_line(lanelet: Lanelet):
     right_start_vertice = lanelet.right_vertices[0, :]
     left_start_vertice = lanelet.left_vertices[0, :]
@@ -1219,14 +1226,14 @@ def lanes_pre(lanelet_id: int, road_network: RoadNetwork) -> List[List[int]]:
     lanelet_network = road_network.lanelet_network
     predecessors = lanelet.predecessor
     if len(predecessors) == 0:
-        return [[]]
+        return [[lanelet_id]]
     paths = []
     for pre in predecessors:
         pre_lanelet = lanelet_network.find_lanelet_by_id(pre)
         pre_paths = lanes_pre(pre_lanelet.lanelet_id, road_network)
         for pre_path in pre_paths:
-            pre_path.append(pre)
-            paths.append(pre_path)
+            pre_path.insert(0, pre)
+            paths.append(list(lanelet_ids.union(set(pre_path))))
     return paths
 
 
@@ -1237,7 +1244,7 @@ def lanes_suc(lanelet_id, road_network: RoadNetwork) -> List[List[int]]:
     lanelet_network = road_network.lanelet_network
     successors = lanelet.successor
     if len(successors) == 0:
-        return [[]]
+        return [[lanelet_id]]
     paths = []
     for suc in successors:
         suc_lanelet = lanelet_network.find_lanelet_by_id(suc)
@@ -1313,6 +1320,7 @@ def lanelets_dir(vehicle: Vehicle, time_step: int, road_network: RoadNetwork, go
     #         if orientation_diff_outside[i] == min_diff_outside:
     #             lanelets_dir_ids.append(lanelets_list_outside[i])
     # TODO: integrate in vehicle class or somewhere so that do not need to use route planner every time step
+    # TODO: goal region: front of vehicle?
     if goal is None:
         initial_state = vehicle.state_list_cr[0]
         end_time = vehicle.state_list_cr[-1].time_step
@@ -1375,4 +1383,191 @@ def ref_path_lanelets(
     #         true_ref_path = lane
     return reference_path[0]
 
+
+def get_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+    incoming = None
+    for lanelet_id in lanelets_id:
+        lanelet_pre = reach_pre(lanelet_id, road_network)
+        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
+            if len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0:
+                incoming = incoming_element
+                break
+        if incoming is not None:
+            break
+    return incoming
+
+
+def get_right_turn_incoming(lanelets_id, road_network):
+    incoming = None
+    for lanelet_id in lanelets_id:
+        lanelet_pre = reach_pre(lanelet_id, road_network)
+        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
+            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
+                    len(incoming_element.successors_right.intersection(set(lanelet_pre))) > 0):
+                incoming = incoming_element
+                break
+        if incoming is not None:
+            break
+    return incoming
+
+
+def get_left_turn_incoming(lanelets_id, road_network):
+    incoming = None
+    for lanelet_id in lanelets_id:
+        lanelet_pre = reach_pre(lanelet_id, road_network)
+        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
+            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
+                    len(incoming_element.successors_left.intersection(set(lanelet_pre))) > 0):
+                incoming = incoming_element
+                break
+        if incoming is not None:
+            break
+    return incoming
+
+
+def get_straight_going_incoming(lanelets_id, road_network):
+    incoming = None
+    for lanelet_id in lanelets_id:
+        lanelet_pre = reach_pre(lanelet_id, road_network)
+        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
+            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
+                    len(incoming_element.successors_straight.intersection(set(lanelet_pre))) > 0):
+                incoming = incoming_element
+                break
+        if incoming is not None:
+            break
+    return incoming
+
+
+def get_right_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+    incoming_lanelets_ids = incoming.incoming_lanelets
+    right_turn_lanelets_ids = incoming.successors_right
+    right_turn_lane = list()
+    for lane in road_network.lanes:
+        right_turn_lanelet_in_lane = lane.contained_lanelets.intersection(right_turn_lanelets_ids)
+        if (len(right_turn_lanelet_in_lane) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+            right_turn_lane.append(lane)
+    assert len(right_turn_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
+    right_turn_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(right_turn_lanelets_ids)[0])
+    return right_turn_lane[0], right_turn_lanelet
+
+
+def get_left_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+    incoming_lanelets_ids = incoming.incoming_lanelets
+    left_turn_lanelets_ids = incoming.successors_left
+    left_turn_lane = list()
+    for lane in road_network.lanes:
+        left_turn_lanelet_in_lane = lane.contained_lanelets.intersection(left_turn_lanelets_ids)
+        if (len(left_turn_lanelet_in_lane) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+            left_turn_lane.append(lane)
+    assert len(left_turn_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
+    left_turn_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(left_turn_lanelets_ids)[0])
+    return left_turn_lane[0], left_turn_lanelet
+
+
+def get_straight_going_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+    incoming_lanelets_ids = incoming.incoming_lanelets
+    straight_going_lanelets_ids = incoming.successors_straight
+    straight_going_lane = list()
+    for lane in road_network.lanes:
+        straight_going_lanelet_in_lane = lane.contained_lanelets.intersection(straight_going_lanelets_ids)
+        if (len(straight_going_lanelet_in_lane) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+            straight_going_lane.append(lane)
+    assert len(straight_going_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
+    straight_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(straight_going_lanelets_ids)[0])
+    return straight_going_lane[0], straight_lanelet
+
+
+def distance_to_left_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
+    state = vehicle.states_cr[time_step]
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
+    distance = list()
+    for point in occ_points:
+        d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
+        distance.append(d_left)
+    return distance
+
+
+def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
+    state = vehicle.states_cr[time_step]
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
+    distance = list()
+    for point in occ_points:
+        d_right = lane.clcs_right.convert_to_curvilinear_coords(*point)[1]
+        distance.append(d_right)
+    return distance
+
+
+def longitudinal_distance_to_lane(vehicle: Vehicle, lane: Lane, time_step):
+    state = vehicle.states_cr[time_step]
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
+    distance = list()
+    for point in occ_points:
+        d_right = lane.clcs.convert_to_curvilinear_coords(*point)[0]
+        distance.append(d_right)
+    return distance
+
+
+def get_priority(lanelet_id: int, road_network: RoadNetwork, direction):
+    # TODO: integrate ts_dic, ts_list, ts_dir in initialization
+    ts_dic = {'306': [4, 5, 4, 11],
+              '201': [4, 5, 4, 12],
+              '205': [2, 2, 2, 13],
+              '206': [1, 1, 1, 14],
+              '102': [3, 3, 3, 15]}
+    ts_list = ['306', '201', '205', '206', '102']
+    ts_dir = {'left': 0, 'straight': 1, 'right': 2}
+    ts_types = traffic_sign_type(lanelet_id, road_network)
+    ts_types_intersection = list(set(ts_list).intersection(set(ts_types)))
+    if len(ts_types_intersection) == 0:
+        ts_types_intersection = ['102']
+    eval_idx_list = list()
+    for ts_type in ts_types_intersection:
+        eval_idx_list.append(ts_dic[ts_type][3])
+    argmin_s = np.argmin(eval_idx_list)
+    return ts_dic[ts_types_intersection[argmin_s]][ts_dir[direction]]
+
+
+def inc_la_left_of(incoming: IntersectionIncomingElement, road_network: RoadNetwork) -> IntersectionIncomingElement:
+    left_of_incoming = incoming.left_of
+    for incoming_element in road_network.lanelet_network.intersections[0].incomings:
+        if incoming_element.incoming_id == left_of_incoming:
+            return incoming_element
+
+
+def adjacent_lanelets(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+    lanelets = {lanelet}
+    la = lanelet
+
+    while la is not None and la.adj_left is not None:
+        if la.adj_left_same_direction:
+            la = lanelet_network.find_lanelet_by_id(la.adj_left)
+            if la is not None:
+                lanelets.add(la)
+        else:
+            la = None
+
+    la = lanelet
+    while la is not None and la.adj_right is not None:
+        if la.adj_right_same_direction:
+            la = lanelet_network.find_lanelet_by_id(la.adj_right)
+            if la is not None:
+                lanelets.add(la)
+        else:
+            la = None
+    return lanelets
+
+
+def find_longest_lane_by_intersection_lanelet(lanelet_id: int, road_network: RoadNetwork) -> Lane:
+    longest_lane = None
+    num_contained_lanelets = 0
+    for lane in road_network.lanes:
+        if lanelet_id in lane.contained_lanelets:
+            if len(lane.contained_lanelets) > num_contained_lanelets:
+                longest_lane = lane
+                num_contained_lanelets = len(lane.contained_lanelets)
+    return longest_lane
 
