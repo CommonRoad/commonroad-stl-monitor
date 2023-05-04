@@ -131,3 +131,19 @@ class TestPriorityPredicates(unittest.TestCase):
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
             print(sol_monitor_2)
 
+    def testSamePriorityRightRight(self):
+        scenario, _ = CommonRoadFileReader(
+                str("../scenarios/test_intersection/DEU_test_traffic_signs_1.xml")).open(True)
+        world = World.create_from_scenario(scenario)
+        road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+        ego_vehicle = world.vehicle_by_id(1001)
+        target_vehicle = world.vehicle_by_id(1002)
+
+        pred = PredSamePriorityRightRight(self.config)
+        for time in range(40, ego_vehicle.end_time + 1):
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
+            print(sol_monitor_1)
+
+            sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id, target_vehicle.id])
+            print(sol_monitor_2)
+
