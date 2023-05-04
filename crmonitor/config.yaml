@@ -76,3 +76,35 @@ other_vehicles_param:
   j_min: -10
   t_react: 0.4 # for safe distance calculation of preceding vehicles
   dynamics_param: None # TODO replace dynamics parameter with worst case behavior
+
+traffic_rules_param:
+  j_abrupt: -2 # for ego vehicle emergency profile calculation
+  a_abrupt: -2
+  standstill_error: 0.01
+  min_velocity_dif: 15
+  num_veh_congestion: 3
+  max_congestion_velocity: 2.78
+  num_veh_slow_moving_traffic: 3
+  max_slow_moving_traffic_velocity: 8.33
+  num_veh_queue_of_vehicles: 3
+  max_queue_of_vehicles_velocity: 3
+  max_velocity_limit_free_driving: 16.67
+  desired_interstate_velocity: 36.11
+  min_interstate_width: 7.0
+  close_to_lane_border: 0.2
+  close_to_other_vehicle: 0.5
+  slightly_higher_speed_difference: 5.55
+  u_turn: 1.57
+  country: "DEU"
+  above_centerline_th: 0.1
+  max_interstate_speed_truck: 22.22
+
+  #parameters from intersection paper
+  t_iB: 1.0
+  d_sl: 1.0
+  a_br: -1.0
+  z_ia: 0.5
+  d_br: 15.0
+  a_pos: -4.0
+  t_slw: 3.0
+  v_err: 0.1
