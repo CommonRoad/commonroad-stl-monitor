@@ -146,47 +146,6 @@ class PredHasPriority(BasePredicateEvaluator):
         return rob
 
 
-class PredSamePriorityRightRight(BasePredicateEvaluator):
-    """
-    evaluates if two vehicles have the same priority
-    """
-
-    vehicle_dir_k = "right"
-    vehicle_dir_p = "right"
-
-    predicate_name = PriorityPredicates.SamePriorityRightRight
-    arity = 2
-
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-
-        road_network = world.road_network
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-
-        lanelets_dir_ids_of_p = utils.lanelets_dir(
-            vehicle_p, time_step, world.road_network
-        )
-        lanelets_dir_ids_of_k = utils.lanelets_dir(
-            vehicle_k, time_step, world.road_network
-        )
-
-        priority_p = utils.get_priority(
-            lanelets_dir_ids_of_p, road_network, self.vehicle_dir_p
-        )
-        priority_k = utils.get_priority(
-            lanelets_dir_ids_of_k, road_network, self.vehicle_dir_k
-        )
-
-        if priority_p == priority_k:
-            rob = 1
-        else:
-            rob = -1
-
-        return rob
-
-
 class PredSamePriorityRightLeft(BasePredicateEvaluator):
     """
     evaluates if two vehicles have the same priority
@@ -973,7 +932,6 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
 
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
-    lanelet_type = utils.HelperLaneletTypes.RELEVANT_TRAFFIC_LIGHT
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         """
@@ -1054,3 +1012,43 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                 robustness = max(robustness, distance_robustness)
         return self._scale_lon_dist(float(robustness))
 
+
+class PredSamePriorityRightRight(BasePredicateEvaluator):
+    """
+    evaluates if two vehicles have the same priority in right and right turning
+    """
+    predicate_name = PriorityPredicates.SamePriorityRightRight
+    arity = 2
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        road_network = world.road_network
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        incoming_k_id = list(incoming_k.incoming_lanelets)[0]
+        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        incoming_p_id = list(incoming_p.incoming_lanelets)[0]
+        priority_k = utils.get_priority(incoming_k_id, road_network, 'right')
+        priority_p = utils.get_priority(incoming_p_id, road_network, 'right')
+        if priority_k != priority_p:
+            rob = -abs(priority_k - priority_p)
+        else:
+            right_turning_lane_k, _ = utils.get_right_turn_lane(road_network, incoming_k)
+            right_turning_lane_p, _ = utils.get_right_turn_lane(road_network, incoming_p)
+            state_k = vehicle_k.states_cr[time_step]
+            state_p = vehicle_p.states_cr[time_step]
+            d_center_left_k = right_turning_lane_k.clcs_left.convert_to_curvilinear_coords(*state_k.position)[1]
+            d_center_left_p = right_turning_lane_p.clcs_left.convert_to_curvilinear_coords(*state_p.position)[1]
+            front_k_s = vehicle_k.front_s(time_step, right_turning_lane_k)
+            front_p_s = vehicle_p.front_s(time_step, right_turning_lane_p)
+            start_k_s = right_turning_lane_k.clcs_left.convert_to_curvilinear_coords(*utils.get_lanelet_start_line(road_network.lanelet_network.find_lanelet_by_id(incoming_k_id))[0])[0]
+            start_p_s = right_turning_lane_p.clcs_left.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(road_network.lanelet_network.find_lanelet_by_id(incoming_p_id))[0])[0]
+            rob = self._scale_lat_dist(np.min(np.array([front_k_s - start_k_s, front_p_s - start_p_s])))
+            rob = 1
+        return rob
