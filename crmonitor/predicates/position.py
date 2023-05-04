@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Set, Tuple
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletType, LineMarking
+from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
 from ruamel.yaml.comments import CommentedMap
 from shapely.geometry.polygon import Polygon
 from crmonitor.predicates import utils
@@ -1004,80 +1005,80 @@ class PredDrivesRightmost(BasePredicateEvaluator):
 
 # --------------------------------------------------------------------- #
 # new predicate from Mahdi Bayouli
-class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
-    """
-    evaluates if a vehicle is on a lanelet with a specific type.
-    """
+# class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
+#     """
+#     evaluates if a vehicle is on a lanelet with a specific type.
+#     """
+#
+#     predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
+#     arity = 1
+#
+#     # TODO
+#     # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+#
+#     # TODO
+#     def evaluate_robustness(
+#         self, world: World, time_step, vehicle_ids: List[int]
+#     ) -> float:
+#         # first step : test if it is inside intersection, if not return distance to closest intersection
+#         lanelet_type = LaneletType.INTERSECTION
+#         return self._scale_lon_dist(
+#             utils.get_robustness_wrt_lanelet_type(
+#                 world, time_step, vehicle_ids, lanelet_type, False, False
+#             )
+#         )
 
-    predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
-    arity = 1
 
-    # TODO
-    # def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-
-    # TODO
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-        # first step : test if it is inside intersection, if not return distance to closest intersection
-        lanelet_type = LaneletType.INTERSECTION
-        return self._scale_lon_dist(
-            utils.get_robustness_wrt_lanelet_type(
-                world, time_step, vehicle_ids, lanelet_type, False, False
-            )
-        )
-
-
-class PredInIntersectionConflictArea(BasePredicateEvaluator):
-    """
-    evaluates if the first vehicle is in the conflict area of the second vehicle.
-    """
-
-    predicate_name = PositionPredicates.InIntersectionConflictArea
-    arity = 2
-
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-
-        non_merged_ref_path_lanelets_p = utils.ref_path_lanelets(
-            vehicle_p, world.road_network, time_step
-        )
-
-        # ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
-
-        ref_path_lanelets_p: List[int] = [
-            l for path in non_merged_ref_path_lanelets_p for l in path
-        ]
-
-        lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, world.road_network)
-
-        lanelets_k = set(vehicle_k.lanelet_assignment[time_step])
-
-        lanelets_k_path_p = set()
-
-        for lk in lanelets_k:
-            if lk in ref_path_lanelets_p:
-                lanelets_k_path_p.add(lk)
-
-        for lk in lanelets_k_path_p:
-            lanelet_k = world.road_network.lanelet_network.find_lanelet_by_id(lk)
-            if not utils.is_lanelet_of_type(
-                lanelet_k, LaneletType.INTERSECTION, world.road_network
-            ):
-                continue
-            for ldir_k in lanelets_dir_k:
-                lanelet_dir_k = world.road_network.lanelet_network.find_lanelet_by_id(
-                    ldir_k
-                )
-                if utils.same_incom(lanelet_k, lanelet_dir_k, world.road_network):
-                    continue
-            return 1
-
-        return -1
+# class PredInIntersectionConflictArea(BasePredicateEvaluator):
+#     """
+#     evaluates if the first vehicle is in the conflict area of the second vehicle.
+#     """
+#
+#     predicate_name = PositionPredicates.InIntersectionConflictArea
+#     arity = 2
+#
+#     def evaluate_robustness(
+#         self, world: World, time_step, vehicle_ids: List[int]
+#     ) -> float:
+#
+#         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+#         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+#
+#         non_merged_ref_path_lanelets_p = utils.ref_path_lanelets(
+#             vehicle_p, world.road_network, time_step
+#         )
+#
+#         # ref_path_lanelets_p = set().union(*non_merged_ref_path_lanelets_p)
+#
+#         ref_path_lanelets_p: List[int] = [
+#             l for path in non_merged_ref_path_lanelets_p for l in path
+#         ]
+#
+#         lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, world.road_network)
+#
+#         lanelets_k = set(vehicle_k.lanelet_assignment[time_step])
+#
+#         lanelets_k_path_p = set()
+#
+#         for lk in lanelets_k:
+#             if lk in ref_path_lanelets_p:
+#                 lanelets_k_path_p.add(lk)
+#
+#         for lk in lanelets_k_path_p:
+#             lanelet_k = world.road_network.lanelet_network.find_lanelet_by_id(lk)
+#             if not utils.is_lanelet_of_type(
+#                 lanelet_k, LaneletType.INTERSECTION, world.road_network
+#             ):
+#                 continue
+#             for ldir_k in lanelets_dir_k:
+#                 lanelet_dir_k = world.road_network.lanelet_network.find_lanelet_by_id(
+#                     ldir_k
+#                 )
+#                 if utils.same_incom(lanelet_k, lanelet_dir_k, world.road_network):
+#                     continue
+#             return 1
+#
+#         return -1
 
 
 class PredOnOncomOf(BasePredicateEvaluator):
@@ -1144,77 +1145,77 @@ class PredOnOncomOf(BasePredicateEvaluator):
             return self._scale_lon_dist(d)
 
 
-class PredOnIncomingLeftOf(BasePredicateEvaluator):
-    predicate_name = PositionPredicates.OnIncomingLeftOf
-    arity = 2
-
-    # idea: rob parameters: d1, d2 and b
-    # 1. stop_line_p: find stop line corresponding to the incoming element of p
-    # 2. d1 : distance(p, stop_line_p)
-    # 3. stop_line_k: find stop line corresponding to the LEFT incoming element of p
-    # 4. d2 = distance(k, stop_line_k)
-    # 5. b = boolean evaluation (1 or -1)
-    # 6. robustness = min(b*d1, b*d2)
-
-    def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
-
-        lnet = world.road_network.lanelet_network
-        rnet = world.road_network
-
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, rnet)
-        lanelets_dir_p = utils.lanelets_dir(vehicle_p, time_step, rnet)
-
-        # TODO: how to decide which lanelet in lanelets_dir to work with ?
-        # current: next(iter(lanelet_dir))
-        # idea: if we find a way to predict ref_path_lanelets or to make it deterministic => problem solved
-        l_dir_p = next(iter(lanelets_dir_p))
-
-        left_of_p_ids = utils.inc_la_left_of(lnet.find_lanelet_by_id(l_dir_p), lnet)
-        _, incom_p = utils.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
-
-        # find stop line of p:
-        stop_line_p, _ = utils.get_stop_line_from_incoming(
-            vehicle_p, incom_p, lnet, time_step
-        )
-
-        # find stop line of left incoming :
-        stop_line_k = None
-        for left_inc in left_of_p_ids:
-            left_lanelet = lnet.find_lanelet_by_id(left_inc)
-            if left_lanelet.stop_line is not None:
-                stop_line_k = left_lanelet.stop_line
-                break
-
-        d1 = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
-        d2 = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
-
-        b = -1
-
-        for lk in lanelets_dir_k:
-            if b == 1:
-                break
-            reach_suc_lk = utils.reach_succ(lnet.find_lanelet_by_id(lk), lnet)
-            merged_reach_suc_lk = set().union(*reach_suc_lk)
-            merged_reach_suc_lk.add(lk)
-            for lp in lanelets_dir_p:
-                if b == 1:
-                    break
-                reach_suc_lp = utils.reach_succ(lnet.find_lanelet_by_id(lp), lnet)
-                merged_reach_suc_lp = set().union(*reach_suc_lp)
-                merged_reach_suc_lp.add(lp)
-                for lap in merged_reach_suc_lp:
-                    if b == 1:
-                        break
-                    for lak in merged_reach_suc_lk:
-                        if lap in utils.inc_la_left_of(
-                            lnet.find_lanelet_by_id(lak), lnet
-                        ):
-                            b = 1
-                            break
-
-        return self._scale_lon_dist(np.minimum(b * d1, b * d2))
+# class PredOnIncomingLeftOf(BasePredicateEvaluator):
+#     predicate_name = PositionPredicates.OnIncomingLeftOf
+#     arity = 2
+#
+#     # idea: rob parameters: d1, d2 and b
+#     # 1. stop_line_p: find stop line corresponding to the incoming element of p
+#     # 2. d1 : distance(p, stop_line_p)
+#     # 3. stop_line_k: find stop line corresponding to the LEFT incoming element of p
+#     # 4. d2 = distance(k, stop_line_k)
+#     # 5. b = boolean evaluation (1 or -1)
+#     # 6. robustness = min(b*d1, b*d2)
+#
+#     def evaluate_robustness(self, world, time_step, vehicle_ids) -> float:
+#
+#         lnet = world.road_network.lanelet_network
+#         rnet = world.road_network
+#
+#         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+#         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+#         lanelets_dir_k = utils.lanelets_dir(vehicle_k, time_step, rnet)
+#         lanelets_dir_p = utils.lanelets_dir(vehicle_p, time_step, rnet)
+#
+#         # TODO: how to decide which lanelet in lanelets_dir to work with ?
+#         # current: next(iter(lanelet_dir))
+#         # idea: if we find a way to predict ref_path_lanelets or to make it deterministic => problem solved
+#         l_dir_p = next(iter(lanelets_dir_p))
+#
+#         left_of_p_ids = utils.inc_la_left_of(lnet.find_lanelet_by_id(l_dir_p), lnet)
+#         _, incom_p = utils.get_incoming(lnet.find_lanelet_by_id(l_dir_p), lnet)
+#
+#         # find stop line of p:
+#         stop_line_p, _ = utils.get_stop_line_from_incoming(
+#             vehicle_p, incom_p, lnet, time_step
+#         )
+#
+#         # find stop line of left incoming :
+#         stop_line_k = None
+#         for left_inc in left_of_p_ids:
+#             left_lanelet = lnet.find_lanelet_by_id(left_inc)
+#             if left_lanelet.stop_line is not None:
+#                 stop_line_k = left_lanelet.stop_line
+#                 break
+#
+#         d1 = utils.distance_vehicle_to_stop_line(vehicle_p, stop_line_p, time_step)
+#         d2 = utils.distance_vehicle_to_stop_line(vehicle_k, stop_line_k, time_step)
+#
+#         b = -1
+#
+#         for lk in lanelets_dir_k:
+#             if b == 1:
+#                 break
+#             reach_suc_lk = utils.reach_succ(lnet.find_lanelet_by_id(lk), lnet)
+#             merged_reach_suc_lk = set().union(*reach_suc_lk)
+#             merged_reach_suc_lk.add(lk)
+#             for lp in lanelets_dir_p:
+#                 if b == 1:
+#                     break
+#                 reach_suc_lp = utils.reach_succ(lnet.find_lanelet_by_id(lp), lnet)
+#                 merged_reach_suc_lp = set().union(*reach_suc_lp)
+#                 merged_reach_suc_lp.add(lp)
+#                 for lap in merged_reach_suc_lp:
+#                     if b == 1:
+#                         break
+#                     for lak in merged_reach_suc_lk:
+#                         if lap in utils.inc_la_left_of(
+#                             lnet.find_lanelet_by_id(lak), lnet
+#                         ):
+#                             b = 1
+#                             break
+#
+#         return self._scale_lon_dist(np.minimum(b * d1, b * d2))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 
@@ -1264,3 +1265,166 @@ class PredStopLineInFront(BasePredicateEvaluator):
             stop_line_robustness = np.fmin(self.config["d_sl"] - stop_line_distance, stop_line_distance)
             robustness = max(robustness, stop_line_robustness)
         return self._scale_lon_dist(float(robustness))
+
+
+class PredOnIncomingLeftOf(BasePredicateEvaluator):
+    """
+    evaluate if the k-th vehicle occupies a lane that is left of the lane of the p-th vehicle in terms of incoming
+    """
+    predicate_name = PositionPredicates.OnIncomingLeftOf
+    arity = 2
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        road_network = world.road_network
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        incoming_k_id = list(incoming_k.incoming_lanelets)[0]
+        incoming_p_id = list(incoming_p.incoming_lanelets)[0]
+        front_k_s = vehicle_k.front_s(time_step, vehicle_k.ref_path_lane)
+        rear_k_s = vehicle_k.rear_s(time_step, vehicle_k.ref_path_lane)
+        front_p_s = vehicle_p.front_s(time_step, vehicle_p.ref_path_lane)
+        rear_p_s = vehicle_p.rear_s(time_step, vehicle_p.ref_path_lane)
+        inc_start_k_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(
+            *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(incoming_k_id))[0])[0]
+        inc_end_k_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(*utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(incoming_k_id))[0])[0]
+        inc_start_p_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(incoming_p_id))[0])[0]
+        inc_end_p_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
+            *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(incoming_p_id))[0])[0]
+        inc_left_of_k = utils.inc_la_left_of(incoming_k, road_network)
+        inc_left_of_k_id = list(inc_left_of_k.incoming_lanelets)[0]
+        # if p-th vehicle in the incoming left of k-th
+        if inc_left_of_k_id == incoming_p_id:
+            rob = np.min([front_k_s - inc_start_k_s,
+                          inc_end_k_s - rear_k_s,
+                          front_p_s - inc_start_k_s,
+                          inc_end_p_s - rear_p_s])
+            rob = self._scale_lon_dist(rob)
+        # if p-th vehicle not in the incoming left of k-th
+        else:
+            inc_left_end_d = list()
+            for point in utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(inc_left_of_k_id)):
+                inc_left_end_d.append(abs(vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(*point)[1]))
+            # find the distance from reference path of p-th vehicle to the end of incoming left of k-th
+            inc_left_end_d = np.max(inc_left_end_d)
+            state_p = vehicle_p.states_cr[time_step]
+            state_distance_d = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                *state_p.position)[1]
+            rob_p_d = self._scale_lat_dist(state_distance_d - inc_left_end_d)
+            rob_k_s = self._scale_lon_dist(inc_end_k_s - rear_k_s)
+            rob = min(rob_p_d, rob_k_s)
+        return rob
+
+
+class PredInIntersectionConflictArea(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.OnIncomingLeftOf
+    arity = 2
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        road_network = world.road_network
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        incoming_k_id = list(incoming_k.incoming_lanelets)[0]
+        incoming_p_id = list(incoming_p.incoming_lanelets)[0]
+        incoming_lanelet_k = road_network.lanelet_network.find_lanelet_by_id(incoming_k_id)
+        incoming_lanelet_p = road_network.lanelet_network.find_lanelet_by_id(incoming_p_id)
+        adj_inc_k = utils.adjacent_lanelets(incoming_lanelet_k, road_network.lanelet_network)
+        if len(adj_inc_k.intersection({incoming_lanelet_p, })) != 0:
+            return -1
+        lanelets_assignment_k = vehicle_k.lanelet_assignment[time_step]
+        lanelets_k_intersection = list()
+        for lanelet_id in lanelets_assignment_k:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            for lanelet_type in lanelet.lanelet_type:
+                if lanelet_type.value == 'intersection':
+                    lanelets_k_intersection.append(lanelet_id)
+        if len(lanelets_k_intersection) == 0:
+            return -1
+        conflict_lanelet = list(vehicle_p.ref_path_lane.contained_lanelets.intersection(set(lanelets_k_intersection)))
+        # TODO: exclude lanelets_dir of k-th vehicle
+        if len(conflict_lanelet) != 0:
+            conflict_lanelet_start_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(conflict_lanelet[0]))[0])[0]
+            conflict_lanelet_end_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(conflict_lanelet[0]))[0])[0]
+            occ_points_k_s = np.array(utils.longitudinal_distance_to_lane(vehicle_k, vehicle_p.ref_path_lane, time_step))
+            distance_to_start = occ_points_k_s - conflict_lanelet_start_s
+            distance_to_start = np.min(distance_to_start[distance_to_start >= 0])
+            distance_to_end = conflict_lanelet_end_s - occ_points_k_s
+            distance_to_end = np.min(distance_to_end[distance_to_start >= 0])
+            rob = min(distance_to_start, distance_to_end)
+            rob = self._scale_lon_dist(rob)
+        else:
+            distance_to_left = utils.distance_to_left_bounds_clcs(vehicle_k, vehicle_p.ref_path_lane, time_step)
+            distance_to_right = utils.distance_to_right_bounds_clcs(vehicle_k, vehicle_p.ref_path_lane, time_step)
+            distance = abs(np.array([distance_to_left, distance_to_right]))
+            rob = -np.min(distance)
+            rob = self._scale_lat_dist(rob)
+        return rob
+
+
+class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
+    """
+    evaluates if a vehicle is on a lanelet with a specific type.
+    """
+
+    predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        rob = -np.inf
+        road_network = world.road_network
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelets_assignment = vehicle.lanelet_assignment[time_step]
+        lanelets_occ_intersection = list()
+        lane_occ_intersection = list()
+        for lanelet_id in lanelets_assignment:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            for lanelet_type in lanelet.lanelet_type:
+                if lanelet_type.value == 'intersection':
+                    lanelets_occ_intersection.append(lanelet)
+                    lane_occ_intersection.append(utils.find_longest_lane_by_intersection_lanelet(lanelet_id, road_network))
+        if len(lanelets_occ_intersection) == 0:
+            for lanelet_id in vehicle.lanelets_dir:
+                lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+                for lanelet_type in lanelet.lanelet_type:
+                    if lanelet_type.value == 'intersection':
+                        lanelets_occ_intersection.append(lanelet)
+                        lane_occ_intersection.append(vehicle.ref_path_lane)
+        for i in range(len(lanelets_occ_intersection)):
+            front_s = vehicle.front_s(time_step, lane_occ_intersection[i])
+            rear_s = vehicle.rear_s(time_step, lane_occ_intersection[i])
+            lanelet_start_s = lane_occ_intersection[i].clcs.convert_to_curvilinear_coords(*utils.get_lanelet_start_line(lanelets_occ_intersection[i])[0])[0]
+            lanelet_end_s = lane_occ_intersection[i].clcs.convert_to_curvilinear_coords(
+                *utils.get_lanelet_end_line(lanelets_occ_intersection[i])[0])[0]
+            # lanelet in front of vehicle
+            if (front_s - lanelet_start_s) < 0 < (lanelet_end_s - front_s):
+                rob = max(rob, front_s - lanelet_start_s)
+            # vehicle in front of lanelet
+            elif (lanelet_end_s - rear_s) <= 0 <= (front_s - lanelet_start_s):
+                rob = max(rob, lanelet_end_s - rear_s)
+            # vehicle inside lanelet
+            else:
+                distance_robustness = min(front_s - lanelet_start_s, lanelet_end_s - rear_s)
+                rob = max(rob, distance_robustness)
+        return self._scale_lon_dist(rob)
+
