@@ -12,6 +12,12 @@ from shapely import affinity
 
 from crmonitor.common.road_network import Lane, RoadNetwork
 
+from commonroad_route_planner.route_planner import RoutePlanner
+from commonroad.planning.goal import GoalRegion
+from commonroad.common.util import Interval, AngleInterval
+from commonroad.geometry.shape import Rectangle
+from commonroad.scenario.state import CustomState
+
 rot_mat_factors = np.array([[1., 1., -1., -1.], [1., -1., 1., -1.]])
 
 logger = logging.getLogger(__name__)
@@ -189,7 +195,7 @@ class PredicateCache:
 
 
 class Vehicle:
-    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None):
+    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None, road_network=None, goal=None):
         self.id = id
         self.obstacle_type = obstacle_type
         self.vehicle_param = vehicle_param
@@ -199,6 +205,13 @@ class Vehicle:
         self.ccosy_cache = ccosy_cache
         self.lanelet_assignment = lanelet_assignment
         self.predicate_cache = predicate_cache or PredicateCache()
+        self.road_network = road_network
+        if self.road_network is None:
+            self.lanelets_dir = None
+            self.ref_path_lane = None
+        else:
+            self.lanelets_dir, self.goal_region = self._initial_lanelets_dir(self.road_network, goal)
+            self.ref_path_lane = self._initial_ref_path_lane(self.road_network)
 
     def rear_s(self, time_step: int, lane: Lane=None) -> float:
         """
@@ -339,44 +352,108 @@ class Vehicle:
     def __hash__(self):
         return self.id
 
+    def _initial_lanelets_dir(self, road_network: RoadNetwork, goal=None):
+        if goal is None:
+            initial_state = self.states_cr[0]
+            end_time = len(self.states_cr) - 1
+            end_position = self.states_cr[end_time].position
+            end_orientation = self.states_cr[end_time].orientation
+            end_velocity = self.states_cr[end_time].velocity
+            attributes = {'time_step': Interval(start=end_time - 1, end=end_time + 1),
+                          'position': Rectangle(length=1.0, width=1.0, center=end_position),
+                                                                              # + np.array([np.cos(end_orientation), np.sin(end_orientation)])),
+                          'velocity': Interval(start=end_velocity, end=end_velocity + 1),
+                          'orientation': AngleInterval(start=end_orientation - 0.1, end=end_orientation + 0.1)}
+            end_state = CustomState(**attributes)
+            goal_region = GoalRegion(state_list=[end_state])
+        route_planner = RoutePlanner(lanelet_network=road_network.lanelet_network, state_initial=initial_state,
+                                     goal_region=goal_region, backend=RoutePlanner.Backend.NETWORKX,
+                                     reach_goal_state=False)
+        candidate_holder = route_planner.plan_routes()
+        route = candidate_holder.retrieve_best_route_by_orientation()
+        # extend the route path:
+        lanelets_leading_to_goal = route.list_ids_lanelets
+        first_lanelet = route_planner.lanelet_network.find_lanelet_by_id(lanelets_leading_to_goal[0])
+        if first_lanelet.predecessor:
+            selected_predecessor = first_lanelet.predecessor[0]
+            # if there are more than one predecessor, find the one with the minimum orientation change
+            # compared with first lanelet
+            if len(first_lanelet.predecessor) > 1:
+                min_offset = np.inf
+                for predecessor_lanelet_id in first_lanelet.predecessor:
+                    predecessor_lanelet = route_planner.lanelet_network.find_lanelet_by_id(predecessor_lanelet_id)
+                    offset = abs(predecessor_lanelet.center_vertices[0, :] - first_lanelet.center_vertices[0, :])
+                    if np.min(offset) < min_offset:
+                        min_offset = np.min(offset)
+                        selected_predecessor = predecessor_lanelet_id
+            lanelets_leading_to_goal.insert(0, selected_predecessor)
+        last_lanelet = route_planner.lanelet_network.find_lanelet_by_id(lanelets_leading_to_goal[-1])
+        if last_lanelet.successor:
+            selected_successor = last_lanelet.successor[0]
+            # if there are more than one successor, find the one with the minimum orientation change
+            # compared with last lanelet
+            if len(last_lanelet.successor) > 1:
+                min_offset = np.inf
+                for successor_lanelet_id in last_lanelet.successor:
+                    successor_lanelet = route_planner.lanelet_network.find_lanelet_by_id(successor_lanelet_id)
+                    offset = abs(successor_lanelet.center_vertices[-1, :] - last_lanelet.center_vertices[-1, :])
+                    if np.min(offset) < min_offset:
+                        min_offset = np.min(offset)
+                        selected_successor = successor_lanelet_id
+            lanelets_leading_to_goal.append(selected_successor)
+        return lanelets_leading_to_goal, goal_region
+
+    def _initial_ref_path_lane(self, road_network: RoadNetwork):
+        lanes = list()
+        lanelets = self.lanelets_dir
+        if len(lanelets) == 1:
+            return road_network.find_lane_by_lanelet(lanelets[0])
+        for lanelet_id in lanelets:
+            lanes.append(road_network.find_lanes_by_lanelets({lanelet_id, }))
+        ref_path = lanes[0]
+        for i in range(len(lanes) - 1):
+            ref_path = ref_path.intersection(lanes[i + 1])
+        reference_path = list(ref_path)
+        return reference_path[0]
+
 #def from Luis
 # ---------------------------------------------------------------------#
-    def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
-        """
-        Determine all possible lanes for a vehicle from the given moment.
-
-        Idea: A vehicle should drive on a connected sequence of lanelets to get to
-        the current
-        position. Hence, the intersection of the initially occupied lanes (all paths
-        from the first state)
-        and the currently occupied lanes should not be empty and only contain the
-        lanes that have been driven on.
-
-        :param timestep:
-        :return:
-        """
-
-        initial_lanes = self.lanes_at_state(self.start_time)
-        current_lanes = self.lanes_at_state(timestep)
-
-        return tuple(initial_lanes.intersection(current_lanes))
-
-    def lanelets_dir(self, timestep: int) -> Tuple[int]:
-        """
-        Get the lanelets in driving direction occupied at the current time step.
-
-        Implementation: Intersect the current lanelets with the reference path.
-
-        :param self:
-        :param timestep:
-        :return:
-        """
-        ref_lanes = self.ref_path_lanes(timestep)
-        current_lanelets = self.lanelet_assignment[timestep]
-        ref_lanelets = set()
-        for lane in ref_lanes:
-            ref_lanelets.update(lane.contained_lanelets)
-        return tuple(ref_lanelets.intersection(current_lanelets))
+#     def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
+#         """
+#         Determine all possible lanes for a vehicle from the given moment.
+#
+#         Idea: A vehicle should drive on a connected sequence of lanelets to get to
+#         the current
+#         position. Hence, the intersection of the initially occupied lanes (all paths
+#         from the first state)
+#         and the currently occupied lanes should not be empty and only contain the
+#         lanes that have been driven on.
+#
+#         :param timestep:
+#         :return:
+#         """
+#
+#         initial_lanes = self.lanes_at_state(self.start_time)
+#         current_lanes = self.lanes_at_state(timestep)
+#
+#         return tuple(initial_lanes.intersection(current_lanes))
+#
+#     def lanelets_dir(self, timestep: int) -> Tuple[int]:
+#         """
+#         Get the lanelets in driving direction occupied at the current time step.
+#
+#         Implementation: Intersect the current lanelets with the reference path.
+#
+#         :param self:
+#         :param timestep:
+#         :return:
+#         """
+#         ref_lanes = self.ref_path_lanes(timestep)
+#         current_lanelets = self.lanelet_assignment[timestep]
+#         ref_lanelets = set()
+#         for lane in ref_lanes:
+#             ref_lanelets.update(lane.contained_lanelets)
+#         return tuple(ref_lanelets.intersection(current_lanelets))
 # ----------------------------------------------------------------#
 
 class ControlledVehicle(Vehicle):
@@ -402,7 +479,7 @@ class DynamicObstacleVehicle(Vehicle):
     """
     Representation of a vehicle with state and input profiles and other information for complete simulation horizon
     """
-    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param, predicate_cache=None):
+    def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param, predicate_cache=None, road_network=None, goal=None):
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
         id = obstacle.obstacle_id
         obstacle_type = obstacle.obstacle_type
@@ -415,7 +492,7 @@ class DynamicObstacleVehicle(Vehicle):
             signal_series = None
         ccosy_cache = ccosy_cache
         lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
-        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache)
+        super().__init__(id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache, road_network, goal)
 
     # @property
     # def states_lon(self) -> Dict[int, StateLongitudinal]:

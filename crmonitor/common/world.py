@@ -84,6 +84,7 @@ class World:
                     CurvilinearStateManager(road_network, curvi_cache),
                     others_params,
                     PredicateCache(predicate_dict),
+                    road_network
                 )
             )
         return cls(vehicles, road_network, scenario, cache)
