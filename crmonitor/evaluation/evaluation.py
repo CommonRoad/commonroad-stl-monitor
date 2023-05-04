@@ -1,3 +1,4 @@
+import copy
 import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
@@ -60,6 +61,7 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
+        ego_vehicle = copy.copy(ego_vehicle)
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
