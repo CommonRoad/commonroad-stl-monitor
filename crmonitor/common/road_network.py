@@ -188,7 +188,7 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, 20, 0.1, 5.0)
 
         return curvilinear_cosy
 
