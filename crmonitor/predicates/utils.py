@@ -10,6 +10,8 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.state import CustomState
 
 import numpy as np
+
+from shapely.geometry import Polygon, LineString
 from commonroad.common.util import subtract_orientations
 from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.intersection import IntersectionIncomingElement
@@ -1570,4 +1572,101 @@ def find_longest_lane_by_intersection_lanelet(lanelet_id: int, road_network: Roa
                 longest_lane = lane
                 num_contained_lanelets = len(lane.contained_lanelets)
     return longest_lane
+
+
+def find_conflict_bounds(current_lanelet: Lanelet, conflict_lanelet: Lanelet):
+    """
+    find bounds of conflict_lanelet, which have point in current lanelet
+    """
+    conflict_bounds = list()
+    right_bound = conflict_lanelet.right_vertices[1:-1]
+    for right_bound_point in right_bound:
+        if current_lanelet.polygon.contains_point(right_bound_point):
+            conflict_bounds.append('right')
+            break
+    left_bound = conflict_lanelet.left_vertices[1:-1]
+    for left_bound_point in left_bound:
+        if current_lanelet.polygon.contains_point(left_bound_point):
+            conflict_bounds.append('left')
+            break
+    start_bound_conflict = get_lanelet_start_line(conflict_lanelet)
+    start_bound_current = get_lanelet_start_line(current_lanelet)
+    if np.max(abs(start_bound_conflict - start_bound_current)) <= 0.01:
+        conflict_bounds.append('start')
+    end_bound_conflict = get_lanelet_end_line(conflict_lanelet)
+    end_bound_current = get_lanelet_end_line(current_lanelet)
+    dif = end_bound_current - end_bound_conflict
+    max_dif = np.max(dif)
+    if np.max(abs(end_bound_conflict - end_bound_current)) <= 0.01:
+        conflict_bounds.append('end')
+    return conflict_bounds
+
+
+def find_conflict_points(line, conflict_lanelet: Lanelet):
+    conflict_line_points = list()
+    polygon = conflict_lanelet.polygon.shapely_object
+
+    # Create curved line
+    curved_line = LineString(line)
+
+    # Get intersection of line and polygon
+    intersection = curved_line.intersection(polygon)
+
+    if intersection.geom_type == 'Point':
+        conflict_line_points.append(intersection)
+    elif intersection.geom_type == 'LineString' or intersection.geom_type == 'LinearRing':
+        for point in intersection.coords:
+            conflict_line_points.append(np.array(point))
+    elif intersection.geom_type == 'MultiPoint' or intersection.geom_type == 'MultiLineString':
+        for geom in intersection.geoms:
+            for point in geom.coords:
+                conflict_line_points.append(point)
+    if len(conflict_line_points) == 0:
+        conflict_points = None
+    else:
+        conflict_points = [conflict_line_points[0], conflict_line_points[-1]]
+    return conflict_points
+
+
+
+
+def get_vehicle_front_points(vehicle: Vehicle, time_step):
+    center_position = vehicle.states_cr[time_step].position
+    orientation = vehicle.states_cr[time_step].orientation
+    l = vehicle.shape.length
+    w = vehicle.shape.width
+    front_right = center_position + np.array([l / 2 * np.cos(orientation) + w / 2 * np.sin(orientation),
+                                              l / 2 * np.sin(orientation) - w / 2 * np.cos(orientation)])
+    front_left = center_position + np.array([l / 2 * np.cos(orientation) - w / 2 * np.sin(orientation),
+                                             l / 2 * np.sin(orientation) + w / 2 * np.cos(orientation)])
+    return np.array([front_right, front_left])
+
+
+def get_vehicle_rear_points(vehicle: Vehicle, time_step):
+    center_position = vehicle.states_cr[time_step].position
+    orientation = vehicle.states_cr[time_step].orientation
+    l = vehicle.shape.length
+    w = vehicle.shape.width
+    rear_right = center_position + np.array([- l / 2 * np.cos(orientation) + w / 2 * np.sin(orientation),
+                                             - l / 2 * np.sin(orientation) - w / 2 * np.cos(orientation)])
+    rear_left = center_position + np.array([- l / 2 * np.cos(orientation) - w / 2 * np.sin(orientation),
+                                            - l / 2 * np.sin(orientation) + w / 2 * np.cos(orientation)])
+    return np.array([rear_right, rear_left])
+
+
+def points_distance_to_right_bound(points, lane: Lane):
+    distance = list()
+    for point in points:
+        d_right = lane.clcs_right.convert_to_curvilinear_coords(*point)[1]
+        distance.append(d_right)
+    return np.max(distance)
+
+
+def points_distance_to_left_bound(points, lane: Lane):
+    distance = list()
+    for point in points:
+        d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
+        distance.append(d_left)
+    return np.min(distance)
+
 
