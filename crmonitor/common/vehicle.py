@@ -209,8 +209,9 @@ class Vehicle:
         if self.road_network is None:
             self.lanelets_dir = None
             self.ref_path_lane = None
+            self.lanelets_dir_center_vertices = None
         else:
-            self.lanelets_dir, self.goal_region = self._initial_lanelets_dir(self.road_network, goal)
+            self.lanelets_dir, self.goal_region, self.lanelets_dir_center_vertices = self._initial_lanelets_dir(self.road_network, goal)
             self.ref_path_lane = self._initial_ref_path_lane(self.road_network)
 
     def rear_s(self, time_step: int, lane: Lane=None) -> float:
@@ -401,7 +402,11 @@ class Vehicle:
                         min_offset = np.min(offset)
                         selected_successor = successor_lanelet_id
             lanelets_leading_to_goal.append(selected_successor)
-        return lanelets_leading_to_goal, goal_region
+        center_vertices = road_network.lanelet_network.find_lanelet_by_id(lanelets_leading_to_goal[0]).center_vertices
+        for lanelet_id in lanelets_leading_to_goal[1:]:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            center_vertices = np.append(center_vertices, lanelet.center_vertices, axis=0)
+        return lanelets_leading_to_goal, goal_region, center_vertices
 
     def _initial_ref_path_lane(self, road_network: RoadNetwork):
         lanes = list()
