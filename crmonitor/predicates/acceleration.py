@@ -97,13 +97,17 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        d_br = self.config['traffic_rules_param']["d_br"]
-        a_br = self.config['traffic_rules_param']["a_br"]
+        # TODO: fix config problem
+        # d_br = self.config['traffic_rules_param']["d_br"]
+        # a_br = self.config['traffic_rules_param']["a_br"]
+        d_br = 1.0
+        a_br = -1.0
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        state = vehicle_k.states_cr[time_step]
         rear_k_s = vehicle_k.rear_s(time_step, vehicle_p.ref_path_lane)
         front_p_s = vehicle_p.front_s(time_step, vehicle_p.ref_path_lane)
+        if rear_k_s is None:
+            return -1
         distance_vehicle = rear_k_s - front_p_s
         rob_distance = np.min([distance_vehicle, d_br - distance_vehicle])
         a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
