@@ -16,6 +16,8 @@ from matplotlib.gridspec import GridSpec
 from crmonitor.common.helper import merge_dicts_recursively
 from crmonitor.predicates.base import BasePredicateEvaluator
 
+from enum import Enum
+
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
         "vehicle_shape": {
@@ -23,6 +25,18 @@ EGO_VEHICLE_DRAW_PARAMS = {
         }
     }
 }
+
+
+class TUMcolor(Enum):
+    TUMblue = [0, 101 / 255, 189 / 255]
+    TUMgreen = [162 / 255, 173 / 255, 0]
+    TUMgray = [156 / 255, 157 / 255, 159 / 255]
+    TUMdarkgray = [88 / 255, 88 / 255, 99 / 255]
+    TUMorange = [227 / 255, 114 / 255, 34 / 255]
+    TUMdarkblue = [0, 82 / 255, 147 / 255]
+    TUMwhite = [1, 1, 1]
+    TUMblack = [0, 0, 0]
+    TUMlightgray = [217 / 255, 218 / 255, 219 / 255]
 
 
 def plot_rule_robustness_course(
@@ -143,7 +157,7 @@ def plot_rule_visualization(
     flat_plot_rule_robustness_course: bool = True,
     scenario_plot_limits: Union[List[Union[int, float]], None] = None,
     flag_rule_conjunction: bool = False,
-    plot_scenario_legend: Optional[bool] = None,
+    plot_scenario_legend: Optional[bool] = None
 ):
     """
     Plotting the rule evaluation result
@@ -203,8 +217,8 @@ def plot_rule_visualization(
         rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
         rule_name_list.append(rule_evaluator_list[i]._rule.name)
 
-    if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
-        _plot_scenario_legend(all_predicate_name2predicate_evaluator, scenario_fig_size)
+    # if plot_scenario_legend or plot_scenario_legend is None and time_step == 0:
+    #     _plot_scenario_legend(all_predicate_name2predicate_evaluator, scenario_fig_size)
 
     scenario_ax, bar_chart_axs, robustness_course_axs = _create_axes(
         scenario_fig_size,
@@ -214,7 +228,7 @@ def plot_rule_visualization(
         flag_rule_conjunction,
     )
 
-    renderer = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
+    rnd = MPRenderer(ax=scenario_ax, plot_limits=scenario_plot_limits)
 
     if flag_rule_conjunction:
         if flag_plot_predicate_bar_chart:
@@ -261,6 +275,42 @@ def plot_rule_visualization(
                 )
             i += 1
     # after vehicle2draw_params is determined, draw the scenarios
+    ego_initial = scenario.obstacle_by_id(ego_vehicle_id)
+
+    rnd.draw_params.time_begin = time_step
+    rnd.draw_params.trajectory.draw_trajectory = False
+    rnd.draw_params.lanelet_network.lanelet.fill_lanelet = False
+    rnd.draw_params.occupancy.draw_occupancies = False
+    rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.draw_occupancies = False
+    rnd.draw_params.dynamic_obstacle.occupancy.draw_occupancies = False
+    # rnd.draw_params.dynamic_obstacle.draw_shape = False
+    rnd.draw_params.dynamic_obstacle['show_label'] = True
+    scenario.draw(rnd)
+
+    rnd.draw_params.dynamic_obstacle.draw_shape = True
+    np_rule_robustness_course = np.array(rule_conjunct_list)
+    rob_values = np_rule_robustness_course[:, 1]
+    if rob_values[-1] >= 0:
+        ego_color = TUMcolor.TUMblue.value
+    else:
+        ego_color = TUMcolor.TUMorange.value
+    ego_mark = 'x'
+    rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.shape.facecolor = ego_color
+    rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.shape.edgecolor = ego_color
+    ego_initial.draw(rnd)
+
+    # render scenario and ego vehicle
+    rnd.render()
+
+    pos_x_initial = [ego_initial.initial_state.position[0]]
+    pos_y_initial = [ego_initial.initial_state.position[1]]
+
+    for state in ego_initial.prediction.trajectory.state_list:
+        pos_x_initial.append(state.position[0])
+        pos_y_initial.append(state.position[1])
+
+    rnd.ax.plot(pos_x_initial[time_step:], pos_y_initial[time_step:], color=ego_color,
+                marker=ego_mark, markersize=7.5, zorder=10000, linewidth=1.5, label='initial trajectory')
     # scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
     #
     # # plotting scenario and obstacles
