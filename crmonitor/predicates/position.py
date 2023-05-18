@@ -23,6 +23,9 @@ from crmonitor.predicates.utils import (
     vehicle_directly_right,
 )
 
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 logger = logging.getLogger(__name__)
 
 
@@ -1304,27 +1307,17 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         if inc_left_of_k_id == incoming_p_id:
             rob = np.min([front_k_s - inc_start_k_s,
                           inc_end_k_s - rear_k_s,
-                          front_p_s - inc_start_k_s,
+                          front_p_s - inc_start_p_s,
                           inc_end_p_s - rear_p_s])
             rob = self._scale_lon_dist(rob)
         # if p-th vehicle not in the incoming left of k-th
         else:
-            inc_left_end_d = list()
-            for point in utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(inc_left_of_k_id)):
-                inc_left_end_d.append(abs(vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(*point)[1]))
-            # find the distance from reference path of p-th vehicle to the end of incoming left of k-th
-            inc_left_end_d = np.max(inc_left_end_d)
-            state_p = vehicle_p.states_cr[time_step]
-            state_distance_d = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                *state_p.position)[1]
-            rob_p_d = self._scale_lat_dist(state_distance_d - inc_left_end_d)
-            rob_k_s = self._scale_lon_dist(inc_end_k_s - rear_k_s)
-            rob = min(rob_p_d, rob_k_s)
+            rob = -1
         return rob
 
 
 class PredInIntersectionConflictArea(BasePredicateEvaluator):
-    predicate_name = PositionPredicates.OnIncomingLeftOf
+    predicate_name = PositionPredicates.InIntersectionConflictArea
     arity = 2
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
@@ -1352,28 +1345,81 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
             for lanelet_type in lanelet.lanelet_type:
                 if lanelet_type.value == 'intersection':
                     lanelets_k_intersection.append(lanelet_id)
-        if len(lanelets_k_intersection) == 0:
-            return -1
         conflict_lanelet = list(vehicle_p.ref_path_lane.contained_lanelets.intersection(set(lanelets_k_intersection)))
-        # TODO: exclude lanelets_dir of k-th vehicle
+        # TODO: exclude lanelets_dir of k-th vehicle (conflict lanelet must exclude lanelets_dir of k-th vehicle)
         if len(conflict_lanelet) != 0:
-            conflict_lanelet_start_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_start_line(world.road_network.lanelet_network.find_lanelet_by_id(conflict_lanelet[0]))[0])[0]
-            conflict_lanelet_end_s = vehicle_p.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_end_line(world.road_network.lanelet_network.find_lanelet_by_id(conflict_lanelet[0]))[0])[0]
-            occ_points_k_s = np.array(utils.longitudinal_distance_to_lane(vehicle_k, vehicle_p.ref_path_lane, time_step))
-            distance_to_start = occ_points_k_s - conflict_lanelet_start_s
-            distance_to_start = np.min(distance_to_start[distance_to_start >= 0])
-            distance_to_end = conflict_lanelet_end_s - occ_points_k_s
-            distance_to_end = np.min(distance_to_end[distance_to_start >= 0])
-            rob = min(distance_to_start, distance_to_end)
-            rob = self._scale_lon_dist(rob)
+            current_lanelet_k = list(lanelets_assignment_k.intersection(set(vehicle_k.lanelets_dir)))
+            current_lanelet_k_item = world.road_network.lanelet_network.find_lanelet_by_id(current_lanelet_k[0])
+            conflict_lanelet_item = world.road_network.lanelet_network.find_lanelet_by_id(conflict_lanelet[0])
+            conflict_points = utils.find_conflict_points(current_lanelet_k_item.center_vertices, conflict_lanelet_item)
+            center_vertices = current_lanelet_k_item.center_vertices
+            center_vertices = [v for v in center_vertices]
+            center_vertices_clcs = vehicle_k.ref_path_lane.clcs.convert_list_of_points_to_curvilinear_coords(center_vertices, len(center_vertices))
+            left_vertices_clcs = list()
+            right_vertices_clcs = list()
+            for vertices in center_vertices_clcs:
+                left_vertices_clcs.append(vertices + np.array([0, vehicle_k.shape.width / 2]))
+                right_vertices_clcs.append(vertices - np.array([0, vehicle_k.shape.width / 2]))
+            left_vertices = np.array(vehicle_k.ref_path_lane.clcs.convert_list_of_points_to_cartesian_coords(left_vertices_clcs, len(left_vertices_clcs)))
+            right_vertices = np.array(vehicle_k.ref_path_lane.clcs.convert_list_of_points_to_cartesian_coords(right_vertices_clcs, len(right_vertices_clcs)))
+            left_conflict_points = utils.find_conflict_points(left_vertices, conflict_lanelet_item)
+            right_conflict_points = utils.find_conflict_points(right_vertices, conflict_lanelet_item)
+
+            start_points = [conflict_points[0], left_conflict_points[0], right_conflict_points[0]]
+            end_points = [conflict_points[1], left_conflict_points[1], right_conflict_points[1]]
+
+            # fig = plt.figure()
+            # ax = fig.gca()
+            # ax.add_patch(patches.Polygon(conflict_lanelet_item.polygon.vertices, edgecolor='blue', fill=False, linewidth=2, zorder=1))
+            # ax.add_patch(
+            #     patches.Polygon(current_lanelet_k_item.polygon.vertices, edgecolor='blue', fill=False, linewidth=2,
+            #                     zorder=1))
+            # ax.plot(current_lanelet_k_item.center_vertices[:, 0], current_lanelet_k_item.center_vertices[:, 1], color='red', linewidth=2,
+            #         zorder=10)
+            # ax.plot(left_vertices[:, 0], left_vertices[:, 1], color='red', linewidth=2, zorder=10)
+            # ax.plot(right_vertices[:, 0], right_vertices[:, 1], color='red', linewidth=2, zorder=10)
+            # ax.plot(conflict_points[0][0], conflict_points[0][1], marker='o', color='red', markersize=10, linewidth=1.5, zorder=100)
+            # ax.plot(conflict_points[1][0], conflict_points[1][1], marker='o', color='red', markersize=10, linewidth=1.5, zorder=100)
+            # ax.plot(left_conflict_points[0][0], left_conflict_points[0][1], marker='o', color='blue', markersize=10, linewidth=1.5,
+            #         zorder=100)
+            # ax.plot(right_conflict_points[0][0], right_conflict_points[0][1], marker='o', color='green', markersize=10, linewidth=1.5,
+            #         zorder=100)
+            # ax.plot(left_conflict_points[1][0], left_conflict_points[1][1], marker='o', color='blue', markersize=10,
+            #         linewidth=1.5, zorder=100)
+            # ax.plot(right_conflict_points[1][0], right_conflict_points[1][1], marker='o', color='green', markersize=10,
+            #         linewidth=1.5, zorder=100)
+            # plt.xlim(50, 100)
+            # plt.ylim(-15, 15)
+            # plt.show()
+
+            front_s_k = vehicle_k.front_s(time_step, vehicle_k.ref_path_lane)
+            rear_s_k = vehicle_k.rear_s(time_step, vehicle_k.ref_path_lane)
+            start_conflict_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(*conflict_points[0])[0]
+            end_conflict_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(*conflict_points[1])[0]
+            rob = min(front_s_k - start_conflict_s, end_conflict_s - rear_s_k)
+            # TODO: fix threshold
+            rob = max(0.001, self._scale_lon_dist(rob))
         else:
-            distance_to_left = utils.distance_to_left_bounds_clcs(vehicle_k, vehicle_p.ref_path_lane, time_step)
-            distance_to_right = utils.distance_to_right_bounds_clcs(vehicle_k, vehicle_p.ref_path_lane, time_step)
-            distance = abs(np.array([distance_to_left, distance_to_right]))
-            rob = -np.min(distance)
-            rob = self._scale_lat_dist(rob)
+            all_conflict_points = list()
+            all_left_conflict_points = list()
+            all_right_conflict_points = list()
+            for lanelet_id in vehicle_p.ref_path_lane.contained_lanelets:
+                lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+                # TODO: can we simplify below for, using define lanelet_type?
+                for lanelet_type in lanelet.lanelet_type:
+                    if lanelet_type.value == 'intersection':
+                        conflict_points = utils.find_conflict_points(vehicle_k.lanelets_dir_center_vertices, lanelet)
+                        if conflict_points is not None:
+                            all_conflict_points.append(conflict_points)
+            if len(all_conflict_points) == 0:
+                return -1
+            else:
+                front_s_k = vehicle_k.front_s(time_step, vehicle_k.ref_path_lane)
+                rear_s_k = vehicle_k.rear_s(time_step, vehicle_k.ref_path_lane)
+                start_conflict_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(*all_conflict_points[0][0])[0]
+                end_conflict_s = vehicle_k.ref_path_lane.clcs.convert_to_curvilinear_coords(*all_conflict_points[-1][-1])[0]
+                rob = min(front_s_k - start_conflict_s, end_conflict_s - rear_s_k)
+                rob = self._scale_lon_dist(rob)
         return rob
 
 
