@@ -29,20 +29,34 @@ traffic_rules:
   ######################
   ## Intersection Rules
   ######################
-  R_IN1: "((not prev (not stop_line_in_front__a0)) and (not stop_line_in_front__a0) and at_traffic_sign_stop__a0 and (not relevant_traffic_light__a0)) implies once(historically[0, 3s](stop_line_in_front__a0 and in_standstill__a0))"
+  R_IN1: "(
+            (not prev (not stop_line_in_front__a0)) and 
+            (not stop_line_in_front__a0) and 
+            at_traffic_sign_stop__a0 and 
+            (not relevant_traffic_light__a0)) implies 
+            once(historically[0, 3s](stop_line_in_front__a0 and in_standstill__a0))"
 
-  META_1: "A a1 A a2: 
+  META_1: "A a1: ( 
                     (
-                      in_intersection_conflict_area__a1_a2 implies
+                      in_intersection_conflict_area__a0_a1 implies
                       (
-                        not causes_braking_intersection__a1_a2 and
-                        not eventually[0,1s](in_intersection_conflict_area__a2_a1)
+                        not causes_braking_intersection__a0_a1 and
+                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
                       )
-                    )"
+                    ) and
+                    (
+                      in_intersection_conflict_area__a1_a0 implies
+                      not eventually[0,1s](in_intersection_conflict_area__a0_a1)
+                    )
+                 )"
+
+  META_1_1: "A a1: (
+                      eventually[500ms:1000ms](in_intersection_conflict_area__a1_a0)
+                   )"
 
   R_IN3: "A a1: (
                   (
-                    on_incoming_left_of__a0_a1 and 
+                    once(on_incoming_left_of__a0_a1) and 
                     not relevant_traffic_light__a0 and 
                     (
                       turning_right__a0 and 
@@ -72,18 +86,25 @@ traffic_rules:
                       going_straight__a0 and
                       going_straight__a1 and
                       same_priority_straight_straight__a0_a1
-                    )) implies
-                    (
-                      (
-                      in_intersection_conflict_area__a0_a1 implies
-                      (
-                        not causes_braking_intersection__a0_a1 and
-                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
-                      )
-                      )or 
-                      not on_lanelet_with_type_intersection__a0
                     )
-                  )"
+                  ) implies
+                  (
+                      (
+                        (
+                        in_intersection_conflict_area__a0_a1 implies
+                          (
+                            not causes_braking_intersection__a0_a1 and
+                            not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                          )
+                        ) and
+                        (
+                          in_intersection_conflict_area__a1_a0 implies
+                          not eventually[0,1s](in_intersection_conflict_area__a0_a1)
+                        )
+                      )or 
+                    not on_lanelet_with_type_intersection__a0
+                  )
+                 )"
 
   R_IN4: "A a1: ((
                     turning_right__a1 and
