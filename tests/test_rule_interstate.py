@@ -9,12 +9,19 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
+
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import parse_rule, RuleNode, PredicateNode, ExistNode, AllNode
+from crmonitor.monitor.rule import (
+    AllNode,
+    ExistNode,
+    PredicateNode,
+    RuleNode,
+    parse_rule,
+)
 from tests.util import parallel_lanes
 
 logging.basicConfig(
@@ -46,15 +53,23 @@ class RuleTest(unittest.TestCase):
 
         # ego vehicle
         cr_state_list_ego = {
-            0: CustomState(position=(0, 0), orientation=0, velocity= 10, time_step=0),
-            1: CustomState(position=(10, 0), orientation=0, velocity=4 , time_step=1),
+            0: CustomState(position=(0, 0), orientation=0, velocity=10, time_step=0),
+            1: CustomState(position=(10, 0), orientation=0, velocity=4, time_step=1),
             2: CustomState(position=(14, 0), orientation=0, velocity=10, time_step=2),
-            3: CustomState(position=(24, 0), orientation=0, velocity=5 , time_step=3),
-            4: CustomState(position=(29, 0), orientation=0, velocity=5 , time_step=4),
+            3: CustomState(position=(24, 0), orientation=0, velocity=5, time_step=3),
+            4: CustomState(position=(29, 0), orientation=0, velocity=5, time_step=4),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}, 4: {1}}
-        ego_vehicle = Vehicle(0, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_ego, None, CurvilinearStateManager(road_network),
-                              lanelet_assignments_ego)
+        ego_vehicle = Vehicle(
+            0,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            Rectangle(5, 2),
+            cr_state_list_ego,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_ego,
+        )
 
         cr_state_list_other_1 = {
             0: CustomState(position=(10, 0), orientation=0, velocity=2, time_step=0),
@@ -63,8 +78,16 @@ class RuleTest(unittest.TestCase):
             3: CustomState(position=(30, 0), orientation=0, velocity=2, time_step=3),
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        other_vehicle_1 = Vehicle(1, ObstacleType.CAR, ego_vehicle_param, Rectangle(5, 2), cr_state_list_other_1, None,
-                                CurvilinearStateManager(road_network), lanelet_assignments_other_1)
+        other_vehicle_1 = Vehicle(
+            1,
+            ObstacleType.CAR,
+            ego_vehicle_param,
+            Rectangle(5, 2),
+            cr_state_list_other_1,
+            None,
+            CurvilinearStateManager(road_network),
+            lanelet_assignments_other_1,
+        )
 
         world = World({ego_vehicle, other_vehicle_1}, road_network)
 
@@ -270,7 +293,9 @@ class RuleTest(unittest.TestCase):
 
         exp_floating = [(ego, all(val.values())) for ego, val in all_exp_result]
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml")
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_interstate/DEU_test_safe_distance.xml"
+        )
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
 
         # standard robustness
@@ -292,7 +317,9 @@ class RuleTest(unittest.TestCase):
             self.assertTrue(isinstance(rule, AllNode))
             self.assertEqual(len(rule.children), 1)
             self.assertTrue(isinstance(rule.children[0], RuleNode))
-            self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
+            self.assertTrue(
+                any([isinstance(c, PredicateNode) for c in rule.children[0].children])
+            )
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
@@ -340,8 +367,12 @@ class RuleTest(unittest.TestCase):
         # one vehicle which has no leading vehicle violates acceleration constraint (1002)
         # two leading vehicle which brake only minimal (1005, 1007)
         # one vehicle following another vehicle which brakes normal (1006)
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_unnecessary_braking.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_interstate/DEU_test_unnecessary_braking.xml"
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
         exp_result = {
             1000: True,
             1001: True,
@@ -352,11 +383,7 @@ class RuleTest(unittest.TestCase):
         }
         rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
-        rule = parse_rule(
-                rule_str,
-                self.traffic_rules,
-                name="UnnecessaryBraking"
-        )
+        rule = parse_rule(rule_str, self.traffic_rules, name="UnnecessaryBraking")
         self.assertTrue(isinstance(rule, RuleNode))
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
@@ -371,7 +398,9 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+            self.assertEqual(
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+            )
 
         # output robustness
         # Todo: RuleEvaluator.create_from_rule_str
@@ -409,13 +438,16 @@ class RuleTest(unittest.TestCase):
         #
         #     self.assertEqual(exp_rob, rob_value, msg=f"Test failed for ego_id={ego_id}")
 
-
     def test_speed_limit(self):
         # one vehicle which always violates speed limit (1002)
         # two vehicles which never violate speed limit (1001, 1003)
         # one vehicle which violates speed limit partially (1000)
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_max_speed_limit.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_interstate/DEU_test_max_speed_limit.xml"
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
 
         # standard robustness
@@ -443,9 +475,21 @@ class RuleTest(unittest.TestCase):
         # one vehicle which does not preserve traffic flow with leading and following vehicle (1003)
         # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_preserve_traffic_flow.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = {1000: True, 1001: True, 1002: True, 1003: False, 1004: True, 1005: False}
+        scenario_file = os.path.join(
+            self.scenario_root_path,
+            "test_interstate/DEU_test_preserve_traffic_flow.xml",
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
+        exp_result = {
+            1000: True,
+            1001: True,
+            1002: True,
+            1003: False,
+            1004: True,
+            1005: False,
+        }
         world = World.create_from_scenario(scenario)
 
         for ego_id, exp_violation in exp_result.items():
@@ -471,11 +515,25 @@ class RuleTest(unittest.TestCase):
         # seven vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1008, 1009,
         # 1010)
         # one vehicle which is in standstill and part of a congestion (1005)
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_standstill.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = {1000: True, 1001: False, 1002: True, 1003: True,
-                      1004: True, 1005: True, 1006: True, 1007: True,
-                      1008: True, 1009: True, 1010: True}
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_interstate/DEU_test_standstill.xml"
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
+        exp_result = {
+            1000: True,
+            1001: False,
+            1002: True,
+            1003: True,
+            1004: True,
+            1005: True,
+            1006: True,
+            1007: True,
+            1008: True,
+            1009: True,
+            1010: True,
+        }
 
         world = World.create_from_scenario(scenario)
 
@@ -499,18 +557,132 @@ class RuleTest(unittest.TestCase):
         # one vehicle which overtakes a congestion too fast (1001)
         # all other vehicles a part of a congestion
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_overtaking_right_congestion.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        scenario_file = os.path.join(
+            self.scenario_root_path,
+            "test_interstate/DEU_test_overtaking_right_congestion.xml",
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
         exp_result = [
-            (1000, {1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1001, {1000: True, 1002: True, 1003: False, 1004: False, 1005: False, 1006: False, 1007: False, 1008: False}),
-            (1002, {1000: True, 1001: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1003, {1000: True, 1001: True, 1002: True, 1004: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1004, {1000: True, 1001: True, 1002: True, 1003: True, 1005: True, 1006: True, 1007: True, 1008: True}),
-            (1005, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1006: True, 1007: True, 1008: True}),
-            (1006, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1007: True, 1008: True}),
-            (1007, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1008: True}),
-            (1008, {1000: True, 1001: True, 1002: True, 1003: True, 1004: True, 1005: True, 1006: True, 1007: True})]
+            (
+                1000,
+                {
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1001,
+                {
+                    1000: True,
+                    1002: True,
+                    1003: False,
+                    1004: False,
+                    1005: False,
+                    1006: False,
+                    1007: False,
+                    1008: False,
+                },
+            ),
+            (
+                1002,
+                {
+                    1000: True,
+                    1001: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1003,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1004,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1005,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1006: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1006,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1007: True,
+                    1008: True,
+                },
+            ),
+            (
+                1007,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1008: True,
+                },
+            ),
+            (
+                1008,
+                {
+                    1000: True,
+                    1001: True,
+                    1002: True,
+                    1003: True,
+                    1004: True,
+                    1005: True,
+                    1006: True,
+                    1007: True,
+                },
+            ),
+        ]
 
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
@@ -525,7 +697,9 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+            self.assertEqual(
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+            )
 
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)
@@ -533,8 +707,12 @@ class RuleTest(unittest.TestCase):
         # one vehicle which drives always in correct direction (1002)
         # one vehicle which makes a u-turn (1003)
 
-        scenario_file = os.path.join(self.scenario_root_path, "test_interstate/DEU_test_reversing_and_u_turn.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_interstate/DEU_test_reversing_and_u_turn.xml"
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
         exp_result = {1000: False, 1001: False, 1002: False, 1003: True}
 
         world = World.create_from_scenario(scenario)
@@ -561,17 +739,41 @@ class RuleTest(unittest.TestCase):
         # several vehicles which drive rightmost(e.g., 1002, 1018)
         # one vehicle which drives on shoulder (1021)
 
-        scenario_file = os.path.join(self.scenario_root_path,
-                                     "test_interstate/DEU_test_emergency_three_lanes_with_shoulder.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
+        scenario_file = os.path.join(
+            self.scenario_root_path,
+            "test_interstate/DEU_test_emergency_three_lanes_with_shoulder.xml",
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
         exp_result = {
-            1000: False, 1001: True, 1002: True, 1003: True,
-            1004: False, 1005: False, 1006: True, 1007: True,
-            1008: False, 1009: True, 1010: False, 1011: True,
-            1012: True, 1013: True, 1014: True, 1015: True,
-            1016: False, 1017: True, 1018: True, 1019: True,
-            1020: True, 1021: False, 1022: False, 1023: True,
-            1024: False, 1025: True, 1026: True
+            1000: False,
+            1001: True,
+            1002: True,
+            1003: True,
+            1004: False,
+            1005: False,
+            1006: True,
+            1007: True,
+            1008: False,
+            1009: True,
+            1010: False,
+            1011: True,
+            1012: True,
+            1013: True,
+            1014: True,
+            1015: True,
+            1016: False,
+            1017: True,
+            1018: True,
+            1019: True,
+            1020: True,
+            1021: False,
+            1022: False,
+            1023: True,
+            1024: False,
+            1025: True,
+            1026: True,
         }
 
         for ego_id, exp_violation in exp_result.items():
@@ -585,22 +787,27 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+            self.assertEqual(
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+            )
 
     def test_consider_entering_vehicles(self):
         # one vehicle driving always in the left most lane (1001)
         # one vehicle changing to rightmost main carriage way lane (1000)
         # one vehicle entering main carriage way (1002)
 
-        scenario_file = os.path.join(self.scenario_root_path,
-                                     "test_interstate/DEU_test_consider_entering_vehicles_for_lane_change.xml")
-        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        exp_result = \
-            [
-                (1000, {1001: True, 1002: False}),
-                (1001, {1000: True, 1002: True}),
-                (1002, {1000: True, 1001: True})
-            ]
+        scenario_file = os.path.join(
+            self.scenario_root_path,
+            "test_interstate/DEU_test_consider_entering_vehicles_for_lane_change.xml",
+        )
+        scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
+            lanelet_assignment=True
+        )
+        exp_result = [
+            (1000, {1001: True, 1002: False}),
+            (1001, {1000: True, 1002: True}),
+            (1002, {1000: True, 1001: True}),
+        ]
         world = World.create_from_scenario(scenario)
 
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
@@ -614,7 +821,10 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
+            self.assertEqual(
+                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
