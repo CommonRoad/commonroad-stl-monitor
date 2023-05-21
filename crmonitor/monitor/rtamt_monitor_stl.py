@@ -104,10 +104,6 @@ class RtamtStlMonitor:
 
         # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
         self._monitor = copy.copy(self._spec)
-        # self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
-        # self._monitor.top.accept(self._monitor.online_evaluator)
-        # self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
-        # self._monitor.reset()
         self._propositions = {}
 
     @property
