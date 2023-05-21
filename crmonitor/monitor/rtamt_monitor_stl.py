@@ -6,17 +6,18 @@ from typing import Any, Dict, List, Tuple
 import rtamt
 
 from crmonitor.monitor.rule import IOType, RuleNode
-from rtamt.node.ltl.implies import Implies
-from rtamt.node.ltl.conjunction import Conjunction
-from rtamt.node.ltl.disjunction import Disjunction
-from rtamt.node.stl.timed_historically import TimedHistorically
-from rtamt.node.stl.timed_eventually import TimedEventually
-from rtamt.node.stl.timed_always import TimedAlways
-from rtamt.node.stl.timed_once import TimedOnce
-from rtamt.node.ltl.previous import Previous
-from rtamt.node.ltl.neg import Neg
-from rtamt.node.ltl.predicate import Predicate
-from rtamt.node.unary_node import UnaryNode
+from rtamt.syntax.node.ltl.implies import Implies
+from rtamt.syntax.node.ltl.conjunction import Conjunction
+from rtamt.syntax.node.ltl.disjunction import Disjunction
+from rtamt.syntax.node.stl.timed_historically import TimedHistorically
+from rtamt.syntax.node.stl.timed_eventually import TimedEventually
+from rtamt.syntax.node.stl.timed_always import TimedAlways
+from rtamt.syntax.node.stl.timed_once import TimedOnce
+from rtamt.syntax.node.ltl.previous import Previous
+from rtamt.syntax.node.ltl.neg import Neg
+from rtamt.syntax.node.ltl.predicate import Predicate
+from rtamt.syntax.node.ltl.variable import Variable
+from rtamt.syntax.node.unary_node import UnaryNode
 
 from .specification_dict import stl_discrete_time_online_specification_factory
 
@@ -103,10 +104,10 @@ class RtamtStlMonitor:
 
         # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
         self._monitor = copy.copy(self._spec)
-        self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
-        self._monitor.top.accept(self._monitor.online_evaluator)
-        self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
-        self._monitor.reset()
+        # self._monitor.online_evaluator = STLOnlineEvaluator(self._monitor)
+        # self._monitor.top.accept(self._monitor.online_evaluator)
+        # self._monitor.reseter.node_monitor_dict = self._monitor.online_evaluator.node_monitor_dict
+        # self._monitor.reset()
         self._propositions = {}
 
     @property
@@ -122,9 +123,10 @@ class RtamtStlMonitor:
     ):
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
+        self.collect_prop_rob(self._spec.ast.specs[0], self._propositions)
         return rob
 
-    def collect_prop_rob(self, top_node=None, prop_list=None):
+    def collect_prop_rob(self, specs_node=None, prop_list=None):
         """
         Collects the propositions (abstractions) recursively to pass them to the monitor wrapper.
         If a sub-formula is encapsulated by an LTL/STL indicator, it constitutes a proposition.
@@ -136,29 +138,27 @@ class RtamtStlMonitor:
         Returns:
         None. Acts directly on the dict that was passed as an argument: dict{proposition, robustness_value}
         """
-        if top_node is None:
-            top_node = self._monitor.top
-        if isinstance(top_node, UnaryNode):
-            if isinstance(top_node, Neg):
-                self.collect_prop_rob(top_node.children[0], prop_list)
-            if isinstance(top_node, TimedOnce) or isinstance(top_node, Previous) or isinstance(top_node, TimedAlways) or\
-                    isinstance(top_node, TimedHistorically) or isinstance(top_node, TimedEventually):
-                prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
-        elif isinstance(top_node, Predicate):
-            prop_list[top_node.name] = self._monitor.online_evaluator.evaluate(top_node, [])
+        if specs_node is None:
+            specs_node = self._spec.ast.specs[0]
+        if isinstance(specs_node, UnaryNode):
+            if isinstance(specs_node, Neg):
+                self.collect_prop_rob(specs_node.children[0], prop_list)
+            if isinstance(specs_node, TimedOnce) or isinstance(specs_node, Previous) or isinstance(specs_node, TimedAlways) or\
+                    isinstance(specs_node, TimedHistorically) or isinstance(specs_node, TimedEventually):
+                prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
+        elif isinstance(specs_node, Variable):
+            prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         else:
-            if isinstance(top_node, Implies):
-                if isinstance(top_node.children[0], Predicate):
-                    prop_list[top_node.children[0].name] = self._monitor.online_evaluator.evaluate(top_node.children[0],
-                                                                                                   [])
-                    self.collect_prop_rob(top_node.children[1], prop_list)
-                elif isinstance(top_node.children[1], Predicate):
-                    prop_list[top_node.children[1].name] = self._monitor.online_evaluator.evaluate(top_node.children[1],
-                                                                                                   [])
-                    self.collect_prop_rob(top_node.children[0], prop_list)
-            if isinstance(top_node, Conjunction) or isinstance(top_node, Disjunction):
-                self.collect_prop_rob(top_node.children[0], prop_list)
-                self.collect_prop_rob(top_node.children[1], prop_list)
+            if isinstance(specs_node, Implies):
+                if isinstance(specs_node.children[0], Variable):
+                    prop_list[specs_node.children[0].name] = self.ast_node_values[specs_node.children[0].name]
+                    self.collect_prop_rob(specs_node.children[1], prop_list)
+                elif isinstance(specs_node.children[1], Variable):
+                    prop_list[specs_node.children[1].name] = self.ast_node_values[specs_node.children[1].name]
+                    self.collect_prop_rob(specs_node.children[0], prop_list)
+            if isinstance(specs_node, Conjunction) or isinstance(specs_node, Disjunction):
+                self.collect_prop_rob(specs_node.children[0], prop_list)
+                self.collect_prop_rob(specs_node.children[1], prop_list)
 
     def copy(self):
         return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)
