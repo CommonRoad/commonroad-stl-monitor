@@ -41,17 +41,18 @@ traffic_rules:
                       in_intersection_conflict_area__a0_a1 implies
                       (
                         not causes_braking_intersection__a0_a1 and
-                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                        not eventually[0, 1s](in_intersection_conflict_area__a1_a0)
                       )
                     ) and
                     (
                       in_intersection_conflict_area__a1_a0 implies
-                      not eventually[0,1s](in_intersection_conflict_area__a0_a1)
+                      not eventually[0, 1s](in_intersection_conflict_area__a0_a1)
                     )
                  )"
 
   META_1_1: "A a1: (
-                      eventually[500ms:1000ms](in_intersection_conflict_area__a1_a0)
+                      (in_intersection_conflict_area__a0_a1 >= 0) implies
+                      not eventually[0, 1s]((in_intersection_conflict_area__a1_a0 >= 0))
                    )"
 
   R_IN3: "A a1: (
