@@ -6,9 +6,9 @@
 #   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
 traffic_rules:
-  R_G1: 'A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 and !once[0, 3s](cut_in_i__a1_a0 and prev(not cut_in_i__a1_a0))) implies keeps_safe_distance_prec__a0_a1)'
-  R_G2: 'brakes_abruptly_i__a0 implies E a1: (precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or not rel_brakes_abruptly_i__a0_a1))'
-  R_G3: keeps_lane_speed_limit__a0 and keeps_type_speed_limit__a0 and keeps_fov_speed_limit__a0 and keeps_brake_speed_limit__a0
+  R_G1: 'A a1: (((in_front_of_i__a0_a1 >= 0) and (in_same_lane_i__a0_a1 >= 0) and !once[0, 3s]((cut_in_i__a1_a0 >= 0) and prev((not cut_in_i__a1_a0 >= 0)))) implies (keeps_safe_distance_prec__a0_a1 >= 0))'
+  R_G2: '(brakes_abruptly_i__a0 >= 0) implies E a1: ((precedes__a0_a1 >= 0) and (not (keeps_safe_distance_prec__a0_a1 >= 0) or not (rel_brakes_abruptly_i__a0_a1 >= 0)))'
+  R_G3: '(keeps_lane_speed_limit__a0 >= 0) and (keeps_type_speed_limit__a0 >= 0) and (keeps_fov_speed_limit__a0 >= 0) and (keeps_brake_speed_limit__a0 >= 0)'
 
   R_G4: not slow_leading_vehicle_i__a0 implies preserves_traffic_flow__a0
 
