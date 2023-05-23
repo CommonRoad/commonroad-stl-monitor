@@ -144,14 +144,14 @@ class RtamtStlMonitor:
                     isinstance(specs_node, TimedHistorically) or isinstance(specs_node, TimedEventually) or \
                     isinstance(specs_node, Once):
                 prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
-        elif isinstance(specs_node, Variable):
+        elif isinstance(specs_node, Predicate):
             prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         else:
             if isinstance(specs_node, Implies):
-                if isinstance(specs_node.children[0], Variable):
+                if isinstance(specs_node.children[0], Predicate):
                     prop_list[specs_node.children[0].name] = self.ast_node_values[specs_node.children[0].name]
                     self.collect_prop_rob(specs_node.children[1], prop_list)
-                elif isinstance(specs_node.children[1], Variable):
+                elif isinstance(specs_node.children[1], Predicate):
                     prop_list[specs_node.children[1].name] = self.ast_node_values[specs_node.children[1].name]
                     self.collect_prop_rob(specs_node.children[0], prop_list)
             if isinstance(specs_node, Conjunction) or isinstance(specs_node, Disjunction):
