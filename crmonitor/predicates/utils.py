@@ -1386,7 +1386,7 @@ def ref_path_lanelets(
     return reference_path[0]
 
 
-def get_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+def get_incoming(lanelets_id, road_network: RoadNetwork) -> IntersectionIncomingElement:
     incoming = None
     for lanelet_id in lanelets_id:
         lanelet_pre = reach_pre(lanelet_id, road_network)
@@ -1399,7 +1399,48 @@ def get_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
     return incoming
 
 
-def get_right_turn_incoming(lanelets_id, road_network):
+def get_incoming_multi_intersections(vehicle: Vehicle, time_step, road_network: RoadNetwork):
+    lanelets_dir_vehicle = np.array(vehicle.lanelets_dir)
+    lanelets_dir_pre = reach_pre(lanelets_dir_vehicle[0], road_network)
+    lanelets_dir_suc = reach_suc(lanelets_dir_vehicle[-1], road_network)
+    lanelets_dir_vehicle = np.append(lanelets_dir_vehicle, lanelets_dir_pre)
+    lanelets_dir_vehicle = np.append(lanelets_dir_vehicle, lanelets_dir_suc)
+    occupied_lanelets_possible = np.unique(lanelets_dir_vehicle)
+    front_s = vehicle.front_s(time_step, vehicle.ref_path_lane)
+    rear_s = vehicle.rear_s(time_step, vehicle.ref_path_lane)
+    incomings = list()
+    distance_to_incomings = list()
+    for intersection in road_network.lanelet_network.intersections:
+        for incoming in intersection.incomings:
+            incoming_ids = list(incoming.incoming_lanelets.intersection(set(occupied_lanelets_possible)))
+            if len(incoming_ids) != 0:
+                incomings.append(incoming)
+                start_incoming_s = vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                    *get_lanelet_start_line(road_network.lanelet_network.find_lanelet_by_id(incoming_ids[0]))[0])[0]
+                incoming_successor = set.union(incoming.successors_right, incoming.successors_straight, incoming.successors_left)
+                successor_possible = list(incoming_successor.intersection(set(occupied_lanelets_possible)))
+                end_intersection_s = vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                    *get_lanelet_end_line(road_network.lanelet_network.find_lanelet_by_id(successor_possible[0]))[0])[0]
+                # lanelet in front of vehicle
+                if (front_s - start_incoming_s) < 0 < (end_intersection_s - rear_s):
+                    distance_to_incomings.append(front_s - start_incoming_s)
+                # vehicle in front of lanelet
+                elif (end_intersection_s - rear_s) <= 0 <= (front_s - start_incoming_s):
+                    distance_to_incomings.append(end_intersection_s - rear_s)
+                # vehicle inside lanelet
+                else:
+                    distance_to_incomings.append(min(front_s - start_incoming_s, end_intersection_s - rear_s))
+    return incomings, distance_to_incomings
+
+
+
+
+
+def get_right_turn_incoming(lanelets_id, road_network: RoadNetwork):
+    """
+    find incoming according to current lanelet and reach_pre of current lanelet includes the right turning lanelet of
+    searched incoming
+    """
     incoming = None
     for lanelet_id in lanelets_id:
         lanelet_pre = reach_pre(lanelet_id, road_network)
@@ -1481,6 +1522,47 @@ def get_straight_going_lane(road_network: RoadNetwork, incoming: IntersectionInc
     assert len(straight_going_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
     straight_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(straight_going_lanelets_ids)[0])
     return straight_going_lane[0], straight_lanelet
+
+
+def get_oncoming(vehicle: Vehicle, road_network: RoadNetwork):
+    incoming_vehicle = get_incoming(vehicle.lanelets_dir, road_network)
+    successors_straight = incoming_vehicle.successors_straight
+    oncoming_straight_list = list()
+    for suc_straight in successors_straight:
+        straight_lanelet = road_network.lanelet_network.find_lanelet_by_id(suc_straight)
+        oncoming_straight_sublist = list()
+        adj_direction = "left"
+        current_lanelet = straight_lanelet
+        while True:
+            if adj_direction == "left":
+                if current_lanelet.adj_left is None:
+                    break
+                adj_left_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
+                if not current_lanelet.adj_left_same_direction:
+                    oncoming_straight_sublist.append(current_lanelet.adj_left)
+                    adj_direction = "right"
+                    current_lanelet = adj_left_lanelet
+                elif current_lanelet.adj_left_same_direction and len(oncoming_straight_sublist) == 0:
+                    current_lanelet = adj_left_lanelet
+                else:
+                    assert False
+            elif adj_direction == "right":
+                if current_lanelet.adj_right is None:
+                    break
+                adj_right_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
+                if current_lanelet.adj_right_same_direction:
+                    oncoming_straight_sublist.append(current_lanelet.adj_right)
+                    current_lanelet = adj_right_lanelet
+                elif not current_lanelet.adj_right_same_direction:
+                    break
+                else:
+                    assert False
+        oncoming_straight_list = oncoming_straight_list + oncoming_straight_sublist
+    oncoming_list = list()
+    for oncoming_straight in oncoming_straight_list:
+        incoming = get_straight_going_incoming([oncoming_straight], road_network)
+        oncoming_list = oncoming_list + list(incoming.incoming_lanelets) + list(incoming.successors_straight) + list(incoming.successors_right)
+    return oncoming_list
 
 
 def distance_to_left_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
