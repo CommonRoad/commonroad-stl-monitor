@@ -57,96 +57,185 @@ traffic_rules:
 
   R_IN3: "A a1: (
                   (
-                    once(on_incoming_left_of__a0_a1) and 
-                    not relevant_traffic_light__a0 and 
+                    (on_incoming_left_of__a0_a1 >= 0) and 
+                    not (relevant_traffic_light__a0 >= 0) and 
                     (
-                      turning_right__a0 and 
-                      turning_right__a1  and
-                      same_priority_right_right__a0_a1 or
-                      turning_right__a0 and
-                      turning_left__a1 and
-                      same_priority_right_left__a0_a1 or
-                      turning_right__a0 and
-                      going_straight__a1 and 
-                      same_priority_right_straight__a0_a1 or 
-                      turning_left__a0 and 
-                      turning_left__a1 and
-                      same_priority_left_left__a0_a1 or
-                      turning_left__a0 and
-                      turning_right__a1 and
-                      same_priority_left_right__a0_a1 or
-                      turning_left__a0 and
-                      going_straight__a1 and
-                      same_priority_left_straight__a0_a1 or
-                      going_straight__a0 and
-                      turning_right__a1 and
-                      same_priority_straight_right__a0_a1 or
-                      going_straight__a0 and
-                      turning_left__a1 and
-                      same_priority_straight_left__a0_a1 or
-                      going_straight__a0 and
-                      going_straight__a1 and
-                      same_priority_straight_straight__a0_a1
+                      ((turning_right__a0 >= 0) and 
+                      (turning_right__a1 >= 0)  and
+                      (same_priority_right_right__a0_a1  >= 0)) or
+                      ((turning_right__a0 >= 0) and
+                      (turning_left__a1 >= 0) and
+                      (same_priority_right_left__a0_a1 >= 0)) or
+                      ((turning_right__a0 >= 0) and
+                      (going_straight__a1 >= 0) and 
+                      (same_priority_right_straight__a0_a1 >= 0)) or 
+                      ((turning_left__a0 >= 0) and 
+                      (turning_left__a1 >= 0) and
+                      (same_priority_left_left__a0_a1 >= 0)) or
+                      ((turning_left__a0 >= 0) and
+                      (turning_right__a1 >= 0) and
+                      (same_priority_left_right__a0_a1 >= 0)) or
+                      ((turning_left__a0 >= 0) and
+                      (going_straight__a1 >= 0) and
+                      (same_priority_left_straight__a0_a1 >= 0)) or
+                      ((going_straight__a0 >= 0) and
+                      (turning_right__a1 >= 0) and
+                      (same_priority_straight_right__a0_a1 >= 0)) or
+                      ((going_straight__a0 >= 0) and
+                      (turning_left__a1 >= 0) and
+                      (same_priority_straight_left__a0_a1 >= 0)) or
+                      ((going_straight__a0 >= 0) and
+                      (going_straight__a1 >= 0) and
+                      (same_priority_straight_straight__a0_a1 >= 0))
                     )
                   ) implies
                   (
                       (
                         (
-                        in_intersection_conflict_area__a0_a1 implies
+                        (in_intersection_conflict_area__a0_a1 >= 0) implies
                           (
-                            not causes_braking_intersection__a0_a1 and
-                            not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                            not (causes_braking_intersection__a0_a1 >= 0) and
+                            not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
                           )
                         ) and
                         (
-                          in_intersection_conflict_area__a1_a0 implies
-                          not eventually[0,1s](in_intersection_conflict_area__a0_a1)
+                          (in_intersection_conflict_area__a1_a0 >= 0) implies
+                          not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
                         )
                       )or 
-                    not on_lanelet_with_type_intersection__a0
+                    not (on_lanelet_with_type_intersection__a0 >= 0)
                   )
                  )"
 
-  R_IN4: "A a1: ((
-                    turning_right__a1 and
-                    turning_right__a0 and 
-                    has_priority_right_right__a1_a0 or
-                    turning_right__a1 and
-                    going_straight__a0 and 
-                    has_priority_right_straight__a1_a0 or
-                    turning_left__a1 and 
-                    turning_right__a0 and
-                    has_priority_left_right__a1_a0 or
-                    turning_left__a1 and
-                    turning_left__a0 and
-                    has_priority_left_left__a1_a0 or
-                    turning_left__a1 and 
-                    going_straight__a0 and 
-                    has_priority_left_straight__a1_a0 or 
-                    going_straight__a1 and 
-                    turning_right__a0 and 
-                    has_priority_straight_right__a1_a0 or
-                    going_straight__a1 and 
-                    going_straight__a0 and 
-                    has_priority_straight_straight__a1_a0 or
-                    turning_right__a1 and 
-                    turning_left__a0 and 
-                    has_priority_right_left__a1_a0 and 
-                    not on_oncom_of__a1_a0 or  
-                    going_straight__a1 and 
-                    turning_left__a0 and 
-                    has_priority_straight_left__a1_a0 and 
-                    not on_oncom_of__a1_a0 
+  R_IN4: "A a1: (
+                  (  
+                    (
+                      (turning_right__a1 >= 0) and
+                      (turning_right__a0 >= 0) and
+                      (has_priority_right_right__a1_a0 >= 0)
+                    ) or
+                    (
+                      (turning_right__a1 >= 0) and
+                      (going_straight__a0 >= 0) and
+                      (has_priority_right_straight__a1_a0 >= 0)
+                    ) or
+                    (
+                      (turning_left__a1 >= 0) and
+                      (turning_right__a0 >= 0) and
+                      (has_priority_left_right__a1_a0 >= 0)
+                    ) or
+                    (
+                      (turning_left__a1 >= 0) and
+                      (turning_left__a0 >= 0) and
+                      (has_priority_left_left__a1_a0 >= 0)
+                    ) or
+                    (
+                      (turning_left__a1 >= 0) and
+                      (going_straight__a0 >= 0) and
+                      (has_priority_left_straight__a1_a0 >= 0)
+                    ) or
+                    (
+                      (going_straight__a1 >= 0) and
+                      (turning_right__a0 >= 0) and
+                      (has_priority_straight_right__a1_a0 >= 0)
+                    ) or
+                    (
+                      (going_straight__a1 >= 0) and
+                      (going_straight__a0 >= 0) and
+                      (has_priority_straight_straight__a1_a0 >= 0)
+                    ) or
+                    (
+                      (turning_right__a1 >= 0) and
+                      (turning_left__a0 >= 0) and
+                      (has_priority_right_left__a1_a0 >= 0) and
+                      not (on_oncom_of__a1_a0 >= 0)
+                    ) or
+                    (
+                      (going_straight__a1 >= 0) and
+                      (turning_left__a0 >= 0) and
+                      (has_priority_straight_left__a1_a0 >= 0) and
+                      not (on_oncom_of__a1_a0 >= 0)
+                    )
                   ) implies
-                  ((
-                      in_intersection_conflict_area__a0_a1 implies
+                  (
+                    (
                       (
-                        not causes_braking_intersection__a0_a1 and
-                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
-                      )) or 
-                    not on_lanelet_with_type_intersection__a0
+                        (in_intersection_conflict_area__a0_a1 >= 0) implies
+                        (
+                          not (causes_braking_intersection__a0_a1 >= 0) 
+                          and not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
+                        )
+                      ) and
+                      (
+                        (in_intersection_conflict_area__a1_a0 >= 0) implies 
+                        not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
+                      )
+                    )or not (on_lanelet_with_type_intersection__a0 >= 0)
                   )
                 )"
+
+  TEST_R_IN4: "A a1: (
+                        (
+                          (once[1s, 1s]((turning_right__a1 >= 0))) and
+                          (once[1s, 1s]((turning_right__a0 >= 0))) and
+                          (once[1s, 1s]((has_priority_right_right__a1_a0 >= 0)))
+                        ) or
+                        (
+                          (once[1s, 1s]((turning_right__a1 >= 0))) and
+                          (once[1s, 1s]((going_straight__a0 >= 0))) and
+                          (once[1s, 1s]((has_priority_right_straight__a1_a0 >= 0)))
+                        ) 
+                     )"
+
+  TEST_R_IN4_3: "A a1: ((once[1s, 1s]((turning_right__a1 >= 0))) and (once[1s, 1s]((turning_right__a1 >= 0))))"
+
+  TEST_R_IN4_2: "A a1: (
+                          (
+                            (  
+                              (turning_right__a1 >= 0) and
+                              (going_straight__a0 >= 0) and
+                              (has_priority_right_straight__a1_a0 >= 0)
+                            )
+                          ) implies
+                          (
+                            (
+                              (in_intersection_conflict_area__a0_a1 >= 0) implies
+                              (
+                                not (causes_braking_intersection__a0_a1 >= 0) 
+                                and not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
+                              )
+                            ) and
+                            (
+                              (in_intersection_conflict_area__a1_a0 >= 0) implies 
+                              not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
+                            )
+                          )
+                       )"
+
+  TEST_R_IN3: "A a1: (
+                        (
+                          once((on_incoming_left_of__a0_a1 >= 0)) and 
+                          not (relevant_traffic_light__a0 >= 0) and 
+                          (
+                            (turning_right__a0 >= 0) and
+                            (going_straight__a1 >= 0) and 
+                            (same_priority_right_straight__a0_a1 >= 0)
+                          )
+                        ) implies
+                        (
+                            (
+                            (in_intersection_conflict_area__a0_a1 >= 0) implies
+                              (
+                                not (causes_braking_intersection__a0_a1 >= 0) and
+                                not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
+                              )
+                            ) and
+                            (
+                              (in_intersection_conflict_area__a1_a0 >= 0) implies
+                              not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
+                            )
+                        )
+                       )"
 
   R_IN5: "A a1: ((
                     (
