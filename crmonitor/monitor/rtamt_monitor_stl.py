@@ -139,8 +139,9 @@ class RtamtStlMonitor:
         if isinstance(specs_node, UnaryNode):
             if isinstance(specs_node, Neg):
                 self.collect_prop_rob(specs_node.children[0], prop_list)
-            if isinstance(specs_node, TimedOnce) or isinstance(specs_node, Previous) or isinstance(specs_node, TimedAlways) or\
-                    isinstance(specs_node, TimedHistorically) or isinstance(specs_node, TimedEventually):
+            if isinstance(specs_node, TimedOnce) or isinstance(specs_node, Previous) or \
+                    isinstance(specs_node, TimedAlways) or isinstance(specs_node, TimedHistorically) \
+                    or isinstance(specs_node, TimedEventually):
                 prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         elif isinstance(specs_node, Predicate):
             prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
