@@ -49,7 +49,6 @@ class Lane:
         
         self._adj_left = None
         self._adj_right = None
-        
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
