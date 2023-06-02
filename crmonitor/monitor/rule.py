@@ -63,7 +63,7 @@ def parse_rule(full_rule_str, config, name=None):
             mod_rule_str = (
                 mod_rule_str[: m.start()]
                 + f"g{len(sub_rules)}"
-                + mod_rule_str[m.end():]
+                + mod_rule_str[m.end() :]
             )
             sub_rule_str = m[0]
             sub_rules.append(parse_rule(sub_rule_str, config, f"g{len(sub_rules)}"))

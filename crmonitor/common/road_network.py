@@ -94,9 +94,7 @@ class Lane:
     def adj_right(self):
         return self._adj_right
 
-    def set_adj_lanes(self,
-                      adj_left=None,
-                      adj_right=None):
+    def set_adj_lanes(self, adj_left=None, adj_right=None):
         self._adj_left = adj_left
         self._adj_right = adj_right
 
@@ -267,9 +265,9 @@ class RoadNetwork:
                 lane_lanelets.append((merged_lanelets[idx], merge_jobs[idx]))
         for lane_element in lane_lanelets:
             lanes.append(Lane(lane_element[0], lane_element[1], road_network_param))
-        
+
         lanes.sort(key=lambda x: x.lane_id)
-        
+
         if len(lanes) == 0:
             pass
         elif len(lanes) == 1:

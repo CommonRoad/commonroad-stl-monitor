@@ -121,20 +121,25 @@ class RuleEvaluator:
         
         Returns:
         props (dict{prop, value}): Robustness values of each proposition, obtained using _props attribute of the
-        RtamtStlMonitor, set using the RtamtStlMonitor.collect_prop_rob method. If quantifier nodes exist, the Monitor 
+        RtamtStlMonitor, set using the RtamtStlMonitor.collect_prop_rob method. If quantifier nodes exist, the Monitor
         that monitors the ego vehicle against the worst-case non-ego vehicle is used.
         other_id (int): The vehicle against which the values were obtained. Ego if the rule concerns the ego vehicle.
         time (int): Timestep at which the values were obtained.
         """
-        other_id = self._eval_visitor.other_ids[-1] if self._eval_visitor.other_ids is not () else self._ego_vehicle.id
+        other_id = (self._eval_visitor.other_ids[-1]
+                    if self._eval_visitor.other_ids is not ()
+                    else self._ego_vehicle.id
+        )
         if hasattr(self._monitor, 'monitors'):
             other_id = self._eval_visitor.other_ids[-1]
             props = self._monitor.monitors[other_id].monitor._propositions
         else:
-            if any(hasattr(child, 'monitors') for child in self._monitor.children):
+            if any(hasattr(child, "monitors") for child in self._monitor.children):
                 other_id = self._eval_visitor.other_ids[-1]
                 props = self._monitor.monitor._propositions
-                quant_nodes = [node for node in self._monitor.children if hasattr(node, 'monitors')]
+                quant_nodes = [
+                    node for node in self._monitor.children if hasattr(node, 'monitors')
+                ]
                 # for quant_node in quant_nodes:
                 #    for key in [key for key in props.keys() if quant_node.name in key]:
                 #        props.pop(key)
