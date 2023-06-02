@@ -280,8 +280,8 @@ class RoadNetwork:
         else:
             lanes[0].set_adj_lanes(lanes[1], None)
             lanes[-1].set_adj_lanes(None, lanes[-2])
-            for k in range(1, len(lanes)-1):
-                lanes[k].set_adj_lanes(lanes[k+1], lanes[k-1])
+            for k in range(1, len(lanes) - 1):
+                lanes[k].set_adj_lanes(lanes[k + 1], lanes[k - 1])
 
         return lanes
 
