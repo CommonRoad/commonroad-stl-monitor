@@ -46,7 +46,7 @@ class Lane:
         self._width = self._compute_width_from_lanalet_boundary(
             merged_lanelet.left_vertices, merged_lanelet.right_vertices
         )
-        
+
         self._adj_left = None
         self._adj_right = None
 
