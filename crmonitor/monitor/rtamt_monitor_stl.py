@@ -103,7 +103,7 @@ class RtamtStlMonitor:
         self._spec = _create_spec(rule_str, output_type, predicates, dt)
 
         # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
-        self._monitor = copy.copy(self._spec)
+        # self._monitor = copy.copy(self._spec)
         self._propositions = {}
 
     @property
@@ -147,16 +147,16 @@ class RtamtStlMonitor:
                 or isinstance(specs_node, TimedEventually)
             ):
                 prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
-        elif isinstance(specs_node, Predicate):
+        elif isinstance(specs_node, Predicate) or isinstance(specs_node, Variable):
             prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         else:
             if isinstance(specs_node, Implies):
-                if isinstance(specs_node.children[0], Predicate):
+                if isinstance(specs_node.children[0], Predicate) or isinstance(specs_node.children[0], Variable):
                     prop_list[specs_node.children[0].name] = self.ast_node_values[
                         specs_node.children[0].name
                     ]
                     self.collect_prop_rob(specs_node.children[1], prop_list)
-                elif isinstance(specs_node.children[1], Predicate):
+                elif isinstance(specs_node.children[1], Predicate) or isinstance(specs_node.children[1], Variable):
                     prop_list[specs_node.children[1].name] = self.ast_node_values[
                         specs_node.children[1].name
                     ]
