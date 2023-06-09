@@ -1400,45 +1400,46 @@ def get_incoming(lanelets_id, road_network: RoadNetwork) -> IntersectionIncoming
 
 
 def get_incoming_multi_intersections(vehicle: Vehicle, time_step, road_network: RoadNetwork):
+    """
+    get all incoming elements and distance to these incoming elements in different intersections
+    by given a vehicle and current time step
+    """
+    # get all lanelets which can be occupied by current vehicle
     lanelets_dir_vehicle = np.array(vehicle.lanelets_dir)
     lanelets_dir_pre = reach_pre(lanelets_dir_vehicle[0], road_network)
     lanelets_dir_suc = reach_suc(lanelets_dir_vehicle[-1], road_network)
     lanelets_dir_vehicle = np.append(lanelets_dir_vehicle, lanelets_dir_pre)
     lanelets_dir_vehicle = np.append(lanelets_dir_vehicle, lanelets_dir_suc)
     occupied_lanelets_possible = np.unique(lanelets_dir_vehicle)
+    # get front- and rear-most point of vehicle along reference lane
     front_s = vehicle.front_s(time_step, vehicle.ref_path_lane)
     rear_s = vehicle.rear_s(time_step, vehicle.ref_path_lane)
-    incomings = list()
+    incoming_elements = list()
     distance_to_incomings = list()
     for intersection in road_network.lanelet_network.intersections:
         for incoming in intersection.incomings:
             incoming_ids = list(incoming.incoming_lanelets.intersection(set(occupied_lanelets_possible)))
             if len(incoming_ids) != 0:
-                incomings.append(incoming)
-                start_incoming_s = vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                    *get_lanelet_start_line(road_network.lanelet_network.find_lanelet_by_id(incoming_ids[0]))[0])[0]
+                incoming_elements.append(incoming)
+                start_incoming_s = get_lanelets_start_s(vehicle.ref_path_lane, incoming_ids, road_network)
                 incoming_successor = set.union(incoming.successors_right, incoming.successors_straight, incoming.successors_left)
-                successor_possible = list(incoming_successor.intersection(set(occupied_lanelets_possible)))
-                end_intersection_s = vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                    *get_lanelet_end_line(road_network.lanelet_network.find_lanelet_by_id(successor_possible[0]))[0])[0]
-                # lanelet in front of vehicle
+                successor_possible = incoming_successor.intersection(set(occupied_lanelets_possible))
+                end_intersection_s = get_lanelets_end_s(vehicle.ref_path_lane, successor_possible, road_network)
+                # lanelets in front of vehicle
                 if (front_s - start_incoming_s) < 0 < (end_intersection_s - rear_s):
                     distance_to_incomings.append(front_s - start_incoming_s)
-                # vehicle in front of lanelet
+                # vehicle in front of lanelets
                 elif (end_intersection_s - rear_s) <= 0 <= (front_s - start_incoming_s):
                     distance_to_incomings.append(end_intersection_s - rear_s)
-                # vehicle inside lanelet
+                # vehicle inside lanelets
                 else:
                     distance_to_incomings.append(min(front_s - start_incoming_s, end_intersection_s - rear_s))
-    return incomings, distance_to_incomings
+    return incoming_elements, distance_to_incomings
 
 
-
-
-
-def get_right_turn_incoming(lanelets_id, road_network: RoadNetwork):
+def get_right_turn_incoming(lanelets_id, road_network: RoadNetwork) -> IntersectionIncomingElement:
     """
-    find incoming according to current lanelet and reach_pre of current lanelet includes the right turning lanelet of
+    find the incoming according to current lanelet and predecessors which includes the right turning lanelet of the
     searched incoming
     """
     incoming = None
@@ -1454,7 +1455,11 @@ def get_right_turn_incoming(lanelets_id, road_network: RoadNetwork):
     return incoming
 
 
-def get_left_turn_incoming(lanelets_id, road_network):
+def get_left_turn_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+    """
+    find the incoming according to current lanelet and predecessors which includes the left turning lanelet of the
+    searched incoming
+    """
     incoming = None
     for lanelet_id in lanelets_id:
         lanelet_pre = reach_pre(lanelet_id, road_network)
@@ -1468,7 +1473,11 @@ def get_left_turn_incoming(lanelets_id, road_network):
     return incoming
 
 
-def get_straight_going_incoming(lanelets_id, road_network):
+def get_straight_going_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+    """
+    find the incoming according to current lanelet and predecessors which includes the straight going lanelet of the
+    searched incoming
+    """
     incoming = None
     for lanelet_id in lanelets_id:
         lanelet_pre = reach_pre(lanelet_id, road_network)
@@ -1482,46 +1491,90 @@ def get_straight_going_incoming(lanelets_id, road_network):
     return incoming
 
 
-def get_right_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+def get_right_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement) -> Lane:
+    """
+    get the right-turning lane by given an incoming element
+    """
     incoming_lanelets_ids = incoming.incoming_lanelets
     right_turn_lanelets_ids = incoming.successors_right
     right_turn_lane = list()
     for lane in road_network.lanes:
-        right_turn_lanelet_in_lane = lane.contained_lanelets.intersection(right_turn_lanelets_ids)
-        if (len(right_turn_lanelet_in_lane) > 0
-                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+        # choose the lane which contains both incoming and right-turning successors
+        if (len(lane.contained_lanelets.intersection(right_turn_lanelets_ids)) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0):
             right_turn_lane.append(lane)
     assert len(right_turn_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
-    right_turn_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(right_turn_lanelets_ids)[0])
-    return right_turn_lane[0], right_turn_lanelet
+    return right_turn_lane[0]
 
 
-def get_left_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+def get_left_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement) -> Lane:
+    """
+    get the left-turning lane by given an incoming element
+    """
     incoming_lanelets_ids = incoming.incoming_lanelets
     left_turn_lanelets_ids = incoming.successors_left
     left_turn_lane = list()
     for lane in road_network.lanes:
-        left_turn_lanelet_in_lane = lane.contained_lanelets.intersection(left_turn_lanelets_ids)
-        if (len(left_turn_lanelet_in_lane) > 0
-                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+        # choose the lane which contains both incoming and left-turning successors
+        if (len(lane.contained_lanelets.intersection(left_turn_lanelets_ids)) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0):
             left_turn_lane.append(lane)
     assert len(left_turn_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
-    left_turn_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(left_turn_lanelets_ids)[0])
-    return left_turn_lane[0], left_turn_lanelet
+    return left_turn_lane[0]
 
 
-def get_straight_going_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement):
+def get_straight_going_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement) -> Lane:
+    """
+    get the straight going lane by given an incoming element
+    """
     incoming_lanelets_ids = incoming.incoming_lanelets
     straight_going_lanelets_ids = incoming.successors_straight
     straight_going_lane = list()
     for lane in road_network.lanes:
-        straight_going_lanelet_in_lane = lane.contained_lanelets.intersection(straight_going_lanelets_ids)
-        if (len(straight_going_lanelet_in_lane) > 0
-                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids))):
+        if (len(lane.contained_lanelets.intersection(straight_going_lanelets_ids)) > 0
+                and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0):
             straight_going_lane.append(lane)
     assert len(straight_going_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
-    straight_lanelet = road_network.lanelet_network.find_lanelet_by_id(list(straight_going_lanelets_ids)[0])
-    return straight_going_lane[0], straight_lanelet
+    return straight_going_lane[0]
+
+
+def get_lanelets_start_end_s(reference_lane: Lane, lanelets_ids, road_network: RoadNetwork) -> (float, float):
+    """
+    get start and end point of a set of lanelets along a reference lane
+    """
+    lanelets_start_s = np.inf
+    lanelets_end_s = -np.inf
+    for lanelet_id in lanelets_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        start_s = reference_lane.clcs.convert_to_curvilinear_coords(*get_lanelet_start_line(lanelet)[0])[0]
+        end_s = reference_lane.clcs.convert_to_curvilinear_coords(*get_lanelet_end_line(lanelet)[0])[0]
+        lanelets_start_s = min(lanelets_start_s, start_s)
+        lanelets_end_s = max(lanelets_end_s, end_s)
+    return lanelets_start_s, lanelets_end_s
+
+
+def get_lanelets_start_s(reference_lane: Lane, lanelets_ids, road_network: RoadNetwork) -> (float, float):
+    """
+    get start point of a set of lanelets along a reference lane
+    """
+    lanelets_start_s = np.inf
+    for lanelet_id in lanelets_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        start_s = reference_lane.clcs.convert_to_curvilinear_coords(*get_lanelet_start_line(lanelet)[0])[0]
+        lanelets_start_s = min(lanelets_start_s, start_s)
+    return lanelets_start_s
+
+
+def get_lanelets_end_s(reference_lane: Lane, lanelets_ids, road_network: RoadNetwork) -> (float, float):
+    """
+    get end point of a set of lanelets along a reference lane
+    """
+    lanelets_end_s = -np.inf
+    for lanelet_id in lanelets_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        end_s = reference_lane.clcs.convert_to_curvilinear_coords(*get_lanelet_end_line(lanelet)[0])[0]
+        lanelets_end_s = max(lanelets_end_s, end_s)
+    return lanelets_end_s
 
 
 def get_oncoming(vehicle: Vehicle, road_network: RoadNetwork):
@@ -1622,26 +1675,28 @@ def inc_la_left_of(incoming: IntersectionIncomingElement, road_network: RoadNetw
             return incoming_element
 
 
-def adjacent_lanelets(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
-    lanelets = {lanelet}
-    la = lanelet
+def adjacent_lanelets(lanelets: Set[Lanelet], lanelet_network: LaneletNetwork) -> Set[Lanelet]:
+    """
+    find all adjacent lanelets by given a lanelet or lanelets
+    """
+    for lanelet in lanelets:
+        la = lanelet
+        while la is not None and la.adj_left is not None:
+            if la.adj_left_same_direction:
+                la = lanelet_network.find_lanelet_by_id(la.adj_left)
+                if la is not None:
+                    lanelets.add(la)
+            else:
+                la = None
 
-    while la is not None and la.adj_left is not None:
-        if la.adj_left_same_direction:
-            la = lanelet_network.find_lanelet_by_id(la.adj_left)
-            if la is not None:
-                lanelets.add(la)
-        else:
-            la = None
-
-    la = lanelet
-    while la is not None and la.adj_right is not None:
-        if la.adj_right_same_direction:
-            la = lanelet_network.find_lanelet_by_id(la.adj_right)
-            if la is not None:
-                lanelets.add(la)
-        else:
-            la = None
+        la = lanelet
+        while la is not None and la.adj_right is not None:
+            if la.adj_right_same_direction:
+                la = lanelet_network.find_lanelet_by_id(la.adj_right)
+                if la is not None:
+                    lanelets.add(la)
+            else:
+                la = None
     return lanelets
 
 
@@ -1684,16 +1739,15 @@ def find_conflict_bounds(current_lanelet: Lanelet, conflict_lanelet: Lanelet):
     return conflict_bounds
 
 
-def find_conflict_points(line, conflict_lanelet: Lanelet):
+def find_conflict_points(line, conflict_polygon: Polygon):
+    """
+    find intersection points between a line and polygon
+    """
     conflict_line_points = list()
-    polygon = conflict_lanelet.polygon.shapely_object
-
     # Create curved line
     curved_line = LineString(line)
-
     # Get intersection of line and polygon
-    intersection = curved_line.intersection(polygon)
-
+    intersection = curved_line.intersection(conflict_polygon)
     if intersection.geom_type == 'Point':
         conflict_line_points.append(intersection)
     elif intersection.geom_type == 'LineString' or intersection.geom_type == 'LinearRing':
