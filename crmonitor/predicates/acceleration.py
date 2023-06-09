@@ -40,53 +40,14 @@ class PredRelAbruptBreaking(BasePredicateEvaluator):
         rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)
 
-# ------------------------------------------------------------------------ #
-# new predicate from Mahdi Bayouli
-# class PredCausesBrakingIntersection1212(BasePredicateEvaluator):
-#     """
-#     evaluates if the first vehicle causes the braking of the second vehicle.
-#     """
-#
-#     predicate_name = AccelerationPredicates.CausesBrakingIntersection
-#     arity = 2
-#
-#     # TODO:
-#     # describe robustness
-#     #
-#
-#     def evaluate_robustness(
-#         self, world: World, time_step, vehicle_ids: List[int]
-#     ) -> float:
-#         d_br = self.config["d_br"]
-#         a_br = self.config["a_br"]
-#         rob = 0
-#         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-#         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-#
-#         lane_k = vehicle_k.get_lane(time_step)
-#         lane_p = vehicle_p.get_lane(time_step)
-#
-#         rear_k = vehicle_k.rear_s(time_step)
-#         front_p = vehicle_p.front_s(time_step)
-#
-#         # TODO: does d need scaling ?
-#         d = rear_k - front_p
-#         a = vehicle_p.get_lon_state(time_step).a
-#
-#         # d_br - d : how well d is far from the threshold
-#         # a_br - a : how well a is far from the threshold
-#         # d : d shouldn't be negative
-#         rob = np.minimum(
-#             np.minimum(self._scale_lon_dist(d_br - d), self._scale_acc(a_br - a)),
-#             self._scale_lon_dist(d),
-#         )
-#
-#         return rob
-
 
 class PredCausesBrakingIntersection(BasePredicateEvaluator):
     """
     evaluates if the k-th vehicle causes the braking of the p-th vehicle.
+
+    If the distance between the frontmost point of the p-th vehicle and the rearmost point of the k-th vehicle along
+    the reference lane of the p-th one is smaller than a threshold (d_br) and the acceleration of the p-th vehicle is
+    lower or equal to a threshold (a_br), the k-th vehicle causes the braking of the p-th vehicle.
     """
     predicate_name = AccelerationPredicates.CausesBrakingIntersection
     arity = 2
@@ -97,21 +58,22 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        # TODO: fix config problem
-        # d_br = self.config['traffic_rules_param']["d_br"]
-        # a_br = self.config['traffic_rules_param']["a_br"]
-        d_br = 1.0
-        a_br = -1.0
+        d_br = self.config["d_br"]
+        a_br = self.config["a_br"]
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        # rearmost point of the k-th vehicle along the reference lane of p-th one
         rear_k_s = vehicle_k.rear_s(time_step, vehicle_p.ref_path_lane)
+        # frontmost point of the p-th vehicle along the reference lane of p-th one
         front_p_s = vehicle_p.front_s(time_step, vehicle_p.ref_path_lane)
+        # if the k-th vehicle is far away from the reference lane of the p-th vehicle, return -1
         if rear_k_s is None:
             return -1
         distance_vehicle = rear_k_s - front_p_s
         rob_distance = np.min([distance_vehicle, d_br - distance_vehicle])
+        # calculate the longitudinal acceleration of the p-th vehicle
         a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
         rob_a = a_br - a_p
-        rob = np.min([self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)])
-        return rob
+        robustness = np.min([self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)])
+        return robustness
 
