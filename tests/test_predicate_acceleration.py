@@ -28,6 +28,8 @@ class TestPriorityPredicates(unittest.TestCase):
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
+        self.config["d_br"] = 15.0
+        self.config["a_br"] = -1.0
 
     def testCausesBrakingIntersection(self):
         scenario, _ = CommonRoadFileReader(
