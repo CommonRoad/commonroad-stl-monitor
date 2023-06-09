@@ -348,10 +348,7 @@ class PredHasPriorityBase(BasePredicateEvaluator):
         incoming_p_id = list(incoming_p.incoming_lanelets)[0]
         priority_k = utils.get_priority(incoming_k_id, road_network, self.first_direction)
         priority_p = utils.get_priority(incoming_p_id, road_network, self.second_direction)
-        if priority_k == priority_p:
-            rob = -0.1
-        else:
-            rob = (priority_k - priority_p) / 5
+        rob = (priority_k - priority_p - 0.5) / 5
         return rob
 
 
