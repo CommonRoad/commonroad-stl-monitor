@@ -34,10 +34,10 @@ class TestPositionPredicates(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testStopLineInFront(self):
-        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
-        #     lanelet_assignment=True)
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
-                lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")).open(
+            lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
         ego_vehicle = world.vehicle_by_id(31)
@@ -95,19 +95,19 @@ class TestPositionPredicates(unittest.TestCase):
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id, target_vehicle.id])
             rob.append(sol_monitor_2)
             print(sol_monitor_2)
-        fig = plt.figure()
-        ax = fig.gca()
-        ax.plot(range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, 'b-')
-        for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            if rob[time] <= 0:
-                ax.plot(time, rob[time], "rx")
-            else:
-                ax.plot(time, rob[time], "g.")
-        ax.plot([24, 24], [-1, 1], 'black')
-        ax.set_ylim([-1, 1])
-        ax.grid(True)
-        ax.set_title('in_intersection_conflict_area__a1_a0')
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.gca()
+        # ax.plot(range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, 'b-')
+        # for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
+        #     if rob[time] <= 0:
+        #         ax.plot(time, rob[time], "rx")
+        #     else:
+        #         ax.plot(time, rob[time], "g.")
+        # ax.plot([24, 24], [-1, 1], 'black')
+        # ax.set_ylim([-1, 1])
+        # ax.grid(True)
+        # ax.set_title('in_intersection_conflict_area__a1_a0')
+        # plt.show()
 
     def testOnLaneletWithTypeIntersection(self):
         scenario, _ = CommonRoadFileReader(
