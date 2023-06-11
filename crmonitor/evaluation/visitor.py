@@ -1,24 +1,18 @@
 import itertools
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
 
 from crmonitor.common.helper import gather
 from crmonitor.monitor.monitor_node import (
-    MonitorNode,
-    RuleMonitorNode,
     AllMonitorNode,
     ExistMonitorNode,
+    MonitorNode,
+    RuleMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor, OutputType
-from crmonitor.monitor.rule import (
-    RuleNode,
-    ExistNode,
-    PredicateNode,
-    AllNode,
-    IOType,
-)
+from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
+from crmonitor.monitor.rule import AllNode, ExistNode, IOType, PredicateNode, RuleNode
 
 
 class RuleTreeVisitor(ABC):
@@ -77,9 +71,11 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         world = ctx[0]
         time_step = ctx[1]
         # Collect child_values
-        assert (
-            rule_node.monitor.dt == world.dt
-        ), f"Monitor constructed with dt={rule_node.monitor.dt} but got world state with dt={world.dt}!"
+        assert rule_node.monitor.dt == world.dt, (
+            f"Monitor constructed with dt="
+            f"{rule_node.monitor.dt} but got "
+            f"world state with dt={world.dt}!"
+        )
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
         val = rule_node.update(time_step, list(child_values.items()))
         return val
@@ -140,16 +136,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return value
 
 
-class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
-    def _visit(self, node):
-        r = []
-        for c in node.children:
-            r.extend(c.visit(self))
-        return r
-
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        return self._visit(rule_node)
-
+class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         if all_node.last_selected is None:
             # Visit the prototype monitor
@@ -168,13 +155,31 @@ class PredicateCollectorMonitorTreeVisitor(RuleTreeVisitor):
             val = exist_node.last_selected.visit(self, *ctx)
         return val
 
+
+class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
+    def visit_rule_node(self, rule_node: "RuleMonitorNode", *ctx):
+        r = []
+        for c in rule_node.children:
+            r.extend(c.visit(self))
+        return r
+
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         return [(predicate_node.name, predicate_node.latest_value)]
 
 
+class AstNodeValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
+    @staticmethod
+    def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):
+        return list(rule_node.monitor.ast_node_values.items())
+
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        raise NotImplementedError()
+
+
 class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
     """
-    Returns list of dictionaries, each dictionary mapping vehicle ids to a possibly nested dict of draw-parameters
+    Returns list of dictionaries, each dictionary mapping vehicle ids to a possibly
+    nested dict of draw-parameters
     """
 
     def _split_context(self, ctx):
