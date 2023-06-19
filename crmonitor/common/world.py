@@ -1,3 +1,4 @@
+import copy
 import importlib.resources as pkg_resources
 import logging
 import shelve
@@ -9,7 +10,16 @@ from pathlib import Path
 from typing import Optional, Set, Union
 
 import numpy as np
+from commonroad.common.solution import PlanningProblemSolution, vehicle_parameters
+from commonroad.geometry.shape import Rectangle
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
+from commonroad.prediction.prediction import TrajectoryPrediction
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.scenario import ObstacleType, Scenario
+from commonroad.scenario.trajectory import Trajectory
+from commonroad_dc.feasibility.solution_checker import (
+    _simulate_trajectory_if_input_vector,
+)
 
 import crmonitor
 from crmonitor.common.helper import create_other_vehicles_param, load_yaml
@@ -36,6 +46,44 @@ class World:
     road_network: RoadNetwork
     scenario: Optional[Scenario] = None
     cache: Union[None, shelve.Shelf, dict] = None
+
+    @classmethod
+    def create_from_solution(
+        cls,
+        scenario: Scenario,
+        planning_problem: PlanningProblem,
+        planning_problem_solution: PlanningProblemSolution,
+    ):
+        """Create a rule evaluator to check a planning problem solution."""
+        pp_id = planning_problem.planning_problem_id
+        _, trajectory = _simulate_trajectory_if_input_vector(
+            PlanningProblemSet([planning_problem]),
+            planning_problem_solution,
+            scenario.dt,
+        )
+        # We have to remove the initial time step
+        trajectory = Trajectory(
+            trajectory.state_list[1].time_step, trajectory.state_list[1:]
+        )
+        shape = Rectangle(
+            length=vehicle_parameters[planning_problem_solution.vehicle_type].l,
+            width=vehicle_parameters[planning_problem_solution.vehicle_type].w,
+        )
+        prediction = TrajectoryPrediction(trajectory, shape=shape)
+        obstacle = DynamicObstacle(
+            # FIXME
+            obstacle_id=pp_id + 1000,
+            obstacle_type=ObstacleType.CAR,
+            obstacle_shape=shape,
+            initial_state=planning_problem.initial_state,
+            prediction=prediction,
+        )
+        scenario = copy.deepcopy(scenario)
+        scenario.add_objects(obstacle)
+        scenario.assign_obstacles_to_lanelets()
+        world = World.create_from_scenario(scenario)
+        ego_vehicle = world.vehicle_by_id(obstacle.obstacle_id)
+        return world, ego_vehicle
 
     def _warn_persistent_cache(self):
         if len(self.controlled_vehicle_ids) > 0 and isinstance(

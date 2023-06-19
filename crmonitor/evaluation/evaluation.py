@@ -1,3 +1,4 @@
+import copy
 import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
@@ -16,6 +17,7 @@ from crmonitor.common.helper import (
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
+    AstNodeValueCollectorMonitorTreeVisitor,
     EvaluationMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
@@ -59,6 +61,7 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
+        ego_vehicle = copy.copy(ego_vehicle)
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
@@ -83,7 +86,10 @@ class RuleEvaluator:
         visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = rule.visit(visitor)
-        self._collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._ast_node_value_collector_visitor = (
+            AstNodeValueCollectorMonitorTreeVisitor()
+        )
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         self._eval_visitor = EvaluationMonitorTreeVisitor(
             use_boolean=use_boolean, output_type=output_type
@@ -101,12 +107,17 @@ class RuleEvaluator:
         return self._last_evaluation_time_step
 
     def get_predicates(self) -> Dict[str, float]:
-        predicate_values = dict(self._monitor.visit(self._collector_visitor))
+        predicate_values = dict(self._monitor.visit(self._predicate_collector_visitor))
         return predicate_values
 
-    def update(self):
+    def ast_node_values(self) -> Dict[str, float]:
+        node_values = dict(self._monitor.visit(self._ast_node_value_collector_visitor))
+        return node_values
+
+    def update(self) -> float:
         """
-        Advance the monitor state by one time step and return the corresponding rule evaluation value.
+        Advance the monitor state by one time step and return the corresponding
+        rule evaluation value.
 
         :return: robustness or boolean rule value
         """
@@ -131,11 +142,13 @@ class RuleEvaluator:
 
     def evaluate(self) -> np.ndarray:
         """
-        Evaluate the rule exhaustively until the final time step of the vehicle object is reached.
+        Evaluate the rule exhaustively until the final time step of the vehicle object
+        is reached.
 
         Caution: This will change the time step of the world object!
 
-        :return: Array of all rule values for all time steps of the vehicle's known trajectory
+        :return: Array of all rule values for all time steps of the vehicle's known
+            trajectory
         """
         robustness_values = []
         for i in range(
@@ -164,24 +177,33 @@ class RuleEvaluator:
         List[Callable[[MPRenderer], None]],
     ]:
         """
-        Renders a scenario visualization using the MPRenderer and adds plots of the predicates. In general, only
-        predicate instances belonging to an effective group within all enclosing all- and exist-quantifiers of the
-        considered rule are visualized; here, "effective group" denotes the group giving the minimum resp. maximum
+        Renders a scenario visualization using the MPRenderer and adds plots of the
+        predicates. In general, only
+        predicate instances belonging to an effective group within all enclosing all-
+        and exist-quantifiers of the
+        considered rule are visualized; here, "effective group" denotes the group
+        giving the minimum resp. maximum
         value for an all- resp. exist-quantifier.
         :visualization_config: predicate-name | 'default' -> {
-            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]], # show predicate value for certain
+            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]],
+            # show predicate value for certain
             # vehicle-ids
         }. Allows predicate-type wise configuration of the visualization
-        :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
+        :plot_scenario_legend: whether the legend for the scenario visualization
+        should be plotted. If None, it is
         plotted for the first time-step only
         :scenario_fig_size: figure size of the scenario only
-        :scenario_scale_compared_to_other_plots: scale describing how much larger than the other bar-chart and the
+        :scenario_scale_compared_to_other_plots: scale describing how much larger
+        than the other bar-chart and the
         rule-robustness chart the scenario should be drawn
-        :plot_predicate_bar_chart: whether a bar chart showing the predicate values should be plotted. The
-        predicate instances included in the visualization are the same as the ones shown in the scenario visualization
+        :plot_predicate_bar_chart: whether a bar chart showing the predicate values
+        should be plotted. The
+        predicate instances included in the visualization are the same as the ones
+        shown in the scenario visualization
         :bar_chart_plot_limits: minimum and maximum value of the bar-chart
         :plot_rule_robustness_course: whether the rule robustness should be plotted
-        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule robustness course
+        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule
+        robustness course
         :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
         """
 
