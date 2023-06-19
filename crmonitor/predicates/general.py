@@ -770,10 +770,13 @@ class PredOnRightTurn(BasePredicateEvaluator):
         lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
             right_turning_lanelet
         )
-        lon_state, _ = cartesian_to_curvilinear(
-            [lane.lanelet.center_vertices],
-            vehicle.states_cr[time_step].position[None, :],
-        ).ravel()
+        try:
+            lon_state, _ = lane.clcs.convert_to_curvilinear_coords(
+                *vehicle.states_cr[time_step].position,
+            )
+        except ValueError:
+            return self._scale_lon_dist(-np.inf)
+
         front_s = lon_state + 0.5 * vehicle.shape.length
         rear_s = lon_state - 0.5 * vehicle.shape.length
         start_s, _ = lane.clcs.convert_to_curvilinear_coords(
