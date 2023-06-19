@@ -72,7 +72,7 @@ class RuleTest(unittest.TestCase):
             32: False,  # Turning left on red
             34: False,  # Turning left on red
         }
-        rule_str = self.traffic_rules["traffic_rules"]["TL"]
+        rule_str = self.traffic_rules["traffic_rules"]["R_IN2_TOR"]
         self.traffic_rules["scale_rob"] = False
         rule = parse_rule(rule_str, self.traffic_rules, name="RedLightRunning")
         world = World.create_from_scenario(scenario)

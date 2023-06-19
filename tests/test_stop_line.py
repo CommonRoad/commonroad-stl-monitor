@@ -32,7 +32,9 @@ class TestStopLine(unittest.TestCase):
 
         for ego in scenario.dynamic_obstacles:
             ego_vehicle = world.vehicle_by_id(ego.obstacle_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "SL")
+            rule_eval = RuleEvaluator.create_from_config(
+                world, ego_vehicle, "R_IN1_past"
+            )
             values = rule_eval.evaluate()
             violated = np.any(values < 0.0)
             self.assertEqual(

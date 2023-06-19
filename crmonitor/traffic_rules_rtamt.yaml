@@ -17,10 +17,12 @@ traffic_rules:
   R_I3: not makes_u_turn__a0 and not reverses__a0
   R_I4: in_congestion_i__a0 or in_slow_moving_traffic_i__a0 implies (interstate_broad_enough__a0 implies not on_shoulder__a0 and (in_leftmost_lane__a0 implies drives_leftmost__a0 and single_lane__a0) and (not in_leftmost_lane__a0 implies drives_rightmost__a0)) and (not interstate_broad_enough__a0 implies drives_rightmost__a0 and in_rightmost_lane__a0 and single_lane__a0)
   R_I5: 'A a1: ((on_main_carriage_way_i__a0 and in_front_of_i__a0_a1 and on_access_ramp_i__a1 and eventually[0, 5s](on_main_carriage_way__a1)) implies (not(not(main_carriageway_right_lane__a0) and eventually[0, 5s](main_carriageway_right_lane__a0))))'
-  TL: once((prev(sl_in_front__a0) and not sl_in_front__a0) and on_intersection__a0 and tl_red_i__a0) implies on_right_turn__a0 or not on_intersection__a0
+    # Wait at traffic light with turn on red exception
+  R_IN2_TOR: (once (not (prev not sl_in_front__a0)) and (not sl_in_front__a0) and on_intersection__a0 and tl_red_i__a0) implies (on_right_turn__a0 or (not on_intersection__a0))
     # RTAMT implements the weak previous operator, which has value inf at time step 0.
     # Using "not (weak) prev not A <=> (strong) prev A" we can rewrite the formula using only the weak prev operator.
-  SL: ((not prev not sl_in_front__a0) and (not sl_in_front__a0)) implies once(historically[0, 3s](sl_in_front__a0 and in_standstill__a0))
+    # Stop sign rule translated to past-time
+  R_IN1_past: ((not prev not sl_in_front__a0) and (not sl_in_front__a0)) implies once(historically[0, 3s](sl_in_front__a0 and in_standstill__a0))
 
 
 # Parameters for traffic rules
