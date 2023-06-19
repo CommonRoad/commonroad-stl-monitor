@@ -137,7 +137,6 @@ class TestRuleEvaluator(unittest.TestCase):
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.PM, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )
-        sol = Solution(scn.scenario_id, [pp_sol])
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
         evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
@@ -155,7 +154,6 @@ class TestRuleEvaluator(unittest.TestCase):
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.PM, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )
-        sol = Solution(scn.scenario_id, [pp_sol])
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
         evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
@@ -169,7 +167,6 @@ class TestRuleEvaluator(unittest.TestCase):
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.KS, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )
-        sol = Solution(scn.scenario_id, [pp_sol])
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
         evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
@@ -193,7 +190,6 @@ class TestRuleEvaluator(unittest.TestCase):
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.KS, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )
-        sol = Solution(scn.scenario_id, [pp_sol])
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
         evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
