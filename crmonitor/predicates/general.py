@@ -1,15 +1,24 @@
 import logging
 from enum import Enum
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import matplotlib.colors
 import numpy as np
+from commonroad.scenario.intersection import IntersectionIncomingElement
+from commonroad.scenario.lanelet import LaneletType, LineMarking
+from commonroad.scenario.traffic_sign import TrafficLightState
 from matplotlib import pyplot as plt
 
+from crmonitor.common.helper import (
+    cartesian_to_curvilinear,
+    get_curvilinear_coordinate_system,
+)
+from crmonitor.common.road_network import Lane
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane, PredSingleLane
-from crmonitor.predicates.utils import cal_road_width
+from crmonitor.predicates.utils import cal_road_width, distance_to_left_bounds
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +30,10 @@ class GeneralPredicates(str, Enum):
     InSlowMovingTraffic = "in_slow_moving_traffic"
     InQueueOfVehicles = "in_queue_of_vehicles"
     MakesUTurn = "makes_u_turn"
+    SlInFront = "sl_in_front"
+    RightTurn = "on_right_turn"
+    TlRed = "tl_red"
+    InIntersection = "on_intersection"
 
 
 class PredCutIn(BasePredicateEvaluator):
@@ -474,3 +487,331 @@ class PredMakesUTurn(BasePredicateEvaluator):
                 )
             )
         return max(robustness_values)
+
+
+class PredStopLineInFront(BasePredicateEvaluator):
+    """Evaluate if a stop line is in front of the vehicle, with respect to a drivable
+    path."""
+
+    predicate_name = GeneralPredicates.SlInFront
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego = world.vehicle_by_id(vehicle_ids[0])
+        lanes = ego.ref_path_lanes(time_step)
+        # Find all lanelets in the map that have a stop line
+        lanelets_with_stop_line = [
+            l
+            for l in world.road_network.lanelet_network.lanelets
+            if l.stop_line is not None
+            and l.stop_line.line_marking is LineMarking.BROAD_SOLID
+        ]
+        robustness = -np.inf
+        # For all possible paths of the vehicle
+        for lane in lanes:
+            # Get the set of lanelets in the current path, that have a stop line
+            relevant_lanelet_ids_with_stop_line = [
+                l
+                for l in lanelets_with_stop_line
+                if l.lanelet_id in lane.contained_lanelets
+            ]
+            # If there is none, continue
+            if len(relevant_lanelet_ids_with_stop_line) == 0:
+                continue
+
+            ccs = get_curvilinear_coordinate_system(lane.lanelet.center_vertices)
+            curvi_occ = ccs(ego.occupancy_at_time_step(time_step).vertices)
+            stop_line_pts = np.array(
+                [
+                    [l.stop_line.start, l.stop_line.end]
+                    for l in relevant_lanelet_ids_with_stop_line
+                ]
+            )
+            curvi_stop_line = ccs(stop_line_pts.reshape((-1, 2))).reshape((-1, 2, 2))
+            # Order stop line points from right to left
+            curvi_stop_line = np.where(
+                curvi_stop_line[:, 0, 1] < curvi_stop_line[:, 0, 1],
+                curvi_stop_line,
+                curvi_stop_line[:, ::-1],
+            )
+
+            occ_stop_line_ccs = cartesian_to_curvilinear(
+                curvi_stop_line, curvi_occ, limit_start_end=False
+            )
+            stop_line_distance = np.nanmin(
+                occ_stop_line_ccs[..., 1], axis=-1, initial=np.inf
+            )
+            stop_line_robustness = np.fmin(
+                self.config["d_sl"] - np.abs(stop_line_distance), stop_line_distance
+            )
+            robustness = max(robustness, stop_line_robustness)
+        return self._scale_lon_dist(float(robustness))
+
+
+class PredInIntersection(BasePredicateEvaluator):
+    """Evaluate if a vehicle occupancy is intersecting with an intersection lanelet."""
+
+    predicate_name = GeneralPredicates.InIntersection
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        ego = world.vehicle_by_id(vehicle_ids[0])
+        lanelets = ego.lanelet_assignment[time_step]
+        intersection_lanelets = [
+            lanelet
+            for lanelet in lanelets
+            if LaneletType.INTERSECTION
+            in world.road_network.lanelet_network.find_lanelet_by_id(
+                lanelet
+            ).lanelet_type
+        ]
+        return len(intersection_lanelets) > 0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego = world.vehicle_by_id(vehicle_ids[0])
+        lanes = ego.lanes_at_state(time_step)
+        if not self.evaluate_boolean(world, time_step, vehicle_ids):
+            all_intersection_lanelets = [
+                l.lanelet_id
+                for l in world.road_network.lanelet_network.lanelets
+                if LaneletType.INTERSECTION in l.lanelet_type
+            ]
+            dist = np.inf
+            for lane in lanes:
+                intersection_lanelets = lane.contained_lanelets.intersection(
+                    all_intersection_lanelets
+                )
+                if len(intersection_lanelets) == 0:
+                    continue
+                front_s = ego.front_s(time_step, lane) or -np.inf
+                rear_s = ego.rear_s(time_step, lane) or np.inf
+                start_s = np.array(
+                    [
+                        lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).center_vertices[0]
+                        )[0]
+                        for l in intersection_lanelets
+                    ]
+                )
+                end_s = np.array(
+                    [
+                        lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).center_vertices[-1]
+                        )[0]
+                        for l in intersection_lanelets
+                    ]
+                )
+                dist_succ = start_s - front_s
+                dist_succ = np.min(dist_succ[dist_succ > 0], initial=np.inf)
+                dist_pred = rear_s - end_s
+                dist_pred = np.min(dist_pred[dist_pred > 0], initial=np.inf)
+                dist = min(dist, dist_succ, dist_pred)
+            return -self._scale_lon_dist(dist)
+        else:
+            all_intersection_lanelets = [
+                l.lanelet_id
+                for l in world.road_network.lanelet_network.lanelets
+                if LaneletType.INTERSECTION not in l.lanelet_type
+            ]
+            dist = np.inf
+            for lane in lanes:
+                intersection_lanelets = lane.contained_lanelets.intersection(
+                    all_intersection_lanelets
+                )
+                if len(intersection_lanelets) == 0:
+                    continue
+                front_s = ego.front_s(time_step, lane) or np.inf
+                rear_s = ego.rear_s(time_step, lane) or -np.inf
+                start_s = np.array(
+                    [
+                        lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).center_vertices[0]
+                        )[0]
+                        for l in intersection_lanelets
+                    ]
+                )
+                end_s = np.array(
+                    [
+                        lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).center_vertices[-1]
+                        )[0]
+                        for l in intersection_lanelets
+                    ]
+                )
+                dist_succ = start_s - rear_s
+                dist_succ = np.min(dist_succ[dist_succ > 0], initial=np.inf)
+                dist_pred = front_s - end_s
+                dist_pred = np.min(dist_pred[dist_pred > 0], initial=np.inf)
+                dist = min(dist, dist_succ, dist_pred)
+            return self._scale_lon_dist(dist)
+
+
+class PredTrafficLightRed(BasePredicateEvaluator):
+    """Evaluate if an upcoming traffic light is red."""
+
+    predicate_name = GeneralPredicates.TlRed
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        tl_states = self._get_tl_states(time_step, vehicle_ids, world)
+        return TrafficLightState.RED in tl_states
+
+    @staticmethod
+    def _get_tl_states(time_step, vehicle_ids, world):
+        ego = world.vehicle_by_id(vehicle_ids[0])
+        lanelet_ids = ego.lanelet_assignment[time_step]
+        lanelets = [
+            world.scenario.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids
+        ]
+        tl_states = []
+        for lanelet in lanelets:
+            if len(lanelet.traffic_lights) == 0:
+                continue
+            # TODO: Only works for one traffic light per lanelet!
+            assert (
+                len(lanelet.traffic_lights) == 1
+            ), "TODO: Only works for one traffic light per lanelet!"
+            tl = world.scenario.lanelet_network.find_traffic_light_by_id(
+                list(lanelet.traffic_lights)[0]
+            )
+            tl_states.append(tl.get_state_at_time_step(time_step))
+        return tl_states
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        tl_states = self._get_tl_states(time_step, vehicle_ids, world)
+        if TrafficLightState.RED in tl_states:
+            robustness = 1.0
+        elif (
+            TrafficLightState.YELLOW in tl_states
+            or TrafficLightState.RED_YELLOW in tl_states
+        ):
+            robustness = -0.5
+        else:
+            robustness = -1.0
+        return robustness
+
+
+class PredOnRightTurn(BasePredicateEvaluator):
+    """Evaluate if a vehicle is within a right turning lanelet."""
+
+    predicate_name = GeneralPredicates.RightTurn
+    arity = 1
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def _get_incoming(self, ego_id, world) -> Optional[IntersectionIncomingElement]:
+        ego = world.vehicle_by_id(ego_id)
+        # Try to find out if we previously have been on any incoming lanelets to
+        # determine which are the corresponding
+        # right-turning elements
+        inc = {
+            frozenset(i.incoming_lanelets): i
+            for i in world.scenario.lanelet_network.intersections[0].incomings
+        }
+        tsteps = sorted(ego.lanelet_assignment.keys())
+        incoming = None
+        for t in tsteps:
+            ls = ego.lanelet_assignment[t]
+            for i in inc:
+                if len(i.intersection(ls)) > 0:
+                    incoming = inc[i]
+                    break
+            if incoming is not None:
+                break
+        return incoming
+
+    def _get_right_turning_lanes(
+        self, world: World, incoming: IntersectionIncomingElement
+    ):
+        incoming_lanelet_ids = incoming.incoming_lanelets
+        right_turning_lanelet_ids = incoming.successors_right
+        right_turning_lanes = []
+        right_turning_lanelets = []
+        for l in world.road_network.lanes:
+            right_turning_lanlet = l.contained_lanelets.intersection(
+                right_turning_lanelet_ids
+            )
+            if (
+                len(l.contained_lanelets.intersection(incoming_lanelet_ids)) > 0
+                and len(right_turning_lanlet) > 0
+            ):
+                right_turning_lanes.append(l)
+                assert len(right_turning_lanlet) == 1
+                right_turning_lanelets.append(right_turning_lanlet.pop())
+        return right_turning_lanes, right_turning_lanelets, incoming
+
+    def _robustness_on_lane(
+        self,
+        world: World,
+        vehicle: Vehicle,
+        time_step: int,
+        lane: Lane,
+        right_turning_lanelet,
+        incoming,
+    ):
+        lanelet = world.road_network.lanelet_network.find_lanelet_by_id(
+            right_turning_lanelet
+        )
+        try:
+            lon_state, _ = lane.clcs.convert_to_curvilinear_coords(
+                *vehicle.states_cr[time_step].position,
+            )
+        except ValueError:
+            return self._scale_lon_dist(-np.inf)
+
+        front_s = lon_state + 0.5 * vehicle.shape.length
+        rear_s = lon_state - 0.5 * vehicle.shape.length
+        start_s, _ = lane.clcs.convert_to_curvilinear_coords(
+            *lanelet.center_vertices[0]
+        )
+        end_s, _ = lane.clcs.convert_to_curvilinear_coords(*lanelet.center_vertices[-1])
+        if start_s <= front_s and rear_s <= end_s:
+            d_left = distance_to_left_bounds(
+                vehicle, incoming.successors_right, world, time_step
+            )
+            rob = -np.max(d_left, initial=-np.inf)
+            rob = self._scale_lat_dist(rob)
+        elif front_s < start_s:
+            rob = self._scale_lon_dist(front_s - start_s)
+        elif end_s < rear_s:
+            rob = self._scale_lon_dist(end_s - rear_s)
+        else:
+            assert False
+        return rob
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        incoming = self._get_incoming(vehicle_ids[0], world)
+        if incoming is None:
+            return self._scale_lon_dist(-np.inf)
+        ego = world.vehicle_by_id(vehicle_ids[0])
+        (
+            right_turning_lanes,
+            right_turning_lanelets,
+            incoming,
+        ) = self._get_right_turning_lanes(world, incoming)
+        rob = []
+        for lane, lanelet in zip(right_turning_lanes, right_turning_lanelets):
+            rob.append(
+                self._robustness_on_lane(world, ego, time_step, lane, lanelet, incoming)
+            )
+        return min(rob, default=self._scale_lon_dist(-np.inf))

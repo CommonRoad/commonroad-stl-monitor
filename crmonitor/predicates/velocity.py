@@ -298,30 +298,12 @@ class PredInStandStill(BasePredicateEvaluator):
     predicate_name = VelocityPredicates.InStandstill
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-
-        if (
-            -self.config["standstill_error"]
-            < vehicle.get_lon_state(time_step).v
-            < self.config["standstill_error"]
-        ):
-            return True
-        else:
-            return False
-
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        return self._scale_speed(
-            min(
-                vehicle.get_lon_state(time_step).v + self.config["standstill_error"],
-                self.config["standstill_error"]
-                - vehicle.get_lon_state(time_step).v
-                - 1.0e-17,
-            )
-        )
+        speed = abs(vehicle.states_cr[time_step].velocity)
+        return self._scale_speed(self.config["standstill_error"] - speed)
 
 
 class PredExistStandingLeadingVehicle(BasePredicateEvaluator):

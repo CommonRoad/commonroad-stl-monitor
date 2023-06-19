@@ -188,7 +188,7 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, 20, 0.1, 5.0)
 
         return curvilinear_cosy
 
@@ -214,18 +214,11 @@ class RoadNetwork:
         """
         lanes = []
         lane_lanelets = []
-        start_lanelets = []
-        for lanelet in self.lanelet_network.lanelets:
-            if len(lanelet.predecessor) == 0:
-                start_lanelets.append(lanelet)
-            else:
-                predecessors = [
-                    self.lanelet_network.find_lanelet_by_id(pred_id)
-                    for pred_id in lanelet.predecessor
-                ]
-                for pred in predecessors:
-                    if not lanelet.lanelet_type == pred.lanelet_type:
-                        start_lanelets.append(lanelet)
+        start_lanelets = [
+            lanelet
+            for lanelet in self.lanelet_network.lanelets
+            if len(lanelet.predecessor) == 0
+        ]
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
                 lanelet_type = LaneletType.ACCESS_RAMP

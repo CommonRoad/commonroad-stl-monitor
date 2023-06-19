@@ -15,7 +15,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.scenario import Scenario
+from commonroad.scenario.scenario import ObstacleType, Scenario
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_dc.feasibility.solution_checker import (
     _simulate_trajectory_if_input_vector,
@@ -118,7 +118,17 @@ class World:
             cache = shelve.open(str(cache_file), writeback=True)
         else:
             cache = {}
-        for obs in scenario.dynamic_obstacles:
+        for obs in filter(
+            lambda o: o.obstacle_type
+            in [
+                ObstacleType.CAR,
+                ObstacleType.BUS,
+                ObstacleType.TRUCK,
+                ObstacleType.MOTORCYCLE,
+                ObstacleType.TAXI,
+            ],
+            scenario.dynamic_obstacles,
+        ):
             # Skip obstacles that go out of the road
             if any(
                 map(
