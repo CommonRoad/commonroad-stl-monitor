@@ -73,9 +73,9 @@ class RuleEvaluator:
         )
         world.vehicles.add(ego_vehicle)
 
-        rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
+        rule = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(
-            rule_set,
+            rule,
             ego_vehicle,
             world,
             use_boolean=use_boolean,
