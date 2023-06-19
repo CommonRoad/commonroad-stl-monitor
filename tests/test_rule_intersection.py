@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.scenario.lanelet import LaneletType
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
@@ -31,36 +30,11 @@ class RuleTest(unittest.TestCase):
 
     def test_red_light(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/traffic_light_test_2.xml"
+            self.scenario_root_path, "test_intersection/ZAM_TrafficLight-1_1_T-1.xml"
         )
         scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open(
             lanelet_assignment=True
         )
-        # TODO: Fix lanelet network completely!
-        scenario.lanelet_network.intersections[0].incomings[3]._successors_right.add(
-            203
-        )
-        scenario.lanelet_network.intersections[0].incomings[1]._successors_right.add(
-            201
-        )
-        scenario.lanelet_network.intersections[0].incomings[3]._successors_straight.add(
-            103
-        )
-        scenario.lanelet_network.intersections[0].incomings[3]._successors_left.add(303)
-        scenario.lanelet_network.find_lanelet_by_id(203)._lanelet_type.add(
-            LaneletType.INTERSECTION
-        )
-        scenario.lanelet_network.find_lanelet_by_id(103)._lanelet_type.add(
-            LaneletType.INTERSECTION
-        )
-        scenario.lanelet_network.find_lanelet_by_id(303)._lanelet_type.add(
-            LaneletType.INTERSECTION
-        )
-        scenario.lanelet_network.find_lanelet_by_id(201)._lanelet_type.add(
-            LaneletType.INTERSECTION
-        )
-        scenario.lanelet_network.find_lanelet_by_id(403)._predecessor.append(203)
-        scenario.lanelet_network.find_lanelet_by_id(400)._predecessor.append(201)
         exp_result = {
             30: True,  # Turning Right on green
             33: True,  # Turning Right on green
