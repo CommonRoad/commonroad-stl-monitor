@@ -61,10 +61,18 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
+
+        # Flat copy vehicles of the world to update ego vehicle parameters
+        world = copy.copy(world)
+        world.vehicles = copy.copy(world.vehicles)
+        world.vehicles.remove(ego_vehicle)
+
         ego_vehicle = copy.copy(ego_vehicle)
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
+        world.vehicles.add(ego_vehicle)
+
         rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(
             rule_set,
