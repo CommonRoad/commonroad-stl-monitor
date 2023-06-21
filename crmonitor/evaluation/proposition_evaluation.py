@@ -1,0 +1,81 @@
+from typing import Optional
+
+from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.world import World
+from crmonitor.evaluation.evaluation import RuleEvaluator
+from crmonitor.evaluation.visitor import (
+    BaseValueMonitorTreeVisitor,
+    MonitorCreationRuleTreeVisitor,
+    RuleTreeVisitor,
+)
+from crmonitor.monitor.monitor_node import RuleMonitorNode
+from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
+from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.monitor.rule import PredicateNode, RuleNode, VisitorNode
+
+
+class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
+    def visit_rule_node(self, rule_node: RuleNode, *ctx):
+        children = [c.visit(self, *ctx) for c in rule_node.children]
+        monitor = PropositionRobustnessMonitor.create_from_rule_node(
+            rule_node, self.dt, self.output_type
+        )
+        return RuleMonitorNode(rule_node.name, children, monitor)
+
+
+class PropositionCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
+    @staticmethod
+    def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):
+        return list(rule_node.monitor.ast_node_values.items())
+
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        raise NotImplementedError()
+
+
+class PropositionRuleEvaluator(RuleEvaluator):
+    def __init__(
+        self,
+        rule: VisitorNode,
+        ego_vehicle: Vehicle,
+        world: World,
+        start_time_step=None,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
+    ):
+        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(
+            world.dt, output_type
+        )
+        self.proposition_collector = PropositionCollectorMonitorTreeVisitor()
+        super().__init__(
+            rule,
+            ego_vehicle,
+            world,
+            start_time_step,
+            use_boolean,
+            output_type,
+            monitor_creation_visitor,
+        )
+
+    @property
+    def ego_vehicle(self) -> Vehicle:
+        return self._ego_vehicle
+
+    def get_propositions(self):
+        """
+        Calculates the proposition robustness (mainly used for trajectory repairing)
+        Calculations are done for the non-ego vehicle that conforms to the rule with the lowest feasibility.
+
+        Returns:
+        props (dict{prop, value}): Robustness values of each proposition, obtained using _props attribute of the
+        RtamtStlMonitor, set using the RtamtStlMonitor.collect_prop_rob method. If quantifier nodes exist, the Monitor
+        that monitors the ego vehicle against the worst-case non-ego vehicle is used.
+        other_id (int): The vehicle against which the values were obtained. Ego if the rule concerns the ego vehicle.
+        time (int): Timestep at which the values were obtained.
+        """
+        other_id = (
+            self._eval_visitor.other_ids[-1]
+            if self._eval_visitor.other_ids is not ()
+            else self._ego_vehicle.id
+        )
+        props = dict(self._monitor.visit(self._ast_node_value_collector_visitor))
+        return props, other_id, self._last_evaluation_time_step
