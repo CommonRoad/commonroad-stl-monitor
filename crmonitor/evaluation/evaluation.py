@@ -61,13 +61,21 @@ class RuleEvaluator:
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
         rule_str_dict = traffic_rules_config["traffic_rules"]
-        # ego_vehicle = copy.copy(ego_vehicle)
+
+        # Flat copy vehicles of the world to update ego vehicle parameters
+        world = copy.copy(world)
+        world.vehicles = copy.copy(world.vehicles)
+        world.vehicles.remove(ego_vehicle)
+
+        ego_vehicle = copy.copy(ego_vehicle)
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
-        rule_set = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
+        world.vehicles.add(ego_vehicle)
+
+        rule = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
         return cls(
-            rule_set,
+            rule,
             ego_vehicle,
             world,
             use_boolean=use_boolean,
@@ -172,6 +180,9 @@ class RuleEvaluator:
             self._world,
             self._last_evaluation_time_step,
             self._ego_vehicle,
+        )
+        rule_value = (
+            rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         )
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
         return rule_value

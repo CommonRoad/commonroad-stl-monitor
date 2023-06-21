@@ -4,14 +4,13 @@ import numpy as np
 from commonroad.scenario.lanelet import Lanelet
 
 
-def parallel_lanes(num_lanes) -> List[Lanelet]:
+def parallel_lanes(num_lanes, lane_length=90.0) -> List[Lanelet]:
     """
     Defines 3 parallel lanes with width 4 and length 90
     Lane ids are 1-indexed!
     :return: List of 3 lanelets
     """
     lane_width = 4
-    lane_length = 90
     lon_step = 10
     lanelets = []
     for i in range(num_lanes):
