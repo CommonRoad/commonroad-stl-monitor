@@ -76,3 +76,6 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
             ):
                 self.collect_prop_rob(specs_node.children[0], prop_list)
                 self.collect_prop_rob(specs_node.children[1], prop_list)
+
+    def copy(self):
+        return PropositionRobustnessMonitor(self._rule, self._predicates, self.dt, self._output_type)
