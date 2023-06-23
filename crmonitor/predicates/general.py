@@ -9,7 +9,13 @@ from matplotlib import pyplot as plt
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf
+from crmonitor.predicates.position import PredInSameLane, PredSingleLane, PredInFrontOf, PredOnOncomOf
+from crmonitor.predicates.priority import (PredSamePriorityRightRight, PredSamePriorityRightLeft, PredSamePriorityRightStraight,
+                                           PredSamePriorityLeftRight, PredSamePriorityLeftLeft, PredSamePriorityLeftStraight,
+                                           PredSamePriorityStraightRight, PredSamePriorityStraightLeft, PredSamePriorityStraightStraight,
+                                           PredHasPriorityRightRight, PredHasPriorityRightLeft, PredHasPriorityRightStraight,
+                                           PredHasPriorityLeftRight, PredHasPriorityLeftLeft, PredHasPriorityLeftStraight,
+                                           PredHasPriorityStraightRight, PredHasPriorityStraightLeft, PredHasPriorityStraightStraight)
 from crmonitor.predicates.utils import (cal_road_width, )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +32,28 @@ class GeneralPredicates(str, Enum):
     TurningLeft = "turning_left"
     TurningRight = "turning_right"
     GoingStraight = "going_straight"
+
+    TurningSamePriorityBase = "turning_same_priority_base"
+    RightEgoRightTargetSamePriority = "turning_right_ego_turning_right_target_same_priority"
+    RightEgoLeftTargetSamePriority = "turning_right_ego_turning_left_target_same_priority"
+    RightEgoStraightTargetSamePriority = "turning_right_ego_going_straight_target_same_priority"
+    LeftEgoRightTargetSamePriority = "turning_left_ego_turning_right_target_same_priority"
+    LeftEgoLeftTargetSamePriority = "turning_left_ego_turning_left_target_same_priority"
+    LeftEgoStraightTargetSamePriority = "turning_left_ego_going_straight_target_same_priority"
+    StraightEgoRightTargetSamePriority = "going_straight_ego_turning_right_target_same_priority"
+    StraightEgoLeftTargetSamePriority = "going_straight_ego_turning_left_target_same_priority"
+    StraightEgoStraightTargetSamePriority = "going_straight_ego_going_straight_target_same_priority"
+
+    TurningHasPriorityBase = "turning_has_priority_base"
+    RightEgoRightTargetHasPriority = "turning_right_ego_turning_right_target_has_priority"
+    RightEgoLeftTargetHasPriority = "turning_right_ego_turning_left_target_has_priority"
+    RightEgoStraightTargetHasPriority = "turning_right_ego_going_straight_target_has_priority"
+    LeftEgoRightTargetHasPriorityNotOncoming = "turning_left_ego_turning_right_target_has_priority_not_oncoming"
+    LeftEgoLeftTargetHasPriority = "turning_left_ego_turning_left_target_has_priority"
+    LeftEgoStraightTargetHasPriorityNotOncoming = "turning_left_ego_going_straight_target_has_priority_not_oncoming"
+    StraightEgoRightTargetHasPriority = "going_straight_ego_turning_right_target_has_priority"
+    StraightEgoLeftTargetHasPriority = "going_straight_ego_turning_left_target_has_priority"
+    StraightEgoStraightTargetHasPriority = "going_straight_ego_going_straight_target_has_priority"
 
 
 class PredCutIn(BasePredicateEvaluator):
@@ -708,3 +736,278 @@ class PredGoingStraight(BasePredicateEvaluator):
             rob = self._scale_lon_dist(straight_end_s - rear_s)
         return rob
 
+
+class PredTurningSamePriorityBase(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.TurningSamePriorityBase
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityRightRight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningRight(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
+        rob_turning_target = self._turning_target.evaluate_robustness(world, time_step, [target_vehicle_id])
+        rob_same_priority = self._same_priority.evaluate_robustness(world, time_step, vehicle_ids)
+        rob = min(rob_turning_ego, rob_turning_target, rob_same_priority)
+        return rob
+
+
+class PredRightEgoRightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.RightEgoRightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityRightRight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningRight(config)
+
+
+class PredRightEgoLeftTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.RightEgoLeftTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityRightLeft(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredRightEgoStraightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.RightEgoStraightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityRightStraight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredGoingStraight(config)
+
+
+class PredLeftEgoRightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoRightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityLeftRight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredTurningRight(config)
+
+
+class PredLeftEgoLeftTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoLeftTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityLeftLeft(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredLeftEgoStraightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoStraightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityLeftStraight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredGoingStraight(config)
+
+
+class PredStraightEgoRightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoRightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityStraightRight(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredTurningRight(config)
+
+
+class PredStraightEgoLeftTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoLeftTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityStraightLeft(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredStraightEgoStraightTargetSamePriority(PredTurningSamePriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoStraightTargetSamePriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._same_priority = PredSamePriorityStraightStraight(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredGoingStraight(config)
+
+
+class PredTurningHasPriorityBase(BasePredicateEvaluator):
+    predicate_name = GeneralPredicates.TurningHasPriorityBase
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityRightRight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningRight(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
+        rob_turning_target = self._turning_target.evaluate_robustness(world, time_step, [target_vehicle_id])
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(world, time_step, [target_vehicle_id, ego_vehicle_id])
+        rob = min(rob_turning_ego, rob_turning_target, rob_target_has_priority)
+        return rob
+
+
+class PredRightEgoRightTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.RightEgoRightTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityRightRight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningRight(config)
+
+
+class PredRightEgoLeftTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.RightEgoLeftTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityRightLeft(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredRightEgoStraightTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.RightEgoStraightTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityRightStraight(config)
+        self._turning_ego = PredTurningRight(config)
+        self._turning_target = PredGoingStraight(config)
+
+
+class PredLeftEgoRightTargetHasPriorityNotOncoming(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoRightTargetHasPriorityNotOncoming
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityLeftRight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredTurningRight(config)
+        self._on_oncoming_of = PredOnOncomOf(config)
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
+        rob_turning_target = self._turning_target.evaluate_robustness(world, time_step, [target_vehicle_id])
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(world, time_step,
+                                                                                [target_vehicle_id, ego_vehicle_id])
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(world, time_step, [target_vehicle_id, ego_vehicle_id])
+        rob = min(rob_turning_ego, rob_turning_target, rob_target_has_priority, -rob_on_oncoming_of)
+        return rob
+
+
+class PredLeftEgoLeftTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoLeftTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityLeftLeft(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredLeftEgoStraightTargetHasPriorityNotOncoming(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.LeftEgoStraightTargetHasPriorityNotOncoming
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityLeftStraight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._turning_target = PredGoingStraight(config)
+        self._on_oncoming_of = PredOnOncomOf(config)
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
+        rob_turning_target = self._turning_target.evaluate_robustness(world, time_step, [target_vehicle_id])
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(world, time_step,
+                                                                                [target_vehicle_id, ego_vehicle_id])
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(world, time_step, [target_vehicle_id, ego_vehicle_id])
+        rob = min(rob_turning_ego, rob_turning_target, rob_target_has_priority, -rob_on_oncoming_of)
+        return rob
+
+
+class PredStraightEgoRightTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoRightTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityStraightRight(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredTurningRight(config)
+
+
+class PredStraightEgoLeftTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoLeftTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityStraightLeft(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredTurningLeft(config)
+
+
+class PredStraightEgoStraightTargetHasPriority(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.StraightEgoStraightTargetHasPriority
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityStraightStraight(config)
+        self._turning_ego = PredGoingStraight(config)
+        self._turning_target = PredGoingStraight(config)
