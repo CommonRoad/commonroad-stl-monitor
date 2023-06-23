@@ -1236,8 +1236,8 @@ class PredOnOncomOf(BasePredicateEvaluator):
         vehicle_target = world.vehicle_by_id(vehicle_ids[0])
         vehicle_ego = world.vehicle_by_id(vehicle_ids[1])
         oncoming_lanelets_id = utils.get_oncoming(vehicle_ego, road_network)
-        lanelets_assignment_target = vehicle_target.lanelet_assignment[time_step]
-        if len(lanelets_assignment_target.intersection(set(oncoming_lanelets_id))) == 0:
+        incoming_target = utils.get_incoming(vehicle_target.lanelets_dir, road_network)
+        if len(incoming_target.incoming_lanelets.intersection(set(oncoming_lanelets_id))) == 0:
             rob = -1
         else:
             rob = 1
