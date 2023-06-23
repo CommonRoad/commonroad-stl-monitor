@@ -1614,7 +1614,7 @@ def get_oncoming(vehicle: Vehicle, road_network: RoadNetwork):
     oncoming_list = list()
     for oncoming_straight in oncoming_straight_list:
         incoming = get_straight_going_incoming([oncoming_straight], road_network)
-        oncoming_list = oncoming_list + list(incoming.incoming_lanelets) + list(incoming.successors_straight) + list(incoming.successors_right)
+        oncoming_list = oncoming_list + list(incoming.incoming_lanelets)
     return oncoming_list
 
 
