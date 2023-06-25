@@ -77,14 +77,16 @@ class PropositionRuleEvaluator(RuleEvaluator):
             if self._eval_visitor.other_ids is not ()
             else self._ego_vehicle.id
         )
-        if hasattr(self._monitor, 'monitors'):
+        if hasattr(self._monitor, "monitors"):
             other_id = self._eval_visitor.other_ids[-1]
             props = self._monitor.monitors[other_id].monitor._propositions
         else:
-            if any(hasattr(child, 'monitors') for child in self._monitor.children):
+            if any(hasattr(child, "monitors") for child in self._monitor.children):
                 other_id = self._eval_visitor.other_ids[-1]
                 props = self._monitor.monitor._propositions
-                quant_nodes = [node for node in self._monitor.children if hasattr(node, 'monitors')]
+                quant_nodes = [
+                    node for node in self._monitor.children if hasattr(node, "monitors")
+                ]
                 # for quant_node in quant_nodes:
                 #    for key in [key for key in props.keys() if quant_node.name in key]:
                 #        props.pop(key)

@@ -22,7 +22,7 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
         self._propositions = {}
 
     def evaluate_monitor_online(
-        self, time_step: int, predicates: List[Tuple[str, float]]
+            self, time_step: int, predicates: List[Tuple[str, float]]
     ):
         robustness = super().evaluate_monitor_online(time_step, predicates)
         self.collect_prop_rob(self._spec.ast.specs[0], self._propositions)
@@ -46,11 +46,11 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
             if isinstance(specs_node, Neg):
                 self.collect_prop_rob(specs_node.children[0], prop_list)
             if (
-                isinstance(specs_node, TimedOnce)
-                or isinstance(specs_node, Previous)
-                or isinstance(specs_node, TimedAlways)
-                or isinstance(specs_node, TimedHistorically)
-                or isinstance(specs_node, TimedEventually)
+                    isinstance(specs_node, TimedOnce)
+                    or isinstance(specs_node, Previous)
+                    or isinstance(specs_node, TimedAlways)
+                    or isinstance(specs_node, TimedHistorically)
+                    or isinstance(specs_node, TimedEventually)
             ):
                 prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         elif isinstance(specs_node, Predicate) or isinstance(specs_node, Variable):
@@ -58,24 +58,26 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
         else:
             if isinstance(specs_node, Implies):
                 if isinstance(specs_node.children[0], Predicate) or isinstance(
-                    specs_node.children[0], Variable
+                        specs_node.children[0], Variable
                 ):
                     prop_list[specs_node.children[0].name] = self.ast_node_values[
                         specs_node.children[0].name
                     ]
                     self.collect_prop_rob(specs_node.children[1], prop_list)
                 elif isinstance(specs_node.children[1], Predicate) or isinstance(
-                    specs_node.children[1], Variable
+                        specs_node.children[1], Variable
                 ):
                     prop_list[specs_node.children[1].name] = self.ast_node_values[
                         specs_node.children[1].name
                     ]
                     self.collect_prop_rob(specs_node.children[0], prop_list)
             if isinstance(specs_node, Conjunction) or isinstance(
-                specs_node, Disjunction
+                    specs_node, Disjunction
             ):
                 self.collect_prop_rob(specs_node.children[0], prop_list)
                 self.collect_prop_rob(specs_node.children[1], prop_list)
 
     def copy(self):
-        return PropositionRobustnessMonitor(self._rule, self._predicates, self.dt, self._output_type)
+        return PropositionRobustnessMonitor(
+            self._rule, self._predicates, self.dt, self._output_type
+        )
