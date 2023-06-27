@@ -139,7 +139,7 @@ class TestRuleEvaluator(unittest.TestCase):
         )
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
-        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
+        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id, rule="R_G3")
         robs = evaluator.evaluate()
         self.assertTrue(np.all(robs < 0))
 
@@ -156,7 +156,7 @@ class TestRuleEvaluator(unittest.TestCase):
         )
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
-        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
+        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id, rule="R_G3")
         robs = evaluator.evaluate()
         self.assertTrue(np.all(robs < 0))
 
@@ -169,7 +169,7 @@ class TestRuleEvaluator(unittest.TestCase):
         )
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
-        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
+        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id, rule="R_G3")
         robs = evaluator.evaluate()
         self.assertTrue(np.all(robs < 0))
 
@@ -192,7 +192,7 @@ class TestRuleEvaluator(unittest.TestCase):
         )
 
         world, ego_vehicle = World.create_from_solution(scn, pps, pp_sol)
-        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle, rule="R_G3")
+        evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id, rule="R_G3")
         robs = evaluator.evaluate()
         self.assertTrue(np.all(robs < 0))
 

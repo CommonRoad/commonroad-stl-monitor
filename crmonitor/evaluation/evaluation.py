@@ -53,7 +53,7 @@ class RuleEvaluator:
     def create_from_config(
         cls,
         world: World = None,
-        ego_vehicle: Vehicle = None,
+        ego_id: int = None,
         rule: str = "R_G1",
         traffic_rules_config=None,
         use_boolean: bool = False,
@@ -66,9 +66,10 @@ class RuleEvaluator:
         # Flat copy vehicles of the world to update ego vehicle parameters
         world = copy.copy(world)
         world.vehicles = copy.copy(world.vehicles)
-        world.vehicles.remove(ego_vehicle)
 
-        ego_vehicle = copy.copy(ego_vehicle)
+        ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
+        world.vehicles.remove(world.vehicle_by_id(ego_id))
+
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
