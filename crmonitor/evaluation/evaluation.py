@@ -3,7 +3,7 @@ import importlib.resources as pkg_resources
 import logging
 from collections import defaultdict
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
@@ -23,6 +23,7 @@ from crmonitor.evaluation.visitor import (
     PredicateCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
+    RuleTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.monitor.rule import VisitorNode, parse_rule
@@ -52,7 +53,7 @@ class RuleEvaluator:
     def create_from_config(
         cls,
         world: World = None,
-        ego_vehicle: Vehicle = None,
+        ego_id: int = None,
         rule: str = "R_G1",
         traffic_rules_config=None,
         use_boolean: bool = False,
@@ -65,9 +66,10 @@ class RuleEvaluator:
         # Flat copy vehicles of the world to update ego vehicle parameters
         world = copy.copy(world)
         world.vehicles = copy.copy(world.vehicles)
-        world.vehicles.remove(ego_vehicle)
 
-        ego_vehicle = copy.copy(ego_vehicle)
+        ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
+        world.vehicles.remove(world.vehicle_by_id(ego_id))
+
         ego_vehicle.vehicle_param = create_ego_vehicle_param(
             get_evaluation_config().get("ego_vehicle_param"), world.dt
         )
@@ -90,10 +92,14 @@ class RuleEvaluator:
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
+        monitor_creation_visitor: Optional[RuleTreeVisitor] = None,
     ):
-        visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
+        if monitor_creation_visitor is None:
+            monitor_creation_visitor = MonitorCreationRuleTreeVisitor(
+                world.dt, output_type
+            )
         self._rule = rule
-        self._monitor = rule.visit(visitor)
+        self._monitor = rule.visit(monitor_creation_visitor)
         self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
         self._ast_node_value_collector_visitor = (
             AstNodeValueCollectorMonitorTreeVisitor()
