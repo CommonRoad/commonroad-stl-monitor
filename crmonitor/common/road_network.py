@@ -261,6 +261,8 @@ class RoadNetwork:
 
         lanes.sort(key=lambda x: x.lane_id)
 
+        # todo: the adjacency assignments only work for highway so far. For intersections, more dedicated approach
+        #  is needed
         if len(lanes) == 0:
             pass
         elif len(lanes) == 1:
