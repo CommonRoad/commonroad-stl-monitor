@@ -179,7 +179,7 @@ class CurvilinearStateManager:
                 d=d,
                 theta=(state.orientation - theta_cl),
                 kappa=state.kappa,
-                kappa_dot=state.kappa_dot
+                kappa_dot=state.kappa_dot,
             )
         elif hasattr(state, "kappa"):
             x_lat = StateLateral(
