@@ -142,9 +142,17 @@ class CurvilinearStateManager:
             )
             return None
         theta_cl = lane.orientation(s)
-        if hasattr(state, "acceleration") and hasattr(state, "jerk") and hasattr(state, 'jerk_dot'):
+        if (
+            hasattr(state, "acceleration")
+            and hasattr(state, "jerk")
+            and hasattr(state, 'jerk_dot')
+        ):
             x_lon = StateLongitudinal(
-                s=s, v=state.velocity, a=state.acceleration, j=state.jerk, j_dot=state.jerk_dot
+                s=s,
+                v=state.velocity,
+                a=state.acceleration,
+                j=state.jerk,
+                j_dot=state.jerk_dot
             )
         elif hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(
