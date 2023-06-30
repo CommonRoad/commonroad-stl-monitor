@@ -33,7 +33,7 @@ class StateLongitudinal:
     Longitudinal state in curvilinear coordinate system
     """
 
-    __slots__ = ["s", "v", "a", "j"]
+    __slots__ = ["s", "v", "a", "j", "j_dot"]
 
     def __init__(self, **kwargs):
         """Elements of state vector are determined during runtime."""
@@ -142,7 +142,11 @@ class CurvilinearStateManager:
             )
             return None
         theta_cl = lane.orientation(s)
-        if hasattr(state, "acceleration") and hasattr(state, "jerk"):
+        if hasattr(state, "acceleration") and hasattr(state, "jerk") and hasattr(state, 'jerk_dot'):
+            x_lon = StateLongitudinal(
+                s=s, v=state.velocity, a=state.acceleration, j=state.jerk, j_dot=state.jerk_dot
+            )
+        elif hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(
                 s=s, v=state.velocity, a=state.acceleration, j=state.jerk
             )
@@ -333,14 +337,14 @@ class Vehicle:
             (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
         )
 
-    def get_lat_state(self, time_step: int, lane: Lane = None):
+    def get_lat_state(self, time_step: int, lane: Lane = None) -> StateLateral:
         lane = lane or self.get_lane(time_step)
         state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
             self.states_cr[time_step], lane
         )
         return state_lat
 
-    def get_lon_state(self, time_step: int, lane: Lane = None):
+    def get_lon_state(self, time_step: int, lane: Lane = None) -> StateLongitudinal:
         lane = lane or self.get_lane(time_step)
         states = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         return states[0] if states is not None else None

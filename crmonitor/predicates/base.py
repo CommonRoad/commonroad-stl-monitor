@@ -57,12 +57,12 @@ class BasePredicateEvaluator(abc.ABC):
 
     @abc.abstractmethod
     def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
+            self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         pass
 
     def evaluate_mpr(
-        self, world: World, time_step, vehicle_ids: List[int]
+            self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         """
         Evaluation of model predictive robustness

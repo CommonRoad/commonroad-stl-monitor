@@ -179,14 +179,21 @@ class World:
             accelerations += accelerations[-1:]
             jerk += [jerk[-1], 0]
             obs.initial_state.jerk = jerk[0]
+
+            # Compute the gradient of jerk
+            jerk_dot = (np.diff(jerk) / dt).tolist()
+            jerk_dot += [0]
+            obs.initial_state.jerk_dot = jerk_dot[0]
         else:
             jerk = [None] * 2
-        for a, j, state in zip(
-            accelerations[1:], jerk[1:], obs.prediction.trajectory.state_list
+            jerk_dot = [None] * 2
+        for a, j, j_dot, state in zip(
+            accelerations[1:], jerk[1:], jerk_dot, obs.prediction.trajectory.state_list
         ):
             state.acceleration = a
             if j is not None:
                 state.jerk = j
+                state.jerk_dot = j_dot
 
     def vehicle_by_id(self, id) -> Optional[Vehicle]:
         for veh in self.vehicles:
