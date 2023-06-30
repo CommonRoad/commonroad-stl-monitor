@@ -34,6 +34,7 @@ from crmonitor.common.vehicle import (
 
 l_wb = 2.578  # for BMW_320i
 
+
 @lru_cache(maxsize=None)
 def get_world_config():
     with pkg_resources.path(crmonitor, "config.yaml") as config_path:

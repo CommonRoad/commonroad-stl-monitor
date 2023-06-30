@@ -165,7 +165,7 @@ class CurvilinearStateManager:
         if (
             hasattr(state, "kappa")
             and hasattr(state, "kappa_dot")
-            and hasattr(state, 'kappa_dot_dot')
+            and hasattr(state, "kappa_dot_dot")
         ):
             x_lat = StateLateral(
                 d=d,
@@ -176,10 +176,15 @@ class CurvilinearStateManager:
             )
         elif hasattr(state, "kappa") and hasattr(state, "kappa_dot"):
             x_lat = StateLateral(
-                d=d, theta=(state.orientation - theta_cl), kappa=state.kappa, kappa_dot=state.kappa_dot
+                d=d,
+                theta=(state.orientation - theta_cl),
+                kappa=state.kappa,
+                kappa_dot=state.kappa_dot
             )
         elif hasattr(state, "kappa"):
-            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl), kappa=state.kappa)
+            x_lat = StateLateral(
+                d=d, theta=(state.orientation - theta_cl), kappa=state.kappa
+            )
         else:
             x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl))
         return x_lon, x_lat
