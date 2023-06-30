@@ -57,12 +57,12 @@ class BasePredicateEvaluator(abc.ABC):
 
     @abc.abstractmethod
     def evaluate_robustness(
-            self, world: World, time_step, vehicle_ids: List[int]
+        self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         pass
 
     def evaluate_mpr(
-            self, world: World, time_step, vehicle_ids: List[int]
+        self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         """
         Evaluation of model predictive robustness
@@ -70,9 +70,7 @@ class BasePredicateEvaluator(abc.ABC):
         # extract feature variables
         list_feature_variables = []
         # computation for single predicate
-        robustness, _ = self.peml.robustness_models[0].predict(
-            [list_feature_variables]
-        )
+        robustness, _ = self.peml.robustness_models[0].predict([list_feature_variables])
         # characteristic function (boolean evaluation)
         char_func = self.evaluate_boolean(world, time_step, vehicle_ids)
         robustness[robustness * char_func < 0] = self.config["eps"]
