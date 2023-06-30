@@ -32,6 +32,7 @@ from crmonitor.common.vehicle import (
     Vehicle,
 )
 
+l_wb = 2.578  # for BMW_320i
 
 @lru_cache(maxsize=None)
 def get_world_config():
@@ -137,7 +138,8 @@ class World:
                 )
             ):
                 continue
-            cls.augment_state_acceleration_jerk(scenario.dt, obs)
+            cls.augment_state_longitudinal(scenario.dt, obs)
+            cls.augment_state_lateral(scenario.dt, obs)
             curvi_cache, predicate_dict = cache.setdefault(
                 str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict)))
             )
@@ -163,7 +165,7 @@ class World:
         return [v.id for v in self.vehicles if v.is_valid(time_step)]
 
     @staticmethod
-    def augment_state_acceleration_jerk(dt, obs):
+    def augment_state_longitudinal(dt, obs):
         accelerations = (
             np.diff(
                 [
@@ -193,7 +195,38 @@ class World:
             state.acceleration = a
             if j is not None:
                 state.jerk = j
+            if j_dot is not None:
                 state.jerk_dot = j_dot
+
+    @staticmethod
+    def augment_state_lateral(dt: float, obs):
+        kappa_list = []
+        for state in [obs.initial_state] + obs.prediction.trajectory.state_list:
+            if hasattr(state, "steering_angle"):
+                state.kappa = state.velocity / l_wb * np.tan(state.steering_angle)
+            elif hasattr(state, "yaw_rate"):
+                state.kappa = state.yaw_rate
+            else:
+                state.kappa = 0.0  # todo: fix for intersection
+            kappa_list.append(state.kappa)
+        if len(kappa_list) >= 2:
+            kappa_dot = (np.diff(kappa_list) / dt).tolist()
+            kappa_dot += [0]
+
+            kappa_dot_dot = (np.diff(kappa_dot) / dt).tolist()
+            kappa_dot_dot += [0]
+            obs.initial_state.kappa_dot = kappa_dot[0]
+            obs.initial_state.kappa_dot_dot = kappa_dot_dot[0]
+        else:
+            kappa_dot = [None] * 2
+            kappa_dot_dot = [None] * 2
+        for k_dot, k_ddot, state in zip(
+            kappa_dot[1:], kappa_dot_dot[1:], obs.prediction.trajectory.state_list
+        ):
+            if k_dot is not None:
+                state.kappa_dot = k_dot
+            if k_ddot is not None:
+                state.kappa_dot_dot = k_ddot
 
     def vehicle_by_id(self, id) -> Optional[Vehicle]:
         for veh in self.vehicles:

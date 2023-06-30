@@ -65,7 +65,7 @@ class StateLateral:
     Lateral state in curvilinear coordinate system
     """
 
-    __slots__ = ["d", "theta", "kappa", "kappa_dot"]
+    __slots__ = ["d", "theta", "kappa", "kappa_dot", "kappa_dot_dot"]
 
     def __init__(self, **kwargs):
         """Elements of state vector are determined during runtime."""
@@ -145,14 +145,14 @@ class CurvilinearStateManager:
         if (
             hasattr(state, "acceleration")
             and hasattr(state, "jerk")
-            and hasattr(state, 'jerk_dot')
+            and hasattr(state, "jerk_dot")
         ):
             x_lon = StateLongitudinal(
                 s=s,
                 v=state.velocity,
                 a=state.acceleration,
                 j=state.jerk,
-                j_dot=state.jerk_dot
+                j_dot=state.jerk_dot,
             )
         elif hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(
@@ -162,7 +162,26 @@ class CurvilinearStateManager:
             x_lon = StateLongitudinal(s=s, v=state.velocity, a=state.acceleration)
         else:
             x_lon = StateLongitudinal(s=s, v=state.velocity)
-        x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl))
+        if (
+            hasattr(state, "kappa")
+            and hasattr(state, "kappa_dot")
+            and hasattr(state, 'kappa_dot_dot')
+        ):
+            x_lat = StateLateral(
+                d=d,
+                theta=(state.orientation - theta_cl),
+                kappa=state.kappa,
+                kappa_dot=state.kappa_dot,
+                kappa_dot_dot=state.kappa_dot_dot,
+            )
+        elif hasattr(state, "kappa") and hasattr(state, "kappa_dot"):
+            x_lat = StateLateral(
+                d=d, theta=(state.orientation - theta_cl), kappa=state.kappa, kappa_dot=state.kappa_dot
+            )
+        elif hasattr(state, "kappa"):
+            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl), kappa=state.kappa)
+        else:
+            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl))
         return x_lon, x_lat
 
     def get_curvilinear_state(
