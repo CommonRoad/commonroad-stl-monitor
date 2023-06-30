@@ -9,6 +9,8 @@ from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
+
 logger = logging.getLogger(__name__)
 
 MAX_LONG_DIST = 200.0
@@ -26,6 +28,10 @@ class BasePredicateEvaluator(abc.ABC):
         self.config = config
         self.scale = config.setdefault("scale_rob", True)
         self.eps = 1e-5
+
+        # usage of model predictive robustness
+        if config["use_mpr"]:
+            self.peml = PEML([self.predicate_name])
 
     # todo: decouple the scaler
     def _scale(self, x, max_value):
@@ -54,6 +60,23 @@ class BasePredicateEvaluator(abc.ABC):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         pass
+
+    def evaluate_mpr(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        """
+        Evaluation of model predictive robustness
+        """
+        # extract feature variables
+        list_feature_variables = []
+        # computation for single predicate
+        robustness, _ = self.peml.robustness_models[0].predict(
+            [list_feature_variables]
+        )
+        # characteristic function (boolean evaluation)
+        char_func = self.evaluate_boolean(world, time_step, vehicle_ids)
+        robustness[robustness * char_func < 0] = self.config["eps"]
+        return robustness[0]
 
     def evaluate_robustness_with_cache(
         self, world: World, time_step, vehicle_ids: List[int]
