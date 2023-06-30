@@ -16,7 +16,7 @@ world = World.create_from_scenario(scenario)
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
-rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
+rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id)
 
 # Either step through time steps sequentially
 robustness = rule_evaluator.update()

@@ -6,7 +6,7 @@ from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 
 from crmonitor.common.helper import cartesian_to_curvilinear
-from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.road_network import RoadNetwork, Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 
@@ -90,6 +90,14 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
     d_right = np.max(d_right) if d_right.size > 0 else np.inf
     return np.fmin(d_left, d_right)
 
+def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_step: int):
+    """
+    Distance of the vehicle center to the boundaries of the lane
+    """
+    veh_position = vehicle_i.state_list_cr[time_step].position
+    dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(veh_position[0], veh_position[1])[1]
+    dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(veh_position[0], veh_position[1])[1]
+    return dis_to_left, dis_to_right
 
 def lanelets_left_of_lanelet(
     lanelet: Lanelet, lanelet_network: LaneletNetwork
