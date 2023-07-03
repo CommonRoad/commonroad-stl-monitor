@@ -96,8 +96,12 @@ def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_
     Distance of the vehicle center to the boundaries of the lane
     """
     veh_position = vehicle_i.state_list_cr[time_step].position
-    dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(veh_position[0], veh_position[1])[1]
-    dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(veh_position[0], veh_position[1])[1]
+    dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(
+        veh_position[0], veh_position[1]
+    )[1]
+    dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(
+        veh_position[0], veh_position[1]
+    )[1]
     return dis_to_left, dis_to_right
 
 
