@@ -91,7 +91,9 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
     return np.fmin(d_left, d_right)
 
 
-def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_step: int):
+def distance_veh_center_to_lane_boundaries(
+    vehicle_i: Vehicle, lane: Lane, time_step: int
+):
     """
     Distance of the vehicle center to the boundaries of the lane
     """

@@ -8,8 +8,9 @@ from commonroad.visualization.renderer import IRenderer
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World, Vehicle
-from crmonitor.predicates.utils import distance_veh_center_to_lane_boundaries, bool_to_num
-
+from crmonitor.predicates.utils import (
+    distance_veh_center_to_lane_boundaries, bool_to_num
+)
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ class BasePredicateEvaluator(abc.ABC):
                 world.road_network.find_lane_by_lanelet(
                     list(veh.lanelet_assignment[time_step])[0]
                 ),
-                time_step
+                time_step,
             )
             return [
                 veh.shape.length,  # length
@@ -135,19 +136,19 @@ class BasePredicateEvaluator(abc.ABC):
         # - single veh features
         ego_veh = world.vehicle_by_id(vehicle_ids[0])
         feature_list += (
-                get_veh_state_long_features(ego_veh)
-                + get_veh_input_long_features(ego_veh)
-                + get_veh_state_lat_features(ego_veh)
-                + get_veh_input_lat_features(ego_veh)
-                + get_veh_env_features(ego_veh)
+            get_veh_state_long_features(ego_veh)
+            + get_veh_input_long_features(ego_veh)
+            + get_veh_state_lat_features(ego_veh)
+            + get_veh_input_lat_features(ego_veh)
+            + get_veh_env_features(ego_veh)
         )
         # - veh to veh features
         if len(vehicle_ids) == 2:
             other_veh = world.vehicle_by_id(vehicle_ids[1])
             feature_list += (
-                    get_veh_state_long_features(other_veh)
-                    + get_veh_state_lat_features(other_veh)
-                    + get_veh_env_features(other_veh)
+                get_veh_state_long_features(other_veh)
+                + get_veh_state_lat_features(other_veh)
+                + get_veh_env_features(other_veh)
             )
             feature_list += get_v2v_features(ego_veh, other_veh)
         # - characteristic function
