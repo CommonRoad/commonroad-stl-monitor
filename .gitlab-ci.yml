@@ -17,7 +17,7 @@ before_script:
 - poetry config virtualenvs.in-project true
 - poetry install --with test
 - source .venv/bin/activate
-- pip install git+ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git@develop
+- pip install -e git+ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git@develop#egg=commonroad-model-predictive-robustness
 
 unittest:
   stage: test
