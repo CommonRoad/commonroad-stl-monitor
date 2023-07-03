@@ -8,6 +8,7 @@ from commonroad.visualization.renderer import IRenderer
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
+from crmonitor.predicates.utils import distance_to_lanes, distance_to_bounds, distance_veh_center_to_lane_boundaries
 
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
@@ -30,7 +31,7 @@ class BasePredicateEvaluator(abc.ABC):
         self.eps = 1e-5
 
         # usage of model predictive robustness
-        if config["use_mpr"]:
+        if self.config["use_mpr"]:
             self.peml = PEML([self.predicate_name])
 
     # todo: decouple the scaler
@@ -65,8 +66,40 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Evaluation of model predictive robustness
         """
+        def get_vehicle_features(vehicle):
+            d_left, d_right = distance_veh_center_to_lane_boundaries(vehicle,
+                                                                     world.road_network.find_lane_by_lanelet(
+                                                                         list(vehicle.lanelet_assignment[time_step])[
+                                                                             0]),
+                                                                     time_step)
+            return [vehicle.get_lon_state(time_step).s,                              # position
+                    vehicle.get_lon_state(time_step).v,                              # velocity
+                    vehicle.get_lon_state(time_step).a,                              # acceleration
+                    vehicle.get_lon_state(time_step).j,                              # jerk
+                    vehicle.get_lon_state(time_step).j_dot,                          # jerk_dot
+                    vehicle.get_lat_state(time_step).d,                              # lateral_position
+                    vehicle.get_lat_state(time_step).theta,                          # orientation
+                    vehicle.get_lat_state(time_step).kappa,                          # curvature
+                    vehicle.get_lat_state(time_step).kappa_dot,                      # curvature_dot
+                    vehicle.get_lat_state(time_step).kappa_dot_dot,                  # curvature_ddot
+                    vehicle.shape.length,                                            # length
+                    vehicle.shape.width,                                             # width
+                    # road from right to the left is: 0, 1, 2, ...
+                    # distance_to_road_left/right
+                    distance_veh_center_to_lane_boundaries(vehicle, world.road_network.lanes[-1], time_step)[0],
+                    distance_veh_center_to_lane_boundaries(vehicle, world.road_network.lanes[0], time_step)[-1],
+                    # distance_to_ref_lane_left, distance_to_ref_lane_right
+                    d_left, d_right,
+                    ]
+        feature_list = []
         # extract feature variables
+        # - single vehicle features
+        for veh_id in vehicle_ids:
+            feature_list += get_vehicle_features(world.vehicle_by_id(veh_id))
+        if len(vehicle_ids) == 1:
+            pass
         list_feature_variables = []
+
         # computation for single predicate
         robustness, _ = self.peml.robustness_models[0].predict([list_feature_variables])
         # characteristic function (boolean evaluation)
@@ -89,7 +122,7 @@ class BasePredicateEvaluator(abc.ABC):
                 time_step,
                 vehicle_ids_tuple,
             )
-            value = self.evaluate_robustness(world, time_step, vehicle_ids)
+            value = self.evaluate_mpr(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(
                 time_step, self.predicate_name, vehicle_ids_tuple[1:], value
             )
