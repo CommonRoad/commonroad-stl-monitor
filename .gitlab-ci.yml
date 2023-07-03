@@ -17,6 +17,7 @@ before_script:
 - poetry config virtualenvs.in-project true
 - poetry install --with test
 - source .venv/bin/activate
+- git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
 - pip install -e git+ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git@develop#egg=commonroad-mpr
 
 unittest:
