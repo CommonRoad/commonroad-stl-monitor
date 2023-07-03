@@ -9,7 +9,8 @@ from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World, Vehicle
 from crmonitor.predicates.utils import (
-    distance_veh_center_to_lane_boundaries, bool_to_num
+    distance_veh_center_to_lane_boundaries,
+    bool_to_num
 )
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
