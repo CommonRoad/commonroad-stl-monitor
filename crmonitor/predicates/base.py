@@ -7,8 +7,8 @@ import numpy as np
 from commonroad.visualization.renderer import IRenderer
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.world import World
-from crmonitor.predicates.utils import distance_to_lanes, distance_to_bounds, distance_veh_center_to_lane_boundaries
+from crmonitor.common.world import World, Vehicle
+from crmonitor.predicates.utils import distance_veh_center_to_lane_boundaries, bool_to_num
 
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
@@ -66,44 +66,76 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Evaluation of model predictive robustness
         """
-        def get_vehicle_features(vehicle):
-            d_left, d_right = distance_veh_center_to_lane_boundaries(vehicle,
+
+        def get_veh_state_long_features(veh: Vehicle):
+            return [veh.get_lon_state(time_step).s,              # position
+                    veh.get_lon_state(time_step).v,              # velocity
+                    veh.get_lon_state(time_step).a,              # acceleration
+                    veh.get_lon_state(time_step).j,              # jerk
+                    ]
+
+        def get_veh_input_long_features(veh: Vehicle):
+            return [veh.get_lon_state(time_step).j_dot]          # jerk_dot
+
+        def get_veh_state_lat_features(veh: Vehicle):
+            return [veh.get_lat_state(time_step).d,              # lateral_position
+                    veh.get_lat_state(time_step).theta,          # orientation
+                    veh.get_lat_state(time_step).kappa,          # curvature
+                    veh.get_lat_state(time_step).kappa_dot,      # curvature_dot
+                    ]
+
+        def get_veh_input_lat_features(veh: Vehicle):
+            return [veh.get_lat_state(time_step).kappa_dot_dot]  # curvature_ddot
+
+        def get_veh_env_features(veh: Vehicle):
+            d_left, d_right = distance_veh_center_to_lane_boundaries(veh,
                                                                      world.road_network.find_lane_by_lanelet(
-                                                                         list(vehicle.lanelet_assignment[time_step])[
+                                                                         list(veh.lanelet_assignment[time_step])[
                                                                              0]),
                                                                      time_step)
-            return [vehicle.get_lon_state(time_step).s,                              # position
-                    vehicle.get_lon_state(time_step).v,                              # velocity
-                    vehicle.get_lon_state(time_step).a,                              # acceleration
-                    vehicle.get_lon_state(time_step).j,                              # jerk
-                    vehicle.get_lon_state(time_step).j_dot,                          # jerk_dot
-                    vehicle.get_lat_state(time_step).d,                              # lateral_position
-                    vehicle.get_lat_state(time_step).theta,                          # orientation
-                    vehicle.get_lat_state(time_step).kappa,                          # curvature
-                    vehicle.get_lat_state(time_step).kappa_dot,                      # curvature_dot
-                    vehicle.get_lat_state(time_step).kappa_dot_dot,                  # curvature_ddot
-                    vehicle.shape.length,                                            # length
-                    vehicle.shape.width,                                             # width
+            return [veh.shape.length,                            # length
+                    veh.shape.width,                             # width
                     # road from right to the left is: 0, 1, 2, ...
                     # distance_to_road_left/right
-                    distance_veh_center_to_lane_boundaries(vehicle, world.road_network.lanes[-1], time_step)[0],
-                    distance_veh_center_to_lane_boundaries(vehicle, world.road_network.lanes[0], time_step)[-1],
+                    distance_veh_center_to_lane_boundaries(veh, world.road_network.lanes[-1], time_step)[0],
+                    distance_veh_center_to_lane_boundaries(veh, world.road_network.lanes[0], time_step)[-1],
                     # distance_to_ref_lane_left, distance_to_ref_lane_right
                     d_left, d_right,
                     ]
+
+        def get_v2v_features(veh_1: Vehicle, veh_2: Vehicle):
+            ref_lane = veh_1.get_lane(time_step)
+            # ego_other_distance, ego_other_lateral_distance,
+            # ego_other_relative_longitudinal_velocity, ego_other_relative_lateral_velocity
+            return [veh_2.rear_s(time_step, ref_lane) - veh_1.front_s(time_step, ref_lane),
+                    veh_2.get_lat_state(time_step, ref_lane).d - veh_1.get_lat_state(time_step, ref_lane).d,  # todo
+                    veh_2.get_lon_state(time_step, ref_lane).v * np.cos(veh_2.get_lat_state(time_step, ref_lane).theta)
+                    - veh_1.get_lon_state(time_step, ref_lane).v * np.cos(
+                        veh_1.get_lat_state(time_step, ref_lane).theta),
+                    veh_2.get_lon_state(time_step, ref_lane).v * np.sin(veh_2.get_lat_state(time_step, ref_lane).theta)
+                    - veh_1.get_lon_state(time_step, ref_lane).v * np.sin(
+                        veh_1.get_lat_state(time_step, ref_lane).theta),
+                    ]
+
         feature_list = []
         # extract feature variables
-        # - single vehicle features
-        for veh_id in vehicle_ids:
-            feature_list += get_vehicle_features(world.vehicle_by_id(veh_id))
-        if len(vehicle_ids) == 1:
-            pass
-        list_feature_variables = []
-
-        # computation for single predicate
-        robustness, _ = self.peml.robustness_models[0].predict([list_feature_variables])
-        # characteristic function (boolean evaluation)
+        # - single veh features
+        ego_veh = world.vehicle_by_id(vehicle_ids[0])
+        feature_list += get_veh_state_long_features(ego_veh) + get_veh_input_long_features(
+            ego_veh) + get_veh_state_lat_features(ego_veh) + get_veh_input_lat_features(
+            ego_veh) + get_veh_env_features(ego_veh)
+        # - veh to veh features
+        if len(vehicle_ids) == 2:
+            other_veh = world.vehicle_by_id(vehicle_ids[1])
+            feature_list += get_veh_state_long_features(other_veh) + get_veh_state_lat_features(
+                other_veh) + get_veh_env_features(other_veh)
+            feature_list += get_v2v_features(ego_veh, other_veh)
+        # - characteristic function
         char_func = self.evaluate_boolean(world, time_step, vehicle_ids)
+        feature_list += [bool_to_num(char_func)]
+        # computation for single predicate
+        robustness, _ = self.peml.robustness_models[0].predict([feature_list])
+        # characteristic function (boolean evaluation)
         robustness[robustness * char_func < 0] = self.config["eps"]
         return robustness[0]
 
