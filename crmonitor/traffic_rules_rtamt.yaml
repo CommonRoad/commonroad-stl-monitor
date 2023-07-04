@@ -63,5 +63,5 @@ traffic_rules_param:
   above_centerline_th: 0.1
   max_interstate_speed_truck: 22.22
   d_sl: 1.0
-  use_mpr: False
+  use_mpr: false
 

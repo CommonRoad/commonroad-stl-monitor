@@ -6,7 +6,7 @@ from commonroad.geometry.transform import rotate_translate
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 
 from crmonitor.common.helper import cartesian_to_curvilinear
-from crmonitor.common.road_network import RoadNetwork, Lane
+from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 

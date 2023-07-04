@@ -5,14 +5,14 @@ from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 from commonroad.visualization.renderer import IRenderer
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.world import World, Vehicle
+from crmonitor.common.world import Vehicle, World
 from crmonitor.predicates.utils import (
-    distance_veh_center_to_lane_boundaries,
     bool_to_num,
+    distance_veh_center_to_lane_boundaries,
 )
-from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Evaluation of model predictive robustness
         """
-        
+
         def get_veh_state_long_features(veh: Vehicle):
             return [
                 veh.get_lon_state(time_step).s,  # position
