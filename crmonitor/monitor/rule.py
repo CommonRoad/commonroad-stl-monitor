@@ -1,54 +1,16 @@
 import copy
-import inspect
 import re
-import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Optional
 
-from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.monitor.monitor_node import MonitorNode
-
-# by setting __all__ in __init__.py, all relevant modules are imported
-# noinspection PyUnresolvedReferences
-from crmonitor.predicates import *  # noqa: F401,F403
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.monitor.predicate_factory import PredicateFactory
 
 
 class IOType(Enum):
     OUTPUT = "output"
     INPUT = "input"
-
-
-class PredicateFactory:
-    def __init__(self, traffic_rule_params: Optional[dict]):
-        self._traffic_rule_params = (
-            traffic_rule_params or get_traffic_rule_config()["traffic_rule_param"]
-        )
-        self._evaluators = self._get_all_predicate_evaluators()
-
-    @staticmethod
-    def _get_all_predicate_evaluators():
-        modules = inspect.getmembers(
-            sys.modules["crmonitor.predicates"], inspect.ismodule
-        )
-        classes = []
-        for _, module in modules:
-            classes += inspect.getmembers(module, inspect.isclass)
-        classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
-        predicate_class_map = {
-            cls.predicate_name: cls
-            for name, cls in classes
-            if len(name) > 4 and name[:4] == "Pred"
-        }
-        return predicate_class_map
-
-    def get_predicate(self, predicate_name: str) -> BasePredicateEvaluator:
-        try:
-            evaluator = self._evaluators[predicate_name]
-        except KeyError:
-            raise KeyError(f"Unknown predicate '{predicate_name}'")
-        return evaluator(self._traffic_rule_params)
 
 
 class RuleFactory:

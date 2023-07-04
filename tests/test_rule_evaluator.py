@@ -29,11 +29,11 @@ from ruamel.yaml import YAML
 
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
+from crmonitor.monitor.predicate_factory import PredicateFactory
 from crmonitor.monitor.rule import (
     AllNode,
     ExistNode,
     IOType,
-    PredicateFactory,
     PredicateNode,
     RuleFactory,
     RuleNode,
