@@ -158,7 +158,6 @@ class BasePredicateEvaluator(abc.ABC):
         robustness, _ = self.peml.robustness_models[0].predict([feature_list])
         if robustness * char_func < 0:
             robustness = char_func * self.eps
-        print(time_step, vehicle_ids, self.evaluate_robustness(world, time_step, vehicle_ids), robustness)
         return robustness
 
     def evaluate_robustness_with_cache(
