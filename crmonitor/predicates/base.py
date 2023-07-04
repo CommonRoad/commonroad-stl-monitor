@@ -68,7 +68,6 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Evaluation of model predictive robustness
         """
-
         def get_veh_state_long_features(veh: Vehicle):
             return [
                 veh.get_lon_state(time_step).s,  # position
@@ -153,12 +152,13 @@ class BasePredicateEvaluator(abc.ABC):
             )
             feature_list += get_v2v_features(ego_veh, other_veh)
         # - characteristic function (Boolean evaluation)
-        char_func = self.evaluate_boolean(world, time_step, vehicle_ids)
-        feature_list += [bool_to_num(char_func)]
+        char_func = bool_to_num(self.evaluate_boolean(world, time_step, vehicle_ids))
+        feature_list += [char_func]
         # computation for single predicate
         robustness, _ = self.peml.robustness_models[0].predict([feature_list])
         if robustness * char_func < 0:
-            robustness = bool_to_num(char_func) * self.config["eps"]
+            robustness = char_func * self.eps
+        print(time_step, vehicle_ids, self.evaluate_robustness(world, time_step, vehicle_ids), robustness)
         return robustness
 
     def evaluate_robustness_with_cache(

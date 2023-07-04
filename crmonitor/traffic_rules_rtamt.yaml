@@ -64,5 +64,4 @@ traffic_rules_param:
   max_interstate_speed_truck: 22.22
   d_sl: 1.0
   use_mpr: False
-  eps: 1e-3
 
