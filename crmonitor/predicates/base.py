@@ -158,7 +158,7 @@ class BasePredicateEvaluator(abc.ABC):
         # computation for single predicate
         robustness, _ = self.peml.robustness_models[0].predict([feature_list])
         if robustness * char_func < 0:
-            robustness = self.config["eps"]
+            robustness = bool_to_num(char_func) * self.config["eps"]
         return robustness
 
     def evaluate_robustness_with_cache(
