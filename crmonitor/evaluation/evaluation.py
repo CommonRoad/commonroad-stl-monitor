@@ -1,20 +1,14 @@
 import copy
-import importlib.resources as pkg_resources
 import logging
 import warnings
 from collections import defaultdict
-from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
-import crmonitor
-from crmonitor.common.helper import (
-    create_ego_vehicle_param,
-    load_yaml,
-    merge_dicts_recursively,
-)
+from crmonitor.common.config import get_evaluation_config, get_traffic_rule_config
+from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
@@ -27,26 +21,10 @@ from crmonitor.evaluation.visitor import (
     RuleTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.monitor.rule import VisitorNode, parse_rule
+from crmonitor.monitor.rule import PredicateFactory, RuleFactory, VisitorNode
 from crmonitor.predicates.base import BasePredicateEvaluator
 
 logger = logging.getLogger(__name__)
-
-
-@lru_cache(maxsize=None)
-def get_traffic_rule_config():
-    with pkg_resources.path(
-        crmonitor, "traffic_rules_rtamt.yaml"
-    ) as traffic_rules_path:
-        traffic_rules_config = load_yaml(traffic_rules_path)
-    return traffic_rules_config
-
-
-@lru_cache(maxsize=None)
-def get_evaluation_config():
-    with pkg_resources.path(crmonitor, "config.yaml") as traffic_rules_path:
-        traffic_rules_config = load_yaml(traffic_rules_path)
-    return traffic_rules_config
 
 
 class RuleEvaluator:
@@ -84,7 +62,9 @@ class RuleEvaluator:
         )
         world.vehicles.add(ego_vehicle)
 
-        rule = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
+        rule = RuleFactory(
+            PredicateFactory(traffic_rules_config["traffic_rules_param"])
+        ).parse_rule(rule_str_dict[rule], name=rule)
         return cls(
             rule,
             ego_vehicle.id,
