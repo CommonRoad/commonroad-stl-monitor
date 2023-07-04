@@ -68,6 +68,7 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Evaluation of model predictive robustness
         """
+        
         def get_veh_state_long_features(veh: Vehicle):
             return [
                 veh.get_lon_state(time_step).s,  # position
