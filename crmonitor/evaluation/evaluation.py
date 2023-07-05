@@ -20,9 +20,9 @@ from crmonitor.evaluation.visitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
     EvaluationMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
+    MPRGradientCollectorMonitorTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
-    MPRGradientCollectorMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
     RuleTreeVisitor,
 )
