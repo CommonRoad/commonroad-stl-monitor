@@ -150,6 +150,7 @@ class PredicateNode(MonitorNode, VisitorNode):
         self.io_type = io_type
         self.latest_value = None
         self.latest_vehicle_ids = None
+        self.mpr_gradient = None
 
     def evaluate_boolean(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)

@@ -171,7 +171,7 @@ class BasePredicateEvaluator(abc.ABC):
             return self.peml.derivative()[0]
         else:
             warnings.warn("The MPR is deactivated")
-            return 0.0
+            return [0.0] * 35
 
     def evaluate_robustness_with_cache(
         self, world: World, time_step, vehicle_ids: List[int]
