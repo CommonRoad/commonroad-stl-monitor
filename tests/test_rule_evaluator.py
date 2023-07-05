@@ -29,15 +29,9 @@ from ruamel.yaml import YAML
 
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.predicate_factory import PredicateFactory
-from crmonitor.monitor.rule import (
-    AllNode,
-    ExistNode,
-    IOType,
-    PredicateNode,
-    RuleFactory,
-    RuleNode,
-)
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
+from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
 from tests.util import parallel_lanes
 
 

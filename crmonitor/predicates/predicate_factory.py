@@ -1,4 +1,5 @@
 import inspect
+import re
 import sys
 from typing import Optional
 
@@ -25,11 +26,11 @@ class PredicateFactory:
         classes = []
         for _, module in modules:
             classes += inspect.getmembers(module, inspect.isclass)
-        classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
+
         predicate_class_map = {
             cls.predicate_name: cls
             for name, cls in classes
-            if len(name) > 4 and name[:4] == "Pred"
+            if re.match(r"^Pred[A-Z].*$", name) is not None
         }
         return predicate_class_map
 

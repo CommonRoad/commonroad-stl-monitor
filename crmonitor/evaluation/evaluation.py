@@ -20,10 +20,11 @@ from crmonitor.evaluation.visitor import (
     ResetMonitorTreeVisitor,
     RuleTreeVisitor,
 )
-from crmonitor.monitor.predicate_factory import PredicateFactory
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.monitor.rule import RuleFactory, VisitorNode
 from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
+from crmonitor.rule.rule_node import VisitorNode
 
 logger = logging.getLogger(__name__)
 

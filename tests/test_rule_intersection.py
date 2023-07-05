@@ -8,8 +8,8 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.predicate_factory import PredicateFactory
-from crmonitor.monitor.rule import RuleFactory
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
 
 
 class TestIntersectionRules(unittest.TestCase):

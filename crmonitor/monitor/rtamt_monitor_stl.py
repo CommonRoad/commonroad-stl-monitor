@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 
 import rtamt
 
-from crmonitor.monitor.rule import IOType, RuleNode
+from crmonitor.rule.rule_node import IOType, RuleNode
 
 from .specification_dict import stl_discrete_time_online_specification_factory
 
