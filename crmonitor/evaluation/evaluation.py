@@ -22,6 +22,7 @@ from crmonitor.evaluation.visitor import (
     MonitorCreationRuleTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
+    MPRGradientCollectorMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
     RuleTreeVisitor,
 )
@@ -101,6 +102,7 @@ class RuleEvaluator:
         self._rule = rule
         self._monitor = rule.visit(monitor_creation_visitor)
         self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
         self._ast_node_value_collector_visitor = (
             AstNodeValueCollectorMonitorTreeVisitor()
         )
@@ -123,6 +125,11 @@ class RuleEvaluator:
     def get_predicates(self) -> Dict[str, float]:
         predicate_values = dict(self._monitor.visit(self._predicate_collector_visitor))
         return predicate_values
+
+    def get_mpr_gradient(self) -> Dict[str, list]:
+        # with the mpr gradient flag to be true
+        mpr_gradient_values = dict(self._monitor.visit(self._mpr_gradient_visitor))
+        return mpr_gradient_values
 
     def ast_node_values(self) -> Dict[str, float]:
         node_values = dict(self._monitor.visit(self._ast_node_value_collector_visitor))

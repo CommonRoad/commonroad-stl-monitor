@@ -163,6 +163,7 @@ class PredicateNode(MonitorNode, VisitorNode):
         )
         self.latest_value = value
         self.latest_vehicle_ids = tuple(vehicle_ids)
+        self.mpr_gradient = self.evaluator.gradient_mpr()
         return value
 
     def visit(self, visitor, *ctx):

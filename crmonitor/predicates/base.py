@@ -1,6 +1,7 @@
 import abc
 import logging
 import math
+import warnings
 from typing import Callable, Dict, List, Tuple
 
 import numpy as np
@@ -155,11 +156,22 @@ class BasePredicateEvaluator(abc.ABC):
         # - characteristic function (Boolean evaluation)
         char_func = bool_to_num(self.evaluate_boolean(world, time_step, vehicle_ids))
         feature_list += [char_func]
+        self.peml.list_feature_variables = [feature_list]
         # computation for single predicate
         robustness, _ = self.peml.robustness_models[0].predict([feature_list])
         if robustness * char_func < 0:
             robustness = char_func * self.eps
         return robustness
+
+    def gradient_mpr(self):
+        """
+        Computes the gradient of the MPR w.r.t. the input values
+        """
+        if self.config["use_mpr"]:
+            return self.peml.derivative()[0]
+        else:
+            warnings.warn("The MPR is deactivated")
+            return 0.0
 
     def evaluate_robustness_with_cache(
         self, world: World, time_step, vehicle_ids: List[int]
