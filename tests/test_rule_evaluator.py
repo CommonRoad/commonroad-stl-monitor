@@ -29,14 +29,9 @@ from ruamel.yaml import YAML
 
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (
-    AllNode,
-    ExistNode,
-    IOType,
-    PredicateNode,
-    RuleNode,
-    parse_rule,
-)
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
+from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
 from tests.util import parallel_lanes
 
 
@@ -49,6 +44,9 @@ class TestRuleEvaluator(unittest.TestCase):
         rules_path = root_path / "traffic_rules_rtamt.yaml"
         self.traffic_rule_params = YAML().load(rules_path)
         self.scenario_root_path = root_path.parent / "scenarios/test_interstate"
+        self.parse_rule = RuleFactory(
+            PredicateFactory(self.traffic_rule_params["traffic_rules_param"])
+        ).parse_rule
 
     def test_smoke(self):
         rules = [
@@ -64,8 +62,9 @@ class TestRuleEvaluator(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(
             str(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml")
         ).open(True)
+
         for r in rules:
-            rule = parse_rule(r, self.traffic_rule_params)
+            rule = self.parse_rule(r)
             ws = World.create_from_scenario(scenario)
             ego_vehicle = ws.vehicle_by_id(1001)
             evaluator = RuleEvaluator(rule, ego_vehicle, ws)
@@ -76,31 +75,33 @@ class TestRuleEvaluator(unittest.TestCase):
         evaluator.reset(ego_vehicle, ws)
 
     def test_parsing(self):
-        rule = parse_rule(
-            "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)", self.traffic_rule_params
+        rule = self.parse_rule(
+            "A a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
         )
         self.assertTrue(isinstance(rule, AllNode))
-        rule = parse_rule(
-            "A a1: (in_front_of__a0_a1) and single_lane__a0", self.traffic_rule_params
+        rule = self.parse_rule(
+            "A a1: (in_front_of__a0_a1) and single_lane__a0",
         )
         self.assertTrue(isinstance(rule, RuleNode))
-        rule = parse_rule(
-            "E a1: (in_front_of__a0_a1 and cut_in__a0_a1)", self.traffic_rule_params
+        rule = self.parse_rule(
+            "E a1: (in_front_of__a0_a1 and cut_in__a0_a1)",
         )
         self.assertTrue(isinstance(rule, ExistNode))
-        rule = parse_rule(
-            "E a1: (in_front_of__a0_a1) and single_lane__a0", self.traffic_rule_params
+        rule = self.parse_rule(
+            "E a1: (in_front_of__a0_a1) and single_lane__a0",
         )
         self.assertTrue(isinstance(rule, RuleNode))
-        rule = parse_rule("single_lane__a0", self.traffic_rule_params)
+        rule = self.parse_rule(
+            "single_lane__a0",
+        )
         self.assertTrue(isinstance(rule, RuleNode))
-        rule = parse_rule(
-            "single_lane__a0 and single_lane__a0", self.traffic_rule_params
+        rule = self.parse_rule(
+            "single_lane__a0 and single_lane__a0",
         )
         self.assertTrue(isinstance(rule, RuleNode))
 
-        rule = parse_rule(
-            "A a1: (in_front_of__a0_a1) and single_lane_i__a0", self.traffic_rule_params
+        rule = self.parse_rule(
+            "A a1: (in_front_of__a0_a1) and single_lane_i__a0",
         )
         self.assertTrue(isinstance(rule, RuleNode))
         self.assertTrue(isinstance(rule.children[1], PredicateNode))

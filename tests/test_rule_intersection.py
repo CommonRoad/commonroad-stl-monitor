@@ -8,7 +8,8 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import parse_rule
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
 
 
 class TestIntersectionRules(unittest.TestCase):
@@ -41,7 +42,9 @@ class TestIntersectionRules(unittest.TestCase):
         }
         rule_str = self.traffic_rules["traffic_rules"]["R_IN2_TOR"]
         self.traffic_rules["scale_rob"] = False
-        rule = parse_rule(rule_str, self.traffic_rules, name="RedLightRunning")
+        rule = RuleFactory(
+            PredicateFactory(self.traffic_rules["traffic_rules_param"])
+        ).parse_rule(rule_str, name="RedLightRunning")
         world = World.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
