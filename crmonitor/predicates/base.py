@@ -65,11 +65,10 @@ class BasePredicateEvaluator(abc.ABC):
     ) -> float:
         pass
 
-    def evaluate_mpr(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def extract_feature(self, world: World, time_step, vehicle_ids: List[int]) -> List:
         """
-        Evaluation of model predictive robustness
+        Extract features for MPR computation.
         """
-
         def get_veh_state_long_features(veh: Vehicle):
             return [
                 veh.get_lon_state(time_step).s,  # position
@@ -156,11 +155,18 @@ class BasePredicateEvaluator(abc.ABC):
         # - characteristic function (Boolean evaluation)
         char_func = bool_to_num(self.evaluate_boolean(world, time_step, vehicle_ids))
         feature_list += [char_func]
+        return feature_list
+
+    def evaluate_mpr(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        """
+        Evaluation of model predictive robustness
+        """
+        feature_list = self.extract_feature(world, time_step, vehicle_ids)
         self.peml.list_feature_variables = [feature_list]
         # computation for single predicate
         robustness, _ = self.peml.robustness_models[0].predict([feature_list])
-        if robustness * char_func < 0:
-            robustness = char_func * self.eps
+        if robustness * feature_list[-1] < 0:
+            robustness = feature_list[-1] * self.eps
         return robustness
 
     def gradient_mpr(self):
