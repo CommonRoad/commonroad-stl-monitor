@@ -1,7 +1,10 @@
 import logging
 import math
+import warnings
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
+
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletType, LineMarking
@@ -352,7 +355,17 @@ class PredPreceding(BasePredicateEvaluator):
     arity = 2
 
     def __init__(self, config: CommentedMap):
-        super().__init__(config)
+        if config["use_mpr"]:
+            self.config = config
+            self.scale = config.setdefault("scale_rob", True)
+            self.eps = 1e-5
+
+            # usage of model predictive robustness
+            self.in_same_lane_peml = PEML([PredInSameLane.predicate_name])
+            self.in_front_of_peml = PEML([PredInFrontOf.predicate_name])
+            self.peml = None
+        else:
+            super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
     @staticmethod
@@ -391,6 +404,24 @@ class PredPreceding(BasePredicateEvaluator):
         rear_vehicle = world.vehicle_by_id(rear_vehicle_id)
         pred_veh = self.get_predecessors(world, time_step, rear_vehicle)
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
+
+    def evaluate_mpr(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+        feature_list = self.extract_feature(world, time_step, vehicle_ids)
+        self.in_same_lane_peml.list_feature_variables = [feature_list]
+        isl_rob, _ = self.in_same_lane_peml.robustness_models[0].predict([feature_list])
+        # todo: the Boolean and robustness don't align
+        if self.evaluate_robustness(world, time_step, vehicle_ids) > 0:
+            ifo_rob, _ = self.in_front_of_peml.robustness_models[0].predict([feature_list])
+            if ifo_rob < isl_rob:  # conjunction: robustness = min(isl_rob, ifo_rob)
+                robustness = ifo_rob
+                self.peml = self.in_front_of_peml
+            else:
+                robustness = isl_rob
+                self.peml = self.in_same_lane_peml
+        else:
+            robustness = -1
+            self.peml = self.in_same_lane_peml
+        return robustness
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
