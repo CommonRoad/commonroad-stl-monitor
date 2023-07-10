@@ -1,18 +1,14 @@
 import abc
 import logging
-import math
 from typing import Callable, Dict, List, Tuple
 
-import numpy as np
 from commonroad.visualization.renderer import IRenderer
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
+from crmonitor.predicates.scaling import RobustnessScaler
 
 logger = logging.getLogger(__name__)
-
-MAX_LONG_DIST = 200.0
-MAX_LAT_DIST = 20.0
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -22,29 +18,27 @@ class BasePredicateEvaluator(abc.ABC):
 
     predicate_name = "interface"
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: CommentedMap, scaler=None):
         self.config = config
-        self.scale = config.setdefault("scale_rob", True)
         self.eps = 1e-5
-
-    # todo: decouple the scaler
-    def _scale(self, x, max_value):
-        return np.clip(x / max_value, -1.0, 1.0) if self.scale else x
+        self._scaler = scaler or RobustnessScaler(
+            scale=config.setdefault("scale_rob", True)
+        )
 
     def _scale_speed(self, x):
-        return self._scale(x, 250.0 / 3.6)
+        return self._scaler.scale_speed(x)
 
     def _scale_acc(self, x):
-        return self._scale(x, 10.5)
+        return self._scaler.scale_acc(x)
 
     def _scale_lon_dist(self, x):
-        return self._scale(x, MAX_LONG_DIST)
+        return self._scaler.scale_lon_dist(x)
 
     def _scale_lat_dist(self, x):
-        return self._scale(x, MAX_LAT_DIST)
+        return self._scaler.scale_lat_dist(x)
 
     def _scale_angle(self, x):
-        return self._scale(x, math.pi)
+        return self._scaler.scale_angle(x)
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
