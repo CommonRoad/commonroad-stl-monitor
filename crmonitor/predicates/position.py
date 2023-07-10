@@ -356,11 +356,11 @@ class PredPreceding(BasePredicateEvaluator):
         self.same_lane = PredInSameLane(config)
 
     @staticmethod
-    def get_predecessors(
+    def _get_candidates(
         world: World, time_step, vehicle_rear: Vehicle
     ) -> List[Tuple[float, Vehicle, Lane, bool]]:
         """
-        Returns a list of preceding vehicles in ascending order of distance
+        Returns a list of vehicles in ascending order of distance
         :param time_step:
         :param world: Current world state
         :param vehicle_rear: Reference vehicle
@@ -389,7 +389,8 @@ class PredPreceding(BasePredicateEvaluator):
         rear_vehicle_id = vehicle_ids[0]
         front_vehicle_id = vehicle_ids[1]
         rear_vehicle = world.vehicle_by_id(rear_vehicle_id)
-        pred_veh = self.get_predecessors(world, time_step, rear_vehicle)
+        candidates = self._get_candidates(world, time_step, rear_vehicle)
+        pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
     def evaluate_robustness(
@@ -397,7 +398,7 @@ class PredPreceding(BasePredicateEvaluator):
     ) -> float:
         rear_veh = world.vehicle_by_id(vehicle_ids[0])
         front_veh = world.vehicle_by_id(vehicle_ids[1])
-        veh_lon_dist = self.get_predecessors(world, time_step, rear_veh)
+        veh_lon_dist = self._get_candidates(world, time_step, rear_veh)
         veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
         bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
         same_lane = self.same_lane.evaluate_robustness_with_cache(
