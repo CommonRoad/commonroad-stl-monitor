@@ -1013,7 +1013,35 @@ class PredStopLineInFront(BasePredicateEvaluator):
         """
         A stop line is in front of a vehicle if any occupied lanelet references a stop line within a distance d_sl
         """
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        # Find all lanelets in the map that have a stop line
+        lanelets_with_stop_line = [l.lanelet_id
+                                   for l in world.road_network.lanelet_network.lanelets
+                                   if l.stop_line is not None]
+        # Get the set of lanelets in the current path, that have a stop line
+        intersection_lanelets = list(vehicle.ref_path_lane.contained_lanelets.intersection(lanelets_with_stop_line))
+        # If there is no stop line in current reference path, return False
+        if len(intersection_lanelets) == 0:
+            return False
+        # Get the front longitudinal value of the vehicle
+        front_s = vehicle.front_s(time_step, vehicle.ref_path_lane) or -np.inf
+        # It doesn't matter if we take the left or right point of the stop line
+        # as we only consider the longitudinal component.
+        stop_line_s = np.array([vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+            *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0] for l in
+                                intersection_lanelets])
+        for i in range(stop_line_s.shape[0]):
+            # check if vehicle in this lanelet in lateral horizon
+            d_lane = utils.distance_to_lanes(vehicle, [intersection_lanelets[i]], world, time_step)
+            if d_lane < 0:
+                continue
+            # Get the distance to the stop lines
+            stop_line_distance = stop_line_s[i] - front_s
+            if 0 <= stop_line_distance <= self.config["d_sl"]:
+                return True
+            else:
+                return False
+        return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         """
