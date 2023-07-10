@@ -12,7 +12,8 @@ from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.predicates.base import MAX_LONG_DIST, BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,
@@ -307,7 +308,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             world, time_step, vehicle_ids
         )
         latest_value_unscaled = (
-            latest_value * MAX_LONG_DIST
+            latest_value * self._scaler._scale_constants.MAX_LONG_DIST
         )  # un-scale to actual range and make positive
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
 
