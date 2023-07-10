@@ -70,7 +70,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
         """
         other_id = (
             self._eval_visitor.other_ids[-1]
-            if self._eval_visitor.other_ids is not ()
+            if len(self._eval_visitor.other_ids) > 0
             else self.ego_vehicle.id
         )
         if hasattr(self._monitor, "monitors"):
