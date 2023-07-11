@@ -125,68 +125,6 @@ traffic_rules:
                   )
                 )"
 
-  TEST_R_IN4: "A a1: (
-                        (
-                          (once[1s, 1s]((turning_right__a1 >= 0))) and
-                          (once[1s, 1s]((turning_right__a0 >= 0))) and
-                          (once[1s, 1s]((has_priority_right_right__a1_a0 >= 0)))
-                        ) or
-                        (
-                          (once[1s, 1s]((turning_right__a1 >= 0))) and
-                          (once[1s, 1s]((going_straight__a0 >= 0))) and
-                          (once[1s, 1s]((has_priority_right_straight__a1_a0 >= 0)))
-                        ) 
-                     )"
-
-  TEST_R_IN4_3: "A a1: ((once[1s, 1s]((turning_right__a1 and turning_left__a1) >= 0)) and (once[1s, 1s]((turning_right__a1 >= 0))))"
-
-  TEST_R_IN4_2: "A a1: (
-                          (
-                            (  
-                              (turning_right__a1 >= 0) and
-                              (going_straight__a0 >= 0) and
-                              (has_priority_right_straight__a1_a0 >= 0)
-                            )
-                          ) implies
-                          (
-                            (
-                              (in_intersection_conflict_area__a0_a1 >= 0) implies
-                              (
-                                not (causes_braking_intersection__a0_a1 >= 0) 
-                                and not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
-                              )
-                            ) and
-                            (
-                              (in_intersection_conflict_area__a1_a0 >= 0) implies 
-                              not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
-                            )
-                          )
-                       )"
-
-  TEST_R_IN3: "A a1: (
-                      (
-                        (on_incoming_left_of__a0_a1 >= 0) and 
-                        not (relevant_traffic_light__a0 >= 0) and 
-                        (going_straight_ego_turning_right_target_same_priority__a0_a1 >= 0)
-                      ) implies
-                      (
-                          (
-                            (
-                            (in_intersection_conflict_area__a0_a1 >= 0) implies
-                              (
-                                not (causes_braking_intersection__a0_a1 >= 0) and
-                                not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
-                              )
-                            ) and
-                            (
-                              (in_intersection_conflict_area__a1_a0 >= 0) implies
-                              not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
-                            )
-                          )or 
-                        not (on_lanelet_with_type_intersection__a0 >= 0)
-                      )
-                     )"
-
   R_IN5: "A a1: ((
                     (
                       turning_left__a0 and 
