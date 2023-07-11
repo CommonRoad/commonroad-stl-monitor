@@ -209,8 +209,6 @@ class RuleTest(unittest.TestCase):
         #     current_time_step += 1
         #     plt.show()
 
-
-
     def test_R_IN3(self):
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml")).open(
         #     lanelet_assignment=True)
@@ -263,7 +261,6 @@ class RuleTest(unittest.TestCase):
         #     current_time_step += 1
         #     plt.show()
 
-
     def test_R_IN4(self):
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml")).open(
         #     lanelet_assignment=True)
@@ -313,36 +310,4 @@ class RuleTest(unittest.TestCase):
         #     current_time_step += 1
         #     plt.show()
 
-
-    def test_R_IN4_part(self):
-        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml")).open(
-        #     lanelet_assignment=True)
-        scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml")).open(
-                lanelet_assignment=True)
-        # scenario, _ = CommonRoadFileReader(
-        #         str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-        #         lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
-        # ego_vehicle = world.vehicle_by_id(32)
-        # target_vehicle = world.vehicle_by_id(30)
-        ego_vehicle = world.vehicle_by_id(30)
-        target_vehicle = world.vehicle_by_id(31)
-        rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "TEST_R_IN4_3")
-        rule = rule_eval._rule
-        self.assertTrue(isinstance(rule, AllNode))
-        rule_robustness = []
-        pred_robs = list()
-        for i in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            rob = rule_eval.update()
-            pred_rob = rule_eval.get_predicates()
-            pred_robs.append(pred_rob)
-            prop_rob = rule_eval.get_propositions()
-            rule_robustness.append(rob)
-            print('-------------------------------')
-            print(i)
-            print(rob)
-        rule_robustness = np.array(rule_robustness)
-        print(rule_robustness)
 
