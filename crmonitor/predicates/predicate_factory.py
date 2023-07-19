@@ -14,7 +14,7 @@ from crmonitor.predicates.base import BasePredicateEvaluator
 class PredicateFactory:
     def __init__(self, traffic_rule_params: Optional[dict] = None):
         self._traffic_rule_params = (
-            traffic_rule_params or get_traffic_rule_config()["traffic_rule_param"]
+            traffic_rule_params or get_traffic_rule_config()["traffic_rules_param"]
         )
         self._evaluators = self._get_all_predicate_evaluators()
 
