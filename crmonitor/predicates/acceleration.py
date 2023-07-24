@@ -53,7 +53,21 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     arity = 2
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        d_br = self.config["d_br"]
+        a_br = self.config["a_br"]
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        # rearmost point of the k-th vehicle along the reference lane of p-th one
+        rear_k_s = vehicle_k.rear_s(time_step, vehicle_p.ref_path_lane)
+        # frontmost point of the p-th vehicle along the reference lane of p-th one
+        front_p_s = vehicle_p.front_s(time_step, vehicle_p.ref_path_lane)
+        # if the k-th vehicle is far away from the reference lane of the p-th vehicle, return -1
+        if rear_k_s is None:
+            return False
+        distance_vehicle = rear_k_s - front_p_s
+        # calculate the longitudinal acceleration of the p-th vehicle
+        a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
+        return (0 <= distance_vehicle <= d_br) and (a_p <= a_br)
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -76,4 +90,3 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
         rob_a = a_br - a_p
         robustness = np.min([self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)])
         return robustness
-
