@@ -5,6 +5,8 @@ from typing import List
 import numpy as np
 import math
 
+from commonroad.scenario.traffic_sign import TrafficSignIDGermany
+
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -40,10 +42,42 @@ class PriorityPredicates(str, Enum):
 
 
 # --------------------------------------------------------------------------------------------------------------------#
+class TrafficSignPriority:
+
+    def __init__(self):
+        self.priority = {}
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_OPPOSITE_RIGHT_YIELD] = self.PriorityIntersection(5, 4, 4, 1)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD] = self.PriorityIntersection(5, 4, None, 2)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_RIGHT_YIELD] = self.PriorityIntersection(5, None, 4, 3)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_OPPOSITE_LEFT_YIELD] = self.PriorityIntersection(4, 4, 5, 4)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD] = self.PriorityIntersection(None, 4, 5, 5)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_LEFT_YIELD] = self.PriorityIntersection(4, None, 5, 6)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TRAFFIC_PRIORITY_WITH_STRAIGHT_RIGHT_YIELD] = self.PriorityIntersection(2, 2, 2, 7)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD] = self.PriorityIntersection(2, 2, None, 8)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TRAFFIC_PRIORITY_WITH_STRAIGHT_LEFT_YIELD] = self.PriorityIntersection(2, 2, 2, 9)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD] = self.PriorityIntersection(None, 2, 2, 10)
+        self.priority[TrafficSignIDGermany.PRIORITY] = self.PriorityIntersection(4, 5, 4, 11)
+        self.priority[TrafficSignIDGermany.RIGHT_OF_WAY] = self.PriorityIntersection(4, 5, 4, 12)
+        self.priority[TrafficSignIDGermany.YIELD] = self.PriorityIntersection(2, 2, 2, 13)
+        self.priority[TrafficSignIDGermany.STOP] = self.PriorityIntersection(1, 1, 1, 14)
+        self.priority[TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT] = self.PriorityIntersection(3, 3, 3, 15)
+        self.priority[TrafficSignIDGermany.GREEN_ARROW] = self.PriorityIntersection(None, None, 0, 16)
+
+    def get_priority(self):
+        return self.priority
+
+    class PriorityIntersection:
+        def __init__(self, left_priority, straight_priority, right_priority, evaluation_index):
+            self.left = left_priority
+            self.straight = straight_priority
+            self.right = right_priority
+            self.evaluation_idx = evaluation_index
+
+
 class PredAtTrafficSignStop(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.AtTrafficSignStop
     arity = 1
-    stop_traffic_sign = '206'
+    stop_traffic_sign_deu = TrafficSignIDGermany.STOP
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         """
@@ -51,10 +85,9 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         """
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
         # find all traffic sign elements with type stop (206) in lanelets_dir
-        for lanelet_id in lanelets_dir_ids:
-            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+        for lanelet_id in vehicle.lanelets_dir:
+            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign_deu, road_network)
             if traffic_sign_elements is None:
                 continue
             # check if vehicle in this lanelet in lateral horizon
@@ -67,20 +100,13 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        """
-        If the vehicle locates at the lanelet with a stop traffic sign (206), return distance to the start of lanelet,
-        otherwise, return -1.
-        idea to improve: use reference path of vehicle, so that the lanelet with a stop traffic sign in the reference
-        path can be found, even though current occupied lanelets have no traffic sign.
-        """
         robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        lanelets_dir_ids = utils.lanelets_dir(vehicle, time_step, world.road_network)
-        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
+        ref_path = vehicle.ref_path_lane
         reach_suc = np.array([], dtype=int)
         # find successors of lanelets_dir
-        for lanelet_id in lanelets_dir_ids:
+        for lanelet_id in vehicle.lanelets_dir:
             test = utils.reach_suc(lanelet_id, road_network)
             reach_suc = np.append(reach_suc, utils.reach_suc(lanelet_id, road_network))
         reach_suc = np.unique(reach_suc)
@@ -136,8 +162,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         reach_suc_id = np.array([], dtype=int)
-        lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
-        for lanelet_id in lanelet_dir_ids:
+        for lanelet_id in vehicle.lanelets_dir:
             reach_suc_id = np.append(reach_suc_id, utils.reach_suc(lanelet_id, road_network))
         for l_id in np.unique(reach_suc_id):
             lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
@@ -165,9 +190,8 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         robustness = -np.inf
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_dir_ids = utils.lanelets_dir(vehicle, time_step, road_network)
-        ref_path = utils.ref_path_lanelets(vehicle, world.road_network, time_step)
-        for lanelet_id in lanelet_dir_ids:
+        ref_path = vehicle.ref_path_lane
+        for lanelet_id in vehicle.lanelets_dir:
             reach_suc_id = np.append(reach_suc_id, utils.reach_suc(lanelet_id, road_network))
         reach_suc_id = np.unique(reach_suc_id)
         # intersection between reference path and successors of lanelets_dir
@@ -214,9 +238,19 @@ class PredSamePriorityBase(BasePredicateEvaluator):
     arity = 2
     first_direction = None
     second_direction = None
+    traffic_sign_priority = TrafficSignPriority()
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        road_network = world.road_network
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        k_incoming_relevant_lanelets = incoming_k.incoming_lanelets.union(incoming_k.successors_left, incoming_k.successors_right, incoming_k.successors_straight)
+        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        p_incoming_relevant_lanelets = incoming_p.incoming_lanelets.union(incoming_p.successors_left, incoming_p.successors_right, incoming_p.successors_straight)
+        priority_k = utils.get_priority(k_incoming_relevant_lanelets, road_network, self.first_direction, self.traffic_sign_priority.get_priority())
+        priority_p = utils.get_priority(p_incoming_relevant_lanelets, road_network, self.second_direction, self.traffic_sign_priority.get_priority())
+        return priority_k == priority_p
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -225,11 +259,17 @@ class PredSamePriorityBase(BasePredicateEvaluator):
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
         incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
-        incoming_k_id = list(incoming_k.incoming_lanelets)[0]
+        k_incoming_relevant_lanelets = incoming_k.incoming_lanelets.union(incoming_k.successors_left,
+                                                                          incoming_k.successors_right,
+                                                                          incoming_k.successors_straight)
         incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
-        incoming_p_id = list(incoming_p.incoming_lanelets)[0]
-        priority_k = utils.get_priority(incoming_k_id, road_network, self.first_direction)
-        priority_p = utils.get_priority(incoming_p_id, road_network, self.second_direction)
+        p_incoming_relevant_lanelets = incoming_p.incoming_lanelets.union(incoming_p.successors_left,
+                                                                          incoming_p.successors_right,
+                                                                          incoming_p.successors_straight)
+        priority_k = utils.get_priority(k_incoming_relevant_lanelets, road_network, self.first_direction,
+                                        self.traffic_sign_priority.get_priority())
+        priority_p = utils.get_priority(p_incoming_relevant_lanelets, road_network, self.second_direction,
+                                        self.traffic_sign_priority.get_priority())
         if priority_k != priority_p:
             rob = -abs(priority_k - priority_p) / 5
         else:
