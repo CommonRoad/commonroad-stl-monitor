@@ -1082,12 +1082,26 @@ class PredStopLineInFront(BasePredicateEvaluator):
 class PredOnIncomingLeftOf(BasePredicateEvaluator):
     """
     evaluate if the k-th vehicle occupies a lane that is left of the lane of the p-th vehicle in terms of incoming
+    consider in multiple intersections
     """
     predicate_name = PositionPredicates.OnIncomingLeftOf
     arity = 2
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        rob = -1
+        road_network = world.road_network
+        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
+        vehicle_p = world.vehicle_by_id(vehicle_ids[1])
+        # consider scenario with multiple intersections
+        incomings_k, dis_to_incomings_k = utils.get_incoming_multi_intersections(vehicle_k, time_step, road_network)
+        incomings_p, dis_to_incomings_p = utils.get_incoming_multi_intersections(vehicle_p, time_step, road_network)
+        for i in range(len(incomings_k)):
+            inc_left_of_k_id = incomings_k[i].left_of
+            # check if k-th incoming is left of p-th incoming
+            if (incomings_p[i].incoming_id == inc_left_of_k_id) and (dis_to_incomings_k[i] >= 0) and (dis_to_incomings_p[i] >= 0):
+                return True
+            else:
+                return False
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -1232,7 +1246,14 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        road_network = world.road_network
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanelets_assignment = vehicle.lanelet_assignment[time_step]
+        for lanelet_id in lanelets_assignment:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            if LaneletType.INTERSECTION in lanelet.lanelet_type:
+                return True
+        return False
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -1243,19 +1264,19 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
         lanelets_assignment = vehicle.lanelet_assignment[time_step]
         lanelets_occ_intersection = list()
         lane_occ_intersection = list()
+        # find occupied lanelet at intersection and find corresponding lane
         for lanelet_id in lanelets_assignment:
             lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            for lanelet_type in lanelet.lanelet_type:
-                if lanelet_type.value == 'intersection':
-                    lanelets_occ_intersection.append(lanelet)
-                    lane_occ_intersection.append(utils.find_longest_lane_by_intersection_lanelet(lanelet_id, road_network))
+            if LaneletType.INTERSECTION in lanelet.lanelet_type:
+                lanelets_occ_intersection.append(lanelet)
+                lane_occ_intersection.append(utils.find_longest_lane_by_intersection_lanelet(lanelet_id, road_network))
+        # if current occupied lanelets are not at intersection, use lanelets_dir to find previous and future
         if len(lanelets_occ_intersection) == 0:
             for lanelet_id in vehicle.lanelets_dir:
                 lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-                for lanelet_type in lanelet.lanelet_type:
-                    if lanelet_type.value == 'intersection':
-                        lanelets_occ_intersection.append(lanelet)
-                        lane_occ_intersection.append(vehicle.ref_path_lane)
+                if LaneletType.INTERSECTION in lanelet.lanelet_type:
+                    lanelets_occ_intersection.append(lanelet)
+                    lane_occ_intersection.append(vehicle.ref_path_lane)
         for i in range(len(lanelets_occ_intersection)):
             front_s = vehicle.front_s(time_step, lane_occ_intersection[i])
             rear_s = vehicle.rear_s(time_step, lane_occ_intersection[i])
