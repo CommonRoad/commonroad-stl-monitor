@@ -67,13 +67,15 @@ class TestTurning(unittest.TestCase):
             print('-----------------------------------------')
 
     def testGoingStraight(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurning-2_1_T-1.xml")).open(
-                lanelet_assignment=True)
+        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurning-2_1_T-1.xml")).open(
+        #         lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestGoingStraight-1_1_T-1.xml")).open(
         #         lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
-        ego_vehicle = world.vehicle_by_id(26)
+        ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
             print(time)
