@@ -20,6 +20,7 @@ from commonroad.scenario.lanelet import (Intersection,
                                          LaneletNetwork,
                                          LaneletType,
                                          StopLine, )
+from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 from crmonitor.common.road_network import Lane
 
 from crmonitor.common.helper import cartesian_to_curvilinear
@@ -36,9 +37,8 @@ logger = logging.getLogger(__name__)
 
 
 def distance_to_left_bounds(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
+        vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
 ):
-
     state = vehicle_i.states_cr[time_step]
     occ_points = rotate_translate(
         vehicle_i.shape.vertices[:-1], state.position, state.orientation
@@ -51,8 +51,8 @@ def distance_to_left_bounds(
             l.left_vertices
             for l in lanelets
             if l.adj_left is None
-            or l.adj_left not in lanelet_ids
-            and not l.adj_left_same_direction
+               or l.adj_left not in lanelet_ids
+               and not l.adj_left_same_direction
         ]
     )
     if len(left_bounds) > 0:
@@ -66,9 +66,8 @@ def distance_to_left_bounds(
 
 
 def distance_to_right_bounds(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
+        vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
 ):
-
     state = vehicle_i.states_cr[time_step]
     occ_points = rotate_translate(
         vehicle_i.shape.vertices[:-1], state.position, state.orientation
@@ -81,8 +80,8 @@ def distance_to_right_bounds(
             l.right_vertices
             for l in lanelets
             if l.adj_right is None
-            or l.adj_right not in lanelet_ids
-            and not l.adj_left_same_direction
+               or l.adj_right not in lanelet_ids
+               and not l.adj_left_same_direction
         ]
     )
     if len(right_bounds) > 0:
@@ -96,7 +95,7 @@ def distance_to_right_bounds(
 
 
 def distance_to_bounds(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
+        vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
 ):
     state = vehicle_i.states_cr[time_step]
     occ_points = rotate_translate(
@@ -145,7 +144,7 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
 
 
 def lanelets_left_of_lanelet(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
+        lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Extracts all lanelet IDs left of a given lanelet based on adjacency relations
@@ -164,7 +163,7 @@ def lanelets_left_of_lanelet(
 
 
 def lanelets_right_of_lanelet(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
+        lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Extracts all lanelet IDs right of a given lanelet based on adjacency relations
@@ -183,7 +182,7 @@ def lanelets_right_of_lanelet(
 
 
 def lanelets_left_of_vehicle(
-    time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
+        time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Extracts all lanelets left of a vehicle
@@ -206,7 +205,7 @@ def lanelets_left_of_vehicle(
 
 
 def lanelets_right_of_vehicle(
-    time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
+        time_step: int, vehicle: Vehicle, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Extracts all lanelets right of a vehicle
@@ -229,7 +228,7 @@ def lanelets_right_of_vehicle(
 
 
 def vehicles_adjacent(
-    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+        time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
 ) -> List[Vehicle]:
     """
      Searches for vehicles adjacent to a vehicle
@@ -245,21 +244,21 @@ def vehicles_adjacent(
         if veh.get_lon_state(time_step, lane_share) is None:
             continue
         if (
-            veh.rear_s(time_step, lane_share)
-            < vehicle.front_s(time_step, lane_share)
-            < veh.front_s(time_step, lane_share)
+                veh.rear_s(time_step, lane_share)
+                < vehicle.front_s(time_step, lane_share)
+                < veh.front_s(time_step, lane_share)
         ):
             vehicles_adj.append(veh)
             continue
         if (
-            veh.rear_s(time_step, lane_share)
-            < vehicle.rear_s(time_step, lane_share)
-            < veh.front_s(time_step, lane_share)
+                veh.rear_s(time_step, lane_share)
+                < vehicle.rear_s(time_step, lane_share)
+                < veh.front_s(time_step, lane_share)
         ):
             vehicles_adj.append(veh)
             continue
         if vehicle.rear_s(time_step, lane_share) <= veh.rear_s(
-            time_step, lane_share
+                time_step, lane_share
         ) and veh.front_s(time_step, lane_share) <= vehicle.front_s(
             time_step, lane_share
         ):
@@ -269,7 +268,7 @@ def vehicles_adjacent(
 
 
 def vehicles_left(
-    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+        time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
 ) -> List[Vehicle]:
     """
     Searches for vehicles left of a vehicle
@@ -290,7 +289,7 @@ def vehicles_left(
 
 
 def vehicle_directly_left(
-    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+        time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
 ) -> Union[Vehicle, None]:
     vehicle_left = vehicles_left(time_step, vehicle, other_vehicles)
     if len(vehicle_left) == 0:
@@ -302,15 +301,15 @@ def vehicle_directly_left(
         for veh in vehicle_left:
             lane_share = veh.get_lane(time_step)
             if (
-                veh.get_lat_state(time_step, lane_share).d
-                < vehicle_directly_left.get_lat_state(time_step, lane_share).d
+                    veh.get_lat_state(time_step, lane_share).d
+                    < vehicle_directly_left.get_lat_state(time_step, lane_share).d
             ):
                 vehicle_directly_left = veh
         return vehicle_directly_left
 
 
 def vehicles_right(
-    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+        time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
 ) -> List[Vehicle]:
     """
     Searches for vehicles right of a vehicle
@@ -331,7 +330,7 @@ def vehicles_right(
 
 
 def vehicle_directly_right(
-    time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
+        time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle]
 ) -> Union[Vehicle, None]:
     vehicle_right = vehicles_right(time_step, vehicle, other_vehicles)
     if len(vehicle_right) == 0:
@@ -343,15 +342,15 @@ def vehicle_directly_right(
         for veh in vehicle_right:
             lane_share = veh.get_lane(time_step)
             if (
-                veh.get_lat_state(time_step, lane_share).d
-                > vehicle_directly_right.get_lat_state(time_step, lane_share).d
+                    veh.get_lat_state(time_step, lane_share).d
+                    > vehicle_directly_right.get_lat_state(time_step, lane_share).d
             ):
                 vehicle_directly_right = veh
         return vehicle_directly_right
 
 
 def _adjacent_lanelets(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
+        lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Returns all lanelet which are adjacent to a lanelet and the lanelet itself
@@ -376,7 +375,7 @@ def _adjacent_lanelets(
 
 
 def cal_road_width(
-    lanelet: Lanelet, road_network: RoadNetwork, position: float
+        lanelet: Lanelet, road_network: RoadNetwork, position: float
 ) -> float:
     """
     Calculates width of road given a lanelet and a longitudinal position
@@ -397,7 +396,7 @@ def cal_road_width(
 # -------------------------------------------------------------------------------------------------------------------- #
 # new from Mahdi Bayouli
 def adjacent_lanelets_same_direction(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork
+        lanelet: Lanelet, lanelet_network: LaneletNetwork
 ) -> Set[Lanelet]:
     """
     Returns all lanelet which are adjacent to a lanelet and the lanelet itself
@@ -426,9 +425,9 @@ def adjacent_lanelets_same_direction(
             lanelets.add(la)
 
     while (
-        left_opp is not None
-        and left_opp.adj_right is not None
-        and left_opp.adj_right_same_direction
+            left_opp is not None
+            and left_opp.adj_right is not None
+            and left_opp.adj_right_same_direction
     ):
         left_opp = lanelet_network.find_lanelet_by_id(left_opp.adj_right)
         if left_opp is not None:
@@ -490,7 +489,7 @@ def adjacent_lanelets_same_direction(
 
 
 def get_robustness_inside_lanelet(
-    vehicle: Vehicle, time_step, lanelet: Lanelet, only_successors: False
+        vehicle: Vehicle, time_step, lanelet: Lanelet, only_successors: False
 ):
     # limitation: euclidean distance from car state position.
     # not a good indicator of how well the car is inside the lanelet
@@ -504,12 +503,12 @@ def get_robustness_inside_lanelet(
 
 
 def get_robustness_wrt_lanelet_type(
-    world,
-    time_step,
-    vehicle_ids: List[int],
-    lanelet_type,
-    inside_intersection: bool,
-    only_successors: bool = False,
+        world,
+        time_step,
+        vehicle_ids: List[int],
+        lanelet_type,
+        inside_intersection: bool,
+        only_successors: bool = False,
 ) -> float:
     """
     get robustness based on desired lanelet type.
@@ -538,7 +537,7 @@ def get_robustness_wrt_lanelet_type(
 
     if on_type:
         if inside_intersection and not is_lanelet_of_type(
-            lanelet_of_type, LaneletType.INTERSECTION, world.road_network
+                lanelet_of_type, LaneletType.INTERSECTION, world.road_network
         ):
             _, min_dist, abs = get_closest_lanelet_of_type(
                 vehicle_k, time_step, LaneletType.INTERSECTION, rnet
@@ -618,7 +617,7 @@ def get_robustness_wrt_lanelet_type(
 
 
 def get_latest_predecessors_path(
-    lanelet: Lanelet, lanelet_network: LaneletNetwork, predecessors=[]
+        lanelet: Lanelet, lanelet_network: LaneletNetwork, predecessors=[]
 ) -> List[int]:
     if len(lanelet.predecessor == 1):
         predecessors.extend(lanelet.predecessor)
@@ -658,18 +657,18 @@ def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, rnet: RoadNetwork) -> boo
 
     reach_pre_p = reach_pre(lanelet_p, rnet.lanelet_network)
     reach_pre_k_flat: List[int] = [
-        pre for reach_pre_path in reach_pre_k for pre in reach_pre_path
-    ] + [lanelet_k.lanelet_id]
+                                      pre for reach_pre_path in reach_pre_k for pre in reach_pre_path
+                                  ] + [lanelet_k.lanelet_id]
 
     reach_pre_p_flat: List[int] = [
-        pre for reach_pre_path in reach_pre_p for pre in reach_pre_path
-    ] + [lanelet_p.lanelet_id]
+                                      pre for reach_pre_path in reach_pre_p for pre in reach_pre_path
+                                  ] + [lanelet_p.lanelet_id]
 
     for lak in reach_pre_k_flat:
         if not is_lanelet_of_type(
-            rnet.lanelet_network.find_lanelet_by_id(lak),
-            HelperLaneletTypes.INCOMING,
-            rnet,
+                rnet.lanelet_network.find_lanelet_by_id(lak),
+                HelperLaneletTypes.INCOMING,
+                rnet,
         ):
             continue
         adj_lanelets_lak_lanelets = adjacent_lanelets_same_direction(
@@ -686,7 +685,7 @@ def same_incom(lanelet_k: Lanelet, lanelet_p: Lanelet, rnet: RoadNetwork) -> boo
 
 
 def orientation_of_lanelet_center_veritices(
-    lanelet: Lanelet, road_network: RoadNetwork
+        lanelet: Lanelet, road_network: RoadNetwork
 ) -> np.ndarray:
     lanes = road_network.find_lanes_by_lanelets([lanelet.lanelet_id])
 
@@ -697,7 +696,7 @@ def orientation_of_lanelet_center_veritices(
 
 
 def mean_orientation_of_lanelet_center(
-    lanelet: Lanelet, road_network: RoadNetwork
+        lanelet: Lanelet, road_network: RoadNetwork
 ) -> float:
     angles = orientation_of_lanelet_center_veritices(lanelet, road_network)
     size = len(angles)
@@ -715,10 +714,10 @@ def mean_orientation_of_lanelet_center(
 
 
 def get_stop_line_from_incoming(
-    vehicle: Vehicle,
-    incoming: IntersectionIncomingElement,
-    lanelet_network: LaneletNetwork,
-    time_step,
+        vehicle: Vehicle,
+        incoming: IntersectionIncomingElement,
+        lanelet_network: LaneletNetwork,
+        time_step,
 ):
     """
     finds all stop lines in an intersection incoming element, and returns the stop line that is closest to the passed vehicle
@@ -734,18 +733,18 @@ def get_stop_line_from_incoming(
         if lanelet_obj.stop_line != None:
             stop_lines.add(lanelet_obj.stop_line)
             if (
-                min_distance == -1.0
-                or distance_vehicle_to_stop_line(
-                    vehicle, lanelet_obj.stop_line, time_step
-                )
-                < min_distance
+                    min_distance == -1.0
+                    or distance_vehicle_to_stop_line(
+                vehicle, lanelet_obj.stop_line, time_step
+            )
+                    < min_distance
             ):
                 closest_stop_line = lanelet_obj.stop_line
     return (closest_stop_line, min_distance)
 
 
 def lanelets_same_direction(
-    lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
+        lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
 ) -> bool:
     e = 10
     mean_angle1 = math.degrees(
@@ -759,7 +758,7 @@ def lanelets_same_direction(
 
 
 def lanelets_opposite_direction(
-    lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
+        lanelet1: Lanelet, lanelet2: Lanelet, road_network: RoadNetwork
 ) -> bool:
     e = 10
     mean_angle1 = math.degrees(
@@ -794,7 +793,7 @@ def oncom(incoming: Lanelet, road_network: RoadNetwork) -> Set[int]:
         )
         for opp in opp_adj_of_succ:
             if lanelets_opposite_direction(
-                incoming, lanelet_network.find_lanelet_by_id(opp), road_network
+                    incoming, lanelet_network.find_lanelet_by_id(opp), road_network
             ):
                 oncom.add(opp)
     return oncom
@@ -815,7 +814,7 @@ def distance_between_two_points(p1: np.ndarray, p2: np.ndarray) -> float:
 
 
 def distance_between_vehicles(
-    vehicle_k: Vehicle, vehicle_p: Vehicle, time_step
+        vehicle_k: Vehicle, vehicle_p: Vehicle, time_step
 ) -> float:
     # TODO: Find a better way to calculate the distance_between_vehicles.
     p1 = np.array(vehicle_k.states_cr[time_step].position)
@@ -824,7 +823,7 @@ def distance_between_vehicles(
 
 
 def distance_vehicle_to_stop_line(
-    vehicle: Vehicle, stop_line: StopLine, time_step
+        vehicle: Vehicle, stop_line: StopLine, time_step
 ) -> float:
     """
     calculates the euclidean distance from a vehicle position to the center point of a stop line
@@ -850,7 +849,7 @@ def distance_lanelet_front_to_stop_line(lanelet: Lanelet, stop_line: StopLine) -
 
 
 def indirect_opposite_adjacents(
-    lanelet1: Lanelet, lanelet_network: LaneletNetwork
+        lanelet1: Lanelet, lanelet_network: LaneletNetwork
 ) -> List[int]:
     """
     returns a list for all adjacent lanelets and their adjacent lanelets, having opposite direction to parameter lanelet
@@ -878,7 +877,7 @@ def indirect_opposite_adjacents(
 
 
 def get_closest_stop_line_from_lanelet(
-    lanelet: Lanelet, road_network: RoadNetwork
+        lanelet: Lanelet, road_network: RoadNetwork
 ) -> Tuple[StopLine, float]:
     if lanelet.stop_line != None:
         return lanelet.stop_line, distance_lanelet_front_to_stop_line(
@@ -916,10 +915,10 @@ class HelperLaneletTypes(enum.Enum):
 
 
 def get_closest_lanelet_of_type(
-    vehicle: Vehicle,
-    time_step: int,
-    lanelet_type: HelperLaneletTypes,
-    rnet: RoadNetwork,
+        vehicle: Vehicle,
+        time_step: int,
+        lanelet_type: HelperLaneletTypes,
+        rnet: RoadNetwork,
 ) -> Optional[Tuple[Lanelet, float, bool]]:
     """
     finds the closest lanelet of type lanelet_type by searching ref_path_lanelets (possible successors and predecessors)
@@ -994,9 +993,9 @@ def has_active_light(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
 
 
 def is_lanelet_of_type(
-    lanelet: Lanelet,
-    lanelet_type: Union[HelperLaneletTypes, LaneletType],
-    rnet: RoadNetwork,
+        lanelet: Lanelet,
+        lanelet_type: Union[HelperLaneletTypes, LaneletType],
+        rnet: RoadNetwork,
 ) -> bool:
     """ "
     evaluates to true, if lanelet has type lanelet_type
@@ -1076,7 +1075,7 @@ def straight_going_lanelet(lanelet: Lanelet, rnet: RoadNetwork) -> bool:
 
 
 def orientation_difference_vehicle_lanelet(
-    vehicle: Vehicle, lanelet: Lanelet, rnet: RoadNetwork, time_step
+        vehicle: Vehicle, lanelet: Lanelet, rnet: RoadNetwork, time_step
 ) -> float:
     """
     finds closest center point of lanelet to vehicle, and returns orientation difference in Rad between this point and the vehicle.
@@ -1100,6 +1099,8 @@ def orientation_difference_vehicle_lanelet(
         subtract_orientations(orientation_of_closest_point, vehicle_orientation)
     )
     return orientation_difference
+
+
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # def distance_to_stop_line(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
@@ -1132,26 +1133,27 @@ def orientation_difference_vehicle_lanelet(
 #     return None
 
 
-def traffic_sign_type(lanelet_id: int, road_network: RoadNetwork):
+def traffic_sign_type(lanelet_ids, road_network: RoadNetwork):
     """
 
     :param lanelet_id:
     :param road_network:
     :return: the set of traffic sign types assigned to a lanelet
     """
-    traffic_sign_ids = list()
-    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-    ts_element_ids = lanelet.traffic_signs
-    for ts_element_id in ts_element_ids:
-        traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
-        for ts_element in traffic_sign_object.traffic_sign_elements:
-            traffic_sign_ids.append(ts_element.traffic_sign_element_id.value)
-    return traffic_sign_ids
+    traffic_sign_list = list()
+    for lanelet_id in lanelet_ids:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        ts_element_ids = lanelet.traffic_signs
+        for ts_element_id in ts_element_ids:
+            traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
+            for ts_element in traffic_sign_object.traffic_sign_elements:
+                if ts_element.traffic_sign_element_id not in traffic_sign_list:
+                    traffic_sign_list.append(ts_element.traffic_sign_element_id)
+    return traffic_sign_list
 
 
 def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwork):
     """
-
     :param lanelet_id:
     :param given_traffic_sign_id:
     :param road_network:
@@ -1163,7 +1165,7 @@ def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwo
     for ts_element_id in ts_element_ids:
         traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(ts_element_id)
         for ts_element in traffic_sign_object.traffic_sign_elements:
-            if ts_element.traffic_sign_element_id.value == given_traffic_sign_id:
+            if ts_element.traffic_sign_element_id == given_traffic_sign_id:
                 traffic_sign_elements.append(traffic_sign_object)
     if len(traffic_sign_elements) == 0:
         return None
@@ -1330,7 +1332,8 @@ def lanelets_dir(vehicle: Vehicle, time_step: int, road_network: RoadNetwork, go
         end_orientation = vehicle.state_list_cr[-1].orientation
         end_velocity = vehicle.state_list_cr[-1].velocity
         attributes = {'time_step': Interval(start=end_time - 1, end=end_time + 1),
-                      'position': Rectangle(length=1.0, width=1.0, center=end_position + np.array([np.cos(end_orientation), np.sin(end_orientation)])),
+                      'position': Rectangle(length=1.0, width=1.0, center=end_position + np.array(
+                          [np.cos(end_orientation), np.sin(end_orientation)])),
                       'velocity': Interval(start=end_velocity, end=end_velocity + 1),
                       'orientation': AngleInterval(start=end_orientation - 0.1, end=end_orientation + 0.1)}
         end_state = CustomState(**attributes)
@@ -1344,8 +1347,9 @@ def lanelets_dir(vehicle: Vehicle, time_step: int, road_network: RoadNetwork, go
     lanelets_dir_ids = np.unique(route.list_ids_lanelets)
     return lanelets_dir_ids
 
+
 def ref_path_lanelets(
-    vehicle: Vehicle, road_network: RoadNetwork, time_step, goal=None):
+        vehicle: Vehicle, road_network: RoadNetwork, time_step, goal=None):
     """
     returns all possible paths for each lanelet in lanelets_dir(vehicle)
     """
@@ -1422,7 +1426,8 @@ def get_incoming_multi_intersections(vehicle: Vehicle, time_step, road_network: 
             if len(incoming_ids) != 0:
                 incoming_elements.append(incoming)
                 start_incoming_s = get_lanelets_start_s(vehicle.ref_path_lane, incoming_ids, road_network)
-                incoming_successor = set.union(incoming.successors_right, incoming.successors_straight, incoming.successors_left)
+                incoming_successor = set.union(incoming.successors_right, incoming.successors_straight,
+                                               incoming.successors_left)
                 successor_possible = incoming_successor.intersection(set(occupied_lanelets_possible))
                 end_intersection_s = get_lanelets_end_s(vehicle.ref_path_lane, successor_possible, road_network)
                 # lanelets in front of vehicle
@@ -1534,7 +1539,8 @@ def get_straight_going_lane(road_network: RoadNetwork, incoming: IntersectionInc
         if (len(lane.contained_lanelets.intersection(straight_going_lanelets_ids)) > 0
                 and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0):
             straight_going_lane.append(lane)
-    assert len(straight_going_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
+    assert len(
+        straight_going_lane) == 1, 'Something not correct, OR there are more than one lanelets before intersection.'
     return straight_going_lane[0]
 
 
@@ -1648,24 +1654,21 @@ def longitudinal_distance_to_lane(vehicle: Vehicle, lane: Lane, time_step):
     return distance
 
 
-def get_priority(lanelet_id: int, road_network: RoadNetwork, direction):
-    # TODO: integrate ts_dic, ts_list, ts_dir in initialization
-    ts_dic = {'306': [4, 5, 4, 11],
-              '201': [4, 5, 4, 12],
-              '205': [2, 2, 2, 13],
-              '206': [1, 1, 1, 14],
-              '102': [3, 3, 3, 15]}
-    ts_list = ['306', '201', '205', '206', '102']
-    ts_dir = {'left': 0, 'straight': 1, 'right': 2}
-    ts_types = traffic_sign_type(lanelet_id, road_network)
-    ts_types_intersection = list(set(ts_list).intersection(set(ts_types)))
+def get_priority(lanelet_ids, road_network: RoadNetwork, direction, traffic_sign_priority):
+    ts_types = traffic_sign_type(lanelet_ids, road_network)
+    ts_types_intersection = [traffic_sign_priority[ts] for ts in ts_types]
     if len(ts_types_intersection) == 0:
-        ts_types_intersection = ['102']
+        ts_types_intersection = [traffic_sign_priority[TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT]]
     eval_idx_list = list()
     for ts_type in ts_types_intersection:
-        eval_idx_list.append(ts_dic[ts_type][3])
+        eval_idx_list.append(ts_type.evaluation_idx)
     argmin_s = np.argmin(eval_idx_list)
-    return ts_dic[ts_types_intersection[argmin_s]][ts_dir[direction]]
+    if direction == "right":
+        return ts_types_intersection[argmin_s].right
+    elif direction == "straight":
+        return ts_types_intersection[argmin_s].straight
+    elif direction == "left":
+        return ts_types_intersection[argmin_s].left
 
 
 def inc_la_left_of(incoming: IntersectionIncomingElement, road_network: RoadNetwork) -> IntersectionIncomingElement:
@@ -1764,8 +1767,6 @@ def find_conflict_points(line, conflict_polygon: Polygon):
     return conflict_points
 
 
-
-
 def get_vehicle_front_points(vehicle: Vehicle, time_step):
     center_position = vehicle.states_cr[time_step].position
     orientation = vehicle.states_cr[time_step].orientation
@@ -1804,5 +1805,3 @@ def points_distance_to_left_bound(points, lane: Lane):
         d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
         distance.append(d_left)
     return np.min(distance)
-
-
