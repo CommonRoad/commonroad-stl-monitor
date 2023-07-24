@@ -303,7 +303,7 @@ class PredInStandStill(BasePredicateEvaluator):
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         # avoid getting None of velocity
-        ref_path = ref_path_lanelets(vehicle, world.road_network, time_step)
+        ref_path = vehicle.ref_path_lane
         # ---------------------------------------------------
 
         if (
@@ -320,7 +320,7 @@ class PredInStandStill(BasePredicateEvaluator):
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         # avoid getting None of velocity
-        ref_path = ref_path_lanelets(vehicle, world.road_network, time_step)
+        ref_path = vehicle.ref_path_lane
         # ---------------------------------------------------
 
         return self._scale_speed(
