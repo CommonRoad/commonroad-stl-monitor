@@ -523,7 +523,30 @@ class PredTurningRight(BasePredicateEvaluator):
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = lanelets_assignment_initial.intersection(vehicle.lanelets_dir)
+        incoming = utils.get_incoming(list(lanelets_initial_occupied), road_network)
+        if incoming is None:
+            return False
+        # find corresponding right turn lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        right_turn_lane = utils.get_right_turn_lane(road_network, incoming)
+        # vehicle odes not occupy right turning lanelet
+        if len(lanelets_assignment_current.intersection(incoming.successors_right)) == 0:
+            return False
+        # vehicle occupies right turning lanelet
+        else:
+            state = vehicle.states_cr[time_step]
+            d_center_to_left = right_turn_lane.clcs_left.convert_to_curvilinear_coords(*state.position)[1]
+            # center of vehicle in right turning lanelet
+            if d_center_to_left > 0:
+                return False
+            # center of vehicle outside right turning lanelet
+            else:
+                return True
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -532,7 +555,7 @@ class PredTurningRight(BasePredicateEvaluator):
         road_network = world.road_network
         # find incoming lanelet
         lanelets_assignment_initial = vehicle.lanelet_assignment[0]
-        lanelets_initial_occupied = lanelets_assignment_initial.intersection(set(vehicle.lanelets_dir))
+        lanelets_initial_occupied = lanelets_assignment_initial.intersection(vehicle.lanelets_dir)
         incoming = utils.get_incoming(list(lanelets_initial_occupied), road_network)
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
@@ -592,7 +615,29 @@ class PredTurningLeft(BasePredicateEvaluator):
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(vehicle.lanelets_dir))
+        incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
+        if incoming is None:
+            return False
+        # find corresponding left turn lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        left_turn_lane = utils.get_left_turn_lane(road_network, incoming)
+        # vehicle does not occupy left turning lanelet
+        if len(lanelets_assignment_current.intersection(incoming.successors_left)) == 0:
+            return False
+        else:
+            state = vehicle.states_cr[time_step]
+            d_center_to_right = left_turn_lane.clcs_right.convert_to_curvilinear_coords(*state.position)[1]
+            if d_center_to_right < 0:
+                # out of left turning lanelet
+                return False
+            else:
+                # in left turning lanelet
+                return True
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -600,9 +645,8 @@ class PredTurningLeft(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
-        lanelets_dir = utils.lanelets_dir(vehicle, time_step, road_network)
         lanelets_assignment_initial = vehicle.lanelet_assignment[0]
-        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(set(lanelets_dir)))
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(vehicle.lanelets_dir))
         incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
@@ -663,7 +707,29 @@ class PredGoingStraight(BasePredicateEvaluator):
     arity = 1
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        road_network = world.road_network
+        # find incoming lanelet
+        lanelets_assignment_initial = vehicle.lanelet_assignment[0]
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(vehicle.lanelets_dir))
+        incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
+        if incoming is None:
+            return False
+        # find corresponding going straight lane and lanelets in intersection
+        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        straight_lane = utils.get_straight_going_lane(road_network, incoming)
+        if len(lanelets_assignment_current.intersection(incoming.successors_straight)) == 0:
+            return False
+        else:
+            state = vehicle.states_cr[time_step]
+            d_center_to_left = straight_lane.clcs_left.convert_to_curvilinear_coords(*state.position)[1]
+            d_center_to_right = straight_lane.clcs_right.convert_to_curvilinear_coords(*state.position)[1]
+            if (d_center_to_left > 0) or (d_center_to_right < 0):
+                # out of going straight lanelet
+                return False
+            else:
+                # in going straight lanelet
+                return True
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -671,9 +737,8 @@ class PredGoingStraight(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
-        lanelets_dir = utils.lanelets_dir(vehicle, time_step, road_network)
         lanelets_assignment_initial = vehicle.lanelet_assignment[0]
-        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(set(lanelets_dir)))
+        lanelets_initial_occupied = list(lanelets_assignment_initial.intersection(vehicle.lanelets_dir))
         incoming = utils.get_incoming(lanelets_initial_occupied, road_network)
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
@@ -694,7 +759,7 @@ class PredGoingStraight(BasePredicateEvaluator):
             d_center_to_left = straight_lane.clcs_left.convert_to_curvilinear_coords(*state.position)[1]
             d_center_to_right = straight_lane.clcs_right.convert_to_curvilinear_coords(*state.position)[1]
             if d_center_to_left > 0:
-                # out of left turning lanelet
+                # out of straight going lanelet
                 d_left = utils.distance_to_left_bounds_clcs(vehicle, straight_lane, time_step)
                 if len(d_left) == 0:
                     rob = -np.inf
@@ -702,7 +767,7 @@ class PredGoingStraight(BasePredicateEvaluator):
                     rob = -np.max(d_left, initial=-np.inf)
                 rob = self._scale_lat_dist(rob)
             elif d_center_to_right < 0:
-                # out of left turning lanelet
+                # out of straight going lanelet
                 d_right = utils.distance_to_right_bounds_clcs(vehicle, straight_lane, time_step)
                 if len(d_right) == 0:
                     rob = -np.inf
@@ -710,7 +775,7 @@ class PredGoingStraight(BasePredicateEvaluator):
                     rob = np.min(d_right, initial=np.inf)
                 rob = self._scale_lat_dist(rob)
             else:
-                # in left turning lanelet
+                # in straight going lanelet
                 rob = np.min([front_s - straight_start_s, straight_end_s - rear_s])
                 rob = self._scale_lon_dist(rob)
         # case 3: vehicle occupies right turning or straight lanelet at intersection instead of right turning
