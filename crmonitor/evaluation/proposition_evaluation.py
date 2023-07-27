@@ -11,7 +11,7 @@ from crmonitor.evaluation.visitor import (
 from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.monitor.rule import PredicateNode, RuleNode, VisitorNode
+from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
 
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
