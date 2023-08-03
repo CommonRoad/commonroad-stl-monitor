@@ -13,8 +13,6 @@ from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
-from crmonitor.predicates.utils import ref_path_lanelets
-
 logger = logging.getLogger(__name__)
 
 
