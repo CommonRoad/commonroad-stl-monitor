@@ -1025,11 +1025,13 @@ class PredStopLineInFront(BasePredicateEvaluator):
             return False
         # Get the front longitudinal value of the vehicle
         front_s = vehicle.front_s(time_step, vehicle.ref_path_lane) or -np.inf
-        # It doesn't matter if we take the left or right point of the stop line
-        # as we only consider the longitudinal component.
-        stop_line_s = np.array([vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-            *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0] for l in
-                                intersection_lanelets])
+        # get the longitudinal position of stop line based on ego reference path
+        # find the closest vertices
+        stop_line_s = np.array([min(vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+            *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0],
+                                    vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                                        *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.end)[0])
+                                for l in intersection_lanelets])
         for i in range(stop_line_s.shape[0]):
             # check if vehicle in this lanelet in lateral horizon
             d_lane = utils.distance_to_lanes(vehicle, [intersection_lanelets[i]], world, time_step)
@@ -1039,8 +1041,6 @@ class PredStopLineInFront(BasePredicateEvaluator):
             stop_line_distance = stop_line_s[i] - front_s
             if 0 <= stop_line_distance <= self.config["d_sl"]:
                 return True
-            else:
-                return False
         return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
@@ -1062,11 +1062,13 @@ class PredStopLineInFront(BasePredicateEvaluator):
             return self._scale_lon_dist(float(robustness))
         # Get the front longitudinal value of the vehicle
         front_s = vehicle.front_s(time_step, vehicle.ref_path_lane) or -np.inf
-        # It doesn't matter if we take the left or right point of the stop line
-        # as we only consider the longitudinal component.
-        stop_line_s = np.array([vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0] for l in
-                                intersection_lanelets])
+        # get the longitudinal position of stop line based on ego reference path
+        # find the closest vertices
+        stop_line_s = np.array([min(vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+            *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.start)[0],
+                                    vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                                        *world.road_network.lanelet_network.find_lanelet_by_id(l).stop_line.end)[0])
+                                for l in intersection_lanelets])
         for i in range(stop_line_s.shape[0]):
             # check if vehicle in this lanelet in lateral horizon
             d_lane = utils.distance_to_lanes(vehicle, [intersection_lanelets[i]], world, time_step)
