@@ -56,7 +56,7 @@ class RobustnessScaler(IRobustnessScaler):
         return self._scale(x, self._scale_constants.MAX_ACC)
 
     def scale_lon_dist(self, x):
-        return self._scale(x, self._scale_constants.MAX_ACC)
+        return self._scale(x, self._scale_constants.MAX_LONG_DIST)
 
     def scale_lat_dist(self, x):
         return self._scale(x, self._scale_constants.MAX_LAT_DIST)
