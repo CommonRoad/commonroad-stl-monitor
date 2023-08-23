@@ -1311,58 +1311,37 @@ def get_incoming_multi_intersections(vehicle: Vehicle, time_step, road_network: 
     return incoming_elements, distance_to_incomings
 
 
-def get_right_turn_incoming(lanelets_id, road_network: RoadNetwork) -> IntersectionIncomingElement:
+def get_right_turning_lane_by_lanelets(lanelets_id, road_network: RoadNetwork) -> (IntersectionIncomingElement, Lane):
     """
-    find the incoming according to current lanelet and predecessors which includes the right turning lanelet of the
+    find the incoming according to current lanelet assignments which includes the right turning lanelet of the
     searched incoming
     """
-    incoming = None
-    for lanelet_id in lanelets_id:
-        lanelet_pre = reach_pre(lanelet_id, road_network)
-        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
-            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
-                    len(incoming_element.successors_right.intersection(set(lanelet_pre))) > 0):
-                incoming = incoming_element
-                break
-        if incoming is not None:
-            break
-    return incoming
+    for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
+        if lanes_incoming[0].contained_lanelets.intersection(lanelets_id):
+            return road_network.incoming[incoming_id], lanes_incoming[0]
+    return None, None
 
 
-def get_left_turn_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+def get_left_turning_lane_by_lanelets(lanelets_id, road_network: RoadNetwork) -> (IntersectionIncomingElement, Lane):
     """
-    find the incoming according to current lanelet and predecessors which includes the left turning lanelet of the
+    find the incoming according to current lanelet assignments which includes the left turning lanelet of the
     searched incoming
     """
-    incoming = None
-    for lanelet_id in lanelets_id:
-        lanelet_pre = reach_pre(lanelet_id, road_network)
-        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
-            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
-                    len(incoming_element.successors_left.intersection(set(lanelet_pre))) > 0):
-                incoming = incoming_element
-                break
-        if incoming is not None:
-            break
-    return incoming
+    for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
+        if lanes_incoming[2].contained_lanelets.intersection(lanelets_id):
+            return road_network.incoming[incoming_id], lanes_incoming[2]
+    return None, None
 
 
-def get_straight_going_incoming(lanelets_id, road_network) -> IntersectionIncomingElement:
+def get_straight_going_lane_by_lanelets(lanelets_id, road_network: RoadNetwork) -> (IntersectionIncomingElement, Lane):
     """
-    find the incoming according to current lanelet and predecessors which includes the straight going lanelet of the
+    find the incoming according to current lanelet assignments which includes the straight going lanelet of the
     searched incoming
     """
-    incoming = None
-    for lanelet_id in lanelets_id:
-        lanelet_pre = reach_pre(lanelet_id, road_network)
-        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
-            if (len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre))) > 0 and
-                    len(incoming_element.successors_straight.intersection(set(lanelet_pre))) > 0):
-                incoming = incoming_element
-                break
-        if incoming is not None:
-            break
-    return incoming
+    for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
+        if lanes_incoming[1].contained_lanelets.intersection(lanelets_id):
+            return road_network.incoming[incoming_id], lanes_incoming[1]
+    return None, None
 
 
 def get_right_turn_lane(road_network: RoadNetwork, incoming: IntersectionIncomingElement) -> Lane:
