@@ -223,6 +223,12 @@ class RoadNetwork:
         """
         self.lanelet_network = lanelet_network
         self.lanes = self._create_lanes(road_network_param)
+        if len(lanelet_network.intersections) != 0:
+            self.incoming = self._create_incoming_dict(lanelet_network)
+            self.lanes_incoming = self._create_lanes_of_incoming(lanelet_network)
+        else:
+            self.incoming = {}
+            self.lanes_incoming = {}
 
     def _create_lanes(self, road_network_param: Dict) -> List[Lane]:
         """
@@ -285,6 +291,22 @@ class RoadNetwork:
                 lanes[k].set_adj_lanes(lanes[k+1], lanes[k-1])
 
         return lanes
+
+    def _create_incoming_dict(self, lanelet_network: LaneletNetwork) -> Dict[int, IntersectionIncomingElement]:
+        incoming_dict = {}
+        for incoming_element in lanelet_network.intersections[0].incomings:
+            incoming_dict[incoming_element.incoming_id] = incoming_element
+        return incoming_dict
+
+    def _create_lanes_of_incoming(self, lanelet_network: LaneletNetwork) -> Dict[int, List[Lane]]:
+        lanes_incoming = {}
+        for intersection in lanelet_network.intersections:
+            for incoming in intersection.incomings:
+                lanes_incoming[incoming.incoming_id] = [
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "right"),
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "straight"),
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "left")]
+        return lanes_incoming
 
     def find_lane_ids_by_obstacle(self, obstacle_id: int, time_step: int) -> Set[int]:
         """
@@ -376,3 +398,124 @@ class RoadNetwork:
                 ):
                     return lane
         return list(occupied_lanes)[0]
+
+    def find_lanes_incoming_by_id(self, incoming_id: int) -> "List[Lane]":
+        return self.lanes_incoming[incoming_id]
+
+    def lanelet_reach_suc(self, lanelet_id: int) -> "np.array":
+        paths = self.lanes_suc(lanelet_id)
+        paths = [l_id for path in paths for l_id in path]
+        return np.unique(paths)
+
+    def lanes_suc(self, lanelet_id: int) -> "List[List[int]]":
+        lanelet_network = self.lanelet_network
+        lanelet = lanelet_network.find_lanelet_by_id(lanelet_id)
+        lanelet_ids = set()
+        lanelet_ids.add(lanelet_id)
+        successors = lanelet.successor
+        if len(successors) == 0:
+            return [[lanelet_id]]
+        paths = []
+        for suc in successors:
+            suc_lanelet = lanelet_network.find_lanelet_by_id(suc)
+            suc_paths = self.lanes_suc(suc_lanelet.lanelet_id)
+            for suc_path in suc_paths:
+                suc_path.insert(0, suc)
+                paths.append(list(lanelet_ids.union(set(suc_path))))
+        return paths
+
+    def lanelet_reach_pre(self, lanelet_id: int) -> "np.array":
+        paths = self.lanes_pre(lanelet_id)
+        paths = [l_id for path in paths for l_id in path]
+        return np.unique(paths)
+
+    def lanes_pre(self, lanelet_id: int) -> "List[List[int]]":
+        lanelet_network = self.lanelet_network
+        lanelet = lanelet_network.find_lanelet_by_id(lanelet_id)
+        lanelet_ids = set()
+        lanelet_ids.add(lanelet_id)
+        predecessors = lanelet.predecessor
+        if len(predecessors) == 0:
+            return [[lanelet_id]]
+        paths = []
+        for pre in predecessors:
+            pre_lanelet = lanelet_network.find_lanelet_by_id(pre)
+            pre_paths = self.lanes_pre(pre_lanelet.lanelet_id)
+            for pre_path in pre_paths:
+                pre_path.insert(0, pre)
+                paths.append(list(lanelet_ids.union(set(pre_path))))
+        return paths
+
+    def find_incoming_intersection(self, lanelets_dir: "List[int]") -> "IntersectionIncomingElement":
+        # TODO: further check needed
+        possible_incomings = list()
+        lanelet_pre = self.lanelet_reach_pre(lanelets_dir[0])
+        lanelet_suc = self.lanelet_reach_suc(lanelets_dir[-1])
+        possible_occupied_lanelets = lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
+        for incoming_element in self.lanelet_network.intersections[0].incomings:
+            if len(incoming_element.incoming_lanelets.intersection(set(possible_occupied_lanelets))) > 0:
+                possible_incomings.append(incoming_element)
+        if len(possible_incomings) == 0:
+            return None
+        elif len(possible_incomings) == 1:
+            return possible_incomings[0]
+        else:
+            # more than one incoming is searched, assume vehicle drives straight.
+            # if no straight goning lane is matched, select the first incoming
+            for incoming in possible_incomings:
+                straight_going_lane = self.get_turning_lane_from_incoming(self.lanes, incoming, "straight")
+                if len(straight_going_lane.contained_lanelets.intersection(possible_occupied_lanelets)) != 0:
+                    return incoming
+            return possible_incomings[0]
+
+    @staticmethod
+    def get_turning_lane_from_incoming(
+            lanes: "List[Lane]",
+            incoming: IntersectionIncomingElement,
+            turning_direction: str,
+    ) -> "Lane":
+        incoming_lanelets_ids = incoming.incoming_lanelets
+        if turning_direction == "right":
+            turning_lanelets_ids = incoming.successors_right
+        elif turning_direction == "left":
+            turning_lanelets_ids = incoming.successors_left
+        elif turning_direction == "straight":
+            turning_lanelets_ids = incoming.successors_straight
+        else:
+            assert False, "turning_direction should be named right, left or straight"
+        possible_lanes = list()
+        for lane in lanes:
+            # choose the lane which contains both incoming and right-turning successors
+            if (len(lane.contained_lanelets.intersection(turning_lanelets_ids)) > 0
+                    and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0):
+                possible_lanes.append(lane)
+        selected_lanes = list()
+        # find the longest lane
+        # TODO: can separate in a new function
+        for lane in possible_lanes:
+            subset_find = False
+            for index, selected_lane in enumerate(selected_lanes):
+                if set(selected_lane.contained_lanelets).issubset(lane.contained_lanelets):
+                    subset_find = True
+                    selected_lanes[index] = lane
+                    break
+                elif set(lane.contained_lanelets).issubset(selected_lane.contained_lanelets):
+                    subset_find = True
+                    break
+                else:
+                    subset_find = False
+            if not subset_find:
+                selected_lanes.append(lane)
+        return selected_lanes[0]
+
+    def get_lanelets_start_end_s(self, lanelets_id: "Union[List, Set]", reference_lane: "Lane") -> (float, float):
+        lanelets_start_s = np.inf
+        lanelets_end_s = -np.inf
+        for lanelet_id in lanelets_id:
+            lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
+            # TODO: check: now assume start and end lines vertical to reference lane
+            start_s = reference_lane.clcs.convert_to_curvilinear_coords(*lanelet.right_vertices[0, :])[0]
+            end_s = reference_lane.clcs.convert_to_curvilinear_coords(*lanelet.right_vertices[-1, :])[0]
+            lanelets_start_s = min(lanelets_start_s, start_s)
+            lanelets_end_s = max(lanelets_end_s, end_s)
+        return lanelets_start_s, lanelets_end_s

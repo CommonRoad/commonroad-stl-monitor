@@ -195,7 +195,7 @@ class PredicateCache:
 
 
 class Vehicle:
-    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None, road_network=None, goal=None):
+    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None, road_network: "Optional[RoadNetwork]"=None, goal=None):
         self.id = id
         self.obstacle_type = obstacle_type
         self.vehicle_param = vehicle_param
@@ -210,8 +210,11 @@ class Vehicle:
             self.lanelets_dir = None
             self.ref_path_lane = None
             self.lanelets_dir_center_vertices = None
+            self.incoming_intersection = None
         else:
+            # intersection scenario
             self.lanelets_dir, self.goal_region, self.lanelets_dir_center_vertices = self._initial_lanelets_dir(self.road_network, goal)
+            self.incoming_intersection = self.road_network.find_incoming_intersection(self.lanelets_dir)
             self.ref_path_lane = self._initial_ref_path_lane(self.road_network)
 
     def rear_s(self, time_step: int, lane: Lane=None) -> float:
