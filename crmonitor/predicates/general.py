@@ -799,7 +799,12 @@ class PredTurningSamePriorityBase(BasePredicateEvaluator):
         self._turning_target = PredTurningRight(config)
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        bool_turning_ego = self._turning_ego.evaluate_boolean(world, time_step, [ego_vehicle_id])
+        bool_turning_target = self._turning_target.evaluate_boolean(world, time_step, [target_vehicle_id])
+        bool_same_priority = self._same_priority.evaluate_boolean(world, time_step, vehicle_ids)
+        return bool_turning_ego and bool_turning_target and bool_same_priority
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -923,7 +928,13 @@ class PredTurningHasPriorityBase(BasePredicateEvaluator):
         self._turning_target = PredTurningRight(config)
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        bool_turning_ego = self._turning_ego.evaluate_boolean(world, time_step, [ego_vehicle_id])
+        bool_turning_target = self._turning_target.evaluate_boolean(world, time_step, [target_vehicle_id])
+        bool_target_has_priority = self._target_has_priority.evaluate_boolean(world, time_step,
+                                                                                [target_vehicle_id, ego_vehicle_id])
+        return bool_turning_ego and bool_turning_target and bool_target_has_priority
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -970,6 +981,7 @@ class PredRightEgoStraightTargetHasPriority(PredTurningHasPriorityBase):
         self._turning_target = PredGoingStraight(config)
 
 
+# TODO: add boolean evaluation
 class PredLeftEgoRightTargetHasPriorityNotOncoming(PredTurningHasPriorityBase):
     predicate_name = GeneralPredicates.LeftEgoRightTargetHasPriorityNotOncoming
     arity = 2
