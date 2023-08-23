@@ -362,8 +362,8 @@ class Vehicle:
 
     def _initial_lanelets_dir(self, road_network: RoadNetwork, goal=None):
         if goal is None:
-            initial_state = self.states_cr[0]
-            end_time = len(self.states_cr) - 1
+            initial_state = self.states_cr[self.start_time]
+            end_time = self.end_time
             end_position = self.states_cr[end_time].position
             end_orientation = self.states_cr[end_time].orientation
             end_velocity = self.states_cr[end_time].velocity
