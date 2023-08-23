@@ -1,4 +1,4 @@
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Union
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
