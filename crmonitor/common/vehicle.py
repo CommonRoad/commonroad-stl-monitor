@@ -133,8 +133,12 @@ class CurvilinearStateManager:
         try:
             s, d = lane.clcs.convert_to_curvilinear_coords(*state.position)
         except ValueError:
-            logger.debug("Vehicle out of projection domain: State will not be considered")
-            return None
+            logger.debug("Vehicle out of projection domain: consider large clcs")
+            try:
+                s, d = lane.clcs_large_step.convert_to_curvilinear_coords(*state.position)
+            except ValueError:
+                logger.debug("Vehicle out of projection domain: State will not be considered")
+                return None
         theta_cl = lane.orientation(s)
         if hasattr(state, "acceleration") and hasattr(state, "jerk"):
             x_lon = StateLongitudinal(s=s, v=state.velocity, a=state.acceleration, j=state.jerk)
