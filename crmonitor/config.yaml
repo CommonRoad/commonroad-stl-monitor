@@ -1,3 +1,5 @@
+scenario: intersection
+
 simulation_param:
   dt: 0.2
 
@@ -12,6 +14,15 @@ road_network_param:
   num_chankins_corner_cutting: 1
   polyline_resampling_step: 0.5
   merging_length: 10000
+
+intersection_road_network_param:
+  map_type: hand_draft
+  num_chankins_corner_cutting: 1
+  polyline_resampling_step: 0.5
+  large_resampling_step: 3.5
+  merging_length: 10000
+  lateral_projection_domain_limit: 50
+  lateral_eps: 0.1
 
 # Ego vehicle parameters
 ###
