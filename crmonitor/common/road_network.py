@@ -261,8 +261,11 @@ class Lane:
         return curvilinear_cosy
 
     def _create_clcs_from_reference(self, ref_path: np.ndarray, weight, smooth_factor, road_network_param):
-        reference_path = self._extrapolate_resample_polyline(ref_path)
-        reference_path_smooth = self._smoothing_reference_path(reference_path, smooth_factor=smooth_factor, weight_coefficient=weight)
+        if road_network_param.get("map_type") == "hand_draft":
+            reference_path_smooth = resample_polyline(ref_path, road_network_param.get("polyline_resampling_step"))
+        else:
+            reference_path = self._extrapolate_resample_polyline(ref_path)
+            reference_path_smooth = self._smoothing_reference_path(reference_path, smooth_factor=smooth_factor, weight_coefficient=weight)
 
         curvilinear_cosy = CurvilinearCoordinateSystem(
             reference_path_smooth,
