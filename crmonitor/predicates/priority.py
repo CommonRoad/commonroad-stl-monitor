@@ -115,7 +115,7 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         # find relevant lanelets with stop traffic sign
         lanelet_with_ts_stop = list()
         for lanelet_id in lanelets_ids:
-            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign, road_network)
+            traffic_sign_elements = utils.traffic_sign(lanelet_id, self.stop_traffic_sign_deu, road_network)
             if traffic_sign_elements is not None:
                 lanelet_with_ts_stop.append(lanelet_id)
         if len(lanelet_with_ts_stop) == 0:
