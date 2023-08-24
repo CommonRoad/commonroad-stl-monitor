@@ -244,9 +244,9 @@ class PredSamePriorityBase(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        incoming_k = vehicle_k.incoming_intersection
         k_incoming_relevant_lanelets = incoming_k.incoming_lanelets.union(incoming_k.successors_left, incoming_k.successors_right, incoming_k.successors_straight)
-        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        incoming_p = vehicle_p.incoming_intersection
         p_incoming_relevant_lanelets = incoming_p.incoming_lanelets.union(incoming_p.successors_left, incoming_p.successors_right, incoming_p.successors_straight)
         priority_k = utils.get_priority(k_incoming_relevant_lanelets, road_network, self.first_direction, self.traffic_sign_priority.get_priority())
         priority_p = utils.get_priority(p_incoming_relevant_lanelets, road_network, self.second_direction, self.traffic_sign_priority.get_priority())
@@ -258,11 +258,11 @@ class PredSamePriorityBase(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
+        incoming_k = vehicle_k.incoming_intersection
         k_incoming_relevant_lanelets = incoming_k.incoming_lanelets.union(incoming_k.successors_left,
                                                                           incoming_k.successors_right,
                                                                           incoming_k.successors_straight)
-        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
+        incoming_p = vehicle_p.incoming_intersection
         p_incoming_relevant_lanelets = incoming_p.incoming_lanelets.union(incoming_p.successors_left,
                                                                           incoming_p.successors_right,
                                                                           incoming_p.successors_straight)
@@ -372,6 +372,7 @@ class PredHasPriorityBase(BasePredicateEvaluator):
     arity = 2
     first_direction = None
     second_direction = None
+    traffic_sign_priority = TrafficSignPriority()
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
@@ -382,12 +383,18 @@ class PredHasPriorityBase(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
-        incoming_k_id = list(incoming_k.incoming_lanelets)[0]
-        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
-        incoming_p_id = list(incoming_p.incoming_lanelets)[0]
-        priority_k = utils.get_priority(incoming_k_id, road_network, self.first_direction)
-        priority_p = utils.get_priority(incoming_p_id, road_network, self.second_direction)
+        incoming_k = vehicle_k.incoming_intersection
+        k_incoming_relevant_lanelets = incoming_k.incoming_lanelets.union(incoming_k.successors_left,
+                                                                          incoming_k.successors_right,
+                                                                          incoming_k.successors_straight)
+        incoming_p = vehicle_p.incoming_intersection
+        p_incoming_relevant_lanelets = incoming_p.incoming_lanelets.union(incoming_p.successors_left,
+                                                                          incoming_p.successors_right,
+                                                                          incoming_p.successors_straight)
+        priority_k = utils.get_priority(k_incoming_relevant_lanelets, road_network, self.first_direction,
+                                        self.traffic_sign_priority.get_priority())
+        priority_p = utils.get_priority(p_incoming_relevant_lanelets, road_network, self.second_direction,
+                                        self.traffic_sign_priority.get_priority())
         rob = (priority_k - priority_p - 0.5) / 5
         return rob
 
