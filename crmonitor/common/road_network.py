@@ -63,9 +63,14 @@ class Lane:
             self._path_length = self._compute_path_length_from_polyline(
                 new_center_vertices
             )
-            self._width = self._compute_width_from_lanalet_boundary(
-                new_left_vertices, new_right_vertices
-            )
+            if road_network_param.get("map_type") == "hand_draft":
+                self._width = self._compute_width_from_lanalet_boundary(
+                    merged_lanelet.left_vertices, merged_lanelet.right_vertices
+                )
+            else:
+                self._width = self._compute_width_from_lanalet_boundary(
+                    new_left_vertices, new_right_vertices
+                )
 
             self._adj_left = None
             self._adj_right = None
