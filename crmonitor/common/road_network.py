@@ -360,19 +360,7 @@ class RoadNetwork:
         """
         lanes = []
         lane_lanelets = []
-        start_lanelets = []
-        for lanelet in self.lanelet_network.lanelets:
-            # only consider the longest lanes in intersection
-            if len(lanelet.predecessor) == 0:
-                start_lanelets.append(lanelet)
-            # else:
-            #     predecessors = [
-            #         self.lanelet_network.find_lanelet_by_id(pred_id)
-            #         for pred_id in lanelet.predecessor
-            #     ]
-            #     for pred in predecessors:
-            #         if not lanelet.lanelet_type == pred.lanelet_type:
-            #             start_lanelets.append(lanelet)
+        start_lanelets = self._get_start_lanelets(self.lanelet_network)
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
                 lanelet_type = LaneletType.ACCESS_RAMP
@@ -416,7 +404,24 @@ class RoadNetwork:
 
         return lanes
 
-    def _create_incoming_dict(self, lanelet_network: LaneletNetwork) -> Dict[int, IntersectionIncomingElement]:
+    def _get_start_lanelets(self, lanelet_network: LaneletNetwork) -> List[Lanelet]:
+        start_lanelets = []
+        for lanelet in lanelet_network.lanelets:
+            # only consider the longest lanes in intersection
+            if len(lanelet.predecessor) == 0:
+                start_lanelets.append(lanelet)
+            elif self.scenario_type == "interstate":
+                predecessors = [
+                    self.lanelet_network.find_lanelet_by_id(pred_id)
+                    for pred_id in lanelet.predecessor
+                ]
+                for pred in predecessors:
+                    if not lanelet.lanelet_type == pred.lanelet_type:
+                        start_lanelets.append(lanelet)
+        return start_lanelets
+
+    @staticmethod
+    def _create_incoming_dict(lanelet_network: LaneletNetwork) -> Dict[int, IntersectionIncomingElement]:
         incoming_dict = {}
         for incoming_element in lanelet_network.intersections[0].incomings:
             incoming_dict[incoming_element.incoming_id] = incoming_element
