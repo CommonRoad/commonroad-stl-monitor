@@ -1,4 +1,5 @@
-scenario: intersection
+# scenario type: interstate or intersection
+scenario: interstate
 
 simulation_param:
   dt: 0.2
@@ -16,7 +17,7 @@ road_network_param:
   merging_length: 10000
 
 intersection_road_network_param:
-  map_type: hand_draft
+  map_type: hand_draft # hand_draft: hand draft map, dataset: inD dataset
   num_chankins_corner_cutting: 1
   polyline_resampling_step: 0.5
   large_resampling_step: 3.5
