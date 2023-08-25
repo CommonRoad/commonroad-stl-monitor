@@ -1,8 +1,6 @@
-import math
 import unittest
 from pathlib import Path
 
-import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import (
@@ -44,8 +42,9 @@ class TestPositionPredicates(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testStopLineInFront(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
-            lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+        ).open(lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
         #         lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
@@ -70,8 +69,10 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testOnIncomingLeftOf(self):
         scenario, _ = CommonRoadFileReader(
-                str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-                lanelet_assignment=True)
+            str(
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            )
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -96,8 +97,10 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testInIntersectionConflictArea(self):
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-                lanelet_assignment=True)
+            str(
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            )
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -139,8 +142,8 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testOnLaneletWithTypeIntersection(self):
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
-                lanelet_assignment=True)
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -155,7 +158,6 @@ class TestPositionPredicates(unittest.TestCase):
             print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
 
     def testOnOncomOf(self):
         scenario, _ = CommonRoadFileReader(

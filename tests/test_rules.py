@@ -54,7 +54,8 @@ class RuleTest(unittest.TestCase):
 
     def test_R_IN1(self):
         scenario, _ = CommonRoadFileReader(
-                str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(lanelet_assignment=True)
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_IN1")

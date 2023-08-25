@@ -45,8 +45,9 @@ class TestPriorityPredicates(unittest.TestCase):
         self.config["scale_rob"] = True
 
     def testAtTrafficSign(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
-                lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(31)
 
@@ -61,9 +62,11 @@ class TestPriorityPredicates(unittest.TestCase):
 
     def testRelevantTrafficLight(self):
         scenario, _ = CommonRoadFileReader(
-                str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(True)
-        dynamic_obstacle_initial_state = CustomState(position=np.array([5, 0.0]), velocity=15, orientation=0.0,
-                                                     time_step=0)
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+        ).open(True)
+        dynamic_obstacle_initial_state = CustomState(
+            position=np.array([5, 0.0]), velocity=15, orientation=0.0, time_step=0
+        )
         state_list_ego = []
         state_list_ego.append(
             CustomState(
@@ -181,4 +184,3 @@ class TestPriorityPredicates(unittest.TestCase):
             print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-

@@ -14,8 +14,11 @@ from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.general import (PredTurningLeft, PredTurningRight,
-                                          PredGoingStraight)
+from crmonitor.predicates.general import (
+    PredTurningLeft,
+    PredTurningRight,
+    PredGoingStraight,
+)
 
 
 class TestTurning(unittest.TestCase):
@@ -28,10 +31,14 @@ class TestTurning(unittest.TestCase):
 
     def testTurningRight(self):
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-            lanelet_assignment=True)
+            str(
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            )
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -45,14 +52,18 @@ class TestTurning(unittest.TestCase):
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-            print('-----------------------------------------')
+            print("-----------------------------------------")
 
     def testTurningLeft(self):
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-            lanelet_assignment=True)
+            str(
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            )
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(scenario.lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(
+            scenario.lanelet_network, self.config.get("road_network_param")
+        )
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -66,11 +77,14 @@ class TestTurning(unittest.TestCase):
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-            print('-----------------------------------------')
+            print("-----------------------------------------")
 
     def testGoingStraight(self):
-        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
-                lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(
+            str(
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            )
+        ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -88,4 +102,4 @@ class TestTurning(unittest.TestCase):
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-            print('-----------------------------------------')
+            print("-----------------------------------------")
