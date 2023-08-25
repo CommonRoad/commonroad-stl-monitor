@@ -23,14 +23,12 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (
-    parse_rule,
+from crmonitor.rule.rule_node import (
     RuleNode,
     PredicateNode,
     ExistNode,
     AllNode,
 )
-from tests.util import parallel_lanes
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
@@ -98,7 +96,7 @@ class RuleTest(unittest.TestCase):
         #     lanelet_assignment=True)
         scenario, _ = CommonRoadFileReader(
             str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml"
+                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
