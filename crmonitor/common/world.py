@@ -92,15 +92,26 @@ class World:
                         str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict)))
                     )
                     try:
-                        vehicles.add(
-                            DynamicObstacleVehicle(
-                                obs,
-                                CurvilinearStateManager(road_network, curvi_cache),
-                                others_params,
-                                PredicateCache(predicate_dict),
-                                road_network
+                        if config.get("scenario") == "intersection":
+                            vehicles.add(
+                                DynamicObstacleVehicle(
+                                    obs,
+                                    CurvilinearStateManager(road_network, curvi_cache),
+                                    others_params,
+                                    PredicateCache(predicate_dict),
+                                    road_network
+                                )
                             )
-                        )
+                        else:
+                            vehicles.add(
+                                DynamicObstacleVehicle(
+                                    obs,
+                                    CurvilinearStateManager(road_network, curvi_cache),
+                                    others_params,
+                                    PredicateCache(predicate_dict),
+                                    road_network=None
+                                )
+                            )
                     except:
                         print("Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s" % (
                         obs.obstacle_id, scenario.scenario_id))
