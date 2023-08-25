@@ -4,6 +4,7 @@ from rtamt.syntax.node.ltl.conjunction import Conjunction
 from rtamt.syntax.node.ltl.disjunction import Disjunction
 from rtamt.syntax.node.ltl.implies import Implies
 from rtamt.syntax.node.ltl.neg import Neg
+from rtamt.syntax.node.ltl.once import Once
 from rtamt.syntax.node.ltl.predicate import Predicate
 from rtamt.syntax.node.ltl.previous import Previous
 from rtamt.syntax.node.ltl.variable import Variable
@@ -51,6 +52,7 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
                 or isinstance(specs_node, TimedAlways)
                 or isinstance(specs_node, TimedHistorically)
                 or isinstance(specs_node, TimedEventually)
+                or isinstance(specs_node, Once)
             ):
                 prop_list[specs_node.name] = self.ast_node_values[specs_node.name]
         elif isinstance(specs_node, Predicate) or isinstance(specs_node, Variable):
@@ -71,6 +73,9 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
                         specs_node.children[1].name
                     ]
                     self.collect_prop_rob(specs_node.children[0], prop_list)
+                else:
+                    self.collect_prop_rob(specs_node.children[0], prop_list)
+                    self.collect_prop_rob(specs_node.children[1], prop_list)
             if isinstance(specs_node, Conjunction) or isinstance(
                 specs_node, Disjunction
             ):
