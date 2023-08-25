@@ -64,7 +64,7 @@ class World:
                 params = config.get("intersection_road_network_param")
             else:
                 params = config.get("road_network_param")
-            road_network = RoadNetwork(scenario.lanelet_network, params)
+            road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
         else:
             road_network = road_network
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
