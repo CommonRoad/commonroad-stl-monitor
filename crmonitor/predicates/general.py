@@ -1,11 +1,22 @@
 from enum import Enum
 import logging
-from typing import List, Tuple, Dict, Callable
+from enum import Enum
+from typing import Callable, Dict, List, Optional, Tuple
+
 import matplotlib.colors
 import numpy as np
-
+from commonroad.common.util import subtract_orientations
+from commonroad.scenario.intersection import IntersectionIncomingElement
+from commonroad.scenario.lanelet import LaneletType, LineMarking
+from commonroad.scenario.traffic_sign import TrafficLightState
 from matplotlib import pyplot as plt
 
+from crmonitor.common.helper import (
+    cartesian_to_curvilinear,
+    get_curvilinear_coordinate_system,
+)
+from crmonitor.common.road_network import Lane
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -32,6 +43,10 @@ class GeneralPredicates(str, Enum):
     TurningLeft = "turning_left"
     TurningRight = "turning_right"
     GoingStraight = "going_straight"
+    SlInFront = "sl_in_front"
+    RightTurn = "on_right_turn"
+    TlRed = "tl_red"
+    InIntersection = "on_intersection"
 
     TurningSamePriorityBase = "turning_same_priority_base"
     RightEgoRightTargetSamePriority = "turning_right_ego_turning_right_target_same_priority"
@@ -112,9 +127,9 @@ class PredCutIn(BasePredicateEvaluator):
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
         r_l_dist = cutted_lat.d - cutting_lat.d
-        r_l_orient = cutting_lat.theta - self.eps
+        r_l_orient = subtract_orientations(cutting_lat.theta, self.eps)
         l_r_dist = cutting_lat.d - cutted_lat.d
-        l_r_orient = -self.eps - cutting_lat.theta
+        l_r_orient = subtract_orientations(-self.eps, cutting_lat.theta)
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
         l_r_dist = self._scale_lat_dist(l_r_dist)

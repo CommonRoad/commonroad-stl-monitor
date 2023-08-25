@@ -145,9 +145,7 @@ class Lane:
     def adj_right(self):
         return self._adj_right
 
-    def set_adj_lanes(self,
-                      adj_left=None,
-                      adj_right=None):
+    def set_adj_lanes(self, adj_left=None, adj_right=None):
         self._adj_left = adj_left
         self._adj_right = adj_right
 
@@ -256,7 +254,7 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, 20, 0.1, 5.0)
 
         return curvilinear_cosy
 
@@ -385,10 +383,11 @@ class RoadNetwork:
                 lane_lanelets.append((merged_lanelets[idx], merge_jobs[idx]))
         for lane_element in lane_lanelets:
             lanes.append(Lane(lane_element[0], lane_element[1], road_network_param))
-        
+
         lanes.sort(key=lambda x: x.lane_id)
 
-        # TODO: check if this is correct
+        # todo: the adjacency assignments only work for highway so far. For intersections, more dedicated approach
+        #  is needed
         if len(lanes) == 0:
             pass
         elif len(lanes) == 1:
@@ -399,8 +398,8 @@ class RoadNetwork:
         else:
             lanes[0].set_adj_lanes(lanes[1], None)
             lanes[-1].set_adj_lanes(None, lanes[-2])
-            for k in range(1, len(lanes)-1):
-                lanes[k].set_adj_lanes(lanes[k+1], lanes[k-1])
+            for k in range(1, len(lanes) - 1):
+                lanes[k].set_adj_lanes(lanes[k + 1], lanes[k - 1])
 
         return lanes
 

@@ -47,9 +47,10 @@ def plot_rule_robustness_course(
 ):
     np_rule_robustness_course = np.array(rule_robustness_course)
     rob_values = np_rule_robustness_course[:, 1]
+    times = np_rule_robustness_course[:, 0]
     ax.plot(rob_values, "b-")
-    ax.plot(np.where(rob_values < 0.0, rob_values, np.nan), "rx")
-    ax.plot(np.where(rob_values >= 0.0, rob_values, np.nan), "g.")
+    ax.plot(times, np.where(rob_values < 0.0, rob_values, np.nan), "rx")
+    ax.plot(times, np.where(rob_values >= 0.0, rob_values, np.nan), "g.")
     ax.set_xlim([np_rule_robustness_course[0, 0], np_rule_robustness_course[-1, 0]])
     ax.set_ylim(plot_limits)
     ax.grid(True)
@@ -58,7 +59,7 @@ def plot_rule_robustness_course(
 
 
 def plot_predicate_bar_chart(
-    predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
+    predicate_vehicle_values: Dict[str, Dict[Tuple[int, ...], float]],
     ax,
     bar_chart_plot_limits: Tuple[float, float],
 ):
@@ -68,11 +69,12 @@ def plot_predicate_bar_chart(
                 str(vehicle_ids): values
                 for vehicle_ids, values in vehicle_ids2values.items()
             }
-            for predicate_name, vehicle_ids2values in predicate_names2vehicle_ids2values.items()
+            for predicate_name, vehicle_ids2values in predicate_vehicle_values.items()
         }
     )
 
-    # we use a different color map, as default one produces non-distinguishable colors for different bars
+    # we use a different color map, as default one produces non-distinguishable
+    # colors for different bars
     cmap = plt.get_cmap("turbo")
     numbers_for_bars = np.linspace(0, 1, num=len(df.columns), endpoint=False)
     ax = df.plot.barh(
@@ -161,6 +163,7 @@ def plot_rule_visualization(
 ):
     """
     Plotting the rule evaluation result
+
     :param scenario: the CommonRoad scenario to be visualized
     :param ego_vehicle_id: id of ego vehicle (the vehicle to be controlled)
     :param time_step: the time step of the current scenario
@@ -169,12 +172,15 @@ def plot_rule_visualization(
     :param scenario_fig_size: size of scenario plot
     :param bar_chart_plot_limits: the plot limits of x-axis
     :param rule_robustness_course_plot_limits: the plot limits of x-axis
-    :param flag_plot_predicate_bar_chart: flag of whether the bar chart needs to be plotted
-    :param flat_plot_rule_robustness_course: flag of whether the robustness curve needs to be plotted
+    :param flag_plot_predicate_bar_chart: flag of whether the bar chart needs to be
+        plotted
+    :param flat_plot_rule_robustness_course: flag of whether the robustness curve
+        needs to be plotted
     :param scenario_plot_limits: the plot limits of scenario,
-    :param flag_rule_conjunction: whether consider the conjunction of rules or separately calculate them
-    :plot_scenario_legend: whether the legend for the scenario visualization should be plotted. If None, it is
-    plotted for the first time-step only
+    :param flag_rule_conjunction: whether consider the conjunction of rules or
+        separately calculate them
+    :param plot_scenario_legend: whether the legend for the scenario visualization
+        should be plotted. If None, it is plotted for the first time-step only
     """
 
     nr_rules = len(rule_evaluator_list)
@@ -194,8 +200,9 @@ def plot_rule_visualization(
     rule_result_dict = {}
     rule_name_list = []
     all_predicate_name2predicate_evaluator = {}
-    # Hint: plotting further stuff on the scenario only works after renderer.render() was called; therefore, the
-    #   predicates need to return functions instead of directly plotting
+    # Hint: plotting further stuff on the scenario only works after renderer.render()
+    # was called; therefore, the predicates need to return functions instead of directly
+    # plotting
     all_draw_functions = []
     for i in range(nr_rules):
         rule_evaluator_list[i].update()

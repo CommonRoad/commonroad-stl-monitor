@@ -103,10 +103,6 @@ class RtamtStlMonitor:
         # avoid parsing the rule.
         self._spec = _create_spec(rule_str, output_type, predicates, dt)
 
-        # Flat copy spec and only recreate the online evaluator to avoid parsing the rule.
-        self._monitor = copy.copy(self._spec)
-        self._propositions = {}
-
     @property
     def dt(self) -> float:
         return self._dt
@@ -120,7 +116,6 @@ class RtamtStlMonitor:
     ):
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
-        self.collect_prop_rob(self._spec.ast.specs[0], self._propositions)
         return rob
 
     def collect_prop_rob(self, specs_node=None, prop_list=None):

@@ -6,7 +6,8 @@ from typing import Union, Dict, List, Tuple, Optional, Set
 
 import numba
 import numpy as np
-from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
+from commonroad.geometry.shape import Rectangle, Shape
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State
 from shapely import affinity
 
@@ -37,9 +38,9 @@ class StateLongitudinal:
     __slots__ = ["s", "v", "a", "j"]
 
     def __init__(self, **kwargs):
-        """ Elements of state vector are determined during runtime."""
-        for (field, value) in kwargs.items():
-            setattr(self, field, value)
+        """Elements of state vector are determined during runtime."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     @property
     def attributes(self) -> List[str]:
@@ -69,9 +70,9 @@ class StateLateral:
     __slots__ = ["d", "theta", "kappa", "kappa_dot"]
 
     def __init__(self, **kwargs):
-        """ Elements of state vector are determined during runtime."""
-        for (field, value) in kwargs.items():
-            setattr(self, field, value)
+        """Elements of state vector are determined during runtime."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     @property
     def attributes(self) -> List[str]:
@@ -199,7 +200,18 @@ class PredicateCache:
 
 
 class Vehicle:
-    def __init__(self, id, obstacle_type, vehicle_param, shape, states_cr, signal_series, ccosy_cache, lanelet_assignment, predicate_cache=None, road_network: "Optional[RoadNetwork]"=None, goal=None):
+    def __init__(
+        self,
+        id,
+        obstacle_type,
+        vehicle_param,
+        shape,
+        states_cr,
+        signal_series,
+        ccosy_cache,
+        lanelet_assignment: Dict[int, Set[int]],
+        predicate_cache=None,
+    ):
         self.id = id
         self.obstacle_type = obstacle_type
         self.vehicle_param = vehicle_param
@@ -235,11 +247,11 @@ class Vehicle:
         if curvi_state is None:
             return None
         state_lon, state_lat = curvi_state
-        s = state_lon.s
-        w = self.shape.width
-        l = self.shape.length
+        center_s = state_lon.s
+        width = self.shape.width
+        length = self.shape.length
         theta = state_lat.theta
-        rear_s = np.min(calc_s(s, w, l, theta))
+        rear_s = np.min(calc_s(center_s, width, length, theta))
         return rear_s
 
     def front_s(self, time_step: int, lane: Lane=None) -> float:
@@ -254,11 +266,11 @@ class Vehicle:
         if curvi_state is None:
             return None
         state_lon, state_lat = curvi_state
-        s = state_lon.s
-        w = self.shape.width
-        l = self.shape.length
+        center_s = state_lon.s
+        width = self.shape.width
+        length = self.shape.length
         theta = state_lat.theta
-        front_s = np.max(calc_s(s, w, l, theta))
+        front_s = np.max(calc_s(center_s, width, length, theta))
         return front_s
 
     def left_d(self, time_step: int, lane: Lane=None) -> float:
@@ -312,7 +324,7 @@ class Vehicle:
         states = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         return states[0] if states is not None else None
 
-    def occupancy_at_time_step(self, time_step):
+    def occupancy_at_time_step(self, time_step) -> Rectangle:
         state = self.states_cr[time_step]
         orientation = state.orientation
         shape = self.shape.rotate_translate_local(state.position,
@@ -489,7 +501,8 @@ class ControlledVehicle(Vehicle):
 
 class DynamicObstacleVehicle(Vehicle):
     """
-    Representation of a vehicle with state and input profiles and other information for complete simulation horizon
+    Vehicle with state and input profiles and other information for complete
+    simulation horizon.
     """
     def __init__(self, obstacle: DynamicObstacle, ccosy_cache: CurvilinearStateManager, vehicle_param, predicate_cache=None, road_network=None, goal=None):
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()

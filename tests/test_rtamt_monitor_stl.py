@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from unittest import TestCase
 
+from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
+from crmonitor.rule.rule_node import IOType
 
 @dataclass
 class DummyPredicate:
