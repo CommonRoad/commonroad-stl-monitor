@@ -3,7 +3,7 @@ from typing import List, Set, Dict, Union
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
 from commonroad_dc.geometry.util import chaikins_corner_cutting, resample_polyline
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
 import commonroad_dc.pycrccosy as pycrccosy
 
 from scipy.interpolate import splprep, splev
