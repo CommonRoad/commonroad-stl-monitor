@@ -44,9 +44,8 @@ class TestPositionPredicates(unittest.TestCase):
         self.config["d_sl"] = 1.0
 
     def testStopLineInFront(self):
-        scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-1_1_T-1.xml")
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
+            lanelet_assignment=True)
         # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")).open(
         #         lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
@@ -67,12 +66,12 @@ class TestPositionPredicates(unittest.TestCase):
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
             print(sol_monitor_2)
 
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+
     def testOnIncomingLeftOf(self):
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
+                str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -93,14 +92,12 @@ class TestPositionPredicates(unittest.TestCase):
             )
             print(sol_monitor_2)
 
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+
     def testInIntersectionConflictArea(self):
-        # scenario, _ = CommonRoadFileReader(str("../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml")).open(
-        #         lanelet_assignment=True)
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
+            str("../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -124,6 +121,8 @@ class TestPositionPredicates(unittest.TestCase):
             )
             rob.append(sol_monitor_2)
             print(sol_monitor_2)
+
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
         # fig = plt.figure()
         # ax = fig.gca()
         # ax.plot(range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, 'b-')
@@ -140,8 +139,8 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testOnLaneletWithTypeIntersection(self):
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestTurnRight-1_1_T-1.xml")
-        ).open(lanelet_assignment=True)
+            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")).open(
+                lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
@@ -154,6 +153,9 @@ class TestPositionPredicates(unittest.TestCase):
 
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
             print(sol_monitor_2)
+
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+
 
     def testOnOncomOf(self):
         scenario, _ = CommonRoadFileReader(
@@ -183,3 +185,5 @@ class TestPositionPredicates(unittest.TestCase):
                 world, time, [target_vehicle.id, ego_vehicle.id]
             )
             print(sol_monitor_2)
+
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)

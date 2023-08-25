@@ -55,3 +55,6 @@ class TestPriorityPredicates(unittest.TestCase):
                 world, time, [ego_vehicle.id, target_vehicle.id]
             )
             print(sol_monitor_2)
+
+            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+
