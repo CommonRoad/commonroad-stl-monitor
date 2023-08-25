@@ -211,6 +211,8 @@ class Vehicle:
         ccosy_cache,
         lanelet_assignment: Dict[int, Set[int]],
         predicate_cache=None,
+        road_network: "Optional[RoadNetwork]" = None,
+        goal=None
     ):
         self.id = id
         self.obstacle_type = obstacle_type
