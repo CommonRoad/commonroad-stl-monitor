@@ -337,12 +337,13 @@ class RoadNetwork:
     Representation of the complete road network of a CommonRoad scenario abstracted to lanes
     """
 
-    def __init__(self, lanelet_network: LaneletNetwork, road_network_param: Dict):
+    def __init__(self, lanelet_network: LaneletNetwork, road_network_param: Dict, scenario_type="interstate"):
         """
         :param lanelet_network: CommonRoad lanelet network
         :param road_network_param: dictionary with parameters for the road network
         """
         self.lanelet_network = lanelet_network
+        self.scenario_type = scenario_type
         self.lanes = self._create_lanes(road_network_param)
         if len(lanelet_network.intersections) != 0:
             self.incoming = self._create_incoming_dict(lanelet_network)
