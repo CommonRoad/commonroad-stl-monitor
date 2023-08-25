@@ -111,7 +111,9 @@ class World:
                 params = config.get("intersection_road_network_param")
             else:
                 params = config.get("road_network_param")
-            road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
+            road_network = RoadNetwork(
+                scenario.lanelet_network, params, config.get("scenario")
+            )
         else:
             road_network = road_network
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
@@ -141,12 +143,20 @@ class World:
             ):
                 continue
             # only consider cars and prediction steps must larger than 2
-            if (obs.obstacle_type == ObstacleType.CAR) and (obs.prediction is not None) and (obs.prediction.final_time_step - obs.prediction.initial_time_step > 1):
+            if (
+                (obs.obstacle_type == ObstacleType.CAR)
+                and (obs.prediction is not None)
+                and (
+                    obs.prediction.final_time_step - obs.prediction.initial_time_step
+                    > 1
+                )
+            ):
                 # obs must not be static
                 if not cls.static_vehicle(obs):
                     cls.augment_state_acceleration_jerk(scenario.dt, obs)
                     curvi_cache, predicate_dict = cache.setdefault(
-                        str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict)))
+                        str(obs.obstacle_id),
+                        (dict(), defaultdict(partial(defaultdict, dict))),
                     )
                     try:
                         if config.get("scenario") == "intersection":
@@ -156,7 +166,7 @@ class World:
                                     CurvilinearStateManager(road_network, curvi_cache),
                                     others_params,
                                     PredicateCache(predicate_dict),
-                                    road_network
+                                    road_network,
                                 )
                             )
                         else:
@@ -166,12 +176,14 @@ class World:
                                     CurvilinearStateManager(road_network, curvi_cache),
                                     others_params,
                                     PredicateCache(predicate_dict),
-                                    road_network=None
+                                    road_network=None,
                                 )
                             )
                     except:
-                        print("Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s" % (
-                        obs.obstacle_id, scenario.scenario_id))
+                        print(
+                            "Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s"
+                            % (obs.obstacle_id, scenario.scenario_id)
+                        )
         return cls(vehicles, road_network, scenario, cache)
 
     @property
@@ -187,7 +199,12 @@ class World:
 
     @staticmethod
     def static_vehicle(dynamic_obstacles: "DynamicObstacle"):
-        velocity = np.array([state.velocity for state in dynamic_obstacles.prediction.trajectory.state_list])
+        velocity = np.array(
+            [
+                state.velocity
+                for state in dynamic_obstacles.prediction.trajectory.state_list
+            ]
+        )
         return all(velocity <= 0.001)
 
     @staticmethod

@@ -43,7 +43,7 @@ def plot_rule_robustness_course(
     rule_robustness_course: List[Tuple[int, float]],
     ax,
     plot_limits: Tuple[float, float],
-    rules: List[str]
+    rules: List[str],
 ):
     np_rule_robustness_course = np.array(rule_robustness_course)
     rob_values = np_rule_robustness_course[:, 1]
@@ -159,7 +159,7 @@ def plot_rule_visualization(
     flat_plot_rule_robustness_course: bool = True,
     scenario_plot_limits: Union[List[Union[int, float]], None] = None,
     flag_rule_conjunction: bool = False,
-    plot_scenario_legend: Optional[bool] = None
+    plot_scenario_legend: Optional[bool] = None,
 ):
     """
     Plotting the rule evaluation result
@@ -291,7 +291,7 @@ def plot_rule_visualization(
     rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.draw_occupancies = False
     rnd.draw_params.dynamic_obstacle.occupancy.draw_occupancies = False
     # rnd.draw_params.dynamic_obstacle.draw_shape = False
-    rnd.draw_params.dynamic_obstacle['show_label'] = True
+    rnd.draw_params.dynamic_obstacle["show_label"] = True
     scenario.draw(rnd)
 
     rnd.draw_params.dynamic_obstacle.draw_shape = True
@@ -301,7 +301,7 @@ def plot_rule_visualization(
         ego_color = TUMcolor.TUMblue.value
     else:
         ego_color = TUMcolor.TUMorange.value
-    ego_mark = 'x'
+    ego_mark = "x"
     rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.shape.facecolor = ego_color
     rnd.draw_params.dynamic_obstacle.vehicle_shape.occupancy.shape.edgecolor = ego_color
     ego_initial.draw(rnd)
@@ -316,8 +316,16 @@ def plot_rule_visualization(
         pos_x_initial.append(state.position[0])
         pos_y_initial.append(state.position[1])
 
-    rnd.ax.plot(pos_x_initial[time_step:], pos_y_initial[time_step:], color=ego_color,
-                marker=ego_mark, markersize=7.5, zorder=10000, linewidth=1.5, label='initial trajectory')
+    rnd.ax.plot(
+        pos_x_initial[time_step:],
+        pos_y_initial[time_step:],
+        color=ego_color,
+        marker=ego_mark,
+        markersize=7.5,
+        zorder=10000,
+        linewidth=1.5,
+        label="initial trajectory",
+    )
     # scenario.lanelet_network.draw(renderer, draw_params=general_draw_params)
     #
     # # plotting scenario and obstacles

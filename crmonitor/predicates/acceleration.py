@@ -49,6 +49,7 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
     the reference lane of the p-th one is smaller than a threshold (d_br) and the acceleration of the p-th vehicle is
     lower or equal to a threshold (a_br), the k-th vehicle causes the braking of the p-th vehicle.
     """
+
     predicate_name = AccelerationPredicates.CausesBrakingIntersection
     arity = 2
 
@@ -88,5 +89,7 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
         # calculate the longitudinal acceleration of the p-th vehicle
         a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
         rob_a = a_br - a_p
-        robustness = np.min([self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)])
+        robustness = np.min(
+            [self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)]
+        )
         return robustness

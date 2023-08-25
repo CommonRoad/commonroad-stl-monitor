@@ -12,8 +12,12 @@ from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
-from crmonitor.predicates.general import (PredInterstateBroadEnough, PredTurningLeft, PredTurningRight,
-                                          PredGoingStraight, )
+from crmonitor.predicates.general import (
+    PredInterstateBroadEnough,
+    PredTurningLeft,
+    PredTurningRight,
+    PredGoingStraight,
+)
 
 
 class TestGeneralPredicates(unittest.TestCase):
@@ -695,7 +699,6 @@ class TestGeneralPredicates(unittest.TestCase):
 
     # # TODO: debug going straight (compare with old, print lanelets ... )
     def test_going_straight(self):
-
         scenario, _ = CommonRoadFileReader(
             str(
                 "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
@@ -792,7 +795,6 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     def test_turning_right(self):
-
         scenario, _ = CommonRoadFileReader(
             str(
                 "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
@@ -886,7 +888,6 @@ class TestGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
     def test_turning_left(self):
-
         scenario, _ = CommonRoadFileReader(
             str(
                 "scenarios/test_intersection/DEU_Intersectionwithlightsandsigns-1_1_T-1.xml"
