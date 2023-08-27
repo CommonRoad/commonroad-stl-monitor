@@ -64,7 +64,6 @@ class TestTurning(unittest.TestCase):
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-
     def testGoingStraight(self):
         scenario, _ = CommonRoadFileReader(
             str(
@@ -81,4 +80,3 @@ class TestTurning(unittest.TestCase):
             sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-

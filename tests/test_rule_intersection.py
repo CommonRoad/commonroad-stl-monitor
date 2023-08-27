@@ -44,7 +44,9 @@ class RuleTest(unittest.TestCase):
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(31)
-        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, "R_IN1")
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, "R_IN1"
+        )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, RuleNode))
         self.assertEqual(len(rule.children), 4)
@@ -72,7 +74,9 @@ class RuleTest(unittest.TestCase):
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
-        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, "META_1")
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, "META_1"
+        )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
         rule_robustness = list()
@@ -97,7 +101,9 @@ class RuleTest(unittest.TestCase):
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
-        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, "R_IN3")
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, "R_IN3"
+        )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
         rule_robustness = list()
@@ -128,7 +134,9 @@ class RuleTest(unittest.TestCase):
         world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
-        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, "R_IN4")
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, "R_IN4"
+        )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
         rule_robustness = list()

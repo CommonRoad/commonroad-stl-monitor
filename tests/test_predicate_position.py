@@ -90,19 +90,21 @@ class TestPositionPredicates(unittest.TestCase):
             rob.append(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-        fig = plt.figure()
-        ax = fig.gca()
-        ax.plot(range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, 'b-')
-        for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            if rob[time] <= 0:
-                ax.plot(time, rob[time], "rx")
-            else:
-                ax.plot(time, rob[time], "g.")
-        ax.plot([24, 24], [-1, 1], 'black')
-        ax.set_ylim([-1, 1])
-        ax.grid(True)
-        ax.set_title('in_intersection_conflict_area__a1_a0')
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.gca()
+        # ax.plot(
+        #     range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, "b-"
+        # )
+        # for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
+        #     if rob[time] <= 0:
+        #         ax.plot(time, rob[time], "rx")
+        #     else:
+        #         ax.plot(time, rob[time], "g.")
+        # ax.plot([24, 24], [-1, 1], "black")
+        # ax.set_ylim([-1, 1])
+        # ax.grid(True)
+        # ax.set_title("in_intersection_conflict_area__a1_a0")
+        # plt.show()
 
     def testOnLaneletWithTypeIntersection(self):
         scenario, _ = CommonRoadFileReader(

@@ -37,4 +37,3 @@ class TestRtamtStlMonitor(TestCase):
 
         rob = mon.evaluate_monitor_online(5, [("predicate", -1.0)])
         self.assertGreater(0.0, rob)
-
