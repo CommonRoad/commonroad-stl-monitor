@@ -142,48 +142,53 @@ class World:
                 )
             ):
                 continue
-            # only consider cars and prediction steps must larger than 2
-            if (
-                (obs.obstacle_type == ObstacleType.CAR)
-                and (obs.prediction is not None)
-                and (
-                    obs.prediction.final_time_step - obs.prediction.initial_time_step
-                    > 1
-                )
-            ):
+            if config.get("scenario") == "intersection":
+                # only consider cars and prediction steps must larger than 2
                 # obs must not be static
-                if not cls.static_vehicle(obs):
+                if (
+                        (obs.obstacle_type == ObstacleType.CAR)
+                        and (obs.prediction is not None)
+                        and (
+                        obs.prediction.final_time_step - obs.prediction.initial_time_step
+                        > 1
+                        )
+                        and (not cls.static_vehicle(obs))
+                ):
                     cls.augment_state_acceleration_jerk(scenario.dt, obs)
                     curvi_cache, predicate_dict = cache.setdefault(
                         str(obs.obstacle_id),
                         (dict(), defaultdict(partial(defaultdict, dict))),
                     )
                     try:
-                        if config.get("scenario") == "intersection":
-                            vehicles.add(
-                                DynamicObstacleVehicle(
-                                    obs,
-                                    CurvilinearStateManager(road_network, curvi_cache),
-                                    others_params,
-                                    PredicateCache(predicate_dict),
-                                    road_network,
-                                )
+                        vehicles.add(
+                            DynamicObstacleVehicle(
+                                obs,
+                                CurvilinearStateManager(road_network, curvi_cache),
+                                others_params,
+                                PredicateCache(predicate_dict),
+                                road_network,
                             )
-                        else:
-                            vehicles.add(
-                                DynamicObstacleVehicle(
-                                    obs,
-                                    CurvilinearStateManager(road_network, curvi_cache),
-                                    others_params,
-                                    PredicateCache(predicate_dict),
-                                    road_network=None,
-                                )
-                            )
+                        )
                     except:
                         print(
                             "Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s"
                             % (obs.obstacle_id, scenario.scenario_id)
                         )
+            else:
+                cls.augment_state_acceleration_jerk(scenario.dt, obs)
+                curvi_cache, predicate_dict = cache.setdefault(
+                    str(obs.obstacle_id),
+                    (dict(), defaultdict(partial(defaultdict, dict))),
+                )
+                vehicles.add(
+                    DynamicObstacleVehicle(
+                        obs,
+                        CurvilinearStateManager(road_network, curvi_cache),
+                        others_params,
+                        PredicateCache(predicate_dict),
+                        road_network=None,
+                    )
+                )
         return cls(vehicles, road_network, scenario, cache)
 
     @property
