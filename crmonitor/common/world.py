@@ -146,13 +146,14 @@ class World:
                 # only consider cars and prediction steps must larger than 2
                 # obs must not be static
                 if (
-                        (obs.obstacle_type == ObstacleType.CAR)
-                        and (obs.prediction is not None)
-                        and (
-                        obs.prediction.final_time_step - obs.prediction.initial_time_step
+                    (obs.obstacle_type == ObstacleType.CAR)
+                    and (obs.prediction is not None)
+                    and (
+                        obs.prediction.final_time_step
+                        - obs.prediction.initial_time_step
                         > 1
-                        )
-                        and (not cls.static_vehicle(obs))
+                    )
+                    and (not cls.static_vehicle(obs))
                 ):
                     cls.augment_state_acceleration_jerk(scenario.dt, obs)
                     curvi_cache, predicate_dict = cache.setdefault(
