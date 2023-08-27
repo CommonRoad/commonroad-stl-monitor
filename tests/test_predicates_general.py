@@ -15,9 +15,6 @@ from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.general import (
     PredInterstateBroadEnough,
-    PredTurningLeft,
-    PredTurningRight,
-    PredGoingStraight,
 )
 
 

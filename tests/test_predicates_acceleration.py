@@ -25,7 +25,7 @@ class TestPriorityPredicates(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
 

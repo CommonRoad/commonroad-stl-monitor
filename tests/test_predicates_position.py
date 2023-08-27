@@ -31,7 +31,7 @@ class TestPositionPredicates(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(
             str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -50,7 +50,7 @@ class TestPositionPredicates(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         road_network = RoadNetwork(
             scenario.lanelet_network, self.config.get("road_network_param")
         )
@@ -74,7 +74,7 @@ class TestPositionPredicates(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         target_vehicle = world.vehicle_by_id(30)
         rob = list()
@@ -110,7 +110,7 @@ class TestPositionPredicates(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(
             str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         for time in range(ego_vehicle.end_time + 1):
             pred = PredOnLaneletWithTypeIntersection(self.config)
@@ -126,7 +126,7 @@ class TestPositionPredicates(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(32)
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):

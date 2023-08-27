@@ -45,7 +45,7 @@ class TestPriorityPredicates(unittest.TestCase):
         scenario, _ = CommonRoadFileReader(
             str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
 
         pred = PredAtTrafficSignStop(self.config)
@@ -128,16 +128,14 @@ class TestPriorityPredicates(unittest.TestCase):
             initial_shape_lanelet_ids={1},
         )
         scenario.add_objects(dynamic_obstacle)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(dynamic_obstacle_id)
 
         pred = PredRelevantTrafficLight(self.config)
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
-            print(sol_monitor_1)
 
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
@@ -147,7 +145,7 @@ class TestPriorityPredicates(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
 

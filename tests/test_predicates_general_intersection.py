@@ -36,7 +36,7 @@ class TestTurning(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -53,7 +53,7 @@ class TestTurning(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -70,7 +70,7 @@ class TestTurning(unittest.TestCase):
                 "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
             )
         ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
