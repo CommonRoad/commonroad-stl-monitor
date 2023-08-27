@@ -6,9 +6,6 @@ from typing import Callable, Dict, List, Optional, Tuple
 import matplotlib.colors
 import numpy as np
 from commonroad.common.util import subtract_orientations
-from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.lanelet import LaneletType, LineMarking
-from commonroad.scenario.traffic_sign import TrafficLightState
 from matplotlib import pyplot as plt
 
 from crmonitor.common.helper import (

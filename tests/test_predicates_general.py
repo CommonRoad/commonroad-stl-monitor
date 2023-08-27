@@ -6,7 +6,8 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
-from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.obstacle import ObstacleType
+from commonroad.scenario.state import CustomState
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
@@ -250,10 +251,10 @@ class TestGeneralPredicates(unittest.TestCase):
 
         # ego vehicle
         cr_state_list_ego = {
-            0: State(position=[0, 0], time_step=0, orientation=0, velocity=1),
-            1: State(position=[10, 0], time_step=1, orientation=0, velocity=1),
-            2: State(position=[20, 0], time_step=2, orientation=0, velocity=1),
-            3: State(position=[30, 16], time_step=3, orientation=0, velocity=1),
+            0: CustomState(position=[0, 0], time_step=0, orientation=0, velocity=1),
+            1: CustomState(position=[10, 0], time_step=1, orientation=0, velocity=1),
+            2: CustomState(position=[20, 0], time_step=2, orientation=0, velocity=1),
+            3: CustomState(position=[30, 16], time_step=3, orientation=0, velocity=1),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {4}, 3: {4}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")

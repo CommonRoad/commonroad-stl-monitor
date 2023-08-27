@@ -11,12 +11,8 @@ from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.state import CustomState
 from commonroad.scenario.trajectory import Trajectory
 from commonroad.prediction.prediction import TrajectoryPrediction
-from commonroad.visualization.mp_renderer import MPRenderer
-import matplotlib.pyplot as plt
 
 from crmonitor.common.helper import load_yaml
-from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle, CurvilinearStateManager
 from crmonitor.common.world import World
 from crmonitor.predicates.priority import (  # not covered
     PredRelevantTrafficLight,  # not covered
@@ -43,6 +39,7 @@ class TestPriorityPredicates(unittest.TestCase):
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
+        self.config["scenario"] = "intersection"
 
     def testAtTrafficSign(self):
         scenario, _ = CommonRoadFileReader(
@@ -54,9 +51,7 @@ class TestPriorityPredicates(unittest.TestCase):
         pred = PredAtTrafficSignStop(self.config)
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
-            print(sol_monitor_1)
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
@@ -133,17 +128,7 @@ class TestPriorityPredicates(unittest.TestCase):
             initial_shape_lanelet_ids={1},
         )
         scenario.add_objects(dynamic_obstacle)
-        # plt.figure(figsize=(25, 10))
-        # rnd = MPRenderer()
-        # rnd.draw_params.time_begin = 2
-        # scenario.draw(rnd)
-        # rnd.render()
-        # plt.show()
-
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
-        )
         ego_vehicle = world.vehicle_by_id(dynamic_obstacle_id)
 
         pred = PredRelevantTrafficLight(self.config)
@@ -163,11 +148,6 @@ class TestPriorityPredicates(unittest.TestCase):
             )
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
-        )
-        # ego_vehicle = world.vehicle_by_id(32)
-        # target_vehicle = world.vehicle_by_id(31)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
 
@@ -176,11 +156,9 @@ class TestPriorityPredicates(unittest.TestCase):
             sol_monitor_1 = pred.evaluate_boolean(
                 world, time, [ego_vehicle.id, target_vehicle.id]
             )
-            print(sol_monitor_1)
 
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [ego_vehicle.id, target_vehicle.id]
             )
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)

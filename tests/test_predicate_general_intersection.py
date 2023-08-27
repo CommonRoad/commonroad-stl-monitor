@@ -28,6 +28,7 @@ class TestTurning(unittest.TestCase):
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
         self.config["d_sl"] = 1.0
+        self.config["scenario"] = "intersection"
 
     def testTurningRight(self):
         scenario, _ = CommonRoadFileReader(
@@ -36,23 +37,15 @@ class TestTurning(unittest.TestCase):
             )
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
-        )
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
-            print(time)
             pred_test = PredTurningRight(self.config)
             sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-            print(sol_monitor_1)
 
             sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-            print("-----------------------------------------")
 
     def testTurningLeft(self):
         scenario, _ = CommonRoadFileReader(
@@ -61,23 +54,16 @@ class TestTurning(unittest.TestCase):
             )
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
-        )
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
-            print(time)
             pred_test = PredTurningLeft(self.config)
             sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-            print(sol_monitor_1)
 
             sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-            print("-----------------------------------------")
 
     def testGoingStraight(self):
         scenario, _ = CommonRoadFileReader(
@@ -86,20 +72,13 @@ class TestTurning(unittest.TestCase):
             )
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
-        )
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
-            print(time)
             pred_test = PredGoingStraight(self.config)
             sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-            print(sol_monitor_1)
 
             sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-            print(sol_monitor_2)
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
-            print("-----------------------------------------")

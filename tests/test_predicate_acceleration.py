@@ -3,7 +3,6 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
@@ -18,6 +17,7 @@ class TestPriorityPredicates(unittest.TestCase):
         self.config["scale_rob"] = True
         self.config["d_br"] = 15.0
         self.config["a_br"] = -1.0
+        self.config["scenario"] = "intersection"
 
     def testCausesBrakingIntersection(self):
         scenario, _ = CommonRoadFileReader(
