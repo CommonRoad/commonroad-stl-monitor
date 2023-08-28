@@ -34,9 +34,7 @@ class TestPositionPredicates(unittest.TestCase):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
 
@@ -52,11 +50,10 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testOnIncomingLeftOf(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
@@ -74,11 +71,10 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testInIntersectionConflictArea(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         target_vehicle = world.vehicle_by_id(30)
@@ -115,9 +111,7 @@ class TestPositionPredicates(unittest.TestCase):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         for time in range(ego_vehicle.end_time + 1):
@@ -130,11 +124,10 @@ class TestPositionPredicates(unittest.TestCase):
 
     def testOnOncomOf(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(32)
         target_vehicle = world.vehicle_by_id(31)

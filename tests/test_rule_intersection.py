@@ -42,9 +42,7 @@ class RuleTest(unittest.TestCase):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = PropositionRuleEvaluator.create_from_config(
@@ -70,11 +68,10 @@ class RuleTest(unittest.TestCase):
         exp_violation_time_step = 20 + rtamt_further_time_range
         exp_violation_end_time_step = 27 + rtamt_further_time_range
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
@@ -98,11 +95,10 @@ class RuleTest(unittest.TestCase):
         exp_violation_time_step = 20 + rtamt_further_time_range
         exp_violation_end_time_step = 27 + rtamt_further_time_range
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
@@ -132,11 +128,10 @@ class RuleTest(unittest.TestCase):
         exp_violation_time_step = 20 + rtamt_further_time_range
         exp_violation_end_time_step = 27 + rtamt_further_time_range
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)

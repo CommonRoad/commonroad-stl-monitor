@@ -47,9 +47,7 @@ class TestPriorityPredicates(unittest.TestCase):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
 
@@ -64,9 +62,7 @@ class TestPriorityPredicates(unittest.TestCase):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(lanelet_assignment=True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
         dynamic_obstacle_initial_state = CustomState(
             position=np.array([5, 0.0]), velocity=15, orientation=0.0, time_step=0
         )
@@ -149,11 +145,10 @@ class TestPriorityPredicates(unittest.TestCase):
 
     def testSamePriority(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)

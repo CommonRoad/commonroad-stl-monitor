@@ -26,11 +26,10 @@ class TestTurning(unittest.TestCase):
 
     def testTurningRight(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
@@ -44,11 +43,10 @@ class TestTurning(unittest.TestCase):
 
     def testTurningLeft(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
@@ -62,11 +60,10 @@ class TestTurning(unittest.TestCase):
 
     def testGoingStraight(self):
         scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+            self.scenario_root_path,
+            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
         )
-        scenario, _ = CommonRoadFileReader(
-            scenario_file
-        ).open(True)
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
 
