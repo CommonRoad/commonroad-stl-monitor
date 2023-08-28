@@ -4,7 +4,7 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.obstacle import State, ObstacleType
+from commonroad.scenario.obstacle import ObstacleType
 
 import numpy as np
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -33,7 +33,7 @@ from crmonitor.predicates.priority import (  # not covered
 )
 
 
-class TestPriorityPredicates(unittest.TestCase):
+class TestIntersectionPriorityPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"

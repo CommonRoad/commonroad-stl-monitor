@@ -9,7 +9,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
 
 
-class TestAccelerationPredicates(unittest.TestCase):
+class TestIntersectionAccelerationPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
@@ -41,3 +41,8 @@ class TestAccelerationPredicates(unittest.TestCase):
             )
 
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+
+
+class TestInterstateAccelerationPredicates(unittest.TestCase):
+    def setUp(self) -> None:
+        pass
