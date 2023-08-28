@@ -1,3 +1,4 @@
+import os
 import unittest
 from pathlib import Path
 
@@ -13,6 +14,7 @@ class TestPriorityPredicates(unittest.TestCase):
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
+        self.scenario_root_path = root_path.parent / "scenarios"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
         self.config["d_br"] = 15.0
@@ -20,10 +22,11 @@ class TestPriorityPredicates(unittest.TestCase):
         self.config["scenario"] = "intersection"
 
     def testCausesBrakingIntersection(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
-            )
+            scenario_file
         ).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)

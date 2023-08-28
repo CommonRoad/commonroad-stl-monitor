@@ -1,3 +1,4 @@
+import os
 import unittest
 from pathlib import Path
 
@@ -21,15 +22,20 @@ from crmonitor.predicates.position import (
 class TestPositionPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+        root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
+        self.scenario_root_path = root_path.parent / "scenarios"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
         self.config["d_sl"] = 1.0
         self.config["scenario"] = "intersection"
 
     def testStopLineInFront(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+            scenario_file
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
@@ -45,15 +51,13 @@ class TestPositionPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testOnIncomingLeftOf(self):
-        scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.config)
-        road_network = RoadNetwork(
-            scenario.lanelet_network, self.config.get("road_network_param")
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
         )
+        scenario, _ = CommonRoadFileReader(
+            scenario_file
+        ).open(True)
+        world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
@@ -69,11 +73,12 @@ class TestPositionPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testInIntersectionConflictArea(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
+            scenario_file
+        ).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         target_vehicle = world.vehicle_by_id(30)
@@ -107,8 +112,11 @@ class TestPositionPredicates(unittest.TestCase):
         # plt.show()
 
     def testOnLaneletWithTypeIntersection(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+            scenario_file
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
@@ -121,11 +129,12 @@ class TestPositionPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testOnOncomOf(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-1_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
+            scenario_file
+        ).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(32)
         target_vehicle = world.vehicle_by_id(31)

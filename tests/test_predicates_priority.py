@@ -1,4 +1,4 @@
-import math
+import os
 import unittest
 from pathlib import Path
 
@@ -36,14 +36,19 @@ from crmonitor.predicates.priority import (  # not covered
 class TestPriorityPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+        root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
+        self.scenario_root_path = root_path.parent / "scenarios"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
         self.config["scenario"] = "intersection"
 
     def testAtTrafficSign(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
+            scenario_file
         ).open(lanelet_assignment=True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
@@ -56,9 +61,12 @@ class TestPriorityPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testRelevantTrafficLight(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str("../scenarios/test_intersection/DEU_TestRIN1-3_1_T-1.xml")
-        ).open(True)
+            scenario_file
+        ).open(lanelet_assignment=True)
         dynamic_obstacle_initial_state = CustomState(
             position=np.array([5, 0.0]), velocity=15, orientation=0.0, time_step=0
         )
@@ -140,11 +148,12 @@ class TestPriorityPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testSamePriority(self):
+        scenario_file = os.path.join(
+            self.scenario_root_path, "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
+        )
         scenario, _ = CommonRoadFileReader(
-            str(
-                "../scenarios/test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml"
-            )
-        ).open(lanelet_assignment=True)
+            scenario_file
+        ).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
