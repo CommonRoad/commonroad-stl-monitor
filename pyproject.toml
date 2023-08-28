@@ -17,6 +17,7 @@ commonroad-io = ">=2020"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2022.2.1"
 numba = "^0.56.0"
+commonroad-route-planner = ">=2022.3"
 
 [tool.poetry.group.test]
 optional = true
