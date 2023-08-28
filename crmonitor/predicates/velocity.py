@@ -323,7 +323,8 @@ class PredInStandStill(BasePredicateEvaluator):
 
         return self._scale_speed(
             min(
-                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v + self.config["standstill_error"],
+                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
+                + self.config["standstill_error"],
                 self.config["standstill_error"]
                 - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
                 - 1.0e-17,

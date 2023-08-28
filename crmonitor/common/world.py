@@ -1,3 +1,4 @@
+import copy
 import importlib.resources as pkg_resources
 import logging
 import shelve
@@ -9,8 +10,16 @@ from pathlib import Path
 from typing import Optional, Set, Union
 
 import numpy as np
-from commonroad.scenario.scenario import Scenario
-from commonroad.scenario.obstacle import ObstacleType, DynamicObstacle
+from commonroad.common.solution import PlanningProblemSolution, vehicle_parameters
+from commonroad.geometry.shape import Rectangle
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
+from commonroad.prediction.prediction import TrajectoryPrediction
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
+from commonroad.scenario.scenario import ObstacleType, Scenario
+from commonroad.scenario.trajectory import Trajectory
+from commonroad_dc.feasibility.solution_checker import (
+    _simulate_trajectory_if_input_vector,
+)
 
 import crmonitor
 from crmonitor.common.helper import create_other_vehicles_param, load_yaml
@@ -38,6 +47,44 @@ class World:
     scenario: Optional[Scenario] = None
     cache: Union[None, shelve.Shelf, dict] = None
 
+    @classmethod
+    def create_from_solution(
+        cls,
+        scenario: Scenario,
+        planning_problem: PlanningProblem,
+        planning_problem_solution: PlanningProblemSolution,
+    ):
+        """Create a rule evaluator to check a planning problem solution."""
+        pp_id = planning_problem.planning_problem_id
+        _, trajectory = _simulate_trajectory_if_input_vector(
+            PlanningProblemSet([planning_problem]),
+            planning_problem_solution,
+            scenario.dt,
+        )
+        # We have to remove the initial time step
+        trajectory = Trajectory(
+            trajectory.state_list[1].time_step, trajectory.state_list[1:]
+        )
+        shape = Rectangle(
+            length=vehicle_parameters[planning_problem_solution.vehicle_type].l,
+            width=vehicle_parameters[planning_problem_solution.vehicle_type].w,
+        )
+        prediction = TrajectoryPrediction(trajectory, shape=shape)
+        obstacle = DynamicObstacle(
+            # FIXME
+            obstacle_id=pp_id + 1000,
+            obstacle_type=ObstacleType.CAR,
+            obstacle_shape=shape,
+            initial_state=planning_problem.initial_state,
+            prediction=prediction,
+        )
+        scenario = copy.deepcopy(scenario)
+        scenario.add_objects(obstacle)
+        scenario.assign_obstacles_to_lanelets()
+        world = World.create_from_scenario(scenario)
+        ego_vehicle = world.vehicle_by_id(obstacle.obstacle_id)
+        return world, ego_vehicle
+
     def _warn_persistent_cache(self):
         if len(self.controlled_vehicle_ids) > 0 and isinstance(
             self.cache, shelve.Shelf
@@ -64,7 +111,9 @@ class World:
                 params = config.get("intersection_road_network_param")
             else:
                 params = config.get("road_network_param")
-            road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
+            road_network = RoadNetwork(
+                scenario.lanelet_network, params, config.get("scenario")
+            )
         else:
             road_network = road_network
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
@@ -74,7 +123,17 @@ class World:
             cache = shelve.open(str(cache_file), writeback=True)
         else:
             cache = {}
-        for obs in scenario.dynamic_obstacles:
+        for obs in filter(
+            lambda o: o.obstacle_type
+            in [
+                ObstacleType.CAR,
+                ObstacleType.BUS,
+                ObstacleType.TRUCK,
+                ObstacleType.MOTORCYCLE,
+                ObstacleType.TAXI,
+            ],
+            scenario.dynamic_obstacles,
+        ):
             # Skip obstacles that go out of the road
             if any(
                 map(
@@ -83,38 +142,54 @@ class World:
                 )
             ):
                 continue
-            # only consider cars and prediction steps must larger than 2
-            if (obs.obstacle_type == ObstacleType.CAR) and (obs.prediction is not None) and (obs.prediction.final_time_step - obs.prediction.initial_time_step > 1):
+            if config.get("scenario") == "intersection":
+                # only consider cars and prediction steps must larger than 2
                 # obs must not be static
-                if not cls.static_vehicle(obs):
+                if (
+                    (obs.obstacle_type == ObstacleType.CAR)
+                    and (obs.prediction is not None)
+                    and (
+                        obs.prediction.final_time_step
+                        - obs.prediction.initial_time_step
+                        > 1
+                    )
+                    and (not cls.static_vehicle(obs))
+                ):
                     cls.augment_state_acceleration_jerk(scenario.dt, obs)
                     curvi_cache, predicate_dict = cache.setdefault(
-                        str(obs.obstacle_id), (dict(), defaultdict(partial(defaultdict, dict)))
+                        str(obs.obstacle_id),
+                        (dict(), defaultdict(partial(defaultdict, dict))),
                     )
                     try:
-                        if config.get("scenario") == "intersection":
-                            vehicles.add(
-                                DynamicObstacleVehicle(
-                                    obs,
-                                    CurvilinearStateManager(road_network, curvi_cache),
-                                    others_params,
-                                    PredicateCache(predicate_dict),
-                                    road_network
-                                )
+                        vehicles.add(
+                            DynamicObstacleVehicle(
+                                obs,
+                                CurvilinearStateManager(road_network, curvi_cache),
+                                others_params,
+                                PredicateCache(predicate_dict),
+                                road_network,
                             )
-                        else:
-                            vehicles.add(
-                                DynamicObstacleVehicle(
-                                    obs,
-                                    CurvilinearStateManager(road_network, curvi_cache),
-                                    others_params,
-                                    PredicateCache(predicate_dict),
-                                    road_network=None
-                                )
-                            )
+                        )
                     except:
-                        print("Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s" % (
-                        obs.obstacle_id, scenario.scenario_id))
+                        print(
+                            "Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s"
+                            % (obs.obstacle_id, scenario.scenario_id)
+                        )
+            else:
+                cls.augment_state_acceleration_jerk(scenario.dt, obs)
+                curvi_cache, predicate_dict = cache.setdefault(
+                    str(obs.obstacle_id),
+                    (dict(), defaultdict(partial(defaultdict, dict))),
+                )
+                vehicles.add(
+                    DynamicObstacleVehicle(
+                        obs,
+                        CurvilinearStateManager(road_network, curvi_cache),
+                        others_params,
+                        PredicateCache(predicate_dict),
+                        road_network=None,
+                    )
+                )
         return cls(vehicles, road_network, scenario, cache)
 
     @property
@@ -130,7 +205,12 @@ class World:
 
     @staticmethod
     def static_vehicle(dynamic_obstacles: "DynamicObstacle"):
-        velocity = np.array([state.velocity for state in dynamic_obstacles.prediction.trajectory.state_list])
+        velocity = np.array(
+            [
+                state.velocity
+                for state in dynamic_obstacles.prediction.trajectory.state_list
+            ]
+        )
         return all(velocity <= 0.001)
 
     @staticmethod

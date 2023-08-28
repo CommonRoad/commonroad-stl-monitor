@@ -13,6 +13,7 @@ from commonroad.scenario.traffic_sign import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
+from scipy.integrate import odeint
 from vehicleDynamics_ST import vehicleDynamics_ST
 
 from crmonitor.common.helper import *

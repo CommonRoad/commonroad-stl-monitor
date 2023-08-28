@@ -15,13 +15,9 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.monitor.rule import (
-    AllNode,
-    ExistNode,
-    PredicateNode,
-    RuleNode,
-    parse_rule,
-)
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
+from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleNode
 from tests.util import parallel_lanes
 
 logging.basicConfig(
@@ -40,6 +36,9 @@ class RuleTest(unittest.TestCase):
         rules_path = root_path / "traffic_rules_rtamt.yaml"
         self.traffic_rules = load_yaml(str(rules_path))
         self.scenario_root_path = root_path.parent / "scenarios"
+        self.parse_rule = RuleFactory(
+            PredicateFactory(self.traffic_rules["traffic_rules_param"])
+        ).parse_rule
 
     def test_single_vehicle(self):
         lanelet_network = LaneletNetwork()
@@ -92,7 +91,7 @@ class RuleTest(unittest.TestCase):
         world = World({ego_vehicle, other_vehicle_1}, road_network)
 
         rule_str = "A a1: (in_front_of__a0_a1)"
-        rule = parse_rule(rule_str, {"traffic_rules_param": {}})
+        rule = self.parse_rule(rule_str)
         rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = rule_eval.evaluate()
         preds = rule_eval.get_predicates()
@@ -100,7 +99,7 @@ class RuleTest(unittest.TestCase):
         np.testing.assert_allclose(np.array(list(preds.values())), 1.0)
 
         rule_str = "E a1: (in_front_of__a0_a1)"
-        rule = parse_rule(rule_str, {"traffic_rules_param": {}})
+        rule = self.parse_rule(rule_str)
         rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = []
         for i in range(ego_vehicle.end_time + 1):
@@ -312,7 +311,7 @@ class RuleTest(unittest.TestCase):
         for ego_id, exp_violation in exp_floating:
             world = World.create_from_scenario(scenario)
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G1")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_G1")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, AllNode))
             self.assertEqual(len(rule.children), 1)
@@ -383,7 +382,7 @@ class RuleTest(unittest.TestCase):
         }
         rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
-        rule = parse_rule(rule_str, self.traffic_rules, name="UnnecessaryBraking")
+        rule = self.parse_rule(rule_str, name="UnnecessaryBraking")
         self.assertTrue(isinstance(rule, RuleNode))
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
@@ -454,7 +453,7 @@ class RuleTest(unittest.TestCase):
         world = World.create_from_scenario(scenario)
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G3")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_G3")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleNode))
             self.assertEqual(len(rule.children), 4)
@@ -494,7 +493,7 @@ class RuleTest(unittest.TestCase):
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_G4")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_G4")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleNode))
             rule_robustness = []
@@ -539,7 +538,7 @@ class RuleTest(unittest.TestCase):
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I1")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_I1")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleNode))
             rule_robustness = []
@@ -689,7 +688,7 @@ class RuleTest(unittest.TestCase):
         for ego_id, exp_violation in exp_floating:
             world = World.create_from_scenario(scenario)
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I2")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_I2")
 
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
@@ -719,7 +718,7 @@ class RuleTest(unittest.TestCase):
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I3")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_I3")
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleNode))
             rule_robustness = []
@@ -779,7 +778,7 @@ class RuleTest(unittest.TestCase):
         for ego_id, exp_violation in exp_result.items():
             world = World.create_from_scenario(scenario)
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I4")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_I4")
 
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
@@ -814,7 +813,7 @@ class RuleTest(unittest.TestCase):
 
         for ego_id, exp_violation in exp_floating:
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle, "R_I5")
+            rule_eval = RuleEvaluator.create_from_config(world, ego_vehicle.id, "R_I5")
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
