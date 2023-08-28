@@ -9,7 +9,7 @@ from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
 
 
-class TestPriorityPredicates(unittest.TestCase):
+class TestAccelerationPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
