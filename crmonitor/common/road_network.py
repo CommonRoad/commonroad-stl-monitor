@@ -84,18 +84,29 @@ class Lane:
                 road_network_param=road_network_param,
             )
 
-            self._orientation = self._compute_orientation_from_polyline(
-                new_center_vertices
-            )
-            self._curvature = self._compute_curvature_from_polyline(new_center_vertices)
-            self._path_length = self._compute_path_length_from_polyline(
-                new_center_vertices
-            )
             if road_network_param.get("map_type") == "hand_draft":
+                self._orientation = self._compute_orientation_from_polyline(
+                    merged_lanelet.center_vertices
+                )
+                self._curvature = self._compute_curvature_from_polyline(
+                    merged_lanelet.center_vertices
+                )
+                self._path_length = self._compute_path_length_from_polyline(
+                    merged_lanelet.center_vertices
+                )
                 self._width = self._compute_width_from_lanalet_boundary(
                     merged_lanelet.left_vertices, merged_lanelet.right_vertices
                 )
             else:
+                self._orientation = self._compute_orientation_from_polyline(
+                    new_center_vertices
+                )
+                self._curvature = self._compute_curvature_from_polyline(
+                    new_center_vertices
+                )
+                self._path_length = self._compute_path_length_from_polyline(
+                    new_center_vertices
+                )
                 self._width = self._compute_width_from_lanalet_boundary(
                     new_left_vertices, new_right_vertices
                 )
