@@ -455,6 +455,54 @@ class Vehicle:
         )
         candidate_holder = route_planner.plan_routes()
         route = candidate_holder.retrieve_best_route_by_orientation()
+        n_refine = 0
+        while route is None and n_refine < 3:
+            extend_end_position = end_position + np.array(
+                [3.0 * np.cos(end_orientation), 3.0 * np.sin(end_orientation)]
+            )
+            initial_state_extend = copy.copy(initial_state)
+            if n_refine == 1:
+                extend_start_position = initial_state_extend.position + np.array(
+                    [
+                        1.0 * np.cos(end_orientation - np.pi / 2),
+                        1.0 * np.sin(end_orientation - np.pi / 2),
+                    ]
+                )
+                initial_state_extend.position = extend_start_position
+            elif n_refine == 2:
+                extend_start_position = initial_state_extend.position - np.array(
+                    [
+                        1.0 * np.cos(end_orientation - np.pi / 2),
+                        1.0 * np.sin(end_orientation - np.pi / 2),
+                    ]
+                )
+                initial_state_extend.position = extend_start_position
+            attributes = {
+                "time_step": Interval(start=end_time - 1, end=end_time + 1),
+                "position": Rectangle(
+                    length=1.0,
+                    width=1.0,
+                    center=extend_end_position,
+                    orientation=end_orientation,
+                ),
+                # + np.array([np.cos(end_orientation), np.sin(end_orientation)])),
+                "velocity": Interval(start=end_velocity, end=end_velocity + 1),
+                "orientation": AngleInterval(
+                    start=end_orientation - 0.1, end=end_orientation + 0.1
+                ),
+            }
+            end_state = CustomState(**attributes)
+            goal_region = GoalRegion(state_list=[end_state])
+            route_planner = RoutePlanner(
+                lanelet_network=road_network.lanelet_network,
+                state_initial=initial_state_extend,
+                goal_region=goal_region,
+                backend=RoutePlanner.Backend.NETWORKX,
+                reach_goal_state=False,
+            )
+            candidate_holder = route_planner.plan_routes()
+            route = candidate_holder.retrieve_best_route_by_orientation()
+            n_refine += 1
         # extend the route path:
         lanelets_leading_to_goal = route.list_ids_lanelets
         first_lanelet = route_planner.lanelet_network.find_lanelet_by_id(
