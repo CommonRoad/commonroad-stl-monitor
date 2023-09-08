@@ -1,3 +1,4 @@
+import copy
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -263,6 +264,8 @@ class Vehicle:
             self.lanelets_dir = None
             self.ref_path_lane = None
             self.lanelets_dir_center_vertices = None
+            self.lanelets_dir_left_vertices = None
+            self.lanelets_dir_right_vertices = None
             self.incoming_intersection = None
         else:
             # intersection scenario
@@ -270,6 +273,8 @@ class Vehicle:
                 self.lanelets_dir,
                 self.goal_region,
                 self.lanelets_dir_center_vertices,
+                self.lanelets_dir_left_vertices,
+                self.lanelets_dir_right_vertices,
             ) = self._initial_lanelets_dir(self.road_network, goal)
             self.incoming_intersection = self.road_network.find_incoming_intersection(
                 self.lanelets_dir
@@ -501,12 +506,26 @@ class Vehicle:
         center_vertices = road_network.lanelet_network.find_lanelet_by_id(
             lanelets_leading_to_goal[0]
         ).center_vertices
+        left_vertices = road_network.lanelet_network.find_lanelet_by_id(
+            lanelets_leading_to_goal[0]
+        ).left_vertices
+        right_vertices = road_network.lanelet_network.find_lanelet_by_id(
+            lanelets_leading_to_goal[0]
+        ).right_vertices
         for lanelet_id in lanelets_leading_to_goal[1:]:
             lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
             center_vertices = np.append(
                 center_vertices, lanelet.center_vertices, axis=0
             )
-        return lanelets_leading_to_goal, goal_region, center_vertices
+            left_vertices = np.append(left_vertices, lanelet.left_vertices, axis=0)
+            right_vertices = np.append(right_vertices, lanelet.right_vertices, axis=0)
+        return (
+            lanelets_leading_to_goal,
+            goal_region,
+            center_vertices,
+            left_vertices,
+            right_vertices,
+        )
 
     def _initial_ref_path_lane(self, road_network: RoadNetwork):
         lanes = list()
