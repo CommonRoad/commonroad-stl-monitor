@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
 
 import numpy as np
+import shapely.ops
 from commonroad.scenario.lanelet import LaneletType, LineMarking
 from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
 from ruamel.yaml.comments import CommentedMap
@@ -1438,17 +1439,25 @@ class PredOnOncomOf(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_target = world.vehicle_by_id(vehicle_ids[0])
         vehicle_ego = world.vehicle_by_id(vehicle_ids[1])
-        oncoming_lanelets_id = utils.get_oncoming(vehicle_ego, road_network)
-        incoming_target = utils.get_incoming(vehicle_target.lanelets_dir, road_network)
-        if (
-            len(
-                incoming_target.incoming_lanelets.intersection(
-                    set(oncoming_lanelets_id)
-                )
+        incoming_target = vehicle_target.incoming_intersection
+        incoming_ego = vehicle_ego.incoming_intersection
+        target_polygon = list()
+        for straight_suc in incoming_target.successors_straight:
+            lanelet_straight = road_network.lanelet_network.find_lanelet_by_id(
+                straight_suc
             )
-            == 0
-        ):
-            rob = -1
+            target_polygon.append(lanelet_straight.polygon.shapely_object)
+        target_polygon = shapely.ops.unary_union(target_polygon)
+        ego_polygon = list()
+        for straight_suc in incoming_ego.successors_straight:
+            lanelet_straight = road_network.lanelet_network.find_lanelet_by_id(
+                straight_suc
+            )
+            ego_polygon.append(lanelet_straight.polygon.shapely_object)
+        ego_polygon = shapely.ops.unary_union(ego_polygon)
+        intersection_polygon = target_polygon.intersection(ego_polygon)
+        if intersection_polygon.type == "Polygon" and not intersection_polygon.is_empty:
+            rob = -1.0
         else:
-            rob = 1
+            rob = 1.0
         return rob
