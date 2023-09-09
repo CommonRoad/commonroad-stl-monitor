@@ -9,7 +9,7 @@ import numba
 import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.trajectory import State
+from commonroad.scenario.trajectory import State, InitialState
 from shapely import affinity
 
 from crmonitor.common.road_network import Lane, RoadNetwork
@@ -271,7 +271,7 @@ class Vehicle:
             # intersection scenario
             (
                 self.lanelets_dir,
-                self.goal_region,
+                self.ref_path_lane,
                 self.lanelets_dir_center_vertices,
                 self.lanelets_dir_left_vertices,
                 self.lanelets_dir_right_vertices,
@@ -279,7 +279,6 @@ class Vehicle:
             self.incoming_intersection = self.road_network.find_incoming_intersection(
                 self.lanelets_dir
             )
-            self.ref_path_lane = self._initial_ref_path_lane(self.road_network)
 
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
@@ -444,8 +443,58 @@ class Vehicle:
                     start=end_orientation - 0.1, end=end_orientation + 0.1
                 ),
             }
-            end_state = CustomState(**attributes)
-            goal_region = GoalRegion(state_list=[end_state])
+        else:
+            initial_state = goal["initial_state"]
+            attributes = goal["attributes"]
+        route = self._route_planner(initial_state, attributes, road_network)
+        replanned_route = self._replan_route(
+            initial_state, end_position, end_orientation, attributes, road_network
+        )
+        if route is None:
+            route = next(replanned_route)
+        lanelets_leading_to_goal = self._extend_route_plan(
+            route.list_ids_lanelets, road_network
+        )
+        ref_path_lanes = self._initial_ref_path_lane(
+            road_network, lanelets_leading_to_goal
+        )
+        while len(ref_path_lanes) == 0 and route is not None:
+            route = next(replanned_route)
+            lanelets_leading_to_goal = self._extend_route_plan(
+                route.list_ids_lanelets, road_network
+            )
+            ref_path_lanes = self._initial_ref_path_lane(
+                road_network, lanelets_leading_to_goal
+            )
+        ref_path_lane = ref_path_lanes[0]
+        center_vertices = road_network.lanelet_network.find_lanelet_by_id(
+            lanelets_leading_to_goal[0]
+        ).center_vertices
+        left_vertices = road_network.lanelet_network.find_lanelet_by_id(
+            lanelets_leading_to_goal[0]
+        ).left_vertices
+        right_vertices = road_network.lanelet_network.find_lanelet_by_id(
+            lanelets_leading_to_goal[0]
+        ).right_vertices
+        for lanelet_id in lanelets_leading_to_goal[1:]:
+            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+            center_vertices = np.append(
+                center_vertices, lanelet.center_vertices, axis=0
+            )
+            left_vertices = np.append(left_vertices, lanelet.left_vertices, axis=0)
+            right_vertices = np.append(right_vertices, lanelet.right_vertices, axis=0)
+        return (
+            lanelets_leading_to_goal,
+            ref_path_lane,
+            center_vertices,
+            left_vertices,
+            right_vertices,
+        )
+
+    @staticmethod
+    def _route_planner(initial_state, attributes, road_network: RoadNetwork):
+        end_state = CustomState(**attributes)
+        goal_region = GoalRegion(state_list=[end_state])
         route_planner = RoutePlanner(
             lanelet_network=road_network.lanelet_network,
             state_initial=initial_state,
@@ -455,57 +504,75 @@ class Vehicle:
         )
         candidate_holder = route_planner.plan_routes()
         route = candidate_holder.retrieve_best_route_by_orientation()
-        n_refine = 0
-        while route is None and n_refine < 3:
-            extend_end_position = end_position + np.array(
-                [3.0 * np.cos(end_orientation), 3.0 * np.sin(end_orientation)]
-            )
-            initial_state_extend = copy.copy(initial_state)
-            if n_refine == 1:
-                extend_start_position = initial_state_extend.position + np.array(
-                    [
-                        1.0 * np.cos(end_orientation - np.pi / 2),
-                        1.0 * np.sin(end_orientation - np.pi / 2),
-                    ]
-                )
-                initial_state_extend.position = extend_start_position
-            elif n_refine == 2:
-                extend_start_position = initial_state_extend.position - np.array(
-                    [
-                        1.0 * np.cos(end_orientation - np.pi / 2),
-                        1.0 * np.sin(end_orientation - np.pi / 2),
-                    ]
-                )
-                initial_state_extend.position = extend_start_position
-            attributes = {
-                "time_step": Interval(start=end_time - 1, end=end_time + 1),
-                "position": Rectangle(
+        return route
+
+    def _replan_route(
+        self,
+        initial_state: InitialState,
+        end_position,
+        end_orientation,
+        attributes,
+        road_network,
+    ):
+        right_start_position = initial_state.position + np.array(
+            [
+                1.0 * np.cos(initial_state.orientation - np.pi / 2),
+                1.0 * np.sin(initial_state.orientation - np.pi / 2),
+            ]
+        )
+        right_initial_state = copy.copy(initial_state)
+        right_initial_state.position = right_start_position
+        left_start_position = initial_state.position - np.array(
+            [
+                1.0 * np.cos(initial_state.orientation - np.pi / 2),
+                1.0 * np.sin(initial_state.orientation - np.pi / 2),
+            ]
+        )
+        left_initial_state = copy.copy(initial_state)
+        left_initial_state.position = left_start_position
+        right_end_position = end_position + np.array(
+            [
+                1.0 * np.cos(end_orientation - np.pi / 2),
+                1.0 * np.sin(end_orientation - np.pi / 2),
+            ]
+        )
+        left_end_position = end_position - np.array(
+            [
+                1.0 * np.cos(end_orientation - np.pi / 2),
+                1.0 * np.sin(end_orientation - np.pi / 2),
+            ]
+        )
+        initial_state_candidates = [
+            initial_state,
+            right_initial_state,
+            left_initial_state,
+        ]
+        end_position_candidates = [end_position, right_end_position, left_end_position]
+        for i in range(len(initial_state_candidates)):
+            for j in range(len(end_position_candidates)):
+                if i == 0 and j == 0:
+                    continue
+                attributes["position"] = Rectangle(
                     length=1.0,
                     width=1.0,
-                    center=extend_end_position,
+                    center=end_position_candidates[j],
                     orientation=end_orientation,
-                ),
-                # + np.array([np.cos(end_orientation), np.sin(end_orientation)])),
-                "velocity": Interval(start=end_velocity, end=end_velocity + 1),
-                "orientation": AngleInterval(
-                    start=end_orientation - 0.1, end=end_orientation + 0.1
-                ),
-            }
-            end_state = CustomState(**attributes)
-            goal_region = GoalRegion(state_list=[end_state])
-            route_planner = RoutePlanner(
-                lanelet_network=road_network.lanelet_network,
-                state_initial=initial_state_extend,
-                goal_region=goal_region,
-                backend=RoutePlanner.Backend.NETWORKX,
-                reach_goal_state=False,
-            )
-            candidate_holder = route_planner.plan_routes()
-            route = candidate_holder.retrieve_best_route_by_orientation()
-            n_refine += 1
+                )
+                route = self._route_planner(
+                    initial_state=initial_state_candidates[i],
+                    attributes=attributes,
+                    road_network=road_network,
+                )
+                if route is not None:
+                    yield route
+        yield None
+
+    @staticmethod
+    def _extend_route_plan(
+        lanelets_leading_to_goal, road_network: RoadNetwork
+    ) -> List[int]:
         # extend the route path:
-        lanelets_leading_to_goal = route.list_ids_lanelets
-        first_lanelet = route_planner.lanelet_network.find_lanelet_by_id(
+        first_lanelet = road_network.lanelet_network.find_lanelet_by_id(
             lanelets_leading_to_goal[0]
         )
         if first_lanelet.predecessor:
@@ -516,7 +583,7 @@ class Vehicle:
                 min_offset = np.inf
                 for predecessor_lanelet_id in first_lanelet.predecessor:
                     predecessor_lanelet = (
-                        route_planner.lanelet_network.find_lanelet_by_id(
+                        road_network.lanelet_network.find_lanelet_by_id(
                             predecessor_lanelet_id
                         )
                     )
@@ -537,7 +604,7 @@ class Vehicle:
                         min_offset = np.min(offset)
                         selected_predecessor = predecessor_lanelet_id
             lanelets_leading_to_goal.insert(0, selected_predecessor)
-        last_lanelet = route_planner.lanelet_network.find_lanelet_by_id(
+        last_lanelet = road_network.lanelet_network.find_lanelet_by_id(
             lanelets_leading_to_goal[-1]
         )
         if last_lanelet.successor:
@@ -547,10 +614,8 @@ class Vehicle:
             if len(last_lanelet.successor) > 1:
                 min_offset = np.inf
                 for successor_lanelet_id in last_lanelet.successor:
-                    successor_lanelet = (
-                        route_planner.lanelet_network.find_lanelet_by_id(
-                            successor_lanelet_id
-                        )
+                    successor_lanelet = road_network.lanelet_network.find_lanelet_by_id(
+                        successor_lanelet_id
                     )
                     orientation_suc = np.arctan2(
                         successor_lanelet.center_vertices[-1, 1]
@@ -569,33 +634,12 @@ class Vehicle:
                         min_offset = np.min(offset)
                         selected_successor = successor_lanelet_id
             lanelets_leading_to_goal.append(selected_successor)
-        center_vertices = road_network.lanelet_network.find_lanelet_by_id(
-            lanelets_leading_to_goal[0]
-        ).center_vertices
-        left_vertices = road_network.lanelet_network.find_lanelet_by_id(
-            lanelets_leading_to_goal[0]
-        ).left_vertices
-        right_vertices = road_network.lanelet_network.find_lanelet_by_id(
-            lanelets_leading_to_goal[0]
-        ).right_vertices
-        for lanelet_id in lanelets_leading_to_goal[1:]:
-            lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            center_vertices = np.append(
-                center_vertices, lanelet.center_vertices, axis=0
-            )
-            left_vertices = np.append(left_vertices, lanelet.left_vertices, axis=0)
-            right_vertices = np.append(right_vertices, lanelet.right_vertices, axis=0)
-        return (
-            lanelets_leading_to_goal,
-            goal_region,
-            center_vertices,
-            left_vertices,
-            right_vertices,
-        )
+        return lanelets_leading_to_goal
 
-    def _initial_ref_path_lane(self, road_network: RoadNetwork):
+    @staticmethod
+    def _initial_ref_path_lane(road_network: RoadNetwork, lanelets: List[int]):
         lanes = list()
-        lanelets = self.lanelets_dir
+        lanelets = lanelets
         if len(lanelets) == 1:
             return road_network.find_lane_by_lanelet(lanelets[0])
         for lanelet_id in lanelets:
@@ -610,7 +654,7 @@ class Vehicle:
         for i in range(len(lanes) - 1):
             ref_path = ref_path.intersection(lanes[i + 1])
         reference_path = list(ref_path)
-        return reference_path[0]
+        return reference_path
 
 
 # def from Luis
