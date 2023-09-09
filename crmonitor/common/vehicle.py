@@ -520,10 +520,19 @@ class Vehicle:
                             predecessor_lanelet_id
                         )
                     )
-                    offset = abs(
-                        predecessor_lanelet.center_vertices[0, :]
-                        - first_lanelet.center_vertices[0, :]
+                    orientation_pre = np.arctan2(
+                        predecessor_lanelet.center_vertices[0, 1]
+                        - predecessor_lanelet.center_vertices[1, 1],
+                        predecessor_lanelet.center_vertices[0, 0]
+                        - predecessor_lanelet.center_vertices[1, 0],
                     )
+                    orientation_first = np.arctan2(
+                        first_lanelet.center_vertices[0, 1]
+                        - first_lanelet.center_vertices[1, 1],
+                        first_lanelet.center_vertices[0, 0]
+                        - first_lanelet.center_vertices[1, 0],
+                    )
+                    offset = abs(orientation_pre - orientation_first)
                     if np.min(offset) < min_offset:
                         min_offset = np.min(offset)
                         selected_predecessor = predecessor_lanelet_id
@@ -543,10 +552,19 @@ class Vehicle:
                             successor_lanelet_id
                         )
                     )
-                    offset = abs(
-                        successor_lanelet.center_vertices[-1, :]
-                        - last_lanelet.center_vertices[-1, :]
+                    orientation_suc = np.arctan2(
+                        successor_lanelet.center_vertices[-1, 1]
+                        - successor_lanelet.center_vertices[-2, 1],
+                        successor_lanelet.center_vertices[-1, 0]
+                        - successor_lanelet.center_vertices[-2, 0],
                     )
+                    orientation_last = np.arctan2(
+                        last_lanelet.center_vertices[-1, 1]
+                        - last_lanelet.center_vertices[-2, 1],
+                        last_lanelet.center_vertices[-1, 0]
+                        - last_lanelet.center_vertices[-2, 0],
+                    )
+                    offset = abs(orientation_suc - orientation_last)
                     if np.min(offset) < min_offset:
                         min_offset = np.min(offset)
                         selected_successor = successor_lanelet_id
