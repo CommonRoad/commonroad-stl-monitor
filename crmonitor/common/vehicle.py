@@ -514,40 +514,45 @@ class Vehicle:
         attributes,
         road_network,
     ):
-        right_start_position = initial_state.position + np.array(
-            [
-                1.0 * np.cos(initial_state.orientation - np.pi / 2),
-                1.0 * np.sin(initial_state.orientation - np.pi / 2),
-            ]
-        )
-        right_initial_state = copy.copy(initial_state)
-        right_initial_state.position = right_start_position
-        left_start_position = initial_state.position - np.array(
-            [
-                1.0 * np.cos(initial_state.orientation - np.pi / 2),
-                1.0 * np.sin(initial_state.orientation - np.pi / 2),
-            ]
-        )
-        left_initial_state = copy.copy(initial_state)
-        left_initial_state.position = left_start_position
-        right_end_position = end_position + np.array(
-            [
-                1.0 * np.cos(end_orientation - np.pi / 2),
-                1.0 * np.sin(end_orientation - np.pi / 2),
-            ]
-        )
-        left_end_position = end_position - np.array(
-            [
-                1.0 * np.cos(end_orientation - np.pi / 2),
-                1.0 * np.sin(end_orientation - np.pi / 2),
-            ]
-        )
-        initial_state_candidates = [
-            initial_state,
-            right_initial_state,
-            left_initial_state,
-        ]
-        end_position_candidates = [end_position, right_end_position, left_end_position]
+        initial_state_candidates = [initial_state]
+        end_position_candidates = [end_position]
+        extend_length = [1.0, 1.5]
+        for length in extend_length:
+            right_start_position = initial_state.position + np.array(
+                [
+                    length * np.cos(initial_state.orientation - np.pi / 2),
+                    length * np.sin(initial_state.orientation - np.pi / 2),
+                ]
+            )
+            right_initial_state = copy.copy(initial_state)
+            right_initial_state.position = right_start_position
+            initial_state_candidates.append(right_initial_state)
+
+            left_start_position = initial_state.position - np.array(
+                [
+                    length * np.cos(initial_state.orientation - np.pi / 2),
+                    length * np.sin(initial_state.orientation - np.pi / 2),
+                ]
+            )
+            left_initial_state = copy.copy(initial_state)
+            left_initial_state.position = left_start_position
+            initial_state_candidates.append(left_initial_state)
+
+            right_end_position = end_position + np.array(
+                [
+                    length * np.cos(end_orientation - np.pi / 2),
+                    1.0 * np.sin(end_orientation - np.pi / 2),
+                ]
+            )
+            end_position_candidates.append(right_end_position)
+
+            left_end_position = end_position - np.array(
+                [
+                    length * np.cos(end_orientation - np.pi / 2),
+                    length * np.sin(end_orientation - np.pi / 2),
+                ]
+            )
+            end_position_candidates.append(left_end_position)
         for i in range(len(initial_state_candidates)):
             for j in range(len(end_position_candidates)):
                 if i == 0 and j == 0:
