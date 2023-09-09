@@ -10,8 +10,8 @@ def generate_learning_data(scenario_path, filename):
         save_filepath=root_path,
         max_scenario_number=400,
     )
-    evaluator.evaluation_parallel()
-    # evaluator.evaluation()
+    # evaluator.evaluation_parallel()
+    evaluator.evaluation()
 
 
 if __name__ == "__main__":
