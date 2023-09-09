@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from multiprocessing import Process, Queue, Semaphore
+import threading
 import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -12,7 +13,6 @@ from typing import Iterable, List, Optional
 
 
 class IndEvaluator:
-
     def __init__(
         self,
         scenario_path: "Optional[str]" = None,
@@ -20,12 +20,14 @@ class IndEvaluator:
         save_filepath: "Optional[str]" = None,
         log_filename: str = "inD_evaluation.log",
         max_scenario_number: int = 400,
+        num_threads: int = 8,
     ):
         config_path = os.path.join(os.getcwd(), "../crmonitor/config.yaml")
         self.config = load_yaml(str(config_path))
         self.config["scenario"] = "intersection"
         self.config["intersection_road_network_param"]["map_type"] = "dataset"
         self.max_scenario_number = max_scenario_number
+        self.num_threads = num_threads
         self.scenario_path = scenario_path
         # logging
         self.log_filename = log_filename
@@ -64,7 +66,43 @@ class IndEvaluator:
         self.data_processor.save_data()
 
     def evaluation_parallel(self):
-        pass
+        def joined(process: "Process"):
+            process.join(1)
+            if process.exitcode is not None:
+                self.logger.info(f"Process {process.name} joint.")
+                return True
+            return False
+
+        queue = Queue()
+        num_worker = self.num_threads
+        semaphore = Semaphore(num_worker)
+        list_processes: "List[Process]" = []
+        queue.put(self.data_processor.data)
+        for world in self.world_iter():
+            semaphore.acquire()
+            process = Process(
+                target=self.process_world_parallel,
+                args=(world, queue, semaphore),
+            )
+            list_processes.append(process)
+            process.start()
+
+        while semaphore.get_value() < num_worker:
+            time.sleep(1)
+
+        # count_joined = 0
+        while len(list_processes) > 1:
+            list_processes[:] = [
+                process for process in list_processes if not joined(process)
+            ]
+
+        self.data_processor.data = queue.get()
+        self.data_processor.save_data()
+
+        while len(list_processes) > 0:
+            list_processes[:] = [
+                process for process in list_processes if not joined(process)
+            ]
 
     def world_iter(self):
         i = 0
@@ -73,15 +111,15 @@ class IndEvaluator:
             root, ext = os.path.splitext(file_name)
             if ext == ".xml":
                 scenario_file_path = os.path.join(self.scenario_path, file_name)
-                scenario, _ = CommonRoadFileReader(scenario_file_path).open(lanelet_assignment=True)
+                scenario, _ = CommonRoadFileReader(scenario_file_path).open(
+                    lanelet_assignment=True
+                )
                 world = World.create_from_scenario(scenario, self.config)
                 if str(world.scenario.scenario_id) in self.data_processor.data.index:
                     continue
                 if i >= self.max_scenario_number:
                     break
-                log_msg = (
-                    f"PROCESSING {world.scenario.scenario_id}:{i}"
-                )
+                log_msg = f"PROCESSING {world.scenario.scenario_id}:{i}"
                 self.logger.info(log_msg)
                 yield world
                 i += 1
@@ -89,12 +127,21 @@ class IndEvaluator:
     def process_world(self, world: "World"):
         pass
 
+    def process_world_parallel(
+        self,
+        world_state: "World",
+        queue: "Queue",
+        semaphore: "threading.Semaphore",
+    ):
+        pass
+
 
 class DataProcessor:
-    def __init__(self,
-                 save_filename: "Optional[str]" = None,
-                 save_filepath: "Optional[str]" = None,
-                 ):
+    def __init__(
+        self,
+        save_filename: "Optional[str]" = None,
+        save_filepath: "Optional[str]" = None,
+    ):
         self.save_filename = save_filename
         self.save_filepath = save_filepath
         self.generate_empty_dataframe()
@@ -102,8 +149,12 @@ class DataProcessor:
     def generate_empty_dataframe(self):
         index = pd.MultiIndex.from_tuples([], names=["scenario_id", "ego_id"])
         columns = pd.MultiIndex.from_product([["R_IN1"], ["violation_bool"]])
-        columns = columns.append(pd.MultiIndex.from_product([["R_IN2"], ["violation_bool"]]))
-        columns = columns.append(pd.MultiIndex.from_product([["R_IN3"], ["violation_bool"]]))
+        columns = columns.append(
+            pd.MultiIndex.from_product([["R_IN2"], ["violation_bool"]])
+        )
+        columns = columns.append(
+            pd.MultiIndex.from_product([["R_IN3"], ["violation_bool"]])
+        )
         self.data = pd.DataFrame(index=index, columns=columns)
 
     def save_data(self, file_name: "Optional[str]" = None):

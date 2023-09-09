@@ -4,7 +4,12 @@ import os
 
 def generate_learning_data(scenario_path, filename):
     root_path = os.getcwd()
-    evaluator = IndEvaluator(scenario_path=scenario_path, save_filename=filename, save_filepath=root_path, max_scenario_number=400)
+    evaluator = IndEvaluator(
+        scenario_path=scenario_path,
+        save_filename=filename,
+        save_filepath=root_path,
+        max_scenario_number=400,
+    )
     # generator.generate_data_parallel()
     evaluator.evaluation()
 
