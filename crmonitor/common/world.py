@@ -104,6 +104,8 @@ class World:
     def create_from_scenario(
         cls, scenario: Scenario, config=None, road_network=None, cache_dir=None
     ):
+        print("---------------------------------------------------------------")
+        print("Debug: scenario %s" % scenario.scenario_id)
         if config is None:
             config = get_world_config()
         if road_network is None:
