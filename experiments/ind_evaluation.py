@@ -155,7 +155,10 @@ class IndEvaluator:
                 rule_violation[rule] = self.process_rule(world, ego_vehicle, rule)
             except Exception as e:
                 raise e
-        dict_index = {"scenario_id": str(world.scenario.scenario_id), "ego_id": ego_vehicle.id}
+        dict_index = {
+            "scenario_id": str(world.scenario.scenario_id),
+            "ego_id": ego_vehicle.id,
+        }
         self.data_processor.add_reult(dict_index, rule_violation)
 
     def process_rule(
@@ -163,10 +166,12 @@ class IndEvaluator:
     ):
         log_msg = f"PROCESSING {world.scenario.scenario_id}:{ego_vehicle.id}:{rule}"
         self.logger.info(log_msg)
-        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, rule, use_boolean=self.use_bool)
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, rule, use_boolean=self.use_bool
+        )
         violation = 1.0
         for _ in range(
-                rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
+            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
         ):
             rob = rule_eval.update()
             if rob < 0:
