@@ -8,8 +8,10 @@ import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.world import World
+from crmonitor.common.vehicle import DynamicObstacleVehicle
+from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
 from crmonitor.common.helper import load_yaml
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Dict
 
 
 class IndEvaluator:
@@ -32,6 +34,9 @@ class IndEvaluator:
         # logging
         self.log_filename = log_filename
         self._init_logger()
+
+        self.rules = ["R_IN1", "R_IN3", "R_IN4"]
+        self.use_bool = True
 
         # create data_loader
         self.data_processor = DataProcessor(
@@ -125,15 +130,50 @@ class IndEvaluator:
                 i += 1
 
     def process_world(self, world: "World"):
-        pass
+        for ego_vehicle in world.vehicles:
+            self.process_vehicle(world, ego_vehicle)
+        self.data_processor.save_data()
 
     def process_world_parallel(
         self,
-        world_state: "World",
+        world: "World",
         queue: "Queue",
         semaphore: "threading.Semaphore",
     ):
-        pass
+        self.data_processor.generate_empty_dataframe()
+        for ego_vehicle in world.vehicles:
+            self.process_vehicle(world, ego_vehicle)
+        self.data_processor.append_dataframe(queue.get())
+        self.data_processor.save_data()
+        queue.put(self.data_processor.data)
+        semaphore.release()
+
+    def process_vehicle(self, world: "World", ego_vehicle: DynamicObstacleVehicle):
+        rule_violation = {}
+        for rule in self.rules:
+            try:
+                rule_violation[rule] = self.process_rule(world, ego_vehicle, rule)
+            except Exception as e:
+                raise e
+        dict_index = {"scenario_id": str(world.scenario.scenario_id), "ego_id": ego_vehicle.id}
+        self.data_processor.add_reult(dict_index, rule_violation)
+
+    def process_rule(
+        self, world: World, ego_vehicle: DynamicObstacleVehicle, rule: str
+    ):
+        log_msg = f"PROCESSING {world.scenario.scenario_id}:{ego_vehicle.id}:{rule}"
+        self.logger.info(log_msg)
+        rule_eval = PropositionRuleEvaluator.create_from_config(world, ego_vehicle, rule, use_boolean=self.use_bool)
+        violation = 1.0
+        for _ in range(
+                rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
+        ):
+            rob = rule_eval.update()
+            if rob < 0:
+                violation = -1.0
+                break
+        dict_evaluation = {"violation_bool": violation}
+        return dict_evaluation
 
 
 class DataProcessor:
@@ -144,16 +184,18 @@ class DataProcessor:
     ):
         self.save_filename = save_filename
         self.save_filepath = save_filepath
+        self.index = ["scenario_id", "ego_id"]
+
         self.generate_empty_dataframe()
 
     def generate_empty_dataframe(self):
-        index = pd.MultiIndex.from_tuples([], names=["scenario_id", "ego_id"])
+        index = pd.MultiIndex.from_tuples([], names=self.index)
         columns = pd.MultiIndex.from_product([["R_IN1"], ["violation_bool"]])
         columns = columns.append(
-            pd.MultiIndex.from_product([["R_IN2"], ["violation_bool"]])
+            pd.MultiIndex.from_product([["R_IN3"], ["violation_bool"]])
         )
         columns = columns.append(
-            pd.MultiIndex.from_product([["R_IN3"], ["violation_bool"]])
+            pd.MultiIndex.from_product([["R_IN4"], ["violation_bool"]])
         )
         self.data = pd.DataFrame(index=index, columns=columns)
 
@@ -162,3 +204,19 @@ class DataProcessor:
             self.save_filename = file_name
         save_path = os.path.join(self.save_filepath, self.save_filename)
         self.data.to_csv(save_path)
+
+    def add_reult(self, dict_index, rule_violation):
+        index = tuple(dict_index[f] for f in self.index)
+        self.data.loc[index, :] = None
+        self.data.loc[index, :].update(self.flatten_dict(rule_violation))
+
+    @staticmethod
+    def flatten_dict(nested_dict: "Dict"):
+        return {
+            (outerKey, innerKey): values
+            for outerKey, innerDict in nested_dict.items()
+            for innerKey, values in innerDict.items()
+        }
+
+    def append_dataframe(self, data: "pd.DataFrame"):
+        self.data = pd.concat([self.data, data])
