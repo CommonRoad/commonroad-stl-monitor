@@ -98,15 +98,15 @@ traffic_rules:
 
   R_IN4: "A a1: (
                   (  
-                    (turning_right_ego_turning_right_target_has_priority__a0_a1 >= 0) or
-                    (turning_right_ego_turning_left_target_has_priority__a0_a1 >= 0) or
-                    (turning_right_ego_going_straight_target_has_priority__a0_a1 >= 0) or
-                    (going_straight_ego_turning_right_target_has_priority__a0_a1 >= 0) or
-                    (going_straight_ego_turning_left_target_has_priority__a0_a1 >= 0) or
-                    (going_straight_ego_going_straight_target_has_priority__a0_a1 >= 0) or
-                    (turning_left_ego_turning_left_target_has_priority__a0_a1 >= 0) or
-                    (turning_left_ego_turning_right_target_has_priority_not_oncoming__a0_a1 >= 0) or
-                    (turning_left_ego_going_straight_target_has_priority_not_oncoming__a0_a1 >= 0)
+                    (turning_right_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
+                    (turning_right_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 >= 0) or
+                    (turning_right_target_going_straight_ego_target_has_priority__a0_a1 >= 0) or
+                    (going_straight_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
+                    (going_straight_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 >= 0) or
+                    (going_straight_target_going_straight_ego_target_has_priority__a0_a1 >= 0) or
+                    (turning_left_target_turning_left_ego_target_has_priority__a0_a1 >= 0) or
+                    (turning_left_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
+                    (turning_left_target_going_straight_ego_target_has_priority__a0_a1 >= 0)
                   ) implies
                   (
                     (
