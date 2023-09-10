@@ -746,3 +746,24 @@ class RoadNetwork:
             lanelets_start_s = min(lanelets_start_s, start_s)
             lanelets_end_s = max(lanelets_end_s, end_s)
         return lanelets_start_s, lanelets_end_s
+
+    def adjacent_lanelets(self, lanelet_ids: "Set[int]") -> "Set[int]":
+        for lanelet_id in lanelet_ids:
+            la = self.lanelet_network.find_lanelet_by_id(lanelet_id)
+            while la is not None and la.adj_left is not None:
+                if la.adj_left_same_direction:
+                    la = self.lanelet_network.find_lanelet_by_id(la.adj_left)
+                    if la is not None:
+                        lanelet_ids.add(la.lanelet_id)
+                else:
+                    la = None
+
+            la = self.lanelet_network.find_lanelet_by_id(lanelet_id)
+            while la is not None and la.adj_right is not None:
+                if la.adj_right_same_direction:
+                    la = self.lanelet_network.find_lanelet_by_id(la.adj_right)
+                    if la is not None:
+                        lanelet_ids.add(la.lanelet_id)
+                else:
+                    la = None
+        return lanelet_ids

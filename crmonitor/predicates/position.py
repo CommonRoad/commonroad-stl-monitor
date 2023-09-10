@@ -1138,7 +1138,6 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
     arity = 2
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        rob = -1
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
@@ -1199,21 +1198,11 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
-        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
-        incoming_lanelets_k = {
-            road_network.lanelet_network.find_lanelet_by_id(l_id)
-            for l_id in incoming_k.incoming_lanelets
-        }
-        incoming_lanelets_p = {
-            road_network.lanelet_network.find_lanelet_by_id(l_id)
-            for l_id in incoming_p.incoming_lanelets
-        }
+        incoming_k = vehicle_k.incoming_intersection
+        incoming_p = vehicle_p.incoming_intersection
         # check whether two lanelets are part of the same intersection incoming
-        adj_inc_k = utils.adjacent_lanelets(
-            incoming_lanelets_k, road_network.lanelet_network
-        )
-        if len(adj_inc_k.intersection(incoming_lanelets_p)) != 0:
+        adj_inc_k = road_network.adjacent_lanelets(incoming_k.incoming_lanelets)
+        if len(adj_inc_k.intersection(incoming_p.incoming_lanelets)) != 0:
             return False
         lanelets_assignment_k = vehicle_k.lanelet_assignment[time_step]
         # find lanelets of assignment with type intersection
@@ -1225,10 +1214,10 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         ]
         # find lanelets of reference path of p-th vehicle conflicting lanelets_k_intersection
         conflict_lanelet = vehicle_p.ref_path_lane.contained_lanelets.intersection(
-            set(lanelets_k_intersection)
+            lanelets_k_intersection
         )
         # exclude lanelets_dir of k-th vehicle (conflict lanelet must exclude lanelets_dir of k-th vehicle)
-        conflict_lanelet = conflict_lanelet.difference(set(vehicle_k.lanelets_dir))
+        conflict_lanelet = conflict_lanelet.difference(vehicle_k.lanelets_dir)
         if len(conflict_lanelet) == 0:
             return False
         else:
@@ -1240,21 +1229,11 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        incoming_k = utils.get_incoming(vehicle_k.lanelets_dir, road_network)
-        incoming_p = utils.get_incoming(vehicle_p.lanelets_dir, road_network)
-        incoming_lanelets_k = {
-            road_network.lanelet_network.find_lanelet_by_id(l_id)
-            for l_id in incoming_k.incoming_lanelets
-        }
-        incoming_lanelets_p = {
-            road_network.lanelet_network.find_lanelet_by_id(l_id)
-            for l_id in incoming_p.incoming_lanelets
-        }
+        incoming_k = vehicle_k.incoming_intersection
+        incoming_p = vehicle_p.incoming_intersection
         # check whether two lanelets are part of the same intersection incoming
-        adj_inc_k = utils.adjacent_lanelets(
-            incoming_lanelets_k, road_network.lanelet_network
-        )
-        if len(adj_inc_k.intersection(incoming_lanelets_p)) != 0:
+        adj_inc_k = road_network.adjacent_lanelets(incoming_k.incoming_lanelets)
+        if len(adj_inc_k.intersection(incoming_p.incoming_lanelets)) != 0:
             return -1
         lanelets_assignment_k = vehicle_k.lanelet_assignment[time_step]
         # find lanelets of assignment with type intersection
@@ -1266,13 +1245,13 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         ]
         # find lanelets of reference path of p-th vehicle conflicting lanelets_k_intersection
         conflict_lanelet = vehicle_p.ref_path_lane.contained_lanelets.intersection(
-            set(lanelets_k_intersection)
+            lanelets_k_intersection
         )
         # exclude lanelets_dir of k-th vehicle (conflict lanelet must exclude lanelets_dir of k-th vehicle)
-        conflict_lanelet = conflict_lanelet.difference(set(vehicle_k.lanelets_dir))
+        conflict_lanelet = conflict_lanelet.difference(vehicle_k.lanelets_dir)
         if len(conflict_lanelet) != 0:
             current_lanelet_k = list(
-                lanelets_assignment_k.intersection(set(vehicle_k.lanelets_dir))
+                lanelets_assignment_k.intersection(vehicle_k.lanelets_dir)
             )
             # get center vertices of current lanelets of k-th vehicle
             center_vertices_k = None
