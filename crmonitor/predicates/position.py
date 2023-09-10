@@ -1456,7 +1456,10 @@ class PredOnOncomOf(BasePredicateEvaluator):
             ego_polygon.append(lanelet_straight.polygon.shapely_object)
         ego_polygon = shapely.ops.unary_union(ego_polygon)
         intersection_polygon = target_polygon.intersection(ego_polygon)
-        if intersection_polygon.geom_type == "Polygon" and not intersection_polygon.is_empty:
+        if (
+            intersection_polygon.geom_type == "Polygon"
+            and not intersection_polygon.is_empty
+        ):
             rob = -1.0
         else:
             rob = 1.0
