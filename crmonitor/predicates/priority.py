@@ -139,14 +139,10 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         ref_path = vehicle.ref_path_lane
-        reach_suc = np.array([], dtype=int)
         # find successors of lanelets_dir
-        for lanelet_id in vehicle.lanelets_dir:
-            test = utils.reach_suc(lanelet_id, road_network)
-            reach_suc = np.append(reach_suc, utils.reach_suc(lanelet_id, road_network))
-        reach_suc = np.unique(reach_suc)
+        reach_suc = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
         # intersection between reference path and successors of lanelets_dir
-        lanelets_ids = ref_path.contained_lanelets.intersection(set(reach_suc))
+        lanelets_ids = ref_path.contained_lanelets.intersection(reach_suc)
         # find relevant lanelets with stop traffic sign
         lanelet_with_ts_stop = list()
         for lanelet_id in lanelets_ids:
@@ -216,12 +212,8 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         """
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        reach_suc_id = np.array([], dtype=int)
-        for lanelet_id in vehicle.lanelets_dir:
-            reach_suc_id = np.append(
-                reach_suc_id, utils.reach_suc(lanelet_id, road_network)
-            )
-        for l_id in np.unique(reach_suc_id):
+        reach_suc_id = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
+        for l_id in reach_suc_id:
             lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
             if len(lanelet_suc.traffic_lights) == 0:
                 continue
@@ -245,19 +237,14 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         """
         returns the distance to the nearest active traffic light
         """
-        reach_suc_id = np.array([], dtype=int)
         lanelet_with_active_tl = list()
         robustness = -np.inf
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         ref_path = vehicle.ref_path_lane
-        for lanelet_id in vehicle.lanelets_dir:
-            reach_suc_id = np.append(
-                reach_suc_id, utils.reach_suc(lanelet_id, road_network)
-            )
-        reach_suc_id = np.unique(reach_suc_id)
+        reach_suc_id = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
         # intersection between reference path and successors of lanelets_dir
-        lanelets_ids = ref_path.contained_lanelets.intersection(set(reach_suc_id))
+        lanelets_ids = ref_path.contained_lanelets.intersection(reach_suc_id)
         for l_id in lanelets_ids:
             lanelet = road_network.lanelet_network.find_lanelet_by_id(l_id)
             if len(lanelet.traffic_lights) == 0:
