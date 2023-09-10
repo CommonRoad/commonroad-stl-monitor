@@ -15,7 +15,7 @@ def generate_learning_data(scenario_path, filename):
 
 
 if __name__ == "__main__":
-    scenario_path = "/home/ge23lac/scenarios/AAH1_3/"
+    scenario_path = "/home/ge23lac/scenarios/AAH1_4/"
     # scenario_path = "/home/zekun/MA/scenarios/AAH1_test"
     filename = "ind_violation.csv"
     generate_learning_data(scenario_path, filename)
