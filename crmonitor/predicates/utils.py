@@ -526,37 +526,66 @@ def get_incoming_multi_intersections(
     incoming_elements = list()
     distance_to_incomings = list()
     for intersection in road_network.lanelet_network.intersections:
+        incoming_intersection = list()
+        start_incoming_s = list()
         for incoming in intersection.incomings:
-            incoming_ids = list(
-                incoming.incoming_lanelets.intersection(set(occupied_lanelets_possible))
-            )
-            if len(incoming_ids) != 0:
-                incoming_elements.append(incoming)
-                start_incoming_s = get_lanelets_start_s(
-                    vehicle.ref_path_lane, incoming_ids, road_network
-                )
-                incoming_successor = set.union(
-                    incoming.successors_right,
-                    incoming.successors_straight,
-                    incoming.successors_left,
-                )
-                successor_possible = incoming_successor.intersection(
-                    set(occupied_lanelets_possible)
-                )
-                end_intersection_s = get_lanelets_end_s(
-                    vehicle.ref_path_lane, successor_possible, road_network
-                )
-                # lanelets in front of vehicle
-                if (front_s - start_incoming_s) < 0 < (end_intersection_s - rear_s):
-                    distance_to_incomings.append(front_s - start_incoming_s)
-                # vehicle in front of lanelets
-                elif (end_intersection_s - rear_s) <= 0 <= (front_s - start_incoming_s):
-                    distance_to_incomings.append(end_intersection_s - rear_s)
-                # vehicle inside lanelets
-                else:
-                    distance_to_incomings.append(
-                        min(front_s - start_incoming_s, end_intersection_s - rear_s)
+            if (
+                len(incoming.incoming_lanelets.intersection(occupied_lanelets_possible))
+                != 0
+            ):
+                incoming_intersection.append(incoming)
+        if len(incoming_intersection) > 1:
+            for incoming in incoming_intersection:
+                if (
+                    len(
+                        incoming.incoming_lanelets.intersection(
+                            vehicle.ref_path_lane.contained_lanelets
+                        )
                     )
+                    != 0
+                ):
+                    incoming_intersection = incoming
+                    incoming_ids = list(
+                        incoming.incoming_lanelets.intersection(
+                            occupied_lanelets_possible
+                        )
+                    )
+                    start_incoming_s = get_lanelets_start_s(
+                        vehicle.ref_path_lane, incoming_ids, road_network
+                    )
+        else:
+            incoming_intersection = incoming_intersection[0]
+            incoming_ids = list(
+                incoming_intersection.incoming_lanelets.intersection(
+                    occupied_lanelets_possible
+                )
+            )
+            start_incoming_s = get_lanelets_start_s(
+                vehicle.ref_path_lane, incoming_ids, road_network
+            )
+        incoming_elements.append(incoming_intersection)
+        incoming_successor = set.union(
+            incoming_intersection.successors_right,
+            incoming_intersection.successors_straight,
+            incoming_intersection.successors_left,
+        )
+        successor_possible = incoming_successor.intersection(
+            set(occupied_lanelets_possible)
+        )
+        end_intersection_s = get_lanelets_end_s(
+            vehicle.ref_path_lane, successor_possible, road_network
+        )
+        # lanelets in front of vehicle
+        if (front_s - start_incoming_s) < 0 < (end_intersection_s - rear_s):
+            distance_to_incomings.append(front_s - start_incoming_s)
+        # vehicle in front of lanelets
+        elif (end_intersection_s - rear_s) <= 0 <= (front_s - start_incoming_s):
+            distance_to_incomings.append(end_intersection_s - rear_s)
+        # vehicle inside lanelets
+        else:
+            distance_to_incomings.append(
+                min(front_s - start_incoming_s, end_intersection_s - rear_s)
+            )
     return incoming_elements, distance_to_incomings
 
 
