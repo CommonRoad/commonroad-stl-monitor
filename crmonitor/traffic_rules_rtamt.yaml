@@ -47,81 +47,76 @@ traffic_rules:
                     (
                       in_intersection_conflict_area__a0_a1 implies
                       (
-                        not causes_braking_intersection__a0_a1 and
-                        not eventually[0, 1s](in_intersection_conflict_area__a1_a0)
+                        not(causes_braking_intersection__a0_a1) and
+                        not(eventually[0, 1s](in_intersection_conflict_area__a1_a0))
                       )
                     ) and
                     (
                       in_intersection_conflict_area__a1_a0 implies
-                      not eventually[0, 1s](in_intersection_conflict_area__a0_a1)
+                      not(eventually[0, 1s](in_intersection_conflict_area__a0_a1))
                     )
                  )"
 
-  META_1_1: "A a1: (
-                      (in_intersection_conflict_area__a0_a1 >= 0) implies
-                      not eventually[0, 1s]((in_intersection_conflict_area__a1_a0 >= 0))
-                   )"
-
   R_IN3: "A a1: (
                   (
-                    (on_incoming_left_of__a0_a1 >= 0) and 
-                    not (relevant_traffic_light__a0 >= 0) and 
+                    on_incoming_left_of__a0_a1 and 
+                    not(relevant_traffic_light__a0) and 
                     (
-                      (turning_right_ego_turning_right_target_same_priority__a0_a1 >= 0) or
-                      (turning_right_ego_turning_left_target_same_priority__a0_a1 >= 0) or
-                      (turning_right_ego_going_straight_target_same_priority__a0_a1 >= 0) or 
-                      (turning_left_ego_turning_right_target_same_priority__a0_a1 >= 0) or
-                      (turning_left_ego_turning_left_target_same_priority__a0_a1 >= 0) or
-                      (turning_left_ego_going_straight_target_same_priority__a0_a1 >= 0) or
-                      (going_straight_ego_turning_right_target_same_priority__a0_a1 >= 0) or
-                      (going_straight_ego_turning_left_target_same_priority__a0_a1 >= 0) or
-                      (going_straight_ego_going_straight_target_same_priority__a0_a1 >= 0)
+                      turning_right_ego_turning_right_target_same_priority__a0_a1 or
+                      turning_right_ego_turning_left_target_same_priority__a0_a1 or
+                      turning_right_ego_going_straight_target_same_priority__a0_a1 or 
+                      turning_left_ego_turning_right_target_same_priority__a0_a1 or
+                      turning_left_ego_turning_left_target_same_priority__a0_a1 or
+                      turning_left_ego_going_straight_target_same_priority__a0_a1 or
+                      going_straight_ego_turning_right_target_same_priority__a0_a1 or
+                      going_straight_ego_turning_left_target_same_priority__a0_a1 or
+                      going_straight_ego_going_straight_target_same_priority__a0_a1
                     )
                   ) implies
                   (
                       (
                         (
-                        (in_intersection_conflict_area__a0_a1 >= 0) implies
+                        (in_intersection_conflict_area__a0_a1) implies
                           (
-                            not (causes_braking_intersection__a0_a1 >= 0) and
-                            not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
+                            not(causes_braking_intersection__a0_a1) and
+                            not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
                           )
                         ) and
                         (
-                          (in_intersection_conflict_area__a1_a0 >= 0) implies
-                          not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
+                          (in_intersection_conflict_area__a1_a0) implies
+                          not (eventually[0,1s](in_intersection_conflict_area__a0_a1))
                         )
                       )or 
-                    not (on_lanelet_with_type_intersection__a0 >= 0)
+                    not(on_lanelet_with_type_intersection__a0)
                   )
                  )"
 
   R_IN4: "A a1: (
                   (  
-                    (turning_right_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
-                    (turning_right_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 >= 0) or
-                    (turning_right_target_going_straight_ego_target_has_priority__a0_a1 >= 0) or
-                    (going_straight_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
-                    (going_straight_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 >= 0) or
-                    (going_straight_target_going_straight_ego_target_has_priority__a0_a1 >= 0) or
-                    (turning_left_target_turning_left_ego_target_has_priority__a0_a1 >= 0) or
-                    (turning_left_target_turning_right_ego_target_has_priority__a0_a1 >= 0) or
-                    (turning_left_target_going_straight_ego_target_has_priority__a0_a1 >= 0)
+                    turning_right_target_turning_right_ego_target_has_priority__a0_a1 or
+                    turning_right_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 or
+                    turning_right_target_going_straight_ego_target_has_priority__a0_a1 or
+                    going_straight_target_turning_right_ego_target_has_priority__a0_a1 or
+                    going_straight_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 or
+                    going_straight_target_going_straight_ego_target_has_priority__a0_a1 or
+                    turning_left_target_turning_left_ego_target_has_priority__a0_a1 or
+                    turning_left_target_turning_right_ego_target_has_priority__a0_a1 or
+                    turning_left_target_going_straight_ego_target_has_priority__a0_a1
                   ) implies
                   (
                     (
                       (
-                        (in_intersection_conflict_area__a0_a1 >= 0) implies
+                        (in_intersection_conflict_area__a0_a1) implies
                         (
-                          not (causes_braking_intersection__a0_a1 >= 0) 
-                          and not eventually[0,1s]((in_intersection_conflict_area__a1_a0 >= 0))
+                          not(causes_braking_intersection__a0_a1) 
+                          and not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
                         )
                       ) and
                       (
-                        (in_intersection_conflict_area__a1_a0 >= 0) implies 
-                        not eventually[0,1s]((in_intersection_conflict_area__a0_a1 >= 0))
+                        (in_intersection_conflict_area__a1_a0) implies 
+                        not(eventually[0,1s](in_intersection_conflict_area__a0_a1))
                       )
-                    )or not (on_lanelet_with_type_intersection__a0 >= 0)
+                    )or not(on_lanelet_with_type_intersection__a0)
                   )
                 )"
 
