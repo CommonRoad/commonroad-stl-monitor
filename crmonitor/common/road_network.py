@@ -72,6 +72,12 @@ class Lane:
                 smooth_factor=smooth_factor_right,
                 road_network_param=road_network_param,
             )
+            if (4 in contained_lanelets):
+                weight = 10
+                smooth_factor = 1.5
+            else:
+                weight = 12
+                smooth_factor = 1.5
             (
                 self._clcs,
                 new_center_vertices,
@@ -79,8 +85,8 @@ class Lane:
                 _,
             ) = self._create_clcs_from_reference(
                 merged_lanelet.center_vertices,
-                weight=12,
-                smooth_factor=1.5,
+                weight=weight,
+                smooth_factor=smooth_factor,
                 road_network_param=road_network_param,
             )
 
@@ -113,6 +119,9 @@ class Lane:
 
             self._adj_left = None
             self._adj_right = None
+            #TODO: need to be fixed
+            self.old_vertice = merged_lanelet.center_vertices
+            self.new_vertice = new_center_vertices
         else:
             self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
                 merged_lanelet.left_vertices, road_network_param
