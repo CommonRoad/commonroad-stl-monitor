@@ -10,7 +10,8 @@ import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.trajectory import State, InitialState
-from shapely import affinity
+from shapely import affinity, unary_union
+from shapely.geometry import Point, Polygon
 
 from crmonitor.common.road_network import Lane, RoadNetwork
 
@@ -279,6 +280,7 @@ class Vehicle:
             self.incoming_intersection = self.road_network.find_incoming_intersection(
                 self.lanelets_dir
             )
+            self.circle_appr_geo, self.circle_radius = self._initial_circle_approximation()
 
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
@@ -396,6 +398,16 @@ class Vehicle:
         new_shape = affinity.affine_transform(shape, mat)
         return new_shape
 
+    def circle_appr_occupancy_at_time_step(self, time_step) -> Polygon:
+        state = self.states_cr[time_step]
+        orientation = state.orientation
+        shape = self.circle_appr_geo
+        cos = np.cos(orientation)
+        sin = np.sin(orientation)
+        mat = [cos, -sin, sin, cos, state.position[0], state.position[1]]
+        new_shape = affinity.affine_transform(shape, mat)
+        return new_shape
+
     def is_valid(self, time_step):
         state = self.states_cr.get(time_step)
         return state is not None
@@ -426,6 +438,20 @@ class Vehicle:
 
     def __hash__(self):
         return self.id
+
+    def _initial_circle_approximation(self):
+        circle_radius = np.sqrt(self.shape.width ** 2 + (self.shape.length / 3) ** 2) / 2
+        center_of_vehicle = Point(0, 0)
+        front_point = Point(self.shape.length / 3, 0)
+        rear_point = Point(-self.shape.length / 3, 0)
+
+        circle_center = center_of_vehicle.buffer(circle_radius)
+        circle_front = front_point.buffer(circle_radius)
+        circle_rear = rear_point.buffer(circle_radius)
+
+        combined_geometry = unary_union([circle_center, circle_front, circle_rear])
+        return combined_geometry, circle_radius
+
 
     def _initial_lanelets_dir(self, road_network: RoadNetwork, goal=None):
         if goal is None:
