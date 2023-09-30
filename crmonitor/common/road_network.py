@@ -72,7 +72,7 @@ class Lane:
                 smooth_factor=smooth_factor_right,
                 road_network_param=road_network_param,
             )
-            if (4 in contained_lanelets):
+            if 4 in contained_lanelets:
                 weight = 10
                 smooth_factor = 1.5
             else:
@@ -119,7 +119,7 @@ class Lane:
 
             self._adj_left = None
             self._adj_right = None
-            #TODO: need to be fixed
+            # TODO: need to be fixed
             self.old_vertice = merged_lanelet.center_vertices
             self.new_vertice = new_center_vertices
         else:
