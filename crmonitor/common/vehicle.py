@@ -280,7 +280,10 @@ class Vehicle:
             self.incoming_intersection = self.road_network.find_incoming_intersection(
                 self.lanelets_dir
             )
-            self.circle_appr_geo, self.circle_radius = self._initial_circle_approximation()
+            (
+                self.circle_appr_geo,
+                self.circle_radius,
+            ) = self._initial_circle_approximation()
 
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
@@ -440,7 +443,9 @@ class Vehicle:
         return self.id
 
     def _initial_circle_approximation(self):
-        circle_radius = np.sqrt(self.shape.width ** 2 + (self.shape.length / 3) ** 2) / 2
+        circle_radius = (
+            np.sqrt(self.shape.width**2 + (self.shape.length / 3) ** 2) / 2
+        )
         center_of_vehicle = Point(0, 0)
         front_point = Point(self.shape.length / 3, 0)
         rear_point = Point(-self.shape.length / 3, 0)
@@ -451,7 +456,6 @@ class Vehicle:
 
         combined_geometry = unary_union([circle_center, circle_front, circle_rear])
         return combined_geometry, circle_radius
-
 
     def _initial_lanelets_dir(self, road_network: RoadNetwork, goal=None):
         if goal is None:
@@ -687,28 +691,29 @@ class Vehicle:
         reference_path = list(ref_path)
         return reference_path
 
+    # def from Luis
+    # ---------------------------------------------------------------------#
+    def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
+        """
+        Determine all possible lanes for a vehicle from the given moment.
 
-# def from Luis
-# ---------------------------------------------------------------------#
-#     def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
-#         """
-#         Determine all possible lanes for a vehicle from the given moment.
-#
-#         Idea: A vehicle should drive on a connected sequence of lanelets to get to
-#         the current
-#         position. Hence, the intersection of the initially occupied lanes (all paths
-#         from the first state)
-#         and the currently occupied lanes should not be empty and only contain the
-#         lanes that have been driven on.
-#
-#         :param timestep:
-#         :return:
-#         """
-#
-#         initial_lanes = self.lanes_at_state(self.start_time)
-#         current_lanes = self.lanes_at_state(timestep)
-#
-#         return tuple(initial_lanes.intersection(current_lanes))
+        Idea: A vehicle should drive on a connected sequence of lanelets to get to
+        the current
+        position. Hence, the intersection of the initially occupied lanes (all paths
+        from the first state)
+        and the currently occupied lanes should not be empty and only contain the
+        lanes that have been driven on.
+
+        :param timestep:
+        :return:
+        """
+
+        initial_lanes = self.lanes_at_state(self.start_time)
+        current_lanes = self.lanes_at_state(timestep)
+
+        return tuple(initial_lanes.intersection(current_lanes))
+
+
 #
 #     def lanelets_dir(self, timestep: int) -> Tuple[int]:
 #         """
