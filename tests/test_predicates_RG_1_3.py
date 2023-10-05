@@ -15,7 +15,12 @@ from commonroad.scenario.traffic_sign import (
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, StateLateral, Vehicle
+from crmonitor.common.vehicle import (
+    CurvilinearStateManager,
+    StateLateral,
+    StateLongitudinal,
+    Vehicle,
+)
 from crmonitor.common.world import World
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
@@ -332,12 +337,12 @@ class TestPredicate(unittest.TestCase):
         )
 
         state_list_lon_other = {
-            0: CustomStateLongitudinal(s=20, v=20),
-            1: CustomStateLongitudinal(s=30, v=0),
+            0: StateLongitudinal(s=20, v=20),
+            1: StateLongitudinal(s=30, v=0),
         }
         state_list_lat_other = {
-            0: CustomStateLateral(d=0, theta=0),
-            1: CustomStateLateral(d=0, theta=0),
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
         }
         cr_state_list_other = {
             0: CustomState(
@@ -587,22 +592,22 @@ class TestPredicate(unittest.TestCase):
 
         # ego vehicle
         state_list_lon_ego = {
-            0: CustomStateLongitudinal(s=0, v=45),
-            1: CustomStateLongitudinal(s=45, v=50),
-            2: CustomStateLongitudinal(s=95, v=55),
-            3: CustomStateLongitudinal(s=150, v=45),
+            0: StateLongitudinal(s=0, v=45),
+            1: StateLongitudinal(s=45, v=50),
+            2: StateLongitudinal(s=95, v=55),
+            3: StateLongitudinal(s=150, v=45),
         }
         state_list_lat_ego = {
-            0: CustomStateLateral(d=0, theta=0),
-            1: CustomStateLateral(d=0, theta=0),
+            0: StateLateral(d=0, theta=0),
+            1: StateLateral(d=0, theta=0),
             2: StateLateral(d=0, theta=0),
             3: StateLateral(d=4, theta=0),
         }
         cr_state_list_ego = {
-            0: State(position=(0, 0), orientation=0, velocity=45, time_step=0),
-            1: State(position=(45, 0), orientation=0, velocity=50, time_step=1),
-            2: State(position=(95, 0), orientation=0, velocity=55, time_step=2),
-            3: State(position=(150, 4), orientation=0, velocity=45, time_step=3),
+            0: CustomState(position=(0, 0), orientation=0, velocity=45, time_step=0),
+            1: CustomState(position=(45, 0), orientation=0, velocity=50, time_step=1),
+            2: CustomState(position=(95, 0), orientation=0, velocity=55, time_step=2),
+            3: CustomState(position=(150, 4), orientation=0, velocity=45, time_step=3),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {2}}
         ego_vehicle = Vehicle(
@@ -679,11 +684,15 @@ class TestPredicate(unittest.TestCase):
         for t, exp in enumerate(expected):
             rob = pred.evaluate_robustness(world, t, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")
+            boolean = pred.evaluate_boolean(world, t, vehicle_ids)
+            self.assertEqual(exp, boolean, f"t={t}")
 
     def create_vehicle(self, veh_id, lanelets_ego, lat_ego, lon_ego, road_network):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         cr_state_list_ego = {
-            t: State(position=(s, d + 0.5 * 4), time_step=t, orientation=0, velocity=45)
+            t: CustomState(
+                position=(s, d + 0.5 * 4), time_step=t, orientation=0, velocity=45
+            )
             for t, (s, d, l) in enumerate(zip(lon_ego, lat_ego, lanelets_ego))
         }
         lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}

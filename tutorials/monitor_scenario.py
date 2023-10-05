@@ -29,8 +29,9 @@ predicate_robustness = rule_evaluator.get_predicates()
 robustness_array = rule_evaluator.evaluate()
 
 rule_evaluator.reset(ego_vehicle, world)
+print(robustness_array)
 
-nodedicts = rule_evaluator.get_node_dicts()
-
-for n in nodedicts:
-    print(n)
+# nodedicts = rule_evaluator.get_node_dicts()
+#
+# for n in nodedicts:
+#     print(n)

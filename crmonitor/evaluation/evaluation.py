@@ -1,19 +1,14 @@
 import copy
-import importlib.resources as pkg_resources
 import logging
+import warnings
 from collections import defaultdict
-from functools import lru_cache
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
-import crmonitor
-from crmonitor.common.helper import (
-    create_ego_vehicle_param,
-    load_yaml,
-    merge_dicts_recursively,
-)
+from crmonitor.common.config import get_evaluation_config, get_traffic_rule_config
+from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
@@ -27,34 +22,20 @@ from crmonitor.evaluation.visitor import (
     RuleTreeVisitor,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.monitor.rule import VisitorNode, parse_rule
 from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.rule.rule_factory import RuleFactory
+from crmonitor.rule.rule_node import VisitorNode
 
 logger = logging.getLogger(__name__)
-
-
-@lru_cache(maxsize=None)
-def get_traffic_rule_config():
-    with pkg_resources.path(
-        crmonitor, "traffic_rules_rtamt.yaml"
-    ) as traffic_rules_path:
-        traffic_rules_config = load_yaml(traffic_rules_path)
-    return traffic_rules_config
-
-
-@lru_cache(maxsize=None)
-def get_evaluation_config():
-    with pkg_resources.path(crmonitor, "config.yaml") as traffic_rules_path:
-        traffic_rules_config = load_yaml(traffic_rules_path)
-    return traffic_rules_config
 
 
 class RuleEvaluator:
     @classmethod
     def create_from_config(
         cls,
-        world: World = None,
-        ego_id: int = None,
+        world: World,
+        ego_id: Optional[Union[int, Vehicle]],
         rule: str = "R_G1",
         traffic_rules_config=None,
         use_boolean: bool = False,
@@ -68,6 +49,14 @@ class RuleEvaluator:
         world = copy.copy(world)
         world.vehicles = copy.copy(world.vehicles)
 
+        if isinstance(ego_id, Vehicle):
+            warnings.warn(
+                "Passing a vehicle instance is deprecated and will be removed in the future!",
+                DeprecationWarning,
+            )
+            assert ego_id is world.vehicle_by_id(ego_id.id)
+            ego_id = ego_id.id
+
         ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
         world.vehicles.remove(world.vehicle_by_id(ego_id))
 
@@ -76,10 +65,12 @@ class RuleEvaluator:
         )
         world.vehicles.add(ego_vehicle)
 
-        rule = parse_rule(rule_str_dict[rule], traffic_rules_config, name=rule)
+        rule = RuleFactory(
+            PredicateFactory(traffic_rules_config["traffic_rules_param"])
+        ).parse_rule(rule_str_dict[rule], name=rule)
         return cls(
             rule,
-            ego_vehicle,
+            ego_vehicle.id,
             world,
             use_boolean=use_boolean,
             output_type=output_type,
@@ -88,8 +79,8 @@ class RuleEvaluator:
     def __init__(
         self,
         rule: VisitorNode,
-        ego_vehicle: Vehicle,
-        world: World,
+        ego_id: Optional[Union[Vehicle, int]] = None,
+        world: Optional[World] = None,
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -112,11 +103,11 @@ class RuleEvaluator:
         )
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
-        self._ego_vehicle = None
+        self._ego_id = None
         self._world = None
-        if ego_vehicle is not None:
+        if ego_id is not None:
             assert world is not None
-            self.reset(ego_vehicle, world, start_time_step)
+            self.reset(ego_id, world, start_time_step)
 
     @property
     def current_time(self) -> int:
@@ -135,6 +126,10 @@ class RuleEvaluator:
         node_values = dict(self._monitor.visit(self._ast_node_value_collector_visitor))
         return node_values
 
+    @property
+    def ego_vehicle(self):
+        return self._world.vehicle_by_id(self._ego_id)
+
     def update(self) -> float:
         """
         Advance the monitor state by one time step and return the corresponding
@@ -144,8 +139,8 @@ class RuleEvaluator:
         """
         self._last_evaluation_time_step += 1
         if (
-            self._ego_vehicle.start_time > self._last_evaluation_time_step
-            or self._last_evaluation_time_step > self._ego_vehicle.end_time
+            self.ego_vehicle.start_time > self._last_evaluation_time_step
+            or self._last_evaluation_time_step > self.ego_vehicle.end_time
         ):
             logger.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
@@ -153,7 +148,7 @@ class RuleEvaluator:
             self._monitor,
             self._world,
             self._last_evaluation_time_step,
-            self._ego_vehicle,
+            self.ego_vehicle,
         )
         rule_value = (
             rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
@@ -173,7 +168,7 @@ class RuleEvaluator:
         """
         robustness_values = []
         for i in range(
-            self._last_evaluation_time_step + 1, self._ego_vehicle.end_time + 1
+            self._last_evaluation_time_step + 1, self.ego_vehicle.end_time + 1
         ):
             robustness_values.append(self.update())
         return np.array(robustness_values)
@@ -182,7 +177,7 @@ class RuleEvaluator:
         return self
 
     def __next__(self):
-        if self._last_evaluation_time_step + 1 < self._ego_vehicle.end_time + 1:
+        if self._last_evaluation_time_step + 1 < self.ego_vehicle.end_time + 1:
             return self.update()
         else:
             raise StopIteration
@@ -258,15 +253,22 @@ class RuleEvaluator:
     def other_ids(self) -> Tuple[int]:
         return self._eval_visitor.other_ids[1:]
 
-    def reset(self, ego_vehicle: Vehicle, world: World, start_time_step=None):
+    def reset(self, ego_id: Union[Vehicle, int], world: World, start_time_step=None):
+        if isinstance(ego_id, Vehicle):
+            warnings.warn(
+                "Passing a vehicle instance is deprecated and will be removed in the future!",
+                DeprecationWarning,
+            )
+            assert ego_id is world.vehicle_by_id(ego_id.id)
+            ego_id = ego_id.id
+        self._ego_id = ego_id
+        self._world = world
         self._last_evaluation_time_step = (
             start_time_step - 1
             if start_time_step is not None
-            else ego_vehicle.start_time - 1
+            else self.ego_vehicle.start_time - 1
         )
         self._rule_value_course = []
-        self._ego_vehicle = ego_vehicle
-        self._world = world
         # Reset monitor
         reset_visitor = ResetMonitorTreeVisitor()
         self._monitor.visit(reset_visitor)

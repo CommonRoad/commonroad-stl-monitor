@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import matplotlib.colors
 import numpy as np
+from commonroad.common.util import subtract_orientations
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import LaneletType, LineMarking
 from commonroad.scenario.traffic_sign import TrafficLightState
@@ -92,9 +93,9 @@ class PredCutIn(BasePredicateEvaluator):
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
         r_l_dist = cutted_lat.d - cutting_lat.d
-        r_l_orient = cutting_lat.theta - self.eps
+        r_l_orient = subtract_orientations(cutting_lat.theta, self.eps)
         l_r_dist = cutting_lat.d - cutted_lat.d
-        l_r_orient = -self.eps - cutting_lat.theta
+        l_r_orient = subtract_orientations(-self.eps, cutting_lat.theta)
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
         l_r_dist = self._scale_lat_dist(l_r_dist)

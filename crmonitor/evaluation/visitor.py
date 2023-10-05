@@ -12,7 +12,7 @@ from crmonitor.monitor.monitor_node import (
     RuleMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
-from crmonitor.monitor.rule import AllNode, ExistNode, IOType, PredicateNode, RuleNode
+from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
 
 
 class RuleTreeVisitor(ABC):

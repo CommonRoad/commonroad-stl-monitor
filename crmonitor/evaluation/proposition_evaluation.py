@@ -11,7 +11,7 @@ from crmonitor.evaluation.visitor import (
 from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.monitor.rule import PredicateNode, RuleNode, VisitorNode
+from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
 
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
@@ -36,7 +36,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
     def __init__(
         self,
         rule: VisitorNode,
-        ego_vehicle: Vehicle,
+        ego_id: int,
         world: World,
         start_time_step=None,
         use_boolean: bool = False,
@@ -48,17 +48,13 @@ class PropositionRuleEvaluator(RuleEvaluator):
         self.proposition_collector = PropositionCollectorMonitorTreeVisitor()
         super().__init__(
             rule,
-            ego_vehicle,
+            ego_id,
             world,
             start_time_step,
             use_boolean,
             output_type,
             monitor_creation_visitor,
         )
-
-    @property
-    def ego_vehicle(self) -> Vehicle:
-        return self._ego_vehicle
 
     def get_propositions(self):
         """
@@ -74,8 +70,8 @@ class PropositionRuleEvaluator(RuleEvaluator):
         """
         other_id = (
             self._eval_visitor.other_ids[-1]
-            if self._eval_visitor.other_ids is not ()
-            else self._ego_vehicle.id
+            if len(self._eval_visitor.other_ids) > 0
+            else self.ego_vehicle.id
         )
         if hasattr(self._monitor, "monitors"):
             other_id = self._eval_visitor.other_ids[-1]
