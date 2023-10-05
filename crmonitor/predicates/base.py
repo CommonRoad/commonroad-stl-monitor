@@ -62,6 +62,7 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Extract features for MPR computation.
         """
+
         def get_veh_state_long_features(veh: Vehicle):
             return [
                 veh.get_lon_state(time_step).s,  # position

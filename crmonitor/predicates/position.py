@@ -413,7 +413,9 @@ class PredPreceding(BasePredicateEvaluator):
         isl_rob, _ = self.in_same_lane_peml.robustness_models[0].predict([feature_list])
         # todo: the Boolean and robustness don't align
         if self.evaluate_robustness(world, time_step, vehicle_ids) > 0:
-            ifo_rob, _ = self.in_front_of_peml.robustness_models[0].predict([feature_list])
+            ifo_rob, _ = self.in_front_of_peml.robustness_models[0].predict(
+                [feature_list]
+            )
             if ifo_rob < isl_rob:  # conjunction: robustness = min(isl_rob, ifo_rob)
                 robustness = ifo_rob
                 self.peml = self.in_front_of_peml
