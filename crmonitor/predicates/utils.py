@@ -23,10 +23,9 @@ from commonroad.scenario.lanelet import (
     StopLine,
 )
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
-from crmonitor.common.road_network import Lane
 
 from crmonitor.common.helper import cartesian_to_curvilinear
-from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 
@@ -148,6 +147,22 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
     d_left = -np.min(d_left) if d_left.size > 0 else np.inf
     d_right = np.max(d_right) if d_right.size > 0 else np.inf
     return np.fmin(d_left, d_right)
+
+
+def distance_veh_center_to_lane_boundaries(
+    vehicle_i: Vehicle, lane: Lane, time_step: int
+):
+    """
+    Distance of the vehicle center to the boundaries of the lane
+    """
+    veh_position = vehicle_i.state_list_cr[time_step].position
+    dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(
+        veh_position[0], veh_position[1]
+    )[1]
+    dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(
+        veh_position[0], veh_position[1]
+    )[1]
+    return dis_to_left, dis_to_right
 
 
 def lanelets_left_of_lanelet(
@@ -367,12 +382,10 @@ def _adjacent_lanelets(
     """
     lanelets = {lanelet}
     la = lanelet
-
     while la is not None and la.adj_left is not None:
         la = lanelet_network.find_lanelet_by_id(la.adj_left)
         if la is not None:
             lanelets.add(la)
-
     la = lanelet
     while la is not None and la.adj_right is not None:
         la = lanelet_network.find_lanelet_by_id(la.adj_right)
@@ -394,6 +407,10 @@ def cal_road_width(
             position
         )
     return road_width
+
+
+def bool_to_num(bool_value):
+    return 1 if bool_value else -1
 
 
 def traffic_sign_type(lanelet_ids, road_network: RoadNetwork):

@@ -167,6 +167,11 @@ class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
         return [(predicate_node.name, predicate_node.latest_value)]
 
 
+class MPRGradientCollectorMonitorTreeVisitor(PredicateCollectorMonitorTreeVisitor):
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        return [(predicate_node.name, predicate_node.mpr_gradient)]
+
+
 class AstNodeValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     @staticmethod
     def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):

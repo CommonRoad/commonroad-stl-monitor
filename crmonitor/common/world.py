@@ -32,6 +32,8 @@ from crmonitor.common.vehicle import (
     Vehicle,
 )
 
+l_wb = 2.578  # for BMW_320i
+
 
 @lru_cache(maxsize=None)
 def get_world_config():
@@ -157,7 +159,8 @@ class World:
                     )
                     and (not cls.static_vehicle(obs))
                 ):
-                    cls.augment_state_acceleration_jerk(scenario.dt, obs)
+                    cls.augment_state_longitudinal(scenario.dt, obs)
+                    cls.augment_state_lateral(scenario.dt, obs)
                     curvi_cache, predicate_dict = cache.setdefault(
                         str(obs.obstacle_id),
                         (dict(), defaultdict(partial(defaultdict, dict))),
@@ -178,7 +181,8 @@ class World:
                             % (obs.obstacle_id, scenario.scenario_id)
                         )
             else:
-                cls.augment_state_acceleration_jerk(scenario.dt, obs)
+                cls.augment_state_longitudinal(scenario.dt, obs)
+                cls.augment_state_lateral(scenario.dt, obs)
                 curvi_cache, predicate_dict = cache.setdefault(
                     str(obs.obstacle_id),
                     (dict(), defaultdict(partial(defaultdict, dict))),
@@ -216,7 +220,7 @@ class World:
         return all(velocity <= 0.001)
 
     @staticmethod
-    def augment_state_acceleration_jerk(dt, obs):
+    def augment_state_longitudinal(dt, obs):
         accelerations = (
             np.diff(
                 [
@@ -232,14 +236,52 @@ class World:
             accelerations += accelerations[-1:]
             jerk += [jerk[-1], 0]
             obs.initial_state.jerk = jerk[0]
+
+            # Compute the gradient of jerk
+            jerk_dot = (np.diff(jerk) / dt).tolist()
+            jerk_dot += [0]
+            obs.initial_state.jerk_dot = jerk_dot[0]
         else:
             jerk = [None] * 2
-        for a, j, state in zip(
-            accelerations[1:], jerk[1:], obs.prediction.trajectory.state_list
+            jerk_dot = [None] * 2
+        for a, j, j_dot, state in zip(
+            accelerations[1:], jerk[1:], jerk_dot, obs.prediction.trajectory.state_list
         ):
             state.acceleration = a
             if j is not None:
                 state.jerk = j
+            if j_dot is not None:
+                state.jerk_dot = j_dot
+
+    @staticmethod
+    def augment_state_lateral(dt: float, obs):
+        kappa_list = []
+        for state in [obs.initial_state] + obs.prediction.trajectory.state_list:
+            if hasattr(state, "steering_angle"):
+                state.kappa = state.velocity / l_wb * np.tan(state.steering_angle)
+            elif hasattr(state, "yaw_rate"):
+                state.kappa = state.yaw_rate
+            else:
+                state.kappa = 0.0  # todo: fix for intersection
+            kappa_list.append(state.kappa)
+        if len(kappa_list) >= 2:
+            kappa_dot = (np.diff(kappa_list) / dt).tolist()
+            kappa_dot += [0]
+
+            kappa_dot_dot = (np.diff(kappa_dot) / dt).tolist()
+            kappa_dot_dot += [0]
+            obs.initial_state.kappa_dot = kappa_dot[0]
+            obs.initial_state.kappa_dot_dot = kappa_dot_dot[0]
+        else:
+            kappa_dot = [None] * 2
+            kappa_dot_dot = [None] * 2
+        for k_dot, k_ddot, state in zip(
+            kappa_dot[1:], kappa_dot_dot[1:], obs.prediction.trajectory.state_list
+        ):
+            if k_dot is not None:
+                state.kappa_dot = k_dot
+            if k_ddot is not None:
+                state.kappa_dot_dot = k_ddot
 
     def vehicle_by_id(self, id) -> Optional[Vehicle]:
         for veh in self.vehicles:

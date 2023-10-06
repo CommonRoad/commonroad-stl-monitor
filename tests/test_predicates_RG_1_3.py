@@ -40,6 +40,7 @@ class TestPredicate(unittest.TestCase):
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = False
+        self.config["use_mpr"] = False
 
     def test_cut_in(self):
         # expected solutions
