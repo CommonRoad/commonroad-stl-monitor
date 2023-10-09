@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Tuple
 import math
 
 from commonroad.visualization.renderer import IRenderer
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import Vehicle, World
