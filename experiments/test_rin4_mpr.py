@@ -62,4 +62,6 @@ if __name__ == "__main__":
         print("--------------------------------")
         print("time = ", i)
         print("rob = ", rob)
+        for prob in prob_rob[0]:
+            print(prob, ":", prob_rob[0][prob])
     rule_robustness = np.array(rule_robustness)
