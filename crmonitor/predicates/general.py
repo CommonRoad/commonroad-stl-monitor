@@ -998,12 +998,16 @@ class PredTurningSamePriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, time_step, [ego_vehicle_id]
-        )
-        rob_turning_target = self._turning_target.evaluate_robustness(
-            world, time_step, [target_vehicle_id]
-        )
+        if self.config["use_mpr"]:
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+        else:
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
         rob_same_priority = self._same_priority.evaluate_robustness(
             world, time_step, vehicle_ids
         )
@@ -1139,12 +1143,16 @@ class PredTurningHasPriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness(
-            world, time_step, [target_vehicle_id]
-        )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, time_step, [ego_vehicle_id]
-        )
+        if self.config["use_mpr"]:
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+        else:
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
@@ -1201,12 +1209,16 @@ class PredRightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriorityB
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness(
-            world, time_step, [target_vehicle_id]
-        )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, time_step, [ego_vehicle_id]
-        )
+        if self.config["use_mpr"]:
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+        else:
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
@@ -1315,12 +1327,16 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness(
-            world, time_step, [target_vehicle_id]
-        )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, time_step, [ego_vehicle_id]
-        )
+        if self.config["use_mpr"]:
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+        else:
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
