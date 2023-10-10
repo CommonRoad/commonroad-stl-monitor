@@ -168,4 +168,5 @@ traffic_rules_param:
 
   #mpr
   use_mpr: true
+  mpr_scenario: interstate # interstate or intersection
 
