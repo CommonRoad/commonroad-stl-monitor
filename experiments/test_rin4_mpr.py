@@ -31,10 +31,15 @@ if __name__ == "__main__":
     traffic_rules["traffic_rules_param"]["mpr_scenario"] = "intersection"
     scenario_root_path = root_path.parent / "scenarios"
 
+    # scenario_file = os.path.join(
+    #     scenario_root_path, "test_intersection/DEU_AAH1-2_76900_T-7049.xml"
+    # )
+    # ego_id = 10065
+
     scenario_file = os.path.join(
-        scenario_root_path, "test_intersection/DEU_AAH1-2_76900_T-7049.xml"
+        scenario_root_path, "test_intersection/DEU_AAH1-2_109450_T-9599.xml"
     )
-    ego_id = 10065
+    ego_id = 10112
     # scenario_file = os.path.join(
     #     scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
     # )
