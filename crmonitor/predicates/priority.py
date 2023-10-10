@@ -370,7 +370,8 @@ class PredSamePriorityBase(BasePredicateEvaluator):
             self.traffic_sign_priority.get_priority(),
         )
         if priority_k != priority_p:
-            rob = -abs(priority_k - priority_p) / 5
+            # rob = -abs(priority_k - priority_p) / 5
+            rob = -1
         else:
             rob = 1
         return rob
@@ -516,6 +517,10 @@ class PredHasPriorityBase(BasePredicateEvaluator):
             self.traffic_sign_priority.get_priority(),
         )
         rob = (priority_k - priority_p - 0.5) / 5
+        if rob > 0:
+            rob = 1
+        else:
+            rob = -1
         return rob
 
 
