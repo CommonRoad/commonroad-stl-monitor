@@ -944,3 +944,18 @@ def points_distance_to_left_bound(points, lane: Lane):
         d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
         distance.append(d_left)
     return np.min(distance)
+
+
+def get_long_distance_stop_lines_from_lane(road_network: "RoadNetwork", lane: "Lane") -> "List[float]":
+    s_stop_line_list = list()
+    for lanelet_id in lane.contained_lanelets:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        if lanelet.stop_line is not None:
+            s_stop_line = min(
+                    lane.clcs.convert_to_curvilinear_coords(*lanelet.stop_line.start)[0],
+                    lane.clcs.convert_to_curvilinear_coords(*lanelet.stop_line.end)[0],
+                )
+            s_stop_line_list.append(s_stop_line)
+        else:
+            continue
+    return s_stop_line_list
