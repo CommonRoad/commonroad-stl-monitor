@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import unittest
 from pathlib import Path
@@ -36,10 +37,15 @@ if __name__ == "__main__":
     # )
     # ego_id = 10065
 
+    # scenario_file = os.path.join(
+    #     scenario_root_path, "test_intersection/DEU_AAH1-2_109450_T-9599.xml"
+    # )
+    # ego_id = 10112
+
     scenario_file = os.path.join(
-        scenario_root_path, "test_intersection/DEU_AAH1-2_109450_T-9599.xml"
+        scenario_root_path, "test_intersection/DEU_AAH-2_221950_T-2099.xml"
     )
-    ego_id = 10112
+    ego_id = 10068
     # scenario_file = os.path.join(
     #     scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
     # )
@@ -52,21 +58,24 @@ if __name__ == "__main__":
     world = World.create_from_scenario(scenario, config)
     ego_vehicle = world.vehicle_by_id(ego_id)
     rule_eval = PropositionRuleEvaluator.create_from_config(
-        world, ego_vehicle, "R_IN4", traffic_rules_config=traffic_rules
+        world, ego_vehicle, "R_IN4", traffic_rules_config=traffic_rules, use_boolean=False
     )
     rule = rule_eval._rule
     rule_robustness = list()
     prob_robs = list()
-    for i in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-    ):
-        rob = rule_eval.update()
-        prob_rob = rule_eval.get_propositions()
-        prob_robs.append(prob_rob)
-        rule_robustness.append(rob)
-        print("--------------------------------")
-        print("time = ", i)
-        print("rob = ", rob)
-        for prob in prob_rob[0]:
-            print(prob, ":", prob_rob[0][prob])
+    with open('output.txt', 'w') as file:
+        sys.stdout = file
+        for i in range(
+                rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
+        ):
+            rob = rule_eval.update()
+            prob_rob = rule_eval.get_propositions()
+            prob_robs.append(prob_rob)
+            rule_robustness.append(rob)
+            print("--------------------------------")
+            print("time = ", i)
+            print("rob = ", rob)
+            for prob in prob_rob[0]:
+                print(prob, ":", prob_rob[0][prob])
+    sys.stdout = sys.__stdout__
     rule_robustness = np.array(rule_robustness)
