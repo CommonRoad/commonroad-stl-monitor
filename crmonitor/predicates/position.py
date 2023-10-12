@@ -1314,6 +1314,8 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
             conflict_points = utils.find_conflict_points(
                 center_vertices_k, conflict_polygon
             )
+            if conflict_points is None:
+                return 0.001
             # get front- and rear-most points along reference path of k-th vehicle
             front_s_k = vehicle_k.front_s(time_step, vehicle_k.ref_path_lane)
             rear_s_k = vehicle_k.rear_s(time_step, vehicle_k.ref_path_lane)
