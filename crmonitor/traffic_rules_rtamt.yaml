@@ -6,7 +6,14 @@
 #   - R_G2: unnecessary braking only if safe distance is violated
 #   - R_G3: speed limit
 traffic_rules:
-  R_G1: 'A a1: ((in_front_of_i__a0_a1 and in_same_lane_i__a0_a1 and !once[0, 3s](cut_in_i__a1_a0 and prev(not cut_in_i__a1_a0))) implies keeps_safe_distance_prec__a0_a1)'
+  R_G1: "A a1: (
+                (
+                  in_front_of_i__a0_a1 and 
+                  in_same_lane_i__a0_a1 and 
+                  not once[0, 3s](cut_in_i__a1_a0 and prev(not (cut_in_i__a1_a0)))
+                ) implies 
+                keeps_safe_distance_prec__a0_a1
+               )"
   R_G2: 'brakes_abruptly_i__a0 implies E a1: (precedes__a0_a1 and (not keeps_safe_distance_prec__a0_a1 or not rel_brakes_abruptly_i__a0_a1))'
   R_G3: keeps_lane_speed_limit__a0 and keeps_type_speed_limit__a0 and keeps_fov_speed_limit__a0 and keeps_brake_speed_limit__a0
 
@@ -57,7 +64,7 @@ traffic_rules:
                         ) and
                         (
                           (in_intersection_conflict_area__a1_a0) implies
-                          not (eventually[0,1s](in_intersection_conflict_area__a0_a1))
+                          not (eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
                         )
                       )or 
                     not(on_lanelet_with_type_intersection__a0)
@@ -87,37 +94,33 @@ traffic_rules:
                       ) and
                       (
                         (in_intersection_conflict_area__a1_a0) implies 
-                        not(eventually[0,1s](in_intersection_conflict_area__a0_a1))
+                        not(eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
                       )
                     )or not(on_lanelet_with_type_intersection__a0)
                   )
                 )"
 
-  R_IN5: "A a1: ((
-                    (
-                      turning_left__a0 and 
-                      (going_straight__a1 and not has_priority_left_straight__a0_a1) and
-                      on_oncom_of__a1_a0
-                    ) or
-                    (
-                      turning_right__a1 and 
-                      not has_priority_left_right__a0_a1 and
-                      on_oncom_of__a1_a0
-                    )
-                  ) implies 
+  R_IN5: "A a1: (
                   (
-                    ( 
+                    turning_right_target_turning_left_ego_target_has_priority_oncoming__a0_a1 or
+                    going_straight_target_turning_left_ego_target_has_priority_oncoming__a0_a1
+                  ) implies
+                  (
+                    (
                       (
-                      in_intersection_conflict_area__a0_a1 implies
+                        (in_intersection_conflict_area__a0_a1) implies
+                        (
+                          not(causes_braking_intersection__a0_a1) 
+                          and not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                        )
+                      ) and
                       (
-                        not causes_braking_intersection__a0_a1 and
-                        not eventually[0,1s](in_intersection_conflict_area__a1_a0)
+                        (in_intersection_conflict_area__a1_a0) implies 
+                        not(eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
                       )
-                      )
-                    ) or 
-                    not on_lanelet_with_type_intersection__a0
-                  ))
-                  "
+                    )or not(on_lanelet_with_type_intersection__a0)
+                  )
+                )"
 # Parameters for traffic rules
 ###
 # .. code-block:: yaml
