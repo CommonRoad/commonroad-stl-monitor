@@ -35,8 +35,13 @@ class IndEvaluator:
         self.log_filename = log_filename
         self._init_logger()
 
-        self.rules = ["R_IN1", "R_IN3", "R_IN4"]
-        self.use_bool = True
+        self.rules = ["R_IN1", "R_IN3", "R_IN4", "R_IN5"]
+        self.use_bool = False
+
+        rules_path = os.path.join(os.getcwd(), "../crmonitor/traffic_rules_rtamt.yaml")
+        self.traffic_rules = load_yaml(str(rules_path))
+        self.traffic_rules["traffic_rules_param"]["use_mpr"] = False
+        self.traffic_rules["traffic_rules_param"]["mpr_scenario"] = "intersection"
 
         # create data_loader
         self.data_processor = DataProcessor(
@@ -167,7 +172,11 @@ class IndEvaluator:
         log_msg = f"PROCESSING {world.scenario.scenario_id}:{ego_vehicle.id}:{rule}"
         self.logger.info(log_msg)
         rule_eval = PropositionRuleEvaluator.create_from_config(
-            world, ego_vehicle, rule, use_boolean=self.use_bool
+            world,
+            ego_vehicle,
+            rule,
+            use_boolean=self.use_bool,
+            traffic_rules_config=self.traffic_rules,
         )
         violation = 1.0
         for _ in range(
@@ -201,6 +210,9 @@ class DataProcessor:
         )
         columns = columns.append(
             pd.MultiIndex.from_product([["R_IN4"], ["violation_bool"]])
+        )
+        columns = columns.append(
+            pd.MultiIndex.from_product([["R_IN5"], ["violation_bool"]])
         )
         self.data = pd.DataFrame(index=index, columns=columns)
 
