@@ -122,6 +122,14 @@ class GeneralPredicates(str, Enum):
         "going_straight_target_going_straight_ego_target_has_priority"
     )
 
+    RightTargetLeftEgoTargetHasPriorityOncoming = (
+        "turning_right_target_turning_left_ego_target_has_priority_oncoming"
+    )
+
+    StraightTargetLeftEgoTargetHasPriorityOncoming = (
+        "going_straight_target_turning_left_ego_target_has_priority_oncoming"
+    )
+
 
 class PredCutIn(BasePredicateEvaluator):
     predicate_name = GeneralPredicates.CutIn
@@ -1234,6 +1242,69 @@ class PredRightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriorityB
         return rob
 
 
+class PredRightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.RightTargetLeftEgoTargetHasPriorityOncoming
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityRightLeft(config)
+        self._turning_target = PredTurningRight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._on_oncoming_of = PredOnOncomOf(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        bool_turning_target = self._turning_target.evaluate_boolean(
+            world, time_step, [target_vehicle_id]
+        )
+        bool_turning_ego = self._turning_ego.evaluate_boolean(
+            world, time_step, [ego_vehicle_id]
+        )
+        bool_target_has_priority = self._target_has_priority.evaluate_boolean(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        bool_on_oncoming_of = self._on_oncoming_of.evaluate_boolean(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        return (
+            bool_turning_target
+            and bool_turning_ego
+            and bool_target_has_priority
+            and bool_on_oncoming_of
+        )
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        if self.config["use_mpr"]:
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+        else:
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        rob = min(
+            rob_turning_target,
+            rob_turning_ego,
+            rob_target_has_priority,
+            rob_on_oncoming_of,
+        )
+        return rob
+
+
 class PredRightTargetStraightEgoTargetHasPriority(PredTurningHasPriorityBase):
     predicate_name = GeneralPredicates.RightTargetStraightEgoTargetHasPriority
     arity = 2
@@ -1348,6 +1419,69 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
             rob_turning_ego,
             rob_target_has_priority,
             -rob_on_oncoming_of,
+        )
+        return rob
+
+
+class PredStraightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase):
+    predicate_name = GeneralPredicates.StraightTargetLeftEgoTargetHasPriorityOncoming
+    arity = 2
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._target_has_priority = PredHasPriorityStraightLeft(config)
+        self._turning_target = PredGoingStraight(config)
+        self._turning_ego = PredTurningLeft(config)
+        self._on_oncoming_of = PredOnOncomOf(config)
+
+    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        bool_turning_target = self._turning_target.evaluate_boolean(
+            world, time_step, [target_vehicle_id]
+        )
+        bool_turning_ego = self._turning_ego.evaluate_boolean(
+            world, time_step, [ego_vehicle_id]
+        )
+        bool_target_has_priority = self._target_has_priority.evaluate_boolean(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        bool_on_oncoming_of = self._on_oncoming_of.evaluate_boolean(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        return (
+            bool_turning_target
+            and bool_turning_ego
+            and bool_target_has_priority
+            and bool_on_oncoming_of
+        )
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        ego_vehicle_id = vehicle_ids[0]
+        target_vehicle_id = vehicle_ids[1]
+        if self.config["use_mpr"]:
+            rob_turning_target = self._turning_target.evaluate_mpr(world, time_step, [target_vehicle_id])
+            rob_turning_ego = self._turning_ego.evaluate_mpr(world, time_step, [ego_vehicle_id])
+        else:
+            rob_turning_target = self._turning_target.evaluate_robustness(
+                world, time_step, [target_vehicle_id]
+            )
+            rob_turning_ego = self._turning_ego.evaluate_robustness(
+                world, time_step, [ego_vehicle_id]
+            )
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
+        )
+        rob = min(
+            rob_turning_target,
+            rob_turning_ego,
+            rob_target_has_priority,
+            rob_on_oncoming_of,
         )
         return rob
 
