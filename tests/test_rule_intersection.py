@@ -35,6 +35,7 @@ class RuleTest(unittest.TestCase):
 
         rules_path = root_path / "traffic_rules_rtamt.yaml"
         self.traffic_rules = load_yaml(str(rules_path))
+        self.traffic_rules["traffic_rules_param"]["use_mpr"] = False
         self.scenario_root_path = root_path.parent / "scenarios"
 
     def test_R_IN1(self):
@@ -120,8 +121,8 @@ class RuleTest(unittest.TestCase):
             rob = rule_eval.update()
             pred_rob = rule_eval.get_predicates()
             pred_robs.append(pred_rob)
-            prob_rob = rule_eval.get_propositions()
-            prob_robs.append(prob_rob)
+            prob_rob, _, _ = rule_eval.get_propositions()
+            prob_robs.append([prob_rob[prop_name] for prop_name in prob_rob.keys()])
             rule_robustness.append(rob)
         rule_robustness = np.array(rule_robustness)
         self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
@@ -152,6 +153,37 @@ class RuleTest(unittest.TestCase):
         ):
             rob = rule_eval.update()
             rule_robustness.append(rob)
+        rule_robustness = np.array(rule_robustness)
+        self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
+        self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
+        self.assertTrue(rule_robustness[exp_violation_end_time_step - 1] < 0)
+        self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)
+
+    def test_R_IN5(self):
+        rtamt_further_time_range = 10
+        exp_violation_time_step = 21 + rtamt_further_time_range
+        exp_violation_end_time_step = 28 + rtamt_further_time_range
+        scenario_file = os.path.join(
+            self.scenario_root_path,
+            "test_intersection/DEU_test_turn_left_6.xml",
+        )
+        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
+        world = World.create_from_scenario(scenario, self.config)
+        ego_vehicle = world.vehicle_by_id(1000)
+        rule_eval = PropositionRuleEvaluator.create_from_config(
+            world, ego_vehicle, "R_IN5", traffic_rules_config=self.traffic_rules
+        )
+        rule = rule_eval._rule
+        self.assertTrue(isinstance(rule, AllNode))
+        rule_robustness = list()
+        prob_robs = list()
+        for _ in range(
+            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
+        ):
+            rob = rule_eval.update()
+            rule_robustness.append(rob)
+            prob_rob, _, _ = rule_eval.get_propositions()
+            prob_robs.append([prob_rob[prop_name] for prop_name in prob_rob.keys()])
         rule_robustness = np.array(rule_robustness)
         self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
