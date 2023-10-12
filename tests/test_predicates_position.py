@@ -47,6 +47,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
         self.config["scale_rob"] = True
         self.config["d_sl"] = 1.0
         self.config["scenario"] = "intersection"
+        self.config["use_mpr"] = False
 
     def testStopLineInFront(self):
         scenario_file = os.path.join(
