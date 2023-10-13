@@ -959,3 +959,12 @@ def get_long_distance_stop_lines_from_lane(road_network: "RoadNetwork", lane: "L
         else:
             continue
     return s_stop_line_list
+
+
+def check_in_intersection(road_network: "RoadNetwork", lanelets_id):
+    for lanelet_id in lanelets_id:
+        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+        if LaneletType.INTERSECTION in lanelet.lanelet_type:
+            return True
+    return False
+

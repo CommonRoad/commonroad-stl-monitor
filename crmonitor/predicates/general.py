@@ -649,11 +649,14 @@ class PredTurningRight(BasePredicateEvaluator):
         right_turn_start_s, right_turn_end_s = road_network.get_lanelets_start_end_s(
             incoming.successors_right, right_turn_lane
         )
+        intersection_lanelets = incoming.successors_straight.union(
+            incoming.successors_left
+        ).union(incoming.successors_right)
         # case 1: vehicle only in incoming
         if (
             len(lanelets_assignment_current.intersection(incoming.incoming_lanelets))
             > 0
-            and len(lanelets_assignment_current.intersection(incoming.successors_right))
+            and len(lanelets_assignment_current.intersection(intersection_lanelets))
             == 0
         ):
             rob = self._scale_lon_dist(front_s - right_turn_start_s)
@@ -682,11 +685,7 @@ class PredTurningRight(BasePredicateEvaluator):
                 rob = self._scale_lon_dist(rob)
         # case 3: vehicle occupies left turning or straight lanelet at intersection instead of right turning
         elif (
-            len(lanelets_assignment_current.intersection(incoming.successors_left)) > 0
-            or len(
-                lanelets_assignment_current.intersection(incoming.successors_straight)
-            )
-            > 0
+            utils.check_in_intersection(road_network, lanelets_assignment_current)
         ):
             d_left = utils.distance_to_left_bounds_clcs(
                 vehicle, right_turn_lane, time_step
@@ -708,7 +707,11 @@ class PredTurningRight(BasePredicateEvaluator):
             right_turn_end_s = utils.get_lanelets_end_s(
                 right_turn_lane, incoming_right_turn.successors_right, road_network
             )
-            rob = self._scale_lon_dist(right_turn_end_s - rear_s)
+            front_s = vehicle.front_s(time_step, right_turn_lane)
+            right_turn_start_s = utils.get_lanelets_start_s(
+                right_turn_lane, incoming_right_turn.successors_straight, road_network
+            )
+            rob = self._scale_lon_dist(min(right_turn_end_s - rear_s, front_s - right_turn_start_s))
         return rob
 
 
@@ -767,11 +770,14 @@ class PredTurningLeft(BasePredicateEvaluator):
         left_turn_start_s, left_turn_end_s = road_network.get_lanelets_start_end_s(
             incoming.successors_left, left_turn_lane
         )
+        intersection_lanelets = incoming.successors_straight.union(
+            incoming.successors_left
+        ).union(incoming.successors_right)
         # case 1: vehicle only in incoming
         if (
             len(lanelets_assignment_current.intersection(incoming.incoming_lanelets))
             > 0
-            and len(lanelets_assignment_current.intersection(incoming.successors_left))
+            and len(lanelets_assignment_current.intersection(intersection_lanelets))
             == 0
         ):
             rob = self._scale_lon_dist(front_s - left_turn_start_s)
@@ -799,11 +805,7 @@ class PredTurningLeft(BasePredicateEvaluator):
                 rob = self._scale_lon_dist(rob)
         # case 3: vehicle occupies right turning or straight lanelet at intersection instead of right turning
         elif (
-            len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0
-            or len(
-                lanelets_assignment_current.intersection(incoming.successors_straight)
-            )
-            > 0
+            utils.check_in_intersection(road_network, lanelets_assignment_current)
         ):
             d_right = utils.distance_to_right_bounds_clcs(
                 vehicle, left_turn_lane, time_step
@@ -825,7 +827,11 @@ class PredTurningLeft(BasePredicateEvaluator):
             left_turn_end_s = utils.get_lanelets_end_s(
                 left_turn_lane, incoming_left_turn.successors_left, road_network
             )
-            rob = self._scale_lon_dist(left_turn_end_s - rear_s)
+            front_s = vehicle.front_s(time_step, left_turn_lane)
+            left_turn_start_s = utils.get_lanelets_start_s(
+                left_turn_lane, incoming_left_turn.successors_straight, road_network
+            )
+            rob = self._scale_lon_dist(min(left_turn_end_s - rear_s, front_s - left_turn_start_s))
         return rob
 
 
@@ -891,12 +897,13 @@ class PredGoingStraight(BasePredicateEvaluator):
         straight_start_s, straight_end_s = road_network.get_lanelets_start_end_s(
             incoming.successors_straight, straight_lane
         )
+        intersection_lanelets = incoming.successors_straight.union(incoming.successors_left).union(incoming.successors_right)
         # case 1: vehicle only in incoming
         if (
             len(lanelets_assignment_current.intersection(incoming.incoming_lanelets))
             > 0
             and len(
-                lanelets_assignment_current.intersection(incoming.successors_straight)
+                lanelets_assignment_current.intersection(intersection_lanelets)
             )
             == 0
         ):
@@ -939,9 +946,7 @@ class PredGoingStraight(BasePredicateEvaluator):
                 rob = self._scale_lon_dist(rob)
         # case 3: vehicle occupies right turning or straight lanelet at intersection instead of right turning
         elif (
-            len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0
-            or len(lanelets_assignment_current.intersection(incoming.successors_left))
-            > 0
+            utils.check_in_intersection(road_network, lanelets_assignment_current)
         ):
             d_left = utils.distance_to_left_bounds_clcs(
                 vehicle, straight_lane, time_step
@@ -959,6 +964,7 @@ class PredGoingStraight(BasePredicateEvaluator):
                 rob_right = np.min(d_right, initial=np.inf)
             rob = self._scale_lat_dist(np.min([rob_left, rob_right]))
         # case 4: vehicle exits intersection
+        # TODO: change to lateral distance to straight lane
         else:
             (
                 incoming_straight,
@@ -973,7 +979,11 @@ class PredGoingStraight(BasePredicateEvaluator):
             straight_end_s = utils.get_lanelets_end_s(
                 straight_lane, incoming_straight.successors_straight, road_network
             )
-            rob = self._scale_lon_dist(straight_end_s - rear_s)
+            front_s = vehicle.front_s(time_step, straight_lane)
+            straight_start_s = utils.get_lanelets_start_s(
+                straight_lane, incoming_straight.successors_straight, road_network
+            )
+            rob = self._scale_lon_dist(min(straight_end_s - rear_s, front_s - straight_start_s))
         return rob
 
 
