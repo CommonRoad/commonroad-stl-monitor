@@ -1363,7 +1363,8 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
                     )[0]
                 )
                 rob = min(front_s_k - start_conflict_s, end_conflict_s - rear_s_k)
-                rob = self._scale_lon_dist(rob)
+                # TODO: fix wrong result of route planner
+                rob = min(-0.01, self._scale_lon_dist(rob))
         return rob
 
 
