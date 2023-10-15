@@ -264,6 +264,7 @@ class BasePredicateEvaluator(abc.ABC):
             feature_list += get_other_to_ego_features(ego_veh, other_veh)
             feature_list += get_ego_to_other_features(other_veh, ego_veh)
         # - characteristic function (Boolean evaluation)
+        feature_list = [round(f, 6) for f in feature_list]
         char_func = bool_to_num(self.evaluate_boolean(world, time_step, vehicle_ids))
         feature_list += [char_func]
         return feature_list
