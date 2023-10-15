@@ -135,67 +135,82 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        robustness = -np.inf
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        ref_path = vehicle.ref_path_lane
-        # find successors of lanelets_dir
-        reach_suc = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
-        # intersection between reference path and successors of lanelets_dir
-        lanelets_ids = ref_path.contained_lanelets.intersection(reach_suc)
-        # find relevant lanelets with stop traffic sign
-        lanelet_with_ts_stop = list()
-        for lanelet_id in lanelets_ids:
+        # find all traffic sign elements with type stop (206) in lanelets_dir
+        for lanelet_id in vehicle.lanelets_dir:
             traffic_sign_elements = utils.traffic_sign(
                 lanelet_id, self.stop_traffic_sign_deu, road_network
             )
-            if traffic_sign_elements is not None:
-                lanelet_with_ts_stop.append(lanelet_id)
-        if len(lanelet_with_ts_stop) == 0:
-            return self._scale_lon_dist(float(robustness))
-        # Get the front and rear longitudinal value of the vehicle and lanelets with stop sign
-        front_s = vehicle.front_s(time_step, ref_path) or -np.inf
-        rear_s = vehicle.rear_s(time_step, ref_path) or -np.inf
-        lanelet_start_s = np.array(
-            [
-                ref_path.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_start_line(
-                        world.road_network.lanelet_network.find_lanelet_by_id(l)
-                    )[0]
-                )[0]
-                for l in lanelet_with_ts_stop
-            ]
-        )
-        lanelet_end_s = np.array(
-            [
-                ref_path.clcs.convert_to_curvilinear_coords(
-                    *utils.get_lanelet_end_line(
-                        world.road_network.lanelet_network.find_lanelet_by_id(l)
-                    )[0]
-                )[0]
-                for l in lanelet_with_ts_stop
-            ]
-        )
-        for i in range(lanelet_start_s.shape[0]):
+            if traffic_sign_elements is None:
+                continue
             # check if vehicle in this lanelet in lateral horizon
-            d_lane = utils.distance_to_lanes(
-                vehicle, [lanelet_with_ts_stop[i]], world, time_step
-            )
+            d_lane = utils.distance_to_lanes(vehicle, [lanelet_id], world, time_step)
             if d_lane < 0:
                 continue
-            # lanelet in front of vehicle
-            if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
-                robustness = max(robustness, front_s - lanelet_start_s[i])
-            # vehicle in front of lanelet
-            elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
-                robustness = max(robustness, lanelet_end_s[i] - rear_s)
-            # vehicle inside lanelet
-            else:
-                distance_robustness = min(
-                    front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s
-                )
-                robustness = max(robustness, distance_robustness)
-        return self._scale_lon_dist(float(robustness))
+            return 1.0
+        return -1.0
+        # robustness = -np.inf
+        # vehicle = world.vehicle_by_id(vehicle_ids[0])
+        # road_network = world.road_network
+        # ref_path = vehicle.ref_path_lane
+        # # find successors of lanelets_dir
+        # reach_suc = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
+        # # intersection between reference path and successors of lanelets_dir
+        # lanelets_ids = ref_path.contained_lanelets.intersection(reach_suc)
+        # # find relevant lanelets with stop traffic sign
+        # lanelet_with_ts_stop = list()
+        # for lanelet_id in lanelets_ids:
+        #     traffic_sign_elements = utils.traffic_sign(
+        #         lanelet_id, self.stop_traffic_sign_deu, road_network
+        #     )
+        #     if traffic_sign_elements is not None:
+        #         lanelet_with_ts_stop.append(lanelet_id)
+        # if len(lanelet_with_ts_stop) == 0:
+        #     return self._scale_lon_dist(float(robustness))
+        # # Get the front and rear longitudinal value of the vehicle and lanelets with stop sign
+        # front_s = vehicle.front_s(time_step, ref_path) or -np.inf
+        # rear_s = vehicle.rear_s(time_step, ref_path) or -np.inf
+        # lanelet_start_s = np.array(
+        #     [
+        #         ref_path.clcs.convert_to_curvilinear_coords(
+        #             *utils.get_lanelet_start_line(
+        #                 world.road_network.lanelet_network.find_lanelet_by_id(l)
+        #             )[0]
+        #         )[0]
+        #         for l in lanelet_with_ts_stop
+        #     ]
+        # )
+        # lanelet_end_s = np.array(
+        #     [
+        #         ref_path.clcs.convert_to_curvilinear_coords(
+        #             *utils.get_lanelet_end_line(
+        #                 world.road_network.lanelet_network.find_lanelet_by_id(l)
+        #             )[0]
+        #         )[0]
+        #         for l in lanelet_with_ts_stop
+        #     ]
+        # )
+        # for i in range(lanelet_start_s.shape[0]):
+        #     # check if vehicle in this lanelet in lateral horizon
+        #     d_lane = utils.distance_to_lanes(
+        #         vehicle, [lanelet_with_ts_stop[i]], world, time_step
+        #     )
+        #     if d_lane < 0:
+        #         continue
+        #     # lanelet in front of vehicle
+        #     if (front_s - lanelet_start_s[i]) < 0 < (lanelet_end_s[i] - front_s):
+        #         robustness = max(robustness, front_s - lanelet_start_s[i])
+        #     # vehicle in front of lanelet
+        #     elif (lanelet_end_s[i] - rear_s) <= 0 <= (front_s - lanelet_start_s[i]):
+        #         robustness = max(robustness, lanelet_end_s[i] - rear_s)
+        #     # vehicle inside lanelet
+        #     else:
+        #         distance_robustness = min(
+        #             front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s
+        #         )
+        #         robustness = max(robustness, distance_robustness)
+        # return self._scale_lon_dist(float(robustness))
 
 
 class PredRelevantTrafficLight(BasePredicateEvaluator):
