@@ -33,7 +33,7 @@ if __name__ == "__main__":
     scenario_root_path = root_path.parent / "scenarios"
 
     scenario_file = os.path.join(
-        scenario_root_path, "test_intersection/DEU_AAH-2_221950_T-2099.xml"
+        scenario_root_path, "test_intersection/DEU_AAH1-2_1715150_T-15299.xml"
     )
     ego_id = 10222
 
