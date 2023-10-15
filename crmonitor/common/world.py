@@ -292,6 +292,12 @@ class World:
             veh = None
         return veh
 
+    def vehicle_ids(self):
+        vehicle_ids = list()
+        for veh in self.vehicles:
+            vehicle_ids.append(veh.id)
+        return vehicle_ids
+
     @property
     def dt(self):
         if self.scenario is not None:
