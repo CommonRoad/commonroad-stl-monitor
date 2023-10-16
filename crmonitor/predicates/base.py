@@ -167,7 +167,7 @@ class BasePredicateEvaluator(abc.ABC):
                 veh.get_lon_state(time_step, veh.ref_path_lane).s,  # position
                 veh.get_lon_state(time_step, veh.ref_path_lane).v,  # velocity
                 veh.get_lon_state(time_step, veh.ref_path_lane).a,  # acceleration
-                veh.get_lon_state(time_step, veh.ref_path_lane).j,  # jerk
+                # veh.get_lon_state(time_step, veh.ref_path_lane).j,  # jerk
             ]
 
         def get_veh_input_long_features(veh: Vehicle):
