@@ -68,9 +68,9 @@ class PredicateNode(MonitorNode, VisitorNode):
         self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
 
-    def evaluate_robustness(self, world, time_step, vehicle_ids):
+    def evaluate_robustness(self, world, mpr_world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
+            world, mpr_world, time_step, vehicle_ids
         )
         self.latest_value = value
         self.latest_vehicle_ids = tuple(vehicle_ids)
