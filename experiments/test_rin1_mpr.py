@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import unittest
 from pathlib import Path
@@ -48,14 +49,19 @@ if __name__ == "__main__":
     rule = rule_eval._rule
     rule_robustness = list()
     prob_robs = list()
-    for i in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-    ):
-        rob = rule_eval.update()
-        prob_rob = rule_eval.get_propositions()
-        prob_robs.append(prob_rob)
-        rule_robustness.append(rob)
-        print("--------------------------------")
-        print("time = ", i)
-        print("rob = ", rob)
+    with open('output.txt', 'w') as file:
+        sys.stdout = file
+        for i in range(
+                rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
+        ):
+            rob = rule_eval.update()
+            prob_rob = rule_eval.get_propositions()
+            prob_robs.append(prob_rob)
+            rule_robustness.append(rob)
+            print("--------------------------------")
+            print("time = ", i)
+            print("rob = ", rob)
+            for prob in prob_rob[0]:
+                print(prob, ":", prob_rob[0][prob])
+    sys.stdout = sys.__stdout__
     rule_robustness = np.array(rule_robustness)
