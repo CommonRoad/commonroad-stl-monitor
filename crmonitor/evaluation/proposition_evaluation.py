@@ -13,6 +13,8 @@ from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonito
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
 
+from commonroad_mpr.common.observation import World as WorldMPR
+
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
     def visit_rule_node(self, rule_node: RuleNode, *ctx):
@@ -38,6 +40,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
         rule: VisitorNode,
         ego_id: int,
         world: World,
+        world_mpr: Optional[WorldMPR] = (None,),
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -50,6 +53,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
             rule,
             ego_id,
             world,
+            world_mpr,
             start_time_step,
             use_boolean,
             output_type,

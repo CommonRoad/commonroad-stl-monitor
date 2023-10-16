@@ -109,7 +109,7 @@ class BasePredicateEvaluator(abc.ABC):
                 time_step,
                 vehicle_ids_tuple,
             )
-            if self.config["use_mpr"]:
+            if self.config["use_mpr"] and self.peml is not None:
                 value = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
             else:
                 value = self.evaluate_robustness(world, time_step, vehicle_ids)
