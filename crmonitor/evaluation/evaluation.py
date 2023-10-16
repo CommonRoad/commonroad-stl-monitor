@@ -27,6 +27,8 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import VisitorNode
 
+from commonroad_mpr.common.observation import World as WorldMPR
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,10 +70,13 @@ class RuleEvaluator:
         rule = RuleFactory(
             PredicateFactory(traffic_rules_config["traffic_rules_param"])
         ).parse_rule(rule_str_dict[rule], name=rule)
+
+        world_mpr = WorldMPR.create_from_scenario(world.scenario)
         return cls(
             rule,
             ego_vehicle.id,
             world,
+            world_mpr=world_mpr,
             use_boolean=use_boolean,
             output_type=output_type,
         )
@@ -81,6 +86,7 @@ class RuleEvaluator:
         rule: VisitorNode,
         ego_id: Optional[Union[Vehicle, int]] = None,
         world: Optional[World] = None,
+        world_mpr: Optional[WorldMPR] = None,
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -104,7 +110,8 @@ class RuleEvaluator:
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
         self._ego_id = None
-        self._world = None
+        self._world = world_mpr
+        self._mpr_world = None
         if ego_id is not None:
             assert world is not None
             self.reset(ego_id, world, start_time_step)
@@ -147,6 +154,7 @@ class RuleEvaluator:
         rule_value = self._eval_visitor.walk(
             self._monitor,
             self._world,
+            self._mpr_world,
             self._last_evaluation_time_step,
             self.ego_vehicle,
         )

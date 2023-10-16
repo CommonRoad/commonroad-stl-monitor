@@ -1,10 +1,12 @@
 import abc
 import logging
+import warnings
 import numpy as np
 from typing import Callable, Dict, List, Tuple
 
 from commonroad.visualization.renderer import IRenderer
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
+from commonroad_mpr.common.observation import World as WorldMPR
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import Vehicle, World
@@ -151,7 +153,9 @@ class BasePredicateEvaluator(abc.ABC):
         feature_list += [char_func]
         return feature_list
 
-    def evaluate_mpr(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_mpr(
+        self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
+    ) -> float:
         """
         Evaluation of model predictive robustness
         """
@@ -174,7 +178,7 @@ class BasePredicateEvaluator(abc.ABC):
             return [0.0] * 35
 
     def evaluate_robustness_with_cache(
-        self, world: World, time_step, vehicle_ids: List[int]
+        self, world: World, mpr_world: WorldMPR, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         vehicle_ids_tuple = tuple(vehicle_ids)
@@ -189,7 +193,7 @@ class BasePredicateEvaluator(abc.ABC):
                 vehicle_ids_tuple,
             )
             if self.config["use_mpr"]:
-                value = self.evaluate_mpr(world, time_step, vehicle_ids)
+                value = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
             else:
                 value = self.evaluate_robustness(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(

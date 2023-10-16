@@ -63,13 +63,13 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.use_boolean = use_boolean
         self.output_type = output_type
 
-    def walk(self, node: MonitorNode, world, time_step, ego_vehicle, *ctx):
+    def walk(self, node: MonitorNode, world, mpr_world, time_step, ego_vehicle, *ctx):
         self.other_ids = tuple()
-        return node.visit(self, world, time_step, (ego_vehicle.id,), *ctx)
+        return node.visit(self, world, mpr_world, time_step, (ego_vehicle.id,), *ctx)
 
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
         world = ctx[0]
-        time_step = ctx[1]
+        time_step = ctx[2]
         # Collect child_values
         assert rule_node.monitor.dt == world.dt, (
             f"Monitor constructed with dt="
@@ -81,14 +81,16 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return val
 
     def _visit_quant_node(self, node, *ctx):
-        world, time_step, other_ids = ctx[:3]
+        world, mpr_world, time_step, other_ids = ctx[:4]
         all_ids = world.vehicle_ids_for_time_step(time_step)
         remaining_ids = tuple(set(all_ids).difference(other_ids))
         values = []
         selected_ids = []
         for i in remaining_ids:
             ids = other_ids + (i,)
-            val = node.monitors[i].visit(self, world, time_step, ids, *ctx[2:])
+            val = node.monitors[i].visit(
+                self, world, mpr_world, time_step, ids, *ctx[2:]
+            )
             values.append(val)
             selected_ids.append(ids)
         return values, selected_ids
@@ -122,7 +124,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return val
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        world, time_step, other_ids = ctx[:3]
+        world, mpr_world, time_step, other_ids = ctx[:4]
         predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
         if (
             self.use_boolean
@@ -132,7 +134,9 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             value = predicate_node.evaluate_boolean(world, time_step, predicate_ids)
             value = 1.0 if value else -1.0
         else:
-            value = predicate_node.evaluate_robustness(world, time_step, predicate_ids)
+            value = predicate_node.evaluate_robustness(
+                world, mpr_world, time_step, predicate_ids
+            )
         return value
 
 
