@@ -176,7 +176,7 @@ class BasePredicateEvaluator(abc.ABC):
         def get_veh_state_lat_features(veh: Vehicle):
             return [
                 veh.get_lat_state(time_step, veh.ref_path_lane).d,  # lateral_position
-                # veh.get_lat_state(time_step, veh.ref_path_lane).theta,  # orientation
+                veh.get_lat_state(time_step, veh.ref_path_lane).theta,  # orientation
                 # veh.get_lat_state(time_step, veh.ref_path_lane).kappa,  # curvature
                 # veh.get_lat_state(time_step, veh.ref_path_lane).kappa_dot,  # curvature_dot
             ]
