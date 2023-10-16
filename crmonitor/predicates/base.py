@@ -36,7 +36,10 @@ class BasePredicateEvaluator(abc.ABC):
         self._scaler = scaler or RobustnessScaler(
             scale=config.setdefault("scale_rob", True)
         )
-        self.feature_extractor = FeatureExtrator([self.predicate_name])
+        try:
+            self.feature_extractor = FeatureExtrator([self.predicate_name])
+        except:
+            self.feature_extractor = None
 
         if self.config["use_mpr"]:
             try:
