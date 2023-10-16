@@ -1,10 +1,10 @@
 import logging
 import math
-import warnings
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
 
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
+from commonroad_mpr.common.observation import World as WorldMPR
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletType, LineMarking
@@ -16,7 +16,6 @@ from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,
@@ -407,20 +406,27 @@ class PredPreceding(BasePredicateEvaluator):
         pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
-    def evaluate_mpr(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        feature_list = self.extract_feature(world, time_step, vehicle_ids)
-        self.in_same_lane_peml.list_feature_variables = [feature_list]
-        isl_rob, _ = self.in_same_lane_peml.robustness_models[0].predict([feature_list])
+    def evaluate_mpr(
+        self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
+    ) -> float:
+        vehicles = []
+        for veh_id in vehicle_ids:
+            vehicles.append(world_mpr.vehicle_by_id(veh_id))
+        isl_rob, _ = self.in_same_lane_peml.evaluate_robustness(
+            world=world_mpr, vehicles=vehicles, time_step=time_step
+        )
         # todo: the Boolean and robustness don't align
         if self.evaluate_robustness(world, time_step, vehicle_ids) > 0:
-            ifo_rob, _ = self.in_front_of_peml.robustness_models[0].predict(
-                [feature_list]
+            ifo_rob, _ = self.in_front_of_peml.evaluate_robustness(
+                world=world_mpr, vehicles=vehicles, time_step=time_step
             )
-            if ifo_rob < isl_rob:  # conjunction: robustness = min(isl_rob, ifo_rob)
-                robustness = ifo_rob
+            if (
+                ifo_rob[0] < isl_rob[0]
+            ):  # conjunction: robustness = min(isl_rob, ifo_rob)
+                robustness = ifo_rob[0]
                 self.peml = self.in_front_of_peml
             else:
-                robustness = isl_rob
+                robustness = isl_rob[0]
                 self.peml = self.in_same_lane_peml
         else:
             robustness = -1

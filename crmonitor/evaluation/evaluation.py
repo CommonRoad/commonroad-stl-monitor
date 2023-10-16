@@ -110,8 +110,8 @@ class RuleEvaluator:
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
         self._ego_id = None
-        self._world = world_mpr
-        self._mpr_world = None
+        self._world = None
+        self._mpr_world = world_mpr
         if ego_id is not None:
             assert world is not None
             self.reset(ego_id, world, start_time_step)
