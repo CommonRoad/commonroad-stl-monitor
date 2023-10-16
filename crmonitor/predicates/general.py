@@ -1016,7 +1016,7 @@ class PredTurningSamePriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_ego = self._turning_ego.evaluate_mpr(
                 world, time_step, [ego_vehicle_id]
             )
@@ -1165,7 +1165,7 @@ class PredTurningHasPriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
             )
@@ -1235,7 +1235,7 @@ class PredRightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriorityB
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
             )
@@ -1302,7 +1302,7 @@ class PredRightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
             )
@@ -1424,7 +1424,7 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
             )
@@ -1491,7 +1491,7 @@ class PredStraightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityB
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        if self.config["use_mpr"]:
+        if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
             )
