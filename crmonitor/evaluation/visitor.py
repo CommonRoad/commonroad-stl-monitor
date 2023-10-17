@@ -97,7 +97,10 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         values, selected_ids = self._visit_quant_node(all_node, *ctx)
-        other_ids = ctx[2]
+        # TODO: fix since adding mpr world in ctx
+        other_ids = ctx[3]
+        if not isinstance(other_ids, tuple):
+            other_ids = ctx[2]
         if len(values) > 0:
             idx = np.argmin(values)
             val = values[idx]
@@ -111,7 +114,9 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         values, selected_ids = self._visit_quant_node(exist_node, *ctx)
-        other_ids = ctx[2]
+        other_ids = ctx[3]
+        if not isinstance(other_ids, tuple):
+            other_ids = ctx[2]
         if len(values) > 0:
             idx = np.argmax(values)
             val = values[idx]
