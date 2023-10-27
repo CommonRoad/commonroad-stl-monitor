@@ -44,12 +44,16 @@ if __name__ == "__main__":
     config = load_yaml(str(config_path))
     config["scale_rob"] = True
     config["d_sl"] = 1.0
+    config["d_br"] = 15.0
+    config["a_br"] = -1.0
+    config["standstill_error"] = 0.1
     config["scenario"] = "intersection"
     config["intersection_road_network_param"]["map_type"] = "dataset"
     
     rules_path = root_path / "traffic_rules_rtamt.yaml"
     traffic_rules = load_yaml(str(rules_path))
     traffic_rules["traffic_rules_param"]["use_mpr"] = False
+    config["use_mpr"] = False
     traffic_rules["traffic_rules_param"]["mpr_scenario"] = "intersection"
     scenario_root_path = root_path.parent / "scenarios"
     
