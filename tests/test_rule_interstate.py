@@ -36,6 +36,7 @@ class RuleTest(unittest.TestCase):
         rules_path = root_path / "traffic_rules_rtamt.yaml"
         self.traffic_rules = load_yaml(str(rules_path))
         self.scenario_root_path = root_path.parent / "scenarios"
+        self.traffic_rules["traffic_rules_param"]["use_mpr"] = False
         self.parse_rule = RuleFactory(
             PredicateFactory(self.traffic_rules["traffic_rules_param"])
         ).parse_rule
