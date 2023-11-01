@@ -805,7 +805,7 @@ class RoadNetwork:
         self, lanelets_id: "Union[List, Set]", reference_lane: "Lane"
     ) -> (float, float):
         """
-        Finds the longitudinal position of the end point of given lanelets along reference lane
+        Finds the longitudinal position of the start and end points of given lanelets along reference lane
 
         :param lanelets_id: list of IDs of given lanelets
         :param reference_lane: reference lane

@@ -317,8 +317,9 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         self._gather_predicate_values_to_plot(
             vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
         )
+        # TODO: FIXME mpr world
         latest_value = self.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
+            world, None, time_step, vehicle_ids
         )
         latest_value_unscaled = (
             latest_value * self._scaler._scale_constants.MAX_LONG_DIST
@@ -452,8 +453,9 @@ class PredPreceding(BasePredicateEvaluator):
         veh_lon_dist = self._get_candidates(world, time_step, rear_veh)
         veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
         bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
+        # TODO: FIXME world mpr
         same_lane = self.same_lane.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
+            world, None, time_step, vehicle_ids
         )
         if bool_val:
             assert same_lane >= -self.eps
