@@ -71,6 +71,41 @@ traffic_rules:
                   )
                  )"
 
+# Since inD dataset has no RIN3 violation. We create a scenario using Crdesigner. The time step size is 0.1s not 0.04s
+  R_IN3_hand_draft: "A a1: (
+                    (
+                      on_incoming_left_of__a0_a1 and 
+                      not(relevant_traffic_light__a0) and 
+                      (
+                        turning_right_ego_turning_right_target_same_priority__a0_a1 or
+                        turning_right_ego_turning_left_target_same_priority__a0_a1 or
+                        turning_right_ego_going_straight_target_same_priority__a0_a1 or 
+                        turning_left_ego_turning_right_target_same_priority__a0_a1 or
+                        turning_left_ego_turning_left_target_same_priority__a0_a1 or
+                        turning_left_ego_going_straight_target_same_priority__a0_a1 or
+                        going_straight_ego_turning_right_target_same_priority__a0_a1 or
+                        going_straight_ego_turning_left_target_same_priority__a0_a1 or
+                        going_straight_ego_going_straight_target_same_priority__a0_a1
+                      )
+                    ) implies
+                    (
+                        (
+                          (
+                          (in_intersection_conflict_area__a0_a1) implies
+                            (
+                              not(causes_braking_intersection__a0_a1) and
+                              not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                            )
+                          ) and
+                          (
+                            (in_intersection_conflict_area__a1_a0) implies
+                            not (eventually[0,1s](in_intersection_conflict_area__a0_a1))
+                          )
+                        )or 
+                      not(on_lanelet_with_type_intersection__a0)
+                    )
+                   )"
+
   R_IN4: "A a1: (
                   (  
                     turning_right_target_turning_right_ego_target_has_priority__a0_a1 or

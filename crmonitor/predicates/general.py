@@ -167,16 +167,17 @@ class PredCutIn(BasePredicateEvaluator):
     ) -> float:
         cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
-
+        # TODO: FIXME world mpr
         single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
             world,
+            None,
             time_step,
             [
                 vehicle_ids[0],
             ],
         )
         same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
+            world, None, time_step, vehicle_ids
         )
 
         cutting_lane = cutting_vehicle.get_lane(time_step)
@@ -214,9 +215,9 @@ class PredCutIn(BasePredicateEvaluator):
         self._gather_predicate_values_to_plot(
             vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
         )
-
+        # TODO: FIXME world mpr
         latest_value = self.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
+            world, None, time_step, vehicle_ids
         )
         latest_value_normalized = (latest_value + 1) / 2
         violation_color = self._get_color_map()(latest_value_normalized)

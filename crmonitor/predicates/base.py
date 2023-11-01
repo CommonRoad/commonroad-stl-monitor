@@ -40,7 +40,7 @@ class BasePredicateEvaluator(abc.ABC):
             try:
                 self.peml = PEML([self.predicate_name])
             except:
-                print("do not have model:", self.predicate_name)
+                logger.warning("do not have model %s", str(self.predicate_name))
                 self.peml = None
 
     def _scale_speed(self, x):

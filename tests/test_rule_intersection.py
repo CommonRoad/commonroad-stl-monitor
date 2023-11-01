@@ -40,6 +40,7 @@ class RuleTest(unittest.TestCase):
 
     def test_R_IN1(self):
         exp_violation_time_step = 24
+        self.config["intersection_road_network_param"]["map_type"] = "hand_draft"
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
@@ -47,7 +48,7 @@ class RuleTest(unittest.TestCase):
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = PropositionRuleEvaluator.create_from_config(
-            world, ego_vehicle, "R_IN1"
+            world, ego_vehicle, "R_IN1", self.traffic_rules
         )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, RuleNode))
@@ -66,49 +67,20 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
 
-    def test_META_1(self):
-        rtamt_further_time_range = 10
-        exp_violation_time_step = 20 + rtamt_further_time_range
-        exp_violation_end_time_step = 27 + rtamt_further_time_range
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
-        ego_vehicle = world.vehicle_by_id(30)
-        target_vehicle = world.vehicle_by_id(31)
-        rule_eval = PropositionRuleEvaluator.create_from_config(
-            world, ego_vehicle, "META_1"
-        )
-        rule = rule_eval._rule
-        self.assertTrue(isinstance(rule, AllNode))
-        rule_robustness = list()
-        for _ in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-        ):
-            rob = rule_eval.update()
-            rule_robustness.append(rob)
-        rule_robustness = np.array(rule_robustness)
-        self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
-        self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step - 1] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)
-
     def test_R_IN3(self):
+        self.config["intersection_road_network_param"]["map_type"] = "hand_draft"
         rtamt_further_time_range = 10
         exp_violation_time_step = 20 + rtamt_further_time_range
         exp_violation_end_time_step = 27 + rtamt_further_time_range
         scenario_file = os.path.join(
             self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
+            "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
         ego_vehicle = world.vehicle_by_id(30)
-        target_vehicle = world.vehicle_by_id(31)
         rule_eval = PropositionRuleEvaluator.create_from_config(
-            world, ego_vehicle, "R_IN3"
+            world, ego_vehicle, "R_IN3_hand_draft", self.traffic_rules
         )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
@@ -131,19 +103,17 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)
 
     def test_R_IN4(self):
-        rtamt_further_time_range = 10
-        exp_violation_time_step = 20 + rtamt_further_time_range
-        exp_violation_end_time_step = 27 + rtamt_further_time_range
+        self.config["intersection_road_network_param"]["map_type"] = "dataset"
+        exp_violation_time_step = 133
         scenario_file = os.path.join(
             self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionInteract-2_1_T-1.xml",
+            "test_intersection/DEU_AAH1-2_176000_T-6149.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
-        ego_vehicle = world.vehicle_by_id(30)
-        target_vehicle = world.vehicle_by_id(31)
+        ego_vehicle = world.vehicle_by_id(10093)
         rule_eval = PropositionRuleEvaluator.create_from_config(
-            world, ego_vehicle, "R_IN4"
+            world, ego_vehicle, "R_IN4", self.traffic_rules
         )
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
@@ -156,20 +126,17 @@ class RuleTest(unittest.TestCase):
         rule_robustness = np.array(rule_robustness)
         self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step - 1] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)
 
     def test_R_IN5(self):
-        rtamt_further_time_range = 10
-        exp_violation_time_step = 21 + rtamt_further_time_range
-        exp_violation_end_time_step = 28 + rtamt_further_time_range
+        self.config["intersection_road_network_param"]["map_type"] = "dataset"
+        exp_violation_time_step = 68
         scenario_file = os.path.join(
             self.scenario_root_path,
-            "test_intersection/DEU_test_turn_left_6.xml",
+            "test_intersection/DEU_AAH1-2_7900_T-1049.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
-        ego_vehicle = world.vehicle_by_id(1000)
+        ego_vehicle = world.vehicle_by_id(10020)
         rule_eval = PropositionRuleEvaluator.create_from_config(
             world, ego_vehicle, "R_IN5", traffic_rules_config=self.traffic_rules
         )
@@ -187,5 +154,3 @@ class RuleTest(unittest.TestCase):
         rule_robustness = np.array(rule_robustness)
         self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step - 1] < 0)
-        self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)

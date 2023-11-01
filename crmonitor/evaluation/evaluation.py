@@ -71,7 +71,10 @@ class RuleEvaluator:
             PredicateFactory(traffic_rules_config["traffic_rules_param"])
         ).parse_rule(rule_str_dict[rule], name=rule)
 
-        world_mpr = WorldMPR.create_from_scenario(world.scenario)
+        if traffic_rules_config["traffic_rules_param"]["use_mpr"]:
+            world_mpr = WorldMPR.create_from_scenario(world.scenario)
+        else:
+            world_mpr = None
         return cls(
             rule,
             ego_vehicle.id,

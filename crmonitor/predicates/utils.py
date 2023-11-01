@@ -444,6 +444,31 @@ def traffic_sign_type(lanelet_ids, road_network: RoadNetwork):
     return traffic_sign_list
 
 
+def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwork):
+    """
+    :param lanelet_id:
+    :param given_traffic_sign_id:
+    :param road_network:
+    :return: the traffic sign element of a given type assigned to a lanelet
+    """
+    traffic_sign_elements = list()
+    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
+    ts_element_ids = lanelet.traffic_signs
+    for ts_element_id in ts_element_ids:
+        traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(
+            ts_element_id
+        )
+        for ts_element in traffic_sign_object.traffic_sign_elements:
+            if ts_element.traffic_sign_element_id == given_traffic_sign_id:
+                traffic_sign_elements.append(traffic_sign_object)
+    if len(traffic_sign_elements) == 0:
+        return None
+    assert len(traffic_sign_elements) == 1, (
+        "TODO: Only works for one " "traffic sign type per lanelet!"
+    )
+    return traffic_sign_elements[0]
+
+
 def get_lanelet_start_line(lanelet: Lanelet):
     right_start_vertice = lanelet.right_vertices[0, :]
     left_start_vertice = lanelet.left_vertices[0, :]

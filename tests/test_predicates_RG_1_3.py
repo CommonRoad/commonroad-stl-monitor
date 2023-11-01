@@ -623,7 +623,8 @@ class TestPredicate(unittest.TestCase):
 
         world = World({ego_vehicle}, road_network)
 
-        pred = PredLaneSpeedLimit({"country": "DEU"})
+        self.config["country"] = "DEU"
+        pred = PredLaneSpeedLimit(self.config)
 
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
@@ -680,7 +681,7 @@ class TestPredicate(unittest.TestCase):
         world = World({ego_vehicle, other_vehicle, other_vehicle_2}, road_network)
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
 
-        pred = PredPreceding({})
+        pred = PredPreceding(self.config)
         for t, exp in enumerate(expected):
             rob = pred.evaluate_robustness(world, t, vehicle_ids)
             self.assertEqual(exp, rob >= 0.0, f"t={t}")

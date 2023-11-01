@@ -25,7 +25,7 @@ class TestIntersectionAccelerationPredicates(unittest.TestCase):
     def testCausesBrakingIntersection(self):
         scenario_file = os.path.join(
             self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionInteract-3_1_T-1.xml",
+            "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
         world = World.create_from_scenario(scenario, self.config)
