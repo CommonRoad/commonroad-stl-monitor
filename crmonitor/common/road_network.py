@@ -31,14 +31,11 @@ class Lane:
         self._contained_lanelets = set(contained_lanelets)
         self.lane_id = int("".join((str(i) for i in self._contained_lanelets)))
         if "large_resampling_step" in road_network_param.keys():
-            # intersection
+            # intersection, to avoid outside projection domain in clcs
             # TODO: currently only consider AAH1 map
-            if 7 in contained_lanelets:
-                weight_left = 5
-                smooth_factor_left = 1.5
-            else:
-                weight_left = 12
-                smooth_factor_left = 1.5
+            weight_left, smooth_factor_left = self._get_smooth_parameter(
+                contained_lanelets
+            )
             (
                 self.clcs_left,
                 new_left_vertices,
@@ -50,17 +47,9 @@ class Lane:
                 smooth_factor=smooth_factor_left,
                 road_network_param=road_network_param,
             )
-            if (
-                0 in contained_lanelets
-                or 1 in contained_lanelets
-                or 2 in contained_lanelets
-                or 3 in contained_lanelets
-            ):
-                weight_right = 25
-                smooth_factor_right = 1.5
-            else:
-                weight_right = 12
-                smooth_factor_right = 1.5
+            weight_right, smooth_factor_right = self._get_smooth_parameter(
+                contained_lanelets
+            )
             (
                 self.clcs_right,
                 new_right_vertices,
@@ -72,12 +61,7 @@ class Lane:
                 smooth_factor=smooth_factor_right,
                 road_network_param=road_network_param,
             )
-            if 4 in contained_lanelets:
-                weight = 10
-                smooth_factor = 1.5
-            else:
-                weight = 12
-                smooth_factor = 1.5
+            weight, smooth_factor = self._get_smooth_parameter(contained_lanelets)
             (
                 self._clcs,
                 new_center_vertices,
@@ -89,7 +73,7 @@ class Lane:
                 smooth_factor=smooth_factor,
                 road_network_param=road_network_param,
             )
-
+            # TODO: there are some errors when using smoothed vertices in hand draft maps (crdesigner).
             if road_network_param.get("map_type") == "hand_draft":
                 self._orientation = self._compute_orientation_from_polyline(
                     merged_lanelet.center_vertices
@@ -119,9 +103,9 @@ class Lane:
 
             self._adj_left = None
             self._adj_right = None
-            # TODO: need to be fixed
-            self.old_vertice = merged_lanelet.center_vertices
-            self.new_vertice = new_center_vertices
+
+            self.center_vertices = merged_lanelet.center_vertices
+            self.smoothed_vertices = new_center_vertices
         else:
             self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
                 merged_lanelet.left_vertices, road_network_param
@@ -147,6 +131,8 @@ class Lane:
 
             self._adj_left = None
             self._adj_right = None
+            self.center_vertices = None
+            self.smoothed_vertices = None
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
@@ -305,8 +291,42 @@ class Lane:
 
         return curvilinear_cosy
 
+    @staticmethod
+    def _get_smooth_parameter(contained_lanelets: List[int]) -> (float, float):
+        """
+        Gets smooth parameters for different lanes.
+        """
+        # TODO: currently only consider AAH1 map.
+        if 7 in contained_lanelets:
+            weight = 5.0
+            smooth_factor = 1.5
+        elif (
+            0 in contained_lanelets
+            or 1 in contained_lanelets
+            or 2 in contained_lanelets
+            or 3 in contained_lanelets
+        ):
+            weight = 25.0
+            smooth_factor = 1.5
+        elif 4 in contained_lanelets:
+            weight = 10.0
+            smooth_factor = 1.5
+        else:
+            weight = 12.0
+            smooth_factor = 1.5
+        return weight, smooth_factor
+
     def _create_clcs_from_reference(
-        self, ref_path: np.ndarray, weight, smooth_factor, road_network_param
+        self,
+        ref_path: np.ndarray,
+        weight: float,
+        smooth_factor: float,
+        road_network_param: Dict,
+    ) -> (
+        CurvilinearCoordinateSystem,
+        np.ndarray,
+        CurvilinearCoordinateSystem,
+        np.ndarray,
     ):
         if road_network_param.get("map_type") == "hand_draft":
             reference_path_smooth = resample_polyline(
@@ -342,10 +362,11 @@ class Lane:
     @staticmethod
     def _smoothing_reference_path(
         reference_path: np.ndarray, smooth_factor=None, weight_coefficient=None
-    ):
-        # generate a smooth reference path
+    ) -> np.ndarray:
+        """
+        generates a smooth reference path using splprep
+        """
         transposed_reference_path = reference_path.T
-        # how to generate index okay
         okay = np.where(
             np.abs(np.diff(transposed_reference_path[0]))
             + np.abs(np.diff(transposed_reference_path[1]))
@@ -371,6 +392,9 @@ class Lane:
     def _extrapolate_resample_polyline(
         polyline: np.ndarray, step: float = 2.0
     ) -> np.ndarray:
+        """
+        Extrapolates polyline for resampling.
+        """
         # extend start point
         p = np.poly1d(np.polyfit(polyline[:2, 0], polyline[:2, 1], 1))
 
@@ -382,7 +406,6 @@ class Lane:
         # extrapolate final point
         p = np.poly1d(np.polyfit(polyline[-2:, 0], polyline[-2:, 1], 1))
 
-        # x = 2 * polyline[-1, 0] - polyline[-2, 0]
         # this extension helps the ego vehicle can drive to the end of the lane.
         x = polyline[-1, 0] + 99 * (polyline[-1, 0] - polyline[-2, 0])
         a = np.array([[x, p(x)]])
@@ -408,10 +431,12 @@ class RoadNetwork:
         """
         :param lanelet_network: CommonRoad lanelet network
         :param road_network_param: dictionary with parameters for the road network
+        :param scenario_type: scenario type (interstate or intersection)
         """
         self.lanelet_network = lanelet_network
         self.scenario_type = scenario_type
         self.lanes = self._create_lanes(road_network_param)
+        # add intersection elements for intersection scenarios
         if len(lanelet_network.intersections) != 0:
             self.incoming = self._create_incoming_dict(lanelet_network)
             self.lanes_incoming = self._create_lanes_of_incoming(lanelet_network)
@@ -427,7 +452,11 @@ class RoadNetwork:
         """
         lanes = []
         lane_lanelets = []
-        start_lanelets = self._get_start_lanelets(self.lanelet_network)
+        start_lanelets = [
+            lanelet
+            for lanelet in self.lanelet_network.lanelets
+            if len(lanelet.predecessor) == 0
+        ]
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
                 lanelet_type = LaneletType.ACCESS_RAMP
@@ -471,46 +500,6 @@ class RoadNetwork:
                 lanes[k].set_adj_lanes(lanes[k + 1], lanes[k - 1])
 
         return lanes
-
-    def _get_start_lanelets(self, lanelet_network: LaneletNetwork) -> List[Lanelet]:
-        start_lanelets = []
-        for lanelet in lanelet_network.lanelets:
-            # only consider the longest lanes in intersection
-            if len(lanelet.predecessor) == 0:
-                start_lanelets.append(lanelet)
-            elif self.scenario_type == "interstate":
-                predecessors = [
-                    self.lanelet_network.find_lanelet_by_id(pred_id)
-                    for pred_id in lanelet.predecessor
-                ]
-                for pred in predecessors:
-                    if not lanelet.lanelet_type == pred.lanelet_type:
-                        start_lanelets.append(lanelet)
-        return start_lanelets
-
-    @staticmethod
-    def _create_incoming_dict(
-        lanelet_network: LaneletNetwork,
-    ) -> Dict[int, IntersectionIncomingElement]:
-        incoming_dict = {}
-        for incoming_element in lanelet_network.intersections[0].incomings:
-            incoming_dict[incoming_element.incoming_id] = incoming_element
-        return incoming_dict
-
-    def _create_lanes_of_incoming(
-        self, lanelet_network: LaneletNetwork
-    ) -> Dict[int, List[Lane]]:
-        lanes_incoming = {}
-        for intersection in lanelet_network.intersections:
-            for incoming in intersection.incomings:
-                lanes_incoming[incoming.incoming_id] = [
-                    self.get_turning_lane_from_incoming(self.lanes, incoming, "right"),
-                    self.get_turning_lane_from_incoming(
-                        self.lanes, incoming, "straight"
-                    ),
-                    self.get_turning_lane_from_incoming(self.lanes, incoming, "left"),
-                ]
-        return lanes_incoming
 
     def find_lane_ids_by_obstacle(self, obstacle_id: int, time_step: int) -> Set[int]:
         """
@@ -603,15 +592,66 @@ class RoadNetwork:
                     return lane
         return list(occupied_lanes)[0]
 
+    # functions in intersection scenarios
+    @staticmethod
+    def _create_incoming_dict(
+        lanelet_network: LaneletNetwork,
+    ) -> Dict[int, IntersectionIncomingElement]:
+        """
+        creates incoming direction for an intersection
+
+        :param lanelet_network: lanelets network
+        """
+        # TODO: currently only consider the first intersection
+        incoming_dict = {}
+        for incoming_element in lanelet_network.intersections[0].incomings:
+            incoming_dict[incoming_element.incoming_id] = incoming_element
+        return incoming_dict
+
+    def _create_lanes_of_incoming(
+        self, lanelet_network: LaneletNetwork
+    ) -> Dict[int, List[Lane]]:
+        """
+        find right turning, left turning, and going straight lanes with respect to incomings
+
+        :param lanelet_network: lanelets network
+        """
+        lanes_incoming = {}
+        for intersection in lanelet_network.intersections:
+            for incoming in intersection.incomings:
+                lanes_incoming[incoming.incoming_id] = [
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "right"),
+                    self.get_turning_lane_from_incoming(
+                        self.lanes, incoming, "straight"
+                    ),
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "left"),
+                ]
+        return lanes_incoming
+
     def find_lanes_incoming_by_id(self, incoming_id: int) -> "List[Lane]":
+        """
+        Finds lanes by given an incoming id
+
+        :param incoming_id: ID of the incoming
+        """
         return self.lanes_incoming[incoming_id]
 
     def lanelet_reach_suc(self, lanelet_id: int) -> "np.array":
+        """
+        Finds reach_suc of a lanelet
+
+        :param lanelet_id: ID of the lanelet
+        """
         paths = self.lanes_suc(lanelet_id)
         paths = [l_id for path in paths for l_id in path]
         return np.unique(paths)
 
     def lanes_suc(self, lanelet_id: int) -> "List[List[int]]":
+        """
+        Finds successors of a lanelets along lanes
+
+        :param lanelet_id: ID of the lanelet
+        """
         lanelet_network = self.lanelet_network
         lanelet = lanelet_network.find_lanelet_by_id(lanelet_id)
         lanelet_ids = set()
@@ -629,11 +669,21 @@ class RoadNetwork:
         return paths
 
     def lanelet_reach_pre(self, lanelet_id: int) -> "np.array":
+        """
+        Finds reach_pre of a lanelet
+
+        :param lanelet_id: ID of the lanelet
+        """
         paths = self.lanes_pre(lanelet_id)
         paths = [l_id for path in paths for l_id in path]
         return np.unique(paths)
 
     def lanes_pre(self, lanelet_id: int) -> "List[List[int]]":
+        """
+        Finds predecessors of a lanelets along lanes
+
+        :param lanelet_id: ID of the lanelet
+        """
         lanelet_network = self.lanelet_network
         lanelet = lanelet_network.find_lanelet_by_id(lanelet_id)
         lanelet_ids = set()
@@ -653,13 +703,20 @@ class RoadNetwork:
     def find_incoming_intersection(
         self, lanelets_dir: "List[int]"
     ) -> "IntersectionIncomingElement":
+        """
+        Finds the incoming by given the lanelets_dir
+
+        :param lanelets_dir: lanelets_dir of the vehicle (driving direction)
+        """
         # TODO: further check needed
         possible_incomings = list()
+        # get all possible occupied lanelets with respect to lanelets_dir
         lanelet_pre = self.lanelet_reach_pre(lanelets_dir[0])
         lanelet_suc = self.lanelet_reach_suc(lanelets_dir[-1])
         possible_occupied_lanelets = (
             lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
         )
+        # find possible incoming elements
         for incoming_element in self.lanelet_network.intersections[0].incomings:
             if (
                 len(
@@ -698,6 +755,13 @@ class RoadNetwork:
         incoming: IntersectionIncomingElement,
         turning_direction: str,
     ) -> "Lane":
+        """
+        Finds turning lane by given incoming and turning direction
+
+        :param lanes: list of possible lanes
+        :param incoming: incoming element
+        :param turning_direction: turning direction (right, left, or straight)
+        """
         incoming_lanelets_ids = incoming.incoming_lanelets
         if turning_direction == "right":
             turning_lanelets_ids = incoming.successors_right
@@ -717,7 +781,6 @@ class RoadNetwork:
                 possible_lanes.append(lane)
         selected_lanes = list()
         # find the longest lane
-        # TODO: can separate in a new function
         for lane in possible_lanes:
             subset_find = False
             for index, selected_lane in enumerate(selected_lanes):
@@ -741,6 +804,12 @@ class RoadNetwork:
     def get_lanelets_start_end_s(
         self, lanelets_id: "Union[List, Set]", reference_lane: "Lane"
     ) -> (float, float):
+        """
+        Finds the longitudinal position of the end point of given lanelets along reference lane
+
+        :param lanelets_id: list of IDs of given lanelets
+        :param reference_lane: reference lane
+        """
         lanelets_start_s = np.inf
         lanelets_end_s = -np.inf
         for lanelet_id in lanelets_id:
@@ -756,14 +825,19 @@ class RoadNetwork:
             lanelets_end_s = max(lanelets_end_s, end_s)
         return lanelets_start_s, lanelets_end_s
 
-    def adjacent_lanelets(self, lanelet_ids: "Set[int]") -> "Set[int]":
-        for lanelet_id in lanelet_ids:
+    def adjacent_lanelets(self, lanelets_id: "Set[int]") -> "Set[int]":
+        """
+        Finds adjacent lanelets by given lanelets
+
+        :param lanelets_id: list of IDs of given lanelets
+        """
+        for lanelet_id in lanelets_id:
             la = self.lanelet_network.find_lanelet_by_id(lanelet_id)
             while la is not None and la.adj_left is not None:
                 if la.adj_left_same_direction:
                     la = self.lanelet_network.find_lanelet_by_id(la.adj_left)
                     if la is not None:
-                        lanelet_ids.add(la.lanelet_id)
+                        lanelets_id.add(la.lanelet_id)
                 else:
                     la = None
 
@@ -772,7 +846,7 @@ class RoadNetwork:
                 if la.adj_right_same_direction:
                     la = self.lanelet_network.find_lanelet_by_id(la.adj_right)
                     if la is not None:
-                        lanelet_ids.add(la.lanelet_id)
+                        lanelets_id.add(la.lanelet_id)
                 else:
                     la = None
-        return lanelet_ids
+        return lanelets_id

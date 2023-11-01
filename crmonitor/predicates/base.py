@@ -13,11 +13,6 @@ from commonroad_mpr.common.observation import World as WorldMPR
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import Vehicle, World
-from crmonitor.predicates.utils import (
-    bool_to_num,
-    distance_veh_center_to_lane_boundaries,
-    get_long_distance_stop_lines_from_lane,
-)
 from crmonitor.predicates.scaling import RobustnessScaler
 
 logger = logging.getLogger(__name__)

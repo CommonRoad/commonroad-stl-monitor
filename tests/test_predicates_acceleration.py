@@ -20,6 +20,7 @@ class TestIntersectionAccelerationPredicates(unittest.TestCase):
         self.config["d_br"] = 15.0
         self.config["a_br"] = -1.0
         self.config["scenario"] = "intersection"
+        self.config["use_mpr"] = False
 
     def testCausesBrakingIntersection(self):
         scenario_file = os.path.join(

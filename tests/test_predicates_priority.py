@@ -42,6 +42,7 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
         self.config = load_yaml(str(config_path))
         self.config["scale_rob"] = True
         self.config["scenario"] = "intersection"
+        self.config["use_mpr"] = False
 
     def testAtTrafficSign(self):
         scenario_file = os.path.join(

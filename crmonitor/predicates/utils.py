@@ -444,55 +444,6 @@ def traffic_sign_type(lanelet_ids, road_network: RoadNetwork):
     return traffic_sign_list
 
 
-def traffic_sign(lanelet_id: int, given_traffic_sign_id, road_network: RoadNetwork):
-    """
-    :param lanelet_id:
-    :param given_traffic_sign_id:
-    :param road_network:
-    :return: the traffic sign element of a given type assigned to a lanelet
-    """
-    traffic_sign_elements = list()
-    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-    ts_element_ids = lanelet.traffic_signs
-    for ts_element_id in ts_element_ids:
-        traffic_sign_object = road_network.lanelet_network.find_traffic_sign_by_id(
-            ts_element_id
-        )
-        for ts_element in traffic_sign_object.traffic_sign_elements:
-            if ts_element.traffic_sign_element_id == given_traffic_sign_id:
-                traffic_sign_elements.append(traffic_sign_object)
-    if len(traffic_sign_elements) == 0:
-        return None
-    assert len(traffic_sign_elements) == 1, (
-        "TODO: Only works for one " "traffic sign type per lanelet!"
-    )
-    return traffic_sign_elements[0]
-
-
-def distance_start_lanelet(
-    vehicle: Vehicle, lanelet_id: int, road_network: RoadNetwork, time_step
-):
-    """
-
-    :param vehicle:
-    :param lanelet_id:
-    :param road_network:
-    :param time_step:
-    :return: the distance between start of lanelet and the front of vehicle
-    """
-    lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-    lanlet_start_line = get_lanelet_start_line(lanelet)
-    state = vehicle.states_cr[time_step]
-    occ_points = rotate_translate(
-        vehicle.shape.vertices[:-1], state.position, state.orientation
-    )
-    d_start_lanelet = np.array(
-        cartesian_to_curvilinear(tuple([lanlet_start_line]), occ_points)
-    )[..., 1].ravel()
-    d_start_lanelet = d_start_lanelet[~np.isnan(d_start_lanelet)]
-    return np.max(d_start_lanelet)
-
-
 def get_lanelet_start_line(lanelet: Lanelet):
     right_start_vertice = lanelet.right_vertices[0, :]
     left_start_vertice = lanelet.left_vertices[0, :]
@@ -503,34 +454,6 @@ def get_lanelet_end_line(lanelet: Lanelet):
     right_start_vertice = lanelet.right_vertices[-1, :]
     left_start_vertice = lanelet.left_vertices[-1, :]
     return np.array([left_start_vertice, right_start_vertice])
-
-
-def active_tls_by_lanelet(lanelet: Lanelet, road_network: RoadNetwork):
-    assert len(lanelet.traffic_lights) == 1, (
-        "TODO: Only works for one " "traffic light per lanelet!"
-    )
-    tl = road_network.lanelet_network.find_traffic_light_by_id(
-        list(lanelet.traffic_lights)[0]
-    )
-    if tl.active:
-        return True
-    return False
-
-
-def get_incoming(lanelets_id, road_network: RoadNetwork) -> IntersectionIncomingElement:
-    incoming = None
-    for lanelet_id in lanelets_id:
-        lanelet_pre = road_network.reach_pre(lanelet_id)
-        for incoming_element in road_network.lanelet_network.intersections[0].incomings:
-            if (
-                len(incoming_element.incoming_lanelets.intersection(set(lanelet_pre)))
-                > 0
-            ):
-                incoming = incoming_element
-                break
-        if incoming is not None:
-            break
-    return incoming
 
 
 def get_incoming_multi_intersections(
@@ -655,92 +578,6 @@ def get_straight_going_lane_by_lanelets(
     return None, None
 
 
-def get_right_turn_lane(
-    road_network: RoadNetwork, incoming: IntersectionIncomingElement
-) -> Lane:
-    """
-    get the right-turning lane by given an incoming element
-    """
-    incoming_lanelets_ids = incoming.incoming_lanelets
-    right_turn_lanelets_ids = incoming.successors_right
-    right_turn_lane = list()
-    for lane in road_network.lanes:
-        # choose the lane which contains both incoming and right-turning successors
-        if (
-            len(lane.contained_lanelets.intersection(right_turn_lanelets_ids)) > 0
-            and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0
-        ):
-            right_turn_lane.append(lane)
-    assert (
-        len(right_turn_lane) == 1
-    ), "Something not correct, OR there are more than one lanelets before intersection."
-    return right_turn_lane[0]
-
-
-def get_left_turn_lane(
-    road_network: RoadNetwork, incoming: IntersectionIncomingElement
-) -> Lane:
-    """
-    get the left-turning lane by given an incoming element
-    """
-    incoming_lanelets_ids = incoming.incoming_lanelets
-    left_turn_lanelets_ids = incoming.successors_left
-    left_turn_lane = list()
-    for lane in road_network.lanes:
-        # choose the lane which contains both incoming and left-turning successors
-        if (
-            len(lane.contained_lanelets.intersection(left_turn_lanelets_ids)) > 0
-            and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0
-        ):
-            left_turn_lane.append(lane)
-    assert (
-        len(left_turn_lane) == 1
-    ), "Something not correct, OR there are more than one lanelets before intersection."
-    return left_turn_lane[0]
-
-
-def get_straight_going_lane(
-    road_network: RoadNetwork, incoming: IntersectionIncomingElement
-) -> Lane:
-    """
-    get the straight going lane by given an incoming element
-    """
-    incoming_lanelets_ids = incoming.incoming_lanelets
-    straight_going_lanelets_ids = incoming.successors_straight
-    straight_going_lane = list()
-    for lane in road_network.lanes:
-        if (
-            len(lane.contained_lanelets.intersection(straight_going_lanelets_ids)) > 0
-            and len(lane.contained_lanelets.intersection(incoming_lanelets_ids)) > 0
-        ):
-            straight_going_lane.append(lane)
-    assert (
-        len(straight_going_lane) == 1
-    ), "Something not correct, OR there are more than one lanelets before intersection."
-    return straight_going_lane[0]
-
-
-def get_lanelets_start_end_s(
-    reference_lane: Lane, lanelets_ids, road_network: RoadNetwork
-) -> (float, float):
-    """
-    get start and end point of a set of lanelets along a reference lane
-    """
-    lanelets_start_s = np.inf
-    lanelets_end_s = -np.inf
-    for lanelet_id in lanelets_ids:
-        lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-        start_s = reference_lane.clcs.convert_to_curvilinear_coords(
-            *get_lanelet_start_line(lanelet)[0]
-        )[0]
-        end_s = reference_lane.clcs.convert_to_curvilinear_coords(
-            *get_lanelet_end_line(lanelet)[0]
-        )[0]
-        lanelets_start_s = min(lanelets_start_s, start_s)
-        lanelets_end_s = max(lanelets_end_s, end_s)
-    return lanelets_start_s, lanelets_end_s
-
-
 def get_lanelets_start_s(
     reference_lane: Lane, lanelets_ids, road_network: RoadNetwork
 ) -> (float, float):
@@ -805,18 +642,6 @@ def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
     return distance
 
 
-def longitudinal_distance_to_lane(vehicle: Vehicle, lane: Lane, time_step):
-    state = vehicle.states_cr[time_step]
-    occ_points = rotate_translate(
-        vehicle.shape.vertices[:-1], state.position, state.orientation
-    )
-    distance = list()
-    for point in occ_points:
-        d_right = lane.clcs.convert_to_curvilinear_coords(*point)[0]
-        distance.append(d_right)
-    return distance
-
-
 def get_priority(
     lanelet_ids, road_network: RoadNetwork, direction, traffic_sign_priority
 ):
@@ -836,15 +661,6 @@ def get_priority(
         return ts_types_intersection[argmin_s].straight
     elif direction == "left":
         return ts_types_intersection[argmin_s].left
-
-
-def inc_la_left_of(
-    incoming: IntersectionIncomingElement, road_network: RoadNetwork
-) -> IntersectionIncomingElement:
-    left_of_incoming = incoming.left_of
-    for incoming_element in road_network.lanelet_network.intersections[0].incomings:
-        if incoming_element.incoming_id == left_of_incoming:
-            return incoming_element
 
 
 def find_longest_lane_by_intersection_lanelet(
@@ -888,62 +704,6 @@ def find_conflict_points(line, conflict_polygon: Polygon):
     else:
         conflict_points = [conflict_line_points[0], conflict_line_points[-1]]
     return conflict_points
-
-
-def get_vehicle_front_points(vehicle: Vehicle, time_step):
-    center_position = vehicle.states_cr[time_step].position
-    orientation = vehicle.states_cr[time_step].orientation
-    l = vehicle.shape.length
-    w = vehicle.shape.width
-    front_right = center_position + np.array(
-        [
-            l / 2 * np.cos(orientation) + w / 2 * np.sin(orientation),
-            l / 2 * np.sin(orientation) - w / 2 * np.cos(orientation),
-        ]
-    )
-    front_left = center_position + np.array(
-        [
-            l / 2 * np.cos(orientation) - w / 2 * np.sin(orientation),
-            l / 2 * np.sin(orientation) + w / 2 * np.cos(orientation),
-        ]
-    )
-    return np.array([front_right, front_left])
-
-
-def get_vehicle_rear_points(vehicle: Vehicle, time_step):
-    center_position = vehicle.states_cr[time_step].position
-    orientation = vehicle.states_cr[time_step].orientation
-    l = vehicle.shape.length
-    w = vehicle.shape.width
-    rear_right = center_position + np.array(
-        [
-            -l / 2 * np.cos(orientation) + w / 2 * np.sin(orientation),
-            -l / 2 * np.sin(orientation) - w / 2 * np.cos(orientation),
-        ]
-    )
-    rear_left = center_position + np.array(
-        [
-            -l / 2 * np.cos(orientation) - w / 2 * np.sin(orientation),
-            -l / 2 * np.sin(orientation) + w / 2 * np.cos(orientation),
-        ]
-    )
-    return np.array([rear_right, rear_left])
-
-
-def points_distance_to_right_bound(points, lane: Lane):
-    distance = list()
-    for point in points:
-        d_right = lane.clcs_right.convert_to_curvilinear_coords(*point)[1]
-        distance.append(d_right)
-    return np.max(distance)
-
-
-def points_distance_to_left_bound(points, lane: Lane):
-    distance = list()
-    for point in points:
-        d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
-        distance.append(d_left)
-    return np.min(distance)
 
 
 def get_long_distance_stop_lines_from_lane(

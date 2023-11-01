@@ -72,7 +72,7 @@ class GeneralPredicates(str, Enum):
     )
     RightEgoLeftTargetSamePriority = (
         "turning_right_ego_turning_left_target_same_priority"
-    )
+    )  # the ego vehicle is turning right, the target vehicle is turning left, and they have the same priority.
     RightEgoStraightTargetSamePriority = (
         "turning_right_ego_going_straight_target_same_priority"
     )
@@ -102,7 +102,7 @@ class GeneralPredicates(str, Enum):
     )
     RightTargetStraightEgoTargetHasPriority = (
         "turning_right_target_going_straight_ego_target_has_priority"
-    )
+    ) # the target vehicle is turning right, the ego vehicle is going straight, and the target vehicle has priority
     LeftTargetRightEgoTargetHasPriority = (
         "turning_left_target_turning_right_ego_target_has_priority"
     )
@@ -839,9 +839,6 @@ class PredGoingStraight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is going straight
     """
-
-    # same idea as turning left, also same limitations and same idea for future work
-
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 
@@ -970,9 +967,6 @@ class PredGoingStraight(BasePredicateEvaluator):
             ) = utils.get_straight_going_lane_by_lanelets(
                 lanelets_assignment_current, road_network
             )
-            straight_lane = utils.get_straight_going_lane(
-                road_network, incoming_straight
-            )
             rear_s = vehicle.rear_s(time_step, straight_lane)
             straight_end_s = utils.get_lanelets_end_s(
                 straight_lane, incoming_straight.successors_straight, road_network
@@ -1016,6 +1010,8 @@ class PredTurningSamePriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_ego = self._turning_ego.evaluate_mpr(
                 world, time_step, [ego_vehicle_id]
@@ -1165,6 +1161,8 @@ class PredTurningHasPriorityBase(BasePredicateEvaluator):
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
@@ -1235,6 +1233,8 @@ class PredRightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriorityB
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
@@ -1302,6 +1302,8 @@ class PredRightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
@@ -1424,6 +1426,8 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]
@@ -1491,6 +1495,8 @@ class PredStraightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityB
     ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
+        # TODO: FIXME: mpr needs world_mpr
+        # if self.config["use_mpr"]:
         if False:
             rob_turning_target = self._turning_target.evaluate_mpr(
                 world, time_step, [target_vehicle_id]

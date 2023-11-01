@@ -106,14 +106,12 @@ class World:
     def create_from_scenario(
         cls, scenario: Scenario, config=None, road_network=None, cache_dir=None
     ):
-        print("---------------------------------------------------------------")
-        print("Debug: scenario %s" % scenario.scenario_id)
         if config is None:
             config = get_world_config()
         if road_network is None:
             if config.get("scenario") == "intersection":
                 params = config.get("intersection_road_network_param")
-            else:
+            else:  # interstate scenarios
                 params = config.get("road_network_param")
             road_network = RoadNetwork(
                 scenario.lanelet_network, params, config.get("scenario")
@@ -176,11 +174,11 @@ class World:
                             )
                         )
                     except:
-                        print(
+                        warnings.warn(
                             "Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s"
                             % (obs.obstacle_id, scenario.scenario_id)
                         )
-            else:
+            else:  # interstate scenarios
                 cls.augment_state_longitudinal(scenario.dt, obs)
                 cls.augment_state_lateral(scenario.dt, obs)
                 curvi_cache, predicate_dict = cache.setdefault(
@@ -210,11 +208,14 @@ class World:
         return [v.id for v in self.vehicles if v.is_valid(time_step)]
 
     @staticmethod
-    def static_vehicle(dynamic_obstacles: "DynamicObstacle"):
+    def static_vehicle(dynamic_obstacle: "DynamicObstacle"):
+        """
+        Checks whether the obstacle is static.
+        """
         velocity = np.array(
             [
                 state.velocity
-                for state in dynamic_obstacles.prediction.trajectory.state_list
+                for state in dynamic_obstacle.prediction.trajectory.state_list
             ]
         )
         return all(velocity <= 0.001)
@@ -293,6 +294,9 @@ class World:
         return veh
 
     def vehicle_ids(self):
+        """
+        Finds ids of all vehicles.
+        """
         vehicle_ids = list()
         for veh in self.vehicles:
             vehicle_ids.append(veh.id)

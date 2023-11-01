@@ -1446,7 +1446,6 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
         return self._scale_lon_dist(rob)
 
 
-# TODO: fix on_oncom_of in inD
 class PredOnOncomOf(BasePredicateEvaluator):
     predicate_name = PositionPredicates.OnOncomOf
     arity = 2

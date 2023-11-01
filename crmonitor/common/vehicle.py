@@ -16,6 +16,7 @@ from shapely.geometry import Point, Polygon
 from crmonitor.common.road_network import Lane, RoadNetwork
 
 from commonroad_route_planner.route_planner import RoutePlanner
+from commonroad_route_planner.route import Route
 from commonroad.planning.goal import GoalRegion
 from commonroad.common.util import Interval, AngleInterval
 from commonroad.geometry.shape import Rectangle
@@ -316,6 +317,7 @@ class Vehicle:
             self.incoming_intersection = self.road_network.find_incoming_intersection(
                 self.lanelets_dir
             )
+            # three circle approximation
             (
                 self.circle_appr_geo,
                 self.circle_radius,
@@ -479,6 +481,9 @@ class Vehicle:
         return self.id
 
     def _initial_circle_approximation(self):
+        """
+        generate three circle approximation
+        """
         circle_radius = (
             np.sqrt(self.shape.width**2 + (self.shape.length / 3) ** 2) / 2
         )
@@ -493,7 +498,12 @@ class Vehicle:
         combined_geometry = unary_union([circle_center, circle_front, circle_rear])
         return combined_geometry, circle_radius
 
-    def _initial_lanelets_dir(self, road_network: RoadNetwork, goal=None):
+    def _initial_lanelets_dir(
+        self, road_network: RoadNetwork, goal=None
+    ) -> (List[int], Lane, np.ndarray, np.ndarray, np.ndarray):
+        """
+        initialize lanelets_dir
+        """
         if goal is None:
             initial_state = self.states_cr[self.start_time]
             end_time = self.end_time
@@ -512,18 +522,24 @@ class Vehicle:
         else:
             initial_state = goal["initial_state"]
             attributes = goal["attributes"]
+            end_position = goal["end_position"]
+            end_orientation = goal["end_orientation"]
         route = self._route_planner(initial_state, attributes, road_network)
+        # replan route to fix no solution from route planner
         replanned_route = self._replan_route(
             initial_state, end_position, end_orientation, attributes, road_network
         )
         if route is None:
             route = next(replanned_route)
+        # extend lanelets from route
         lanelets_leading_to_goal = self._extend_route_plan(
             route.list_ids_lanelets, road_network
         )
+        # get reference lane from lanelets_leading_to_goal
         ref_path_lanes = self._initial_ref_path_lane(
             road_network, lanelets_leading_to_goal
         )
+        # if no reference lane is found, replan the route
         while len(ref_path_lanes) == 0 and route is not None:
             route = next(replanned_route)
             lanelets_leading_to_goal = self._extend_route_plan(
@@ -532,6 +548,7 @@ class Vehicle:
             ref_path_lanes = self._initial_ref_path_lane(
                 road_network, lanelets_leading_to_goal
             )
+        # get properties from reference lane
         ref_path_lane = ref_path_lanes[0]
         center_vertices = road_network.lanelet_network.find_lanelet_by_id(
             lanelets_leading_to_goal[0]
@@ -559,6 +576,9 @@ class Vehicle:
 
     @staticmethod
     def _route_planner(initial_state, attributes, road_network: RoadNetwork):
+        """
+        route planner by given intial state and attributes
+        """
         end_state = CustomState(**attributes)
         goal_region = GoalRegion(state_list=[end_state])
         route_planner = RoutePlanner(
@@ -580,6 +600,9 @@ class Vehicle:
         attributes,
         road_network,
     ):
+        """
+        replan route to fix no solution in route planner
+        """
         initial_state_candidates = [initial_state]
         end_position_candidates = [end_position]
         extend_length = [1.0, 1.5]
@@ -642,6 +665,9 @@ class Vehicle:
     def _extend_route_plan(
         lanelets_leading_to_goal, road_network: RoadNetwork
     ) -> List[int]:
+        """
+        extend lanelets from route
+        """
         # extend the route path:
         first_lanelet = road_network.lanelet_network.find_lanelet_by_id(
             lanelets_leading_to_goal[0]
@@ -709,6 +735,9 @@ class Vehicle:
 
     @staticmethod
     def _initial_ref_path_lane(road_network: RoadNetwork, lanelets: List[int]):
+        """
+        finds reference lane based on lanelets dir
+        """
         lanes = list()
         lanelets = lanelets
         if len(lanelets) == 1:
@@ -727,27 +756,26 @@ class Vehicle:
         reference_path = list(ref_path)
         return reference_path
 
-    # def from Luis
     # ---------------------------------------------------------------------#
-    def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
-        """
-        Determine all possible lanes for a vehicle from the given moment.
-
-        Idea: A vehicle should drive on a connected sequence of lanelets to get to
-        the current
-        position. Hence, the intersection of the initially occupied lanes (all paths
-        from the first state)
-        and the currently occupied lanes should not be empty and only contain the
-        lanes that have been driven on.
-
-        :param timestep:
-        :return:
-        """
-
-        initial_lanes = self.lanes_at_state(self.start_time)
-        current_lanes = self.lanes_at_state(timestep)
-
-        return tuple(initial_lanes.intersection(current_lanes))
+    # def ref_path_lanes(self, timestep: int) -> Tuple[Lane]:
+    #     """
+    #     Determine all possible lanes for a vehicle from the given moment.
+    #
+    #     Idea: A vehicle should drive on a connected sequence of lanelets to get to
+    #     the current
+    #     position. Hence, the intersection of the initially occupied lanes (all paths
+    #     from the first state)
+    #     and the currently occupied lanes should not be empty and only contain the
+    #     lanes that have been driven on.
+    #
+    #     :param timestep:
+    #     :return:
+    #     """
+    #
+    #     initial_lanes = self.lanes_at_state(self.start_time)
+    #     current_lanes = self.lanes_at_state(timestep)
+    #
+    #     return tuple(initial_lanes.intersection(current_lanes))
 
 
 #
