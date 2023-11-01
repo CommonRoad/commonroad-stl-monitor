@@ -70,9 +70,7 @@ class GeneralPredicates(str, Enum):
     RightEgoRightTargetSamePriority = (
         "turning_right_ego_turning_right_target_same_priority"
     )
-    RightEgoLeftTargetSamePriority = (
-        "turning_right_ego_turning_left_target_same_priority"
-    )  # the ego vehicle is turning right, the target vehicle is turning left, and they have the same priority.
+    RightEgoLeftTargetSamePriority = "turning_right_ego_turning_left_target_same_priority"  # the ego vehicle is turning right, the target vehicle is turning left, and they have the same priority.
     RightEgoStraightTargetSamePriority = (
         "turning_right_ego_going_straight_target_same_priority"
     )
@@ -100,9 +98,7 @@ class GeneralPredicates(str, Enum):
     RightTargetLeftEgoTargetHasPriorityNotOncoming = (
         "turning_right_target_turning_left_ego_target_has_priority_not_oncoming"
     )
-    RightTargetStraightEgoTargetHasPriority = (
-        "turning_right_target_going_straight_ego_target_has_priority"
-    ) # the target vehicle is turning right, the ego vehicle is going straight, and the target vehicle has priority
+    RightTargetStraightEgoTargetHasPriority = "turning_right_target_going_straight_ego_target_has_priority"  # the target vehicle is turning right, the ego vehicle is going straight, and the target vehicle has priority
     LeftTargetRightEgoTargetHasPriority = (
         "turning_left_target_turning_right_ego_target_has_priority"
     )
@@ -839,6 +835,7 @@ class PredGoingStraight(BasePredicateEvaluator):
     """
     evaluates if a vehicle is going straight
     """
+
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 
