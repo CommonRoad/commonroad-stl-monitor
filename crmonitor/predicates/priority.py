@@ -117,17 +117,15 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         If the vehicle locates at the lanelet with a stop traffic sign (206), return True, otherwise, return False.
         """
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        road_network = world.road_network
         # find all traffic sign elements with type stop (206) in lanelets_dir
         for lanelet_id in vehicle.lanelets_dir:
             traffic_sign_elements = utils.traffic_sign(
-                lanelet_id, self.stop_traffic_sign_deu, road_network
+                lanelet_id, self.stop_traffic_sign_deu, world.road_network
             )
             if traffic_sign_elements is None:
                 continue
             # check if vehicle in this lanelet in lateral horizon
-            d_lane = utils.distance_to_lanes(vehicle, [lanelet_id], world, time_step)
-            if d_lane < 0:
+            if not vehicle.lanelet_assignment[time_step].intersection([lanelet_id]):
                 continue
             return True
         return False
@@ -175,8 +173,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                 "TODO: Only works for one " "traffic light per lanelet!"
             )
             # check if vehicle in this lanelet in lateral horizon
-            d_lane = utils.distance_to_lanes(vehicle, [l_id], world, time_step)
-            if d_lane < 0:
+            if not vehicle.lanelet_assignment[time_step].intersection([l_id]):
                 continue
             tl = road_network.lanelet_network.find_traffic_light_by_id(
                 list(lanelet_suc.traffic_lights)[0]
