@@ -9,6 +9,7 @@ import commonroad_dc.pycrccosy as pycrccosy
 from scipy.interpolate import splprep, splev
 
 from commonroad.scenario.intersection import IntersectionIncomingElement
+from commonroad.scenario.traffic_light import TrafficLight
 
 
 class Lane:
@@ -440,6 +441,8 @@ class RoadNetwork:
         if len(lanelet_network.intersections) != 0:
             self.incoming = self._create_incoming_dict(lanelet_network)
             self.lanes_incoming = self._create_lanes_of_incoming(lanelet_network)
+            self.reach_suc_cache = {}
+            self.reach_pre_cache = {}
         else:
             self.incoming = {}
             self.lanes_incoming = {}
@@ -636,6 +639,20 @@ class RoadNetwork:
         """
         return self.lanes_incoming[incoming_id]
 
+    def get_reach_suc_cache(self, lanelet_id: int) -> "np.array":
+        if lanelet_id in self.reach_suc_cache:
+            return self.reach_suc_cache[lanelet_id]
+        else:
+            self.reach_suc_cache[lanelet_id] = self.lanelet_reach_suc(lanelet_id)
+            return self.reach_suc_cache[lanelet_id]
+
+    def get_reach_pre_cache(self, lanelet_id: int) -> "np.array":
+        if lanelet_id in self.reach_pre_cache:
+            return self.reach_pre_cache[lanelet_id]
+        else:
+            self.reach_pre_cache[lanelet_id] = self.lanelet_reach_pre(lanelet_id)
+            return self.reach_pre_cache[lanelet_id]
+
     def lanelet_reach_suc(self, lanelet_id: int) -> "np.array":
         """
         Finds reach_suc of a lanelet
@@ -711,8 +728,8 @@ class RoadNetwork:
         # TODO: further check needed
         possible_incomings = list()
         # get all possible occupied lanelets with respect to lanelets_dir
-        lanelet_pre = self.lanelet_reach_pre(lanelets_dir[0])
-        lanelet_suc = self.lanelet_reach_suc(lanelets_dir[-1])
+        lanelet_pre = self.get_reach_pre_cache(lanelets_dir[0])
+        lanelet_suc = self.get_reach_suc_cache(lanelets_dir[-1])
         possible_occupied_lanelets = (
             lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
         )
