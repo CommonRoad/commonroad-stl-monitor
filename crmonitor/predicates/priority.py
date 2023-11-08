@@ -3,7 +3,8 @@ from enum import Enum
 from typing import List
 
 import numpy as np
-import math
+from collections import defaultdict
+from ruamel.yaml.comments import CommentedMap
 
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 
@@ -158,29 +159,43 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
+    def __init__(self, config: CommentedMap):
+        super().__init__(config)
+        self._dict_lanelets_traffic_light = defaultdict(lambda: None)
+
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         """
         check if there is an active traffic light in lanelet_dir or successors
         """
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
-        reach_suc_id = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
-        for l_id in reach_suc_id:
-            lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if len(lanelet_suc.traffic_lights) == 0:
-                continue
-            assert len(lanelet_suc.traffic_lights) == 1, (
-                "TODO: Only works for one " "traffic light per lanelet!"
-            )
-            # check if vehicle in this lanelet in lateral horizon
-            if not vehicle.lanelet_assignment[time_step].intersection([l_id]):
-                continue
-            tl = road_network.lanelet_network.find_traffic_light_by_id(
-                list(lanelet_suc.traffic_lights)[0]
-            )
-            if tl.active:
-                return True
-        return False
+        if self._dict_lanelets_traffic_light[vehicle.lanelets_dir[0]] is not None:
+            traffic_light_lanelets = self._dict_lanelets_traffic_light[
+                vehicle.lanelets_dir[0]
+            ]
+        else:
+            reach_suc_id = road_network.get_reach_suc_cache(vehicle.lanelets_dir[0])
+            traffic_light_lanelets = list()
+            for l_id in reach_suc_id:
+                lanelet_suc = road_network.lanelet_network.find_lanelet_by_id(l_id)
+                if len(lanelet_suc.traffic_lights) == 0:
+                    continue
+                assert len(lanelet_suc.traffic_lights) == 1, (
+                    "TODO: Only works for one " "traffic light per lanelet!"
+                )
+                tl = road_network.lanelet_network.find_traffic_light_by_id(
+                    list(lanelet_suc.traffic_lights)[0]
+                )
+                if tl.active:
+                    traffic_light_lanelets.append(l_id)
+            self._dict_lanelets_traffic_light[
+                vehicle.lanelets_dir[0]
+            ] = traffic_light_lanelets
+        # check if vehicle in this lanelet in lateral horizon
+        if vehicle.lanelet_assignment[time_step].intersection(traffic_light_lanelets):
+            return True
+        else:
+            return False
 
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
@@ -193,7 +208,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         ref_path = vehicle.ref_path_lane
-        reach_suc_id = road_network.lanelet_reach_suc(vehicle.lanelets_dir[0])
+        reach_suc_id = road_network.get_reach_suc_cache(vehicle.lanelets_dir[0])
         # intersection between reference path and successors of lanelets_dir
         lanelets_ids = ref_path.contained_lanelets.intersection(reach_suc_id)
         for l_id in lanelets_ids:
