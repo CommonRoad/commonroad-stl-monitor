@@ -9,7 +9,6 @@ import commonroad_dc.pycrccosy as pycrccosy
 from scipy.interpolate import splprep, splev
 
 from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.traffic_light import TrafficLight
 
 
 class Lane:
