@@ -2,6 +2,7 @@ import logging
 import math
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
+from collections import defaultdict
 
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from commonroad_mpr.common.observation import World as WorldMPR
@@ -1053,53 +1054,70 @@ class PredStopLineInFront(BasePredicateEvaluator):
     predicate_name = PositionPredicates.StopLineInFront
     arity = 1
 
+    def __init__(self, config: CommentedMap):
+        super().__init__(config)
+        self._dict_veh_id_stop_line_s = defaultdict(lambda: None)
+        self._dict_veh_id_intersection_lanelets = defaultdict(lambda: None)
+
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         """
         A stop line is in front of a vehicle if any occupied lanelet references a stop line within a distance d_sl
         """
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        # Find all lanelets in the map that have a stop line
-        lanelets_with_stop_line = [
-            l.lanelet_id
-            for l in world.road_network.lanelet_network.lanelets
-            if l.stop_line is not None
-        ]
-        # Get the set of lanelets in the current path, that have a stop line
-        intersection_lanelets = list(
-            vehicle.ref_path_lane.contained_lanelets.intersection(
-                lanelets_with_stop_line
+        if self._dict_veh_id_stop_line_s[vehicle_ids[0]]:
+            vehicle = world.vehicle_by_id(vehicle_ids[0])
+            stop_line_s = self._dict_veh_id_stop_line_s[vehicle_ids[0]]
+            intersection_lanelets = self._dict_veh_id_intersection_lanelets[
+                vehicle_ids[0]
+            ]
+            if not intersection_lanelets:
+                return False
+        else:
+            vehicle = world.vehicle_by_id(vehicle_ids[0])
+            # Find all lanelets in the map that have a stop line
+            lanelets_with_stop_line = [
+                l.lanelet_id
+                for l in world.road_network.lanelet_network.lanelets
+                if l.stop_line is not None
+            ]
+            # Get the set of lanelets in the current path, that have a stop line
+            intersection_lanelets = list(
+                vehicle.ref_path_lane.contained_lanelets.intersection(
+                    lanelets_with_stop_line
+                )
             )
-        )
-        # If there is no stop line in current reference path, return False
-        if len(intersection_lanelets) == 0:
-            return False
+            # If there is no stop line in current reference path, return False
+            if len(intersection_lanelets) == 0:
+                return False
+            # get the longitudinal position of stop line based on ego reference path
+            # find the closest vertices
+            stop_line_s = np.array(
+                [
+                    min(
+                        vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).stop_line.start
+                        )[0],
+                        vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
+                            *world.road_network.lanelet_network.find_lanelet_by_id(
+                                l
+                            ).stop_line.end
+                        )[0],
+                    )
+                    for l in intersection_lanelets
+                ]
+            )
+            self._dict_veh_id_intersection_lanelets[
+                vehicle_ids[0]
+            ] = intersection_lanelets
+            self._dict_veh_id_stop_line_s[vehicle_ids[0]] = stop_line_s
         # Get the front longitudinal value of the vehicle
         front_s = vehicle.front_s(time_step, vehicle.ref_path_lane) or -np.inf
-        # get the longitudinal position of stop line based on ego reference path
-        # find the closest vertices
-        stop_line_s = np.array(
-            [
-                min(
-                    vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                        *world.road_network.lanelet_network.find_lanelet_by_id(
-                            l
-                        ).stop_line.start
-                    )[0],
-                    vehicle.ref_path_lane.clcs.convert_to_curvilinear_coords(
-                        *world.road_network.lanelet_network.find_lanelet_by_id(
-                            l
-                        ).stop_line.end
-                    )[0],
-                )
-                for l in intersection_lanelets
-            ]
-        )
         for i in range(stop_line_s.shape[0]):
             # check if vehicle in this lanelet in lateral horizon
-            d_lane = utils.distance_to_lanes(
-                vehicle, [intersection_lanelets[i]], world, time_step
-            )
-            if d_lane < 0:
+            if not vehicle.lanelet_assignment[time_step].intersection(
+                [intersection_lanelets[i]]
+            ):
                 continue
             # Get the distance to the stop lines
             stop_line_distance = stop_line_s[i] - front_s

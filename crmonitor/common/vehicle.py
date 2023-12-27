@@ -9,7 +9,7 @@ import numba
 import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.trajectory import State, InitialState
+from commonroad.scenario.state import State, InitialState
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
 

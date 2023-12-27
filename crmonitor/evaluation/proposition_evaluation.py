@@ -1,4 +1,5 @@
 from typing import Optional
+import copy
 
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -59,6 +60,13 @@ class PropositionRuleEvaluator(RuleEvaluator):
             output_type,
             monitor_creation_visitor,
         )
+        monitor_copied = copy.copy(self._monitor)
+        while not isinstance(monitor_copied, RuleMonitorNode):
+            if isinstance(monitor_copied, list):
+                monitor_copied = copy.copy(monitor_copied[0])
+            else:
+                monitor_copied = monitor_copied.children
+        self.rule_str_original = monitor_copied.monitor._rule
 
     def get_propositions(self):
         """
