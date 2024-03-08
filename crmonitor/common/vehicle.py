@@ -27,7 +27,8 @@ rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+#@numba.njit
+# todo: the decorator is removed as it might take a lot of time to initialize 
 def calc_s(s, w, l, theta):
     s = (
         rot_mat_factors[0] * l / 2.0 * np.cos(theta)
@@ -323,6 +324,7 @@ class Vehicle:
                 self.circle_radius,
             ) = self._initial_circle_approximation()
 
+    @lru_cache(128)
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
         Calculates rear s-coordinate of vehicle
@@ -346,6 +348,7 @@ class Vehicle:
         rear_s = np.min(calc_s(center_s, width, length, theta))
         return rear_s
 
+    @lru_cache(128)
     def front_s(self, time_step: int, lane: Lane = None) -> float:
         """
         Calculates front s-coordinate of vehicle
