@@ -27,8 +27,8 @@ rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])
 logger = logging.getLogger(__name__)
 
 
-#@numba.njit
-# todo: the decorator is removed as it might take a lot of time to initialize 
+# @numba.njit
+# todo: the decorator is removed as it might take a lot of time to initialize
 def calc_s(s, w, l, theta):
     s = (
         rot_mat_factors[0] * l / 2.0 * np.cos(theta)
