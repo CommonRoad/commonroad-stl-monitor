@@ -2,7 +2,7 @@ import copy
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import partial
+from functools import partial, lru_cache
 from typing import Union, Dict, List, Tuple, Optional, Set
 
 import numba
