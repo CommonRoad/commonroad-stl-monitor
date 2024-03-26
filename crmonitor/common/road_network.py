@@ -34,7 +34,7 @@ class Lane:
             # intersection, to avoid outside projection domain in clcs
             # TODO: currently only consider AAH1 map
             weight_left, smooth_factor_left = self._get_smooth_parameter(
-                contained_lanelets
+                contained_lanelets, "left"
             )
             (
                 self.clcs_left,
@@ -48,7 +48,7 @@ class Lane:
                 road_network_param=road_network_param,
             )
             weight_right, smooth_factor_right = self._get_smooth_parameter(
-                contained_lanelets
+                contained_lanelets, "right"
             )
             (
                 self.clcs_right,
@@ -61,7 +61,9 @@ class Lane:
                 smooth_factor=smooth_factor_right,
                 road_network_param=road_network_param,
             )
-            weight, smooth_factor = self._get_smooth_parameter(contained_lanelets)
+            weight, smooth_factor = self._get_smooth_parameter(
+                contained_lanelets, "center"
+            )
             (
                 self._clcs,
                 new_center_vertices,
@@ -292,25 +294,22 @@ class Lane:
         return curvilinear_cosy
 
     @staticmethod
-    def _get_smooth_parameter(contained_lanelets: List[int]) -> (float, float):
+    def _get_smooth_parameter(
+        contained_lanelets: List[int], bound: str
+    ) -> (float, float):
         """
         Gets smooth parameters for different lanes.
         """
         # TODO: currently only consider AAH1 map.
-        if 7 in contained_lanelets:
+        if 7 in contained_lanelets and bound == "left":
             weight = 5.0
             smooth_factor = 1.5
-        elif (
-            0 in contained_lanelets
-            or 1 in contained_lanelets
-            or 2 in contained_lanelets
-            or 3 in contained_lanelets
-        ):
+        elif {0, 1, 2, 3}.intersection(contained_lanelets) and bound == "right":
             weight = 25.0
             smooth_factor = 1.5
-        elif 4 in contained_lanelets:
-            weight = 10.0
-            smooth_factor = 1.5
+        # elif 4 in contained_lanelets:
+        #     weight = 10.0
+        #     smooth_factor = 1.5
         else:
             weight = 12.0
             smooth_factor = 1.5
