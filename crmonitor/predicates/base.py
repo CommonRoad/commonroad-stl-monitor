@@ -86,7 +86,7 @@ class BasePredicateEvaluator(abc.ABC):
         """
         Computes the gradient of the MPR w.r.t. the input values
         """
-        if self.config["use_mpr"]:
+        if self.config["use_mpr"] and self.peml is not None:
             return self.peml.derivative()[0]
         else:
             warnings.warn("The MPR is deactivated")
