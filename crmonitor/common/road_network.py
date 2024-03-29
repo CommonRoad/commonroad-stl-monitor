@@ -2,7 +2,12 @@ from typing import List, Set, Dict, Union
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
-from commonroad_dc.geometry.util import chaikins_corner_cutting, resample_polyline
+from commonroad_dc.geometry.util import (
+    chaikins_corner_cutting,
+    resample_polyline,
+    compute_orientation_from_polyline,
+    compute_pathlength_from_polyline,
+)
 from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
 import commonroad_dc.pycrccosy as pycrccosy
 
@@ -77,26 +82,24 @@ class Lane:
             )
             # TODO: there are some errors when using smoothed vertices in hand draft maps (crdesigner).
             if road_network_param.get("map_type") == "hand_draft":
-                self._orientation = self._compute_orientation_from_polyline(
+                self._orientation = compute_orientation_from_polyline(
                     merged_lanelet.center_vertices
                 )
-                self._curvature = self._compute_curvature_from_polyline(
+                self._curvature = pycrccosy.Util.compute_curvature(
                     merged_lanelet.center_vertices
                 )
-                self._path_length = self._compute_path_length_from_polyline(
+                self._path_length = compute_pathlength_from_polyline(
                     merged_lanelet.center_vertices
                 )
                 self._width = self._compute_width_from_lanalet_boundary(
                     merged_lanelet.left_vertices, merged_lanelet.right_vertices
                 )
             else:
-                self._orientation = self._compute_orientation_from_polyline(
+                self._orientation = compute_orientation_from_polyline(
                     new_center_vertices
                 )
-                self._curvature = self._compute_curvature_from_polyline(
-                    new_center_vertices
-                )
-                self._path_length = self._compute_path_length_from_polyline(
+                self._curvature = pycrccosy.Util.compute_curvature(new_center_vertices)
+                self._path_length = compute_pathlength_from_polyline(
                     new_center_vertices
                 )
                 self._width = self._compute_width_from_lanalet_boundary(
@@ -118,13 +121,13 @@ class Lane:
             self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
                 merged_lanelet.center_vertices, road_network_param
             )
-            self._orientation = self._compute_orientation_from_polyline(
+            self._orientation = compute_orientation_from_polyline(
                 merged_lanelet.center_vertices
             )
-            self._curvature = self._compute_curvature_from_polyline(
+            self._curvature = pycrccosy.Util.compute_curvature(
                 merged_lanelet.center_vertices
             )
-            self._path_length = self._compute_path_length_from_polyline(
+            self._path_length = compute_pathlength_from_polyline(
                 merged_lanelet.center_vertices
             )
             self._width = self._compute_width_from_lanalet_boundary(
@@ -184,6 +187,7 @@ class Lane:
         self._adj_left = adj_left
         self._adj_right = adj_right
 
+    # todo fixme: in MPR, commonroad_dc.geometry.util.compute_orientation_from_polyline is used
     @staticmethod
     def _compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
         """
@@ -210,6 +214,7 @@ class Lane:
 
         return np.array(orientation)
 
+    # todo fixme: in MPR, pycrccosy.Util.compute_curvature is used
     @staticmethod
     def _compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
         """
@@ -231,6 +236,7 @@ class Lane:
 
         return (x_d * y_dd - x_dd * y_d) / ((x_d**2 + y_d**2) ** (3.0 / 2.0))
 
+    # todo fixme: in MPR, commonroad_dc.geometry.util.compute_pathlength_from_polyline is used
     @staticmethod
     def _compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
         """
