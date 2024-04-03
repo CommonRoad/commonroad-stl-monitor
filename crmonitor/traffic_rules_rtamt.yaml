@@ -192,6 +192,6 @@ traffic_rules_param:
   v_err: 0.1
 
   #mpr
-  use_mpr: true
+  use_mpr: false
   mpr_scenario: interstate # interstate or intersection
 

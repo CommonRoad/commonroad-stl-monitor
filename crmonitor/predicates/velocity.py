@@ -62,7 +62,7 @@ class PredLaneSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        ts_interpreter = TrafficSigInterpreter(
+        ts_interpreter = TrafficSignInterpreter(
             self.country, world.road_network.lanelet_network
         )
         speed_limit = ts_interpreter.speed_limit(frozenset(lanelet_ids))
