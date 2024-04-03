@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
-from commonroad.scenario.traffic_sign_interpreter import TrafficSigInterpreter
+from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World

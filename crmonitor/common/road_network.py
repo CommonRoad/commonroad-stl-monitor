@@ -1,12 +1,13 @@
 from typing import List, Set, Dict, Union
 
 import numpy as np
-from commonroad.scenario.lanelet import LaneletNetwork, Lanelet, LaneletType
+from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
 from commonroad_dc.geometry.util import (
     chaikins_corner_cutting,
     resample_polyline,
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
+    compute_curvature_from_polyline,
 )
 from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
 import commonroad_dc.pycrccosy as pycrccosy

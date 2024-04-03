@@ -91,7 +91,7 @@ class RuleTest(unittest.TestCase):
 
         world = World({ego_vehicle, other_vehicle_1}, road_network)
 
-        rule_str = "A a1: (in_front_of__a0_a1)"
+        rule_str = "A a1: (in_front_of(a0, a1))"
         rule = self.parse_rule(rule_str)
         rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = rule_eval.evaluate()
@@ -99,7 +99,7 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(rule_robustness[4], 1.0)
         np.testing.assert_allclose(np.array(list(preds.values())), 1.0)
 
-        rule_str = "E a1: (in_front_of__a0_a1)"
+        rule_str = "E a1: (in_front_of(a0, a1))"
         rule = self.parse_rule(rule_str)
         rule_eval = RuleEvaluator(rule, ego_vehicle, world)
         rule_robustness = []
