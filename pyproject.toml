@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "commonroad-stl-monitor"
-version = "2022.3"
+version = "2024.1"
 description = ""
-authors = ["Luis Gressenbuch <luis.gressenbuch@tum.de>"]
+authors = ["Luis Gressenbuch <luis.gressenbuch@tum.de>, Yuanfei Lin <yuanfei.lin@tum.de>"]
 readme = "README.md"
 packages = [
     {include = "crmonitor"},
@@ -11,12 +11,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-commonroad-io = ">=2020"
+python = ">=3.8, <4.0"
+commonroad-io = ">=2024.1"
 #commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2022.2.1"
-numba = "^0.56.0"
+numba = ">=0.57.1"
 
 [tool.poetry.group.test]
 optional = true
@@ -24,7 +24,7 @@ optional = true
 [tool.poetry.group.test.dependencies]
 coverage = "^6.5.0"
 # To run the tests, we necessarily need this commonroad-io version
-commonroad-io = ">=2022.2"
+commonroad-io = ">=2024.1"
 
 [tool.poetry.group.doc]
 optional = true
