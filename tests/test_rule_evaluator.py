@@ -72,7 +72,6 @@ class TestRuleEvaluator(unittest.TestCase):
             predicates = evaluator.get_predicates()
             node_values = evaluator.ast_node_values()
 
-
     def test_parsing(self):
         rule = self.parse_rule(
             "A a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
