@@ -10,6 +10,8 @@ import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import State, InitialState
+from commonroad.scenario.scenario import Scenario
+from commonroad.planning.planning_problem import PlanningProblem
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
 
@@ -584,11 +586,11 @@ class Vehicle:
         """
         end_state = CustomState(**attributes)
         goal_region = GoalRegion(state_list=[end_state])
+        planning_problem = PlanningProblem(0, initial_state, goal_region)
         route_planner = RoutePlanner(
             lanelet_network=road_network.lanelet_network,
             state_initial=initial_state,
             goal_region=goal_region,
-            backend=RoutePlanner.Backend.NETWORKX,
             reach_goal_state=False,
         )
         candidate_holder = route_planner.plan_routes()

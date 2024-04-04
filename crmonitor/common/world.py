@@ -163,21 +163,15 @@ class World:
                         str(obs.obstacle_id),
                         (dict(), defaultdict(partial(defaultdict, dict))),
                     )
-                    try:
-                        vehicles.add(
-                            DynamicObstacleVehicle(
-                                obs,
-                                CurvilinearStateManager(road_network, curvi_cache),
-                                others_params,
-                                PredicateCache(predicate_dict),
-                                road_network,
-                            )
+                    vehicles.add(
+                        DynamicObstacleVehicle(
+                            obs,
+                            CurvilinearStateManager(road_network, curvi_cache),
+                            others_params,
+                            PredicateCache(predicate_dict),
+                            road_network,
                         )
-                    except:
-                        warnings.warn(
-                            "Warning: Cannot find the lanelets_dir of obstacle with ID %i at scenario %s"
-                            % (obs.obstacle_id, scenario.scenario_id)
-                        )
+                    )
             else:  # interstate scenarios
                 cls.augment_state_longitudinal(scenario.dt, obs)
                 cls.augment_state_lateral(scenario.dt, obs)

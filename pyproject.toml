@@ -11,12 +11,13 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4.0"
+python = ">=3.9, <4.0"
 commonroad-io = ">=2024.1"
 #commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2022.2.1"
-numba = ">=0.57.1"
+commonroad-route-planner = "^2022.3"
+numba = ">=0.58.1"
 
 [tool.poetry.group.test]
 optional = true
