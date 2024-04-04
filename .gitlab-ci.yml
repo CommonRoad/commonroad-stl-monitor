@@ -1,4 +1,4 @@
-image: python:3.8
+image: python:3.9
 
 variables:
   GIT_SUBMODULE_STRATEGY: normal
@@ -37,7 +37,7 @@ unittest:
 flake8:
   stage: style
   needs: []
-  image: python:3.8-buster
+  image: python:3.9-buster
   before_script: []
   cache: []
   allow_failure: true
