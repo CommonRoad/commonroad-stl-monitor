@@ -118,11 +118,11 @@ traffic_rules:
                         (in_intersection_conflict_area(a0, a1)) implies
                         (
                           not(causes_braking_intersection(a0, a1)) 
-                          and not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
+                          and not(eventually[0,1s](in_intersection_conflict_area(a1, a0)))
                         )
                       ) and
                       (
-                        (in_intersection_conflict_area(a0, a1)) implies 
+                        (in_intersection_conflict_area(a1, a0)) implies 
                         not(eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
                       )
                     )or not(on_lanelet_with_type_intersection(a0))
@@ -140,11 +140,11 @@ traffic_rules:
                         (in_intersection_conflict_area(a0, a1)) implies
                         (
                           not(causes_braking_intersection(a0, a1)) 
-                          and not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
+                          and not(eventually[0,1s](in_intersection_conflict_area(a1, a0)))
                         )
                       ) and
                       (
-                        (in_intersection_conflict_area(a0, a1)) implies 
+                        (in_intersection_conflict_area(a1, a0)) implies 
                         not(eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
                       )
                     )or not(on_lanelet_with_type_intersection(a0))
