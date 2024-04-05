@@ -23,124 +23,131 @@ traffic_rules:
     # Using "not (weak) prev not A <=> (strong) prev A" we can rewrite the formula using only the weak prev operator.
     # Stop sign rule translated to past-time
   R_IN1_past: ((not prev not sl_in_front(a0)) and (not sl_in_front(a0))) implies once(historically[0, 3s](sl_in_front(a0) and in_standstill(a0)))
+  R_IN1: "(
+              (not prev (not (stop_line_in_front(a0)_i))) and 
+              (not stop_line_in_front(a0)_i) and 
+              at_traffic_sign_stop(a0)_i and 
+              (not relevant_traffic_light(a0)_i)) implies 
+              once(historically[0, 3s](stop_line_in_front(a0)_i and in_standstill(a0)_i))"
+
 
   R_IN3: "A a1: (
                   (
-                    on_incoming_left_of__a0_a1 and 
-                    not(relevant_traffic_light__a0) and 
+                    on_incoming_left_of(a0, a1) and 
+                    not(relevant_traffic_light(a0)) and 
                     (
-                      turning_right_ego_turning_right_target_same_priority__a0_a1 or
-                      turning_right_ego_turning_left_target_same_priority__a0_a1 or
-                      turning_right_ego_going_straight_target_same_priority__a0_a1 or 
-                      turning_left_ego_turning_right_target_same_priority__a0_a1 or
-                      turning_left_ego_turning_left_target_same_priority__a0_a1 or
-                      turning_left_ego_going_straight_target_same_priority__a0_a1 or
-                      going_straight_ego_turning_right_target_same_priority__a0_a1 or
-                      going_straight_ego_turning_left_target_same_priority__a0_a1 or
-                      going_straight_ego_going_straight_target_same_priority__a0_a1
+                      turning_right_ego_turning_right_target_same_priority(a0, a1) or
+                      turning_right_ego_turning_left_target_same_priority(a0, a1) or
+                      turning_right_ego_going_straight_target_same_priority(a0, a1) or 
+                      turning_left_ego_turning_right_target_same_priority(a0, a1) or
+                      turning_left_ego_turning_left_target_same_priority(a0, a1) or
+                      turning_left_ego_going_straight_target_same_priority(a0, a1) or
+                      going_straight_ego_turning_right_target_same_priority(a0, a1) or
+                      going_straight_ego_turning_left_target_same_priority(a0, a1) or
+                      going_straight_ego_going_straight_target_same_priority(a0, a1)
                     )
                   ) implies
                   (
                       (
                         (
-                        (in_intersection_conflict_area__a0_a1) implies
+                        (in_intersection_conflict_area(a0, a1)) implies
                           (
-                            not(causes_braking_intersection__a0_a1) and
-                            not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                            not(causes_braking_intersection(a0, a1)) and
+                            not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
                           )
                         ) and
                         (
-                          (in_intersection_conflict_area__a1_a0) implies
-                          not (eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
+                          (in_intersection_conflict_area(a0, a1)) implies
+                          not (eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
                         )
                       )or 
-                    not(on_lanelet_with_type_intersection__a0)
+                    not(on_lanelet_with_type_intersection(a0))
                   )
                  )"
 
 # Since inD dataset has no RIN3 violation. We create a scenario using Crdesigner. The time step size is 0.1s not 0.04s
   R_IN3_hand_draft: "A a1: (
                     (
-                      on_incoming_left_of__a0_a1 and 
-                      not(relevant_traffic_light__a0) and 
+                      on_incoming_left_of(a0, a1) and 
+                      not(relevant_traffic_light(a0)) and 
                       (
-                        turning_right_ego_turning_right_target_same_priority__a0_a1 or
-                        turning_right_ego_turning_left_target_same_priority__a0_a1 or
-                        turning_right_ego_going_straight_target_same_priority__a0_a1 or 
-                        turning_left_ego_turning_right_target_same_priority__a0_a1 or
-                        turning_left_ego_turning_left_target_same_priority__a0_a1 or
-                        turning_left_ego_going_straight_target_same_priority__a0_a1 or
-                        going_straight_ego_turning_right_target_same_priority__a0_a1 or
-                        going_straight_ego_turning_left_target_same_priority__a0_a1 or
-                        going_straight_ego_going_straight_target_same_priority__a0_a1
+                        turning_right_ego_turning_right_target_same_priority(a0, a1) or
+                        turning_right_ego_turning_left_target_same_priority(a0, a1) or
+                        turning_right_ego_going_straight_target_same_priority(a0, a1) or 
+                        turning_left_ego_turning_right_target_same_priority(a0, a1) or
+                        turning_left_ego_turning_left_target_same_priority(a0, a1) or
+                        turning_left_ego_going_straight_target_same_priority(a0, a1) or
+                        going_straight_ego_turning_right_target_same_priority(a0, a1) or
+                        going_straight_ego_turning_left_target_same_priority(a0, a1) or
+                        going_straight_ego_going_straight_target_same_priority(a0, a1)
                       )
                     ) implies
                     (
                         (
                           (
-                          (in_intersection_conflict_area__a0_a1) implies
+                          (in_intersection_conflict_area(a0, a1)) implies
                             (
-                              not(causes_braking_intersection__a0_a1) and
-                              not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                              not(causes_braking_intersection(a0, a1)) and
+                              not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
                             )
                           ) and
                           (
-                            (in_intersection_conflict_area__a1_a0) implies
-                            not (eventually[0,1s](in_intersection_conflict_area__a0_a1))
+                            (in_intersection_conflict_area(a0, a1)) implies
+                            not (eventually[0,1s](in_intersection_conflict_area(a0, a1)))
                           )
                         )or 
-                      not(on_lanelet_with_type_intersection__a0)
+                      not(on_lanelet_with_type_intersection(a0))
                     )
                    )"
 
   R_IN4: "A a1: (
                   (  
-                    turning_right_target_turning_right_ego_target_has_priority__a0_a1 or
-                    turning_right_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 or
-                    turning_right_target_going_straight_ego_target_has_priority__a0_a1 or
-                    going_straight_target_turning_right_ego_target_has_priority__a0_a1 or
-                    going_straight_target_turning_left_ego_target_has_priority_not_oncoming__a0_a1 or
-                    going_straight_target_going_straight_ego_target_has_priority__a0_a1 or
-                    turning_left_target_turning_left_ego_target_has_priority__a0_a1 or
-                    turning_left_target_turning_right_ego_target_has_priority__a0_a1 or
-                    turning_left_target_going_straight_ego_target_has_priority__a0_a1
+                    turning_right_target_turning_right_ego_target_has_priority(a0, a1) or
+                    turning_right_target_turning_left_ego_target_has_priority_not_oncoming(a0, a1) or
+                    turning_right_target_going_straight_ego_target_has_priority(a0, a1) or
+                    going_straight_target_turning_right_ego_target_has_priority(a0, a1) or
+                    going_straight_target_turning_left_ego_target_has_priority_not_oncoming(a0, a1) or
+                    going_straight_target_going_straight_ego_target_has_priority(a0, a1) or
+                    turning_left_target_turning_left_ego_target_has_priority(a0, a1) or
+                    turning_left_target_turning_right_ego_target_has_priority(a0, a1) or
+                    turning_left_target_going_straight_ego_target_has_priority(a0, a1)
                   ) implies
                   (
                     (
                       (
-                        (in_intersection_conflict_area__a0_a1) implies
+                        (in_intersection_conflict_area(a0, a1)) implies
                         (
-                          not(causes_braking_intersection__a0_a1) 
-                          and not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                          not(causes_braking_intersection(a0, a1)) 
+                          and not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
                         )
                       ) and
                       (
-                        (in_intersection_conflict_area__a1_a0) implies 
-                        not(eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
+                        (in_intersection_conflict_area(a0, a1)) implies 
+                        not(eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
                       )
-                    )or not(on_lanelet_with_type_intersection__a0)
+                    )or not(on_lanelet_with_type_intersection(a0))
                   )
                 )"
 
   R_IN5: "A a1: (
                   (
-                    turning_right_target_turning_left_ego_target_has_priority_oncoming__a0_a1 or
-                    going_straight_target_turning_left_ego_target_has_priority_oncoming__a0_a1
+                    turning_right_target_turning_left_ego_target_has_priority_oncoming(a0, a1) or
+                    going_straight_target_turning_left_ego_target_has_priority_oncoming(a0, a1)
                   ) implies
                   (
                     (
                       (
-                        (in_intersection_conflict_area__a0_a1) implies
+                        (in_intersection_conflict_area(a0, a1)) implies
                         (
-                          not(causes_braking_intersection__a0_a1) 
-                          and not(eventually[0,1s](in_intersection_conflict_area__a1_a0))
+                          not(causes_braking_intersection(a0, a1)) 
+                          and not(eventually[0,1s](in_intersection_conflict_area(a0, a1)))
                         )
                       ) and
                       (
-                        (in_intersection_conflict_area__a1_a0) implies 
-                        not(eventually[0,0.52s](in_intersection_conflict_area__a0_a1))
+                        (in_intersection_conflict_area(a0, a1)) implies 
+                        not(eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
                       )
-                    )or not(on_lanelet_with_type_intersection__a0)
+                    )or not(on_lanelet_with_type_intersection(a0))
                   )
                 )"
 # Parameters for traffic rules
