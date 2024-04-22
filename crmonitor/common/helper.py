@@ -5,7 +5,7 @@ from functools import reduce
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
-import numba
+# import numba
 import numpy as np
 from commonroad.scenario.lanelet import (
     Lanelet,
@@ -914,7 +914,7 @@ def flatten_nested_dict(data, path=tuple()):
     return entries
 
 
-@numba.njit(fastmath=True)
+# @numba.njit(fastmath=True)
 def min_max(arr):
     """
     https://stackoverflow.com/questions/12200580/numpy-function-for-simultaneous-max-and-min

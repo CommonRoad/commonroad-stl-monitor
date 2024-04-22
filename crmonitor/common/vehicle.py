@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from functools import partial, lru_cache
 from typing import Union, Dict, List, Tuple, Optional, Set
 
-import numba
+# import numba
 import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
