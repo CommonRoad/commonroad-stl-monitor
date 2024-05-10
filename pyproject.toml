@@ -16,7 +16,7 @@ commonroad-io = ">=2024.1"
 #commonroad-vehicle-models = ">=2"
 ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2022.2.1"
-commonroad-route-planner = "^2022.3"
+commonroad-route-planner = ">=2024.2.0"
 numba = ">=0.58.1"
 commonroad-mpr = { git = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git", branch = "feature/repair/miqp" }
 
