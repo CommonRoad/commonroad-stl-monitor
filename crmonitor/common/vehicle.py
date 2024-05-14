@@ -746,7 +746,7 @@ class Vehicle:
         lanes = list()
         lanelets = lanelets
         if len(lanelets) == 1:
-            return road_network.find_lane_by_lanelet(lanelets[0])
+            return list(road_network.find_lanes_by_lanelets(set(lanelets)))
         for lanelet_id in lanelets:
             lanes.append(
                 road_network.find_lanes_by_lanelets(
