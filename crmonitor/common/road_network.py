@@ -449,8 +449,11 @@ class RoadNetwork:
             self.reach_suc_cache = {}
             self.reach_pre_cache = {}
         else:
+            self.intersection_lanelets = set()
             self.incoming = {}
             self.lanes_incoming = {}
+            self.reach_suc_cache = {}
+            self.reach_pre_cache = {}
 
     def _create_lanes(self, road_network_param: Dict) -> List[Lane]:
         """
@@ -739,6 +742,8 @@ class RoadNetwork:
             lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
         )
         # find possible incoming elements
+        if len(self.lanelet_network.intersections) == 0:
+            return None
         for incoming_element in self.lanelet_network.intersections[0].incomings:
             if (
                 len(
