@@ -23,7 +23,15 @@ class PredAbruptBreaking(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        accel = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step].acceleration
+        veh_state = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step]
+        if veh_state.has_value("acceleration_y"):
+            # todo: if state has acceleration_y, we assume that acceleration and acceleration_y
+            #  are components on the x- and y-axes  in the Cartesian coordinate system.
+            accel = veh_state.acceleration * np.cos(
+                veh_state.orientation
+            ) + veh_state.acceleration_y * np.sin(veh_state.orientation)
+        else:
+            accel = veh_state.acceleration
         rob = self.config["a_abrupt"] - accel
         return self._scale_acc(rob)
 
@@ -35,8 +43,20 @@ class PredRelAbruptBreaking(BasePredicateEvaluator):
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
-        accel_k = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step].acceleration
-        accel_p = world.vehicle_by_id(vehicle_ids[1]).states_cr[time_step].acceleration
+        state_k = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step]
+        state_p = world.vehicle_by_id(vehicle_ids[1]).states_cr[time_step]
+        if state_k.has_value("acceleration_y"):
+            accel_k = state_k.acceleration * np.cos(
+                state_k.orientation
+            ) + state_k.acceleration_y * np.sin(state_k.orientation)
+        else:
+            accel_k = state_k.acceleration
+        if state_p.has_value("acceleration_y"):
+            accel_p = state_p.acceleration * np.cos(
+                state_p.orientation
+            ) + state_p.acceleration_y * np.sin(state_p.orientation)
+        else:
+            accel_p = state_p.acceleration
         rob = -accel_k + accel_p + self.config["a_abrupt"]
         return self._scale_acc(rob)
 
@@ -67,7 +87,13 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
             return False
         distance_vehicle = rear_k_s - front_p_s
         # calculate the longitudinal acceleration of the p-th vehicle
-        a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
+        state_p = vehicle_p.states_cr[time_step]
+        if state_p.has_value("acceleration_y"):
+            a_p = state_p.acceleration * np.cos(
+                state_p.orientation
+            ) + state_p.acceleration_y * np.sin(state_p.orientation)
+        else:
+            a_p = state_p.acceleration
         return (0 <= distance_vehicle <= d_br) and (a_p <= a_br)
 
     def evaluate_robustness(
@@ -87,7 +113,13 @@ class PredCausesBrakingIntersection(BasePredicateEvaluator):
         distance_vehicle = rear_k_s - front_p_s
         rob_distance = np.min([distance_vehicle, d_br - distance_vehicle])
         # calculate the longitudinal acceleration of the p-th vehicle
-        a_p = vehicle_p.get_lon_state(time_step, vehicle_p.ref_path_lane).a
+        state_p = vehicle_p.states_cr[time_step]
+        if state_p.has_value("acceleration_y"):
+            a_p = state_p.acceleration * np.cos(
+                state_p.orientation
+            ) + state_p.acceleration_y * np.sin(state_p.orientation)
+        else:
+            a_p = state_p.acceleration
         rob_a = a_br - a_p
         robustness = np.min(
             [self._scale_lon_dist(rob_distance), self._scale_acc(rob_a)]
