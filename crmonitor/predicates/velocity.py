@@ -46,14 +46,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator):
         if speed_limit is None:
             rob = math.inf
         else:
-            state = vehicle.states_cr[time_step]
-            if state.has_value("velocity_y"):
-                # todo: if state has velocity_y, we assume that velocity and velocity_y
-                #  are components on the x- and y-axes  in the Cartesian coordinate system.
-                speed = np.sqrt(state.velocity ** 2 + state.velocity_y ** 2)
-            else:
-                speed = state.velocity
-            rob = speed_limit + self.eps - speed
+            rob = speed_limit + self.eps - vehicle.states_cr[time_step].velocity
         rob = self._scale_speed(rob)
         return rob
 
@@ -129,14 +122,7 @@ class PredReverses(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = state.velocity * np.cos(
-                state.orientation
-            ) + state.velocity_y * np.sin(state.orientation)
-        else:
-            speed = state.velocity
-        if speed < -self.config["standstill_error"]:
+        if vehicle.get_lon_state(time_step).v < -self.config["standstill_error"]:
             return True
         else:
             return False
@@ -145,14 +131,11 @@ class PredReverses(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = state.velocity * np.cos(
-                state.orientation
-            ) + state.velocity_y * np.sin(state.orientation)
-        else:
-            speed = state.velocity
-        return self._scale_speed(-self.config["standstill_error"] - speed - 1.0e-17)
+        return self._scale_speed(
+            -self.config["standstill_error"]
+            - vehicle.get_lon_state(time_step).v
+            - 1.0e-17
+        )
 
 
 class PredSlowLeadingVehicle(BasePredicateEvaluator):
@@ -276,12 +259,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             v_type,
         ]
         v_max = min(v for v in v_list if v is not None)
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = np.sqrt(state.velocity ** 2 + state.velocity_y ** 2)
-        else:
-            speed = state.velocity
-        if v_max - speed < self.config["min_velocity_dif"]:
+        if v_max - vehicle.get_lon_state(time_step).v < self.config["min_velocity_dif"]:
             return True
         else:
             return False
@@ -304,13 +282,11 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             v_type,
         ]
         v_max = min(v for v in v_list if v is not None)
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = np.sqrt(state.velocity ** 2 + state.velocity_y ** 2)
-        else:
-            speed = state.velocity
         return self._scale_speed(
-            self.config["min_velocity_dif"] - v_max + speed - 1.0e-17
+            self.config["min_velocity_dif"]
+            - v_max
+            + vehicle.get_lon_state(time_step).v
+            - 1.0e-17
         )
 
 
@@ -324,14 +300,13 @@ class PredInStandStill(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = np.sqrt(state.velocity ** 2 + state.velocity_y ** 2)
-        else:
-            speed = state.velocity
         # ---------------------------------------------------
 
-        if -self.config["standstill_error"] < speed < self.config["standstill_error"]:
+        if (
+            -self.config["standstill_error"]
+            < vehicle.get_lon_state(time_step=time_step, lane=vehicle.ref_path_lane).v
+            < self.config["standstill_error"]
+        ):
             return True
         else:
             return False
@@ -340,17 +315,17 @@ class PredInStandStill(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        state = vehicle.states_cr[time_step]
-        if state.has_value("velocity_y"):
-            speed = np.sqrt(state.velocity ** 2 + state.velocity_y ** 2)
-        else:
-            speed = state.velocity
+        # avoid getting None of velocity
+        ref_path = vehicle.ref_path_lane
         # ---------------------------------------------------
 
         return self._scale_speed(
             min(
-                speed + self.config["standstill_error"],
-                self.config["standstill_error"] - speed - 1.0e-17,
+                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
+                + self.config["standstill_error"],
+                self.config["standstill_error"]
+                - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
+                - 1.0e-17,
             )
         )
 
@@ -431,18 +406,12 @@ class PredDrivesFaster(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        state_k = vehicle_k.states_cr[time_step]
-        if state_k.has_value("velocity_y"):
-            speed_k = np.sqrt(state_k.velocity ** 2 + state_k.velocity_y ** 2)
-        else:
-            speed_k = state_k.velocity
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        state_p = vehicle_p.states_cr[time_step]
-        if state_p.has_value("velocity_y"):
-            speed_p = np.sqrt(state_p.velocity ** 2 + state_p.velocity_y ** 2)
-        else:
-            speed_p = state_p.velocity
-        return self._scale_speed(speed_k - speed_p - 1.0e-17)
+        return self._scale_speed(
+            vehicle_k.get_lon_state(time_step).v
+            - vehicle_p.get_lon_state(time_step).v
+            - 1.0e-17
+        )
 
 
 class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
@@ -457,23 +426,15 @@ class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        state_k = vehicle_k.states_cr[time_step]
-        if state_k.has_value("velocity_y"):
-            speed_k = np.sqrt(state_k.velocity ** 2 + state_k.velocity_y ** 2)
-        else:
-            speed_k = state_k.velocity
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
-        state_p = vehicle_p.states_cr[time_step]
-        if state_p.has_value("velocity_y"):
-            speed_p = np.sqrt(state_p.velocity ** 2 + state_p.velocity_y ** 2)
-        else:
-            speed_p = state_p.velocity
         return self._scale_speed(
             min(
-                speed_k - speed_p - 1.0e-17,
+                vehicle_k.get_lon_state(time_step).v
+                - vehicle_p.get_lon_state(time_step).v
+                - 1.0e-17,
                 self.config["slightly_higher_speed_difference"]
-                - speed_k
-                + speed_p
+                - vehicle_k.get_lon_state(time_step).v
+                + vehicle_p.get_lon_state(time_step).v
                 - 1.0e-17,
             )
         )
