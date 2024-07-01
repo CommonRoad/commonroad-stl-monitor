@@ -350,7 +350,6 @@ class Vehicle:
         rear_s = np.min(calc_s(center_s, width, length, theta))
         return rear_s
 
-    @lru_cache(128)
     def front_s(self, time_step: int, lane: Lane = None) -> float:
         """
         Calculates front s-coordinate of vehicle
