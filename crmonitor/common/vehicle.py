@@ -160,26 +160,37 @@ class CurvilinearStateManager:
                 )
                 return None
         theta_cl = lane.orientation(s)
-        if (
-            hasattr(state, "acceleration")
-            and hasattr(state, "jerk")
-            and hasattr(state, "jerk_dot")
-        ):
-            x_lon = StateLongitudinal(
-                s=s,
-                v=state.velocity,
-                a=state.acceleration,
-                j=state.jerk,
-                j_dot=state.jerk_dot,
-            )
-        elif hasattr(state, "acceleration") and hasattr(state, "jerk"):
-            x_lon = StateLongitudinal(
-                s=s, v=state.velocity, a=state.acceleration, j=state.jerk
-            )
-        elif hasattr(state, "acceleration"):
-            x_lon = StateLongitudinal(s=s, v=state.velocity, a=state.acceleration)
+        if state.has_value("velocity_y"):
+            speed = state.velocity * np.cos(
+                state.orientation
+            ) + state.velocity_y * np.sin(state.orientation)
         else:
-            x_lon = StateLongitudinal(s=s, v=state.velocity)
+            speed = state.velocity
+        if hasattr(state, "acceleration"):
+            if state.has_value("acceleration_y"):
+                # todo: if state has acceleration_y, we assume that acceleration and acceleration_y
+                #  are components on the x- and y-axes  in the Cartesian coordinate system.
+                accel = state.acceleration * np.cos(
+                    state.orientation
+                ) + state.acceleration_y * np.sin(state.orientation)
+            else:
+                accel = state.acceleration
+            if hasattr(state, "jerk"):
+                if hasattr(state, "jerk_dot"):
+                    x_lon = StateLongitudinal(
+                        s=s,
+                        v=speed,
+                        a=accel,
+                        j=state.jerk,
+                        j_dot=state.jerk_dot,
+                    )
+                else:
+                    x_lon = StateLongitudinal(s=s, v=speed, a=accel, j=state.jerk)
+            else:
+                x_lon = StateLongitudinal(s=s, v=speed, a=accel)
+        else:
+            x_lon = StateLongitudinal(s=s, v=speed)
+
         if (
             hasattr(state, "kappa")
             and hasattr(state, "kappa_dot")
@@ -588,12 +599,10 @@ class Vehicle:
         planning_problem = PlanningProblem(0, initial_state, goal_region)
         route_planner = RoutePlanner(
             lanelet_network=road_network.lanelet_network,
-            state_initial=initial_state,
-            goal_region=goal_region,
-            reach_goal_state=False,
+            planning_problem=planning_problem,
         )
         candidate_holder = route_planner.plan_routes()
-        route = candidate_holder.retrieve_best_route_by_orientation()
+        route = candidate_holder.retrieve_first_route()
         return route
 
     def _replan_route(
