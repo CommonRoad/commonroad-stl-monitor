@@ -528,7 +528,10 @@ class Vehicle:
             attributes = goal["attributes"]
             end_position = goal["end_position"]
             end_orientation = goal["end_orientation"]
-        route = self._route_planner(initial_state, attributes, road_network)
+        try:
+            route = self._route_planner(initial_state, attributes, road_network)
+        except:
+            route = None
         # replan route to fix no solution from route planner
         replanned_route = self._replan_route(
             initial_state, end_position, end_orientation, attributes, road_network
@@ -588,12 +591,10 @@ class Vehicle:
         planning_problem = PlanningProblem(0, initial_state, goal_region)
         route_planner = RoutePlanner(
             lanelet_network=road_network.lanelet_network,
-            state_initial=initial_state,
-            goal_region=goal_region,
-            reach_goal_state=False,
+            planning_problem=planning_problem,
         )
         candidate_holder = route_planner.plan_routes()
-        route = candidate_holder.retrieve_best_route_by_orientation()
+        route = candidate_holder.retrieve_shortetest_route_with_least_lane_changes()
         return route
 
     def _replan_route(
@@ -656,11 +657,14 @@ class Vehicle:
                     center=end_position_candidates[j],
                     orientation=end_orientation,
                 )
-                route = self._route_planner(
-                    initial_state=initial_state_candidates[i],
-                    attributes=attributes,
-                    road_network=road_network,
-                )
+                try:
+                    route = self._route_planner(
+                        initial_state=initial_state_candidates[i],
+                        attributes=attributes,
+                        road_network=road_network,
+                    )
+                except:
+                    route = None
                 if route is not None:
                     yield route
         yield None
