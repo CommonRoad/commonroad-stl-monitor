@@ -537,7 +537,7 @@ class Vehicle:
             route = next(replanned_route)
         # extend lanelets from route
         lanelets_leading_to_goal = self._extend_route_plan(
-            route.list_ids_lanelets, road_network
+            route.lanelet_ids, road_network
         )
         # get reference lane from lanelets_leading_to_goal
         ref_path_lanes = self._initial_ref_path_lane(
@@ -547,7 +547,7 @@ class Vehicle:
         while len(ref_path_lanes) == 0 and route is not None:
             route = next(replanned_route)
             lanelets_leading_to_goal = self._extend_route_plan(
-                route.list_ids_lanelets, road_network
+                route.lanelet_ids, road_network
             )
             ref_path_lanes = self._initial_ref_path_lane(
                 road_network, lanelets_leading_to_goal
