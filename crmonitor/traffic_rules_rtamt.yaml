@@ -123,7 +123,7 @@ traffic_rules:
                       ) and
                       (
                         (in_intersection_conflict_area(a1, a0)) implies 
-                        not(eventually[0,0.52s](in_intersection_conflict_area(a0, a1)))
+                        not(eventually[0,0.6s](in_intersection_conflict_area(a0, a1)))
                       )
                     )or not(on_lanelet_with_type_intersection(a0))
                   )
