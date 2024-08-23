@@ -102,6 +102,10 @@ class World:
         self.vehicles.add(vehicle)
         self._warn_persistent_cache()
 
+    def remove_vehicle(self, vehicle: Vehicle):
+        self.vehicles.remove(vehicle)
+        self._warn_persistent_cache()
+
     @classmethod
     def create_from_scenario(
         cls, scenario: Scenario, config=None, road_network=None, cache_dir=None
