@@ -107,7 +107,8 @@ class PropositionRuleEvaluator(RuleEvaluator):
         # Iterate over all vehicle IDs stored in all_values_all_ids
         for veh_id in other_ids:
             if hasattr(self._monitor, "monitors") and veh_id in self._monitor.monitors:
-                vehicle_props = self._monitor.monitor._propositions
+                other_id = self._eval_visitor.other_ids[-1]
+                vehicle_props = self._monitor.monitors[other_id].monitor._propositions
             else:
                 vehicle_props = None
                 if any(hasattr(child, "monitors") for child in self._monitor.children) or vehicle_props is None:
