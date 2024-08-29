@@ -101,8 +101,11 @@ class PropositionRuleEvaluator(RuleEvaluator):
         # Initialize the dictionary to store the robustness values for each proposition
         props = {}
 
-        other_ids = self._eval_visitor.all_values_all_ids.keys() if self._eval_visitor.all_values_all_ids else [
-            self.ego_vehicle.id]
+        other_ids = (
+            self._eval_visitor.all_values_all_ids.keys()
+            if self._eval_visitor.all_values_all_ids
+            else [self.ego_vehicle.id]
+        )
 
         # Iterate over all vehicle IDs stored in all_values_all_ids
         for veh_id in other_ids:
@@ -111,7 +114,10 @@ class PropositionRuleEvaluator(RuleEvaluator):
                 vehicle_props = self._monitor.monitors[other_id].monitor._propositions
             else:
                 vehicle_props = None
-                if any(hasattr(child, "monitors") for child in self._monitor.children) or vehicle_props is None:
+                if (
+                    any(hasattr(child, "monitors") for child in self._monitor.children)
+                    or vehicle_props is None
+                ):
                     vehicle_props = self._monitor.monitor._propositions
 
             # Populate the props dictionary with proposition names as keys
@@ -121,13 +127,19 @@ class PropositionRuleEvaluator(RuleEvaluator):
                 props[prop_name][veh_id] = robustness_value
 
         # Determine the violation other_id used
-        other_id = self._eval_visitor.other_ids[-1] if self._eval_visitor.other_ids else self.ego_vehicle.id
+        other_id = (
+            self._eval_visitor.other_ids[-1]
+            if self._eval_visitor.other_ids
+            else self.ego_vehicle.id
+        )
 
         # Collect the props for the other_id separately
         if other_id == self.ego_vehicle.id:
             other_id_props = self._monitor.monitor._propositions
         else:
-            other_id_props = {prop_name: robustness_value.get(other_id, None) for prop_name, robustness_value in
-                              props.items()}
+            other_id_props = {
+                prop_name: robustness_value.get(other_id, None)
+                for prop_name, robustness_value in props.items()
+            }
 
         return props, other_id_props, self._last_evaluation_time_step
