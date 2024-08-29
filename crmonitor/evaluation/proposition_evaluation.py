@@ -92,14 +92,41 @@ class PropositionRuleEvaluator(RuleEvaluator):
             if any(hasattr(child, "monitors") for child in self._monitor.children):
                 other_id = self._eval_visitor.other_ids[-1]
                 props = self._monitor.monitor._propositions
-                quant_nodes = [
-                    node for node in self._monitor.children if hasattr(node, "monitors")
-                ]
-                # for quant_node in quant_nodes:
-                #    for key in [key for key in props.keys() if quant_node.name in key]:
-                #        props.pop(key)
-                #    props.update(quant_node.monitors[other_id].monitor._props)
             else:
                 props = self._monitor.monitor._propositions
 
         return props, other_id, self._last_evaluation_time_step
+
+    def get_propositions_all(self):
+        # Initialize the dictionary to store the robustness values for each proposition
+        props = {}
+
+        other_ids = self._eval_visitor.all_values_all_ids.keys() if self._eval_visitor.all_values_all_ids else [
+            self.ego_vehicle.id]
+
+        # Iterate over all vehicle IDs stored in all_values_all_ids
+        for veh_id in other_ids:
+            if hasattr(self._monitor, "monitors") and veh_id in self._monitor.monitors:
+                vehicle_props = self._monitor.monitor._propositions
+            else:
+                vehicle_props = None
+                if any(hasattr(child, "monitors") for child in self._monitor.children) or vehicle_props is None:
+                    vehicle_props = self._monitor.monitor._propositions
+
+            # Populate the props dictionary with proposition names as keys
+            for prop_name, robustness_value in vehicle_props.items():
+                if prop_name not in props:
+                    props[prop_name] = {}
+                props[prop_name][veh_id] = robustness_value
+
+        # Determine the violation other_id used
+        other_id = self._eval_visitor.other_ids[-1] if self._eval_visitor.other_ids else self.ego_vehicle.id
+
+        # Collect the props for the other_id separately
+        if other_id == self.ego_vehicle.id:
+            other_id_props = self._monitor.monitor._propositions
+        else:
+            other_id_props = {prop_name: robustness_value.get(other_id, None) for prop_name, robustness_value in
+                              props.items()}
+
+        return props, other_id_props, self._last_evaluation_time_step
