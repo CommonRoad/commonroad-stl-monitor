@@ -264,6 +264,10 @@ class RuleEvaluator:
     def other_ids(self) -> Tuple[int]:
         return self._eval_visitor.other_ids[1:]
 
+    @property
+    def all_values_all_ids(self) -> Dict[int, List[Tuple[int, float]]]:
+        return self._eval_visitor.all_values_all_ids
+
     def reset(self, ego_id: Union[Vehicle, int], world: World, start_time_step=None):
         if isinstance(ego_id, Vehicle):
             warnings.warn(
