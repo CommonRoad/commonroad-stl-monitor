@@ -62,6 +62,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.other_ids = tuple()
         self.use_boolean = use_boolean
         self.output_type = output_type
+        self.all_values_all_ids = {}
 
     def walk(self, node: MonitorNode, world, mpr_world, time_step, ego_vehicle, *ctx):
         self.other_ids = tuple()
@@ -101,15 +102,23 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         other_ids = ctx[3]
         if not isinstance(other_ids, tuple):
             other_ids = ctx[2]
+
+        self.all_values_all_ids = {}  # reset to empty
+
         if len(values) > 0:
             idx = np.argmin(values)
             val = values[idx]
             self.other_ids = selected_ids[idx]
             all_node.last_selected = all_node.monitors[self.other_ids[-1]]
+
+            # Loop through all selected_ids and populate the dictionary
+            for i, sid in enumerate(selected_ids):
+                self.all_values_all_ids[sid[-1]] = values[i]
         else:
             val = 1.0
             self.other_ids = other_ids
             all_node.last_selected = None
+
         return val
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
@@ -117,15 +126,27 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         other_ids = ctx[3]
         if not isinstance(other_ids, tuple):
             other_ids = ctx[2]
+
+        self.all_values_all_ids = {}  # reset to empty
+
         if len(values) > 0:
             idx = np.argmax(values)
             val = values[idx]
             self.other_ids = selected_ids[idx]
+
             exist_node.last_selected = exist_node.monitors[self.other_ids[-1]]
+
+            # Loop through all selected_ids and populate the dictionary
+            for i, sid in enumerate(selected_ids):
+                self.all_values_all_ids[sid[-1]] = values[i]
         else:
             val = -1.0
             self.other_ids = other_ids
             exist_node.last_selected = None
+
+            # If no values, only add other_ids if it's not empty
+            if other_ids:
+                self.all_values_all_ids[other_ids[-1]] = val
         return val
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
