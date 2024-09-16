@@ -142,4 +142,4 @@ class PropositionRuleEvaluator(RuleEvaluator):
                 for prop_name, robustness_value in props.items()
             }
 
-        return props, other_id_props, self._last_evaluation_time_step
+        return props, other_id_props, self._eval_visitor.all_values_all_ids, self._last_evaluation_time_step
