@@ -666,26 +666,44 @@ def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
         distance.append(d_right)
     return distance
 
+def get_priority(lanelet_ids, road_network, direction, traffic_sign_priority):
+    """
+    Determine the priority of a vehicle at an intersection based on traffic signs.
 
-def get_priority(
-    lanelet_ids, road_network: RoadNetwork, direction, traffic_sign_priority
-):
+    Parameters:
+    - lanelet_ids: List of IDs of the lanelets where the vehicle is located.
+    - road_network: The road network data structure.
+    - direction: The direction the vehicle intends to go ('right', 'straight', or 'left').
+    - traffic_sign_priority: A mapping from traffic sign types to priority configurations.
+
+    Returns:
+    - The priority value for the given direction based on traffic signs.
+
+    Raises:
+    - ValueError: If the provided direction is invalid.
+    """
+    # Get the types of traffic signs associated with the given lanelets
     ts_types = traffic_sign_type(lanelet_ids, road_network)
-    ts_types_intersection = [traffic_sign_priority[ts] for ts in ts_types]
-    if len(ts_types_intersection) == 0:
-        ts_types_intersection = [
+
+    # Filter traffic signs to those that affect priority
+    applicable_ts_types = [
+        traffic_sign_priority[ts] for ts in ts_types if ts in traffic_sign_priority
+    ]
+
+    # If no relevant traffic signs are found, default to 'right before left' rule
+    if not applicable_ts_types:
+        applicable_ts_types = [
             traffic_sign_priority[TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT]
         ]
-    eval_idx_list = list()
-    for ts_type in ts_types_intersection:
-        eval_idx_list.append(ts_type.evaluation_idx)
-    argmin_s = np.argmin(eval_idx_list)
-    if direction == "right":
-        return ts_types_intersection[argmin_s].right
-    elif direction == "straight":
-        return ts_types_intersection[argmin_s].straight
-    elif direction == "left":
-        return ts_types_intersection[argmin_s].left
+
+    # Select the traffic sign with the highest priority (lowest evaluation index)
+    selected_ts_type = min(applicable_ts_types, key=lambda ts: ts.evaluation_idx)
+
+    # Return the priority value based on the direction
+    if direction in ["right", "straight", "left"]:
+        return getattr(selected_ts_type, direction)
+    else:
+        raise ValueError(f"Invalid direction: {direction}")
 
 
 def find_longest_lane_by_intersection_lanelet(
