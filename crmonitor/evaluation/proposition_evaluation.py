@@ -98,33 +98,30 @@ class PropositionRuleEvaluator(RuleEvaluator):
         return props, other_id, self._last_evaluation_time_step
 
     def get_propositions_all(self):
-        # Initialize the dictionary to store the robustness values for each proposition
-        props = {}
 
-        other_ids = (
-            self._eval_visitor.all_values_all_ids.keys()
-            if self._eval_visitor.all_values_all_ids
-            else [self.ego_vehicle.id]
-        )
+        # New dictionary structure
+        transformed_all_props_all_ids = {}
 
-        # Iterate over all vehicle IDs stored in all_values_all_ids
-        for veh_id in other_ids:
-            if hasattr(self._monitor, "monitors") and veh_id in self._monitor.monitors:
-                other_id = self._eval_visitor.other_ids[-1]
-                vehicle_props = self._monitor.monitors[other_id].monitor._propositions
-            else:
-                vehicle_props = None
-                if (
-                    any(hasattr(child, "monitors") for child in self._monitor.children)
-                    or vehicle_props is None
-                ):
-                    vehicle_props = self._monitor.monitor._propositions
+        if not self._eval_visitor.all_props_all_ids:
+            # Iterate over all vehicle IDs stored in all_values_all_ids
+            veh_id = self.ego_vehicle.id
+            vehicle_props = self._monitor.monitor._propositions
 
             # Populate the props dictionary with proposition names as keys
             for prop_name, robustness_value in vehicle_props.items():
-                if prop_name not in props:
-                    props[prop_name] = {}
-                props[prop_name][veh_id] = robustness_value
+                if prop_name not in transformed_all_props_all_ids:
+                    transformed_all_props_all_ids[prop_name] = {}
+                transformed_all_props_all_ids[prop_name][veh_id] = robustness_value
+
+        else:
+            # Iterate over the original dictionary
+            for time_step, props in self._eval_visitor.all_props_all_ids.items():
+                for v_id, value in props.items():
+                    # If the feature is not in the new dictionary, initialize it with an empty dictionary
+                    if v_id not in transformed_all_props_all_ids:
+                        transformed_all_props_all_ids[v_id] = {}
+                    # Add the time_step and its corresponding value to the feature's dictionary
+                    transformed_all_props_all_ids[v_id][time_step] = value
 
         # Determine the violation other_id used
         other_id = (
@@ -139,7 +136,12 @@ class PropositionRuleEvaluator(RuleEvaluator):
         else:
             other_id_props = {
                 prop_name: robustness_value.get(other_id, None)
-                for prop_name, robustness_value in props.items()
+                for prop_name, robustness_value in transformed_all_props_all_ids.items()
             }
 
-        return props, other_id_props, self._eval_visitor.all_values_all_ids, self._last_evaluation_time_step
+        return (
+            transformed_all_props_all_ids,
+            other_id_props,
+            self._eval_visitor.all_values_all_ids,
+            self._last_evaluation_time_step,
+        )
