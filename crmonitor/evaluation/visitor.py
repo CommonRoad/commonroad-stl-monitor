@@ -63,6 +63,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.use_boolean = use_boolean
         self.output_type = output_type
         self.all_values_all_ids = {}
+        self.all_props_all_ids = {}
 
     def walk(self, node: MonitorNode, world, mpr_world, time_step, ego_vehicle, *ctx):
         self.other_ids = tuple()
@@ -104,6 +105,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             other_ids = ctx[2]
 
         self.all_values_all_ids = {}  # reset to empty
+        self.all_props_all_ids = {}  # reset to empty
 
         if len(values) > 0:
             idx = np.argmin(values)
@@ -114,6 +116,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             # Loop through all selected_ids and populate the dictionary
             for i, sid in enumerate(selected_ids):
                 self.all_values_all_ids[sid[-1]] = values[i]
+                self.all_props_all_ids[sid[-1]] = all_node.monitors[sid[-1]].monitor._propositions
         else:
             val = 1.0
             self.other_ids = other_ids
@@ -128,6 +131,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             other_ids = ctx[2]
 
         self.all_values_all_ids = {}  # reset to empty
+        self.all_props_all_ids = {}  # reset to empty
 
         if len(values) > 0:
             idx = np.argmax(values)
