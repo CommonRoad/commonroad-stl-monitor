@@ -39,7 +39,8 @@ class BasePredicateEvaluator(abc.ABC):
         if self.config["use_mpr"]:
             try:
                 self.peml = PEML([self.predicate_name])
-            except:
+            except Exception as e:
+                print("loading mpr model: ", e)
                 logger.warning("do not have model %s", str(self.predicate_name))
                 self.peml = None
 
