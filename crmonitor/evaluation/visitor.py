@@ -116,7 +116,8 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             # Loop through all selected_ids and populate the dictionary
             for i, sid in enumerate(selected_ids):
                 self.all_values_all_ids[sid[-1]] = values[i]
-                self.all_props_all_ids[sid[-1]] = all_node.monitors[sid[-1]].monitor._propositions
+                if hasattr(all_node.monitors[sid[-1]], "_propositions"):
+                    self.all_props_all_ids[sid[-1]] = all_node.monitors[sid[-1]].monitor._propositions
         else:
             val = 1.0
             self.other_ids = other_ids
