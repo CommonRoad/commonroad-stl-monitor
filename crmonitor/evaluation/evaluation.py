@@ -42,6 +42,8 @@ class RuleEvaluator:
         traffic_rules_config=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
+        monitor_creation_visitor: Optional[RuleTreeVisitor] = None,
+        monitor_evaluation_visitor: Optional[RuleTreeVisitor] = None,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
@@ -82,6 +84,8 @@ class RuleEvaluator:
             world_mpr=world_mpr,
             use_boolean=use_boolean,
             output_type=output_type,
+            monitor_creation_visitor=monitor_creation_visitor,
+            monitor_evaluation_visitor=monitor_evaluation_visitor,
         )
 
     def __init__(
@@ -94,6 +98,7 @@ class RuleEvaluator:
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
         monitor_creation_visitor: Optional[RuleTreeVisitor] = None,
+        monitor_evaluation_visitor: Optional[RuleTreeVisitor] = None,
     ):
         if monitor_creation_visitor is None:
             monitor_creation_visitor = MonitorCreationRuleTreeVisitor(
@@ -107,9 +112,12 @@ class RuleEvaluator:
             AstNodeValueCollectorMonitorTreeVisitor()
         )
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
-        self._eval_visitor = EvaluationMonitorTreeVisitor(
-            use_boolean=use_boolean, output_type=output_type
-        )
+        if monitor_evaluation_visitor is None:
+            self._eval_visitor = EvaluationMonitorTreeVisitor(
+                use_boolean=use_boolean, output_type=output_type
+            )
+        else:
+            self._eval_visitor = monitor_evaluation_visitor
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
         self._ego_id = None

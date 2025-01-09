@@ -140,9 +140,9 @@ class BasePredicateEvaluator(abc.ABC):
         time_step: int,
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
-        predicate_names2vehicle_ids2values[self.predicate_name][
-            tuple(vehicle_ids)
-        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
+            self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        )
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):

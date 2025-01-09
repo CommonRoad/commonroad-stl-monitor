@@ -1,9 +1,12 @@
 import copy
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import rtamt
+from rtamt.spec.abstract_specification import (
+    AbstractOnlineSpecification,
+)
 
 from crmonitor.rule.rule_node import IOType, RuleNode
 
@@ -17,8 +20,14 @@ class OutputType(Enum):
 
 @lru_cache(None)
 def _template_spec(
-    logic_formula: str, output_type: OutputType, predicates, dt
-) -> rtamt.STLSpecification:
+    logic_formula: str,
+    output_type: OutputType,
+    predicates,
+    dt,
+    spec_factory: Callable[
+        [rtamt.Semantics], AbstractOnlineSpecification
+    ] = stl_discrete_time_online_specification_factory,
+) -> AbstractOnlineSpecification:
     if output_type != OutputType.STANDARD:
         # Workaround for rtamt when working with output-robustness and input vacuity
         for pred in predicates:
@@ -49,13 +58,21 @@ def _template_spec(
 
 
 def _create_spec(
-    rule_str: str, output_type: OutputType, predicates: List[Tuple[str, Any]], dt: float
-) -> rtamt.STLSpecification:
-    template_spec = _template_spec(rule_str, output_type, tuple(predicates), dt)
+    rule_str: str,
+    output_type: OutputType,
+    predicates: List[Tuple[str, Any]],
+    dt: float,
+    spec_factory: Callable[
+        [rtamt.Semantics], AbstractOnlineSpecification
+    ] = stl_discrete_time_online_specification_factory,
+) -> AbstractOnlineSpecification:
+    template_spec = _template_spec(
+        rule_str, output_type, tuple(predicates), dt, spec_factory
+    )
     # The dynamic part of the template spec has to be replaced.
     spec = copy.copy(template_spec)
     # Create a dummy spec to obtain a new interpreter
-    dummy_spec = stl_discrete_time_online_specification_factory(output_type.value)
+    dummy_spec = spec_factory(output_type.value)
     spec.online_interpreter = dummy_spec.online_interpreter
     # new ast of online interpreter is not set until the
     # update method of AbstractOnlineSpecification is called
