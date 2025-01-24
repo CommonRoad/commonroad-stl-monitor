@@ -37,7 +37,7 @@ def _template_spec(
                 pred[0].name, f"({pred[0].name} >= 0)"
             )
 
-    spec = stl_discrete_time_online_specification_factory(semantics=output_type.value)
+    spec = spec_factory(output_type.value)
     for var, io_type in predicates:
         spec.declare_var(var.name, "float")
         if io_type == IOType.INPUT:
