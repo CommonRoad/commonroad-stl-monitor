@@ -1,10 +1,11 @@
 import itertools
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import TypedDict, Union
 
 import numpy as np
 
 from crmonitor.common.helper import gather
+from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,

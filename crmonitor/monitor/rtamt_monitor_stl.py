@@ -1,10 +1,12 @@
+from abc import ABC
 import copy
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Protocol
 
 import rtamt
 from rtamt.spec.abstract_specification import (
+    AbstractOfflineOnlineSpecification,
     AbstractOnlineSpecification,
 )
 
@@ -27,7 +29,7 @@ def _template_spec(
     spec_factory: Callable[
         [rtamt.Semantics], AbstractOnlineSpecification
     ] = stl_discrete_time_online_specification_factory,
-) -> AbstractOnlineSpecification:
+) -> AbstractOfflineOnlineSpecification:
     if output_type != OutputType.STANDARD:
         # Workaround for rtamt when working with output-robustness and input vacuity
         for pred in predicates:
@@ -63,9 +65,9 @@ def _create_spec(
     predicates: List[Tuple[str, Any]],
     dt: float,
     spec_factory: Callable[
-        [rtamt.Semantics], AbstractOnlineSpecification
+        [rtamt.Semantics], AbstractOfflineOnlineSpecification
     ] = stl_discrete_time_online_specification_factory,
-) -> AbstractOnlineSpecification:
+) -> AbstractOfflineOnlineSpecification:
     template_spec = _template_spec(
         rule_str, output_type, tuple(predicates), dt, spec_factory
     )
@@ -121,6 +123,18 @@ class RtamtStlMonitor:
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob
+
+    def evaluate_monitor_offline(self, predicates: List[Tuple[str, List[float]]]):
+        dataset = {}
+        max_time = 0
+        for i, (predicate_name, values) in enumerate(predicates):
+            dataset[predicate_name] = values
+            max_time = max(max_time, len(values))
+
+        dataset["time"] = []
+        for i in range(0, max_time):
+            dataset["time"].append(i)
+        return self._spec.evaluate(dataset)
 
     def copy(self):
         return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)

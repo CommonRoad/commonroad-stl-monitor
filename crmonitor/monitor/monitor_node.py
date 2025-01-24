@@ -37,6 +37,9 @@ class RuleMonitorNode(MonitorNode):
     def update(self, time, values):
         return self.monitor.evaluate_monitor_online(time, values)
 
+    def evaluate(self, values):
+        return self.monitor.evaluate_monitor_offline(values)
+
     def copy(self):
         return RuleMonitorNode(
             self.name, [c.copy() for c in self.children], self.monitor.copy()

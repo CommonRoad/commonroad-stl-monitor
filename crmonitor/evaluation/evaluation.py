@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import copy
 import logging
 import warnings
@@ -30,6 +31,23 @@ from crmonitor.rule.rule_node import VisitorNode
 from commonroad_mpr.common.observation import World as WorldMPR
 
 logger = logging.getLogger(__name__)
+
+
+class AbstractRuleEvaluator(ABC):
+    @classmethod
+    def create_from_config(cls, world: World):
+        return cls()
+
+    @abstractmethod
+    def evaluate(self) -> float: ...
+
+
+class OnlineRuleEvaluator(AbstractRuleEvaluator):
+    def evaluate(self) -> float: ...
+
+
+class OfflineRuleEvaluator(AbstractRuleEvaluator):
+    def evaluate(self) -> float: ...
 
 
 class RuleEvaluator:
@@ -191,6 +209,16 @@ class RuleEvaluator:
         ):
             robustness_values.append(self.update())
         return np.array(robustness_values)
+
+    def evaluate_offline(self) -> np.ndarray:
+        """ """
+        return self._eval_visitor.walk(
+            self._monitor,
+            self._world,
+            self._mpr_world,
+            self.ego_vehicle.end_time,
+            self.ego_vehicle,
+        )
 
     def __iter__(self):
         return self

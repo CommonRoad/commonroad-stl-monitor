@@ -2,18 +2,12 @@ from typing import Dict
 
 from rtamt import Language, StlDiscreteTimeSpecification
 import rtamt
-from rtamt.pastifier.stl.pastifier import StlPastifier
-from rtamt.semantics.abstract_discrete_time_offline_interpreter import (
-    discrete_time_offline_interpreter_factory,
-)
 from rtamt.semantics.abstract_discrete_time_online_interpreter import (
     DiscreteTimeOnlineUpdateVisitor,
-    discrete_time_online_interpreter_factory,
 )
 from rtamt.spec.abstract_specification import (
-    AbstractOnlineSpecification,
+    AbstractOfflineOnlineSpecification,
 )
-from rtamt.syntax.ast.parser.stl.specification_parser import StlAst
 
 
 class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
@@ -34,7 +28,7 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
 
 def stl_discrete_time_online_specification_factory(
     semantics: rtamt.Semantics,
-) -> AbstractOnlineSpecification:
+) -> AbstractOfflineOnlineSpecification:
     spec = StlDiscreteTimeSpecification(semantics, Language.PYTHON)
     spec.online_interpreter.updateVisitor = DiscreteTimeOnlineUpdateVisitorDict()
     return spec
