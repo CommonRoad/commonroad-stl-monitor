@@ -81,11 +81,6 @@ if use_mpr:
     )
 
 
-class CustomOfflineAstVisitor(StlDiscreteTimeOfflineAstVisitor):
-    # TODO: implement custom operators :)
-    ...
-
-
 class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
         print(rule_node)
@@ -97,7 +92,7 @@ class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
             f"world state with dt={world.dt}!"
         )
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
-        val = rule_node.evaluate(list(child_values.items()))
+        val = rule_node.evaluate(list(child_values.items()))  # evaluate instead of update for offline usage
         return val
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
@@ -125,11 +120,6 @@ class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
         return samples
 
 
-# The pasitifer applies transformations to the RTAMT AST.
-# Here we could implement custom transformations to the rules, in case this is necessary.
-class CustomPastifier(StlPastifier): ...
-
-
 # ==============================
 # End custom aggregation logic
 # ==============================
@@ -149,56 +139,6 @@ rule_evaluator_config["traffic_rules_param"]["use_mpr"] = use_mpr
 world = World.create_from_scenario(scenario, config=config)
 
 
-# Plumbing code to inject our custom RTAMT interpreter and visitors into the STL monitor code
-def custom_stl_discrete_time_online_specification_factory(
-    semantics: rtamt.Semantics,
-) -> AbstractOfflineOnlineSpecification:
-    online_interpreter = discrete_time_online_interpreter_factory(
-        StlDiscreteTimeOnlineAstVisitor
-    )()
-    # TODO: The offline interpreter is also created with our custom visitor and custom online operators -> can this lead to uninted issues?
-    offline_interpreter = discrete_time_offline_interpreter_factory(
-        CustomOfflineAstVisitor
-    )()
-
-    spec = AbstractOfflineOnlineSpecification(
-        StlAst(), offline_interpreter, online_interpreter, pastifier=CustomPastifier()
-    )
-    # spec.online_interpreter.updateVisitor = CustomUpdateVisitor()
-
-    return spec
-
-
-class CustomRtamtStlMonitor(RtamtStlMonitor):
-    def __init__(self, rule_str, predicates, dt, output_type):
-        self._rule = rule_str
-        self._predicates = predicates
-        self._output_type = output_type
-        self._dt = dt
-
-        self._spec = _create_spec(
-            rule_str,
-            output_type,
-            predicates,
-            dt,
-            custom_stl_discrete_time_online_specification_factory,
-        )
-
-    def copy(self):
-        return CustomRtamtStlMonitor(
-            self._rule, self._predicates, self.dt, self._output_type
-        )
-
-
-class EnhancedCreationMonitorTreeVisitor(MonitorCreationRuleTreeVisitor):
-    def visit_rule_node(self, rule_node: RuleNode, *ctx):
-        children = [c.visit(self, *ctx) for c in rule_node.children]
-        monitor = CustomRtamtStlMonitor.create_from_rule_node(
-            rule_node, self.dt, self.output_type
-        )
-        return RuleMonitorNode(rule_node.name, children, monitor)
-
-
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
@@ -206,7 +146,7 @@ rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
     rule="R_G3",
-    monitor_creation_visitor=EnhancedCreationMonitorTreeVisitor(dt=scenario.dt),
+    monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
 )
 
