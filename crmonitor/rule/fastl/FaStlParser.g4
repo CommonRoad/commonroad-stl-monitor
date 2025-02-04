@@ -24,6 +24,7 @@ spec
 	| FORALL vehicle COLON LPAREN spec RPAREN             #SpecQuantForall
 
     | spec AndOperator spec                               #SpecNested
+    | spec AndsmoothOperator spec                         #SpecAndSmooth
     | spec OrOperator spec                                #SpecNested
     | spec ImpliesOperator spec                           #SpecNested
     | spec IffOperator spec                               #SpecNested
@@ -43,9 +44,9 @@ spec
 	;
 
 real_expression:
-     literal                                                   #ExprLiteral
-    | predicate                                                  #ExprPred
-    | real_expression comparisonOp real_expression                          #ExprComp
+     literal                                                    #ExprLiteral
+    | predicate                                                 #ExprPred
+    | real_expression comparisonOp real_expression              #ExprComp
     | real_expression PLUS real_expression                      #ExprAddition
 	| real_expression MINUS real_expression                     #ExprSubtraction
 	| real_expression TIMES real_expression                     #ExprMultiplication

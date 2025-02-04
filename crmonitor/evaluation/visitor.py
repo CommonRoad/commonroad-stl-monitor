@@ -10,10 +10,10 @@ from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
     MonitorNode,
-    RuleMonitorNode,
+    RuleMonitorNode, AndsmoothMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
-from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
+from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode, AndsmoothNode
 
 
 class RuleTreeVisitor(ABC):
@@ -27,6 +27,10 @@ class RuleTreeVisitor(ABC):
 
     @abstractmethod
     def visit_exist_node(self, exist_node: Union[ExistNode, ExistMonitorNode], *ctx):
+        pass
+
+    @abstractmethod
+    def visit_andsmooth_node(self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx):
         pass
 
     @abstractmethod
@@ -53,6 +57,10 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
     def visit_exist_node(self, exist_node: ExistNode, *ctx):
         children = [c.visit(self, *ctx) for c in exist_node.children]
         return ExistMonitorNode(exist_node.name, children)
+
+    def visit_andsmooth_node(self, andsmooth_node: AndsmoothNode, *ctx):
+        children = [c.visit(self, *ctx) for c in andsmooth_node.children]
+        return AndsmoothMonitorNode(andsmooth_node.name, children)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         return predicate_node
@@ -193,6 +201,16 @@ class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
             val = exist_node.last_selected.visit(self, *ctx)
         return val
 
+    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
+        print("TODO implement")
+        if andsmooth_node.last_selected is None:
+            # Visit the prototype monitor
+            val = andsmooth_node.children[0].visit(self, *ctx)
+            val = [(n, v if v is not None else -1.0) for n, v in val]
+        else:
+            val = andsmooth_node.last_selected.visit(self, *ctx)
+        return val
+
 
 class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     def visit_rule_node(self, rule_node: "RuleMonitorNode", *ctx):
@@ -257,6 +275,10 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         return self._visit_quant_node(exist_node, *ctx)
 
+    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
+        print("TODO implement")
+        return self._visit_quant_node(andsmooth_node, *ctx)
+
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         ctx, is_effective = self._split_context(ctx)
 
@@ -309,6 +331,9 @@ class ResetMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_exist_node(self, exist_node: Union[ExistNode, ExistMonitorNode], *ctx):
         self._visit(exist_node, *ctx)
+
+    def visit_andsmooth_node(self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx):
+        self._visit(andsmooth_node, *ctx)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         pass

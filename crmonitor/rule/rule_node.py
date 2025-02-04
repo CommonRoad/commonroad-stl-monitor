@@ -49,6 +49,15 @@ class ExistNode(VisitorNode):
         return visitor.visit_exist_node(self, *ctx)
 
 
+class AndsmoothNode(VisitorNode):
+    def __init__(self, children, name):
+        self.children = children
+        self.name = name
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_andsmooth_node(self, *ctx)
+
+
 class PredicateNode(MonitorNode, VisitorNode):
     def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
         assert len(agent_placeholders) == evaluator.arity, (

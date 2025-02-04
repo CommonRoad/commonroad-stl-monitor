@@ -13,6 +13,9 @@ FORALL
 VEHICLE
     : 'a' ;
 
+AndsmoothOperator
+    : 'andsmooth' ;
+
 // Preserve whitespace
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;

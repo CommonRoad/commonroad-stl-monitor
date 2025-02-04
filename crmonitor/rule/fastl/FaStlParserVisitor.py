@@ -24,6 +24,11 @@ class FaStlParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by FaStlParser#SpecAndSmooth.
+    def visitSpecAndSmooth(self, ctx:FaStlParser.SpecAndSmoothContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by FaStlParser#SpecQuantExist.
     def visitSpecQuantExist(self, ctx:FaStlParser.SpecQuantExistContext):
         return self.visitChildren(ctx)

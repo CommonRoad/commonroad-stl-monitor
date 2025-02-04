@@ -79,3 +79,15 @@ class ExistMonitorNode(MonitorNode):
         super().reset()
         self.last_selected = None
         self.monitors.clear()
+
+
+class AndsmoothMonitorNode(MonitorNode):
+    def __init__(self, name, children):
+        assert len(children) == 2
+        super().__init__(name, children)
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_andsmooth_node(self, *ctx)
+
+    def reset(self):
+        super().reset()

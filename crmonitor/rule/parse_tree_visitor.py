@@ -96,7 +96,29 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
                 RuleNode(
                     children,
                     self._rewriter.getText(
-                        "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex
+                        "predicate",
+                        ctx.start.tokenIndex,
+                        ctx.stop.tokenIndex
+                    ),
+                    f"g{self._sub_rule_counter}",
+                )
+            ]
+        else:
+            return children
+
+    def visitSpecAndSmooth(self, ctx:FaStlParser.SpecAndSmoothContext):
+        children = self.visitChildren(ctx)
+        # De-duplicate
+        children = list(dict.fromkeys(children))
+        if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
+            # Flatten tree to evaluate with rtamt
+            return [
+                RuleNode(
+                    children,
+                    self._rewriter.getText(
+                        "predicate",
+                        ctx.start.tokenIndex,
+                        ctx.stop.tokenIndex
                     ),
                     f"g{self._sub_rule_counter}",
                 )

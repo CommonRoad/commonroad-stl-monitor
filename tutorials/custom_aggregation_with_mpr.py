@@ -27,7 +27,6 @@ from rtamt.spec.abstract_specification import (
 from rtamt.syntax.ast.parser.stl.specification_parser import StlAst
 
 from crmonitor.common.helper import gather
-from crmonitor.monitor.rtamt_monitor_stl import _create_spec
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
@@ -40,10 +39,9 @@ from crmonitor.evaluation.visitor import (
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
-    RuleMonitorNode,
+    RuleMonitorNode, AndsmoothMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.rule.rule_node import RuleNode, PredicateNode
+from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = False
@@ -106,6 +104,12 @@ class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
         world, mpr_world, time_step, other_ids = ctx[:4]
         # TODO: Implement the Exist quantifier
         return 1.0
+
+    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
+        print(andsmooth_node)
+        world, mpr_world, time_step, other_ids = ctx[:4]
+        # TODO: Implement the Andsmooth operator
+        return 2.0
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         print(predicate_node)
