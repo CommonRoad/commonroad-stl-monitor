@@ -5,7 +5,14 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.fastl.FaStlParser import FaStlParser
 from crmonitor.rule.fastl.FaStlParserVisitor import FaStlParserVisitor
-from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
+from crmonitor.rule.rule_node import (
+    AllNode,
+    AndsmoothNode,
+    ExistNode,
+    IOType,
+    PredicateNode,
+    RuleNode,
+)
 
 
 class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
@@ -96,9 +103,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
                 RuleNode(
                     children,
                     self._rewriter.getText(
-                        "predicate",
-                        ctx.start.tokenIndex,
-                        ctx.stop.tokenIndex
+                        "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex
                     ),
                     f"g{self._sub_rule_counter}",
                 )
@@ -106,22 +111,12 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         else:
             return children
 
-    def visitSpecAndSmooth(self, ctx:FaStlParser.SpecAndSmoothContext):
+    def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
         children = self.visitChildren(ctx)
-        # De-duplicate
-        children = list(dict.fromkeys(children))
-        if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
-            # Flatten tree to evaluate with rtamt
-            return [
-                RuleNode(
-                    children,
-                    self._rewriter.getText(
-                        "predicate",
-                        ctx.start.tokenIndex,
-                        ctx.stop.tokenIndex
-                    ),
-                    f"g{self._sub_rule_counter}",
-                )
-            ]
-        else:
-            return children
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        node = AndsmoothNode(children, node_name)
+        self._rewriter.replace(
+            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+        )
+        return [node]

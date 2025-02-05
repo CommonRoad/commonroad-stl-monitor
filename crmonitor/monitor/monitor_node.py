@@ -85,9 +85,13 @@ class AndsmoothMonitorNode(MonitorNode):
     def __init__(self, name, children):
         assert len(children) == 2
         super().__init__(name, children)
+        self.monitors = defaultdict(children[0].copy)
+        self.last_selected = None
 
     def visit(self, visitor, *ctx):
         return visitor.visit_andsmooth_node(self, *ctx)
 
     def reset(self):
         super().reset()
+        self.last_selected = None
+        self.monitors.clear()
