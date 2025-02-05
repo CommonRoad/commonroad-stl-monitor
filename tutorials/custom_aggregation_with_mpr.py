@@ -39,7 +39,8 @@ from crmonitor.evaluation.visitor import (
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
-    RuleMonitorNode, AndsmoothMonitorNode,
+    RuleMonitorNode,
+    AndsmoothMonitorNode,
 )
 from crmonitor.rule.rule_node import PredicateNode
 
@@ -51,12 +52,8 @@ use_mpr = False
 scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
 
 if use_mpr:
-    MprCfg.set_paths(
-        path_root=str(Path(commonroad_mpr.__file__).parent.parent),
-        folder_config="config_files",
-    )
-    MprCfg.update_with_config(
-        {
+    MprCfg.build_configuration(
+        config={
             "common": {
                 "scenario": "interstate",
                 "lane": {
@@ -75,7 +72,16 @@ if use_mpr:
             "path": {
                 "path_models": "/tmp/models"
             },  # point to the models, either the ones you have trained or the pre-trained ones.
-        }
+        },
+        # Path root must point to a local revision of commonroad-model-predictive-robustness.
+        # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
+        # If this is not the case for your setup, adjust the path here accordingly.
+        path_root=str(
+            Path(__file__).parent.parent.parent
+            / "commonroad-model-predictive-robustness"
+        ),
+        folder_config="config_files",
+        default_profile="default",
     )
 
 
@@ -90,7 +96,9 @@ class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
             f"world state with dt={world.dt}!"
         )
         child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
-        val = rule_node.evaluate(list(child_values.items()))  # evaluate instead of update for offline usage
+        val = rule_node.evaluate(
+            list(child_values.items())
+        )  # evaluate instead of update for offline usage
         return val
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
