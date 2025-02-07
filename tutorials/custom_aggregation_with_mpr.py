@@ -7,6 +7,7 @@ You can either use your own models or download pre-trained ones from https://nex
 
 from collections import defaultdict
 from pathlib import Path
+import math
 
 from commonroad.common.file_reader import CommonRoadFileReader
 import numpy as np
@@ -195,8 +196,17 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
         world, mpr_world, time_step, other_ids = ctx[:4]
-        # TODO: Implement the Andsmooth operator
-        return [2.0] * time_step
+        samples_left = andsmooth_node.children[0].visit(self, *ctx)
+        samples_right = andsmooth_node.children[1].visit(self, *ctx)
+
+        samples = []
+        for a, b in zip(samples_left, samples_right):
+            k = 1e-6
+            x = (a - b) / k
+            g = 0.5 * (x + math.sqrt(x * x + 1.0))
+            samples.append(b - k * g)
+
+        return samples
 
     def visit_historicallyduration_node(
         self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx

@@ -116,7 +116,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             return children
 
     def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
-        children = self.visit(ctx.spec())
+        children = self.visitChildren(ctx)
         self._sub_rule_counter += 1
         node_name = f"g{self._sub_rule_counter}"
         node = AndsmoothNode(children, node_name)

@@ -58,7 +58,12 @@ class BasePredicateEvaluator(abc.ABC):
                     "Could not load model for predicate %s; falling back to MPR without model for this predicate.",
                     str(self.predicate_name),
                 )
-                self.peml = MprPredicateEvalutor([mpr_predicate_name])
+                try:
+                    self.peml = MprPredicateEvalutor([mpr_predicate_name])
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"The predicate {mpr_predicate_name} is not supported by MPR."
+                    ) from e
 
     def _scale_speed(self, x):
         return self._scaler.scale_speed(x)
