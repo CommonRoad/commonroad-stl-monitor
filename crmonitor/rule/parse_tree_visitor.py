@@ -1,6 +1,9 @@
+from decimal import Decimal
+from fractions import Fraction
 from typing import Optional
 
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from rtamt.semantics.interval.interval import Interval
 
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.fastl.FaStlParser import FaStlParser
@@ -9,6 +12,7 @@ from crmonitor.rule.rule_node import (
     AllNode,
     AndsmoothNode,
     ExistNode,
+    HistoricallydurationNode,
     IOType,
     PredicateNode,
     RuleNode,
@@ -112,7 +116,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             return children
 
     def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
-        children = self.visitChildren(ctx)
+        children = self.visit(ctx.spec())
         self._sub_rule_counter += 1
         node_name = f"g{self._sub_rule_counter}"
         node = AndsmoothNode(children, node_name)
@@ -120,3 +124,32 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
         )
         return [node]
+
+    def visitSpecHistoricallyDuration(
+        self, ctx: FaStlParser.SpecHistoricallyDurationContext
+    ):
+        children = self.visit(ctx.spec())
+        interval = self.process_interval(ctx.interval())
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        node = HistoricallydurationNode(children, node_name, interval)
+        self._rewriter.replace(
+            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+        )
+        return [node]
+
+    # Not visitor methods, because this breaks the parsing when intervals occur outside of our custom operators
+    def process_interval_time(self, ctx):
+        time_bound = Fraction(Decimal(ctx.literal().getText()))
+        if ctx.unit() is None:
+            unit = ""
+        else:
+            unit = ctx.unit().getText()
+
+        return time_bound, unit
+
+    def process_interval(self, ctx):
+        begin, begin_unit = self.process_interval_time(ctx.intervalTime(0))
+        end, end_unit = self.process_interval_time(ctx.intervalTime(1))
+        interval = Interval(begin, end, begin_unit, end_unit)
+        return interval

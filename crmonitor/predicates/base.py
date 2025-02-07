@@ -1,21 +1,32 @@
 import abc
 import logging
 import warnings
-import numpy as np
 from typing import Callable, Dict, List, Tuple
-import math
 
 from commonroad.visualization.renderer import IRenderer
 
 from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML as PEML
+from commonroad_mpr.common.predicates import PredicateEvaluator as MprPredicateEvalutor
 from commonroad_mpr.common.observation import World as WorldMPR
 
 from ruamel.yaml.comments import CommentedMap
 
-from crmonitor.common.world import Vehicle, World
+from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
 
 logger = logging.getLogger(__name__)
+
+
+def _map_crmonitor_predicate_name_to_mpr_predicate_name(
+    predicate_name: str,
+) -> str:
+    """
+    Returns the predicate name to lookup in mpr. Used to fix up predicate names which differ between crmonitor and mpr.
+    """
+    if predicate_name == "rel_brakes_abruptly":
+        return "brakes_abruptly_relative"
+
+    return predicate_name
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -37,12 +48,17 @@ class BasePredicateEvaluator(abc.ABC):
             self.feature_extractor = None
 
         if self.config["use_mpr"]:
+            mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
+                self.predicate_name
+            )
             try:
-                self.peml = PEML([self.predicate_name])
-            except Exception as e:
-                print("loading mpr model: ", e)
-                logger.warning("do not have model %s", str(self.predicate_name))
-                self.peml = None
+                self.peml = PEML([mpr_predicate_name])
+            except Exception:
+                logger.warning(
+                    "Could not load model for predicate %s; falling back to MPR without model for this predicate.",
+                    str(self.predicate_name),
+                )
+                self.peml = MprPredicateEvalutor([mpr_predicate_name])
 
     def _scale_speed(self, x):
         return self._scaler.scale_speed(x)

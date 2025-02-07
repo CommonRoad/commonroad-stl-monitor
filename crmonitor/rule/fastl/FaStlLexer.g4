@@ -16,6 +16,9 @@ VEHICLE
 AndsmoothOperator
     : 'andsmooth' ;
 
+HistoricallydurationOperator
+	: 'historicallyduration' ;
+
 // Preserve whitespace
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;

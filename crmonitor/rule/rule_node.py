@@ -58,6 +58,16 @@ class AndsmoothNode(VisitorNode):
         return visitor.visit_andsmooth_node(self, *ctx)
 
 
+class HistoricallydurationNode(VisitorNode):
+    def __init__(self, children, name, interval):
+        self.children = children
+        self.name = name
+        self.interval = interval
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_historicallyduration_node(self, *ctx)
+
+
 class PredicateNode(MonitorNode, VisitorNode):
     def __init__(self, full_name, agent_placeholders, evaluator, io_type=IOType.OUTPUT):
         assert len(agent_placeholders) == evaluator.arity, (

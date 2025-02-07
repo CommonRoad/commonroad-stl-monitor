@@ -95,3 +95,20 @@ class AndsmoothMonitorNode(MonitorNode):
         super().reset()
         self.last_selected = None
         self.monitors.clear()
+
+
+class HistoricallydurationMonitorNode(MonitorNode):
+    def __init__(self, name, children, interval):
+        assert len(children) == 1
+        super().__init__(name, children)
+        self.interval = interval
+        self.monitors = defaultdict(children[0].copy)
+        self.last_selected = None
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_historicallyduration_node(self, *ctx)
+
+    def reset(self):
+        super().reset()
+        self.last_selected = None
+        self.monitors.clear()

@@ -5,43 +5,30 @@ To get started, you must provide the pre-trained models and put them into `/tmp/
 You can either use your own models or download pre-trained ones from https://nextcloud.in.tum.de/index.php/s/bijGnSNZQB92GRz (see commonroad-model-predictive-robustness for more information).
 """
 
+from collections import defaultdict
 from pathlib import Path
+
 from commonroad.common.file_reader import CommonRoadFileReader
-import rtamt
-from rtamt.pastifier.stl.pastifier import StlPastifier
-from rtamt.semantics.abstract_discrete_time_offline_interpreter import (
-    discrete_time_offline_interpreter_factory,
-)
-from rtamt.semantics.abstract_discrete_time_online_interpreter import (
-    discrete_time_online_interpreter_factory,
-)
-from rtamt.semantics.stl.discrete_time.offline.ast_visitor import (
-    StlDiscreteTimeOfflineAstVisitor,
-)
-from rtamt.semantics.stl.discrete_time.online.ast_visitor import (
-    StlDiscreteTimeOnlineAstVisitor,
-)
-from rtamt.spec.abstract_specification import (
-    AbstractOfflineOnlineSpecification,
-)
-from rtamt.syntax.ast.parser.stl.specification_parser import StlAst
+import numpy as np
 
 from crmonitor.common.helper import gather
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-import commonroad_mpr
 from crmonitor.evaluation.visitor import (
-    EvaluationMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
+    RuleTreeVisitor,
 )
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
+    HistoricallydurationMonitorNode,
+    MonitorNode,
     RuleMonitorNode,
     AndsmoothMonitorNode,
 )
+from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
@@ -70,7 +57,7 @@ if use_mpr:
                 },
             },
             "path": {
-                "path_models": "/tmp/models"
+                "path_models": "/home/beicekol/projects/work/uni/commonroad-model-predictive-robustness/output/models/"
             },  # point to the models, either the ones you have trained or the pre-trained ones.
         },
         # Path root must point to a local revision of commonroad-model-predictive-robustness.
@@ -85,9 +72,22 @@ if use_mpr:
     )
 
 
-class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
+class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
+    def __init__(self, use_boolean=False, output_type=OutputType.STANDARD):
+        self.other_ids = tuple()
+        self.use_boolean = use_boolean
+        self.output_type = output_type
+        self.all_values_all_ids = {}
+        self.all_props_all_ids = {}
+
+    def walk(
+        self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx
+    ):
+        self.other_ids = tuple()
+        other_ids = [(ego_vehicle.id,)] * max_time_step
+        return node.visit(self, world, mpr_world, max_time_step, other_ids, *ctx)
+
     def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        print(rule_node)
         world = ctx[0]
         # Collect child_values
         assert rule_node.monitor.dt == world.dt, (
@@ -101,32 +101,153 @@ class OfflineEvaluationMonitorTreeVisitor(EvaluationMonitorTreeVisitor):
         )  # evaluate instead of update for offline usage
         return val
 
+    def _visit_quant_node(self, node, *ctx):
+        """
+        This method performs the quantification for the operators all and exist.
+        Those operators use predicates, which correlate the ego vehicle with all other vehicles in the scenario.
+        This method performs this correlation and evaluates each sub-monitor for the permutations of ego vehicle and other vehicles.
+        """
+        world, mpr_world, max_time_step, other_idss = ctx[:4]
+        selected_idss = defaultdict(lambda: [()] * max_time_step)
+        for time_step in range(0, max_time_step):
+            other_ids = other_idss[time_step]
+            all_ids = world.vehicle_ids_for_time_step(time_step)
+            remaining_ids = tuple(set(all_ids).difference(other_ids))
+            for remaining_id in remaining_ids:
+                selected_idss[remaining_id][time_step] = other_ids + (remaining_id,)
+
+        values = []
+        ret_selected_ids = []
+        for remaining_id, selected_ids in selected_idss.items():
+            val = node.monitors[remaining_id].visit(
+                self, world, mpr_world, max_time_step, selected_ids, *ctx[2:]
+            )
+            values.append(val)
+            ret_selected_ids.append(selected_ids)
+
+        return values, ret_selected_ids
+
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
-        print(all_node)
-        world, mpr_world, time_step, other_ids = ctx[:4]
-        # TODO: Implement the All quantifier
-        return 1.0
+        samples, selected_ids = self._visit_quant_node(all_node, *ctx)
+        world, mpr_world, max_time_step, other_idss = ctx[:4]
+
+        self.all_values_all_ids = {}  # reset to empty
+        self.all_props_all_ids = {}  # reset to empty
+
+        robustness_values = []
+        for time_step in range(0, max_time_step):
+            values = [predicate_values[time_step] for predicate_values in samples]
+            if len(values) > 0:
+                idx = np.argmin(values)
+                val = values[idx]
+                self.other_ids = selected_ids[idx]
+                all_node.last_selected = all_node.monitors[self.other_ids[-1]]
+
+                # Loop through all selected_ids and populate the dictionary
+                for i, sid in enumerate(selected_ids):
+                    self.all_values_all_ids[sid[-1]] = values[i]
+                    if hasattr(all_node.monitors[sid[-1]].monitor, "_propositions"):
+                        self.all_props_all_ids[sid[-1]] = all_node.monitors[
+                            sid[-1]
+                        ].monitor._propositions
+            else:
+                val = 1.0
+                self.other_ids = other_idss
+                all_node.last_selected = None
+
+            robustness_values.append(val)
+
+        return robustness_values
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
-        print(exist_node)
-        world, mpr_world, time_step, other_ids = ctx[:4]
-        # TODO: Implement the Exist quantifier
-        return 1.0
+        samples, selected_ids = self._visit_quant_node(exist_node, *ctx)
+        world, mpr_world, max_time_step, other_ids = ctx[:4]
+
+        self.all_values_all_ids = {}  # reset to empty
+        self.all_props_all_ids = {}  # reset to empty
+
+        robustness_values = []
+        for time_step in range(0, max_time_step):
+            values = [predicate_values[time_step] for predicate_values in samples]
+
+            if len(values) > 0:
+                idx = np.argmax(values)
+                val = values[idx]
+                self.other_ids = selected_ids[idx]
+
+                exist_node.last_selected = exist_node.monitors[self.other_ids[-1]]
+
+                # Loop through all selected_ids and populate the dictionary
+                for i, sid in enumerate(selected_ids):
+                    self.all_values_all_ids[sid[-1]] = values[i]
+            else:
+                val = -1.0
+                self.other_ids = other_ids
+                exist_node.last_selected = None
+
+                # If no values, only add other_ids if it's not empty
+                if other_ids:
+                    self.all_values_all_ids[other_ids[-1]] = val
+
+            robustness_values.append(val)
+
+        return robustness_values
 
     def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
-        print(andsmooth_node)
         world, mpr_world, time_step, other_ids = ctx[:4]
         # TODO: Implement the Andsmooth operator
-        return 2.0
+        return [2.0] * time_step
+
+    def visit_historicallyduration_node(
+        self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
+    ):
+        child_values = historicallyduration_node.children[0].visit(self, *ctx)
+        world, mpr_world, max_time_step = ctx[:3]
+
+        # The interval can be defined with different units. Therefore, they are first normalized to time steps.
+        # This currently only supports time steps and seconds as units.
+        begin_unit = historicallyduration_node.interval.begin_unit
+        end_unit = historicallyduration_node.interval.end_unit
+        if len(begin_unit) == 0 and len(end_unit) == 0:
+            normalized_begin = int(historicallyduration_node.interval.begin)
+            normalized_end = int(historicallyduration_node.interval.end)
+        else:
+            normalized_begin = int(
+                historicallyduration_node.interval.begin / world.scenario.dt
+            )
+            normalized_end = int(
+                historicallyduration_node.interval.end / world.scenario.dt
+            )
+        begin = max(0, normalized_begin)
+        end = min(max_time_step, normalized_end)
+
+        spec_violations = 0
+        total = 0
+        for time_step in range(begin, end):
+            if child_values[time_step] < 0:
+                spec_violations += 1
+            total += 1
+
+        # Interpolate the robustness between -1.0 (spec_violations=total) and 1.0 (spec_violations=0)
+        rob = (2.0 * ((total - spec_violations) / total)) - 1.0
+
+        # The robustness outside the interval is filled with 1.0 and only the interval is set to the computed robustness
+        samples = [1.0] * max_time_step
+        for time_step in range(begin, end):
+            samples[time_step] = rob
+
+        return samples
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        print(predicate_node)
-        world, mpr_world, time_step, other_ids = ctx[:4]
-        predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
+        world, mpr_world, max_time_step, other_idss = ctx[:4]
         samples = []
-        for i in range(0, time_step):
+        for time_step in range(0, max_time_step):
+            other_ids = other_idss[time_step]
+            predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
             samples.append(
-                predicate_node.evaluate_robustness(world, mpr_world, i, predicate_ids)
+                predicate_node.evaluate_robustness(
+                    world, mpr_world, time_step, predicate_ids
+                )
             )
 
         return samples
@@ -157,7 +278,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G3",
+    rule="R_G1",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
 )

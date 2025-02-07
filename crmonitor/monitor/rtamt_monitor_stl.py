@@ -134,7 +134,10 @@ class RtamtStlMonitor:
         dataset["time"] = []
         for i in range(0, max_time):
             dataset["time"].append(i)
-        return self._spec.evaluate(dataset)
+        robustness_values = self._spec.evaluate(dataset)
+
+        # The robustness values are of the form [[time_step, robustness_value], [time_step + 1, robustness_value]]
+        return [entry[1] for entry in robustness_values]
 
     def copy(self):
         return RtamtStlMonitor(self._rule, self._predicates, self.dt, self._output_type)
