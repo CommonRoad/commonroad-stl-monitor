@@ -108,18 +108,23 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         Those operators use predicates, which correlate the ego vehicle with all other vehicles in the scenario.
         This method performs this correlation and evaluates each sub-monitor for the permutations of ego vehicle and other vehicles.
         """
-        world, mpr_world, max_time_step, other_idss = ctx[:4]
-        selected_idss = defaultdict(lambda: [()] * max_time_step)
+        world, mpr_world, max_time_step, other_ids_at_time = ctx[:4]
+        # Stores tuples of ego vehicle + other vehicle in a time series list indexed by the other vehicle.
+        # This is passed to the evaluators below to correlate the ego vehicle with all other vehicles in the scenario.
+        # TODO: Shouldn't a pair be sufficient, because other_ids_at_time always contains a single ego vehicle?
+        selected_ids_by_vehicle_id = defaultdict(lambda: [()] * max_time_step)
         for time_step in range(0, max_time_step):
-            other_ids = other_idss[time_step]
+            other_ids = other_ids_at_time[time_step]
             all_ids = world.vehicle_ids_for_time_step(time_step)
             remaining_ids = tuple(set(all_ids).difference(other_ids))
             for remaining_id in remaining_ids:
-                selected_idss[remaining_id][time_step] = other_ids + (remaining_id,)
+                selected_ids_by_vehicle_id[remaining_id][time_step] = other_ids + (
+                    remaining_id,
+                )
 
         values = []
         ret_selected_ids = []
-        for remaining_id, selected_ids in selected_idss.items():
+        for remaining_id, selected_ids in selected_ids_by_vehicle_id.items():
             val = node.monitors[remaining_id].visit(
                 self, world, mpr_world, max_time_step, selected_ids, *ctx[2:]
             )
@@ -129,6 +134,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return values, ret_selected_ids
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
+        # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(all_node, *ctx)
         world, mpr_world, max_time_step, other_idss = ctx[:4]
 
@@ -161,6 +167,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return robustness_values
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
+        # Mostly the same as visit_exist_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(exist_node, *ctx)
         world, mpr_world, max_time_step, other_ids = ctx[:4]
 
@@ -201,10 +208,11 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
         samples = []
         for a, b in zip(samples_left, samples_right):
-            k = 1e-6
-            x = (a - b) / k
+            k = 2.0 * 1e-6
+            x = (b - a) / k
             g = 0.5 * (x + math.sqrt(x * x + 1.0))
-            samples.append(b - k * g)
+            smin = b - k * g
+            samples.append(smin)
 
         return samples
 
@@ -288,7 +296,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G1",
+    rule="R_G3",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
 )
