@@ -29,11 +29,16 @@ def _map_crmonitor_predicate_name_to_mpr_predicate_name(
     return predicate_name
 
 
-COMPOSED_PREDICATES = ["preserves_traffic_flow", "slow_leading_vehicle"]
+# Those predicates are non-atomic and a composition of other atomic predicates. They do not have a pendant in mpr, and therefore they get special treatment when evaluating with mpr.
+_COMPOSED_PREDICATES = ["preserves_traffic_flow", "slow_leading_vehicle"]
 
 
 def _should_use_mpr_predicate_for(predicate_name: str) -> bool:
-    return predicate_name not in COMPOSED_PREDICATES
+    """
+    Determines whether a crmonitor predicate should be replaced with its pendant from mpr.
+    This is usefull, to keep non-atomic predicates from crmonitor, and only replace their sub-predicates with predicates from mpr.
+    """
+    return predicate_name not in _COMPOSED_PREDICATES
 
 
 class BasePredicateEvaluator(abc.ABC):
