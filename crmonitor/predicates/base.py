@@ -29,6 +29,13 @@ def _map_crmonitor_predicate_name_to_mpr_predicate_name(
     return predicate_name
 
 
+COMPOSED_PREDICATES = ["preserves_traffic_flow", "slow_leading_vehicle"]
+
+
+def _should_use_mpr_predicate_for(predicate_name: str) -> bool:
+    return predicate_name not in COMPOSED_PREDICATES
+
+
 class BasePredicateEvaluator(abc.ABC):
     """
     Base class for the predicate evaluator
@@ -47,10 +54,11 @@ class BasePredicateEvaluator(abc.ABC):
         except:
             self.feature_extractor = None
 
-        if self.config["use_mpr"]:
-            mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
-                self.predicate_name
-            )
+        self.peml = None
+        mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
+            self.predicate_name
+        )
+        if self.config["use_mpr"] and _should_use_mpr_predicate_for(mpr_predicate_name):
             try:
                 self.peml = PEML([mpr_predicate_name])
             except Exception:
