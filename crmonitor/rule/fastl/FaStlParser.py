@@ -1,12 +1,14 @@
 # Generated from FaStlParser.g4 by ANTLR 4.9.3
 # encoding: utf-8
-from antlr4 import *
-from io import StringIO
 import sys
+from io import StringIO
+
+from antlr4 import *
+
 if sys.version_info[1] > 5:
-	from typing import TextIO
+    from typing import TextIO
 else:
-	from typing.io import TextIO
+    from typing.io import TextIO
 
 
 def serializedATN():
@@ -50,12 +52,12 @@ def serializedATN():
         buf.write("\3\25\3\26\3\26\3\27\3\27\3\27\3\27\3\27\3\27\5\27\u0199")
         buf.write("\n\27\3\30\3\30\3\30\3\30\5\30\u019f\n\30\3\31\3\31\3")
         buf.write("\31\2\5\b\n\22\32\2\4\6\b\n\f\16\20\22\24\26\30\32\34")
-        buf.write("\36 \"$&(*,.\60\2\6\3\2\25\26\3\2\35 \4\2),NN\3\2$%\2")
+        buf.write('\36 "$&(*,.\60\2\6\3\2\25\26\3\2\35 \4\2),NN\3\2$%\2')
         buf.write("\u01e2\2\62\3\2\2\2\4\65\3\2\2\2\68\3\2\2\2\b\u0086\3")
         buf.write("\2\2\2\n\u00ca\3\2\2\2\f\u00e1\3\2\2\2\16\u00ef\3\2\2")
         buf.write("\2\20\u00f1\3\2\2\2\22\u011d\3\2\2\2\24\u0149\3\2\2\2")
         buf.write("\26\u014d\3\2\2\2\30\u0161\3\2\2\2\32\u0168\3\2\2\2\34")
-        buf.write("\u016e\3\2\2\2\36\u0170\3\2\2\2 \u0173\3\2\2\2\"\u017b")
+        buf.write('\u016e\3\2\2\2\36\u0170\3\2\2\2 \u0173\3\2\2\2"\u017b')
         buf.write("\3\2\2\2$\u0182\3\2\2\2&\u018c\3\2\2\2(\u018e\3\2\2\2")
         buf.write("*\u0190\3\2\2\2,\u0198\3\2\2\2.\u019e\3\2\2\2\60\u01a0")
         buf.write("\3\2\2\2\62\63\5\b\5\2\63\64\7\2\2\3\64\3\3\2\2\2\65\66")
@@ -187,20 +189,20 @@ def serializedATN():
         buf.write("\u0163\7N\2\2\u0163\u0164\7#\2\2\u0164\u0165\7N\2\2\u0165")
         buf.write("\31\3\2\2\2\u0166\u0167\7N\2\2\u0167\u0169\7H\2\2\u0168")
         buf.write("\u0166\3\2\2\2\u0168\u0169\3\2\2\2\u0169\u016a\3\2\2\2")
-        buf.write("\u016a\u016b\5\22\n\2\u016b\33\3\2\2\2\u016c\u016f\5\"")
+        buf.write('\u016a\u016b\5\22\n\2\u016b\33\3\2\2\2\u016c\u016f\5"')
         buf.write("\22\2\u016d\u016f\5$\23\2\u016e\u016c\3\2\2\2\u016e\u016d")
         buf.write("\3\2\2\2\u016f\35\3\2\2\2\u0170\u0171\7\30\2\2\u0171\u0172")
-        buf.write("\5 \21\2\u0172\37\3\2\2\2\u0173\u0174\7\"\2\2\u0174\u0175")
+        buf.write('\5 \21\2\u0172\37\3\2\2\2\u0173\u0174\7"\2\2\u0174\u0175')
         buf.write("\7\16\2\2\u0175\u0176\7N\2\2\u0176\u0177\7\26\2\2\u0177")
         buf.write("\u0178\7N\2\2\u0178\u0179\7\17\2\2\u0179!\3\2\2\2\u017a")
         buf.write("\u017c\5*\26\2\u017b\u017a\3\2\2\2\u017b\u017c\3\2\2\2")
         buf.write("\u017c\u017d\3\2\2\2\u017d\u017e\5(\25\2\u017e\u0180\7")
         buf.write("N\2\2\u017f\u0181\5&\24\2\u0180\u017f\3\2\2\2\u0180\u0181")
-        buf.write("\3\2\2\2\u0181#\3\2\2\2\u0182\u0183\7\'\2\2\u0183\u0184")
+        buf.write("\3\2\2\2\u0181#\3\2\2\2\u0182\u0183\7'\2\2\u0183\u0184")
         buf.write("\5(\25\2\u0184\u0185\7N\2\2\u0185\u0186\7H\2\2\u0186\u0187")
         buf.write("\5.\30\2\u0187%\3\2\2\2\u0188\u0189\7H\2\2\u0189\u018d")
         buf.write("\5.\30\2\u018a\u018b\7H\2\2\u018b\u018d\5\22\n\2\u018c")
-        buf.write("\u0188\3\2\2\2\u018c\u018a\3\2\2\2\u018d\'\3\2\2\2\u018e")
+        buf.write("\u0188\3\2\2\2\u018c\u018a\3\2\2\2\u018d'\3\2\2\2\u018e")
         buf.write("\u018f\t\4\2\2\u018f)\3\2\2\2\u0190\u0191\t\5\2\2\u0191")
         buf.write("+\3\2\2\2\u0192\u0199\7E\2\2\u0193\u0199\7D\2\2\u0194")
         buf.write("\u0199\7G\2\2\u0195\u0199\7F\2\2\u0196\u0199\7B\2\2\u0197")
@@ -218,49 +220,171 @@ def serializedATN():
         return buf.getvalue()
 
 
-class FaStlParser ( Parser ):
-
+class FaStlParser(Parser):
     grammarFileName = "FaStlParser.g4"
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
-    decisionsToDFA = [ DFA(ds, i) for i, ds in enumerate(atn.decisionToState) ]
+    decisionsToDFA = [DFA(ds, i) for i, ds in enumerate(atn.decisionToState)]
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "'E'", "'A'", "'a'", "'andsmooth'", "'historicallyduration'", 
-                     "<INVALID>", "'_i'", "'-'", "'+'", "'*'", "'/'", "'('", 
-                     "')'", "'{'", "'}'", "'['", "']'", "';'", "':'", "','", 
-                     "'.'", "'@'", "'abs'", "'sqrt'", "'exp'", "'pow'", 
-                     "'s'", "'ms'", "'us'", "'ns'", "'ps'", "'topic'", "'import'", 
-                     "'input'", "'output'", "'internal'", "'const'", "'real'", 
-                     "'float'", "'long'", "'complex'", "'int'", "'bool'", 
-                     "'assertion'", "'specification'", "'from'", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'xor'", "'rise'", "'fall'", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "'=='", "'!=='", 
-                     "'>='", "'<='", "'>'", "'<'", "'='" ]
+    literalNames = [
+        "<INVALID>",
+        "'E'",
+        "'A'",
+        "'a'",
+        "'andsmooth'",
+        "'historicallyduration'",
+        "<INVALID>",
+        "'_i'",
+        "'-'",
+        "'+'",
+        "'*'",
+        "'/'",
+        "'('",
+        "')'",
+        "'{'",
+        "'}'",
+        "'['",
+        "']'",
+        "';'",
+        "':'",
+        "','",
+        "'.'",
+        "'@'",
+        "'abs'",
+        "'sqrt'",
+        "'exp'",
+        "'pow'",
+        "'s'",
+        "'ms'",
+        "'us'",
+        "'ns'",
+        "'ps'",
+        "'topic'",
+        "'import'",
+        "'input'",
+        "'output'",
+        "'internal'",
+        "'const'",
+        "'real'",
+        "'float'",
+        "'long'",
+        "'complex'",
+        "'int'",
+        "'bool'",
+        "'assertion'",
+        "'specification'",
+        "'from'",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "'xor'",
+        "'rise'",
+        "'fall'",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "<INVALID>",
+        "'=='",
+        "'!=='",
+        "'>='",
+        "'<='",
+        "'>'",
+        "'<'",
+        "'='",
+    ]
 
-    symbolicNames = [ "<INVALID>", "EXIST", "FORALL", "VEHICLE", "AndsmoothOperator", 
-                      "HistoricallydurationOperator", "WHITESPACE", "IO_TYPE_INPUT", 
-                      "MINUS", "PLUS", "TIMES", "DIVIDE", "LPAREN", "RPAREN", 
-                      "LBRACE", "RBRACE", "LBRACK", "RBRACK", "SEMICOLON", 
-                      "COLON", "COMMA", "DOT", "AT", "ABS", "SQRT", "EXP", 
-                      "POW", "SEC", "MSEC", "USEC", "NSEC", "PSEC", "ROS_Topic", 
-                      "Import", "Input", "Output", "Internal", "Constant", 
-                      "DomainTypeReal", "DomainTypeFloat", "DomainTypeLong", 
-                      "DomainTypeComplex", "DomainTypeInt", "DomainTypeBool", 
-                      "Assertion", "Specification", "From", "NotOperator", 
-                      "OrOperator", "AndOperator", "IffOperator", "ImpliesOperator", 
-                      "XorOperator", "RiseOperator", "FallOperator", "AlwaysOperator", 
-                      "EventuallyOperator", "UntilOperator", "UnlessOperator", 
-                      "HistoricallyOperator", "OnceOperator", "SinceOperator", 
-                      "NextOperator", "PreviousOperator", "EqualOperator", 
-                      "NotEqualOperator", "GreaterOrEqualOperator", "LesserOrEqualOperator", 
-                      "GreaterOperator", "LesserOperator", "EQUAL", "BooleanLiteral", 
-                      "TRUE", "FALSE", "IntegerLiteral", "RealLiteral", 
-                      "Identifier", "LINE_TERMINATOR", "COMMENT", "LINE_COMMENT" ]
+    symbolicNames = [
+        "<INVALID>",
+        "EXIST",
+        "FORALL",
+        "VEHICLE",
+        "AndsmoothOperator",
+        "HistoricallydurationOperator",
+        "WHITESPACE",
+        "IO_TYPE_INPUT",
+        "MINUS",
+        "PLUS",
+        "TIMES",
+        "DIVIDE",
+        "LPAREN",
+        "RPAREN",
+        "LBRACE",
+        "RBRACE",
+        "LBRACK",
+        "RBRACK",
+        "SEMICOLON",
+        "COLON",
+        "COMMA",
+        "DOT",
+        "AT",
+        "ABS",
+        "SQRT",
+        "EXP",
+        "POW",
+        "SEC",
+        "MSEC",
+        "USEC",
+        "NSEC",
+        "PSEC",
+        "ROS_Topic",
+        "Import",
+        "Input",
+        "Output",
+        "Internal",
+        "Constant",
+        "DomainTypeReal",
+        "DomainTypeFloat",
+        "DomainTypeLong",
+        "DomainTypeComplex",
+        "DomainTypeInt",
+        "DomainTypeBool",
+        "Assertion",
+        "Specification",
+        "From",
+        "NotOperator",
+        "OrOperator",
+        "AndOperator",
+        "IffOperator",
+        "ImpliesOperator",
+        "XorOperator",
+        "RiseOperator",
+        "FallOperator",
+        "AlwaysOperator",
+        "EventuallyOperator",
+        "UntilOperator",
+        "UnlessOperator",
+        "HistoricallyOperator",
+        "OnceOperator",
+        "SinceOperator",
+        "NextOperator",
+        "PreviousOperator",
+        "EqualOperator",
+        "NotEqualOperator",
+        "GreaterOrEqualOperator",
+        "LesserOrEqualOperator",
+        "GreaterOperator",
+        "LesserOperator",
+        "EQUAL",
+        "BooleanLiteral",
+        "TRUE",
+        "FALSE",
+        "IntegerLiteral",
+        "RealLiteral",
+        "Identifier",
+        "LINE_TERMINATOR",
+        "COMMENT",
+        "LINE_COMMENT",
+    ]
 
     RULE_compile_unit = 0
     RULE_vehicle = 1
@@ -287,113 +411,133 @@ class FaStlParser ( Parser ):
     RULE_literal = 22
     RULE_identifier = 23
 
-    ruleNames =  [ "compile_unit", "vehicle", "predicate", "spec", "real_expression", 
-                   "interval", "intervalTime", "unit", "expression", "specification_file", 
-                   "specification", "modimport", "assertion", "declaration", 
-                   "annotation", "annotation_type", "variableDeclaration", 
-                   "constantDeclaration", "assignment", "domainType", "ioType", 
-                   "comparisonOp", "literal", "identifier" ]
+    ruleNames = [
+        "compile_unit",
+        "vehicle",
+        "predicate",
+        "spec",
+        "real_expression",
+        "interval",
+        "intervalTime",
+        "unit",
+        "expression",
+        "specification_file",
+        "specification",
+        "modimport",
+        "assertion",
+        "declaration",
+        "annotation",
+        "annotation_type",
+        "variableDeclaration",
+        "constantDeclaration",
+        "assignment",
+        "domainType",
+        "ioType",
+        "comparisonOp",
+        "literal",
+        "identifier",
+    ]
 
     EOF = Token.EOF
-    EXIST=1
-    FORALL=2
-    VEHICLE=3
-    AndsmoothOperator=4
-    HistoricallydurationOperator=5
-    WHITESPACE=6
-    IO_TYPE_INPUT=7
-    MINUS=8
-    PLUS=9
-    TIMES=10
-    DIVIDE=11
-    LPAREN=12
-    RPAREN=13
-    LBRACE=14
-    RBRACE=15
-    LBRACK=16
-    RBRACK=17
-    SEMICOLON=18
-    COLON=19
-    COMMA=20
-    DOT=21
-    AT=22
-    ABS=23
-    SQRT=24
-    EXP=25
-    POW=26
-    SEC=27
-    MSEC=28
-    USEC=29
-    NSEC=30
-    PSEC=31
-    ROS_Topic=32
-    Import=33
-    Input=34
-    Output=35
-    Internal=36
-    Constant=37
-    DomainTypeReal=38
-    DomainTypeFloat=39
-    DomainTypeLong=40
-    DomainTypeComplex=41
-    DomainTypeInt=42
-    DomainTypeBool=43
-    Assertion=44
-    Specification=45
-    From=46
-    NotOperator=47
-    OrOperator=48
-    AndOperator=49
-    IffOperator=50
-    ImpliesOperator=51
-    XorOperator=52
-    RiseOperator=53
-    FallOperator=54
-    AlwaysOperator=55
-    EventuallyOperator=56
-    UntilOperator=57
-    UnlessOperator=58
-    HistoricallyOperator=59
-    OnceOperator=60
-    SinceOperator=61
-    NextOperator=62
-    PreviousOperator=63
-    EqualOperator=64
-    NotEqualOperator=65
-    GreaterOrEqualOperator=66
-    LesserOrEqualOperator=67
-    GreaterOperator=68
-    LesserOperator=69
-    EQUAL=70
-    BooleanLiteral=71
-    TRUE=72
-    FALSE=73
-    IntegerLiteral=74
-    RealLiteral=75
-    Identifier=76
-    LINE_TERMINATOR=77
-    COMMENT=78
-    LINE_COMMENT=79
+    EXIST = 1
+    FORALL = 2
+    VEHICLE = 3
+    AndsmoothOperator = 4
+    HistoricallydurationOperator = 5
+    WHITESPACE = 6
+    IO_TYPE_INPUT = 7
+    MINUS = 8
+    PLUS = 9
+    TIMES = 10
+    DIVIDE = 11
+    LPAREN = 12
+    RPAREN = 13
+    LBRACE = 14
+    RBRACE = 15
+    LBRACK = 16
+    RBRACK = 17
+    SEMICOLON = 18
+    COLON = 19
+    COMMA = 20
+    DOT = 21
+    AT = 22
+    ABS = 23
+    SQRT = 24
+    EXP = 25
+    POW = 26
+    SEC = 27
+    MSEC = 28
+    USEC = 29
+    NSEC = 30
+    PSEC = 31
+    ROS_Topic = 32
+    Import = 33
+    Input = 34
+    Output = 35
+    Internal = 36
+    Constant = 37
+    DomainTypeReal = 38
+    DomainTypeFloat = 39
+    DomainTypeLong = 40
+    DomainTypeComplex = 41
+    DomainTypeInt = 42
+    DomainTypeBool = 43
+    Assertion = 44
+    Specification = 45
+    From = 46
+    NotOperator = 47
+    OrOperator = 48
+    AndOperator = 49
+    IffOperator = 50
+    ImpliesOperator = 51
+    XorOperator = 52
+    RiseOperator = 53
+    FallOperator = 54
+    AlwaysOperator = 55
+    EventuallyOperator = 56
+    UntilOperator = 57
+    UnlessOperator = 58
+    HistoricallyOperator = 59
+    OnceOperator = 60
+    SinceOperator = 61
+    NextOperator = 62
+    PreviousOperator = 63
+    EqualOperator = 64
+    NotEqualOperator = 65
+    GreaterOrEqualOperator = 66
+    LesserOrEqualOperator = 67
+    GreaterOperator = 68
+    LesserOperator = 69
+    EQUAL = 70
+    BooleanLiteral = 71
+    TRUE = 72
+    FALSE = 73
+    IntegerLiteral = 74
+    RealLiteral = 75
+    Identifier = 76
+    LINE_TERMINATOR = 77
+    COMMENT = 78
+    LINE_COMMENT = 79
 
-    def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
+    def __init__(self, input: TokenStream, output: TextIO = sys.stdout):
         super().__init__(input, output)
         self.checkVersion("4.9.3")
-        self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
+        self._interp = ParserATNSimulator(
+            self, self.atn, self.decisionsToDFA, self.sharedContextCache
+        )
         self._predicates = None
 
-
-
-
     class Compile_unitContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def spec(self):
-            return self.getTypedRuleContext(FaStlParser.SpecContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.SpecContext, 0)
 
         def EOF(self):
             return self.getToken(FaStlParser.EOF, 0)
@@ -401,17 +545,13 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_compile_unit
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitCompile_unit" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitCompile_unit"):
                 return visitor.visitCompile_unit(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def compile_unit(self):
-
         localctx = FaStlParser.Compile_unitContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_compile_unit)
         try:
@@ -428,11 +568,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class VehicleContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -445,17 +586,13 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_vehicle
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitVehicle" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitVehicle"):
                 return visitor.visitVehicle(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def vehicle(self):
-
         localctx = FaStlParser.VehicleContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_vehicle)
         try:
@@ -472,11 +609,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class PredicateContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -486,17 +624,16 @@ class FaStlParser ( Parser ):
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
 
-        def vehicle(self, i:int=None):
+        def vehicle(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.VehicleContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.VehicleContext,i)
-
+                return self.getTypedRuleContext(FaStlParser.VehicleContext, i)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def COMMA(self, i:int=None):
+        def COMMA(self, i: int = None):
             if i is None:
                 return self.getTokens(FaStlParser.COMMA)
             else:
@@ -508,20 +645,16 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_predicate
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitPredicate" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitPredicate"):
                 return visitor.visitPredicate(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def predicate(self):
-
         localctx = FaStlParser.PredicateContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_predicate)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 54
@@ -533,7 +666,7 @@ class FaStlParser ( Parser ):
             self.state = 61
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==FaStlParser.COMMA:
+            while _la == FaStlParser.COMMA:
                 self.state = 57
                 self.match(FaStlParser.COMMA)
                 self.state = 58
@@ -546,11 +679,10 @@ class FaStlParser ( Parser ):
             self.match(FaStlParser.RPAREN)
             self.state = 66
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,1,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 1, self._ctx)
             if la_ == 1:
                 self.state = 65
                 self.match(FaStlParser.IO_TYPE_INPUT)
-
 
         except RecognitionException as re:
             localctx.exception = re
@@ -560,206 +692,238 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class SpecContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_spec
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
     class SpecAndSmoothContext(SpecContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.SpecContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.SpecContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def spec(self, i:int=None):
+        def spec(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.SpecContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.SpecContext,i)
+                return self.getTypedRuleContext(FaStlParser.SpecContext, i)
 
         def AndsmoothOperator(self):
             return self.getToken(FaStlParser.AndsmoothOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecAndSmooth" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecAndSmooth"):
                 return visitor.visitSpecAndSmooth(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class SpecQuantExistContext(SpecContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.SpecContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.SpecContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EXIST(self):
             return self.getToken(FaStlParser.EXIST, 0)
+
         def vehicle(self):
-            return self.getTypedRuleContext(FaStlParser.VehicleContext,0)
+            return self.getTypedRuleContext(FaStlParser.VehicleContext, 0)
 
         def COLON(self):
             return self.getToken(FaStlParser.COLON, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def spec(self):
-            return self.getTypedRuleContext(FaStlParser.SpecContext,0)
+            return self.getTypedRuleContext(FaStlParser.SpecContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecQuantExist" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecQuantExist"):
                 return visitor.visitSpecQuantExist(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class SpecQuantForallContext(SpecContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.SpecContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.SpecContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def FORALL(self):
             return self.getToken(FaStlParser.FORALL, 0)
+
         def vehicle(self):
-            return self.getTypedRuleContext(FaStlParser.VehicleContext,0)
+            return self.getTypedRuleContext(FaStlParser.VehicleContext, 0)
 
         def COLON(self):
             return self.getToken(FaStlParser.COLON, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def spec(self):
-            return self.getTypedRuleContext(FaStlParser.SpecContext,0)
+            return self.getTypedRuleContext(FaStlParser.SpecContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecQuantForall" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecQuantForall"):
                 return visitor.visitSpecQuantForall(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class SpecNestedContext(SpecContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.SpecContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.SpecContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def real_expression(self):
-            return self.getTypedRuleContext(FaStlParser.Real_expressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.Real_expressionContext, 0)
 
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
-        def spec(self, i:int=None):
+
+        def spec(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.SpecContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.SpecContext,i)
+                return self.getTypedRuleContext(FaStlParser.SpecContext, i)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
+
         def NotOperator(self):
             return self.getToken(FaStlParser.NotOperator, 0)
+
         def AlwaysOperator(self):
             return self.getToken(FaStlParser.AlwaysOperator, 0)
+
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
         def EventuallyOperator(self):
             return self.getToken(FaStlParser.EventuallyOperator, 0)
+
         def HistoricallyOperator(self):
             return self.getToken(FaStlParser.HistoricallyOperator, 0)
+
         def OnceOperator(self):
             return self.getToken(FaStlParser.OnceOperator, 0)
+
         def RiseOperator(self):
             return self.getToken(FaStlParser.RiseOperator, 0)
+
         def FallOperator(self):
             return self.getToken(FaStlParser.FallOperator, 0)
+
         def PreviousOperator(self):
             return self.getToken(FaStlParser.PreviousOperator, 0)
+
         def NextOperator(self):
             return self.getToken(FaStlParser.NextOperator, 0)
+
         def AndOperator(self):
             return self.getToken(FaStlParser.AndOperator, 0)
+
         def OrOperator(self):
             return self.getToken(FaStlParser.OrOperator, 0)
+
         def ImpliesOperator(self):
             return self.getToken(FaStlParser.ImpliesOperator, 0)
+
         def IffOperator(self):
             return self.getToken(FaStlParser.IffOperator, 0)
+
         def XorOperator(self):
             return self.getToken(FaStlParser.XorOperator, 0)
+
         def UntilOperator(self):
             return self.getToken(FaStlParser.UntilOperator, 0)
+
         def UnlessOperator(self):
             return self.getToken(FaStlParser.UnlessOperator, 0)
+
         def SinceOperator(self):
             return self.getToken(FaStlParser.SinceOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecNested" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecNested"):
                 return visitor.visitSpecNested(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class SpecHistoricallyDurationContext(SpecContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.SpecContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.SpecContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def HistoricallydurationOperator(self):
             return self.getToken(FaStlParser.HistoricallydurationOperator, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def spec(self):
-            return self.getTypedRuleContext(FaStlParser.SpecContext,0)
+            return self.getTypedRuleContext(FaStlParser.SpecContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
+
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecHistoricallyDuration" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecHistoricallyDuration"):
                 return visitor.visitSpecHistoricallyDuration(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-    def spec(self, _p:int=0):
+    def spec(self, _p: int = 0):
         _parentctx = self._ctx
         _parentState = self.state
         localctx = FaStlParser.SpecContext(self, self._ctx, _parentState)
         _prevctx = localctx
         _startState = 6
         self.enterRecursionRule(localctx, 6, self.RULE_spec, _p)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 132
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [FaStlParser.MINUS, FaStlParser.ABS, FaStlParser.SQRT, FaStlParser.EXP, FaStlParser.POW, FaStlParser.IntegerLiteral, FaStlParser.RealLiteral, FaStlParser.Identifier]:
+            if token in [
+                FaStlParser.MINUS,
+                FaStlParser.ABS,
+                FaStlParser.SQRT,
+                FaStlParser.EXP,
+                FaStlParser.POW,
+                FaStlParser.IntegerLiteral,
+                FaStlParser.RealLiteral,
+                FaStlParser.Identifier,
+            ]:
                 localctx = FaStlParser.SpecNestedContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
@@ -830,10 +994,9 @@ class FaStlParser ( Parser ):
                 self.state = 92
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 91
                     self.interval()
-
 
                 self.state = 94
                 self.match(FaStlParser.LPAREN)
@@ -851,10 +1014,9 @@ class FaStlParser ( Parser ):
                 self.state = 100
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 99
                     self.interval()
-
 
                 self.state = 102
                 self.spec(11)
@@ -868,10 +1030,9 @@ class FaStlParser ( Parser ):
                 self.state = 105
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 104
                     self.interval()
-
 
                 self.state = 107
                 self.spec(10)
@@ -885,10 +1046,9 @@ class FaStlParser ( Parser ):
                 self.state = 110
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 109
                     self.interval()
-
 
                 self.state = 112
                 self.spec(7)
@@ -902,10 +1062,9 @@ class FaStlParser ( Parser ):
                 self.state = 115
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 114
                     self.interval()
-
 
                 self.state = 117
                 self.spec(6)
@@ -960,22 +1119,30 @@ class FaStlParser ( Parser ):
             self._ctx.stop = self._input.LT(-1)
             self.state = 172
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,12,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
+            _alt = self._interp.adaptivePredict(self._input, 12, self._ctx)
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
                     self.state = 170
                     self._errHandler.sync(self)
-                    la_ = self._interp.adaptivePredict(self._input,11,self._ctx)
+                    la_ = self._interp.adaptivePredict(self._input, 11, self._ctx)
                     if la_ == 1:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 134
                         if not self.precpred(self._ctx, 18):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 18)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 18)"
+                            )
                         self.state = 135
                         self.match(FaStlParser.AndOperator)
                         self.state = 136
@@ -983,12 +1150,20 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 2:
-                        localctx = FaStlParser.SpecAndSmoothContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecAndSmoothContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 137
                         if not self.precpred(self._ctx, 17):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 17)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 17)"
+                            )
                         self.state = 138
                         self.match(FaStlParser.AndsmoothOperator)
                         self.state = 139
@@ -996,12 +1171,20 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 3:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 140
                         if not self.precpred(self._ctx, 16):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 16)"
+                            )
                         self.state = 141
                         self.match(FaStlParser.OrOperator)
                         self.state = 142
@@ -1009,12 +1192,20 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 4:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 143
                         if not self.precpred(self._ctx, 15):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 15)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 15)"
+                            )
                         self.state = 144
                         self.match(FaStlParser.ImpliesOperator)
                         self.state = 145
@@ -1022,12 +1213,20 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 5:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 146
                         if not self.precpred(self._ctx, 14):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 14)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 14)"
+                            )
                         self.state = 147
                         self.match(FaStlParser.IffOperator)
                         self.state = 148
@@ -1035,12 +1234,20 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 6:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 149
                         if not self.precpred(self._ctx, 13):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 13)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 13)"
+                            )
                         self.state = 150
                         self.match(FaStlParser.XorOperator)
                         self.state = 151
@@ -1048,72 +1255,92 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 7:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 152
                         if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 9)"
+                            )
                         self.state = 153
                         self.match(FaStlParser.UntilOperator)
                         self.state = 155
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 154
                             self.interval()
-
 
                         self.state = 157
                         self.spec(10)
                         pass
 
                     elif la_ == 8:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 158
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 8)"
+                            )
                         self.state = 159
                         self.match(FaStlParser.UnlessOperator)
                         self.state = 161
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 160
                             self.interval()
-
 
                         self.state = 163
                         self.spec(9)
                         pass
 
                     elif la_ == 9:
-                        localctx = FaStlParser.SpecNestedContext(self, FaStlParser.SpecContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_spec)
+                        localctx = FaStlParser.SpecNestedContext(
+                            self,
+                            FaStlParser.SpecContext(self, _parentctx, _parentState),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_spec
+                        )
                         self.state = 164
                         if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 5)"
+                            )
                         self.state = 165
                         self.match(FaStlParser.SinceOperator)
                         self.state = 167
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 166
                             self.interval()
-
 
                         self.state = 169
                         self.spec(6)
                         pass
 
-             
                 self.state = 174
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,12,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 12, self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -1123,267 +1350,270 @@ class FaStlParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
-
     class Real_expressionContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_real_expression
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
     class ExprSubtractionContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def real_expression(self, i:int=None):
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def MINUS(self):
             return self.getToken(FaStlParser.MINUS, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprSubtraction" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprSubtraction"):
                 return visitor.visitExprSubtraction(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprPowContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def POW(self):
             return self.getToken(FaStlParser.POW, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
-        def real_expression(self, i:int=None):
+
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def COMMA(self):
             return self.getToken(FaStlParser.COMMA, 0)
+
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprPow" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprPow"):
                 return visitor.visitExprPow(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprDivisionContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def real_expression(self, i:int=None):
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def DIVIDE(self):
             return self.getToken(FaStlParser.DIVIDE, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprDivision" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprDivision"):
                 return visitor.visitExprDivision(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprCompContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def real_expression(self, i:int=None):
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def comparisonOp(self):
-            return self.getTypedRuleContext(FaStlParser.ComparisonOpContext,0)
+            return self.getTypedRuleContext(FaStlParser.ComparisonOpContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprComp" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprComp"):
                 return visitor.visitExprComp(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprMultiplicationContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def real_expression(self, i:int=None):
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def TIMES(self):
             return self.getToken(FaStlParser.TIMES, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprMultiplication" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprMultiplication"):
                 return visitor.visitExprMultiplication(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprLiteralContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def literal(self):
-            return self.getTypedRuleContext(FaStlParser.LiteralContext,0)
+            return self.getTypedRuleContext(FaStlParser.LiteralContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprLiteral" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprLiteral"):
                 return visitor.visitExprLiteral(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprExpContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EXP(self):
             return self.getToken(FaStlParser.EXP, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def real_expression(self):
-            return self.getTypedRuleContext(FaStlParser.Real_expressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.Real_expressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprExp" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprExp"):
                 return visitor.visitExprExp(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprSqrtContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def SQRT(self):
             return self.getToken(FaStlParser.SQRT, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def real_expression(self):
-            return self.getTypedRuleContext(FaStlParser.Real_expressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.Real_expressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprSqrt" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprSqrt"):
                 return visitor.visitExprSqrt(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprPredContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def predicate(self):
-            return self.getTypedRuleContext(FaStlParser.PredicateContext,0)
+            return self.getTypedRuleContext(FaStlParser.PredicateContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprPred" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprPred"):
                 return visitor.visitExprPred(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprAbsContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def ABS(self):
             return self.getToken(FaStlParser.ABS, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def real_expression(self):
-            return self.getTypedRuleContext(FaStlParser.Real_expressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.Real_expressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprAbs" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprAbs"):
                 return visitor.visitExprAbs(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprAdditionContext(Real_expressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Real_expressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Real_expressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def real_expression(self, i:int=None):
+        def real_expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.Real_expressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.Real_expressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.Real_expressionContext, i)
 
         def PLUS(self):
             return self.getToken(FaStlParser.PLUS, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprAddition" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprAddition"):
                 return visitor.visitExprAddition(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-    def real_expression(self, _p:int=0):
+    def real_expression(self, _p: int = 0):
         _parentctx = self._ctx
         _parentState = self.state
         localctx = FaStlParser.Real_expressionContext(self, self._ctx, _parentState)
@@ -1395,7 +1625,11 @@ class FaStlParser ( Parser ):
             self.state = 200
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [FaStlParser.MINUS, FaStlParser.IntegerLiteral, FaStlParser.RealLiteral]:
+            if token in [
+                FaStlParser.MINUS,
+                FaStlParser.IntegerLiteral,
+                FaStlParser.RealLiteral,
+            ]:
                 localctx = FaStlParser.ExprLiteralContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
@@ -1472,22 +1706,32 @@ class FaStlParser ( Parser ):
             self._ctx.stop = self._input.LT(-1)
             self.state = 220
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,15,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
+            _alt = self._interp.adaptivePredict(self._input, 15, self._ctx)
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
                     self.state = 218
                     self._errHandler.sync(self)
-                    la_ = self._interp.adaptivePredict(self._input,14,self._ctx)
+                    la_ = self._interp.adaptivePredict(self._input, 14, self._ctx)
                     if la_ == 1:
-                        localctx = FaStlParser.ExprCompContext(self, FaStlParser.Real_expressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_real_expression)
+                        localctx = FaStlParser.ExprCompContext(
+                            self,
+                            FaStlParser.Real_expressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_real_expression
+                        )
                         self.state = 202
                         if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 9)"
+                            )
                         self.state = 203
                         self.comparisonOp()
                         self.state = 204
@@ -1495,12 +1739,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 2:
-                        localctx = FaStlParser.ExprAdditionContext(self, FaStlParser.Real_expressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_real_expression)
+                        localctx = FaStlParser.ExprAdditionContext(
+                            self,
+                            FaStlParser.Real_expressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_real_expression
+                        )
                         self.state = 206
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 8)"
+                            )
                         self.state = 207
                         self.match(FaStlParser.PLUS)
                         self.state = 208
@@ -1508,12 +1762,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 3:
-                        localctx = FaStlParser.ExprSubtractionContext(self, FaStlParser.Real_expressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_real_expression)
+                        localctx = FaStlParser.ExprSubtractionContext(
+                            self,
+                            FaStlParser.Real_expressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_real_expression
+                        )
                         self.state = 209
                         if not self.precpred(self._ctx, 7):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 7)"
+                            )
                         self.state = 210
                         self.match(FaStlParser.MINUS)
                         self.state = 211
@@ -1521,12 +1785,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 4:
-                        localctx = FaStlParser.ExprMultiplicationContext(self, FaStlParser.Real_expressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_real_expression)
+                        localctx = FaStlParser.ExprMultiplicationContext(
+                            self,
+                            FaStlParser.Real_expressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_real_expression
+                        )
                         self.state = 212
                         if not self.precpred(self._ctx, 6):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 6)"
+                            )
                         self.state = 213
                         self.match(FaStlParser.TIMES)
                         self.state = 214
@@ -1534,22 +1808,31 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 5:
-                        localctx = FaStlParser.ExprDivisionContext(self, FaStlParser.Real_expressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_real_expression)
+                        localctx = FaStlParser.ExprDivisionContext(
+                            self,
+                            FaStlParser.Real_expressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_real_expression
+                        )
                         self.state = 215
                         if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 5)"
+                            )
                         self.state = 216
                         self.match(FaStlParser.DIVIDE)
                         self.state = 217
                         self.real_expression(6)
                         pass
 
-             
                 self.state = 222
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,15,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 15, self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -1559,23 +1842,23 @@ class FaStlParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
-
     class IntervalContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def LBRACK(self):
             return self.getToken(FaStlParser.LBRACK, 0)
 
-        def intervalTime(self, i:int=None):
+        def intervalTime(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.IntervalTimeContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.IntervalTimeContext,i)
-
+                return self.getTypedRuleContext(FaStlParser.IntervalTimeContext, i)
 
         def RBRACK(self):
             return self.getToken(FaStlParser.RBRACK, 0)
@@ -1589,20 +1872,16 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_interval
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitInterval" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitInterval"):
                 return visitor.visitInterval(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def interval(self):
-
         localctx = FaStlParser.IntervalContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_interval)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 223
@@ -1611,7 +1890,7 @@ class FaStlParser ( Parser ):
             self.intervalTime()
             self.state = 225
             _la = self._input.LA(1)
-            if not(_la==FaStlParser.COLON or _la==FaStlParser.COMMA):
+            if not (_la == FaStlParser.COLON or _la == FaStlParser.COMMA):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1628,74 +1907,72 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class IntervalTimeContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_intervalTime
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class IntervalTimeLiteralContext(IntervalTimeContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.IntervalTimeContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.IntervalTimeContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def literal(self):
-            return self.getTypedRuleContext(FaStlParser.LiteralContext,0)
+            return self.getTypedRuleContext(FaStlParser.LiteralContext, 0)
 
         def unit(self):
-            return self.getTypedRuleContext(FaStlParser.UnitContext,0)
+            return self.getTypedRuleContext(FaStlParser.UnitContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitIntervalTimeLiteral" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitIntervalTimeLiteral"):
                 return visitor.visitIntervalTimeLiteral(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ConstantTimeLiteralContext(IntervalTimeContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.IntervalTimeContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.IntervalTimeContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def Identifier(self):
             return self.getToken(FaStlParser.Identifier, 0)
+
         def unit(self):
-            return self.getTypedRuleContext(FaStlParser.UnitContext,0)
+            return self.getTypedRuleContext(FaStlParser.UnitContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitConstantTimeLiteral" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitConstantTimeLiteral"):
                 return visitor.visitConstantTimeLiteral(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def intervalTime(self):
-
         localctx = FaStlParser.IntervalTimeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 12, self.RULE_intervalTime)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.state = 237
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [FaStlParser.MINUS, FaStlParser.IntegerLiteral, FaStlParser.RealLiteral]:
+            if token in [
+                FaStlParser.MINUS,
+                FaStlParser.IntegerLiteral,
+                FaStlParser.RealLiteral,
+            ]:
                 localctx = FaStlParser.IntervalTimeLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
                 self.state = 229
@@ -1703,10 +1980,17 @@ class FaStlParser ( Parser ):
                 self.state = 231
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << FaStlParser.SEC) | (1 << FaStlParser.MSEC) | (1 << FaStlParser.USEC) | (1 << FaStlParser.NSEC))) != 0):
+                if ((_la) & ~0x3F) == 0 and (
+                    (1 << _la)
+                    & (
+                        (1 << FaStlParser.SEC)
+                        | (1 << FaStlParser.MSEC)
+                        | (1 << FaStlParser.USEC)
+                        | (1 << FaStlParser.NSEC)
+                    )
+                ) != 0:
                     self.state = 230
                     self.unit()
-
 
                 pass
             elif token in [FaStlParser.Identifier]:
@@ -1717,10 +2001,17 @@ class FaStlParser ( Parser ):
                 self.state = 235
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << FaStlParser.SEC) | (1 << FaStlParser.MSEC) | (1 << FaStlParser.USEC) | (1 << FaStlParser.NSEC))) != 0):
+                if ((_la) & ~0x3F) == 0 and (
+                    (1 << _la)
+                    & (
+                        (1 << FaStlParser.SEC)
+                        | (1 << FaStlParser.MSEC)
+                        | (1 << FaStlParser.USEC)
+                        | (1 << FaStlParser.NSEC)
+                    )
+                ) != 0:
                     self.state = 234
                     self.unit()
-
 
                 pass
             else:
@@ -1734,11 +2025,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class UnitContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -1757,25 +2049,35 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_unit
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitUnit" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitUnit"):
                 return visitor.visitUnit(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def unit(self):
-
         localctx = FaStlParser.UnitContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_unit)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 239
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << FaStlParser.SEC) | (1 << FaStlParser.MSEC) | (1 << FaStlParser.USEC) | (1 << FaStlParser.NSEC))) != 0)):
+            if not (
+                (
+                    ((_la) & ~0x3F) == 0
+                    and (
+                        (1 << _la)
+                        & (
+                            (1 << FaStlParser.SEC)
+                            | (1 << FaStlParser.MSEC)
+                            | (1 << FaStlParser.USEC)
+                            | (1 << FaStlParser.NSEC)
+                        )
+                    )
+                    != 0
+                )
+            ):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1788,475 +2090,484 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class ExpressionContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_expression
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
     class ExprSinceContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def SinceOperator(self):
             return self.getToken(FaStlParser.SinceOperator, 0)
+
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprSince" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprSince"):
                 return visitor.visitExprSince(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprParenContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprParen" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprParen"):
                 return visitor.visitExprParen(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprIffContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def IffOperator(self):
             return self.getToken(FaStlParser.IffOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprIff" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprIff"):
                 return visitor.visitExprIff(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExpreOnceContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def OnceOperator(self):
             return self.getToken(FaStlParser.OnceOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExpreOnce" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExpreOnce"):
                 return visitor.visitExpreOnce(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprEvContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EventuallyOperator(self):
             return self.getToken(FaStlParser.EventuallyOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprEv" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprEv"):
                 return visitor.visitExprEv(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprImpliesContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def ImpliesOperator(self):
             return self.getToken(FaStlParser.ImpliesOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprImplies" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprImplies"):
                 return visitor.visitExprImplies(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprUntilContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def UntilOperator(self):
             return self.getToken(FaStlParser.UntilOperator, 0)
+
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprUntil" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprUntil"):
                 return visitor.visitExprUntil(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprNotContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def NotOperator(self):
             return self.getToken(FaStlParser.NotOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprNot" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprNot"):
                 return visitor.visitExprNot(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprNextContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def NextOperator(self):
             return self.getToken(FaStlParser.NextOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprNext" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprNext"):
                 return visitor.visitExprNext(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprAndContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def AndOperator(self):
             return self.getToken(FaStlParser.AndOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprAnd" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprAnd"):
                 return visitor.visitExprAnd(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprUnlessContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def UnlessOperator(self):
             return self.getToken(FaStlParser.UnlessOperator, 0)
+
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprUnless" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprUnless"):
                 return visitor.visitExprUnless(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprPreviousContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def PreviousOperator(self):
             return self.getToken(FaStlParser.PreviousOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprPrevious" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprPrevious"):
                 return visitor.visitExprPrevious(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprHistContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def HistoricallyOperator(self):
             return self.getToken(FaStlParser.HistoricallyOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprHist" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprHist"):
                 return visitor.visitExprHist(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprFallContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def FallOperator(self):
             return self.getToken(FaStlParser.FallOperator, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprFall" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprFall"):
                 return visitor.visitExprFall(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprPredicateContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def comparisonOp(self):
-            return self.getTypedRuleContext(FaStlParser.ComparisonOpContext,0)
+            return self.getTypedRuleContext(FaStlParser.ComparisonOpContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprPredicate" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprPredicate"):
                 return visitor.visitExprPredicate(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprXorContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def XorOperator(self):
             return self.getToken(FaStlParser.XorOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprXor" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprXor"):
                 return visitor.visitExprXor(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprRiseContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def RiseOperator(self):
             return self.getToken(FaStlParser.RiseOperator, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprRise" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprRise"):
                 return visitor.visitExprRise(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprOrContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expression(self, i:int=None):
+        def expression(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ExpressionContext,i)
+                return self.getTypedRuleContext(FaStlParser.ExpressionContext, i)
 
         def OrOperator(self):
             return self.getToken(FaStlParser.OrOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprOr" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprOr"):
                 return visitor.visitExprOr(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprAlwaysContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def AlwaysOperator(self):
             return self.getToken(FaStlParser.AlwaysOperator, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def interval(self):
-            return self.getTypedRuleContext(FaStlParser.IntervalContext,0)
+            return self.getTypedRuleContext(FaStlParser.IntervalContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprAlways" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprAlways"):
                 return visitor.visitExprAlways(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class ExprRealContext(ExpressionContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ExpressionContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ExpressionContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def real_expression(self):
-            return self.getTypedRuleContext(FaStlParser.Real_expressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.Real_expressionContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExprReal" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitExprReal"):
                 return visitor.visitExprReal(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-    def expression(self, _p:int=0):
+    def expression(self, _p: int = 0):
         _parentctx = self._ctx
         _parentState = self.state
         localctx = FaStlParser.ExpressionContext(self, self._ctx, _parentState)
         _prevctx = localctx
         _startState = 16
         self.enterRecursionRule(localctx, 16, self.RULE_expression, _p)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 283
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [FaStlParser.MINUS, FaStlParser.ABS, FaStlParser.SQRT, FaStlParser.EXP, FaStlParser.POW, FaStlParser.IntegerLiteral, FaStlParser.RealLiteral, FaStlParser.Identifier]:
+            if token in [
+                FaStlParser.MINUS,
+                FaStlParser.ABS,
+                FaStlParser.SQRT,
+                FaStlParser.EXP,
+                FaStlParser.POW,
+                FaStlParser.IntegerLiteral,
+                FaStlParser.RealLiteral,
+                FaStlParser.Identifier,
+            ]:
                 localctx = FaStlParser.ExprRealContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
@@ -2293,10 +2604,9 @@ class FaStlParser ( Parser ):
                 self.state = 251
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 250
                     self.interval()
-
 
                 self.state = 253
                 self.expression(11)
@@ -2310,10 +2620,9 @@ class FaStlParser ( Parser ):
                 self.state = 256
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 255
                     self.interval()
-
 
                 self.state = 258
                 self.expression(10)
@@ -2327,10 +2636,9 @@ class FaStlParser ( Parser ):
                 self.state = 261
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 260
                     self.interval()
-
 
                 self.state = 263
                 self.expression(7)
@@ -2344,10 +2652,9 @@ class FaStlParser ( Parser ):
                 self.state = 266
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==FaStlParser.LBRACK:
+                if _la == FaStlParser.LBRACK:
                     self.state = 265
                     self.interval()
-
 
                 self.state = 268
                 self.expression(6)
@@ -2402,22 +2709,32 @@ class FaStlParser ( Parser ):
             self._ctx.stop = self._input.LT(-1)
             self.state = 324
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,28,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
+            _alt = self._interp.adaptivePredict(self._input, 28, self._ctx)
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
                     self.state = 322
                     self._errHandler.sync(self)
-                    la_ = self._interp.adaptivePredict(self._input,27,self._ctx)
+                    la_ = self._interp.adaptivePredict(self._input, 27, self._ctx)
                     if la_ == 1:
-                        localctx = FaStlParser.ExprPredicateContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprPredicateContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 285
                         if not self.precpred(self._ctx, 19):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 19)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 19)"
+                            )
                         self.state = 286
                         self.comparisonOp()
                         self.state = 287
@@ -2425,12 +2742,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 2:
-                        localctx = FaStlParser.ExprOrContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprOrContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 289
                         if not self.precpred(self._ctx, 16):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 16)"
+                            )
                         self.state = 290
                         self.match(FaStlParser.OrOperator)
                         self.state = 291
@@ -2438,12 +2765,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 3:
-                        localctx = FaStlParser.ExprAndContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprAndContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 292
                         if not self.precpred(self._ctx, 15):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 15)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 15)"
+                            )
                         self.state = 293
                         self.match(FaStlParser.AndOperator)
                         self.state = 294
@@ -2451,12 +2788,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 4:
-                        localctx = FaStlParser.ExprImpliesContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprImpliesContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 295
                         if not self.precpred(self._ctx, 14):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 14)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 14)"
+                            )
                         self.state = 296
                         self.match(FaStlParser.ImpliesOperator)
                         self.state = 297
@@ -2464,12 +2811,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 5:
-                        localctx = FaStlParser.ExprIffContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprIffContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 298
                         if not self.precpred(self._ctx, 13):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 13)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 13)"
+                            )
                         self.state = 299
                         self.match(FaStlParser.IffOperator)
                         self.state = 300
@@ -2477,12 +2834,22 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 6:
-                        localctx = FaStlParser.ExprXorContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprXorContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 301
                         if not self.precpred(self._ctx, 12):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 12)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 12)"
+                            )
                         self.state = 302
                         self.match(FaStlParser.XorOperator)
                         self.state = 303
@@ -2490,72 +2857,98 @@ class FaStlParser ( Parser ):
                         pass
 
                     elif la_ == 7:
-                        localctx = FaStlParser.ExprUntilContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprUntilContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 304
                         if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 9)"
+                            )
                         self.state = 305
                         self.match(FaStlParser.UntilOperator)
                         self.state = 307
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 306
                             self.interval()
-
 
                         self.state = 309
                         self.expression(10)
                         pass
 
                     elif la_ == 8:
-                        localctx = FaStlParser.ExprUnlessContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprUnlessContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 310
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 8)"
+                            )
                         self.state = 311
                         self.match(FaStlParser.UnlessOperator)
                         self.state = 313
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 312
                             self.interval()
-
 
                         self.state = 315
                         self.expression(9)
                         pass
 
                     elif la_ == 9:
-                        localctx = FaStlParser.ExprSinceContext(self, FaStlParser.ExpressionContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        localctx = FaStlParser.ExprSinceContext(
+                            self,
+                            FaStlParser.ExpressionContext(
+                                self, _parentctx, _parentState
+                            ),
+                        )
+                        self.pushNewRecursionContext(
+                            localctx, _startState, self.RULE_expression
+                        )
                         self.state = 316
                         if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
+
+                            raise FailedPredicateException(
+                                self, "self.precpred(self._ctx, 5)"
+                            )
                         self.state = 317
                         self.match(FaStlParser.SinceOperator)
                         self.state = 319
                         self._errHandler.sync(self)
                         _la = self._input.LA(1)
-                        if _la==FaStlParser.LBRACK:
+                        if _la == FaStlParser.LBRACK:
                             self.state = 318
                             self.interval()
-
 
                         self.state = 321
                         self.expression(6)
                         pass
 
-             
                 self.state = 326
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,28,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 28, self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -2565,17 +2958,17 @@ class FaStlParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
-
     class Specification_fileContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def specification(self):
-            return self.getTypedRuleContext(FaStlParser.SpecificationContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.SpecificationContext, 0)
 
         def EOF(self):
             return self.getToken(FaStlParser.EOF, 0)
@@ -2583,17 +2976,13 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_specification_file
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecification_file" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecification_file"):
                 return visitor.visitSpecification_file(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def specification_file(self):
-
         localctx = FaStlParser.Specification_fileContext(self, self._ctx, self.state)
         self.enterRule(localctx, 18, self.RULE_specification_file)
         try:
@@ -2610,77 +2999,68 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class SpecificationContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def spec(self):
-            return self.getTypedRuleContext(FaStlParser.SpecContext,0)
+            return self.getTypedRuleContext(FaStlParser.SpecContext, 0)
 
-
-        def modimport(self, i:int=None):
+        def modimport(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.ModimportContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.ModimportContext,i)
+                return self.getTypedRuleContext(FaStlParser.ModimportContext, i)
 
-
-        def declaration(self, i:int=None):
+        def declaration(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.DeclarationContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.DeclarationContext,i)
+                return self.getTypedRuleContext(FaStlParser.DeclarationContext, i)
 
-
-        def annotation(self, i:int=None):
+        def annotation(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.AnnotationContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.AnnotationContext,i)
+                return self.getTypedRuleContext(FaStlParser.AnnotationContext, i)
 
-
-        def assertion(self, i:int=None):
+        def assertion(self, i: int = None):
             if i is None:
                 return self.getTypedRuleContexts(FaStlParser.AssertionContext)
             else:
-                return self.getTypedRuleContext(FaStlParser.AssertionContext,i)
-
+                return self.getTypedRuleContext(FaStlParser.AssertionContext, i)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_specification
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSpecification" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitSpecification"):
                 return visitor.visitSpecification(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def specification(self):
-
         localctx = FaStlParser.SpecificationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_specification)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 331
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,29,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 29, self._ctx)
             if la_ == 1:
                 self.state = 330
                 self.spec(0)
 
-
             self.state = 336
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==FaStlParser.From:
+            while _la == FaStlParser.From:
                 self.state = 333
                 self.modimport()
                 self.state = 338
@@ -2689,13 +3069,22 @@ class FaStlParser ( Parser ):
 
             self.state = 343
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,32,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
+            _alt = self._interp.adaptivePredict(self._input, 32, self._ctx)
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
                     self.state = 341
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [FaStlParser.Input, FaStlParser.Output, FaStlParser.Constant, FaStlParser.DomainTypeFloat, FaStlParser.DomainTypeLong, FaStlParser.DomainTypeComplex, FaStlParser.DomainTypeInt, FaStlParser.Identifier]:
+                    if token in [
+                        FaStlParser.Input,
+                        FaStlParser.Output,
+                        FaStlParser.Constant,
+                        FaStlParser.DomainTypeFloat,
+                        FaStlParser.DomainTypeLong,
+                        FaStlParser.DomainTypeComplex,
+                        FaStlParser.DomainTypeInt,
+                        FaStlParser.Identifier,
+                    ]:
                         self.state = 339
                         self.declaration()
                         pass
@@ -2705,21 +3094,58 @@ class FaStlParser ( Parser ):
                         pass
                     else:
                         raise NoViableAltException(self)
-             
+
                 self.state = 345
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,32,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 32, self._ctx)
 
-            self.state = 347 
+            self.state = 347
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
                 self.state = 346
                 self.assertion()
-                self.state = 349 
+                self.state = 349
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << FaStlParser.MINUS) | (1 << FaStlParser.LPAREN) | (1 << FaStlParser.ABS) | (1 << FaStlParser.SQRT) | (1 << FaStlParser.EXP) | (1 << FaStlParser.POW) | (1 << FaStlParser.NotOperator) | (1 << FaStlParser.RiseOperator) | (1 << FaStlParser.FallOperator) | (1 << FaStlParser.AlwaysOperator) | (1 << FaStlParser.EventuallyOperator) | (1 << FaStlParser.HistoricallyOperator) | (1 << FaStlParser.OnceOperator) | (1 << FaStlParser.NextOperator) | (1 << FaStlParser.PreviousOperator))) != 0) or ((((_la - 74)) & ~0x3f) == 0 and ((1 << (_la - 74)) & ((1 << (FaStlParser.IntegerLiteral - 74)) | (1 << (FaStlParser.RealLiteral - 74)) | (1 << (FaStlParser.Identifier - 74)))) != 0)):
+                if not (
+                    (
+                        ((_la) & ~0x3F) == 0
+                        and (
+                            (1 << _la)
+                            & (
+                                (1 << FaStlParser.MINUS)
+                                | (1 << FaStlParser.LPAREN)
+                                | (1 << FaStlParser.ABS)
+                                | (1 << FaStlParser.SQRT)
+                                | (1 << FaStlParser.EXP)
+                                | (1 << FaStlParser.POW)
+                                | (1 << FaStlParser.NotOperator)
+                                | (1 << FaStlParser.RiseOperator)
+                                | (1 << FaStlParser.FallOperator)
+                                | (1 << FaStlParser.AlwaysOperator)
+                                | (1 << FaStlParser.EventuallyOperator)
+                                | (1 << FaStlParser.HistoricallyOperator)
+                                | (1 << FaStlParser.OnceOperator)
+                                | (1 << FaStlParser.NextOperator)
+                                | (1 << FaStlParser.PreviousOperator)
+                            )
+                        )
+                        != 0
+                    )
+                    or (
+                        (((_la - 74)) & ~0x3F) == 0
+                        and (
+                            (1 << (_la - 74))
+                            & (
+                                (1 << (FaStlParser.IntegerLiteral - 74))
+                                | (1 << (FaStlParser.RealLiteral - 74))
+                                | (1 << (FaStlParser.Identifier - 74))
+                            )
+                        )
+                        != 0
+                    )
+                ):
                     break
 
         except RecognitionException as re:
@@ -2730,50 +3156,47 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class ModimportContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_modimport
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class ModImportContext(ModimportContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ModimportContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ModimportContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def From(self):
             return self.getToken(FaStlParser.From, 0)
-        def Identifier(self, i:int=None):
+
+        def Identifier(self, i: int = None):
             if i is None:
                 return self.getTokens(FaStlParser.Identifier)
             else:
                 return self.getToken(FaStlParser.Identifier, i)
+
         def Import(self):
             return self.getToken(FaStlParser.Import, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitModImport" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitModImport"):
                 return visitor.visitModImport(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def modimport(self):
-
         localctx = FaStlParser.ModimportContext(self, self._ctx, self.state)
         self.enterRule(localctx, 22, self.RULE_modimport)
         try:
@@ -2795,17 +3218,17 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class AssertionContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
         def Identifier(self):
             return self.getToken(FaStlParser.Identifier, 0)
@@ -2816,30 +3239,25 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_assertion
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitAssertion" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitAssertion"):
                 return visitor.visitAssertion(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def assertion(self):
-
         localctx = FaStlParser.AssertionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 24, self.RULE_assertion)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 358
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,34,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 34, self._ctx)
             if la_ == 1:
                 self.state = 356
                 self.match(FaStlParser.Identifier)
                 self.state = 357
                 self.match(FaStlParser.EQUAL)
-
 
             self.state = 360
             self.expression(0)
@@ -2851,68 +3269,69 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class DeclarationContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_declaration
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class DeclVariableContext(DeclarationContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.DeclarationContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.DeclarationContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def variableDeclaration(self):
-            return self.getTypedRuleContext(FaStlParser.VariableDeclarationContext,0)
+            return self.getTypedRuleContext(FaStlParser.VariableDeclarationContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitDeclVariable" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitDeclVariable"):
                 return visitor.visitDeclVariable(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class DeclConstantContext(DeclarationContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.DeclarationContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.DeclarationContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def constantDeclaration(self):
-            return self.getTypedRuleContext(FaStlParser.ConstantDeclarationContext,0)
+            return self.getTypedRuleContext(FaStlParser.ConstantDeclarationContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitDeclConstant" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitDeclConstant"):
                 return visitor.visitDeclConstant(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def declaration(self):
-
         localctx = FaStlParser.DeclarationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 26, self.RULE_declaration)
         try:
             self.state = 364
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [FaStlParser.Input, FaStlParser.Output, FaStlParser.DomainTypeFloat, FaStlParser.DomainTypeLong, FaStlParser.DomainTypeComplex, FaStlParser.DomainTypeInt, FaStlParser.Identifier]:
+            if token in [
+                FaStlParser.Input,
+                FaStlParser.Output,
+                FaStlParser.DomainTypeFloat,
+                FaStlParser.DomainTypeLong,
+                FaStlParser.DomainTypeComplex,
+                FaStlParser.DomainTypeInt,
+                FaStlParser.Identifier,
+            ]:
                 localctx = FaStlParser.DeclVariableContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
                 self.state = 362
@@ -2935,11 +3354,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class AnnotationContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -2947,23 +3367,18 @@ class FaStlParser ( Parser ):
             return self.getToken(FaStlParser.AT, 0)
 
         def annotation_type(self):
-            return self.getTypedRuleContext(FaStlParser.Annotation_typeContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.Annotation_typeContext, 0)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_annotation
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitAnnotation" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitAnnotation"):
                 return visitor.visitAnnotation(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def annotation(self):
-
         localctx = FaStlParser.AnnotationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 28, self.RULE_annotation)
         try:
@@ -2980,54 +3395,53 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class Annotation_typeContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_annotation_type
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class RosTopicContext(Annotation_typeContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.Annotation_typeContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.Annotation_typeContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def ROS_Topic(self):
             return self.getToken(FaStlParser.ROS_Topic, 0)
+
         def LPAREN(self):
             return self.getToken(FaStlParser.LPAREN, 0)
-        def Identifier(self, i:int=None):
+
+        def Identifier(self, i: int = None):
             if i is None:
                 return self.getTokens(FaStlParser.Identifier)
             else:
                 return self.getToken(FaStlParser.Identifier, i)
+
         def COMMA(self):
             return self.getToken(FaStlParser.COMMA, 0)
+
         def RPAREN(self):
             return self.getToken(FaStlParser.RPAREN, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitRosTopic" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitRosTopic"):
                 return visitor.visitRosTopic(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def annotation_type(self):
-
         localctx = FaStlParser.Annotation_typeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 30, self.RULE_annotation_type)
         try:
@@ -3053,55 +3467,48 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class VariableDeclarationContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
         def domainType(self):
-            return self.getTypedRuleContext(FaStlParser.DomainTypeContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.DomainTypeContext, 0)
 
         def Identifier(self):
             return self.getToken(FaStlParser.Identifier, 0)
 
         def ioType(self):
-            return self.getTypedRuleContext(FaStlParser.IoTypeContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.IoTypeContext, 0)
 
         def assignment(self):
-            return self.getTypedRuleContext(FaStlParser.AssignmentContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.AssignmentContext, 0)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_variableDeclaration
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitVariableDeclaration" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitVariableDeclaration"):
                 return visitor.visitVariableDeclaration(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def variableDeclaration(self):
-
         localctx = FaStlParser.VariableDeclarationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 32, self.RULE_variableDeclaration)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 377
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==FaStlParser.Input or _la==FaStlParser.Output:
+            if _la == FaStlParser.Input or _la == FaStlParser.Output:
                 self.state = 376
                 self.ioType()
-
 
             self.state = 379
             self.domainType()
@@ -3110,10 +3517,9 @@ class FaStlParser ( Parser ):
             self.state = 382
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==FaStlParser.EQUAL:
+            if _la == FaStlParser.EQUAL:
                 self.state = 381
                 self.assignment()
-
 
         except RecognitionException as re:
             localctx.exception = re
@@ -3123,11 +3529,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class ConstantDeclarationContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -3135,8 +3542,7 @@ class FaStlParser ( Parser ):
             return self.getToken(FaStlParser.Constant, 0)
 
         def domainType(self):
-            return self.getTypedRuleContext(FaStlParser.DomainTypeContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.DomainTypeContext, 0)
 
         def Identifier(self):
             return self.getToken(FaStlParser.Identifier, 0)
@@ -3145,23 +3551,18 @@ class FaStlParser ( Parser ):
             return self.getToken(FaStlParser.EQUAL, 0)
 
         def literal(self):
-            return self.getTypedRuleContext(FaStlParser.LiteralContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.LiteralContext, 0)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_constantDeclaration
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitConstantDeclaration" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitConstantDeclaration"):
                 return visitor.visitConstantDeclaration(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def constantDeclaration(self):
-
         localctx = FaStlParser.ConstantDeclarationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 34, self.RULE_constantDeclaration)
         try:
@@ -3184,71 +3585,66 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class AssignmentContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_assignment
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class AsgnExprContext(AssignmentContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.AssignmentContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.AssignmentContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EQUAL(self):
             return self.getToken(FaStlParser.EQUAL, 0)
+
         def expression(self):
-            return self.getTypedRuleContext(FaStlParser.ExpressionContext,0)
+            return self.getTypedRuleContext(FaStlParser.ExpressionContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitAsgnExpr" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitAsgnExpr"):
                 return visitor.visitAsgnExpr(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class AsgnLiteralContext(AssignmentContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.AssignmentContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.AssignmentContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EQUAL(self):
             return self.getToken(FaStlParser.EQUAL, 0)
+
         def literal(self):
-            return self.getTypedRuleContext(FaStlParser.LiteralContext,0)
+            return self.getTypedRuleContext(FaStlParser.LiteralContext, 0)
 
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitAsgnLiteral" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitAsgnLiteral"):
                 return visitor.visitAsgnLiteral(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def assignment(self):
-
         localctx = FaStlParser.AssignmentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_assignment)
         try:
             self.state = 394
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,38,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 38, self._ctx)
             if la_ == 1:
                 localctx = FaStlParser.AsgnLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
@@ -3267,7 +3663,6 @@ class FaStlParser ( Parser ):
                 self.expression(0)
                 pass
 
-
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3276,11 +3671,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class DomainTypeContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -3302,25 +3698,36 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_domainType
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitDomainType" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitDomainType"):
                 return visitor.visitDomainType(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def domainType(self):
-
         localctx = FaStlParser.DomainTypeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 38, self.RULE_domainType)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 396
             _la = self._input.LA(1)
-            if not(((((_la - 39)) & ~0x3f) == 0 and ((1 << (_la - 39)) & ((1 << (FaStlParser.DomainTypeFloat - 39)) | (1 << (FaStlParser.DomainTypeLong - 39)) | (1 << (FaStlParser.DomainTypeComplex - 39)) | (1 << (FaStlParser.DomainTypeInt - 39)) | (1 << (FaStlParser.Identifier - 39)))) != 0)):
+            if not (
+                (
+                    (((_la - 39)) & ~0x3F) == 0
+                    and (
+                        (1 << (_la - 39))
+                        & (
+                            (1 << (FaStlParser.DomainTypeFloat - 39))
+                            | (1 << (FaStlParser.DomainTypeLong - 39))
+                            | (1 << (FaStlParser.DomainTypeComplex - 39))
+                            | (1 << (FaStlParser.DomainTypeInt - 39))
+                            | (1 << (FaStlParser.Identifier - 39))
+                        )
+                    )
+                    != 0
+                )
+            ):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -3333,11 +3740,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class IoTypeContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -3350,25 +3758,21 @@ class FaStlParser ( Parser ):
         def getRuleIndex(self):
             return FaStlParser.RULE_ioType
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitIoType" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitIoType"):
                 return visitor.visitIoType(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def ioType(self):
-
         localctx = FaStlParser.IoTypeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 40, self.RULE_ioType)
-        self._la = 0 # Token type
+        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 398
             _la = self._input.LA(1)
-            if not(_la==FaStlParser.Input or _la==FaStlParser.Output):
+            if not (_la == FaStlParser.Input or _la == FaStlParser.Output):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -3381,123 +3785,118 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class ComparisonOpContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_comparisonOp
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class GeqContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def GreaterOrEqualOperator(self):
             return self.getToken(FaStlParser.GreaterOrEqualOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitGeq" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitGeq"):
                 return visitor.visitGeq(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class LeqContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def LesserOrEqualOperator(self):
             return self.getToken(FaStlParser.LesserOrEqualOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitLeq" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitLeq"):
                 return visitor.visitLeq(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class GreaterContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def GreaterOperator(self):
             return self.getToken(FaStlParser.GreaterOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitGreater" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitGreater"):
                 return visitor.visitGreater(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class NeqContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def NotEqualOperator(self):
             return self.getToken(FaStlParser.NotEqualOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitNeq" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitNeq"):
                 return visitor.visitNeq(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class EqContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def EqualOperator(self):
             return self.getToken(FaStlParser.EqualOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitEq" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitEq"):
                 return visitor.visitEq(self)
             else:
                 return visitor.visitChildren(self)
 
-
     class LessContext(ComparisonOpContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.ComparisonOpContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.ComparisonOpContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def LesserOperator(self):
             return self.getToken(FaStlParser.LesserOperator, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitLess" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitLess"):
                 return visitor.visitLess(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def comparisonOp(self):
-
         localctx = FaStlParser.ComparisonOpContext(self, self._ctx, self.state)
         self.enterRule(localctx, 42, self.RULE_comparisonOp)
         try:
@@ -3551,11 +3950,12 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class LiteralContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
@@ -3569,23 +3969,18 @@ class FaStlParser ( Parser ):
             return self.getToken(FaStlParser.MINUS, 0)
 
         def literal(self):
-            return self.getTypedRuleContext(FaStlParser.LiteralContext,0)
-
+            return self.getTypedRuleContext(FaStlParser.LiteralContext, 0)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_literal
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitLiteral" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitLiteral"):
                 return visitor.visitLiteral(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
-
     def literal(self):
-
         localctx = FaStlParser.LiteralContext(self, self._ctx, self.state)
         self.enterRule(localctx, 44, self.RULE_literal)
         try:
@@ -3620,43 +4015,38 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class IdentifierContext(ParserRuleContext):
-        __slots__ = 'parser'
+        __slots__ = "parser"
 
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
             super().__init__(parent, invokingState)
             self.parser = parser
-
 
         def getRuleIndex(self):
             return FaStlParser.RULE_identifier
 
-     
-        def copyFrom(self, ctx:ParserRuleContext):
+        def copyFrom(self, ctx: ParserRuleContext):
             super().copyFrom(ctx)
 
-
-
     class IdContext(IdentifierContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a FaStlParser.IdentifierContext
+        def __init__(
+            self, parser, ctx: ParserRuleContext
+        ):  # actually a FaStlParser.IdentifierContext
             super().__init__(parser)
             self.copyFrom(ctx)
 
         def Identifier(self):
             return self.getToken(FaStlParser.Identifier, 0)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitId" ):
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitId"):
                 return visitor.visitId(self)
             else:
                 return visitor.visitChildren(self)
 
-
-
     def identifier(self):
-
         localctx = FaStlParser.IdentifierContext(self, self._ctx, self.state)
         self.enterRule(localctx, 46, self.RULE_identifier)
         try:
@@ -3672,9 +4062,7 @@ class FaStlParser ( Parser ):
             self.exitRule()
         return localctx
 
-
-
-    def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
+    def sempred(self, localctx: RuleContext, ruleIndex: int, predIndex: int):
         if self._predicates == None:
             self._predicates = dict()
         self._predicates[3] = self.spec_sempred
@@ -3686,101 +4074,74 @@ class FaStlParser ( Parser ):
         else:
             return pred(localctx, predIndex)
 
-    def spec_sempred(self, localctx:SpecContext, predIndex:int):
-            if predIndex == 0:
-                return self.precpred(self._ctx, 18)
-         
+    def spec_sempred(self, localctx: SpecContext, predIndex: int):
+        if predIndex == 0:
+            return self.precpred(self._ctx, 18)
 
-            if predIndex == 1:
-                return self.precpred(self._ctx, 17)
-         
+        if predIndex == 1:
+            return self.precpred(self._ctx, 17)
 
-            if predIndex == 2:
-                return self.precpred(self._ctx, 16)
-         
+        if predIndex == 2:
+            return self.precpred(self._ctx, 16)
 
-            if predIndex == 3:
-                return self.precpred(self._ctx, 15)
-         
+        if predIndex == 3:
+            return self.precpred(self._ctx, 15)
 
-            if predIndex == 4:
-                return self.precpred(self._ctx, 14)
-         
+        if predIndex == 4:
+            return self.precpred(self._ctx, 14)
 
-            if predIndex == 5:
-                return self.precpred(self._ctx, 13)
-         
+        if predIndex == 5:
+            return self.precpred(self._ctx, 13)
 
-            if predIndex == 6:
-                return self.precpred(self._ctx, 9)
-         
+        if predIndex == 6:
+            return self.precpred(self._ctx, 9)
 
-            if predIndex == 7:
-                return self.precpred(self._ctx, 8)
-         
+        if predIndex == 7:
+            return self.precpred(self._ctx, 8)
 
-            if predIndex == 8:
-                return self.precpred(self._ctx, 5)
-         
+        if predIndex == 8:
+            return self.precpred(self._ctx, 5)
 
-    def real_expression_sempred(self, localctx:Real_expressionContext, predIndex:int):
-            if predIndex == 9:
-                return self.precpred(self._ctx, 9)
-         
+    def real_expression_sempred(self, localctx: Real_expressionContext, predIndex: int):
+        if predIndex == 9:
+            return self.precpred(self._ctx, 9)
 
-            if predIndex == 10:
-                return self.precpred(self._ctx, 8)
-         
+        if predIndex == 10:
+            return self.precpred(self._ctx, 8)
 
-            if predIndex == 11:
-                return self.precpred(self._ctx, 7)
-         
+        if predIndex == 11:
+            return self.precpred(self._ctx, 7)
 
-            if predIndex == 12:
-                return self.precpred(self._ctx, 6)
-         
+        if predIndex == 12:
+            return self.precpred(self._ctx, 6)
 
-            if predIndex == 13:
-                return self.precpred(self._ctx, 5)
-         
+        if predIndex == 13:
+            return self.precpred(self._ctx, 5)
 
-    def expression_sempred(self, localctx:ExpressionContext, predIndex:int):
-            if predIndex == 14:
-                return self.precpred(self._ctx, 19)
-         
+    def expression_sempred(self, localctx: ExpressionContext, predIndex: int):
+        if predIndex == 14:
+            return self.precpred(self._ctx, 19)
 
-            if predIndex == 15:
-                return self.precpred(self._ctx, 16)
-         
+        if predIndex == 15:
+            return self.precpred(self._ctx, 16)
 
-            if predIndex == 16:
-                return self.precpred(self._ctx, 15)
-         
+        if predIndex == 16:
+            return self.precpred(self._ctx, 15)
 
-            if predIndex == 17:
-                return self.precpred(self._ctx, 14)
-         
+        if predIndex == 17:
+            return self.precpred(self._ctx, 14)
 
-            if predIndex == 18:
-                return self.precpred(self._ctx, 13)
-         
+        if predIndex == 18:
+            return self.precpred(self._ctx, 13)
 
-            if predIndex == 19:
-                return self.precpred(self._ctx, 12)
-         
+        if predIndex == 19:
+            return self.precpred(self._ctx, 12)
 
-            if predIndex == 20:
-                return self.precpred(self._ctx, 9)
-         
+        if predIndex == 20:
+            return self.precpred(self._ctx, 9)
 
-            if predIndex == 21:
-                return self.precpred(self._ctx, 8)
-         
+        if predIndex == 21:
+            return self.precpred(self._ctx, 8)
 
-            if predIndex == 22:
-                return self.precpred(self._ctx, 5)
-         
-
-
-
-
+        if predIndex == 22:
+            return self.precpred(self._ctx, 5)

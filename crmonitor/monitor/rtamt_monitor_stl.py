@@ -1,8 +1,8 @@
-from abc import ABC
 import copy
+from abc import ABC
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Tuple, Protocol
+from typing import Any, Callable, Dict, List, Protocol, Tuple
 
 import rtamt
 from rtamt.spec.abstract_specification import (

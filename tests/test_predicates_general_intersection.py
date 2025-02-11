@@ -1,11 +1,10 @@
-import os
 import math
+import os
 import unittest
 from pathlib import Path
 
-from commonroad.common.file_reader import CommonRoadFileReader
-
 import numpy as np
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
@@ -16,14 +15,14 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.general import (
-    PredTurningLeft,
-    PredTurningRight,
     PredGoingStraight,
     PredInCongestion,
     PredInQueueOfVehicles,
     PredInSlowMovingTraffic,
     PredInterstateBroadEnough,
     PredMakesUTurn,
+    PredTurningLeft,
+    PredTurningRight,
 )
 
 

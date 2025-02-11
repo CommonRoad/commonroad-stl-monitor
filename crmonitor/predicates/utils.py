@@ -3,17 +3,12 @@ import logging
 import math
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
-from commonroad_route_planner.route_planner import RoutePlanner
-from commonroad.planning.goal import GoalRegion
-from commonroad.common.util import Interval, AngleInterval
-from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.state import CustomState
-
+import matplotlib.pyplot as plt
 import numpy as np
-
-from shapely.geometry import Polygon, LineString
-from commonroad.common.util import subtract_orientations
+from commonroad.common.util import AngleInterval, Interval, subtract_orientations
+from commonroad.geometry.shape import Rectangle
 from commonroad.geometry.transform import rotate_translate
+from commonroad.planning.goal import GoalRegion
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import (
     Intersection,
@@ -22,22 +17,22 @@ from commonroad.scenario.lanelet import (
     LaneletType,
     StopLine,
 )
+from commonroad.scenario.state import CustomState
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
+from commonroad_dc.geometry.util import (
+    chaikins_corner_cutting,
+    compute_curvature_from_polyline,
+    compute_orientation_from_polyline,
+    compute_pathlength_from_polyline,
+    resample_polyline,
+)
+from commonroad_route_planner.route_planner import RoutePlanner
+from shapely.geometry import LineString, Polygon
 
 from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-
-from commonroad_dc.geometry.util import (
-    chaikins_corner_cutting,
-    compute_curvature_from_polyline,
-    resample_polyline,
-    compute_pathlength_from_polyline,
-    compute_orientation_from_polyline,
-)
-
-import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -665,6 +660,7 @@ def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
             ]
         distance.append(d_right)
     return distance
+
 
 def get_priority(lanelet_ids, road_network, direction, traffic_sign_priority):
     """

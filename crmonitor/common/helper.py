@@ -7,10 +7,7 @@ from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
 # import numba
 import numpy as np
-from commonroad.scenario.lanelet import (
-    Lanelet,
-    LaneletType,
-)
+from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State

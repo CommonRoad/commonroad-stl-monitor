@@ -1,7 +1,9 @@
 import os
 import unittest
 from pathlib import Path
+
 import numpy as np
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import (
     Lanelet,
@@ -11,29 +13,28 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from commonroad.common.file_reader import CommonRoadFileReader
 
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates.position import (
-    PredOnLaneletWithTypeIntersection,
-    PredInIntersectionConflictArea,
-    PredOnIncomingLeftOf,
-    PredOnOncomOf,
-    PredStopLineInFront,
     PredDrivesLeftmost,
     PredDrivesRightmost,
+    PredInIntersectionConflictArea,
     PredInLeftmostLane,
     PredInRightmostLane,
     PredLeftOf,
     PredLeftOfBroadLaneMarking,
     PredMainCarriageWayRightLane,
     PredOnAccessRamp,
+    PredOnIncomingLeftOf,
+    PredOnLaneletWithTypeIntersection,
     PredOnMainCarriageway,
+    PredOnOncomOf,
     PredOnShoulder,
     PredRightOfBroadLaneMarking,
+    PredStopLineInFront,
 )
 
 

@@ -5,35 +5,32 @@ To get started, you must provide the pre-trained models and put them into `/tmp/
 You can either use your own models or download pre-trained ones from https://nextcloud.in.tum.de/index.php/s/bijGnSNZQB92GRz (see commonroad-model-predictive-robustness for more information).
 """
 
+import math
 from collections import defaultdict
 from pathlib import Path
-import math
 
-from commonroad.common.file_reader import CommonRoadFileReader
 import numpy as np
+from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 
-from crmonitor.common.helper import gather
 from crmonitor.common.config import get_traffic_rule_config
+from crmonitor.common.helper import gather
 from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from crmonitor.evaluation.visitor import (
-    MonitorCreationRuleTreeVisitor,
-    RuleTreeVisitor,
-)
+from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, RuleTreeVisitor
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
+    AndsmoothMonitorNode,
     ExistMonitorNode,
     HistoricallydurationMonitorNode,
     MonitorNode,
     RuleMonitorNode,
-    AndsmoothMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = False
+use_mpr = True
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -296,7 +293,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G3",
+    rule="R_G4",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
 )

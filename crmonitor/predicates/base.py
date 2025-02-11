@@ -4,11 +4,10 @@ import warnings
 from typing import Callable, Dict, List, Tuple
 
 from commonroad.visualization.renderer import IRenderer
-
-from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML as PEML
-from commonroad_mpr.common.predicates import PredicateEvaluator as MprPredicateEvalutor
 from commonroad_mpr.common.observation import World as WorldMPR
-
+from commonroad_mpr.common.predicates import PredicateEvaluator as MprPredicateEvalutor
+from commonroad_mpr.learning import FeatureExtrator
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
@@ -29,6 +28,18 @@ def _map_crmonitor_predicate_name_to_mpr_predicate_name(
     return predicate_name
 
 
+# Those predicates are non-atomic and a composition of other atomic predicates. They do not have a pendant in mpr, and therefore they get special treatment when evaluating with mpr.
+_COMPOSED_PREDICATES = ["preserves_traffic_flow", "slow_leading_vehicle"]
+
+
+def _should_use_mpr_predicate_for(predicate_name: str) -> bool:
+    """
+    Determines whether a crmonitor predicate should be replaced with its pendant from mpr.
+    This is usefull, to keep non-atomic predicates from crmonitor, and only replace their sub-predicates with predicates from mpr.
+    """
+    return predicate_name not in _COMPOSED_PREDICATES
+
+
 class BasePredicateEvaluator(abc.ABC):
     """
     Base class for the predicate evaluator
@@ -47,10 +58,11 @@ class BasePredicateEvaluator(abc.ABC):
         except:
             self.feature_extractor = None
 
-        if self.config["use_mpr"]:
-            mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
-                self.predicate_name
-            )
+        self.peml = None
+        mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
+            self.predicate_name
+        )
+        if self.config["use_mpr"] and _should_use_mpr_predicate_for(mpr_predicate_name):
             try:
                 self.peml = PEML([mpr_predicate_name])
             except Exception:
@@ -161,9 +173,9 @@ class BasePredicateEvaluator(abc.ABC):
         time_step: int,
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
-        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
-            self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
-        )
+        predicate_names2vehicle_ids2values[self.predicate_name][
+            tuple(vehicle_ids)
+        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):

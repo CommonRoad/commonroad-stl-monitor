@@ -1,17 +1,14 @@
-from scipy.integrate import odeint
-
-from commonroad.common.file_writer import CommonRoadFileWriter
-from commonroad.common.file_writer import OverwriteExistingFile
+from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.geometry.shape import Rectangle
+from commonroad.planning.goal import AngleInterval, GoalRegion, Interval
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
-from commonroad.planning.goal import GoalRegion, Interval, AngleInterval
 from commonroad.prediction.prediction import TrajectoryPrediction
+from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import (
     TrafficSign,
     TrafficSignElement,
     TrafficSignIDGermany,
 )
-from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.trajectory import State, Trajectory
 from scipy.integrate import odeint
 from vehicleDynamics_ST import vehicleDynamics_ST
