@@ -243,7 +243,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
         window_size = end - begin  # sliding average window size
         # Fill up the values before the interval, so that the returned trace is as long as the input
-        sample_return = [1.0] * begin
+        sample_return = [float("inf")] * begin
         # Computes the sliding average over the samples
         for i in range(begin, len(sample)):
             window = sample[max(begin, i - window_size) : i + 1]
