@@ -1,12 +1,13 @@
-from abc import ABC, abstractmethod
 import copy
 import logging
 import warnings
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
+from commonroad_mpr.common.observation import World as WorldMPR
 
 from crmonitor.common.config import get_evaluation_config, get_traffic_rule_config
 from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
@@ -28,8 +29,6 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import VisitorNode
 
-from commonroad_mpr.common.observation import World as WorldMPR
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,15 +38,18 @@ class AbstractRuleEvaluator(ABC):
         return cls()
 
     @abstractmethod
-    def evaluate(self) -> float: ...
+    def evaluate(self) -> float:
+        ...
 
 
 class OnlineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float: ...
+    def evaluate(self) -> float:
+        ...
 
 
 class OfflineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float: ...
+    def evaluate(self) -> float:
+        ...
 
 
 class RuleEvaluator:

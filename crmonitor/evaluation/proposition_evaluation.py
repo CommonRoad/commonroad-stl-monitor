@@ -1,5 +1,7 @@
-from typing import Optional
 import copy
+from typing import Optional
+
+from commonroad_mpr.common.observation import World as WorldMPR
 
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -13,8 +15,6 @@ from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
-
-from commonroad_mpr.common.observation import World as WorldMPR
 
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
@@ -98,7 +98,6 @@ class PropositionRuleEvaluator(RuleEvaluator):
         return props, other_id, self._last_evaluation_time_step
 
     def get_propositions_all(self):
-
         # New dictionary structure
         transformed_all_props_all_ids = {}
 

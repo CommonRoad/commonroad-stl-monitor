@@ -1,4 +1,3 @@
-from enum import Enum
 import logging
 from enum import Enum
 from typing import Callable, Dict, List, Optional, Tuple
@@ -21,34 +20,32 @@ from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.position import (
-    PredInSameLane,
-    PredSingleLane,
     PredInFrontOf,
+    PredInSameLane,
     PredOnOncomOf,
+    PredSingleLane,
 )
 from crmonitor.predicates.priority import (
-    PredSamePriorityRightRight,
-    PredSamePriorityRightLeft,
-    PredSamePriorityRightStraight,
-    PredSamePriorityLeftRight,
-    PredSamePriorityLeftLeft,
-    PredSamePriorityLeftStraight,
-    PredSamePriorityStraightRight,
-    PredSamePriorityStraightLeft,
-    PredSamePriorityStraightStraight,
-    PredHasPriorityRightRight,
-    PredHasPriorityRightLeft,
-    PredHasPriorityRightStraight,
-    PredHasPriorityLeftRight,
     PredHasPriorityLeftLeft,
+    PredHasPriorityLeftRight,
     PredHasPriorityLeftStraight,
-    PredHasPriorityStraightRight,
+    PredHasPriorityRightLeft,
+    PredHasPriorityRightRight,
+    PredHasPriorityRightStraight,
     PredHasPriorityStraightLeft,
+    PredHasPriorityStraightRight,
     PredHasPriorityStraightStraight,
+    PredSamePriorityLeftLeft,
+    PredSamePriorityLeftRight,
+    PredSamePriorityLeftStraight,
+    PredSamePriorityRightLeft,
+    PredSamePriorityRightRight,
+    PredSamePriorityRightStraight,
+    PredSamePriorityStraightLeft,
+    PredSamePriorityStraightRight,
+    PredSamePriorityStraightStraight,
 )
-from crmonitor.predicates.utils import (
-    cal_road_width,
-)
+from crmonitor.predicates.utils import cal_road_width
 
 logger = logging.getLogger(__name__)
 

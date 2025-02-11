@@ -1,12 +1,13 @@
 # Generated from FaStlLexer.g4 by ANTLR 4.9.3
-from antlr4 import *
-from io import StringIO
 import sys
+from io import StringIO
+
+from antlr4 import *
+
 if sys.version_info[1] > 5:
     from typing import TextIO
 else:
     from typing.io import TextIO
-
 
 
 def serializedATN():
@@ -17,8 +18,8 @@ def serializedATN():
         buf.write("\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4\23")
         buf.write("\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30")
         buf.write("\4\31\t\31\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36")
-        buf.write("\t\36\4\37\t\37\4 \t \4!\t!\4\"\t\"\4#\t#\4$\t$\4%\t%")
-        buf.write("\4&\t&\4\'\t\'\4(\t(\4)\t)\4*\t*\4+\t+\4,\t,\4-\t-\4.")
+        buf.write('\t\36\4\37\t\37\4 \t \4!\t!\4"\t"\4#\t#\4$\t$\4%\t%')
+        buf.write("\4&\t&\4'\t'\4(\t(\4)\t)\4*\t*\4+\t+\4,\t,\4-\t-\4.")
         buf.write("\t.\4/\t/\4\60\t\60\4\61\t\61\4\62\t\62\4\63\t\63\4\64")
         buf.write("\t\64\4\65\t\65\4\66\t\66\4\67\t\67\48\t8\49\t9\4:\t:")
         buf.write("\4;\t;\4<\t<\4=\t=\4>\t>\4?\t?\4@\t@\4A\tA\4B\tB\4C\t")
@@ -35,10 +36,10 @@ def serializedATN():
         buf.write("\3\22\3\23\3\23\3\24\3\24\3\25\3\25\3\26\3\26\3\27\3\27")
         buf.write("\3\30\3\30\3\31\3\31\3\31\3\31\3\32\3\32\3\32\3\32\3\32")
         buf.write("\3\33\3\33\3\33\3\33\3\34\3\34\3\34\3\34\3\35\3\35\3\36")
-        buf.write("\3\36\3\36\3\37\3\37\3\37\3 \3 \3 \3!\3!\3!\3\"\3\"\3")
-        buf.write("\"\3\"\3\"\3\"\3#\3#\3#\3#\3#\3#\3#\3$\3$\3$\3$\3$\3$")
-        buf.write("\3%\3%\3%\3%\3%\3%\3%\3&\3&\3&\3&\3&\3&\3&\3&\3&\3\'\3")
-        buf.write("\'\3\'\3\'\3\'\3\'\3(\3(\3(\3(\3(\3)\3)\3)\3)\3)\3)\3")
+        buf.write('\3\36\3\36\3\37\3\37\3\37\3 \3 \3 \3!\3!\3!\3"\3"\3')
+        buf.write('"\3"\3"\3"\3#\3#\3#\3#\3#\3#\3#\3$\3$\3$\3$\3$\3$')
+        buf.write("\3%\3%\3%\3%\3%\3%\3%\3&\3&\3&\3&\3&\3&\3&\3&\3&\3'\3")
+        buf.write("'\3'\3'\3'\3'\3(\3(\3(\3(\3(\3)\3)\3)\3)\3)\3)\3")
         buf.write("*\3*\3*\3*\3*\3+\3+\3+\3+\3+\3+\3+\3+\3,\3,\3,\3,\3-\3")
         buf.write("-\3-\3-\3-\3.\3.\3.\3.\3.\3.\3.\3.\3.\3.\3/\3/\3/\3/\3")
         buf.write("/\3/\3/\3/\3/\3/\3/\3/\3/\3/\3\60\3\60\3\60\3\60\3\60")
@@ -71,21 +72,21 @@ def serializedATN():
         buf.write("i\3i\3i\3i\3i\3i\3j\3j\3j\3j\7j\u0301\nj\fj\16j\u0304")
         buf.write("\13j\3j\3j\3\u02f4\2k\3\2\5\3\7\4\t\5\13\6\r\7\17\b\21")
         buf.write("\t\23\n\25\13\27\f\31\r\33\16\35\17\37\20!\21#\22%\23")
-        buf.write("\'\24)\25+\26-\27/\30\61\31\63\32\65\33\67\349\35;\36")
-        buf.write("=\37? A!C\"E#G$I%K&M\'O(Q)S*U+W,Y-[.]/_\60a\61c\62e\63")
+        buf.write("'\24)\25+\26-\27/\30\61\31\63\32\65\33\67\349\35;\36")
+        buf.write("=\37? A!C\"E#G$I%K&M'O(Q)S*U+W,Y-[.]/_\60a\61c\62e\63")
         buf.write("g\64i\65k\66m\67o8q9s:u;w<y={>}?\177@\u0081A\u0083B\u0085")
         buf.write("C\u0087D\u0089E\u008bF\u008dG\u008fH\u0091I\u0093J\u0095")
         buf.write("K\u0097L\u0099\2\u009b\2\u009d\2\u009f\2\u00a1\2\u00a3")
         buf.write("\2\u00a5\2\u00a7\2\u00a9\2\u00ab\2\u00ad\2\u00af\2\u00b1")
         buf.write("\2\u00b3\2\u00b5\2\u00b7\2\u00b9\2\u00bbM\u00bd\2\u00bf")
         buf.write("\2\u00c1\2\u00c3\2\u00c5\2\u00c7N\u00c9\2\u00cb\2\u00cd")
-        buf.write("\2\u00cfO\u00d1P\u00d3Q\3\2\r\5\2\13\13\16\17\"\"\3\2")
+        buf.write('\2\u00cfO\u00d1P\u00d3Q\3\2\r\5\2\13\13\16\17""\3\2')
         buf.write("\63;\4\2ZZzz\5\2\62;CHch\4\2DDdd\3\2\62\63\4\2GGgg\4\2")
         buf.write("--//\4\2C\\c|\3\2\f\f\4\2\f\f\17\17\2\u031e\2\5\3\2\2")
         buf.write("\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2")
         buf.write("\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27")
         buf.write("\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3")
-        buf.write("\2\2\2\2!\3\2\2\2\2#\3\2\2\2\2%\3\2\2\2\2\'\3\2\2\2\2")
+        buf.write("\2\2\2\2!\3\2\2\2\2#\3\2\2\2\2%\3\2\2\2\2'\3\2\2\2\2")
         buf.write(")\3\2\2\2\2+\3\2\2\2\2-\3\2\2\2\2/\3\2\2\2\2\61\3\2\2")
         buf.write("\2\2\63\3\2\2\2\2\65\3\2\2\2\2\67\3\2\2\2\29\3\2\2\2\2")
         buf.write(";\3\2\2\2\2=\3\2\2\2\2?\3\2\2\2\2A\3\2\2\2\2C\3\2\2\2")
@@ -105,7 +106,7 @@ def serializedATN():
         buf.write("\u00ff\3\2\2\2\21\u0105\3\2\2\2\23\u0108\3\2\2\2\25\u010a")
         buf.write("\3\2\2\2\27\u010c\3\2\2\2\31\u010e\3\2\2\2\33\u0110\3")
         buf.write("\2\2\2\35\u0112\3\2\2\2\37\u0114\3\2\2\2!\u0116\3\2\2")
-        buf.write("\2#\u0118\3\2\2\2%\u011a\3\2\2\2\'\u011c\3\2\2\2)\u011e")
+        buf.write("\2#\u0118\3\2\2\2%\u011a\3\2\2\2'\u011c\3\2\2\2)\u011e")
         buf.write("\3\2\2\2+\u0120\3\2\2\2-\u0122\3\2\2\2/\u0124\3\2\2\2")
         buf.write("\61\u0126\3\2\2\2\63\u012a\3\2\2\2\65\u012f\3\2\2\2\67")
         buf.write("\u0133\3\2\2\29\u0137\3\2\2\2;\u0139\3\2\2\2=\u013c\3")
@@ -156,7 +157,7 @@ def serializedATN():
         buf.write("\2\2\u010c\u010d\7,\2\2\u010d\30\3\2\2\2\u010e\u010f\7")
         buf.write("\61\2\2\u010f\32\3\2\2\2\u0110\u0111\7*\2\2\u0111\34\3")
         buf.write("\2\2\2\u0112\u0113\7+\2\2\u0113\36\3\2\2\2\u0114\u0115")
-        buf.write("\7}\2\2\u0115 \3\2\2\2\u0116\u0117\7\177\2\2\u0117\"\3")
+        buf.write('\7}\2\2\u0115 \3\2\2\2\u0116\u0117\7\177\2\2\u0117"\3')
         buf.write("\2\2\2\u0118\u0119\7]\2\2\u0119$\3\2\2\2\u011a\u011b\7")
         buf.write("_\2\2\u011b&\3\2\2\2\u011c\u011d\7=\2\2\u011d(\3\2\2\2")
         buf.write("\u011e\u011f\7<\2\2\u011f*\3\2\2\2\u0120\u0121\7.\2\2")
@@ -358,10 +359,9 @@ def serializedATN():
 
 
 class FaStlLexer(Lexer):
-
     atn = ATNDeserializer().deserialize(serializedATN())
 
-    decisionsToDFA = [ DFA(ds, i) for i, ds in enumerate(atn.decisionToState) ]
+    decisionsToDFA = [DFA(ds, i) for i, ds in enumerate(atn.decisionToState)]
 
     EXIST = 1
     FORALL = 2
@@ -443,71 +443,267 @@ class FaStlLexer(Lexer):
     COMMENT = 78
     LINE_COMMENT = 79
 
-    channelNames = [ u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN" ]
+    channelNames = ["DEFAULT_TOKEN_CHANNEL", "HIDDEN"]
 
-    modeNames = [ "DEFAULT_MODE" ]
+    modeNames = ["DEFAULT_MODE"]
 
-    literalNames = [ "<INVALID>",
-            "'E'", "'A'", "'a'", "'andsmooth'", "'historicallyduration'", 
-            "'_i'", "'-'", "'+'", "'*'", "'/'", "'('", "')'", "'{'", "'}'", 
-            "'['", "']'", "';'", "':'", "','", "'.'", "'@'", "'abs'", "'sqrt'", 
-            "'exp'", "'pow'", "'s'", "'ms'", "'us'", "'ns'", "'ps'", "'topic'", 
-            "'import'", "'input'", "'output'", "'internal'", "'const'", 
-            "'real'", "'float'", "'long'", "'complex'", "'int'", "'bool'", 
-            "'assertion'", "'specification'", "'from'", "'xor'", "'rise'", 
-            "'fall'", "'=='", "'!=='", "'>='", "'<='", "'>'", "'<'", "'='" ]
+    literalNames = [
+        "<INVALID>",
+        "'E'",
+        "'A'",
+        "'a'",
+        "'andsmooth'",
+        "'historicallyduration'",
+        "'_i'",
+        "'-'",
+        "'+'",
+        "'*'",
+        "'/'",
+        "'('",
+        "')'",
+        "'{'",
+        "'}'",
+        "'['",
+        "']'",
+        "';'",
+        "':'",
+        "','",
+        "'.'",
+        "'@'",
+        "'abs'",
+        "'sqrt'",
+        "'exp'",
+        "'pow'",
+        "'s'",
+        "'ms'",
+        "'us'",
+        "'ns'",
+        "'ps'",
+        "'topic'",
+        "'import'",
+        "'input'",
+        "'output'",
+        "'internal'",
+        "'const'",
+        "'real'",
+        "'float'",
+        "'long'",
+        "'complex'",
+        "'int'",
+        "'bool'",
+        "'assertion'",
+        "'specification'",
+        "'from'",
+        "'xor'",
+        "'rise'",
+        "'fall'",
+        "'=='",
+        "'!=='",
+        "'>='",
+        "'<='",
+        "'>'",
+        "'<'",
+        "'='",
+    ]
 
-    symbolicNames = [ "<INVALID>",
-            "EXIST", "FORALL", "VEHICLE", "AndsmoothOperator", "HistoricallydurationOperator", 
-            "WHITESPACE", "IO_TYPE_INPUT", "MINUS", "PLUS", "TIMES", "DIVIDE", 
-            "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
-            "SEMICOLON", "COLON", "COMMA", "DOT", "AT", "ABS", "SQRT", "EXP", 
-            "POW", "SEC", "MSEC", "USEC", "NSEC", "PSEC", "ROS_Topic", "Import", 
-            "Input", "Output", "Internal", "Constant", "DomainTypeReal", 
-            "DomainTypeFloat", "DomainTypeLong", "DomainTypeComplex", "DomainTypeInt", 
-            "DomainTypeBool", "Assertion", "Specification", "From", "NotOperator", 
-            "OrOperator", "AndOperator", "IffOperator", "ImpliesOperator", 
-            "XorOperator", "RiseOperator", "FallOperator", "AlwaysOperator", 
-            "EventuallyOperator", "UntilOperator", "UnlessOperator", "HistoricallyOperator", 
-            "OnceOperator", "SinceOperator", "NextOperator", "PreviousOperator", 
-            "EqualOperator", "NotEqualOperator", "GreaterOrEqualOperator", 
-            "LesserOrEqualOperator", "GreaterOperator", "LesserOperator", 
-            "EQUAL", "BooleanLiteral", "TRUE", "FALSE", "IntegerLiteral", 
-            "RealLiteral", "Identifier", "LINE_TERMINATOR", "COMMENT", "LINE_COMMENT" ]
+    symbolicNames = [
+        "<INVALID>",
+        "EXIST",
+        "FORALL",
+        "VEHICLE",
+        "AndsmoothOperator",
+        "HistoricallydurationOperator",
+        "WHITESPACE",
+        "IO_TYPE_INPUT",
+        "MINUS",
+        "PLUS",
+        "TIMES",
+        "DIVIDE",
+        "LPAREN",
+        "RPAREN",
+        "LBRACE",
+        "RBRACE",
+        "LBRACK",
+        "RBRACK",
+        "SEMICOLON",
+        "COLON",
+        "COMMA",
+        "DOT",
+        "AT",
+        "ABS",
+        "SQRT",
+        "EXP",
+        "POW",
+        "SEC",
+        "MSEC",
+        "USEC",
+        "NSEC",
+        "PSEC",
+        "ROS_Topic",
+        "Import",
+        "Input",
+        "Output",
+        "Internal",
+        "Constant",
+        "DomainTypeReal",
+        "DomainTypeFloat",
+        "DomainTypeLong",
+        "DomainTypeComplex",
+        "DomainTypeInt",
+        "DomainTypeBool",
+        "Assertion",
+        "Specification",
+        "From",
+        "NotOperator",
+        "OrOperator",
+        "AndOperator",
+        "IffOperator",
+        "ImpliesOperator",
+        "XorOperator",
+        "RiseOperator",
+        "FallOperator",
+        "AlwaysOperator",
+        "EventuallyOperator",
+        "UntilOperator",
+        "UnlessOperator",
+        "HistoricallyOperator",
+        "OnceOperator",
+        "SinceOperator",
+        "NextOperator",
+        "PreviousOperator",
+        "EqualOperator",
+        "NotEqualOperator",
+        "GreaterOrEqualOperator",
+        "LesserOrEqualOperator",
+        "GreaterOperator",
+        "LesserOperator",
+        "EQUAL",
+        "BooleanLiteral",
+        "TRUE",
+        "FALSE",
+        "IntegerLiteral",
+        "RealLiteral",
+        "Identifier",
+        "LINE_TERMINATOR",
+        "COMMENT",
+        "LINE_COMMENT",
+    ]
 
-    ruleNames = [ "IdentifierPart", "EXIST", "FORALL", "VEHICLE", "AndsmoothOperator", 
-                  "HistoricallydurationOperator", "WHITESPACE", "IO_TYPE_INPUT", 
-                  "MINUS", "PLUS", "TIMES", "DIVIDE", "LPAREN", "RPAREN", 
-                  "LBRACE", "RBRACE", "LBRACK", "RBRACK", "SEMICOLON", "COLON", 
-                  "COMMA", "DOT", "AT", "ABS", "SQRT", "EXP", "POW", "SEC", 
-                  "MSEC", "USEC", "NSEC", "PSEC", "ROS_Topic", "Import", 
-                  "Input", "Output", "Internal", "Constant", "DomainTypeReal", 
-                  "DomainTypeFloat", "DomainTypeLong", "DomainTypeComplex", 
-                  "DomainTypeInt", "DomainTypeBool", "Assertion", "Specification", 
-                  "From", "NotOperator", "OrOperator", "AndOperator", "IffOperator", 
-                  "ImpliesOperator", "XorOperator", "RiseOperator", "FallOperator", 
-                  "AlwaysOperator", "EventuallyOperator", "UntilOperator", 
-                  "UnlessOperator", "HistoricallyOperator", "OnceOperator", 
-                  "SinceOperator", "NextOperator", "PreviousOperator", "EqualOperator", 
-                  "NotEqualOperator", "GreaterOrEqualOperator", "LesserOrEqualOperator", 
-                  "GreaterOperator", "LesserOperator", "EQUAL", "BooleanLiteral", 
-                  "TRUE", "FALSE", "IntegerLiteral", "DecimalNumeral", "Digits", 
-                  "Digit", "NonZeroDigit", "DigitsAndUnderscores", "DigitOrUnderscore", 
-                  "Underscores", "HexNumeral", "HexDigits", "HexDigit", 
-                  "HexDigitsAndUnderscores", "HexDigitOrUnderscore", "BinaryNumeral", 
-                  "BinaryDigits", "BinaryDigit", "BinaryDigitsAndUnderscores", 
-                  "BinaryDigitOrUnderscore", "RealLiteral", "DecimalRealLiteral", 
-                  "ExponentPart", "ExponentIndicator", "SignedInteger", 
-                  "Sign", "Identifier", "IdentifierStart", "LetterOrUnderscore", 
-                  "Letter", "LINE_TERMINATOR", "COMMENT", "LINE_COMMENT" ]
+    ruleNames = [
+        "IdentifierPart",
+        "EXIST",
+        "FORALL",
+        "VEHICLE",
+        "AndsmoothOperator",
+        "HistoricallydurationOperator",
+        "WHITESPACE",
+        "IO_TYPE_INPUT",
+        "MINUS",
+        "PLUS",
+        "TIMES",
+        "DIVIDE",
+        "LPAREN",
+        "RPAREN",
+        "LBRACE",
+        "RBRACE",
+        "LBRACK",
+        "RBRACK",
+        "SEMICOLON",
+        "COLON",
+        "COMMA",
+        "DOT",
+        "AT",
+        "ABS",
+        "SQRT",
+        "EXP",
+        "POW",
+        "SEC",
+        "MSEC",
+        "USEC",
+        "NSEC",
+        "PSEC",
+        "ROS_Topic",
+        "Import",
+        "Input",
+        "Output",
+        "Internal",
+        "Constant",
+        "DomainTypeReal",
+        "DomainTypeFloat",
+        "DomainTypeLong",
+        "DomainTypeComplex",
+        "DomainTypeInt",
+        "DomainTypeBool",
+        "Assertion",
+        "Specification",
+        "From",
+        "NotOperator",
+        "OrOperator",
+        "AndOperator",
+        "IffOperator",
+        "ImpliesOperator",
+        "XorOperator",
+        "RiseOperator",
+        "FallOperator",
+        "AlwaysOperator",
+        "EventuallyOperator",
+        "UntilOperator",
+        "UnlessOperator",
+        "HistoricallyOperator",
+        "OnceOperator",
+        "SinceOperator",
+        "NextOperator",
+        "PreviousOperator",
+        "EqualOperator",
+        "NotEqualOperator",
+        "GreaterOrEqualOperator",
+        "LesserOrEqualOperator",
+        "GreaterOperator",
+        "LesserOperator",
+        "EQUAL",
+        "BooleanLiteral",
+        "TRUE",
+        "FALSE",
+        "IntegerLiteral",
+        "DecimalNumeral",
+        "Digits",
+        "Digit",
+        "NonZeroDigit",
+        "DigitsAndUnderscores",
+        "DigitOrUnderscore",
+        "Underscores",
+        "HexNumeral",
+        "HexDigits",
+        "HexDigit",
+        "HexDigitsAndUnderscores",
+        "HexDigitOrUnderscore",
+        "BinaryNumeral",
+        "BinaryDigits",
+        "BinaryDigit",
+        "BinaryDigitsAndUnderscores",
+        "BinaryDigitOrUnderscore",
+        "RealLiteral",
+        "DecimalRealLiteral",
+        "ExponentPart",
+        "ExponentIndicator",
+        "SignedInteger",
+        "Sign",
+        "Identifier",
+        "IdentifierStart",
+        "LetterOrUnderscore",
+        "Letter",
+        "LINE_TERMINATOR",
+        "COMMENT",
+        "LINE_COMMENT",
+    ]
 
     grammarFileName = "FaStlLexer.g4"
 
-    def __init__(self, input=None, output:TextIO = sys.stdout):
+    def __init__(self, input=None, output: TextIO = sys.stdout):
         super().__init__(input, output)
         self.checkVersion("4.9.3")
-        self._interp = LexerATNSimulator(self, self.atn, self.decisionsToDFA, PredictionContextCache())
+        self._interp = LexerATNSimulator(
+            self, self.atn, self.decisionsToDFA, PredictionContextCache()
+        )
         self._actions = None
         self._predicates = None
-
-

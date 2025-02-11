@@ -1,12 +1,11 @@
 import logging
+from collections import defaultdict
 from enum import Enum
 from typing import List
 
 import numpy as np
-from collections import defaultdict
-from ruamel.yaml.comments import CommentedMap
-
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
+from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils

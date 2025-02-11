@@ -1,23 +1,25 @@
 import logging
 import math
+from collections import defaultdict
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
-from collections import defaultdict
 
-from commonroad_mpr.learning import PredicateEvaluatorML as PEML
-from commonroad_mpr.common.observation import World as WorldMPR
-
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 import numpy as np
 import shapely.ops
-from commonroad.scenario.lanelet import LaneletType, LineMarking
 from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
+from commonroad.scenario.lanelet import LaneletType, LineMarking
+from commonroad_mpr.common.observation import World as WorldMPR
+from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from ruamel.yaml.comments import CommentedMap
 from shapely.geometry.polygon import Polygon
-from crmonitor.predicates import utils
+
 from crmonitor.common.helper import union_set
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.utils import (
     distance_to_bounds,
@@ -27,9 +29,6 @@ from crmonitor.predicates.utils import (
     vehicle_directly_left,
     vehicle_directly_right,
 )
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 logger = logging.getLogger(__name__)
 

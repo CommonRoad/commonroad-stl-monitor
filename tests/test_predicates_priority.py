@@ -2,34 +2,31 @@ import os
 import unittest
 from pathlib import Path
 
+import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.obstacle import ObstacleType
-
-import numpy as np
-from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.prediction.prediction import TrajectoryPrediction
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState
 from commonroad.scenario.trajectory import Trajectory
-from commonroad.prediction.prediction import TrajectoryPrediction
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
+from crmonitor.predicates.priority import PredHasPriorityRightStraight  # not covered
+from crmonitor.predicates.priority import PredHasPriorityStraightRight  # not covered
+from crmonitor.predicates.priority import PredRelevantTrafficLight  # not covered
+from crmonitor.predicates.priority import PredSamePriorityRightStraight  # not covered
+from crmonitor.predicates.priority import PredSamePriorityStraightRight  # not covered
 from crmonitor.predicates.priority import (  # not covered
-    PredRelevantTrafficLight,  # not covered
-    PredHasPriorityRightRight,
-    PredHasPriorityRightLeft,
-    PredHasPriorityRightStraight,  # not covered
-    # not covered
-    PredHasPriorityLeftStraight,
-    PredHasPriorityStraightRight,  # not covered
-    PredHasPriorityStraightStraight,
-    PredSamePriorityRightRight,
-    PredSamePriorityRightLeft,
-    PredSamePriorityRightStraight,  # not covered
-    PredSamePriorityLeftStraight,
-    PredSamePriorityStraightRight,  # not covered
-    PredSamePriorityStraightStraight,
     PredAtTrafficSignStop,
+    PredHasPriorityLeftStraight,
+    PredHasPriorityRightLeft,
+    PredHasPriorityRightRight,
+    PredHasPriorityStraightStraight,
+    PredSamePriorityLeftStraight,
+    PredSamePriorityRightLeft,
+    PredSamePriorityRightRight,
+    PredSamePriorityStraightStraight,
 )
 
 

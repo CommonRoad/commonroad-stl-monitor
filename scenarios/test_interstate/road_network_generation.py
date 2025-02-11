@@ -1,11 +1,11 @@
-import bezier
-import numpy as np
-from typing import List, Tuple, Set
-import matplotlib.pyplot as plt
+from typing import List, Set, Tuple
 
+import bezier
+import matplotlib.pyplot as plt
+import numpy as np
+from commonroad.scenario.lanelet import Lanelet, LaneletType, LineMarking, RoadUser
 from commonroad.scenario.obstacle import DynamicObstacle
-from commonroad.scenario.lanelet import Lanelet, LineMarking, LaneletType, RoadUser
-from commonroad.scenario.scenario import Scenario, Tag, Location
+from commonroad.scenario.scenario import Location, Scenario, Tag
 
 
 def create_access_ramp_start(lanelet_length: int, l_id: int) -> Lanelet:

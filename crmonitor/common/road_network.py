@@ -1,20 +1,18 @@
-from typing import List, Set, Dict, Union
+from typing import Dict, List, Set, Union
 
+import commonroad_dc.pycrccosy as pycrccosy
 import numpy as np
+from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
+from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
 from commonroad_dc.geometry.util import (
     chaikins_corner_cutting,
-    resample_polyline,
+    compute_curvature_from_polyline,
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
-    compute_curvature_from_polyline,
+    resample_polyline,
 )
-from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
-import commonroad_dc.pycrccosy as pycrccosy
-
-from scipy.interpolate import splprep, splev
-
-from commonroad.scenario.intersection import IntersectionIncomingElement
+from scipy.interpolate import splev, splprep
 
 
 class Lane:

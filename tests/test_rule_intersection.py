@@ -1,20 +1,15 @@
-import os
 import logging
+import os
 import unittest
 from pathlib import Path
 
 import numpy as np
-
 from commonroad.common.file_reader import CommonRoadFileReader
+
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
-from crmonitor.rule.rule_node import (
-    RuleNode,
-    PredicateNode,
-    ExistNode,
-    AllNode,
-)
+from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleNode
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",

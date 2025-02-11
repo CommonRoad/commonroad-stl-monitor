@@ -2,28 +2,28 @@ import itertools
 from abc import ABC, abstractmethod
 from typing import TypedDict, Union
 
-from commonroad.common.util import Interval
 import numpy as np
+from commonroad.common.util import Interval
 
 from crmonitor.common.helper import gather
 from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
+    AndsmoothMonitorNode,
     ExistMonitorNode,
     HistoricallydurationMonitorNode,
     MonitorNode,
     RuleMonitorNode,
-    AndsmoothMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from crmonitor.rule.rule_node import (
     AllNode,
+    AndsmoothNode,
     ExistNode,
+    HistoricallydurationNode,
     IOType,
     PredicateNode,
     RuleNode,
-    AndsmoothNode,
-    HistoricallydurationNode,
 )
 
 

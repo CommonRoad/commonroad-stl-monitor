@@ -1,22 +1,18 @@
-from typing import Dict, List, Tuple, Union, Optional
 from collections import defaultdict
+from enum import Enum
 from itertools import groupby
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad.scenario.scenario import Scenario
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 from crmonitor.common.helper import merge_dicts_recursively
 from crmonitor.predicates.base import BasePredicateEvaluator
-
-from enum import Enum
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {

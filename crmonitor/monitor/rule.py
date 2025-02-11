@@ -137,6 +137,7 @@ class ExistNode(VisitorNode):
     def visit(self, visitor, *ctx):
         return visitor.visit_exist_node(self, *ctx)
 
+
 class AndsmoothNode(VisitorNode):
     def __init__(self, children, name):
         self.children = children
