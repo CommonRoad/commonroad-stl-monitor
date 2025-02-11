@@ -8,6 +8,7 @@ You can either use your own models or download pre-trained ones from https://nex
 import math
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -30,7 +31,7 @@ from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = True
+use_mpr = False
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -216,42 +217,39 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_historicallyduration_node(
         self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
     ):
-        child_values = historicallyduration_node.children[0].visit(self, *ctx)
+        sample = historicallyduration_node.children[0].visit(self, *ctx)
         world, mpr_world, max_time_step = ctx[:3]
 
-        # The interval can be defined with different units. Therefore, they are first normalized to time steps.
-        # This currently only supports time steps and seconds as units.
-        begin_unit = historicallyduration_node.interval.begin_unit
-        end_unit = historicallyduration_node.interval.end_unit
-        if len(begin_unit) == 0 and len(end_unit) == 0:
-            normalized_begin = int(historicallyduration_node.interval.begin)
-            normalized_end = int(historicallyduration_node.interval.end)
+        if historicallyduration_node.interval is not None:
+            # The interval can be defined with different units. Therefore, they are first normalized to time steps.
+            # This currently only supports time steps and seconds as units.
+            begin_unit = historicallyduration_node.interval.begin_unit
+            end_unit = historicallyduration_node.interval.end_unit
+            if len(begin_unit) == 0 and len(end_unit) == 0:
+                normalized_begin = int(historicallyduration_node.interval.begin)
+                normalized_end = int(historicallyduration_node.interval.end)
+            else:
+                normalized_begin = int(
+                    historicallyduration_node.interval.begin / world.scenario.dt
+                )
+                normalized_end = int(
+                    historicallyduration_node.interval.end / world.scenario.dt
+                )
+            begin = max(0, normalized_begin)
+            end = min(max_time_step, normalized_end)
         else:
-            normalized_begin = int(
-                historicallyduration_node.interval.begin / world.scenario.dt
-            )
-            normalized_end = int(
-                historicallyduration_node.interval.end / world.scenario.dt
-            )
-        begin = max(0, normalized_begin)
-        end = min(max_time_step, normalized_end)
+            begin = 0
+            end = len(sample)
 
-        spec_violations = 0
-        total = 0
-        for time_step in range(begin, end):
-            if child_values[time_step] < 0:
-                spec_violations += 1
-            total += 1
+        window_size = end - begin  # sliding average window size
+        # Fill up the values before the interval, so that the returned trace is as long as the input
+        sample_return = [1.0] * begin
+        # Computes the sliding average over the samples
+        for i in range(begin, len(sample)):
+            window = sample[max(begin, i - window_size) : i + 1]
+            sample_return.append(sum(window) / len(window))
 
-        # Interpolate the robustness between -1.0 (spec_violations=total) and 1.0 (spec_violations=0)
-        rob = (2.0 * ((total - spec_violations) / total)) - 1.0
-
-        # The robustness outside the interval is filled with 1.0 and only the interval is set to the computed robustness
-        samples = [1.0] * max_time_step
-        for time_step in range(begin, end):
-            samples[time_step] = rob
-
-        return samples
+        return sample_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         world, mpr_world, max_time_step, other_idss = ctx[:4]

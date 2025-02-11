@@ -30,7 +30,7 @@ spec
     | spec IffOperator spec                               #SpecNested
     | spec XorOperator spec                               #SpecNested
 
-    | HistoricallydurationOperator interval spec          #SpecHistoricallyDuration
+    | HistoricallydurationOperator ( interval )? spec     #SpecHistoricallyDuration
 	| AlwaysOperator ( interval )? spec                   #SpecNested
     | EventuallyOperator ( interval )? spec               #SpecNested
     | spec UntilOperator ( interval )? spec               #SpecNested

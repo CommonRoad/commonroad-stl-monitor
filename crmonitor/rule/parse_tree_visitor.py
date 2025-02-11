@@ -129,7 +129,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         self, ctx: FaStlParser.SpecHistoricallyDurationContext
     ):
         children = self.visit(ctx.spec())
-        interval = self.process_interval(ctx.interval())
+        if ctx.interval() is None:
+            interval = None
+        else:
+            interval = self.process_interval(ctx.interval())
         self._sub_rule_counter += 1
         node_name = f"g{self._sub_rule_counter}"
         node = HistoricallydurationNode(children, node_name, interval)
