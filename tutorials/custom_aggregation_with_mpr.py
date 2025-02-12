@@ -8,7 +8,6 @@ You can either use your own models or download pre-trained ones from https://nex
 import math
 from collections import defaultdict
 from pathlib import Path
-from typing import List
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -28,10 +27,14 @@ from crmonitor.monitor.monitor_node import (
     RuleMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = False
+use_mpr = True
+# If True (default), robustness values will be normalized into the interval [-1.0, 1.0]. If False, robustness values, are not normalized and may lay in the interval [-inf, +inf].
+# Disable with caution, when use_mpr is also enabled, as mpr with gaussian processes does currently not
+scale_rob = use_mpr
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -78,6 +81,9 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.output_type = output_type
         self.all_values_all_ids = {}
         self.all_props_all_ids = {}
+
+        # TODO: when this visitor is integrated into crmonitor directly, this option should be read from the config
+        self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
     def walk(
         self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx
@@ -156,7 +162,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                             sid[-1]
                         ].monitor._propositions
             else:
-                val = 1.0
+                val = self._rob_scaler.max
                 self.other_ids = other_idss
                 all_node.last_selected = None
 
@@ -187,7 +193,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 for i, sid in enumerate(selected_ids):
                     self.all_values_all_ids[sid[-1]] = values[i]
             else:
-                val = -1.0
+                val = self._rob_scaler.min
                 self.other_ids = other_ids
                 exist_node.last_selected = None
 
@@ -243,7 +249,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
         window_size = end - begin  # sliding average window size
         # Fill up the values before the interval, so that the returned trace is as long as the input
-        sample_return = [float("inf")] * begin
+        sample_return = [self._rob_scaler.max] * begin
         # Computes the sliding average over the samples
         for i in range(begin, len(sample)):
             window = sample[max(begin, i - window_size) : i + 1]
@@ -278,6 +284,7 @@ config["use_mpr"] = use_mpr
 # MPR must be explicitly enabled
 rule_evaluator_config = get_traffic_rule_config()
 rule_evaluator_config["traffic_rules_param"]["use_mpr"] = use_mpr
+rule_evaluator_config["traffic_rules_param"]["scale_rob"] = scale_rob
 
 
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
@@ -294,6 +301,7 @@ rule_evaluator = RuleEvaluator.create_from_config(
     rule="R_G4",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
+    output_type=OutputType.STANDARD,
 )
 
 # Either step through time steps sequentially
