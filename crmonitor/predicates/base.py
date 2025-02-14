@@ -90,7 +90,8 @@ class BasePredicateEvaluator(abc.ABC):
         count_error = 0
         for ego_future_state_mpr in ego_sampler.sample():
             try:
-                #
+                # MPR states are sometimes (always?) not relative to the world.
+                # To be able to use the states, they need to be converted to CommonRoad states, which are relative to the world.
                 ego_future_state = (
                     ego_future_state_mpr.get_state_in_world_frame().convert_to_commonroad_state()
                 )
@@ -104,13 +105,6 @@ class BasePredicateEvaluator(abc.ABC):
                     )
                 )
                 if len(lanelet_assignment) == 0:
-                    _LOGGER.debug(
-                        "Evaluation of predicate %s for %s at time step %s in %s is counted as error, because lanelet assignment is empty.",
-                        self.predicate_name,
-                        ego_vehicle_id,
-                        time_step,
-                        world.scenario.scenario_id,
-                    )
                     count_error += 1
                     continue
                 ego_vehicle.lanelet_assignment[time_step] = lanelet_assignment

@@ -29,6 +29,8 @@ all_general_predicates = [
     "slow_leading_vehicle",
     "preserves_traffic_flow",
 ]
+# Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
+# Alternativly, supply specific predicates you want to evaluate.
 predicate_names = all_general_predicates
 scenarios_load_path = (
     Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
@@ -37,9 +39,8 @@ output_path = (
     Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 )
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = 1
+scenario_limit = 100
 
-# Optional: If you encounter errors
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
