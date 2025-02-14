@@ -2,8 +2,10 @@ import abc
 import copy
 import logging
 import warnings
-from typing import Callable, Dict, List, Tuple
+from inspect import EndOfBlock
+from typing import Callable, Dict, Generic, Iterable, List, Tuple, TypeVar, Union
 
+from commonroad.scenario.state import State
 from commonroad.visualization.renderer import IRenderer
 from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
@@ -13,7 +15,7 @@ from ruamel.yaml.comments import CommentedMap
 from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -57,12 +59,16 @@ class BasePredicateEvaluator(abc.ABC):
 
     def evaluate_mpr(
         self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
-    ) -> float:
+    ) -> Dict[str, Union[bool, float]]:
         """
         Evaluation of model predictive robustness
         """
         ego_vehicle_id = vehicle_ids[0]
         ego_vehicle_mpr = world_mpr.vehicle_by_id(ego_vehicle_id)
+        orig_state = ego_vehicle_mpr.trajectory_persp.trajectories[
+            0
+        ].state_at_time_step(time_step)
+
         ego_sampler = StateBasedSampling(
             ego_vehicle_mpr,
             time_step,
@@ -84,7 +90,10 @@ class BasePredicateEvaluator(abc.ABC):
         count_error = 0
         for ego_future_state_mpr in ego_sampler.sample():
             try:
-                ego_future_state = ego_future_state_mpr.convert_to_commonroad_state()
+                #
+                ego_future_state = (
+                    ego_future_state_mpr.get_state_in_world_frame().convert_to_commonroad_state()
+                )
                 ego_vehicle.states_cr[time_step] = ego_future_state
                 ego_loc_shape = ego_vehicle.shape.rotate_translate_local(
                     ego_future_state.position, ego_future_state.orientation
@@ -95,6 +104,13 @@ class BasePredicateEvaluator(abc.ABC):
                     )
                 )
                 if len(lanelet_assignment) == 0:
+                    _LOGGER.debug(
+                        "Evaluation of predicate %s for %s at time step %s in %s is counted as error, because lanelet assignment is empty.",
+                        self.predicate_name,
+                        ego_vehicle_id,
+                        time_step,
+                        world.scenario.scenario_id,
+                    )
                     count_error += 1
                     continue
                 ego_vehicle.lanelet_assignment[time_step] = lanelet_assignment
@@ -104,7 +120,13 @@ class BasePredicateEvaluator(abc.ABC):
                     count_true += 1
                 count_valid += 1
             except Exception as e:
-                raise e
+                _LOGGER.debug(
+                    "Encountered exception while evaluating predicate %s at time step %s in %s: %s",
+                    self.predicate_name,
+                    time_step,
+                    world.scenario.scenario_id,
+                    e,
+                )
                 count_error += 1
 
         world.remove_vehicle(ego_vehicle)
@@ -114,14 +136,24 @@ class BasePredicateEvaluator(abc.ABC):
         probability = count_true / (count_valid + MprCfg["robustness"]["eps"])
         robustness = probability if satisfied else -(1 - probability)
 
-        return robustness
+        # This is the format used by the original MPR evaluator.
+        # It is used here too, to keep backwards compatibility with GP regression for the time being.
+        ret = {
+            "robustness": robustness,
+            "count_valid": count_valid,
+            "count_error": count_error,
+            "count_true": count_true,
+            "bool": satisfied,
+        }
+
+        return ret
 
     def gradient_mpr(self):
         """
         Computes the gradient of the MPR w.r.t. the input values
         """
         default = [0.0] * 35
-        # TODO: reenable
+        # TODO: Handle gradients depending whether GP is used or not, instead of requesting it every time
         return default
         if not self._use_mpr_for_evaluation:
             # TODO: If the user tries to extract the gradient for a comosed/exempted predicate, should it just be skipped?
@@ -147,14 +179,15 @@ class BasePredicateEvaluator(abc.ABC):
             time_step, self.predicate_name, vehicle_ids_tuple[1:]
         )
         if value is None:
-            logger.debug(
+            _LOGGER.debug(
                 "Evaluating predicate %s , t=%d, ids=%s",
                 self.predicate_name,
                 time_step,
                 vehicle_ids_tuple,
             )
             if self._use_mpr_for_evaluation:
-                value = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
+                mpr_ret = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
+                value = mpr_ret["robustness"]
             else:
                 value = self.evaluate_robustness(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(

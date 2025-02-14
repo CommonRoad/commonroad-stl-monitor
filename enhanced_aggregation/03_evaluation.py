@@ -202,7 +202,6 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                     self.all_values_all_ids[other_ids[-1]] = val
 
             robustness_values.append(val)
-
         return robustness_values
 
     def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
@@ -263,6 +262,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         for time_step in range(0, max_time_step):
             other_ids = other_idss[time_step]
             predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
+
             samples.append(
                 predicate_node.evaluate_robustness(
                     world, mpr_world, time_step, predicate_ids
@@ -303,7 +303,6 @@ rule_evaluator = RuleEvaluator.create_from_config(
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
     output_type=OutputType.STANDARD,
 )
-
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate_offline()
 print(f"robustness is {robustness}")

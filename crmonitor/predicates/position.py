@@ -418,7 +418,7 @@ class PredPreceding(BasePredicateEvaluator):
         pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
-    def evaluate_mpr(
+    def _evaluate_mpr(
         self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
     ) -> float:
         vehicles = []
