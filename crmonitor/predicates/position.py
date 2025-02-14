@@ -367,17 +367,17 @@ class PredPreceding(BasePredicateEvaluator):
     arity = 2
 
     def __init__(self, config: CommentedMap):
-        if config["use_mpr"]:
-            self.config = config
-            self.scale = config.setdefault("scale_rob", True)
-            self.eps = 1e-5
+        # if config["use_mpr"]:
+        #     self.config = config
+        #     self.scale = config.setdefault("scale_rob", True)
+        #     self.eps = 1e-5
 
-            # usage of model predictive robustness
-            self.in_same_lane_peml = PEML([PredInSameLane.predicate_name])
-            self.in_front_of_peml = PEML([PredInFrontOf.predicate_name])
-            self.peml = None
-        else:
-            super().__init__(config)
+        #     # usage of model predictive robustness
+        #     self.in_same_lane_peml = PEML([PredInSameLane.predicate_name])
+        #     self.in_front_of_peml = PEML([PredInFrontOf.predicate_name])
+        #     self.peml = None
+        # else:
+        super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
     @staticmethod
