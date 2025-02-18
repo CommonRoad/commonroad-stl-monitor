@@ -5,14 +5,24 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
+from rtamt.syntax.ast.visitor.abstract_ast_visitor import AbstractAstVisitor
 
-from crmonitor.common.helper import merge_dicts_recursively
+from crmonitor.evaluation.visitor import RuleTreeVisitor
+from crmonitor.monitor.monitor_node import (
+    AllMonitorNode,
+    AndsmoothMonitorNode,
+    ExistMonitorNode,
+    HistoricallydurationMonitorNode,
+    MonitorNode,
+    RuleMonitorNode,
+)
+from crmonitor.monitor.rule import AllNode, AndsmoothNode, ExistNode, RuleNode
 from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.rule.rule_node import HistoricallydurationNode, PredicateNode
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
@@ -356,3 +366,121 @@ def plot_rule_visualization(
     #
     # for f in all_draw_functions:
     #     f(renderer)
+
+
+class RtamtFormulaVisualization(AbstractAstVisitor):
+    def __init__(self, values: Dict[str, List[float]]) -> None:
+        self._values = values
+
+    def visit(self, node, *args, **kwargs):
+        result = super().visit(node, *args, **kwargs)
+        print(node)
+        return result
+
+
+class FormulaVisualizationVisitor(RuleTreeVisitor):
+    def __init__(self, values: Dict[str, List[float]]):
+        self._values = values
+        self._fig, self._ax = plt.subplots()
+
+        self._lines = []
+
+    def visualize(
+        self,
+        monitor: MonitorNode,
+        plot_limits: Optional[Tuple[float, float]] = (-1.1, 1.1),
+    ) -> None:
+        monitor.visit(self)
+        self._ax.grid(True)
+        lens = [len(trace) for trace in self._values.values()]
+        if plot_limits is not None:
+            self._ax.set_ylim(plot_limits)
+        self._ax.set_xlim((0.0, max(lens) - 1))
+        leg = self._fig.legend(
+            loc="lower center",
+        )
+        pickradius = 8
+
+        map_legend_to_ax = {}
+
+        for legend_line, ax_line in zip(leg.get_lines(), self._lines):
+            legend_line.set_picker(pickradius)
+            map_legend_to_ax[legend_line] = ax_line
+
+        def on_pick(event):
+            legend_line = event.artist
+            if legend_line not in map_legend_to_ax:
+                return
+
+            ax_line = map_legend_to_ax[legend_line]
+            visible = not ax_line.get_visible()
+            ax_line.set_visible(visible)
+            legend_line.set_alpha(1.0 if visible else 0.2)
+            self._fig.canvas.draw()
+
+        self._fig.canvas.mpl_connect("pick_event", on_pick)
+        leg.set_draggable(True)
+        self._fig.tight_layout(rect=[0.0, 0.3, 1.0, 1.0])
+
+    def _plot_node(self, node: MonitorNode, label: str) -> None:
+        (line,) = self._ax.plot(self._values[node.name], "x-", label=label)
+        self._lines.append(line)
+
+    def visit_rule_node(self, rule_node: Union[RuleNode, RuleMonitorNode], *ctx):
+        label = rule_node.monitor._rule
+        name_replacements = {}
+        for child in rule_node.children:
+            if isinstance(child, PredicateNode):
+                # Predicates are already plotted below from rtamt ast node values
+                continue
+
+            val = child.visit(self, *ctx)
+            name_replacements[child.name] = val
+            if child.name in label:
+                label = label.replace(child.name, val)
+
+        values = rule_node.monitor._spec.offline_interpreter.ast_node_values
+        for name, trace in values.items():
+            for target_name, name_replacement in name_replacements.items():
+                if target_name in name:
+                    name = name.replace(target_name, name_replacement)
+            (line,) = self._ax.plot(trace, "x-", label=name)
+            self._lines.append(line)
+        return label
+
+    def visit_all_node(self, all_node: Union[AllNode, AllMonitorNode], *ctx):
+        child_values = [c.visit(self, *ctx) for c in all_node.children]
+        label = f"All: ({child_values[0]})"
+        self._plot_node(all_node, label)
+        return label
+
+    def visit_exist_node(self, exist_node: Union[ExistNode, ExistMonitorNode], *ctx):
+        child_values = [c.visit(self, *ctx) for c in exist_node.children]
+        label = f"Exist: ({child_values[0]})"
+        self._plot_node(exist_node, label)
+        return label
+
+    def visit_andsmooth_node(
+        self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx
+    ):
+        child_values = [c.visit(self, *ctx) for c in andsmooth_node.children]
+        label = child_values[0] + "Andsmooth" + child_values[1]
+        self._plot_node(andsmooth_node, label)
+        return label
+
+    def visit_historicallyduration_node(
+        self,
+        historicallyduration_node: Union[
+            HistoricallydurationNode, HistoricallydurationMonitorNode
+        ],
+        *ctx,
+    ):
+        child_values = [c.visit(self, *ctx) for c in historicallyduration_node.children]
+        label = child_values[0] + "Andsmooth" + child_values[1]
+        self._plot_node(historicallyduration_node, label)
+        return label
+
+    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+        label = predicate_node.base_name.value
+        self._plot_node(predicate_node, label)
+        return label

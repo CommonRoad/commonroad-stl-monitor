@@ -10,6 +10,7 @@ import math
 from collections import defaultdict
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
@@ -19,6 +20,7 @@ from crmonitor.common.helper import gather
 from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, RuleTreeVisitor
+from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
@@ -32,13 +34,15 @@ from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = True
+use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
 model_path = None
+
+traffic_rule = "R_G1"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -290,7 +294,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G2",
+    rule=traffic_rule,
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
     output_type=OutputType.STANDARD,
@@ -298,3 +302,9 @@ rule_evaluator = RuleEvaluator.create_from_config(
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate_offline()
 print(f"robustness is {robustness}")
+
+values = rule_evaluator._eval_visitor.all_values_all_ids
+visualization_visitor = FormulaVisualizationVisitor(values)
+plot_limits = (-1.1, 1.1) if scale_rob else None
+visualization_visitor.visualize(rule_evaluator._monitor, plot_limits)
+plt.show()
