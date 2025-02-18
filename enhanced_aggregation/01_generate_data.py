@@ -39,7 +39,7 @@ output_path = (
     Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 )
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = 100
+scenario_limit = 1
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
@@ -176,7 +176,7 @@ data_generator = CustomDataGenerator(
 
 
 _LOGGER.info(
-    "Starting processing scenarios from %s to generate learning data for predicates %s",
+    "Started processing scenarios from %s to generate learning data for predicates %s",
     scenarios_load_path,
     ", ".join(predicate_names),
 )

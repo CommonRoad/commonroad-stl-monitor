@@ -2,14 +2,16 @@ import abc
 import copy
 import logging
 import warnings
-from inspect import EndOfBlock
-from typing import Callable, Dict, Generic, Iterable, List, Tuple, TypeVar, Union
+from typing import Callable, Dict, List, Tuple, Union
 
-from commonroad.scenario.state import State
+import numpy as np
 from commonroad.visualization.renderer import IRenderer
 from commonroad_mpr.common.observation import World as WorldMPR
+from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML, read_model
+from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from commonroad_mpr.utils.configuration_builder import ScenarioType
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
@@ -30,6 +32,23 @@ class BasePredicateEvaluator(abc.ABC):
         self.eps = 1e-5
         scale_rob = config.get("scale_rob", True)
         self._scaler = scaler or RobustnessScaler(scale_rob)
+
+        if self.config["use_mpr"]:
+            try:
+                self._mpr_model = read_model(
+                    self.predicate_name,
+                    self.config.get("model_path"),
+                    ScenarioType.INTERSTATE,
+                )
+            except ModelLoadError as e:
+                _LOGGER.warning(
+                    "Failed to load pre-trained model for predicate '%s' from path '%s'. Falling back to model-predictive evaluation without a pre-trained model.",
+                    e.predicate_name,
+                    e.model_path,
+                )
+                self._mpr_model = None
+        else:
+            self._mpr_model = None
 
         self._use_mpr_for_evaluation = self.config["use_mpr"]
 
@@ -57,17 +76,102 @@ class BasePredicateEvaluator(abc.ABC):
     ) -> float:
         pass
 
+    def evaluate_mpr_ml(
+        self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]
+    ) -> float:
+        """
+        Evaluate this predicate with model-predicitive robustness using pre-trained models.
+        This method should usually not be called directly. Instead use `evaluate_robustness_with_cache`.
+
+        :param world: The model-free world, required for boolean evaluation of this predicate.
+        :param world_mpr: The model-predictive world, required for feature extraction.
+        :param time_step: The time step for which this predicate should be evaluated.
+        :param vehicle_ids: The vehicles that should be considered for the evaluation.
+
+        :returns: The predictated robustness value.
+
+        :raises RuntimeError: If the pre-trained model was not already loaded.
+        """
+        # The feature extraction is usually performed by `PredicateEvaluatorML`. It must be adapted here, because
+        # it originally does not support predicates which are not part of commonroad-mpr.
+        desired_features = dict(
+            MprCfg["feature_variable"][MprCfg["common"]["scenario"]]["desired_features"]
+        )
+        # TODO: arity should be a standard attribute of all predicates.
+        # Currently it is not clear whether all predicates have this attribute.
+        if self.arity == 1:
+            desired_features.pop("other", None)
+            desired_features.pop("ego_other", None)
+            desired_features.pop("other_ego", None)
+
+        vehicles = []
+        for vehicle_id in vehicle_ids:
+            vehicles.append(world_mpr.vehicle_by_id(vehicle_id))
+        all_feature_variables = FeatureExtrator.all_feature_variables(
+            world_state=world_mpr, vehicles=vehicles, time_step=time_step
+        )
+
+        features = {
+            vehicle: {
+                name: all_feature_variables[vehicle][name] for name in desired_names
+            }
+            for vehicle, desired_names in desired_features.items()
+            if desired_names is not None
+        }
+
+        # For consistency, the limits of the scaler are used here.
+        # However, it is unclear whether the pre-trained models can handled values outside of
+        # the interval [-1.0, 1.0].
+        characteristic_value = (
+            self._scaler.max
+            if self.evaluate_boolean(world, time_step, vehicle_ids)
+            else self._scaler.min
+        )
+        features.update({"predicate_evaluation": {"bool": characteristic_value}})
+
+        list_features = FeatureExtrator.featrue_dict_to_list(features)
+
+        if self._mpr_model is None:
+            raise RuntimeError(
+                f"Failed to evaluate predicate {self.predicate_name} with model-predictive robustness and pre-trained model: No pre-trained model was loaded!"
+            )
+        robustness, _ = self._mpr_model.predict([list_features])
+        peml = PredicateEvaluatorML([self.predicate_name])
+        peml_rob = peml.evaluate_robustness(
+            world_state=world_mpr, vehicles=vehicles, time_step=time_step
+        )
+
+        if robustness * characteristic_value < 0:
+            robustness = np.float64(1e-3)
+
+        return np.copysign(
+            np.clip(robustness, self._scaler.min, self._scaler.max),
+            characteristic_value,
+        )
+
     def evaluate_mpr(
-        self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
+        self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]
     ) -> Dict[str, Union[bool, float]]:
         """
-        Evaluation of model predictive robustness
+        Evaluate this predicate with model-predictive robustness. Its return value follows the standard from commonroad_mpr, so this method can be used for data generation for the gaussian processes.
+        This method should usually not be called directly. Instead use `evaluate_robustness_with_cache`.
+
+        :param world: The model-free world, required for boolean evaluation of this predicate.
+        :param world_mpr: The model-predictive world, required for state sampling.
+        :param time_step: The time step for which this predicate should be evaluated.
+        :param vehicle_ids: The vehicles that should be considered for the evaluation. The first one is considered the ego vehicle.
+
+        :returns: A dict with:
+            - robustness: The model-predictive robustness.
+            - count_valid: The number of successfull evaulations of the model-free predicate.
+            - count_true: The number of successfull evaluations of the model-free predicate, where its return value is True.
+            - count_error: The number of failed evaluations of the model-free predicate.
+            - bool: The single boolean evaluation of the model-free predicate.
+
+        :raises RuntimeError: If the pre-trained model was not already loaded.
         """
         ego_vehicle_id = vehicle_ids[0]
         ego_vehicle_mpr = world_mpr.vehicle_by_id(ego_vehicle_id)
-        orig_state = ego_vehicle_mpr.trajectory_persp.trajectories[
-            0
-        ].state_at_time_step(time_step)
 
         ego_sampler = StateBasedSampling(
             ego_vehicle_mpr,
@@ -82,6 +186,8 @@ class BasePredicateEvaluator(abc.ABC):
         ego_vehicle = copy.deepcopy(orig_ego_vehicle)
         ego_vehicle.signal_series[time_step] = None
 
+        # The `ego_vehicle` will be modified for each sampled stated.
+        # To make sure this does not interfer with other predicates, the vehicle is swapped with a copy before and after the evaluation.
         world.remove_vehicle(orig_ego_vehicle)
         world.add_vehicle(ego_vehicle)
 
@@ -95,7 +201,11 @@ class BasePredicateEvaluator(abc.ABC):
                 ego_future_state = (
                     ego_future_state_mpr.get_state_in_world_frame().convert_to_commonroad_state()
                 )
+                # Inject the sampled state at the specific time step into the model-free world.
                 ego_vehicle.states_cr[time_step] = ego_future_state
+
+                # Many predicates rely on the pre-computed lanelet assignments.
+                # To make sure they match the sampled state, the lanelet assignment must also be updated.
                 ego_loc_shape = ego_vehicle.shape.rotate_translate_local(
                     ego_future_state.position, ego_future_state.orientation
                 )
@@ -105,6 +215,7 @@ class BasePredicateEvaluator(abc.ABC):
                     )
                 )
                 if len(lanelet_assignment) == 0:
+                    # The state sampler created a state that is outside of the lanelet network.
                     count_error += 1
                     continue
                 ego_vehicle.lanelet_assignment[time_step] = lanelet_assignment
@@ -144,10 +255,10 @@ class BasePredicateEvaluator(abc.ABC):
 
     def gradient_mpr(self):
         """
-        Computes the gradient of the MPR w.r.t. the input values
+        Computes the gradient of the MPR w.r.t. the input values.
         """
         default = [0.0] * 35
-        # TODO: Handle gradients depending whether GP is used or not, instead of requesting it every time
+        # TODO: The gradient is always requested, even if this predicate is not evaluated with pre-trained models.
         return default
         if not self._use_mpr_for_evaluation:
             # TODO: If the user tries to extract the gradient for a comosed/exempted predicate, should it just be skipped?
@@ -156,13 +267,13 @@ class BasePredicateEvaluator(abc.ABC):
             )
             return default
 
-        if self.peml is None:
+        if self._mpr_model is None:
             warnings.warn(
                 f"Tried to extract gradient of the model predictive robustness, but no gaussian processes were used for the evaluation of '{self.predicate_name}' and therefore no gradient is available."
             )
             return default
 
-        return self.peml.derivative()[0]
+        return self._mpr_model.derivative()[0]
 
     def evaluate_robustness_with_cache(
         self, world: World, mpr_world: WorldMPR, time_step, vehicle_ids: List[int]
@@ -173,16 +284,30 @@ class BasePredicateEvaluator(abc.ABC):
             time_step, self.predicate_name, vehicle_ids_tuple[1:]
         )
         if value is None:
-            _LOGGER.debug(
-                "Evaluating predicate %s , t=%d, ids=%s",
-                self.predicate_name,
-                time_step,
-                vehicle_ids_tuple,
-            )
-            if self._use_mpr_for_evaluation:
+            if self._mpr_model is not None:
+                _LOGGER.debug(
+                    "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, with pre-trained models.",
+                    self.predicate_name,
+                    time_step,
+                    ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
+                )
+                value = self.evaluate_mpr_ml(world, mpr_world, time_step, vehicle_ids)
+            elif self._use_mpr_for_evaluation:
+                _LOGGER.debug(
+                    "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, without pre-trained models.",
+                    self.predicate_name,
+                    time_step,
+                    ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
+                )
                 mpr_ret = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
                 value = mpr_ret["robustness"]
             else:
+                _LOGGER.debug(
+                    "Evaluating predicate %s at time step %d with vehicles %s using model-free robustness.",
+                    self.predicate_name,
+                    time_step,
+                    ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
+                )
                 value = self.evaluate_robustness(world, time_step, vehicle_ids)
             vehicle.predicate_cache.set_robustness(
                 time_step, self.predicate_name, vehicle_ids_tuple[1:], value

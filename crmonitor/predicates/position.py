@@ -367,16 +367,6 @@ class PredPreceding(BasePredicateEvaluator):
     arity = 2
 
     def __init__(self, config: CommentedMap):
-        # if config["use_mpr"]:
-        #     self.config = config
-        #     self.scale = config.setdefault("scale_rob", True)
-        #     self.eps = 1e-5
-
-        #     # usage of model predictive robustness
-        #     self.in_same_lane_peml = PEML([PredInSameLane.predicate_name])
-        #     self.in_front_of_peml = PEML([PredInFrontOf.predicate_name])
-        #     self.peml = None
-        # else:
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
@@ -418,33 +408,6 @@ class PredPreceding(BasePredicateEvaluator):
         pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
-    def _evaluate_mpr(
-        self, world: World, world_mpr: WorldMPR, time_step, vehicle_ids: List[int]
-    ) -> float:
-        vehicles = []
-        for veh_id in vehicle_ids:
-            vehicles.append(world_mpr.vehicle_by_id(veh_id))
-        isl_rob, _ = self.in_same_lane_peml.evaluate_robustness(
-            world=world_mpr, vehicles=vehicles, time_step=time_step
-        )
-        # todo: the Boolean and robustness don't align
-        if self.evaluate_robustness(world, time_step, vehicle_ids) > 0:
-            ifo_rob, _ = self.in_front_of_peml.evaluate_robustness(
-                world=world_mpr, vehicles=vehicles, time_step=time_step
-            )
-            if (
-                ifo_rob[0] < isl_rob[0]
-            ):  # conjunction: robustness = min(isl_rob, ifo_rob)
-                robustness = ifo_rob[0]
-                self.peml = self.in_front_of_peml
-            else:
-                robustness = isl_rob[0]
-                self.peml = self.in_same_lane_peml
-        else:
-            robustness = -1
-            self.peml = self.in_same_lane_peml
-        return robustness
-
     def evaluate_robustness(
         self, world: World, time_step, vehicle_ids: List[int]
     ) -> float:
@@ -453,7 +416,6 @@ class PredPreceding(BasePredicateEvaluator):
         veh_lon_dist = self._get_candidates(world, time_step, rear_veh)
         veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
         bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
-        # TODO: FIXME world mpr
         same_lane = self.same_lane.evaluate_robustness_with_cache(
             world, None, time_step, vehicle_ids
         )

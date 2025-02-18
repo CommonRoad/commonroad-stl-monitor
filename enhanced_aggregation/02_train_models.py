@@ -8,4 +8,5 @@ learning_data_path = (
 )
 
 data_loader = DataLoader.create_from_file(learning_data_path)
+raise RuntimeError("Training of new models is currently work in progress.")
 trainer = ModelTrainer.create_from_config(data_loader)
