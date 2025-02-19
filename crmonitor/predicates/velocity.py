@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class VelocityPredicates(str, Enum):
     KeepsLaneSpeedLimit = "keeps_lane_speed_limit"
     KeepsTypeSpeedLimit = "keeps_type_speed_limit"
+    KeepsLaneSpeedLimitStar = "keeps_lane_speed_limit_star"
     KeepsFovSpeedLimit = "keeps_fov_speed_limit"
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
     Reverses = "reverses"
@@ -100,7 +101,7 @@ class PredBrSpeedLimit(PredGenericSpeedLimit):
 
 
 class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
-    predicate_name = "keeps_lane_speed_limit_star"
+    predicate_name = VelocityPredicates.KeepsLaneSpeedLimitStar
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):

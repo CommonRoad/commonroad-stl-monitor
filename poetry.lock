@@ -265,7 +265,7 @@ develop = false
 [package.dependencies]
 commonroad-drivability-checker = ">=2023.1"
 commonroad-io = ">=2024.1"
-commonroad-route-planner = ">=2024.2.0"
+commonroad-route-planner = "^2024.2"
 gpytorch = ">=1.8.0"
 matplotlib = ">=3.5.2"
 numpy = ">=1.19.0"
@@ -276,8 +276,8 @@ scipy = ">=1.7.3"
 [package.source]
 type = "git"
 url = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git"
-reference = "b393b0f291c2f7acd06c66c66fe28d112630acb7"
-resolved_reference = "b393b0f291c2f7acd06c66c66fe28d112630acb7"
+reference = "8171b0aaf8cbe51cf0c53a5506ae7ac209f0a5fa"
+resolved_reference = "8171b0aaf8cbe51cf0c53a5506ae7ac209f0a5fa"
 
 [[package]]
 name = "commonroad-route-planner"
@@ -2761,4 +2761,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "af2ed67942e669c99aa0c92d7ad843ec4a99e9e4625f09768205c3d4338f4c08"
+content-hash = "3792d14b43202a7f0bf543b31ba29885ac4091b1150594f88c878cb7cf1aa131"

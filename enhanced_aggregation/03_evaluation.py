@@ -5,6 +5,7 @@ To get started, you must provide the pre-trained models and put them into `/tmp/
 You can either use your own models or download pre-trained ones from https://nextcloud.in.tum.de/index.php/s/bijGnSNZQB92GRz (see commonroad-model-predictive-robustness for more information).
 """
 
+import logging
 import math
 from collections import defaultdict
 from pathlib import Path
@@ -32,9 +33,14 @@ from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = True
-# If True (default), robustness values will be normalized into the interval [-1.0, 1.0]. If False, robustness values, are not normalized and may lay in the interval [-inf, +inf].
-# Disable with caution, when use_mpr is also enabled, as mpr with gaussian processes does currently not
-scale_rob = use_mpr
+# If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
+# Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
+scale_rob = True
+
+# Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
+model_path = None
+
+logging.basicConfig(level=logging.INFO)
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -104,6 +110,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         val = rule_node.evaluate(
             list(child_values.items())
         )  # evaluate instead of update for offline usage
+        self.all_values_all_ids[rule_node.name] = val
         return val
 
     def _visit_quant_node(self, node, *ctx):
@@ -141,10 +148,6 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(all_node, *ctx)
         world, mpr_world, max_time_step, other_idss = ctx[:4]
-
-        self.all_values_all_ids = {}  # reset to empty
-        self.all_props_all_ids = {}  # reset to empty
-
         robustness_values = []
         for time_step in range(0, max_time_step):
             values = [predicate_values[time_step] for predicate_values in samples]
@@ -154,13 +157,6 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 self.other_ids = selected_ids[idx]
                 all_node.last_selected = all_node.monitors[self.other_ids[-1]]
 
-                # Loop through all selected_ids and populate the dictionary
-                for i, sid in enumerate(selected_ids):
-                    self.all_values_all_ids[sid[-1]] = values[i]
-                    if hasattr(all_node.monitors[sid[-1]].monitor, "_propositions"):
-                        self.all_props_all_ids[sid[-1]] = all_node.monitors[
-                            sid[-1]
-                        ].monitor._propositions
             else:
                 val = self._rob_scaler.max
                 self.other_ids = other_idss
@@ -168,15 +164,13 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
             robustness_values.append(val)
 
+        self.all_values_all_ids[all_node.name] = robustness_values
         return robustness_values
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         # Mostly the same as visit_exist_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(exist_node, *ctx)
         world, mpr_world, max_time_step, other_ids = ctx[:4]
-
-        self.all_values_all_ids = {}  # reset to empty
-        self.all_props_all_ids = {}  # reset to empty
 
         robustness_values = []
         for time_step in range(0, max_time_step):
@@ -189,20 +183,13 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
                 exist_node.last_selected = exist_node.monitors[self.other_ids[-1]]
 
-                # Loop through all selected_ids and populate the dictionary
-                for i, sid in enumerate(selected_ids):
-                    self.all_values_all_ids[sid[-1]] = values[i]
             else:
                 val = self._rob_scaler.min
                 self.other_ids = other_ids
                 exist_node.last_selected = None
 
-                # If no values, only add other_ids if it's not empty
-                if other_ids:
-                    self.all_values_all_ids[other_ids[-1]] = val
-
             robustness_values.append(val)
-
+        self.all_values_all_ids[exist_node.name] = robustness_values
         return robustness_values
 
     def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
@@ -218,6 +205,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             smin = b - k * g
             samples.append(smin)
 
+        self.all_values_all_ids[andsmooth_node.name] = samples
         return samples
 
     def visit_historicallyduration_node(
@@ -255,6 +243,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             window = sample[max(begin, i - window_size) : i + 1]
             sample_return.append(sum(window) / len(window))
 
+        self.all_values_all_ids[historicallyduration_node.name] = sample_return
         return sample_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -263,12 +252,14 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         for time_step in range(0, max_time_step):
             other_ids = other_idss[time_step]
             predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
+
             samples.append(
                 predicate_node.evaluate_robustness(
                     world, mpr_world, time_step, predicate_ids
                 )
             )
 
+        self.all_values_all_ids[predicate_node.name] = samples
         return samples
 
 
@@ -285,6 +276,7 @@ config["use_mpr"] = use_mpr
 rule_evaluator_config = get_traffic_rule_config()
 rule_evaluator_config["traffic_rules_param"]["use_mpr"] = use_mpr
 rule_evaluator_config["traffic_rules_param"]["scale_rob"] = scale_rob
+rule_evaluator_config["traffic_rules_param"]["model_path"] = model_path
 
 
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
@@ -298,12 +290,11 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G4",
+    rule="R_G2",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
     output_type=OutputType.STANDARD,
 )
-
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate_offline()
 print(f"robustness is {robustness}")

@@ -212,6 +212,20 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             )
         return value
 
+    def visit_andsmooth_node(
+        self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx
+    ):
+        raise NotImplementedError()
+
+    def visit_historicallyduration_node(
+        self,
+        andsmooth_node: Union[
+            HistoricallydurationNode, HistoricallydurationMonitorNode
+        ],
+        *ctx,
+    ):
+        raise NotImplementedError()
+
 
 class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
