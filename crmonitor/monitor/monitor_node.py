@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
+
+from rtamt.semantics.interval.interval import Interval
 
 
 class MonitorNode(ABC):
@@ -98,7 +100,7 @@ class AndsmoothMonitorNode(MonitorNode):
 
 
 class HistoricallydurationMonitorNode(MonitorNode):
-    def __init__(self, name, children, interval):
+    def __init__(self, name, children, interval: Optional[Interval]):
         assert len(children) == 1
         super().__init__(name, children)
         self.interval = interval

@@ -7,6 +7,22 @@ import numpy as np
 
 
 class IRobustnessScaler(metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def max(self) -> float:
+        """
+        The maximum robustness value. Should be used for clipping and as default value, instead of hardcoding.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def min(self) -> float:
+        """
+        The minimal robustness value. Should be used for clipping and as default value, instead of hardcoding.
+        """
+        ...
+
     @abstractmethod
     def scale_speed(self, x):
         pass
@@ -47,7 +63,15 @@ class RobustnessScaler(IRobustnessScaler):
         self.scale = scale
 
     def _scale(self, x, max_value):
-        return np.clip(x / max_value, -1.0, 1.0) if self.scale else x
+        return np.clip(x / max_value, self.min, self.max) if self.scale else x
+
+    @property
+    def max(self) -> float:
+        return 1.0 if self.scale else float("inf")
+
+    @property
+    def min(self) -> float:
+        return -1.0 if self.scale else float("-inf")
 
     def scale_speed(self, x):
         return self._scale(x, self._scale_constants.MAX_SPEED)

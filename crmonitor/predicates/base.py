@@ -5,9 +5,9 @@ from typing import Callable, Dict, List, Tuple
 
 from commonroad.visualization.renderer import IRenderer
 from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad_mpr.common.predicates import PredicateEvaluator as MprPredicateEvalutor
 from commonroad_mpr.learning import FeatureExtrator
 from commonroad_mpr.learning import PredicateEvaluatorML as PEML
+from commonroad_mpr.mpr import ModelPredictiveRobustness
 from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
@@ -29,7 +29,13 @@ def _map_crmonitor_predicate_name_to_mpr_predicate_name(
 
 
 # Those predicates are non-atomic and a composition of other atomic predicates. They do not have a pendant in mpr, and therefore they get special treatment when evaluating with mpr.
-_COMPOSED_PREDICATES = ["preserves_traffic_flow", "slow_leading_vehicle"]
+_COMPOSED_PREDICATES = [
+    "preserves_traffic_flow",
+    "slow_leading_vehicle",
+    "in_congestion",
+    "exist_standing_leading_vehicle",
+    "in_slow_moving_traffic",
+]
 
 
 def _should_use_mpr_predicate_for(predicate_name: str) -> bool:
@@ -50,31 +56,33 @@ class BasePredicateEvaluator(abc.ABC):
     def __init__(self, config: CommentedMap, scaler=None):
         self.config = config
         self.eps = 1e-5
-        self._scaler = scaler or RobustnessScaler(
-            scale=config.setdefault("scale_rob", True)
-        )
-        try:
-            self.feature_extractor = FeatureExtrator([self.predicate_name])
-        except:
-            self.feature_extractor = None
+        scale_rob = config.get("scale_rob", True)
+        self._scaler = scaler or RobustnessScaler(scale_rob)
 
+        # peml and mpr are the evalutors for mpr with and without pre-trained models respectivly.
         self.peml = None
+        self.mpr = None
+        # There might be
         mpr_predicate_name = _map_crmonitor_predicate_name_to_mpr_predicate_name(
             self.predicate_name
         )
-        if self.config["use_mpr"] and _should_use_mpr_predicate_for(mpr_predicate_name):
+        self._use_mpr_for_evaluation = self.config[
+            "use_mpr"
+        ] and _should_use_mpr_predicate_for(mpr_predicate_name)
+        if self._use_mpr_for_evaluation:
             try:
                 self.peml = PEML([mpr_predicate_name])
             except Exception:
-                logger.warning(
-                    "Could not load model for predicate %s; falling back to MPR without model for this predicate.",
-                    str(self.predicate_name),
+                warnings.warn(
+                    f"Model for gaussian processes for mpr evaluation of predicate '{self.predicate_name}' is not available. Falling back to MPR without gaussian processes for this predicate. This might result in slower evaluation."
                 )
                 try:
-                    self.peml = MprPredicateEvalutor([mpr_predicate_name])
+                    self.mpr = ModelPredictiveRobustness(
+                        [mpr_predicate_name], normalize=scale_rob
+                    )
                 except KeyError as e:
                     raise RuntimeError(
-                        f"The predicate {mpr_predicate_name} is not supported by MPR."
+                        f"The predicate '{mpr_predicate_name}' is not supported by MPR."
                     ) from e
 
     def _scale_speed(self, x):
@@ -111,20 +119,45 @@ class BasePredicateEvaluator(abc.ABC):
         vehicles = []
         for veh_id in vehicle_ids:
             vehicles.append(world_mpr.vehicle_by_id(veh_id))
-        robustness, _ = self.peml.evaluate_robustness(
-            world=world_mpr, vehicles=vehicles, time_step=time_step
-        )
-        return robustness[0]
+
+        if self.peml is not None:
+            robustness, _ = self.peml.evaluate_robustness(
+                world=world_mpr, vehicles=vehicles, time_step=time_step
+            )
+            return robustness[0]
+        elif self.mpr is not None:
+            robustness = self.mpr.evaluate(
+                world=world_mpr, vehicles=vehicles, time_step=time_step
+            )
+            # Each mpr evaluator is always configured for exactly one predicate.
+            # As the output predicate names might be different then the input predicate names (TOOD: fix in commonroad-mpr), we simply use the single key as to retrive the robustenss value.
+            mpr_predicate_name = list(robustness.keys())[0]
+            return robustness[mpr_predicate_name]["robustness"]
+        else:
+            # Should be unreachable, because __init__ should ensure that the evaluators are available if we are evaluating with mpr.
+            raise RuntimeError(
+                f"Cannot evaluate model predictive robutness of predicate '{self.predicate_name}', as no evaluator is available. This is a bug."
+            )
 
     def gradient_mpr(self):
         """
         Computes the gradient of the MPR w.r.t. the input values
         """
-        if self.config["use_mpr"] and self.peml is not None:
-            return self.peml.derivative()[0]
-        else:
-            warnings.warn("The MPR is deactivated")
-            return [0.0] * 35
+        default = [0.0] * 35
+        if not self._use_mpr_for_evaluation:
+            # TODO: If the user tries to extract the gradient for a comosed/exempted predicate, should it just be skipped?
+            warnings.warn(
+                f"Tried to extract the gradient of the model predictive evaluation, but model predictive evaluation is not enabled for '{self.predicate_name}'. This is either because mpr is disabled or this predicate is exempted from MPR."
+            )
+            return default
+
+        if self.peml is None:
+            warnings.warn(
+                f"Tried to extract gradient of the model predictive robustness, but no gaussian processes were used for the evaluation of '{self.predicate_name}' and therefore no gradient is available."
+            )
+            return default
+
+        return self.peml.derivative()[0]
 
     def evaluate_robustness_with_cache(
         self, world: World, mpr_world: WorldMPR, time_step, vehicle_ids: List[int]
@@ -141,7 +174,7 @@ class BasePredicateEvaluator(abc.ABC):
                 time_step,
                 vehicle_ids_tuple,
             )
-            if self.config["use_mpr"] and self.peml is not None:
+            if self._use_mpr_for_evaluation:
                 value = self.evaluate_mpr(world, mpr_world, time_step, vehicle_ids)
             else:
                 value = self.evaluate_robustness(world, time_step, vehicle_ids)

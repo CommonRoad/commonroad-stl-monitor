@@ -1,6 +1,9 @@
 import copy
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+from typing import Optional
+
+from rtamt.semantics.interval.interval import Interval
 
 from crmonitor.monitor.monitor_node import MonitorNode
 
@@ -59,7 +62,7 @@ class AndsmoothNode(VisitorNode):
 
 
 class HistoricallydurationNode(VisitorNode):
-    def __init__(self, children, name, interval):
+    def __init__(self, children, name: str, interval: Optional[Interval]):
         self.children = children
         self.name = name
         self.interval = interval

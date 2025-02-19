@@ -27,10 +27,14 @@ from crmonitor.monitor.monitor_node import (
     RuleMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = True
+# If True (default), robustness values will be normalized into the interval [-1.0, 1.0]. If False, robustness values, are not normalized and may lay in the interval [-inf, +inf].
+# Disable with caution, when use_mpr is also enabled, as mpr with gaussian processes does currently not
+scale_rob = use_mpr
 
 # Open the scenario
 # Make sure to call with lanelet_assignment=True
@@ -77,6 +81,9 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.output_type = output_type
         self.all_values_all_ids = {}
         self.all_props_all_ids = {}
+
+        # TODO: when this visitor is integrated into crmonitor directly, this option should be read from the config
+        self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
     def walk(
         self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx
@@ -155,7 +162,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                             sid[-1]
                         ].monitor._propositions
             else:
-                val = 1.0
+                val = self._rob_scaler.max
                 self.other_ids = other_idss
                 all_node.last_selected = None
 
@@ -186,7 +193,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 for i, sid in enumerate(selected_ids):
                     self.all_values_all_ids[sid[-1]] = values[i]
             else:
-                val = -1.0
+                val = self._rob_scaler.min
                 self.other_ids = other_ids
                 exist_node.last_selected = None
 
@@ -216,42 +223,39 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_historicallyduration_node(
         self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
     ):
-        child_values = historicallyduration_node.children[0].visit(self, *ctx)
+        sample = historicallyduration_node.children[0].visit(self, *ctx)
         world, mpr_world, max_time_step = ctx[:3]
 
-        # The interval can be defined with different units. Therefore, they are first normalized to time steps.
-        # This currently only supports time steps and seconds as units.
-        begin_unit = historicallyduration_node.interval.begin_unit
-        end_unit = historicallyduration_node.interval.end_unit
-        if len(begin_unit) == 0 and len(end_unit) == 0:
-            normalized_begin = int(historicallyduration_node.interval.begin)
-            normalized_end = int(historicallyduration_node.interval.end)
+        if historicallyduration_node.interval is not None:
+            # The interval can be defined with different units. Therefore, they are first normalized to time steps.
+            # This currently only supports time steps and seconds as units.
+            begin_unit = historicallyduration_node.interval.begin_unit
+            end_unit = historicallyduration_node.interval.end_unit
+            if len(begin_unit) == 0 and len(end_unit) == 0:
+                normalized_begin = int(historicallyduration_node.interval.begin)
+                normalized_end = int(historicallyduration_node.interval.end)
+            else:
+                normalized_begin = int(
+                    historicallyduration_node.interval.begin / world.scenario.dt
+                )
+                normalized_end = int(
+                    historicallyduration_node.interval.end / world.scenario.dt
+                )
+            begin = max(0, normalized_begin)
+            end = min(max_time_step, normalized_end)
         else:
-            normalized_begin = int(
-                historicallyduration_node.interval.begin / world.scenario.dt
-            )
-            normalized_end = int(
-                historicallyduration_node.interval.end / world.scenario.dt
-            )
-        begin = max(0, normalized_begin)
-        end = min(max_time_step, normalized_end)
+            begin = 0
+            end = len(sample)
 
-        spec_violations = 0
-        total = 0
-        for time_step in range(begin, end):
-            if child_values[time_step] < 0:
-                spec_violations += 1
-            total += 1
+        window_size = end - begin  # sliding average window size
+        # Fill up the values before the interval, so that the returned trace is as long as the input
+        sample_return = [self._rob_scaler.max] * begin
+        # Computes the sliding average over the samples
+        for i in range(begin, len(sample)):
+            window = sample[max(begin, i - window_size) : i + 1]
+            sample_return.append(sum(window) / len(window))
 
-        # Interpolate the robustness between -1.0 (spec_violations=total) and 1.0 (spec_violations=0)
-        rob = (2.0 * ((total - spec_violations) / total)) - 1.0
-
-        # The robustness outside the interval is filled with 1.0 and only the interval is set to the computed robustness
-        samples = [1.0] * max_time_step
-        for time_step in range(begin, end):
-            samples[time_step] = rob
-
-        return samples
+        return sample_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         world, mpr_world, max_time_step, other_idss = ctx[:4]
@@ -280,6 +284,7 @@ config["use_mpr"] = use_mpr
 # MPR must be explicitly enabled
 rule_evaluator_config = get_traffic_rule_config()
 rule_evaluator_config["traffic_rules_param"]["use_mpr"] = use_mpr
+rule_evaluator_config["traffic_rules_param"]["scale_rob"] = scale_rob
 
 
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
@@ -296,6 +301,7 @@ rule_evaluator = RuleEvaluator.create_from_config(
     rule="R_G4",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
+    output_type=OutputType.STANDARD,
 )
 
 # Either step through time steps sequentially
