@@ -42,7 +42,11 @@ scale_rob = True
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
 model_path = None
 
+# Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
 traffic_rule = "R_G1"
+
+# Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
+output_type = OutputType.OUTPUT_ROBUSTNESS
 
 logging.basicConfig(level=logging.INFO)
 
@@ -168,8 +172,11 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
             robustness_values.append(val)
 
-        self.all_values_all_ids[all_node.name] = robustness_values
-        return robustness_values
+        scaled_robustness_values = np.clip(
+            robustness_values, self._rob_scaler.min, self._rob_scaler.max
+        )
+        self.all_values_all_ids[all_node.name] = scaled_robustness_values
+        return scaled_robustness_values
 
     def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         # Mostly the same as visit_exist_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
@@ -295,9 +302,11 @@ rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
     rule=traffic_rule,
-    monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
+    monitor_creation_visitor=MonitorCreationRuleTreeVisitor(
+        dt=scenario.dt, output_type=output_type
+    ),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
-    output_type=OutputType.STANDARD,
+    output_type=output_type,
 )
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate_offline()
