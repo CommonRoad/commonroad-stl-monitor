@@ -245,8 +245,8 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_historicallyduration_node(
         self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
     ):
-        sample = historicallyduration_node.children[0].visit(self, *ctx)
-        world, mpr_world, max_time_step = ctx[:3]
+        samples = historicallyduration_node.children[0].visit(self, *ctx)
+        world, _, max_time_step = ctx[:3]
 
         if historicallyduration_node.interval is not None:
             interval = _rtamt_interval_to_commonroad_interval(
@@ -258,13 +258,21 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             begin = 0
             end = max_time_step
 
-        window_size = end - begin  # sliding average window size
-        # Fill up the values before the interval, so that the returned trace is as long as the input
-        sample_return = [self._rob_scaler.max] * begin
-        # Computes the sliding average over the samples
-        for i in range(begin, len(sample)):
-            window = sample[max(begin, i - window_size) : i + 1]
-            sample_return.append(sum(window) / len(window))
+        # The concrete implementation of this operator closely follows the implementation of `visitTimedHistorically` from rtamt.
+
+        # Extend the samples, so that we can iterate with a static window size
+        # and to make sure that the returned trace covers the interval [0, max_time_step].
+        extended_samples = [self._rob_scaler.max for _ in range(end)] + samples
+        sample_return = []
+        for i in range(end, len(extended_samples)):
+            # Iterate over the extended sample using a window of the size `(end - begin) + 1`.
+            window = extended_samples[i - end : i - begin + 1]
+            all_samples_are_ge_0 = all(x >= 0 for x in window)
+            if all_samples_are_ge_0:
+                sample_return.append(min(window))
+            else:
+                samples_less_0 = list(filter(lambda x: x < 0, window))
+                sample_return.append(len(samples_less_0) / len(window))
 
         self.all_values_all_ids[historicallyduration_node.name] = sample_return
         return sample_return
@@ -293,10 +301,10 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         # and to make sure that the returned trace covers the interval [0, max_time_step].
         extended_samples = [self._rob_scaler.max for _ in range(end)] + samples
         sample_return = []
-        all_samples_are_ge_0 = all(x >= 0 for x in samples[begin : end + 1])
         for i in range(end, len(extended_samples)):
             # Iterate over the extended sample using a window of the size `(end - begin) + 1`.
             window = extended_samples[i - end : i - begin + 1]
+            all_samples_are_ge_0 = all(x >= 0 for x in window)
             if all_samples_are_ge_0:
                 sample_return.append(min(window))
             else:
@@ -350,7 +358,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="R_G2",
+    rule="Foo",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
     output_type=OutputType.STANDARD,
