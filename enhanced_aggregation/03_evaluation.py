@@ -287,9 +287,10 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             begin = 0
             end = max_time_step
 
-        # Closely follows the implementation of `visitTimedHistorically` from rtamt.
+        # The concrete implementation of this operator closely follows the implementation of `visitTimedHistorically` from rtamt.
+
         # Extend the samples, so that we can iterate with a static window size
-        # and to make sure that the returned trace covers the [0, max_time_step].
+        # and to make sure that the returned trace covers the interval [0, max_time_step].
         extended_samples = [self._rob_scaler.max for _ in range(end)] + samples
         sample_return = []
         all_samples_are_ge_0 = all(x >= 0 for x in samples[begin : end + 1])
