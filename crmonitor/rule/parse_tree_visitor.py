@@ -12,7 +12,8 @@ from crmonitor.rule.rule_node import (
     AllNode,
     AndsmoothNode,
     ExistNode,
-    HistoricallydurationNode,
+    HistoricallyDurationNode,
+    HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
     RuleNode,
@@ -135,7 +136,23 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             interval = self.process_interval(ctx.interval())
         self._sub_rule_counter += 1
         node_name = f"g{self._sub_rule_counter}"
-        node = HistoricallydurationNode(children, node_name, interval)
+        node = HistoricallyDurationNode(children, node_name, interval)
+        self._rewriter.replace(
+            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+        )
+        return [node]
+
+    def visitSpecHistoricallyDurationSeverity(
+        self, ctx: FaStlParser.SpecHistoricallyDurationSeverityContext
+    ):
+        children = self.visit(ctx.spec())
+        if ctx.interval() is None:
+            interval = None
+        else:
+            interval = self.process_interval(ctx.interval())
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        node = HistoricallyDurationSeverityNode(children, node_name, interval)
         self._rewriter.replace(
             "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
         )

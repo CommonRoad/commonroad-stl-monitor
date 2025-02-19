@@ -16,8 +16,11 @@ VEHICLE
 AndsmoothOperator
     : 'andsmooth' ;
 
-HistoricallydurationOperator
-	: 'historicallyduration' ;
+HistoricallyDurationOperator
+	: 'historicallyDuration' ;
+
+HistoricallyDurationSeverityOperator
+	: 'historicallyDurationSeverity' ;
 
 // Preserve whitespace
 WHITESPACE

@@ -1,17 +1,16 @@
 import itertools
 from abc import ABC, abstractmethod
-from typing import TypedDict, Union
+from typing import Union
 
 import numpy as np
-from commonroad.common.util import Interval
 
 from crmonitor.common.helper import gather
-from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
     ExistMonitorNode,
-    HistoricallydurationMonitorNode,
+    HistoricallyDurationMonitorNode,
+    HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     RuleMonitorNode,
 )
@@ -20,7 +19,8 @@ from crmonitor.rule.rule_node import (
     AllNode,
     AndsmoothNode,
     ExistNode,
-    HistoricallydurationNode,
+    HistoricallyDurationNode,
+    HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
     RuleNode,
@@ -49,8 +49,18 @@ class RuleTreeVisitor(ABC):
     @abstractmethod
     def visit_historicallyduration_node(
         self,
-        andsmooth_node: Union[
-            HistoricallydurationNode, HistoricallydurationMonitorNode
+        historicallyduration_node: Union[
+            HistoricallyDurationNode, HistoricallyDurationMonitorNode
+        ],
+        *ctx,
+    ):
+        pass
+
+    @abstractmethod
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: Union[
+            HistoricallyDurationSeverityNode, HistoricallyDurationSeverityMonitorNode
         ],
         *ctx,
     ):
@@ -86,11 +96,25 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
         return AndsmoothMonitorNode(andsmooth_node.name, children)
 
     def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallydurationNode, *ctx
+        self, historicallyduration_node: HistoricallyDurationNode, *ctx
     ):
         children = [c.visit(self, *ctx) for c in historicallyduration_node.children]
-        return HistoricallydurationMonitorNode(
+        return HistoricallyDurationMonitorNode(
             historicallyduration_node.name, children, historicallyduration_node.interval
+        )
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: HistoricallyDurationSeverityNode,
+        *ctx,
+    ):
+        children = [
+            c.visit(self, *ctx) for c in historicallydurationseverity_node.children
+        ]
+        return HistoricallyDurationSeverityMonitorNode(
+            historicallydurationseverity_node.name,
+            children,
+            historicallydurationseverity_node.interval,
         )
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -220,7 +244,16 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_historicallyduration_node(
         self,
         andsmooth_node: Union[
-            HistoricallydurationNode, HistoricallydurationMonitorNode
+            HistoricallyDurationNode, HistoricallyDurationMonitorNode
+        ],
+        *ctx,
+    ):
+        raise NotImplementedError()
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: Union[
+            HistoricallyDurationSeverityNode, HistoricallyDurationMonitorNode
         ],
         *ctx,
     ):
@@ -257,7 +290,7 @@ class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
         return val
 
     def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
+        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
     ):
         if historicallyduration_node.last_selected is None:
             # Visit the prototype monitor
@@ -265,6 +298,17 @@ class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
             val = [(n, v if v is not None else -1.0) for n, v in val]
         else:
             val = historicallyduration_node.last_selected.visit(self, *ctx)
+        return val
+
+    def visit_historicallydurationseverity_node(
+        self, historicallydurationseverity_node: HistoricallyDurationSeverityNode, *ctx
+    ):
+        if historicallydurationseverity_node.last_selected is None:
+            # Visit the prototype monitor
+            val = historicallydurationseverity_node.children[0].visit(self, *ctx)
+            val = [(n, v if v is not None else -1.0) for n, v in val]
+        else:
+            val = historicallydurationseverity_node.last_selected.visit(self, *ctx)
         return val
 
 
@@ -336,9 +380,16 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
         return self._visit_quant_node(andsmooth_node, *ctx)
 
     def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
+        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
     ):
         return self._visit_quant_node(historicallyduration_node, *ctx)
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: HistoricallyDurationSeverityMonitorNode,
+        *ctx,
+    ):
+        return self._visit_quant_node(historicallydurationseverity_node, *ctx)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         ctx, is_effective = self._split_context(ctx)
@@ -401,11 +452,20 @@ class ResetMonitorTreeVisitor(RuleTreeVisitor):
     def visit_historicallyduration_node(
         self,
         historicallyduration_node: Union[
-            HistoricallydurationNode, HistoricallydurationMonitorNode
+            HistoricallyDurationNode, HistoricallyDurationMonitorNode
         ],
         *ctx,
     ):
         self._visit(historicallyduration_node, *ctx)
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: Union[
+            HistoricallyDurationSeverityNode, HistoricallyDurationSeverityMonitorNode
+        ],
+        *ctx,
+    ):
+        self._visit(historicallydurationseverity_node, *ctx)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         pass

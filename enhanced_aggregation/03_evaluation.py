@@ -12,7 +12,10 @@ from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.common.util import Interval as CommonRoadInterval
+from commonroad.scenario.scenario import Scenario
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.helper import gather
@@ -23,7 +26,7 @@ from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
     ExistMonitorNode,
-    HistoricallydurationMonitorNode,
+    HistoricallyDurationMonitorNode,
     MonitorNode,
     RuleMonitorNode,
 )
@@ -32,7 +35,7 @@ from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = True
+use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True
@@ -78,6 +81,35 @@ if use_mpr:
         folder_config="config_files",
         default_profile="default",
     )
+
+
+def _rtamt_interval_to_commonroad_interval(
+    interval: RtamtInterval, scenario_context: Scenario
+) -> CommonRoadInterval:
+    """
+    Convert a rtamt interval with units to a time step based interval in the context of the scenario.
+
+    :param interval: A rtamt interval, with optional units.
+    :param scenario_context: The scenario in which this interval should be valid.
+
+    :returns: A CommonRoad interval in time steps, which is valid in regards to the scenario context.
+
+    :raises RuntimeError: If an invalid combination of units is used.
+    """
+    if len(interval.begin_unit) == 0 and len(interval.end_unit) == 0:
+        normalized_begin = int(interval.begin)
+        normalized_end = int(interval.end)
+    elif interval.begin_unit == "s" or interval.end_unit == "s":
+        normalized_begin = interval.begin / scenario_context.dt
+        normalized_end = interval.end / scenario_context.dt
+    else:
+        raise RuntimeError(
+            f"Cannot convert rtamt interval: combination of time units '{interval.begin_unit}' and '{interval.end_unit}' is not supported! Use 's' for seconds, or omit for time steps."
+        )
+
+    begin = max(0, normalized_begin)
+
+    return CommonRoadInterval(begin, normalized_end)
 
 
 class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
@@ -209,31 +241,20 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         return samples
 
     def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallydurationMonitorNode, *ctx
+        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
     ):
         sample = historicallyduration_node.children[0].visit(self, *ctx)
         world, mpr_world, max_time_step = ctx[:3]
 
         if historicallyduration_node.interval is not None:
-            # The interval can be defined with different units. Therefore, they are first normalized to time steps.
-            # This currently only supports time steps and seconds as units.
-            begin_unit = historicallyduration_node.interval.begin_unit
-            end_unit = historicallyduration_node.interval.end_unit
-            if len(begin_unit) == 0 and len(end_unit) == 0:
-                normalized_begin = int(historicallyduration_node.interval.begin)
-                normalized_end = int(historicallyduration_node.interval.end)
-            else:
-                normalized_begin = int(
-                    historicallyduration_node.interval.begin / world.scenario.dt
-                )
-                normalized_end = int(
-                    historicallyduration_node.interval.end / world.scenario.dt
-                )
-            begin = max(0, normalized_begin)
-            end = min(max_time_step, normalized_end)
+            interval = _rtamt_interval_to_commonroad_interval(
+                historicallyduration_node.interval, world.scenario
+            )
+            begin = int(interval.start)
+            end = min(max_time_step, int(interval.end))
         else:
             begin = 0
-            end = len(sample)
+            end = max_time_step
 
         window_size = end - begin  # sliding average window size
         # Fill up the values before the interval, so that the returned trace is as long as the input
@@ -244,6 +265,38 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             sample_return.append(sum(window) / len(window))
 
         self.all_values_all_ids[historicallyduration_node.name] = sample_return
+        return sample_return
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: HistoricallyDurationMonitorNode,
+        *ctx,
+    ):
+        samples = historicallydurationseverity_node.children[0].visit(self, *ctx)
+        world, _, max_time_step = ctx[:3]
+
+        if historicallydurationseverity_node.interval is not None:
+            interval = _rtamt_interval_to_commonroad_interval(
+                historicallydurationseverity_node.interval, world.scenario
+            )
+            begin = int(interval.start)
+            end = min(max_time_step, int(interval.end))
+        else:
+            begin = 0
+            end = max_time_step
+
+        sample_return = [self._rob_scaler.max] * begin
+        all_samples_are_ge_0 = all(x >= 0 for x in samples[begin : end + 1])
+        for i in range(begin, end):
+            window = samples[begin : i + 1]
+            if all_samples_are_ge_0:
+                sample_return.append(min(window))
+            else:
+                samples_less_0 = list(filter(lambda x: x < 0, window))
+                sample_return.append(sum(samples_less_0) / len(window))
+
+        if end < max_time_step:
+            sample_return.extend([self._rob_scaler.max] * (max_time_step - end))
         return sample_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
