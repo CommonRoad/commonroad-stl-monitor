@@ -358,7 +358,7 @@ ego_vehicle = next(iter(world.vehicles))
 rule_evaluator = RuleEvaluator.create_from_config(
     world,
     ego_vehicle.id,
-    rule="Foo",
+    rule="R_G2",
     monitor_creation_visitor=MonitorCreationRuleTreeVisitor(dt=scenario.dt),
     monitor_evaluation_visitor=OfflineEvaluationMonitorTreeVisitor(),
     output_type=OutputType.STANDARD,

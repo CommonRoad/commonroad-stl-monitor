@@ -239,16 +239,20 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_andsmooth_node(
         self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx
     ):
-        raise NotImplementedError()
+        raise RuntimeError(
+            "The 'andsmooth' operator is currently only supported when using offline evaluation."
+        )
 
     def visit_historicallyduration_node(
         self,
-        andsmooth_node: Union[
+        historicallyduration_node: Union[
             HistoricallyDurationNode, HistoricallyDurationMonitorNode
         ],
         *ctx,
     ):
-        raise NotImplementedError()
+        raise RuntimeError(
+            "The 'historicallyDuration' operator is currently only supported when using offline evaluation."
+        )
 
     def visit_historicallydurationseverity_node(
         self,
@@ -257,7 +261,9 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         ],
         *ctx,
     ):
-        raise NotImplementedError()
+        raise RuntimeError(
+            "The 'historicallyDurationSeverity' operator is currently only supported when using offline evaluation."
+        )
 
 
 class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
