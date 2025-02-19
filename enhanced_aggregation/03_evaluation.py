@@ -142,8 +142,9 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         val = rule_node.evaluate(
             list(child_values.items())
         )  # evaluate instead of update for offline usage
-        self.all_values_all_ids[rule_node.name] = val
-        return val
+        scaled_values = list(np.clip(val, self._rob_scaler.min, self._rob_scaler.max))
+        self.all_values_all_ids[rule_node.name] = scaled_values
+        return scaled_values
 
     def _visit_quant_node(self, node, *ctx):
         """
@@ -221,6 +222,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 exist_node.last_selected = None
 
             robustness_values.append(val)
+
         self.all_values_all_ids[exist_node.name] = robustness_values
         return robustness_values
 
@@ -285,18 +287,22 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             begin = 0
             end = max_time_step
 
-        sample_return = [self._rob_scaler.max] * begin
+        # Closely follows the implementation of `visitTimedHistorically` from rtamt.
+        # Extend the samples, so that we can iterate with a static window size
+        # and to make sure that the returned trace covers the [0, max_time_step].
+        extended_samples = [self._rob_scaler.max for _ in range(end)] + samples
+        sample_return = []
         all_samples_are_ge_0 = all(x >= 0 for x in samples[begin : end + 1])
-        for i in range(begin, end):
-            window = samples[begin : i + 1]
+        for i in range(end, len(extended_samples)):
+            # Iterate over the extended sample using a window of the size `(end - begin) + 1`.
+            window = extended_samples[i - end : i - begin + 1]
             if all_samples_are_ge_0:
                 sample_return.append(min(window))
             else:
                 samples_less_0 = list(filter(lambda x: x < 0, window))
                 sample_return.append(sum(samples_less_0) / len(window))
 
-        if end < max_time_step:
-            sample_return.extend([self._rob_scaler.max] * (max_time_step - end))
+        self.all_values_all_ids[historicallydurationseverity_node.name] = sample_return
         return sample_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
