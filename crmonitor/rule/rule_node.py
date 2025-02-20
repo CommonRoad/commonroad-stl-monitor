@@ -61,7 +61,7 @@ class AndsmoothNode(VisitorNode):
         return visitor.visit_andsmooth_node(self, *ctx)
 
 
-class HistoricallydurationNode(VisitorNode):
+class HistoricallyDurationNode(VisitorNode):
     def __init__(self, children, name: str, interval: Optional[Interval]):
         self.children = children
         self.name = name
@@ -69,6 +69,16 @@ class HistoricallydurationNode(VisitorNode):
 
     def visit(self, visitor, *ctx):
         return visitor.visit_historicallyduration_node(self, *ctx)
+
+
+class HistoricallyDurationSeverityNode(VisitorNode):
+    def __init__(self, children, name: str, interval: Optional[Interval]):
+        self.children = children
+        self.name = name
+        self.interval = interval
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_historicallydurationseverity_node(self, *ctx)
 
 
 class PredicateNode(MonitorNode, VisitorNode):

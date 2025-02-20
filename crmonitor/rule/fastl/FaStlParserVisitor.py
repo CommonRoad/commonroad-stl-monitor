@@ -44,6 +44,12 @@ class FaStlParserVisitor(ParseTreeVisitor):
     ):
         return self.visitChildren(ctx)
 
+    # Visit a parse tree produced by FaStlParser#SpecHistoricallyDurationSeverity.
+    def visitSpecHistoricallyDurationSeverity(
+        self, ctx: FaStlParser.SpecHistoricallyDurationSeverityContext
+    ):
+        return self.visitChildren(ctx)
+
     # Visit a parse tree produced by FaStlParser#ExprSubtraction.
     def visitExprSubtraction(self, ctx: FaStlParser.ExprSubtractionContext):
         return self.visitChildren(ctx)
