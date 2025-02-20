@@ -46,7 +46,7 @@ scale_rob = True
 model_path = None
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_G1"
+traffic_rule = "R_G2"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS
@@ -150,6 +150,11 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         val = rule_node.evaluate(
             list(child_values.items())
         )  # evaluate instead of update for offline usage
+
+        # When the rule is evaluated with IA-STL, some robustness values might be +inf.
+        # This can lead to problems if the user expects scaled values.
+        # Therefore, a simple clip is applied here, to make sure the robustness values
+        # remain in the required robustness value interval.
         scaled_values = list(np.clip(val, self._rob_scaler.min, self._rob_scaler.max))
         self.all_values_all_ids[rule_node.name] = scaled_values
         return scaled_values
@@ -380,8 +385,8 @@ rule_evaluator = RuleEvaluator.create_from_config(
 robustness = rule_evaluator.evaluate_offline()
 print(f"robustness is {robustness}")
 
+# TODO: Expose the AST values over a public API, such that we no longer need to access the private attributes.
 values = rule_evaluator._eval_visitor.all_values_all_ids
-visualization_visitor = FormulaVisualizationVisitor(values)
-plot_limits = (-1.1, 1.1) if scale_rob else None
-visualization_visitor.visualize(rule_evaluator._monitor, plot_limits)
+visualization_visitor = FormulaVisualizationVisitor(values, scale_rob)
+visualization_visitor.visualize(rule_evaluator._monitor)
 plt.show()

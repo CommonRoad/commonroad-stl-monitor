@@ -16,13 +16,15 @@ from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
     ExistMonitorNode,
-    HistoricallydurationMonitorNode,
+    HistoricallyDurationMonitorNode,
+    HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     RuleMonitorNode,
 )
 from crmonitor.monitor.rule import AllNode, AndsmoothNode, ExistNode, RuleNode
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.rule.rule_node import HistoricallydurationNode, PredicateNode
+from crmonitor.predicates.scaling import RobustnessScaler
+from crmonitor.rule.rule_node import HistoricallyDurationNode, PredicateNode
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
@@ -368,19 +370,11 @@ def plot_rule_visualization(
     #     f(renderer)
 
 
-class RtamtFormulaVisualization(AbstractAstVisitor):
-    def __init__(self, values: Dict[str, List[float]]) -> None:
-        self._values = values
-
-    def visit(self, node, *args, **kwargs):
-        result = super().visit(node, *args, **kwargs)
-        print(node)
-        return result
-
-
 class FormulaVisualizationVisitor(RuleTreeVisitor):
-    def __init__(self, values: Dict[str, List[float]]):
+    def __init__(self, values: Dict[str, List[float]], scale_rob: bool = True):
         self._values = values
+        self._rob_scaler = RobustnessScaler(scale=scale_rob)
+
         self._fig, self._ax = plt.subplots()
 
         self._lines = []
@@ -388,14 +382,21 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
     def visualize(
         self,
         monitor: MonitorNode,
-        plot_limits: Optional[Tuple[float, float]] = (-1.1, 1.1),
+        plot_limits: Optional[Tuple[float, float]] = None,
     ) -> None:
         monitor.visit(self)
         self._ax.grid(True)
-        lens = [len(trace) for trace in self._values.values()]
+
         if plot_limits is not None:
             self._ax.set_ylim(plot_limits)
+        elif self._rob_scaler.scale:
+            # If no explict plot limit is given, but robustness scaling is active, we have some other lower and upper bounds.
+            # From those we can set the limits with a 5% margin.
+            self._ax.set_ylim(self._rob_scaler.min * 1.05, self._rob_scaler.max * 1.05)
+
+        lens = [len(trace) for trace in self._values.values()]
         self._ax.set_xlim((0.0, max(lens) - 1))
+
         leg = self._fig.legend(
             loc="lower center",
         )
@@ -426,8 +427,10 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         (line,) = self._ax.plot(self._values[node.name], "x-", label=label)
         self._lines.append(line)
 
-    def visit_rule_node(self, rule_node: Union[RuleNode, RuleMonitorNode], *ctx):
+    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
         label = rule_node.monitor._rule
+        # Custom operators are replaced by 'g{i}' identifiers in rtamt rules.
+        # To enhance the visualization, those placeholders are replaced by their computed label.
         name_replacements = {}
         for child in rule_node.children:
             if isinstance(child, PredicateNode):
@@ -444,40 +447,59 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
             for target_name, name_replacement in name_replacements.items():
                 if target_name in name:
                     name = name.replace(target_name, name_replacement)
-            (line,) = self._ax.plot(trace, "x-", label=name)
+
+            # rtamt operators might return traces with +-inf. As +-inf cannot be shown
+            # in a plot, the lines will be missing from the plot. For the case, where
+            # robustness scaling is enabled, we can normalize the intermediate traces, such that they are displayed in the plot.
+            scaled_trace = np.clip(trace, self._rob_scaler.min, self._rob_scaler.max)
+            (line,) = self._ax.plot(scaled_trace, "x-", label=name)
             self._lines.append(line)
         return label
 
-    def visit_all_node(self, all_node: Union[AllNode, AllMonitorNode], *ctx):
+    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         child_values = [c.visit(self, *ctx) for c in all_node.children]
         label = f"All: ({child_values[0]})"
         self._plot_node(all_node, label)
         return label
 
-    def visit_exist_node(self, exist_node: Union[ExistNode, ExistMonitorNode], *ctx):
+    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
         child_values = [c.visit(self, *ctx) for c in exist_node.children]
         label = f"Exist: ({child_values[0]})"
         self._plot_node(exist_node, label)
         return label
 
-    def visit_andsmooth_node(
-        self, andsmooth_node: Union[AndsmoothNode, AndsmoothMonitorNode], *ctx
-    ):
+    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
         child_values = [c.visit(self, *ctx) for c in andsmooth_node.children]
-        label = child_values[0] + "Andsmooth" + child_values[1]
+        label = child_values[0] + "andsmooth" + child_values[1]
         self._plot_node(andsmooth_node, label)
         return label
 
     def visit_historicallyduration_node(
         self,
-        historicallyduration_node: Union[
-            HistoricallydurationNode, HistoricallydurationMonitorNode
-        ],
+        historicallyduration_node: HistoricallyDurationMonitorNode,
         *ctx,
     ):
         child_values = [c.visit(self, *ctx) for c in historicallyduration_node.children]
-        label = child_values[0] + "Andsmooth" + child_values[1]
+        if historicallyduration_node.interval is not None:
+            label = f"historicallyDuration[{historicallyduration_node.interval.begin}{historicallyduration_node.interval.begin_unit}, {historicallyduration_node.interval.end}{historicallyduration_node.interval.end_unit}] ({child_values[0]})"
+        else:
+            label = f"historicallyDuration ({child_values[0]})"
         self._plot_node(historicallyduration_node, label)
+        return label
+
+    def visit_historicallydurationseverity_node(
+        self,
+        historicallydurationseverity_node: HistoricallyDurationSeverityMonitorNode,
+        *ctx,
+    ):
+        child_values = [
+            c.visit(self, *ctx) for c in historicallydurationseverity_node.children
+        ]
+        if historicallydurationseverity_node.interval is not None:
+            label = f"historicallyDurationSeverity[{historicallydurationseverity_node.interval.begin}{historicallydurationseverity_node.interval.begin_unit}, {historicallydurationseverity_node.interval.end}{historicallydurationseverity_node.interval.end_unit}] ({child_values[0]})"
+        else:
+            label = f"historicallyDurationSeverity ({child_values[0]})"
+        self._plot_node(historicallydurationseverity_node, label)
         return label
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
