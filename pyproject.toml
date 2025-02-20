@@ -18,7 +18,7 @@ ruamel-yaml = ">=0.16.12"
 commonroad-drivability-checker = ">=2024.2.0"
 commonroad-route-planner = ">=2024.2.0"
 numba = ">=0.58.1"
-commonroad-mpr = { git = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git", rev = "8171b0aaf8cbe51cf0c53a5506ae7ac209f0a5fa" }
+commonroad-mpr = { git = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git", rev = "1fc39c6b20c5f2ef553fd65bf784c6ea13c7ca02" }
 pyqt6 = "^6.8.1"
 
 [tool.poetry.group.test]
