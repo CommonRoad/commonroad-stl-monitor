@@ -8,7 +8,7 @@
 traffic_rules:
   R_G1: 'A a1: ((in_front_of(a0,a1)_i and in_same_lane(a0,a1)_i and !once[0, 3s](cut_in(a1,a0)_i and prev(not cut_in(a1,a0)_i)) ) implies keeps_safe_distance_prec(a0,a1))'
   R_G2: 'brakes_abruptly(a0)_i implies E a1: (precedes(a0, a1) and (not keeps_safe_distance_prec(a0, a1) or not rel_brakes_abruptly(a0, a1)_i))'
-  R_G3: keeps_lane_speed_limit(a0) and keeps_type_speed_limit(a0) andsmooth keeps_fov_speed_limit(a0) and keeps_brake_speed_limit(a0)
+  R_G3: keeps_lane_speed_limit(a0) and keeps_type_speed_limit(a0) and keeps_fov_speed_limit(a0) and keeps_brake_speed_limit(a0)
 
   R_G4: not slow_leading_vehicle(a0)_i implies preserves_traffic_flow(a0)
 
@@ -201,4 +201,3 @@ traffic_rules_param:
   #mpr
   use_mpr: false
   mpr_scenario: interstate # interstate or intersection
-

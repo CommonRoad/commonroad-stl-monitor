@@ -39,7 +39,7 @@ output_path = (
     Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 )
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = 1
+scenario_limit = 4
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
