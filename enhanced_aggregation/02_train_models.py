@@ -2,8 +2,10 @@ from pathlib import Path
 
 from commonroad_mpr.learning.data_loader import DataLoader
 from commonroad_mpr.learning.gp_regression import ModelTrainer
-from commonroad_mpr.utils.configuration_builder import ScenarioType
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from commonroad_mpr.utils.configuration_builder import ScenarioType
+
+from crmonitor.predicates.predicate_factory import PredicateFactory
 
 learning_data_path = (
     Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
@@ -38,9 +40,15 @@ MprCfg.build_configuration(
     folder_config="config_files",
     default_profile="default",
 )
+# The ModelTrainer requires the arity of each predicate to determine the number of samples that should be used to train the model for each predicate.
+arities = {
+    predicate_name.value: {"arity": predicate.arity}
+    for predicate_name, predicate in PredicateFactory()._evaluators.items()
+    if predicate_name != "interface"
+}
+MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
-# raise RuntimeError("Training of new models is currently work in progress.")
 
 all_general_predicates = [
     "in_front_of",
@@ -48,14 +56,14 @@ all_general_predicates = [
     "cut_in",
     "keeps_safe_distance_prec",
     "brakes_abruptly",
-#    "rel_brakes_abruptly",
-#    "precedes",
+    "rel_brakes_abruptly",
+    "precedes",
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",
     "keeps_fov_speed_limit",
-#    "keeps_lane_speed_limit_star",
-#    "slow_leading_vehicle",
-#    "preserves_traffic_flow",
+    "keeps_lane_speed_limit_star",
+    "slow_leading_vehicle",
+    "preserves_traffic_flow",
 ]
 
 trainer = ModelTrainer(data_loader, all_general_predicates, ScenarioType.INTERSTATE)
