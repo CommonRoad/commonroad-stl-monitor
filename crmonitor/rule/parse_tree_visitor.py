@@ -3,7 +3,6 @@ from fractions import Fraction
 from typing import Optional
 
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
-from rtamt.semantics.interval.interval import Interval
 
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.fastl.FaStlParser import FaStlParser
@@ -18,6 +17,7 @@ from crmonitor.rule.rule_node import (
     PredicateNode,
     RuleNode,
 )
+from rtamt.semantics.interval.interval import Interval
 
 
 class TrafficRuleParseTreeVisitor(FaStlParserVisitor):

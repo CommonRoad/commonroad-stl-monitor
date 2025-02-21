@@ -12,22 +12,11 @@ from commonroad.scenario.trajectory import Trajectory
 
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
-from crmonitor.predicates.priority import PredHasPriorityRightStraight  # not covered
-from crmonitor.predicates.priority import PredHasPriorityStraightRight  # not covered
-from crmonitor.predicates.priority import PredRelevantTrafficLight  # not covered
-from crmonitor.predicates.priority import PredSamePriorityRightStraight  # not covered
-from crmonitor.predicates.priority import PredSamePriorityStraightRight  # not covered
 from crmonitor.predicates.priority import (  # not covered
     PredAtTrafficSignStop,
-    PredHasPriorityLeftStraight,
-    PredHasPriorityRightLeft,
-    PredHasPriorityRightRight,
-    PredHasPriorityStraightStraight,
-    PredSamePriorityLeftStraight,
-    PredSamePriorityRightLeft,
-    PredSamePriorityRightRight,
-    PredSamePriorityStraightStraight,
 )
+from crmonitor.predicates.priority import PredRelevantTrafficLight  # not covered
+from crmonitor.predicates.priority import PredSamePriorityRightStraight  # not covered
 
 
 class TestIntersectionPriorityPredicates(unittest.TestCase):

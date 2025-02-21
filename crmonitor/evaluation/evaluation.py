@@ -7,8 +7,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad_mpr.common.observation import World as WorldMPR
 
+from commonroad_mpr.common.observation import World as WorldMPR
 from crmonitor.common.config import get_evaluation_config, get_traffic_rule_config
 from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle

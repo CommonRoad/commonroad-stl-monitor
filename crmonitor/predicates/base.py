@@ -6,14 +6,14 @@ from typing import Callable, Dict, List, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.renderer import IRenderer
+from ruamel.yaml.comments import CommentedMap
+
 from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML, read_model
 from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
-from ruamel.yaml.comments import CommentedMap
-
 from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
 

@@ -4,7 +4,6 @@ from commonroad_mpr.learning.data_loader import DataLoader
 from commonroad_mpr.learning.gp_regression import ModelTrainer
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
-
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 learning_data_path = (
@@ -56,7 +55,7 @@ all_general_predicates = [
     "cut_in",
     "keeps_safe_distance_prec",
     "brakes_abruptly",
-    "rel_brakes_abruptly",
+    "brakes_abruptly_relative",
     "precedes",
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",

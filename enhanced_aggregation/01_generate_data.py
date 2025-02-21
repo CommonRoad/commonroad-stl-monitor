@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
+
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-
 from crmonitor.common.world import World
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
@@ -20,7 +20,7 @@ all_general_predicates = [
     "cut_in",
     "keeps_safe_distance_prec",
     "brakes_abruptly",
-    "rel_brakes_abruptly",
+    "brakes_abruptly_relative",
     "precedes",
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",
@@ -137,33 +137,33 @@ class CustomDataGenerator(DataGenerator):
         return (dict_entry_id, features_dict, predicates_dict)
 
     def _process_scenario(self, scenario_path: Path) -> List[Tuple[dict, dict, dict]]:
-        try:
-            scenario, _ = CommonRoadFileReader(scenario_path).open(
-                lanelet_assignment=True
-            )
-            world_mpr = MprWorld.create_from_scenario(scenario)
-            # Create an additional world for crmonitor predicates
-            world = World.create_from_scenario(scenario)
-            data_entries = []
+        # try:
+        scenario, _ = CommonRoadFileReader(scenario_path).open(
+            lanelet_assignment=True
+        )
+        world_mpr = MprWorld.create_from_scenario(scenario)
+        # Create an additional world for crmonitor predicates
+        world = World.create_from_scenario(scenario)
+        data_entries = []
 
-            for time_step in self._time_step_iteration:
-                for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
-                    data_entry = self._process_vehicles_patched(
-                        vehicle_ids, time_step, world_mpr, world
-                    )
-                    data_entries.append(data_entry)
+        for time_step in self._time_step_iteration:
+            for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
+                data_entry = self._process_vehicles_patched(
+                    vehicle_ids, time_step, world_mpr, world
+                )
+                data_entries.append(data_entry)
 
-                    data_entry = self._process_vehicles_patched(
-                        tuple(reversed(vehicle_ids)), time_step, world_mpr, world
-                    )
-                    data_entries.append(data_entry)
+                data_entry = self._process_vehicles_patched(
+                    tuple(reversed(vehicle_ids)), time_step, world_mpr, world
+                )
+                data_entries.append(data_entry)
 
-            return data_entries
-        except Exception as e:
-            _LOGGER.debug(traceback.format_exc())
-            raise RuntimeError(
-                f"Failed to process scenario {scenario_path.stem}: {e}"
-            ) from e
+        return data_entries
+        # except Exception as e:
+        #     _LOGGER.debug(traceback.format_exc())
+        #     raise RuntimeError(
+        #         f"Failed to process scenario {scenario_path.stem}: {e}"
+        #     ) from e
 
 
 data_generator = CustomDataGenerator(
@@ -181,5 +181,6 @@ _LOGGER.info(
     ", ".join(predicate_names),
 )
 data_generator.generate_data(workers=multiprocessing.cpu_count(), limit=scenario_limit)
+# data_generator._process_scenario(next(scenarios_load_path.glob("*.xml")))
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

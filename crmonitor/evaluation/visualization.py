@@ -9,7 +9,6 @@ from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
-from rtamt.syntax.ast.visitor.abstract_ast_visitor import AbstractAstVisitor
 
 from crmonitor.evaluation.visitor import RuleTreeVisitor
 from crmonitor.monitor.monitor_node import (
@@ -21,10 +20,9 @@ from crmonitor.monitor.monitor_node import (
     MonitorNode,
     RuleMonitorNode,
 )
-from crmonitor.monitor.rule import AllNode, AndsmoothNode, ExistNode, RuleNode
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
-from crmonitor.rule.rule_node import HistoricallyDurationNode, PredicateNode
+from crmonitor.rule.rule_node import PredicateNode
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {

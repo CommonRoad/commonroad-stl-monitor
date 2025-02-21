@@ -4,14 +4,9 @@ from collections import defaultdict
 from enum import Enum
 from typing import Callable, Dict, List, Set, Tuple
 
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
 import numpy as np
 import shapely.ops
-from commonroad.scenario.intersection import Intersection, IntersectionIncomingElement
 from commonroad.scenario.lanelet import LaneletType, LineMarking
-from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad_mpr.learning import PredicateEvaluatorML as PEML
 from ruamel.yaml.comments import CommentedMap
 from shapely.geometry.polygon import Polygon
 

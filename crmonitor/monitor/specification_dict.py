@@ -9,7 +9,6 @@ from rtamt.semantics.abstract_discrete_time_online_interpreter import (
     DiscreteTimeOnlineUpdateVisitor,
 )
 from rtamt.semantics.iastl.discrete_time.offline.ast_visitor import (
-    IAStlDiscreteTimeOfflineAstVisitor,
     IAStlOutputRobustnessDiscreteTimeOfflineAstVisitor,
 )
 from rtamt.semantics.stl.discrete_time.offline.ast_visitor import (

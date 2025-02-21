@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class AccelerationPredicates(str, Enum):
     BrakesAbruptly = "brakes_abruptly"
-    RelBrakesAbruptly = "rel_brakes_abruptly"
+    BrakesAbruptlyRelative = "brakes_abruptly_relative"
     CausesBrakingIntersection = "causes_braking_intersection"
 
 
@@ -28,8 +28,8 @@ class PredAbruptBreaking(BasePredicateEvaluator):
         return self._scale_acc(rob)
 
 
-class PredRelAbruptBreaking(BasePredicateEvaluator):
-    predicate_name = AccelerationPredicates.RelBrakesAbruptly
+class PredAbruptBreakingRelative(BasePredicateEvaluator):
+    predicate_name = AccelerationPredicates.BrakesAbruptlyRelative
     arity = 2
 
     def evaluate_robustness(

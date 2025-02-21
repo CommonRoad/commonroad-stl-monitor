@@ -1,13 +1,13 @@
 from typing import Dict, List, Set, Union
 
-import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
-from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
-from commonroad_dc.geometry.util import (
+from commonroad_clcs.clcs import CurvilinearCoordinateSystem
+from commonroad_clcs.config import CLCSParams
+from commonroad_clcs.util import (
     chaikins_corner_cutting,
-    compute_curvature_from_polyline,
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
     resample_polyline,
@@ -294,7 +294,7 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, 20, 0.1, 5.0)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, CLCSParams()) #20, 0.1, 5.0)
 
         return curvilinear_cosy
 

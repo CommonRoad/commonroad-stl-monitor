@@ -14,7 +14,7 @@ from commonroad.common.solution import PlanningProblemSolution, vehicle_paramete
 from commonroad.geometry.shape import Rectangle
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.prediction.prediction import TrajectoryPrediction
-from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
+from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import ObstacleType, Scenario
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_dc.feasibility.solution_checker import (

@@ -2,14 +2,11 @@ import copy
 from typing import Optional
 
 from commonroad_mpr.common.observation import World as WorldMPR
-
-from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import (
     BaseValueMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
-    RuleTreeVisitor,
 )
 from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor

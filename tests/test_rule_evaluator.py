@@ -6,14 +6,13 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.solution import (
     CostFunction,
     PlanningProblemSolution,
-    Solution,
     VehicleModel,
     VehicleType,
 )
 from commonroad.common.util import Interval
 from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
-from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import (

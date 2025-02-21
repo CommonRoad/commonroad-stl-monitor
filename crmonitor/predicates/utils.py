@@ -1,7 +1,6 @@
 import enum
 import logging
-import math
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Iterable, List, Set, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,21 +10,12 @@ from commonroad.geometry.transform import rotate_translate
 from commonroad.planning.goal import GoalRegion
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import (
-    Intersection,
     Lanelet,
     LaneletNetwork,
     LaneletType,
     StopLine,
 )
-from commonroad.scenario.state import CustomState
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
-from commonroad_dc.geometry.util import (
-    chaikins_corner_cutting,
-    compute_curvature_from_polyline,
-    compute_orientation_from_polyline,
-    compute_pathlength_from_polyline,
-    resample_polyline,
-)
 from commonroad_route_planner.route_planner import RoutePlanner
 from shapely.geometry import LineString, Polygon
 

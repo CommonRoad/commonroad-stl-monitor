@@ -8,17 +8,15 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 # import numba
 import numpy as np
 from commonroad.common.util import AngleInterval, Interval
-from commonroad.geometry.shape import Rectangle, Shape
+from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import CustomState, InitialState, State
-from commonroad_route_planner.route import Route
-from commonroad_route_planner.route_planner import RoutePlanner
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
 
+from commonroad_route_planner.route_planner import RoutePlanner
 from crmonitor.common.road_network import Lane, RoadNetwork
 
 rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])

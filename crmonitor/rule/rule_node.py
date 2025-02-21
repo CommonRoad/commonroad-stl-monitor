@@ -3,9 +3,8 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Optional
 
-from rtamt.semantics.interval.interval import Interval
-
 from crmonitor.monitor.monitor_node import MonitorNode
+from rtamt.semantics.interval.interval import Interval
 
 
 class IOType(Enum):

@@ -1,21 +1,12 @@
 import logging
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import matplotlib.colors
 import numpy as np
 from commonroad.common.util import subtract_orientations
-from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.lanelet import LaneletType, LineMarking
-from commonroad.scenario.traffic_light import TrafficLightState
 from matplotlib import pyplot as plt
 
-from crmonitor.common.helper import (
-    cartesian_to_curvilinear,
-    get_curvilinear_coordinate_system,
-)
-from crmonitor.common.road_network import Lane
-from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import BasePredicateEvaluator

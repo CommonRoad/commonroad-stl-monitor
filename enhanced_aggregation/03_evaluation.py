@@ -15,9 +15,8 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval as CommonRoadInterval
 from commonroad.scenario.scenario import Scenario
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
+from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.helper import gather
 from crmonitor.common.world import World, get_world_config
@@ -35,15 +34,16 @@ from crmonitor.monitor.monitor_node import (
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = False
+use_mpr = True
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
-model_path = None
+model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
 traffic_rule = "R_G2"
