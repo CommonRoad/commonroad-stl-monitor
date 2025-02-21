@@ -136,10 +136,6 @@ class BasePredicateEvaluator(abc.ABC):
                 f"Failed to evaluate predicate {self.predicate_name} with model-predictive robustness and pre-trained model: No pre-trained model was loaded!"
             )
         robustness, _ = self._mpr_model.predict([list_features])
-        peml = PredicateEvaluatorML([self.predicate_name])
-        peml_rob = peml.evaluate_robustness(
-            world_state=world_mpr, vehicles=vehicles, time_step=time_step
-        )
 
         if robustness * characteristic_value < 0:
             robustness = np.float64(1e-3)
