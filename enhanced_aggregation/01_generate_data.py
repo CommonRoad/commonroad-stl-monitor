@@ -1,6 +1,5 @@
 import logging
 import multiprocessing
-import traceback
 from pathlib import Path
 from typing import List, Tuple
 
@@ -22,16 +21,25 @@ all_general_predicates = [
     "brakes_abruptly",
     "brakes_abruptly_relative",
     "precedes",
+    "single_lane",
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",
+    "keeps_brake_speed_limit",
     "keeps_fov_speed_limit",
     "keeps_lane_speed_limit_star",
     "slow_leading_vehicle",
     "preserves_traffic_flow",
 ]
+
+all_interstate_predicates = [
+    "in_congestion",
+    "exist_standing_leading_vehicle",
+    "in_standstill",
+]
+
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
-# Alternativly, supply specific predicates you want to evaluate.
-predicate_names = all_general_predicates
+# Alternatively, supply a list of specific predicates you want to evaluate.
+predicate_names = all_general_predicates + all_interstate_predicates
 scenarios_load_path = (
     Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
 )

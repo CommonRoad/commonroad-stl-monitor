@@ -36,6 +36,9 @@ from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = True
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
@@ -46,7 +49,7 @@ scale_rob = True
 model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_G2"
+traffic_rule = "R_I1"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS

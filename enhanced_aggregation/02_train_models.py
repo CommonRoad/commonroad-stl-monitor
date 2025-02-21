@@ -57,15 +57,23 @@ all_general_predicates = [
     "brakes_abruptly",
     "brakes_abruptly_relative",
     "precedes",
+    "single_lane",
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",
+    "keeps_brake_speed_limit",
     "keeps_fov_speed_limit",
     "keeps_lane_speed_limit_star",
     "slow_leading_vehicle",
     "preserves_traffic_flow",
 ]
 
-trainer = ModelTrainer(data_loader, all_general_predicates, ScenarioType.INTERSTATE)
+all_interstate_predicates = [
+    "in_congestion",
+    "exist_standing_leading_vehicle",
+    "in_standstill",
+]
+
+trainer = ModelTrainer(data_loader, all_general_predicates + all_interstate_predicates, ScenarioType.INTERSTATE)
 
 models = trainer.train()
 
