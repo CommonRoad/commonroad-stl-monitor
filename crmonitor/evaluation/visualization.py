@@ -365,7 +365,7 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         monitor: MonitorNode,
         plot_limits: Optional[Tuple[float, float]] = None,
     ) -> None:
-        monitor.visit(self)
+        monitor.visit(self, ())
         self._ax.grid(True)
 
         if plot_limits is not None:
@@ -378,9 +378,11 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         lens = [len(trace) for trace in self._values.values()]
         self._ax.set_xlim((0.0, max(lens) - 1))
 
-        leg = self._fig.legend(
-            loc="lower center",
+        fig_legend = plt.figure()
+        leg = fig_legend.legend(
+            *self._ax.get_legend_handles_labels(), loc="center", ncols=2, fontsize=8
         )
+        fig_legend.subplots_adjust(left=0.2, right=0.8, top=0.8, bottom=0.2)  # Centering
         pickradius = 8
 
         map_legend_to_ax = {}
@@ -399,8 +401,9 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
             ax_line.set_visible(visible)
             legend_line.set_alpha(1.0 if visible else 0.2)
             self._fig.canvas.draw()
+            fig_legend.canvas.draw()
 
-        self._fig.canvas.mpl_connect("pick_event", on_pick)
+        fig_legend.canvas.mpl_connect("pick_event", on_pick)
         leg.set_draggable(True)
         self._fig.tight_layout(rect=[0.0, 0.3, 1.0, 1.0])
 
@@ -414,10 +417,6 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         # To enhance the visualization, those placeholders are replaced by their computed label.
         name_replacements = {}
         for child in rule_node.children:
-            if isinstance(child, PredicateNode):
-                # Predicates are already plotted below from rtamt ast node values
-                continue
-
             val = child.visit(self, *ctx)
             name_replacements[child.name] = val
             if child.name in label:
@@ -438,7 +437,9 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         return label
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
-        child_values = [c.visit(self, *ctx) for c in all_node.children]
+        vehicle_id_pairs = all_node.monitors.keys()
+        for vehicle_id_pair in vehicle_id_pairs:
+            child_values = [c.visit(self, vehicle_id_pair) for c in all_node.children]
         label = f"All: ({child_values[0]})"
         self._plot_node(all_node, label)
         return label
@@ -497,7 +498,9 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         self._plot_node(compare_to_threshold_scaled_node, label)
         return label
 
-    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        label = predicate_node.base_name.value
-        self._plot_node(predicate_node, label)
-        return label
+    def visit_predicate_node(self, predicate_node: PredicateNode, vehicle_ids: Tuple[int, ...]):
+        trace = self._values[predicate_node.name][vehicle_ids]
+        name = f"{predicate_node.name}({', '.join(str(vehicle_id) for vehicle_id in vehicle_ids)})"
+        (line,) = self._ax.plot(trace, "x-", label=name)
+        self._lines.append(line)
+        return name

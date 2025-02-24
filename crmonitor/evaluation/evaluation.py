@@ -32,23 +32,6 @@ from crmonitor.rule.rule_node import VisitorNode
 logger = logging.getLogger(__name__)
 
 
-class AbstractRuleEvaluator(ABC):
-    @classmethod
-    def create_from_config(cls, world: World):
-        return cls()
-
-    @abstractmethod
-    def evaluate(self) -> float: ...
-
-
-class OnlineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float: ...
-
-
-class OfflineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float: ...
-
-
 class RuleEvaluator:
     @classmethod
     def create_from_config(

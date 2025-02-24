@@ -8,16 +8,21 @@ You can either use your own models or download pre-trained ones from https://nex
 import logging
 import math
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval as CommonRoadInterval
 from commonroad.scenario.scenario import Scenario
+from commonroad_mpr.common.observation import World as MprWorld
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
+
 from crmonitor.common.config import get_traffic_rule_config
-from crmonitor.common.helper import gather
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor, RuleTreeVisitor
@@ -35,7 +40,6 @@ from crmonitor.monitor.monitor_node import (
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -44,13 +48,13 @@ scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
-scale_rob = True
+scale_rob = False
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
 model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_I1"
+traffic_rule = "R_G1"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS
@@ -123,6 +127,33 @@ def _rtamt_interval_to_commonroad_interval(
     return CommonRoadInterval(begin, normalized_end)
 
 
+@dataclass
+class OfflineEvaluationMonitorTreeVisitorContext:
+    """
+    Context for the `OfflineEvaluationMonitorTreeVisitor`. During the evaluation the context is passed down to each node.
+    """
+
+    world: World
+    mpr_world: MprWorld
+    max_time_step: int
+    ego_vehicle: Vehicle
+    other_vehicle: Optional[Tuple[int, Tuple[int, int]]]
+    """
+    Optionally provide one other vehicle that should be considered for the evaluation of binary predicates. This field is populated during the evaluation by the quantifiers.
+    """
+
+    def copy_with_other_vehicles(
+        self, other_vehicle: Tuple[int, Tuple[int, int]]
+    ) -> "OfflineEvaluationMonitorTreeVisitorContext":
+        return OfflineEvaluationMonitorTreeVisitorContext(
+            self.world,
+            self.mpr_world,
+            self.max_time_step,
+            self.ego_vehicle,
+            other_vehicle,
+        )
+
+
 class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def __init__(self, use_boolean=False, output_type=OutputType.STANDARD):
         self.other_ids = tuple()
@@ -134,20 +165,47 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         # TODO: when this visitor is integrated into crmonitor directly, this option should be read from the config
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
-    def walk(self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx):
+    def walk(
+        self,
+        node: MonitorNode,
+        world: World,
+        mpr_world: MprWorld,
+        max_time_step: int,
+        ego_vehicle: Vehicle,
+    ):
         self.other_ids = tuple()
-        other_ids = [(ego_vehicle.id,)] * max_time_step
-        return node.visit(self, world, mpr_world, max_time_step, other_ids, *ctx)
+        # TODO: The context mostly contains static objects, which could also be encoded as object attributes of the visitor.
+        # The only element that must be
+        ctx = OfflineEvaluationMonitorTreeVisitorContext(
+            world, mpr_world, max_time_step, ego_vehicle, None
+        )
+        return node.visit(self, ctx)
 
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        world = ctx[0]
+    def _record_node_samples(
+        self, node, ctx: OfflineEvaluationMonitorTreeVisitorContext, values
+    ) -> None:
+        vehicle_ids = [ctx.ego_vehicle.id]
+        if ctx.other_vehicle:
+            vehicle_ids.append(ctx.other_vehicle[0])
+
+        if node.name not in self.all_values_all_ids:
+            self.all_values_all_ids[node.name] = {}
+        self.all_values_all_ids[node.name][tuple(vehicle_ids)] = values
+
+    def visit_rule_node(
+        self,
+        rule_node: RuleMonitorNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
+    ):
+        world = ctx.world
         # Collect child_values
         assert rule_node.monitor.dt == world.dt, (
             f"Monitor constructed with dt="
             f"{rule_node.monitor.dt} but got "
             f"world state with dt={world.dt}!"
         )
-        child_values = {c.name: c.visit(self, *ctx) for c in rule_node.children}
+
+        child_values = {c.name: c.visit(self, ctx) for c in rule_node.children}
         val = rule_node.evaluate(
             list(child_values.items())
         )  # evaluate instead of update for offline usage
@@ -157,54 +215,66 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         # Therefore, a simple clip is applied here, to make sure the robustness values
         # remain in the required robustness value interval.
         scaled_values = list(np.clip(val, self._rob_scaler.min, self._rob_scaler.max))
-        self.all_values_all_ids[rule_node.name] = scaled_values
+        self._record_node_samples(rule_node, ctx, scaled_values)
         return scaled_values
 
-    def _visit_quant_node(self, node, *ctx):
+    def _visit_quant_node(self, node, ctx: OfflineEvaluationMonitorTreeVisitorContext):
         """
         This method performs the quantification for the operators all and exist.
         Those operators use predicates, which correlate the ego vehicle with all other vehicles in the scenario.
         This method performs this correlation and evaluates each sub-monitor for the permutations of ego vehicle and other vehicles.
         """
-        world, mpr_world, max_time_step, other_ids_at_time = ctx[:4]
-        # Stores tuples of ego vehicle + other vehicle in a time series list indexed by the other vehicle.
-        # This is passed to the evaluators below to correlate the ego vehicle with all other vehicles in the scenario.
-        # TODO: Shouldn't a pair be sufficient, because other_ids_at_time always contains a single ego vehicle?
-        selected_ids_by_vehicle_id = defaultdict(lambda: [()] * max_time_step)
-        for time_step in range(0, max_time_step):
-            other_ids = other_ids_at_time[time_step]
-            all_ids = world.vehicle_ids_for_time_step(time_step)
-            remaining_ids = tuple(set(all_ids).difference(other_ids))
-            for remaining_id in remaining_ids:
-                selected_ids_by_vehicle_id[remaining_id][time_step] = other_ids + (remaining_id,)
+        vehicle_start_times = {}
+        vehicle_end_times = defaultdict(lambda: ctx.max_time_step)
+        for time_step in range(0, ctx.max_time_step):
+            all_ids = set(world.vehicle_ids_for_time_step(time_step))
+
+            entered_vehicle_ids = all_ids.difference(vehicle_start_times.keys())
+            left_vehicle_ids = (
+                set(vehicle_start_times.keys())
+                .difference(vehicle_end_times.keys())
+                .difference(all_ids)
+            )
+
+            for entered_vehicle_id in entered_vehicle_ids:
+                vehicle_start_times[entered_vehicle_id] = time_step
+
+            for left_vehicle_id in left_vehicle_ids:
+                vehicle_start_times[left_vehicle_id] = time_step - 1
 
         values = []
         ret_selected_ids = []
-        for remaining_id, selected_ids in selected_ids_by_vehicle_id.items():
-            val = node.monitors[remaining_id].visit(
-                self, world, mpr_world, max_time_step, selected_ids, *ctx[2:]
+        for vehicle_id in ctx.world.vehicle_ids():
+            if vehicle_id == ctx.ego_vehicle.id:
+                continue
+
+            other_vehicle_params = (
+                vehicle_id,
+                (vehicle_start_times[vehicle_id], vehicle_end_times[vehicle_id]),
+            )
+            val = node.monitors[(ctx.ego_vehicle.id, vehicle_id)].visit(
+                self, ctx.copy_with_other_vehicles(other_vehicle_params)
             )
             values.append(val)
-            ret_selected_ids.append(selected_ids)
+            ret_selected_ids.append(vehicle_id)
 
         return values, ret_selected_ids
 
-    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
+    def visit_all_node(
+        self, all_node: AllMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
+    ):
         # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
-        samples, selected_ids = self._visit_quant_node(all_node, *ctx)
-        world, mpr_world, max_time_step, other_idss = ctx[:4]
+        samples, selected_ids = self._visit_quant_node(all_node, ctx)
         robustness_values = []
-        for time_step in range(0, max_time_step):
+        for time_step in range(0, ctx.max_time_step):
             values = [predicate_values[time_step] for predicate_values in samples]
             if len(values) > 0:
                 idx = np.argmin(values)
                 val = values[idx]
-                self.other_ids = selected_ids[idx]
-                all_node.last_selected = all_node.monitors[self.other_ids[-1]]
+                # all_node.last_selected = all_node.monitors[selected_ids[-1]]
 
             else:
                 val = self._rob_scaler.max
-                self.other_ids = other_idss
                 all_node.last_selected = None
 
             robustness_values.append(val)
@@ -215,25 +285,25 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.all_values_all_ids[all_node.name] = scaled_robustness_values
         return scaled_robustness_values
 
-    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
+    def visit_exist_node(
+        self,
+        exist_node: ExistMonitorNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
+    ):
         # Mostly the same as visit_exist_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
-        samples, selected_ids = self._visit_quant_node(exist_node, *ctx)
-        world, mpr_world, max_time_step, other_ids = ctx[:4]
+        samples, selected_ids = self._visit_quant_node(exist_node, ctx)
 
         robustness_values = []
-        for time_step in range(0, max_time_step):
+        for time_step in range(0, ctx.max_time_step):
             values = [predicate_values[time_step] for predicate_values in samples]
 
             if len(values) > 0:
                 idx = np.argmax(values)
                 val = values[idx]
-                self.other_ids = selected_ids[idx]
 
-                exist_node.last_selected = exist_node.monitors[self.other_ids[-1]]
-
+                exist_node.last_selected = exist_node.monitors[selected_ids[-1]]
             else:
                 val = self._rob_scaler.min
-                self.other_ids = other_ids
                 exist_node.last_selected = None
 
             robustness_values.append(val)
@@ -241,10 +311,13 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.all_values_all_ids[exist_node.name] = robustness_values
         return robustness_values
 
-    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
-        world, mpr_world, time_step, other_ids = ctx[:4]
-        samples_left = andsmooth_node.children[0].visit(self, *ctx)
-        samples_right = andsmooth_node.children[1].visit(self, *ctx)
+    def visit_andsmooth_node(
+        self,
+        andsmooth_node: AndsmoothMonitorNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
+    ):
+        samples_left = andsmooth_node.children[0].visit(self, ctx)
+        samples_right = andsmooth_node.children[1].visit(self, ctx)
 
         samples = []
         for a, b in zip(samples_left, samples_right):
@@ -254,24 +327,25 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             smin = b - k * g
             samples.append(smin)
 
-        self.all_values_all_ids[andsmooth_node.name] = samples
+        self._record_node_samples(andsmooth_node, ctx, samples)
         return samples
 
     def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
+        self,
+        historicallyduration_node: HistoricallyDurationMonitorNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
     ):
-        samples = historicallyduration_node.children[0].visit(self, *ctx)
-        world, _, max_time_step = ctx[:3]
+        samples = historicallyduration_node.children[0].visit(self, ctx)
 
         if historicallyduration_node.interval is not None:
             interval = _rtamt_interval_to_commonroad_interval(
-                historicallyduration_node.interval, world.scenario
+                historicallyduration_node.interval, ctx.world.scenario
             )
             begin = int(interval.start)
-            end = min(max_time_step, int(interval.end))
+            end = min(ctx.max_time_step, int(interval.end))
         else:
             begin = 0
-            end = max_time_step
+            end = ctx.max_time_step
 
         # The concrete implementation of this operator closely follows the implementation of `visitTimedHistorically` from rtamt.
 
@@ -289,26 +363,25 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 samples_less_0 = list(filter(lambda x: x < 0, window))
                 sample_return.append(len(samples_less_0) / len(window))
 
-        self.all_values_all_ids[historicallyduration_node.name] = sample_return
+        self._record_node_samples(historicallyduration_node, ctx, values)
         return sample_return
 
     def visit_historicallydurationseverity_node(
         self,
         historicallydurationseverity_node: HistoricallyDurationMonitorNode,
-        *ctx,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
     ):
-        samples = historicallydurationseverity_node.children[0].visit(self, *ctx)
-        world, _, max_time_step = ctx[:3]
+        samples = historicallydurationseverity_node.children[0].visit(self, ctx)
 
         if historicallydurationseverity_node.interval is not None:
             interval = _rtamt_interval_to_commonroad_interval(
-                historicallydurationseverity_node.interval, world.scenario
+                historicallydurationseverity_node.interval, ctx.world.scenario
             )
             begin = int(interval.start)
-            end = min(max_time_step, int(interval.end))
+            end = min(ctx.max_time_step, int(interval.end))
         else:
             begin = 0
-            end = max_time_step
+            end = ctx.max_time_step
 
         # The concrete implementation of this operator closely follows the implementation of `visitTimedHistorically` from rtamt.
 
@@ -326,15 +399,18 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
                 samples_less_0 = list(filter(lambda x: x < 0, window))
                 sample_return.append(sum(samples_less_0) / len(window))
 
-        self.all_values_all_ids[historicallydurationseverity_node.name] = sample_return
+        self._record_node_samples(historicallydurationseverity_node, ctx, sample_return)
         return sample_return
 
-    def visit_sum_if_positive_node(self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx):
-        samples, selected_ids = self._visit_quant_node(sum_if_positive_node, *ctx)
-        _, _, max_time_step, _ = ctx[:4]
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: SumIfPositiveMonitorNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
+    ):
+        samples, selected_ids = self._visit_quant_node(sum_if_positive_node, ctx)
 
         samples_return = []
-        for time_step in range(0, max_time_step):
+        for time_step in range(0, ctx.max_time_step):
             values = [predicate_values[time_step] for predicate_values in samples]
 
             if len(values) > 0:
@@ -350,7 +426,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
     def visit_compare_to_threshold_scaled_node(
         self,
         compare_to_threshold_scaled_node: CompareToThresholdScaledMonitorNode,
-        *ctx,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
     ):
         samples = compare_to_threshold_scaled_node.children[0].visit(self, *ctx)
 
@@ -361,18 +437,38 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.all_values_all_ids[compare_to_threshold_scaled_node.name] = samples_return
         return samples_return
 
-    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        world, mpr_world, max_time_step, other_idss = ctx[:4]
+    def visit_predicate_node(
+        self,
+        predicate_node: PredicateNode,
+        ctx: OfflineEvaluationMonitorTreeVisitorContext,
+    ):
+        vehicle_ids = [ctx.ego_vehicle.id]
+
+        predicate_arity = len(predicate_node.agent_placeholders)
+        if predicate_arity == 2:
+            if ctx.other_vehicle is None:
+                raise RuntimeError()
+            (
+                other_vehicle_id,
+                (other_vehicle_start_time, other_vehicle_end_time),
+            ) = ctx.other_vehicle
+            vehicle_ids.append(other_vehicle_id)
+        else:
+            other_vehicle_start_time = 0
+            other_vehicle_end_time = ctx.max_time_step
+
         samples = []
-        for time_step in range(0, max_time_step):
-            other_ids = other_idss[time_step]
-            predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
+        for time_step in range(0, ctx.max_time_step):
+            # Only evaluate the predicate if the other vehicle
+            if other_vehicle_start_time > time_step or other_vehicle_end_time < time_step:
+                samples.append(self._rob_scaler.max)
+                continue
 
             samples.append(
-                predicate_node.evaluate_robustness(world, mpr_world, time_step, predicate_ids)
+                predicate_node.evaluate_robustness(ctx.world, ctx.mpr_world, time_step, vehicle_ids)
             )
 
-        self.all_values_all_ids[predicate_node.name] = samples
+        self._record_node_samples(predicate_node, ctx, samples)
         return samples
 
 
