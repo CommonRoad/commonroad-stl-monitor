@@ -71,6 +71,22 @@ all_interstate_predicates = [
     "in_congestion",
     "exist_standing_leading_vehicle",
     "in_standstill",
+    "left_of",
+    "drives_faster",
+    "in_slow_moving_traffic",
+    "in_queue_of_vehicles",
+    "drives_with_slightly_higher_speed",
+    "right_of_broad_lane_marking",
+    "left_of_broad_lane_marking",
+    "on_access_ramp",
+    "on_main_carriage_way",
+    "interstate_broad_enough",
+    "on_shoulder",
+    "in_leftmost_lane",
+    "drives_leftmost",
+    "drives_rightmost",
+    "in_rightmost_lane",
+    "main_carriageway_right_lane",
 ]
 
 trainer = ModelTrainer(data_loader, all_general_predicates + all_interstate_predicates, ScenarioType.INTERSTATE)

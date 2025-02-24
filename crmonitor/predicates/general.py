@@ -357,7 +357,7 @@ class PredInCongestion(BasePredicateEvaluator):
                     self._scale_speed(
                         self.config["max_congestion_velocity"]
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17
+                        - 1.0e-17  # TODO hardcoded epsilon
                     ),
                 )
             )

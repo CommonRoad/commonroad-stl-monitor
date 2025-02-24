@@ -20,21 +20,40 @@ all_general_predicates = [
     "keeps_safe_distance_prec",
     "brakes_abruptly",
     "brakes_abruptly_relative",
-    "precedes",
-    "single_lane",
+    "precedes",  # missing; problematic → all other vehicles must be considered; not too important
+    "single_lane",  # missing
     "keeps_lane_speed_limit",
     "keeps_type_speed_limit",
     "keeps_brake_speed_limit",
     "keeps_fov_speed_limit",
-    "keeps_lane_speed_limit_star",
-    "slow_leading_vehicle",
-    "preserves_traffic_flow",
+    "keeps_lane_speed_limit_star",  # missing
+    "slow_leading_vehicle",  # missing; problematic → all other vehicles must be considered
+    "preserves_traffic_flow",  # missing
 ]
 
+# all missing
 all_interstate_predicates = [
-    "in_congestion",
-    "exist_standing_leading_vehicle",
+    "in_congestion",  # problematic → all other vehicles must be considered
+    "exist_standing_leading_vehicle", # problematic → all other vehicles must be considered
     "in_standstill",
+    "left_of",
+    "drives_faster",
+    "in_slow_moving_traffic", # problematic → all other vehicles must be considered
+    "in_queue_of_vehicles", # problematic → all other vehicles must be considered
+    "drives_with_slightly_higher_speed",
+    "right_of_broad_lane_marking",  # problematic → missing lane information
+    "left_of_broad_lane_marking",  # problematic → missing lane information
+    "on_access_ramp",  # problematic → missing lane information
+    "on_main_carriage_way",  # problematic → missing lane information
+    "makes_u_turn",
+    "reverses",
+    "interstate_broad_enough",
+    "on_shoulder",  # problematic → missing lane information
+    "in_leftmost_lane",  # problematic → missing lane information
+    "drives_leftmost",
+    "drives_rightmost",
+    "in_rightmost_lane",  # problematic → missing lane information
+    "main_carriageway_right_lane",  # problematic → missing lane information
 ]
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
