@@ -41,24 +41,24 @@ all_interstate_predicates = [
     "in_slow_moving_traffic", # problematic → all other vehicles must be considered
     "in_queue_of_vehicles", # problematic → all other vehicles must be considered
     "drives_with_slightly_higher_speed",
-    "right_of_broad_lane_marking",  # problematic → missing lane information
-    "left_of_broad_lane_marking",  # problematic → missing lane information
-    "on_access_ramp",  # problematic → missing lane information
-    "on_main_carriage_way",  # problematic → missing lane information
-    "makes_u_turn",
+    # "right_of_broad_lane_marking",  # problematic → missing lane information
+    # "left_of_broad_lane_marking",  # problematic → missing lane information
+    # "on_access_ramp",  # problematic → missing lane information
+    # "on_main_carriage_way",  # problematic → missing lane information
+    "makes_u_turn",  # input features sufficient? → should be fine; only limitation: we just consider one lanelet instead of possibly multiple lanelets. For our use case, this will be fine.
     "reverses",
     "interstate_broad_enough",
-    "on_shoulder",  # problematic → missing lane information
-    "in_leftmost_lane",  # problematic → missing lane information
+    # "on_shoulder",  # problematic → missing lane information
+    # "in_leftmost_lane",  # problematic → missing lane information
     "drives_leftmost",
     "drives_rightmost",
-    "in_rightmost_lane",  # problematic → missing lane information
-    "main_carriageway_right_lane",  # problematic → missing lane information
+    # "in_rightmost_lane",  # problematic → missing lane information
+    # "main_carriageway_right_lane",  # problematic → missing lane information
 ]
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
-predicate_names = all_general_predicates + all_interstate_predicates
+predicate_names = ["in_front_of"]  # all_general_predicates + all_interstate_predicates
 scenarios_load_path = (
     Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
 )
@@ -68,7 +68,7 @@ output_path = (
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
 scenario_limit = 4
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -168,9 +168,9 @@ class CustomDataGenerator(DataGenerator):
         scenario, _ = CommonRoadFileReader(scenario_path).open(
             lanelet_assignment=True
         )
-        world_mpr = MprWorld.create_from_scenario(scenario)
+        world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
         # Create an additional world for crmonitor predicates
-        world = World.create_from_scenario(scenario)
+        world = World.create_from_scenario(scenario)  # everything still cartesian
         data_entries = []
 
         for time_step in self._time_step_iteration:
@@ -207,7 +207,7 @@ _LOGGER.info(
     scenarios_load_path,
     ", ".join(predicate_names),
 )
-data_generator.generate_data(workers=multiprocessing.cpu_count(), limit=scenario_limit)
+data_generator.generate_data(workers=1, limit=scenario_limit)  # multiprocessing.cpu_count()
 # data_generator._process_scenario(next(scenarios_load_path.glob("*.xml")))
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

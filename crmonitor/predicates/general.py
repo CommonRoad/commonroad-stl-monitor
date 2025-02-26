@@ -286,7 +286,7 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
                 self._scale_lat_dist(
                     cal_road_width(lanelet, world.road_network, s)
                     - self.config["min_interstate_width"]
-                    - 1.0e-17
+                    - 1.0e-17,  # TODO hardcoded epsilon
                 )
             )
         return min(comparison_list)
@@ -357,7 +357,7 @@ class PredInCongestion(BasePredicateEvaluator):
                     self._scale_speed(
                         self.config["max_congestion_velocity"]
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17  # TODO hardcoded epsilon
+                        - 1.0e-17,  # TODO hardcoded epsilon
                     ),
                 )
             )
@@ -436,7 +436,7 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
                     self._scale_speed(
                         self.config["max_slow_moving_traffic_velocity"]
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17
+                        - 1.0e-17,  # TODO hardcoded epsilon
                     ),
                 )
             )
@@ -566,7 +566,7 @@ class PredMakesUTurn(BasePredicateEvaluator):
                         - la.orientation(vehicle.get_lon_state(time_step, la).s)
                     )
                     - self.config["u_turn"]
-                    - 1.0e-17
+                    - 1.0e-17,  # TODO hardcoded epsilon
                 )
             )
         return max(robustness_values)

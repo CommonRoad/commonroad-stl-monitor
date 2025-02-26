@@ -211,7 +211,8 @@ class BasePredicateEvaluator(abc.ABC):
                     )
                 )
                 if len(lanelet_assignment) == 0:
-                    # The state sampler created a state that is outside of the lanelet network.
+                    # The state sampler created a state outside the lanelet network.
+                    # TODO mitigate by activating phantom lanes?
                     count_error += 1
                     continue
                 ego_vehicle.lanelet_assignment[time_step] = lanelet_assignment

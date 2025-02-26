@@ -135,7 +135,7 @@ class PredReverses(BasePredicateEvaluator):
         return self._scale_speed(
             -self.config["standstill_error"]
             - vehicle.get_lon_state(time_step).v
-            - 1.0e-17
+            - 1.0e-17,  # TODO hardcoded epsilon
         )
 
 
@@ -225,7 +225,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                     v_max
                     - veh_o.get_lon_state(time_step).v
                     - self.config["min_velocity_dif"]
-                    - 1.0e-17
+                    - 1.0e-17,  # TODO hardcoded epsilon
                 )
             )
         return max(rob_slow_leading_list)
@@ -287,7 +287,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             self.config["min_velocity_dif"]
             - v_max
             + vehicle.get_lon_state(time_step).v
-            - 1.0e-17
+            - 1.0e-17,  # TODO hardcoded epsilon
         )
 
 
@@ -326,7 +326,7 @@ class PredInStandStill(BasePredicateEvaluator):
                 + self.config["standstill_error"],
                 self.config["standstill_error"]
                 - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                - 1.0e-17,
+                - 1.0e-17,  # TODO hardcoded epsilon
             )
         )
 
@@ -411,7 +411,7 @@ class PredDrivesFaster(BasePredicateEvaluator):
         return self._scale_speed(
             vehicle_k.get_lon_state(time_step).v
             - vehicle_p.get_lon_state(time_step).v
-            - 1.0e-17
+            - 1.0e-17,  # TODO hardcoded epsilon
         )
 
 
@@ -432,10 +432,10 @@ class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
             min(
                 vehicle_k.get_lon_state(time_step).v
                 - vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,
+                - 1.0e-17,  # TODO hardcoded epsilon
                 self.config["slightly_higher_speed_difference"]
                 - vehicle_k.get_lon_state(time_step).v
                 + vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,
+                - 1.0e-17,  # TODO hardcoded epsilon
             )
         )
