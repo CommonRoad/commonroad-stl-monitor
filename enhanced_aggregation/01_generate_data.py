@@ -154,6 +154,8 @@ class CustomDataGenerator(DataGenerator):
         features_dict = FeatureExtrator.all_feature_variables(
             world_state=world_mpr, vehicle_ids=vehicle_ids, time_step=time_step
         )
+        # Not all of these features will be used for training the GPs for each of the predicates.
+        # The relevant features can still be selected later on.
 
         dict_entry_id = {
             "scenario_id": str(world.scenario.scenario_id),

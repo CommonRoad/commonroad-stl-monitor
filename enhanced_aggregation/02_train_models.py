@@ -89,7 +89,7 @@ all_interstate_predicates = [
     "main_carriageway_right_lane",
 ]
 
-trainer = ModelTrainer(data_loader, all_general_predicates + all_interstate_predicates, ScenarioType.INTERSTATE)
+trainer = ModelTrainer(data_loader, ["in_front_of"], ScenarioType.INTERSTATE)
 
 models = trainer.train()
 
