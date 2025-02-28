@@ -190,9 +190,8 @@ class BasePredicateEvaluator(abc.ABC):
         count_valid = 0
         count_true = 0
         count_error = 0
-        for ego_future_state_mpr in ego_sampler.sample():
+        for ego_future_state_mpr in ego_sampler.sample():  # iterates over all states of all predictions.
             try:
-                # MPR states are sometimes (always?) not relative to the world.
                 # To be able to use the states, they need to be converted to CommonRoad states, which are relative to the world.
                 ego_future_state = (
                     ego_future_state_mpr.get_state_in_world_frame().convert_to_commonroad_state()
