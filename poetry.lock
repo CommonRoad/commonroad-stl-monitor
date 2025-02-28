@@ -287,8 +287,8 @@ scipy = ">=1.7.3"
 [package.source]
 type = "git"
 url = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git"
-reference = "02273bdb8fede24b0f1e6ecf93cd2479e1850e2d"
-resolved_reference = "02273bdb8fede24b0f1e6ecf93cd2479e1850e2d"
+reference = "0a89d1721a59873eebda3c145cf566ded27f398d"
+resolved_reference = "0a89d1721a59873eebda3c145cf566ded27f398d"
 
 [[package]]
 name = "commonroad-route-planner"
@@ -2950,4 +2950,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <3.12"
-content-hash = "dc71650fba61c905c905d2a0d9035d57f08244796c7ffb42f61816b29c860e3d"
+content-hash = "b68ace250eb4934ce36aad7c2c4f4c917d85dc3195f6130044b64194d7237452"

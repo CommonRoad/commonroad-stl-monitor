@@ -8,7 +8,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg, ScenarioType
 from crmonitor.common.world import World
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
@@ -41,32 +41,33 @@ all_interstate_predicates = [
     "in_slow_moving_traffic", # problematic → all other vehicles must be considered
     "in_queue_of_vehicles", # problematic → all other vehicles must be considered
     "drives_with_slightly_higher_speed",
-    # "right_of_broad_lane_marking",  # problematic → missing lane information
-    # "left_of_broad_lane_marking",  # problematic → missing lane information
-    # "on_access_ramp",  # problematic → missing lane information
-    # "on_main_carriage_way",  # problematic → missing lane information
+    "right_of_broad_lane_marking",  # problematic → missing lane information
+    "left_of_broad_lane_marking",  # problematic → missing lane information
+    "on_access_ramp",  # problematic → missing lane information
+    "on_main_carriage_way",  # problematic → missing lane information
     "makes_u_turn",  # input features sufficient? → should be fine; only limitation: we just consider one lanelet instead of possibly multiple lanelets. For our use case, this will be fine.
     "reverses",
     "interstate_broad_enough",
-    # "on_shoulder",  # problematic → missing lane information
-    # "in_leftmost_lane",  # problematic → missing lane information
+    "on_shoulder",  # problematic → missing lane information
+    "in_leftmost_lane",  # problematic → missing lane information
     "drives_leftmost",
     "drives_rightmost",
-    # "in_rightmost_lane",  # problematic → missing lane information
-    # "main_carriageway_right_lane",  # problematic → missing lane information
+    "in_rightmost_lane",  # problematic → missing lane information
+    "main_carriageway_right_lane",  # problematic → missing lane information
 ]
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
-predicate_names = ["in_front_of"]  # all_general_predicates + all_interstate_predicates
+predicate_names = all_general_predicates + all_interstate_predicates
 scenarios_load_path = (
-    Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
+    Path(__file__).parent.parent.parent.parent / "highD-scenarios"
 )
+
 output_path = (
     Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 )
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = 4
+scenario_limit = 1
 
 logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
@@ -163,10 +164,9 @@ class CustomDataGenerator(DataGenerator):
             "ego_id": vehicle_ids[0],
             "other_id": vehicle_ids[1],
         }
-        return (dict_entry_id, features_dict, predicates_dict)
+        return dict_entry_id, features_dict, predicates_dict
 
     def _process_scenario(self, scenario_path: Path) -> List[Tuple[dict, dict, dict]]:
-        # try:
         scenario, _ = CommonRoadFileReader(scenario_path).open(
             lanelet_assignment=True
         )
@@ -188,19 +188,19 @@ class CustomDataGenerator(DataGenerator):
                 data_entries.append(data_entry)
 
         return data_entries
-        # except Exception as e:
-        #     _LOGGER.debug(traceback.format_exc())
-        #     raise RuntimeError(
-        #         f"Failed to process scenario {scenario_path.stem}: {e}"
-        #     ) from e
 
 
 data_generator = CustomDataGenerator(
-    predicate_names,
-    scenarios_load_path,
-    scenario_duration=50,
-    dt=0.2,
-    time_steps_per_scenario=1,
+    predicate_names=predicate_names,
+    scenarios_path=scenarios_load_path,
+    scenario_duration=251,
+    dt=0.04,
+    output_path=output_path,
+    vehicle_pair_steps=20,
+    state_sampling_time_horizon=1.5,
+    time_steps_per_scenario=5,
+    scenario_type=ScenarioType.INTERSTATE,
+    snapshot_frequency=20
 )
 
 
@@ -209,7 +209,9 @@ _LOGGER.info(
     scenarios_load_path,
     ", ".join(predicate_names),
 )
-data_generator.generate_data(workers=1, limit=scenario_limit)  # multiprocessing.cpu_count()
-# data_generator._process_scenario(next(scenarios_load_path.glob("*.xml")))
+
+_LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
+
+data_generator.generate_data(workers=max(60, multiprocessing.cpu_count()/2-2), limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)
