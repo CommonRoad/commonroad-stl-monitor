@@ -13,10 +13,10 @@ from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState, InitialState, State
+from commonroad_route_planner.route_planner import RoutePlanner
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
 
-from commonroad_route_planner.route_planner import RoutePlanner
 from crmonitor.common.road_network import Lane, RoadNetwork
 
 rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])

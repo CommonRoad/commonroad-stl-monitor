@@ -4,11 +4,13 @@ from functools import lru_cache
 from typing import Any, Callable, Dict, List, Tuple
 
 import rtamt
-from crmonitor.rule.rule_node import IOType, RuleNode
 from rtamt.spec.abstract_specification import (
     AbstractOfflineOnlineSpecification,
     AbstractOnlineSpecification,
 )
+
+from crmonitor.rule.rule_node import IOType, RuleNode
+
 from .specification_dict import stl_discrete_time_online_specification_factory
 
 

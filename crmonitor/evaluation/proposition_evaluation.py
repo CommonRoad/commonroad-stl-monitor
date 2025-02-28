@@ -2,6 +2,7 @@ import copy
 from typing import Optional
 
 from commonroad_mpr.common.observation import World as WorldMPR
+
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import (

@@ -1,6 +1,5 @@
 from typing import List, Tuple
 
-from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from rtamt.syntax.node.ltl.conjunction import Conjunction
 from rtamt.syntax.node.ltl.disjunction import Disjunction
 from rtamt.syntax.node.ltl.implies import Implies
@@ -14,6 +13,8 @@ from rtamt.syntax.node.stl.timed_eventually import TimedEventually
 from rtamt.syntax.node.stl.timed_historically import TimedHistorically
 from rtamt.syntax.node.stl.timed_once import TimedOnce
 from rtamt.syntax.node.unary_node import UnaryNode
+
+from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 
 
 class PropositionRobustnessMonitor(RtamtStlMonitor):

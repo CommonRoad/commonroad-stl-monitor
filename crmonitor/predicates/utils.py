@@ -9,12 +9,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.geometry.transform import rotate_translate
 from commonroad.planning.goal import GoalRegion
 from commonroad.scenario.intersection import IntersectionIncomingElement
-from commonroad.scenario.lanelet import (
-    Lanelet,
-    LaneletNetwork,
-    LaneletType,
-    StopLine,
-)
+from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType, StopLine
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 from commonroad_route_planner.route_planner import RoutePlanner
 from shapely.geometry import LineString, Polygon

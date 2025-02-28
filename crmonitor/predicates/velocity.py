@@ -24,6 +24,7 @@ class VelocityPredicates(str, Enum):
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
     Reverses = "reverses"
     SlowLeadingVehicle = "slow_leading_vehicle"
+    SlowAsLeadingVehicle = "slow_as_leading_vehicle"
     PreservesTrafficFlow = "preserves_traffic_flow"
     ExistStandingLeadingVehicle = "exist_standing_leading_vehicle"
     InStandstill = "in_standstill"
@@ -136,6 +137,39 @@ class PredReverses(BasePredicateEvaluator):
             -self.config["standstill_error"]
             - vehicle.get_lon_state(time_step).v
             - 1.0e-17,  # TODO hardcoded epsilon
+        )
+
+
+class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
+    """
+    Predicate to evaluate whether a vehicle is 'slow' when driving as a leading vehicle of an ego vehicle.
+    """
+
+    predicate_name = VelocityPredicates.SlowAsLeadingVehicle
+    arity = 1
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self._lane_speed_limit_evaluator = PredLaneSpeedLimitStar(config)
+        self._type_speed_limit_evaluator = PredTypeSpeedLimit(config)
+
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: List[int]
+    ) -> float:
+        veh_id = vehicle_ids[0]
+        vehicle = world.vehicle_by_id(veh_id)
+        v_type = self._type_speed_limit_evaluator.get_speed_limit(
+            world, time_step, [veh_id]
+        )
+        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
+            world, time_step, [veh_id]
+        )
+        v_max = min(v for v in (v_type, v_max_lane) if v is not None)
+        return self._scale_speed(
+            v_max
+            - vehicle.get_lon_state(time_step).v
+            - self.config["min_velocity_dif"]
+            - 1.0e-17  # TODO hardcoded epsilon
         )
 
 

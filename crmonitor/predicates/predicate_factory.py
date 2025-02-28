@@ -4,6 +4,7 @@ import sys
 from typing import Optional
 
 from crmonitor.common.config import get_traffic_rule_config
+
 # by setting __all__ in __init__.py, all relevant modules are imported
 # noinspection PyUnresolvedReferences
 from crmonitor.predicates import *  # noqa: F401,F403

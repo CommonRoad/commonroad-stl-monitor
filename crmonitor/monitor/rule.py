@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 
 from crmonitor.monitor.monitor_node import MonitorNode
+
 # by setting __all__ in __init__.py, all relevant modules are imported
 # noinspection PyUnresolvedReferences
 from crmonitor.predicates import *  # noqa: F401,F403
