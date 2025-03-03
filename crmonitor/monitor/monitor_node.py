@@ -43,9 +43,7 @@ class RuleMonitorNode(MonitorNode):
         return self.monitor.evaluate_monitor_offline(values)
 
     def copy(self):
-        return RuleMonitorNode(
-            self.name, [c.copy() for c in self.children], self.monitor.copy()
-        )
+        return RuleMonitorNode(self.name, [c.copy() for c in self.children], self.monitor.copy())
 
     def reset(self):
         self.monitor.reset()

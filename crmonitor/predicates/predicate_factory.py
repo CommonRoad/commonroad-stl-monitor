@@ -20,9 +20,7 @@ class PredicateFactory:
 
     @staticmethod
     def _get_all_predicate_evaluators():
-        modules = inspect.getmembers(
-            sys.modules["crmonitor.predicates"], inspect.ismodule
-        )
+        modules = inspect.getmembers(sys.modules["crmonitor.predicates"], inspect.ismodule)
         classes = []
         for _, module in modules:
             classes += inspect.getmembers(module, inspect.isclass)

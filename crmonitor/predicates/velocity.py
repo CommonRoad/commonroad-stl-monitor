@@ -40,9 +40,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator):
     def get_speed_limit(self, world, time_step, vehicle_ids):
         raise NotImplementedError
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         time_step = time_step
         speed_limit = self.get_speed_limit(world, time_step, vehicle_ids)
@@ -65,9 +63,7 @@ class PredLaneSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids = vehicle.lanelet_assignment[time_step]
-        ts_interpreter = TrafficSignInterpreter(
-            self.country, world.road_network.lanelet_network
-        )
+        ts_interpreter = TrafficSignInterpreter(self.country, world.road_network.lanelet_network)
         speed_limit = ts_interpreter.speed_limit(frozenset(lanelet_ids))
         return speed_limit
 
@@ -130,9 +126,7 @@ class PredReverses(BasePredicateEvaluator):
         else:
             return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         return self._scale_speed(
             -self.config["standstill_error"]
@@ -148,9 +142,7 @@ class PredHasCongestionVelocity(BasePredicateEvaluator):
     def __init__(self, config) -> None:
         super().__init__(config)
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         veh_id = vehicle_ids[0]
         vehicle = world.vehicle_by_id(veh_id)
         return self._scale_speed(
@@ -171,17 +163,11 @@ class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
         self._lane_speed_limit_evaluator = PredLaneSpeedLimitStar(config)
         self._type_speed_limit_evaluator = PredTypeSpeedLimit(config)
 
-    def evaluate_robustness(
-        self, world: World, time_step: int, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
         veh_id = vehicle_ids[0]
         vehicle = world.vehicle_by_id(veh_id)
-        v_type = self._type_speed_limit_evaluator.get_speed_limit(
-            world, time_step, [veh_id]
-        )
-        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
-            world, time_step, [veh_id]
-        )
+        v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_id])
+        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_id])
         v_max = min(v for v in (v_type, v_max_lane) if v is not None)
         return self._scale_speed(
             v_max
@@ -225,25 +211,18 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
                 world, time_step, [veh_o.id]
             )
-            v_type = self._type_speed_limit_evaluator.get_speed_limit(
-                world, time_step, [veh_o.id]
-            )
+            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
                 vehicle.vehicle_param.get("road_condition_speed_limit"),
                 v_max_lane,
                 v_type,
             ]
             v_max = min(v for v in v_list if v is not None)
-            if (
-                v_max - veh_o.get_lon_state(time_step).v
-                >= self.config["min_velocity_dif"]
-            ):
+            if v_max - veh_o.get_lon_state(time_step).v >= self.config["min_velocity_dif"]:
                 return True
         return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         rob_slow_leading_list = [self._scale_speed(-np.inf)]
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicles = [
@@ -263,9 +242,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
                 world, time_step, [veh_o.id]
             )
-            v_type = self._type_speed_limit_evaluator.get_speed_limit(
-                world, time_step, [veh_o.id]
-            )
+            v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
                 vehicle.vehicle_param.get("road_condition_speed_limit"),
                 v_max_lane,
@@ -298,12 +275,8 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
-            world, time_step, vehicle_ids
-        )
-        v_type = self._type_speed_limit_evaluator.get_speed_limit(
-            world, time_step, vehicle_ids
-        )
+        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
         v_list = [
             vehicle.vehicle_param.get("road_condition_speed_limit"),
             vehicle.vehicle_param.get("fov_speed_limit"),
@@ -317,16 +290,10 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         else:
             return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(
-            world, time_step, vehicle_ids
-        )
-        v_type = self._type_speed_limit_evaluator.get_speed_limit(
-            world, time_step, vehicle_ids
-        )
+        v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
         v_list = [
             vehicle.vehicle_param.get("road_condition_speed_limit"),
             vehicle.vehicle_param.get("fov_speed_limit"),
@@ -364,9 +331,7 @@ class PredInStandStill(BasePredicateEvaluator):
         else:
             return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         # avoid getting None of velocity
         ref_path = vehicle.ref_path_lane
@@ -413,15 +378,11 @@ class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
                 world, time_step, [vehicle_ids[0], veh_o.id]
             ):
                 continue
-            if self._in_standstill_evaluator.evaluate_boolean(
-                world, time_step, [veh_o.id]
-            ):
+            if self._in_standstill_evaluator.evaluate_boolean(world, time_step, [veh_o.id]):
                 return True
         return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         rob_standstill_list = [self._scale_speed(-np.inf)]
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicles = [
@@ -440,9 +401,7 @@ class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
                 continue
 
             rob_standstill_list.append(
-                self._in_standstill_evaluator.evaluate_robustness(
-                    world, time_step, [veh_o.id]
-                )
+                self._in_standstill_evaluator.evaluate_robustness(world, time_step, [veh_o.id])
             )
         return max(rob_standstill_list)
 
@@ -455,9 +414,7 @@ class PredDrivesFaster(BasePredicateEvaluator):
     predicate_name = VelocityPredicates.DrivesFaster
     arity = 2
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
         return self._scale_speed(
@@ -475,9 +432,7 @@ class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
     predicate_name = VelocityPredicates.DrivesWithSlightlyHigherSpeed
     arity = 2
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
         return self._scale_speed(

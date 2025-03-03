@@ -16,8 +16,6 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval as CommonRoadInterval
 from commonroad.scenario.scenario import Scenario
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
-
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.helper import gather
 from crmonitor.common.world import World, get_world_config
@@ -37,6 +35,7 @@ from crmonitor.monitor.monitor_node import (
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -88,8 +87,7 @@ if use_mpr:
         # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
         # If this is not the case for your setup, adjust the path here accordingly.
         path_root=str(
-            Path(__file__).parent.parent.parent
-            / "commonroad-model-predictive-robustness"
+            Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"
         ),
         folder_config="config_files",
         default_profile="default",
@@ -136,9 +134,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         # TODO: when this visitor is integrated into crmonitor directly, this option should be read from the config
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
-    def walk(
-        self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx
-    ):
+    def walk(self, node: MonitorNode, world, mpr_world, max_time_step, ego_vehicle, *ctx):
         self.other_ids = tuple()
         other_ids = [(ego_vehicle.id,)] * max_time_step
         return node.visit(self, world, mpr_world, max_time_step, other_ids, *ctx)
@@ -180,9 +176,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             all_ids = world.vehicle_ids_for_time_step(time_step)
             remaining_ids = tuple(set(all_ids).difference(other_ids))
             for remaining_id in remaining_ids:
-                selected_ids_by_vehicle_id[remaining_id][time_step] = other_ids + (
-                    remaining_id,
-                )
+                selected_ids_by_vehicle_id[remaining_id][time_step] = other_ids + (remaining_id,)
 
         values = []
         ret_selected_ids = []
@@ -335,9 +329,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         self.all_values_all_ids[historicallydurationseverity_node.name] = sample_return
         return sample_return
 
-    def visit_sum_if_positive_node(
-        self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx
-    ):
+    def visit_sum_if_positive_node(self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx):
         samples, selected_ids = self._visit_quant_node(sum_if_positive_node, *ctx)
         _, _, max_time_step, _ = ctx[:4]
 
@@ -363,11 +355,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
         samples = compare_to_threshold_scaled_node.children[0].visit(self, *ctx)
 
         samples_return = [
-            1
-            - 2
-            * math.exp(
-                -sample / compare_to_threshold_scaled_node.threshold * math.log(2)
-            )
+            1 - 2 * math.exp(-sample / compare_to_threshold_scaled_node.threshold * math.log(2))
             for sample in samples
         ]
         self.all_values_all_ids[compare_to_threshold_scaled_node.name] = samples_return
@@ -381,9 +369,7 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
             predicate_ids = gather(other_ids, predicate_node.agent_placeholders)
 
             samples.append(
-                predicate_node.evaluate_robustness(
-                    world, mpr_world, time_step, predicate_ids
-                )
+                predicate_node.evaluate_robustness(world, mpr_world, time_step, predicate_ids)
             )
 
         self.all_values_all_ids[predicate_node.name] = samples

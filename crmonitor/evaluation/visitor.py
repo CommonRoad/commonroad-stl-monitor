@@ -53,9 +53,7 @@ class RuleTreeVisitor(ABC):
     @abstractmethod
     def visit_historicallyduration_node(
         self,
-        historicallyduration_node: Union[
-            HistoricallyDurationNode, HistoricallyDurationMonitorNode
-        ],
+        historicallyduration_node: Union[HistoricallyDurationNode, HistoricallyDurationMonitorNode],
         *ctx,
     ):
         pass
@@ -75,8 +73,7 @@ class RuleTreeVisitor(ABC):
         self,
         sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
         *ctx,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def visit_compare_to_threshold_scaled_node(
@@ -85,8 +82,7 @@ class RuleTreeVisitor(ABC):
             CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
         ],
         *ctx,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -100,9 +96,7 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
 
     def visit_rule_node(self, rule_node: RuleNode, *ctx):
         children = [c.visit(self, *ctx) for c in rule_node.children]
-        monitor = RtamtStlMonitor.create_from_rule_node(
-            rule_node, self.dt, self.output_type
-        )
+        monitor = RtamtStlMonitor.create_from_rule_node(rule_node, self.dt, self.output_type)
         return RuleMonitorNode(rule_node.name, children, monitor)
 
     def visit_all_node(self, all_node: AllNode, *ctx):
@@ -130,9 +124,7 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
         historicallydurationseverity_node: HistoricallyDurationSeverityNode,
         *ctx,
     ):
-        children = [
-            c.visit(self, *ctx) for c in historicallydurationseverity_node.children
-        ]
+        children = [c.visit(self, *ctx) for c in historicallydurationseverity_node.children]
         return HistoricallyDurationSeverityMonitorNode(
             historicallydurationseverity_node.name,
             children,
@@ -153,9 +145,7 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
     def visit_compare_to_threshold_scaled_node(
         self, compare_to_threshold_scaled_node: CompareToThresholdScaledNode, *ctx
     ):
-        children = [
-            c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children
-        ]
+        children = [c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children]
         return CompareToThresholdScaledMonitorNode(
             compare_to_threshold_scaled_node.name,
             children,
@@ -199,9 +189,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
         selected_ids = []
         for i in remaining_ids:
             ids = other_ids + (i,)
-            val = node.monitors[i].visit(
-                self, world, mpr_world, time_step, ids, *ctx[2:]
-            )
+            val = node.monitors[i].visit(self, world, mpr_world, time_step, ids, *ctx[2:])
             values.append(val)
             selected_ids.append(ids)
         return values, selected_ids
@@ -276,9 +264,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
             value = predicate_node.evaluate_boolean(world, time_step, predicate_ids)
             value = 1.0 if value else -1.0
         else:
-            value = predicate_node.evaluate_robustness(
-                world, mpr_world, time_step, predicate_ids
-            )
+            value = predicate_node.evaluate_robustness(world, mpr_world, time_step, predicate_ids)
         return value
 
     def visit_andsmooth_node(
@@ -290,9 +276,7 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_historicallyduration_node(
         self,
-        historicallyduration_node: Union[
-            HistoricallyDurationNode, HistoricallyDurationMonitorNode
-        ],
+        historicallyduration_node: Union[HistoricallyDurationNode, HistoricallyDurationMonitorNode],
         *ctx,
     ):
         raise RuntimeError(
@@ -308,6 +292,24 @@ class EvaluationMonitorTreeVisitor(RuleTreeVisitor):
     ):
         raise RuntimeError(
             "The 'historicallyDurationSeverity' operator is currently only supported when using offline evaluation."
+        )
+
+    def visit_sum_if_positive_node(
+        self, sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode], *ctx
+    ):
+        raise RuntimeError(
+            "The 'sum_if_positive' operator is currently only supported when using offline evaluation."
+        )
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: Union[
+            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
+        ],
+        *ctx,
+    ):
+        raise RuntimeError(
+            "The 'compare_to_threshold_scaled' operator is currently only supported when using offline evaluation."
         )
 
 
@@ -418,10 +420,7 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
             for i, monitor in node.monitors.items()
             if monitor != node.last_selected
         ]
-        return (
-            list(itertools.chain(*draw_functions_nested))
-            + draw_functions_for_effective_node
-        )
+        return list(itertools.chain(*draw_functions_nested)) + draw_functions_for_effective_node
 
     def visit_all_node(self, all_node: AllMonitorNode, *ctx):
         return self._visit_quant_node(all_node, *ctx)
@@ -484,8 +483,7 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
 
         if (
             not is_effective
-            and latest_vehicle_ids
-            not in show_non_effective_predicate_instances_for_vehicles
+            and latest_vehicle_ids not in show_non_effective_predicate_instances_for_vehicles
         ):
             return ()
 
@@ -521,9 +519,7 @@ class ResetMonitorTreeVisitor(RuleTreeVisitor):
 
     def visit_historicallyduration_node(
         self,
-        historicallyduration_node: Union[
-            HistoricallyDurationNode, HistoricallyDurationMonitorNode
-        ],
+        historicallyduration_node: Union[HistoricallyDurationNode, HistoricallyDurationMonitorNode],
         *ctx,
     ):
         self._visit(historicallyduration_node, *ctx)

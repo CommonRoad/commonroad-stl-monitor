@@ -38,18 +38,15 @@ class AbstractRuleEvaluator(ABC):
         return cls()
 
     @abstractmethod
-    def evaluate(self) -> float:
-        ...
+    def evaluate(self) -> float: ...
 
 
 class OnlineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float:
-        ...
+    def evaluate(self) -> float: ...
 
 
 class OfflineRuleEvaluator(AbstractRuleEvaluator):
-    def evaluate(self) -> float:
-        ...
+    def evaluate(self) -> float: ...
 
 
 class RuleEvaluator:
@@ -121,16 +118,12 @@ class RuleEvaluator:
         monitor_evaluation_visitor: Optional[RuleTreeVisitor] = None,
     ):
         if monitor_creation_visitor is None:
-            monitor_creation_visitor = MonitorCreationRuleTreeVisitor(
-                world.dt, output_type
-            )
+            monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = rule.visit(monitor_creation_visitor)
         self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
         self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
-        self._ast_node_value_collector_visitor = (
-            AstNodeValueCollectorMonitorTreeVisitor()
-        )
+        self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         if monitor_evaluation_visitor is None:
             self._eval_visitor = EvaluationMonitorTreeVisitor(
@@ -189,9 +182,7 @@ class RuleEvaluator:
             self._last_evaluation_time_step,
             self.ego_vehicle,
         )
-        rule_value = (
-            rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
-        )
+        rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
         return rule_value
 
@@ -206,9 +197,7 @@ class RuleEvaluator:
             trajectory
         """
         robustness_values = []
-        for i in range(
-            self._last_evaluation_time_step + 1, self.ego_vehicle.end_time + 1
-        ):
+        for i in range(self._last_evaluation_time_step + 1, self.ego_vehicle.end_time + 1):
             robustness_values.append(self.update())
         return np.array(robustness_values)
 
@@ -317,9 +306,7 @@ class RuleEvaluator:
         self._ego_id = ego_id
         self._world = world
         self._last_evaluation_time_step = (
-            start_time_step - 1
-            if start_time_step is not None
-            else self.ego_vehicle.start_time - 1
+            start_time_step - 1 if start_time_step is not None else self.ego_vehicle.start_time - 1
         )
         self._rule_value_course = []
         # Reset monitor

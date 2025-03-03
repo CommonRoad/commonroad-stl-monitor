@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg, ScenarioType
+from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.common.world import World
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
@@ -34,12 +34,12 @@ all_general_predicates = [
 # all missing
 all_interstate_predicates = [
     "in_congestion",  # problematic → all other vehicles must be considered
-    "exist_standing_leading_vehicle", # problematic → all other vehicles must be considered
+    "exist_standing_leading_vehicle",  # problematic → all other vehicles must be considered
     "in_standstill",
     "left_of",
     "drives_faster",
-    "in_slow_moving_traffic", # problematic → all other vehicles must be considered
-    "in_queue_of_vehicles", # problematic → all other vehicles must be considered
+    "in_slow_moving_traffic",  # problematic → all other vehicles must be considered
+    "in_queue_of_vehicles",  # problematic → all other vehicles must be considered
     "drives_with_slightly_higher_speed",
     "right_of_broad_lane_marking",  # problematic → missing lane information
     "left_of_broad_lane_marking",  # problematic → missing lane information
@@ -59,13 +59,9 @@ all_interstate_predicates = [
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
 predicate_names = all_general_predicates + all_interstate_predicates
-scenarios_load_path = (
-    Path(__file__).parent.parent.parent.parent / "highD-scenarios"
-)
+scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
 
-output_path = (
-    Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
-)
+output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
 scenario_limit = None
 
@@ -95,9 +91,7 @@ MprCfg.build_configuration(
     # Path root must point to a local revision of commonroad-model-predictive-robustness.
     # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
     # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(
-        Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"
-    ),
+    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
     folder_config="config_files",
     default_profile="default",
 )
@@ -167,9 +161,7 @@ class CustomDataGenerator(DataGenerator):
         return dict_entry_id, features_dict, predicates_dict
 
     def _process_scenario(self, scenario_path: Path) -> List[Tuple[dict, dict, dict]]:
-        scenario, _ = CommonRoadFileReader(scenario_path).open(
-            lanelet_assignment=True
-        )
+        scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
         world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
         # Create an additional world for crmonitor predicates
         world = World.create_from_scenario(scenario)  # everything still cartesian
@@ -200,7 +192,7 @@ data_generator = CustomDataGenerator(
     state_sampling_time_horizon=1.5,
     time_steps_per_scenario=5,
     scenario_type=ScenarioType.INTERSTATE,
-    snapshot_frequency=10
+    snapshot_frequency=10,
 )
 
 
@@ -212,6 +204,8 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(workers=int(min(60, multiprocessing.cpu_count()/2-2)), limit=scenario_limit)  # multiprocessing.cpu_count()
+data_generator.generate_data(
+    workers=int(min(60, multiprocessing.cpu_count() / 2 - 2)), limit=scenario_limit
+)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

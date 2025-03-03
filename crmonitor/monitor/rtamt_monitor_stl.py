@@ -32,9 +32,7 @@ def _template_spec(
     if output_type != OutputType.STANDARD:
         # Workaround for rtamt when working with output-robustness and input vacuity
         for pred in predicates:
-            logic_formula = logic_formula.replace(
-                pred[0].name, f"({pred[0].name} >= 0)"
-            )
+            logic_formula = logic_formula.replace(pred[0].name, f"({pred[0].name} >= 0)")
 
     spec = spec_factory(output_type.value)
     for var, io_type in predicates:
@@ -67,9 +65,7 @@ def _create_spec(
         [rtamt.Semantics], AbstractOfflineOnlineSpecification
     ] = stl_discrete_time_online_specification_factory,
 ) -> AbstractOfflineOnlineSpecification:
-    template_spec = _template_spec(
-        rule_str, output_type, tuple(predicates), dt, spec_factory
-    )
+    template_spec = _template_spec(rule_str, output_type, tuple(predicates), dt, spec_factory)
     # The dynamic part of the template spec has to be replaced.
     spec = copy.copy(template_spec)
     # Create a dummy spec to obtain a new interpreter
@@ -89,12 +85,9 @@ class RtamtStlMonitor:
     """
 
     @classmethod
-    def create_from_rule_node(
-        cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD
-    ):
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD):
         predicates = [
-            (c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT)
-            for c in rule_node.children
+            (c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT) for c in rule_node.children
         ]
         return cls(rule_node.rule_str, predicates, dt, output_type)
 
@@ -116,9 +109,7 @@ class RtamtStlMonitor:
     def ast_node_values(self) -> Dict[str, float]:
         return self._spec.online_interpreter.updateVisitor.ast_node_values
 
-    def evaluate_monitor_online(
-        self, time_step: int, predicates: List[Tuple[str, float]]
-    ):
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob

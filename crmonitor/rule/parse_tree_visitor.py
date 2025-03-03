@@ -54,9 +54,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             io_type = IOType.INPUT
             token_index = ctx.IO_TYPE_INPUT().symbol.tokenIndex
             # Delete the input indicator, only keep the predicate name.
-            self._rewriter.delete(
-                self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index
-            )
+            self._rewriter.delete(self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index)
         else:
             io_type = IOType.OUTPUT
         predicate_evaluator = self._predicate_factory.get_predicate(pred_basename)
@@ -139,9 +137,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         )
         return [node]
 
-    def visitSpecHistoricallyDuration(
-        self, ctx: FaStlParser.SpecHistoricallyDurationContext
-    ):
+    def visitSpecHistoricallyDuration(self, ctx: FaStlParser.SpecHistoricallyDurationContext):
         children = self.visit(ctx.spec())
         if ctx.interval() is None:
             interval = None
@@ -193,9 +189,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         interval = Interval(begin, end, begin_unit, end_unit)
         return interval
 
-    def visitSpecQuantSumIfPositive(
-        self, ctx: FaStlParser.SpecQuantSumIfPositiveContext
-    ):
+    def visitSpecQuantSumIfPositive(self, ctx: FaStlParser.SpecQuantSumIfPositiveContext):
         children = self.visit(ctx.spec())
         quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
         self._sub_rule_counter += 1

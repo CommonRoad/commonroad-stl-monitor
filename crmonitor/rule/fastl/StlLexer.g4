@@ -81,7 +81,7 @@ PSEC
 ROS_Topic
         : 'topic' ;
 
-        
+
 Import
         : 'import' ;
 
@@ -117,7 +117,7 @@ DomainTypeBool
 
 Assertion
 	: 'assertion' ;
-	
+
 Specification
 	: 'specification';
 
@@ -323,4 +323,3 @@ COMMENT
 
 LINE_COMMENT
 	: '//' ~[\r\n]* -> skip ;
-

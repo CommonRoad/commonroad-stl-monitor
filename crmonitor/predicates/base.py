@@ -7,7 +7,7 @@ from typing import Callable, Dict, List, Tuple, Union
 import numpy as np
 from commonroad.visualization.renderer import IRenderer
 from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML, read_model
+from commonroad_mpr.learning import FeatureExtrator, read_model
 from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
@@ -71,9 +71,7 @@ class BasePredicateEvaluator(abc.ABC):
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
-    def evaluate_robustness(
-        self, world: World, time_step: int, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
         pass
 
     def evaluate_mpr_ml(
@@ -112,9 +110,7 @@ class BasePredicateEvaluator(abc.ABC):
         )
 
         features = {
-            vehicle: {
-                name: all_feature_variables[vehicle][name] for name in desired_names
-            }
+            vehicle: {name: all_feature_variables[vehicle][name] for name in desired_names}
             for vehicle, desired_names in desired_features.items()
             if desired_names is not None
         }
@@ -173,9 +169,7 @@ class BasePredicateEvaluator(abc.ABC):
             ego_vehicle_mpr,
             time_step,
             MprCfg["common"]["scenario"],
-            **MprCfg["sampling_approach"]["state_based_sampling"][
-                MprCfg["common"]["scenario"]
-            ],
+            **MprCfg["sampling_approach"]["state_based_sampling"][MprCfg["common"]["scenario"]],
         )
 
         orig_ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
@@ -206,10 +200,8 @@ class BasePredicateEvaluator(abc.ABC):
                 ego_loc_shape = ego_vehicle.shape.rotate_translate_local(
                     ego_future_state.position, ego_future_state.orientation
                 )
-                lanelet_assignment = (
-                    world.road_network.lanelet_network.find_lanelet_by_shape(
-                        ego_loc_shape
-                    )
+                lanelet_assignment = world.road_network.lanelet_network.find_lanelet_by_shape(
+                    ego_loc_shape
                 )
                 if len(lanelet_assignment) == 0:
                     # The state sampler created a state outside the lanelet network.
@@ -335,9 +327,9 @@ class BasePredicateEvaluator(abc.ABC):
         time_step: int,
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
-        predicate_names2vehicle_ids2values[self.predicate_name][
-            tuple(vehicle_ids)
-        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
+            self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        )
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):

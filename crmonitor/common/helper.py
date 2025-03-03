@@ -49,11 +49,7 @@ def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
     )
     ego_vehicle_param["emergency_profile"] = emergency_profile
 
-    if (
-        not -1e-12
-        <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(str(dt)))
-        <= 1e-12
-    ):
+    if not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(str(dt))) <= 1e-12:
         raise ValueError("Reaction time must be multiple of time step size.")
 
     return ego_vehicle_param
@@ -73,9 +69,7 @@ def create_other_vehicles_param(other_vehicles_param: Dict) -> Dict:
     elif other_vehicles_param.get("vehicle_number") == 3:
         other_vehicles_param["dynamics_param"] = parameters_vehicle3()
     else:
-        raise ValueError(
-            "Wrong vehicle number for leading vehicle in config file defined."
-        )
+        raise ValueError("Wrong vehicle number for leading vehicle in config file defined.")
 
     return other_vehicles_param
 
@@ -118,9 +112,7 @@ def calc_v_max_fov(ego_vehicle_param: Dict, simulation_param: Dict) -> int:
         t_react,
         v_max,
         v_min,
-    ) = init_v_max_calculation(
-        a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego
-    )
+    ) = init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego)
     while (
         dist_offset <= 0
         or dist_offset >= 0.5
@@ -194,13 +186,9 @@ def calc_v_max_braking(
         t_react,
         v_max,
         v_min,
-    ) = init_v_max_calculation(
-        a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego
-    )
+    ) = init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego)
     while (
-        dist_offset <= 0
-        or dist_offset >= 0.5
-        and not (v_max == v_max_delta and dist_offset > 0.5)
+        dist_offset <= 0 or dist_offset >= 0.5 and not (v_max == v_max_delta and dist_offset > 0.5)
     ):
         if ego_vehicle_param.get("fov") - stopping_distance < 0:
             v_max -= 0.001
@@ -233,9 +221,7 @@ def calc_v_max_braking(
     return math.floor(v_max + traffic_rule_param.get("max_velocity_limit_free_driving"))
 
 
-def init_v_max_calculation(
-    a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego
-):
+def init_v_max_calculation(a_min, ego_vehicle_param, emergency_profile, simulation_param, v_ego):
     """
     Helper function to initialize values for calculation of maximum velocity based on field of view and braking
 
@@ -426,9 +412,7 @@ def calculate_tv(a_0, j_input, v_0, v_max):
     return t_v
 
 
-def get_robust_lanelet_assignment(
-    state: State, obs: DynamicObstacle, road_network: RoadNetwork
-):
+def get_robust_lanelet_assignment(state: State, obs: DynamicObstacle, road_network: RoadNetwork):
     lanelets = obs.initial_shape_lanelet_ids
     lanes = road_network.find_lanes_by_lanelets(lanelets)
     shape = obs.obstacle_shape.rotate_translate_local(state.position, state.orientation)
@@ -477,9 +461,7 @@ def create_vehicle(
             main_carriage_way_lanelet_id = _find_main_carriage_way_lanelet_id(
                 initial_lanelets[0], road_network
             )
-            lane = road_network.find_lane_by_obstacle(
-                [main_carriage_way_lanelet_id], []
-            )
+            lane = road_network.find_lane_by_obstacle([main_carriage_way_lanelet_id], [])
         else:
             lane = road_network.find_lane_by_obstacle(
                 list(obstacle.initial_center_lanelet_ids),
@@ -539,12 +521,10 @@ def create_vehicle(
         state_list_lon[state.time_step] = state_lon
         state_list_lat[state.time_step] = state_lat
         state_list_cr[state.time_step] = state
-        signal_series[state.time_step] = obstacle.signal_state_at_time_step(
+        signal_series[state.time_step] = obstacle.signal_state_at_time_step(state.time_step)
+        lanelet_assignments[state.time_step] = obstacle.prediction.shape_lanelet_assignment[
             state.time_step
-        )
-        lanelet_assignments[
-            state.time_step
-        ] = obstacle.prediction.shape_lanelet_assignment[state.time_step]
+        ]
         if create_robust_lanelet_assignment:
             robust_lanelet_assginment[state.time_step] = get_robust_lanelet_assignment(
                 state, obstacle, road_network
@@ -566,9 +546,7 @@ def create_vehicle(
     return vehicle
 
 
-def _adjacent_to_ego(
-    ego_lanelet_id: int, obs_lanelet_id: int, road_network: RoadNetwork
-) -> bool:
+def _adjacent_to_ego(ego_lanelet_id: int, obs_lanelet_id: int, road_network: RoadNetwork) -> bool:
     """
     Evaluates if a vehicle is in a to the ego vehicle adjacent lane
 
@@ -584,17 +562,13 @@ def _adjacent_to_ego(
         current_lanelet.adj_left_same_direction is not None
         and current_lanelet.adj_left_same_direction is True
     ):
-        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_left
-        )
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     while (
         current_lanelet.adj_right_same_direction is not None
         and current_lanelet.adj_right_same_direction is True
     ):
-        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_right
-        )
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_right)
         adjacent_lanelet_ids.add(current_lanelet.lanelet_id)
     for lanelet_id in list(adjacent_lanelet_ids):
         lane = road_network.find_lane_by_lanelet(lanelet_id)
@@ -614,16 +588,12 @@ def _find_main_carriage_way_lanelet_id(lanelet: Lanelet, road_network) -> int:
     if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
         return current_lanelet.lanelet_id
     while current_lanelet.adj_left_same_direction is not None:
-        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            current_lanelet.adj_left
-        )
+        current_lanelet = road_network.lanelet_network.find_lanelet_by_id(current_lanelet.adj_left)
         if LaneletType.MAIN_CARRIAGE_WAY in current_lanelet.lanelet_type:
             return current_lanelet.lanelet_id
 
 
-def _compute_jerk(
-    current_acceleration: float, previous_acceleration: float, dt: float
-) -> float:
+def _compute_jerk(current_acceleration: float, previous_acceleration: float, dt: float) -> float:
     """
     Computes jerk given acceleration
 
@@ -684,14 +654,12 @@ def create_scenario_vehicles(
         ):
             continue
         if obstacle_vehicle_curvi_states_dict is None:
-            vehicle = create_vehicle(
-                obs, other_vehicles_param, road_network, dt, ego_vehicle
-            )
+            vehicle = create_vehicle(obs, other_vehicles_param, road_network, dt, ego_vehicle)
         else:
             # load curvi states
-            state_list_lon, state_list_lat = obstacle_vehicle_curvi_states_dict[
-                obs.obstacle_id
-            ][ego_vehicle.lane.lanelet.lanelet_id]
+            state_list_lon, state_list_lat = obstacle_vehicle_curvi_states_dict[obs.obstacle_id][
+                ego_vehicle.lane.lanelet.lanelet_id
+            ]
 
             initial_time_step = obs.initial_state.time_step
             state_list_cr = {initial_time_step: obs.initial_state}
@@ -699,12 +667,10 @@ def create_scenario_vehicles(
             signal_series = {initial_time_step: obs.initial_signal_state}
             for state in obs.prediction.trajectory.state_list:
                 state_list_cr[state.time_step] = state
-                signal_series[state.time_step] = obs.signal_state_at_time_step(
+                signal_series[state.time_step] = obs.signal_state_at_time_step(state.time_step)
+                lanelet_assignments[state.time_step] = obs.prediction.shape_lanelet_assignment[
                     state.time_step
-                )
-                lanelet_assignments[
-                    state.time_step
-                ] = obs.prediction.shape_lanelet_assignment[state.time_step]
+                ]
             lane = road_network.find_lane_by_obstacle(
                 list(obs.initial_center_lanelet_ids),
                 list(obs.initial_shape_lanelet_ids),
@@ -833,19 +799,13 @@ def update_scenario_vehicles(
     :return: updated ego and dynamic vehicles
     """
     # update ego vehicle # TODO: ego_vehicle.lane is not updated
-    ego_vehicle = update_vehicle(
-        ego_obstacle, dt, time_step, ego_vehicle.lane, ego_vehicle
-    )
+    ego_vehicle = update_vehicle(ego_obstacle, dt, time_step, ego_vehicle.lane, ego_vehicle)
 
     # update obstacle vehicles
     other_vehicles = []
     for o in dynamic_obstacles:
         # only update if obstacle appears at the current time step
-        if (
-            o.initial_state.time_step
-            <= time_step
-            <= o.prediction.trajectory.final_state.time_step
-        ):
+        if o.initial_state.time_step <= time_step <= o.prediction.trajectory.final_state.time_step:
             if obstacle_vehicle_dict is None:
                 if o.obstacle_id in dynamic_vehicles:
                     updated_vehicle = update_vehicle(
@@ -998,15 +958,12 @@ def get_curvilinear_coordinate_system(
 
     def fn(cartesian_points: np.ndarray) -> np.ndarray:
         # Dimensions (cart pts, segs, xy)
-        cartesian_points_seg_local = to_local_frame(
-            cartesian_points[:, None] - seg_start
-        )
+        cartesian_points_seg_local = to_local_frame(cartesian_points[:, None] - seg_start)
 
         # Dimensions (cart pts, segs)
-        s = (
-            cartesian_points_seg_local[..., 0]
-            + m_b * cartesian_points_seg_local[..., 1]
-        ) / (seg_length - cartesian_points_seg_local[..., 1] * (m_t - m_b))
+        s = (cartesian_points_seg_local[..., 0] + m_b * cartesian_points_seg_local[..., 1]) / (
+            seg_length - cartesian_points_seg_local[..., 1] * (m_t - m_b)
+        )
         # Dimensions (cart pts, segs, xy)
         base_point = s[..., None] * seg_dir + seg_start
         # Dimensions (cart pts, segs, xy)
@@ -1066,9 +1023,7 @@ def merge_dicts_recursively(*dicts):
                 if isinstance(result[k], dict) and isinstance(v, dict):
                     result[k] = merge_dicts_recursively(result[k], v)
                 else:
-                    result[
-                        k
-                    ] = v  # in case of two different values take the one later added
+                    result[k] = v  # in case of two different values take the one later added
             else:
                 result[k] = v
     return result

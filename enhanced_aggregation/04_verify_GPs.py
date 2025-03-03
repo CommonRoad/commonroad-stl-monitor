@@ -3,12 +3,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
-learning_data_path = (
-    Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
-)
+learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 models_path = Path(__file__).parent.parent / "output" / "models"
 
 metrics_output_path = Path(__file__).parent.parent / "output" / "gp_metrics.csv"
@@ -34,9 +31,7 @@ MprCfg.build_configuration(
     # Path root must point to a local revision of commonroad-model-predictive-robustness.
     # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
     # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(
-        Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"
-    ),
+    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
     folder_config="config_files",
     default_profile="default",
 )

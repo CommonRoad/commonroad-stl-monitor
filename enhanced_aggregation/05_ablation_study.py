@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import pandas as pd
-
 from crmonitor.common.config import get_traffic_rule_config
-from crmonitor.common.world import get_world_config, World
+from crmonitor.common.world import World, get_world_config
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor
 
@@ -16,7 +15,17 @@ scale_rob = True
 model_path = "/path/to/mpr/models"
 
 for scenario in input_scenarios.glob("*.xml"):
-    for rule in ("R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I2", "R_I3", "R_I4", "R_I5"):
+    for rule in (
+        "R_G1",
+        "R_G2",
+        "R_G3",
+        "R_G4",
+        "R_I1",
+        "R_I2",
+        "R_I3",
+        "R_I4",
+        "R_I5",
+    ):
         for use_mpr in (False,):
             for use_enhanced_aggregation in (False, True):
                 # config used for the world creation
@@ -50,8 +59,14 @@ for scenario in input_scenarios.glob("*.xml"):
                 # Either step through time steps sequentially
                 robustness = rule_evaluator.evaluate_offline()
 
-
-                results.append({"Scenario": scenario, "Rule": rule, "MPR": use_mpr, "Enhanced Aggregation": use_enhanced_aggregation})
+                results.append(
+                    {
+                        "Scenario": scenario,
+                        "Rule": rule,
+                        "MPR": use_mpr,
+                        "Enhanced Aggregation": use_enhanced_aggregation,
+                    }
+                )
 
 results_df = pd.DataFrame(results)
 results_df.to_csv(output_file, index=False)
@@ -66,7 +81,17 @@ scale_rob = True
 model_path = "/path/to/mpr/models"
 
 for scenario_path in sorted(input_scenarios.glob("*.xml"))[1:4]:
-    for rule in ("R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I2", "R_I3", "R_I4", "R_I5"):
+    for rule in (
+        "R_G1",
+        "R_G2",
+        "R_G3",
+        "R_G4",
+        "R_I1",
+        "R_I2",
+        "R_I3",
+        "R_I4",
+        "R_I5",
+    ):
         for use_mpr in (False,):
             for use_enhanced_aggregation in (False, True):
                 # try:
@@ -103,7 +128,14 @@ for scenario_path in sorted(input_scenarios.glob("*.xml"))[1:4]:
                 # Either step through time steps sequentially
                 robustness = rule_evaluator.evaluate_offline()
 
-                results.append({"Scenario": scenario.scenario_id, "Rule": rule, "MPR": use_mpr, "Enhanced Aggregation": use_enhanced_aggregation})
+                results.append(
+                    {
+                        "Scenario": scenario.scenario_id,
+                        "Rule": rule,
+                        "MPR": use_mpr,
+                        "Enhanced Aggregation": use_enhanced_aggregation,
+                    }
+                )
                 # except Exception as e:
                 #     print(f"Failed to process {scenario.scenario_id}, {rule}, {use_mpr}, {use_enhanced_aggregation}: {e}")
 

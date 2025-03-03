@@ -5,26 +5,26 @@ variables:
 
 cache:
   paths:
-  - .venv
+    - .venv
 
 stages:
-- style
-- test
-- deploy
+  - style
+  - test
+  - deploy
 
-before_script:
-- pip install poetry
-- poetry config virtualenvs.in-project true
-- poetry install --with test
-- source .venv/bin/activate
-- git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
+before_script: &default_before_script
+  - pip install poetry
+  - poetry config virtualenvs.in-project true
+  - poetry install --with test
+  - source .venv/bin/activate
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
 
 unittest:
   stage: test
   script:
-  - coverage run --source=./crmonitor -m unittest discover tests
-  - coverage report -m || true
-  - coverage xml
+    - coverage run --source=./crmonitor -m unittest discover tests
+    - coverage report -m || true
+    - coverage xml
   coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
   artifacts:
     reports:
@@ -32,56 +32,41 @@ unittest:
         coverage_format: cobertura
         path: coverage.xml
 
-
-flake8:
+pre_commit:
   stage: style
-  needs: []
-  image: python:3.9-buster
-  before_script: []
-  cache: []
-  allow_failure: true
+  before_script:
+    - *default_before_script
+    - poetry install --only dev
   script:
-  - pip install flake8 flake8-todo
-  - flake8 crmonitor
-
-black:
-  stage: style
-  needs: []
-  image: pyfound/black:23.1.0
-  before_script: []
-  cache: []
-  script:
-  - black --check --verbose --diff --color crmonitor
-  - black --check --verbose --diff --color tests
+    - poetry run pre-commit run --all-files --show-diff-on-failure
 
 deploy_master:
   stage: deploy
   script:
-  - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
-  - poetry build
-  - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
+    - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+    - poetry build
+    - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
   only:
-  - master
+    - master
   except:
-  - tags
-
+    - tags
 
 sphinx:
   stage: test
   needs: []
   script:
-  - poetry install --with doc
-  - cd docs/source && sphinx-build -b html -W . ../build
+    - poetry install --with doc
+    - cd docs/source && sphinx-build -b html -W . ../build
 
 pages:
   stage: deploy
   needs:
   - sphinx
   script:
-  - poetry install --with doc
-  - cd docs/source && sphinx-build -b html . ../../public
+    - poetry install --with doc
+    - cd docs/source && sphinx-build -b html . ../../public
   artifacts:
     paths:
     - public
   only:
-  - development
+    - development

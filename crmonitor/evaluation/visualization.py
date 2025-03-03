@@ -28,9 +28,7 @@ from crmonitor.rule.rule_node import PredicateNode
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
-        "vehicle_shape": {
-            "occupancy": {"shape": {"rectangle": {"facecolor": "yellow"}}}
-        }
+        "vehicle_shape": {"occupancy": {"shape": {"rectangle": {"facecolor": "yellow"}}}}
     }
 }
 
@@ -74,8 +72,7 @@ def plot_predicate_bar_chart(
     df = pd.DataFrame.from_dict(
         {
             predicate_name: {
-                str(vehicle_ids): values
-                for vehicle_ids, values in vehicle_ids2values.items()
+                str(vehicle_ids): values for vehicle_ids, values in vehicle_ids2values.items()
             }
             for predicate_name, vehicle_ids2values in predicate_vehicle_values.items()
         }
@@ -142,9 +139,7 @@ def _plot_scenario_legend(
     width, _ = scenario_fig_size
     figsize = (width, width / 4)
     num_predicates = len(predicate_name2predicate_evaluator)
-    fig, (axes_row_1, axes_row_2) = plt.subplots(
-        figsize=figsize, nrows=2, ncols=num_predicates
-    )
+    fig, (axes_row_1, axes_row_2) = plt.subplots(figsize=figsize, nrows=2, ncols=num_predicates)
     fig.suptitle("Legend: predicate visualization in scenario", fontsize=14)
     for ax1, ax2, (pred_name, pred_evaluator) in zip(
         axes_row_1, axes_row_2, predicate_name2predicate_evaluator.items()
@@ -197,9 +192,7 @@ def plot_rule_visualization(
         "time_begin": time_step,
         "dynamic_obstacle": {
             "show_label": True,
-            "vehicle_shape": {
-                "occupancy": {"shape": {"rectangle": {"facecolor": "#90ee90"}}}
-            },
+            "vehicle_shape": {"occupancy": {"shape": {"rectangle": {"facecolor": "#90ee90"}}}},
         },
     }
 
@@ -219,16 +212,10 @@ def plot_rule_visualization(
             pred_result,
             rule_result,
             draw_functions,
-        ) = rule_evaluator_list[i].visualize_predicates(
-            vehicle2draw_params, visualization_config
-        )
-        all_predicate_name2predicate_evaluator.update(
-            predicate_name2predicate_evaluator
-        )
+        ) = rule_evaluator_list[i].visualize_predicates(vehicle2draw_params, visualization_config)
+        all_predicate_name2predicate_evaluator.update(predicate_name2predicate_evaluator)
         all_draw_functions += draw_functions
-        pred_result_dict[
-            rule_evaluator_list[i]._rule.name
-        ] = pred_result  # merge the dict
+        pred_result_dict[rule_evaluator_list[i]._rule.name] = pred_result  # merge the dict
         rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
         rule_name_list.append(rule_evaluator_list[i]._rule.name)
 
@@ -251,20 +238,14 @@ def plot_rule_visualization(
             for _, pred_result_sep in pred_result_dict.items():
                 for veh_ids, rob_pairs in pred_result_sep.items():
                     pred_conjunct_dict[veh_ids].update(rob_pairs)
-            plot_predicate_bar_chart(
-                pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits
-            )
+            plot_predicate_bar_chart(pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits)
 
         if flat_plot_rule_robustness_course:
             # conjunction of all rules, i.e., the min of the robustness is calculated
-            rule_rob_list = [
-                r for _, rule_rob in rule_result_dict.items() for r in rule_rob
-            ]
+            rule_rob_list = [r for _, rule_rob in rule_result_dict.items() for r in rule_rob]
             rule_conjunct_list = [
                 min(time_rob[1])
-                for time_rob in groupby(
-                    rule_rob_list, lambda rule_rob_list: rule_rob_list[0]
-                )
+                for time_rob in groupby(rule_rob_list, lambda rule_rob_list: rule_rob_list[0])
             ]
             plot_rule_robustness_course(
                 rule_conjunct_list,
@@ -492,9 +473,7 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         historicallydurationseverity_node: HistoricallyDurationSeverityMonitorNode,
         *ctx,
     ):
-        child_values = [
-            c.visit(self, *ctx) for c in historicallydurationseverity_node.children
-        ]
+        child_values = [c.visit(self, *ctx) for c in historicallydurationseverity_node.children]
         if historicallydurationseverity_node.interval is not None:
             label = f"historicallyDurationSeverity[{historicallydurationseverity_node.interval.begin}{historicallydurationseverity_node.interval.begin_unit}, {historicallydurationseverity_node.interval.end}{historicallydurationseverity_node.interval.end_unit}] ({child_values[0]})"
         else:
@@ -502,9 +481,7 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         self._plot_node(historicallydurationseverity_node, label)
         return label
 
-    def visit_sum_if_positive_node(
-        self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx
-    ):
+    def visit_sum_if_positive_node(self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx):
         child_values = [c.visit(self, *ctx) for c in sum_if_positive_node.children]
         label = f"sum_if_positive: ({child_values[0]})"
         self._plot_node(sum_if_positive_node, label)
@@ -515,9 +492,7 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         compare_to_threshold_scaled_node: CompareToThresholdScaledMonitorNode,
         *ctx,
     ):
-        child_values = [
-            c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children
-        ]
+        child_values = [c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children]
         label = f"compare_to_threshold_scaled[>={compare_to_threshold_scaled_node.threshold}] {child_values[0]}"
         self._plot_node(compare_to_threshold_scaled_node, label)
         return label
