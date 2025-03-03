@@ -72,7 +72,7 @@ class BasePredicateEvaluator(abc.ABC):
 
     @abc.abstractmethod
     def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
+        self, world: World, time_step: int, vehicle_ids: List[int]
     ) -> float:
         pass
 
@@ -190,7 +190,9 @@ class BasePredicateEvaluator(abc.ABC):
         count_valid = 0
         count_true = 0
         count_error = 0
-        for ego_future_state_mpr in ego_sampler.sample():  # iterates over all states of all predictions.
+        for (
+            ego_future_state_mpr
+        ) in ego_sampler.sample():  # iterates over all states of all predictions.
             try:
                 # To be able to use the states, they need to be converted to CommonRoad states, which are relative to the world.
                 ego_future_state = (

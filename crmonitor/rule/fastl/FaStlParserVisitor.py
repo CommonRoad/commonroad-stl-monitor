@@ -22,8 +22,24 @@ class FaStlParserVisitor(ParseTreeVisitor):
     def visitPredicate(self, ctx: FaStlParser.PredicateContext):
         return self.visitChildren(ctx)
 
+    # Visit a parse tree produced by FaStlParser#threshold.
+    def visitThreshold(self, ctx: FaStlParser.ThresholdContext):
+        return self.visitChildren(ctx)
+
+    # Visit a parse tree produced by FaStlParser#SpecQuantSumIfPositive.
+    def visitSpecQuantSumIfPositive(
+        self, ctx: FaStlParser.SpecQuantSumIfPositiveContext
+    ):
+        return self.visitChildren(ctx)
+
     # Visit a parse tree produced by FaStlParser#SpecAndSmooth.
     def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
+        return self.visitChildren(ctx)
+
+    # Visit a parse tree produced by FaStlParser#specCompareToThresholdScaled.
+    def visitSpecCompareToThresholdScaled(
+        self, ctx: FaStlParser.SpecCompareToThresholdScaledContext
+    ):
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by FaStlParser#SpecQuantExist.

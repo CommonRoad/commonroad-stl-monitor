@@ -15,8 +15,9 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval as CommonRoadInterval
 from commonroad.scenario.scenario import Scenario
-
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
+
 from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.common.helper import gather
 from crmonitor.common.world import World, get_world_config
@@ -26,21 +27,22 @@ from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
+    CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     MonitorNode,
     RuleMonitorNode,
+    SumIfPositiveMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import PredicateNode
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = True
+use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True
@@ -332,6 +334,44 @@ class OfflineEvaluationMonitorTreeVisitor(RuleTreeVisitor):
 
         self.all_values_all_ids[historicallydurationseverity_node.name] = sample_return
         return sample_return
+
+    def visit_sum_if_positive_node(
+        self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx
+    ):
+        samples, selected_ids = self._visit_quant_node(sum_if_positive_node, *ctx)
+        _, _, max_time_step, _ = ctx[:4]
+
+        samples_return = []
+        for time_step in range(0, max_time_step):
+            values = [predicate_values[time_step] for predicate_values in samples]
+
+            if len(values) > 0:
+                val = sum([val for val in values if val > 0])
+            else:
+                val = float("nan")
+
+            samples_return.append(val)
+
+        self.all_values_all_ids[sum_if_positive_node.name] = samples_return
+        return samples_return
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: CompareToThresholdScaledMonitorNode,
+        *ctx,
+    ):
+        samples = compare_to_threshold_scaled_node.children[0].visit(self, *ctx)
+
+        samples_return = [
+            1
+            - 2
+            * math.exp(
+                -sample / compare_to_threshold_scaled_node.threshold * math.log(2)
+            )
+            for sample in samples
+        ]
+        self.all_values_all_ids[compare_to_threshold_scaled_node.name] = samples_return
+        return samples_return
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         world, mpr_world, max_time_step, other_idss = ctx[:4]

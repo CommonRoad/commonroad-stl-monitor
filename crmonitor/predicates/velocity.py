@@ -23,6 +23,7 @@ class VelocityPredicates(str, Enum):
     KeepsFovSpeedLimit = "keeps_fov_speed_limit"
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
     Reverses = "reverses"
+    HasCongestionVelocity = "has_congestion_velocity"
     SlowLeadingVehicle = "slow_leading_vehicle"
     SlowAsLeadingVehicle = "slow_as_leading_vehicle"
     PreservesTrafficFlow = "preserves_traffic_flow"
@@ -137,6 +138,23 @@ class PredReverses(BasePredicateEvaluator):
             -self.config["standstill_error"]
             - vehicle.get_lon_state(time_step).v
             - 1.0e-17,  # TODO hardcoded epsilon
+        )
+
+
+class PredHasCongestionVelocity(BasePredicateEvaluator):
+    predicate_name = VelocityPredicates.HasCongestionVelocity
+    arity = 1
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+
+    def evaluate_robustness(
+        self, world: World, time_step, vehicle_ids: List[int]
+    ) -> float:
+        veh_id = vehicle_ids[0]
+        vehicle = world.vehicle_by_id(veh_id)
+        return self._scale_speed(
+            self.config["max_congestion_velocity"] - vehicle.get_lon_state(time_step).v
         )
 
 

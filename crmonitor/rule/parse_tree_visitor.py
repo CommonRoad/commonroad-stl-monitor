@@ -11,12 +11,14 @@ from crmonitor.rule.fastl.FaStlParserVisitor import FaStlParserVisitor
 from crmonitor.rule.rule_node import (
     AllNode,
     AndsmoothNode,
+    CompareToThresholdScaledNode,
     ExistNode,
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
     RuleNode,
+    SumIfPositiveNode,
 )
 
 
@@ -25,9 +27,13 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     Build a modified tree from the original parse tree.
     """
 
+    # The program name is used to uniquely identify our token stream.
+    # It's value does not really matter, because we only apply one kind of rewrite.
+    DEFAULT_TOKEN_REWRITER_PROGRAM = "predicate"
+
     def __init__(self, tokens, predicate_factory: Optional[PredicateFactory] = None):
         self._predicate_factory = predicate_factory or PredicateFactory()
-        self._rewriter: Optional[TokenStreamRewriter] = TokenStreamRewriter(tokens)
+        self._rewriter: TokenStreamRewriter = TokenStreamRewriter(tokens)
         self._sub_rule_counter = 0
 
     def defaultResult(self):
@@ -48,14 +54,16 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             io_type = IOType.INPUT
             token_index = ctx.IO_TYPE_INPUT().symbol.tokenIndex
             # Delete the input indicator, only keep the predicate name.
-            self._rewriter.delete("predicate", token_index, token_index)
+            self._rewriter.delete(
+                self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index
+            )
         else:
             io_type = IOType.OUTPUT
         predicate_evaluator = self._predicate_factory.get_predicate(pred_basename)
         # Rewrite the predicate name into RTAMT compliant syntax
         suffix = "__" + "_".join(str(i) for i in vehicle_ids)
         self._rewriter.replace(
-            "predicate",
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.LPAREN().symbol.tokenIndex,
             ctx.RPAREN().symbol.tokenIndex,
             suffix,
@@ -76,7 +84,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         node = AllNode(children, quantified_vehicle, node_name)
         # Replace sub-formula inside the quantification by a "virtual" predicate g...
         self._rewriter.replace(
-            "predicate",
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
             ctx.stop.tokenIndex,
             node_name,
@@ -91,7 +99,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         node = ExistNode(children, quantified_vehicle, node_name)
         # Replace sub-formula inside the quantification by a "virtual" predicate g...
         self._rewriter.replace(
-            "predicate",
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
             ctx.stop.tokenIndex,
             node_name,
@@ -108,7 +116,9 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
                 RuleNode(
                     children,
                     self._rewriter.getText(
-                        "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex
+                        self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+                        ctx.start.tokenIndex,
+                        ctx.stop.tokenIndex,
                     ),
                     f"g{self._sub_rule_counter}",
                 )
@@ -122,7 +132,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         node_name = f"g{self._sub_rule_counter}"
         node = AndsmoothNode(children, node_name)
         self._rewriter.replace(
-            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
         )
         return [node]
 
@@ -138,7 +151,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         node_name = f"g{self._sub_rule_counter}"
         node = HistoricallyDurationNode(children, node_name, interval)
         self._rewriter.replace(
-            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
         )
         return [node]
 
@@ -154,7 +170,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         node_name = f"g{self._sub_rule_counter}"
         node = HistoricallyDurationSeverityNode(children, node_name, interval)
         self._rewriter.replace(
-            "predicate", ctx.start.tokenIndex, ctx.stop.tokenIndex, node_name
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
         )
         return [node]
 
@@ -173,3 +192,36 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         end, end_unit = self.process_interval_time(ctx.intervalTime(1))
         interval = Interval(begin, end, begin_unit, end_unit)
         return interval
+
+    def visitSpecQuantSumIfPositive(
+        self, ctx: FaStlParser.SpecQuantSumIfPositiveContext
+    ):
+        children = self.visit(ctx.spec())
+        quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        node = SumIfPositiveNode(children, quantified_vehicle, node_name)
+        # Replace sub-formula inside the quantification by a "virtual" predicate g...
+        self._rewriter.replace(
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
+        )
+        return [node]
+
+    def visitSpecCompareToThresholdScaled(
+        self, ctx: FaStlParser.SpecCompareToThresholdScaledContext
+    ):
+        children = self.visitChildren(ctx)
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        threshold = float(ctx.threshold().literal().getText())
+        node = CompareToThresholdScaledNode(children, node_name, threshold)
+        self._rewriter.replace(
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
+        )
+        return [node]

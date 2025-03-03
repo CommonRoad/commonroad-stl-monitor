@@ -18,7 +18,7 @@ class VisitorNode(metaclass=ABCMeta):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def visit(self, visitor, **ctx):
+    def visit(self, visitor, *ctx):
         pass
 
 
@@ -32,17 +32,19 @@ class RuleNode(VisitorNode):
         return visitor.visit_rule_node(self, *ctx)
 
 
-class AllNode(VisitorNode):
+class QuantNode(VisitorNode):
     def __init__(self, children, quantified_vehicle, name):
         self.children = children
         self.name = name
         self.quantified_vehicle = quantified_vehicle
 
+
+class AllNode(QuantNode):
     def visit(self, visitor, *ctx):
         return visitor.visit_all_node(self, *ctx)
 
 
-class ExistNode(VisitorNode):
+class ExistNode(QuantNode):
     def __init__(self, children, quantified_vehicle, name):
         self.children = children
         self.name = name
@@ -79,6 +81,21 @@ class HistoricallyDurationSeverityNode(VisitorNode):
 
     def visit(self, visitor, *ctx):
         return visitor.visit_historicallydurationseverity_node(self, *ctx)
+
+
+class SumIfPositiveNode(QuantNode):
+    def visit(self, visitor, *ctx):
+        return visitor.visit_sum_if_positive_node(self, *ctx)
+
+
+class CompareToThresholdScaledNode(VisitorNode):
+    def __init__(self, children, name, threshold: float):
+        self.children = children
+        self.name = name
+        self.threshold = threshold
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_compare_to_threshold_scaled_node(self, *ctx)
 
 
 class PredicateNode(MonitorNode, VisitorNode):

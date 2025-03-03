@@ -11,7 +11,7 @@ class MonitorNode(ABC):
         self.children = children
 
     @abstractmethod
-    def visit(self, *ctx):
+    def visit(self, visitor, *ctx):
         pass
 
     @classmethod
@@ -87,16 +87,9 @@ class AndsmoothMonitorNode(MonitorNode):
     def __init__(self, name, children):
         assert len(children) == 2
         super().__init__(name, children)
-        self.monitors = defaultdict(children[0].copy)
-        self.last_selected = None
 
     def visit(self, visitor, *ctx):
         return visitor.visit_andsmooth_node(self, *ctx)
-
-    def reset(self):
-        super().reset()
-        self.last_selected = None
-        self.monitors.clear()
 
 
 class HistoricallyDurationMonitorNode(MonitorNode):
@@ -104,16 +97,9 @@ class HistoricallyDurationMonitorNode(MonitorNode):
         assert len(children) == 1
         super().__init__(name, children)
         self.interval = interval
-        self.monitors = defaultdict(children[0].copy)
-        self.last_selected = None
 
     def visit(self, visitor, *ctx):
         return visitor.visit_historicallyduration_node(self, *ctx)
-
-    def reset(self):
-        super().reset()
-        self.last_selected = None
-        self.monitors.clear()
 
 
 class HistoricallyDurationSeverityMonitorNode(MonitorNode):
@@ -121,13 +107,32 @@ class HistoricallyDurationSeverityMonitorNode(MonitorNode):
         assert len(children) == 1
         super().__init__(name, children)
         self.interval = interval
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_historicallydurationseverity_node(self, *ctx)
+
+
+class SumIfPositiveMonitorNode(MonitorNode):
+    def __init__(self, name, children):
+        assert len(children) == 1
+        super().__init__(name, children)
         self.monitors = defaultdict(children[0].copy)
         self.last_selected = None
 
     def visit(self, visitor, *ctx):
-        return visitor.visit_historicallydurationseverity_node(self, *ctx)
+        return visitor.visit_sum_if_positive_node(self, *ctx)
 
     def reset(self):
         super().reset()
         self.last_selected = None
         self.monitors.clear()
+
+
+class CompareToThresholdScaledMonitorNode(MonitorNode):
+    def __init__(self, name, children, threshold: float):
+        assert len(children) == 1
+        super().__init__(name, children)
+        self.threshold = threshold
+
+    def visit(self, visitor, *ctx):
+        return visitor.visit_compare_to_threshold_scaled_node(self, *ctx)

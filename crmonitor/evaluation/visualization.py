@@ -14,11 +14,13 @@ from crmonitor.evaluation.visitor import RuleTreeVisitor
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
+    CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     RuleMonitorNode,
+    SumIfPositiveMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
@@ -498,6 +500,26 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         else:
             label = f"historicallyDurationSeverity ({child_values[0]})"
         self._plot_node(historicallydurationseverity_node, label)
+        return label
+
+    def visit_sum_if_positive_node(
+        self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx
+    ):
+        child_values = [c.visit(self, *ctx) for c in sum_if_positive_node.children]
+        label = f"sum_if_positive: ({child_values[0]})"
+        self._plot_node(sum_if_positive_node, label)
+        return label
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: CompareToThresholdScaledMonitorNode,
+        *ctx,
+    ):
+        child_values = [
+            c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children
+        ]
+        label = f"compare_to_threshold_scaled[>={compare_to_threshold_scaled_node.threshold}] {child_values[0]}"
+        self._plot_node(compare_to_threshold_scaled_node, label)
         return label
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):

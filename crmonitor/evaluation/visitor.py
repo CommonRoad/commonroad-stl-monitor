@@ -8,22 +8,26 @@ from crmonitor.common.helper import gather
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     AndsmoothMonitorNode,
+    CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     RuleMonitorNode,
+    SumIfPositiveMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from crmonitor.rule.rule_node import (
     AllNode,
     AndsmoothNode,
+    CompareToThresholdScaledNode,
     ExistNode,
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
     RuleNode,
+    SumIfPositiveNode,
 )
 
 
@@ -65,6 +69,24 @@ class RuleTreeVisitor(ABC):
         *ctx,
     ):
         pass
+
+    @abstractmethod
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
+        *ctx,
+    ):
+        ...
+
+    @abstractmethod
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: Union[
+            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
+        ],
+        *ctx,
+    ):
+        ...
 
     @abstractmethod
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -115,6 +137,29 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitor):
             historicallydurationseverity_node.name,
             children,
             historicallydurationseverity_node.interval,
+        )
+
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: SumIfPositiveNode,
+        *ctx,
+    ):
+        children = [c.visit(self, *ctx) for c in sum_if_positive_node.children]
+        return SumIfPositiveMonitorNode(
+            sum_if_positive_node.name,
+            children,
+        )
+
+    def visit_compare_to_threshold_scaled_node(
+        self, compare_to_threshold_scaled_node: CompareToThresholdScaledNode, *ctx
+    ):
+        children = [
+            c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children
+        ]
+        return CompareToThresholdScaledMonitorNode(
+            compare_to_threshold_scaled_node.name,
+            children,
+            compare_to_threshold_scaled_node.threshold,
         )
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -286,35 +331,38 @@ class BaseValueMonitorTreeVisitor(RuleTreeVisitor, ABC):
         return val
 
     def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
-        print("TODO implement")
-        if andsmooth_node.last_selected is None:
-            # Visit the prototype monitor
-            val = andsmooth_node.children[0].visit(self, *ctx)
-            val = [(n, v if v is not None else -1.0) for n, v in val]
-        else:
-            val = andsmooth_node.last_selected.visit(self, *ctx)
-        return val
+        return [c.visit(self, *ctx) for c in andsmooth_node.children]
 
     def visit_historicallyduration_node(
         self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
     ):
-        if historicallyduration_node.last_selected is None:
-            # Visit the prototype monitor
-            val = historicallyduration_node.children[0].visit(self, *ctx)
-            val = [(n, v if v is not None else -1.0) for n, v in val]
-        else:
-            val = historicallyduration_node.last_selected.visit(self, *ctx)
-        return val
+        return [c.visit(self, *ctx) for c in historicallyduration_node.children]
 
     def visit_historicallydurationseverity_node(
         self, historicallydurationseverity_node: HistoricallyDurationSeverityNode, *ctx
     ):
-        if historicallydurationseverity_node.last_selected is None:
+        return [c.visit(self, *ctx) for c in historicallydurationseverity_node.children]
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: Union[
+            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
+        ],
+        *ctx,
+    ):
+        return [c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children]
+
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
+        *ctx,
+    ):
+        if sum_if_positive_node.last_selected is None:
             # Visit the prototype monitor
-            val = historicallydurationseverity_node.children[0].visit(self, *ctx)
+            val = sum_if_positive_node.children[0].visit(self, *ctx)
             val = [(n, v if v is not None else -1.0) for n, v in val]
         else:
-            val = historicallydurationseverity_node.last_selected.visit(self, *ctx)
+            val = sum_if_positive_node.last_selected.visit(self, *ctx)
         return val
 
 
@@ -397,6 +445,22 @@ class PredicateVisualizerMonitorTreeVisitor(RuleTreeVisitor):
     ):
         return self._visit_quant_node(historicallydurationseverity_node, *ctx)
 
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
+        *ctx,
+    ):
+        return self._visit_quant_node(sum_if_positive_node, *ctx)
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: Union[
+            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
+        ],
+        *ctx,
+    ):
+        return self._visit_quant_node(compare_to_threshold_scaled_node, *ctx)
+
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         ctx, is_effective = self._split_context(ctx)
 
@@ -472,6 +536,22 @@ class ResetMonitorTreeVisitor(RuleTreeVisitor):
         *ctx,
     ):
         self._visit(historicallydurationseverity_node, *ctx)
+
+    def visit_compare_to_threshold_scaled_node(
+        self,
+        compare_to_threshold_scaled_node: Union[
+            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
+        ],
+        *ctx,
+    ):
+        self._visit(compare_to_threshold_scaled_node)
+
+    def visit_sum_if_positive_node(
+        self,
+        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
+        *ctx,
+    ):
+        self._visit(sum_if_positive_node)
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         pass
