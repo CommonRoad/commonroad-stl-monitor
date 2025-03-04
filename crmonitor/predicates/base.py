@@ -26,6 +26,7 @@ class BasePredicateEvaluator(abc.ABC):
     """
 
     predicate_name = "interface"
+    arity: int
 
     def __init__(self, config: CommentedMap, scaler=None):
         self.config = config

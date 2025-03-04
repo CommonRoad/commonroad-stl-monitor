@@ -109,7 +109,7 @@ class RtamtStlMonitor:
     def ast_node_values(self) -> Dict[str, float]:
         return self._spec.online_interpreter.updateVisitor.ast_node_values
 
-    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]) -> float:
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob

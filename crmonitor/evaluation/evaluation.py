@@ -14,22 +14,89 @@ from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recurs
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
-    AstNodeValueCollectorMonitorTreeVisitor,
-    EvaluationMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
-    MPRGradientCollectorMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
+    OfflineEvaluationMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
-    RuleTreeVisitor,
 )
+from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
-from crmonitor.rule.rule_node import VisitorNode
+from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
 
 logger = logging.getLogger(__name__)
+
+
+class RuleEvaluatorInterface(ABC):
+    @classmethod
+    def create_from_config(
+        cls,
+        world: World,
+        ego_id: int,
+        rule_name: str = "R_G1",
+        traffic_rules_config=None,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
+        use_mpr: bool = True,
+    ):
+        if traffic_rules_config is None:
+            traffic_rules_config = get_traffic_rule_config()
+        rule_str_dict = traffic_rules_config["traffic_rules"]
+        rule = RuleFactory(
+            PredicateFactory(traffic_rules_config["traffic_rules_param"])
+        ).parse_rule(rule_str_dict[rule_name], name=rule_name)
+
+        return cls(rule, world, ego_id, use_boolean, output_type, use_mpr)
+
+    def __init__(
+        self,
+        rule: VisitorNode,
+        world: World,
+        ego_id: int,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
+        use_mpr: bool = True,
+    ) -> None:
+        self._rule = rule
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
+        self._monitor = monitor_creation_visitor.visit(self._rule)
+        self._world = world
+        self._ego_id = ego_id
+        self._use_boolean = use_boolean
+        self._output_type = output_type
+        self._use_mpr = use_mpr
+
+        if self._use_mpr:
+            self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
+        else:
+            self._mpr_world = None
+
+    @property
+    def ego_vehicle(self):
+        return self._world.vehicle_by_id(self._ego_id)
+
+    @abstractmethod
+    def evaluate(self) -> List[float]: ...
+
+
+class OfflineRuleEvaluator(RuleEvaluatorInterface):
+    def __init__(
+        self,
+        rule: VisitorNode,
+        world: World,
+        ego_id: int,
+        use_boolean: bool = False,
+        output_type: OutputType = OutputType.STANDARD,
+        use_mpr: bool = True,
+    ) -> None:
+        super().__init__(rule, world, ego_id, use_boolean, output_type, use_mpr)
+        self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(use_boolean, output_type)
+
+    def evaluate(self) -> List[float]:
+        return self._eval_visitor.walk(
+            self._monitor, self._world, self._mpr_world, self.ego_vehicle.end_time, self.ego_vehicle
+        )
 
 
 class RuleEvaluator:
@@ -42,8 +109,8 @@ class RuleEvaluator:
         traffic_rules_config=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        monitor_creation_visitor: Optional[RuleTreeVisitor] = None,
-        monitor_evaluation_visitor: Optional[RuleTreeVisitor] = None,
+        monitor_creation_visitor: Optional[RuleTreeVisitorInterface] = None,
+        monitor_evaluation_visitor: Optional[RuleTreeVisitorInterface] = None,
     ):
         if traffic_rules_config is None:
             traffic_rules_config = get_traffic_rule_config()
@@ -97,19 +164,19 @@ class RuleEvaluator:
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        monitor_creation_visitor: Optional[RuleTreeVisitor] = None,
-        monitor_evaluation_visitor: Optional[RuleTreeVisitor] = None,
+        monitor_creation_visitor: Optional[RuleTreeVisitorInterface[MonitorNode]] = None,
+        monitor_evaluation_visitor: Optional[RuleTreeVisitorInterface] = None,
     ):
         if monitor_creation_visitor is None:
             monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
-        self._monitor = rule.visit(monitor_creation_visitor)
-        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
-        self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
-        self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
-        self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
+        self._monitor = monitor_creation_visitor.visit(rule)
+        # self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        # self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
+        # self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
+        # self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         if monitor_evaluation_visitor is None:
-            self._eval_visitor = EvaluationMonitorTreeVisitor(
+            self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(
                 use_boolean=use_boolean, output_type=output_type
             )
         else:
@@ -183,16 +250,6 @@ class RuleEvaluator:
         for i in range(self._last_evaluation_time_step + 1, self.ego_vehicle.end_time + 1):
             robustness_values.append(self.update())
         return np.array(robustness_values)
-
-    def evaluate_offline(self) -> np.ndarray:
-        """ """
-        return self._eval_visitor.walk(
-            self._monitor,
-            self._world,
-            self._mpr_world,
-            self.ego_vehicle.end_time,
-            self.ego_vehicle,
-        )
 
     def __iter__(self):
         return self
@@ -294,4 +351,4 @@ class RuleEvaluator:
         self._rule_value_course = []
         # Reset monitor
         reset_visitor = ResetMonitorTreeVisitor()
-        self._monitor.visit(reset_visitor)
+        reset_visitor.visit(self._monitor)

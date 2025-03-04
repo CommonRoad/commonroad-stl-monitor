@@ -9,9 +9,9 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.9.9
   hooks:
-      # TODO: Enable linting with ruff. It is disable for now, because too much of the code base has linting errors.
-      # - id: ruff
-      #   args: [--fix]
+  # TODO: Enable linting with ruff. It is disable for now, because too much of the code base has linting errors.
+  # - id: ruff
+  #   args: [--fix]
   - id: ruff-format
 - repo: https://github.com/python-poetry/poetry
   rev: 2.0.0

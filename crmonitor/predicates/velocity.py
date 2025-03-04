@@ -1,7 +1,8 @@
 import logging
 import math
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
@@ -24,6 +25,8 @@ class VelocityPredicates(str, Enum):
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
     Reverses = "reverses"
     HasCongestionVelocity = "has_congestion_velocity"
+    HasSlowMovingVelocity = "has_slow_moving_velocity"
+    HasQueueVelocity = "has_queue_velocity"
     SlowLeadingVehicle = "slow_leading_vehicle"
     SlowAsLeadingVehicle = "slow_as_leading_vehicle"
     PreservesTrafficFlow = "preserves_traffic_flow"
@@ -33,12 +36,11 @@ class VelocityPredicates(str, Enum):
     DrivesWithSlightlyHigherSpeed = "drives_with_slightly_higher_speed"
 
 
-class PredGenericSpeedLimit(BasePredicateEvaluator):
-    def __init__(self, config: CommentedMap):
-        super().__init__(config)
-
-    def get_speed_limit(self, world, time_step, vehicle_ids):
-        raise NotImplementedError
+class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
+    @abstractmethod
+    def get_speed_limit(
+        self, world: World, time_step: int, vehicle_ids: List[int]
+    ) -> Optional[float]: ...
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -111,6 +113,30 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
         return speed_limit
 
 
+class PredHasSlowMovingVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasSlowMovingVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        return self.config["max_slow_moving_traffic_velocity"]
+
+
+class PredHasCongestionVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasCongestionVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids) -> float:
+        return self.config["max_congestion_velocity"]
+
+
+class PredHasQueueVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasQueueVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        return self.config["max_queue_of_vehicles_velocity"]
+
+
 class PredReverses(BasePredicateEvaluator):
     """
     Evaluates if a vehicle drives backwards
@@ -132,21 +158,6 @@ class PredReverses(BasePredicateEvaluator):
             -self.config["standstill_error"]
             - vehicle.get_lon_state(time_step).v
             - 1.0e-17,  # TODO hardcoded epsilon
-        )
-
-
-class PredHasCongestionVelocity(BasePredicateEvaluator):
-    predicate_name = VelocityPredicates.HasCongestionVelocity
-    arity = 1
-
-    def __init__(self, config) -> None:
-        super().__init__(config)
-
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        veh_id = vehicle_ids[0]
-        vehicle = world.vehicle_by_id(veh_id)
-        return self._scale_speed(
-            self.config["max_congestion_velocity"] - vehicle.get_lon_state(time_step).v
         )
 
 
