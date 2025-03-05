@@ -1,26 +1,35 @@
 import copy
+from dataclasses import dataclass
 import logging
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 from commonroad_mpr.common.observation import World as WorldMPR
 
-from crmonitor.common.config import get_evaluation_config, get_traffic_rule_config
+from crmonitor.common.config import (
+    get_evaluation_config,
+    get_traffic_rule_config,
+    get_traffic_rule_from_config,
+)
 from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
+    AstNodeValueCollectorMonitorTreeVisitor,
+    MPRGradientCollectorMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
     OfflineEvaluationMonitorTreeVisitor,
+    PredicateCollectorMonitorTreeVisitor,
+    PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
 from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
@@ -28,46 +37,48 @@ from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class RuleEvaluatorConfig:
+    use_boolean: bool = False
+    output_type: OutputType = OutputType.STANDARD
+    scale_rob: bool = True
+    use_mpr: bool = False
+
+
 class RuleEvaluatorInterface(ABC):
     @classmethod
-    def create_from_config(
+    def create_for_rule(
         cls,
         world: World,
         ego_id: int,
         rule_name: str = "R_G1",
-        traffic_rules_config=None,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-        use_mpr: bool = True,
+        config: RuleEvaluatorConfig = RuleEvaluatorConfig(),
+        predicate_evaluator_config: Optional[PredicateEvaluatorConfig] = None,
     ):
-        if traffic_rules_config is None:
-            traffic_rules_config = get_traffic_rule_config()
-        rule_str_dict = traffic_rules_config["traffic_rules"]
-        rule = RuleFactory(
-            PredicateFactory(traffic_rules_config["traffic_rules_param"])
-        ).parse_rule(rule_str_dict[rule_name], name=rule_name)
+        rule_str = get_traffic_rule_from_config(rule_name)
+        rule = RuleFactory(PredicateFactory(predicate_evaluator_config)).parse_rule(
+            rule_str, name=rule_name
+        )
 
-        return cls(rule, world, ego_id, use_boolean, output_type, use_mpr)
+        return cls(rule, world, ego_id, config)
 
     def __init__(
         self,
         rule: VisitorNode,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-        use_mpr: bool = True,
+        config: RuleEvaluatorConfig = RuleEvaluatorConfig(),
     ) -> None:
         self._rule = rule
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
-        self._monitor = monitor_creation_visitor.visit(self._rule)
-        self._world = world
         self._ego_id = ego_id
-        self._use_boolean = use_boolean
-        self._output_type = output_type
-        self._use_mpr = use_mpr
+        self._world = world
+        self._config = config
 
-        if self._use_mpr:
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(
+            world.dt, self._config.output_type
+        )
+        self._monitor = monitor_creation_visitor.visit(self._rule)
+        if self._config.use_mpr:
             self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
         else:
             self._mpr_world = None
@@ -86,16 +97,16 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
         rule: VisitorNode,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-        use_mpr: bool = True,
+        config: RuleEvaluatorConfig = RuleEvaluatorConfig(),
     ) -> None:
-        super().__init__(rule, world, ego_id, use_boolean, output_type, use_mpr)
-        self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(use_boolean, output_type)
+        super().__init__(rule, world, ego_id, config)
+        self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(
+            self._config.scale_rob, self._config.use_boolean, self._config.output_type
+        )
 
     def evaluate(self) -> List[float]:
         return self._eval_visitor.walk(
-            self._monitor, self._world, self._mpr_world, self.ego_vehicle.end_time, self.ego_vehicle
+            self._monitor, self._world, self.ego_vehicle.end_time, self.ego_vehicle, self._mpr_world
         )
 
 
@@ -171,10 +182,10 @@ class RuleEvaluator:
             monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = monitor_creation_visitor.visit(rule)
-        # self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
-        # self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
-        # self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
-        # self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
+        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
+        self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
+        self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         if monitor_evaluation_visitor is None:
             self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(
                 use_boolean=use_boolean, output_type=output_type

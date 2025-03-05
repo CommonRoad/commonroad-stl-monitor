@@ -14,26 +14,35 @@ class MonitorNode(VisitorNode):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
-        # For recording values of this monitor.
-        # The values are populated by other visitors with `record_values`.
         self._values = []
 
     @property
     def values(self) -> List[float]:
+        """
+        Retrive all values for the evaluation of this monitor.
+        """
         return self._values
 
-    def record_values(self, values: Union[Iterable[float], float]) -> None:
+    @values.setter
+    def values(self, values: Iterable[float]) -> None:
         """
-        Save the values of this monitor after a computation.
-
-        :param values: Either a single value or an iterable of values.
-
-        :returns: Nothing.
+        Set the values for the evaluation of this monitor.
         """
-        if isinstance(values, Iterable):
-            self._values.extend(values)
-        else:
-            self._values.append(values)
+        self._values.extend(values)
+
+    @property
+    def last_value(self) -> float:
+        """
+        Get the value of the last evaluation of this monitor.
+        """
+        return self._values[-1]
+
+    @last_value.setter
+    def last_value(self, value: float) -> None:
+        """
+        Set the value of the last evaluation of this monitor.
+        """
+        self._values.append(value)
 
     @classmethod
     def _copy_cls(cls, node: "MonitorNode") -> "MonitorNode":
@@ -107,7 +116,6 @@ class QuantMonitorNode(OneArityMonitorNode):
         super().__init__(name, child)
         self.quantified_vehicle = quantified_vehicle
         self.monitors = defaultdict(child.copy)
-        self.last_selected = None
 
     @classmethod
     def _copy_cls(cls, node: "QuantMonitorNode") -> "QuantMonitorNode":
@@ -119,10 +127,33 @@ class QuantMonitorNode(OneArityMonitorNode):
         self.monitors.clear()
 
 
-class AllMonitorNode(QuantMonitorNode): ...
+class SelectiveQuantMonitorNode(QuantMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
+        super().__init__(name, child, quantified_vehicle)
+
+        self._selected: List[Optional[MonitorNode]] = []
+
+    @property
+    def selected(self) -> List[Optional[MonitorNode]]:
+        return self._selected
+
+    @selected.setter
+    def selected(self, monitors: List[Optional[MonitorNode]]) -> None:
+        self._selected = monitors
+
+    @property
+    def last_selected(self) -> Optional[MonitorNode]:
+        return self._selected[-1]
+
+    @last_selected.setter
+    def last_selected(self, monitor: Optional[MonitorNode]) -> None:
+        self._selected.append(monitor)
 
 
-class ExistMonitorNode(QuantMonitorNode): ...
+class AllMonitorNode(SelectiveQuantMonitorNode): ...
+
+
+class ExistMonitorNode(SelectiveQuantMonitorNode): ...
 
 
 class AndSmoothMonitorNode(TwoArityMonitorNode):
@@ -165,7 +196,6 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
 
     def evaluate_boolean(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
-        self.latest_value = 1.0 if value else -1.0
         self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
 
@@ -188,28 +218,34 @@ class MonitorVisitorInterface(Generic[T], ABC):
     def visit(self, node: MonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: RuleMonitorNode, *args, **kwargs) -> T: ...
+    def visit_rule_node(self, node: RuleMonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: AllMonitorNode, *args, **kwargs) -> T: ...
+    def visit_all_node(self, node: AllMonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: ExistMonitorNode, *args, **kwargs) -> T: ...
+    def visit_exist_node(self, node: ExistMonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: SumIfPositiveMonitorNode, *args, **kwargs) -> T: ...
+    def visit_sum_if_positive_node(self, node: SumIfPositiveMonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: AndSmoothMonitorNode, *args, **kwargs) -> T: ...
+    def visit_and_smooth_node(self, node: AndSmoothMonitorNode, *args, **kwargs) -> T: ...
 
     @visit.register
-    def _(self, node: HistoricallyDurationMonitorNode, *args, **kwargs) -> T: ...
+    def visit_historically_duration_node(
+        self, node: HistoricallyDurationMonitorNode, *args, **kwargs
+    ) -> T: ...
 
     @visit.register
-    def _(self, node: HistoricallyDurationSeverityMonitorNode, *args, **kwargs) -> T: ...
+    def visit_historically_duration_severity_node(
+        self, node: HistoricallyDurationSeverityMonitorNode, *args, **kwargs
+    ) -> T: ...
 
     @visit.register
-    def _(self, node: CompareToThresholdScaledMonitorNode, *args, **kwargs) -> T: ...
+    def visit_compare_to_threshold_scaled_node(
+        self, node: CompareToThresholdScaledMonitorNode, *args, **kwargs
+    ) -> T: ...
 
     @visit.register
-    def _(self, node: PredicateMonitorNode, *args, **kwargs) -> T: ...
+    def visit_predicate_node(self, node: PredicateMonitorNode, *args, **kwargs) -> T: ...

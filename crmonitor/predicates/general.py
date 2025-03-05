@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.position import (
     PredInFrontOf,
     PredInSameLane,
@@ -106,7 +106,7 @@ class PredCutIn(BasePredicateEvaluator):
     predicate_name = GeneralPredicates.CutIn
     arity = 2
 
-    def __init__(self, config):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
@@ -130,7 +130,9 @@ class PredCutIn(BasePredicateEvaluator):
         d_k = cutting_lat.d
         orient_k = cutting_lat.theta
 
-        result = (d_k < d_p and orient_k > self.eps) or (d_k > d_p and orient_k < -self.eps)
+        result = (d_k < d_p and orient_k > self.config.eps) or (
+            d_k > d_p and orient_k < -self.config.eps
+        )
         return result
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
@@ -153,9 +155,9 @@ class PredCutIn(BasePredicateEvaluator):
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
         r_l_dist = cutted_lat.d - cutting_lat.d
-        r_l_orient = subtract_orientations(cutting_lat.theta, self.eps)
+        r_l_orient = subtract_orientations(cutting_lat.theta, self.config.eps)
         l_r_dist = cutting_lat.d - cutted_lat.d
-        l_r_orient = subtract_orientations(-self.eps, cutting_lat.theta)
+        l_r_orient = subtract_orientations(-self.config.eps, cutting_lat.theta)
 
         r_l_dist = self._scale_lat_dist(r_l_dist)
         l_r_dist = self._scale_lat_dist(l_r_dist)
@@ -240,10 +242,7 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
         s = vehicle.get_lon_state(time_step).s
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if (
-                cal_road_width(lanelet, world.road_network, s)
-                <= self.config["min_interstate_width"]
-            ):
+            if cal_road_width(lanelet, world.road_network, s) <= self.config.min_interstate_width:
                 return False
         return True
 
@@ -257,8 +256,8 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
             comparison_list.append(
                 self._scale_lat_dist(
                     cal_road_width(lanelet, world.road_network, s)
-                    - self.config["min_interstate_width"]
-                    - 1.0e-17,  # TODO hardcoded epsilon
+                    - self.config.min_interstate_width
+                    - self.config.eps
                 )
             )
         return min(comparison_list)
@@ -295,10 +294,10 @@ class PredInCongestion(BasePredicateEvaluator):
                 and self._same_lane_evaluator.evaluate_boolean(
                     world, time_step, [vehicle_ids[0], veh_o.id]
                 )
-                and veh_o.get_lon_state(time_step).v <= self.config["max_congestion_velocity"]
+                and veh_o.get_lon_state(time_step).v <= self.config.max_congestion_velocity
             ):
                 num_vehicles += 1
-        if num_vehicles >= self.config["num_veh_congestion"]:
+        if num_vehicles >= self.config.num_veh_congestion:
             return True
         else:
             return False
@@ -324,14 +323,14 @@ class PredInCongestion(BasePredicateEvaluator):
                         world, time_step, [vehicle_ids[0], veh_o.id]
                     ),
                     self._scale_speed(
-                        self.config["max_congestion_velocity"]
+                        self.config.max_congestion_velocity
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17,  # TODO hardcoded epsilon
+                        - self.config.eps,
                     ),
                 )
             )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_congestion"]:
+        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config.num_veh_congestion:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -368,11 +367,10 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
                 and self._same_lane_evaluator.evaluate_boolean(
                     world, time_step, [vehicle_ids[0], veh_o.id]
                 )
-                and veh_o.get_lon_state(time_step).v
-                <= self.config["max_slow_moving_traffic_velocity"]
+                and veh_o.get_lon_state(time_step).v <= self.config.max_slow_moving_traffic_velocity
             ):
                 num_vehicles += 1
-        if num_vehicles >= self.config["num_veh_slow_moving_traffic"]:
+        if num_vehicles >= self.config.num_veh_slow_moving_traffic:
             return True
         else:
             return False
@@ -398,14 +396,14 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
                         world, time_step, [vehicle_ids[0], veh_o.id]
                     ),
                     self._scale_speed(
-                        self.config["max_slow_moving_traffic_velocity"]
+                        self.config.max_slow_moving_traffic_velocity
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17,  # TODO hardcoded epsilon
+                        - self.config.eps,
                     ),
                 )
             )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_slow_moving_traffic"]:
+        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config.num_veh_slow_moving_traffic:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -442,11 +440,10 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
                 and self._same_lane_evaluator.evaluate_boolean(
                     world, time_step, [vehicle_ids[0], veh_o.id]
                 )
-                and veh_o.get_lon_state(time_step).v
-                <= self.config["max_queue_of_vehicles_velocity"]
+                and veh_o.get_lon_state(time_step).v <= self.config.max_queue_of_vehicles_velocity
             ):
                 num_vehicles += 1
-        if num_vehicles >= self.config["num_veh_queue_of_vehicles"]:
+        if num_vehicles >= self.config.num_veh_queue_of_vehicles:
             return True
         else:
             return False
@@ -472,14 +469,14 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
                         world, time_step, [vehicle_ids[0], veh_o.id]
                     ),
                     self._scale_speed(
-                        self.config["max_queue_of_vehicles_velocity"]
+                        self.config.max_queue_of_vehicles_velocity
                         - veh_o.get_lon_state(time_step).v
-                        - 1.0e-17
+                        - self.config.eps
                     ),
                 )
             )
         # values are already normalized
-        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config["num_veh_queue_of_vehicles"]:
+        if sum(rob > 0 for rob in rob_cong_veh_list) >= self.config.num_veh_queue_of_vehicles:
             return min(rob for rob in rob_cong_veh_list if rob > 0)
         else:
             return max(rob for rob in rob_cong_veh_list if rob < 0)
@@ -497,7 +494,7 @@ class PredMakesUTurn(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
         for la in lanes:
-            if self.config["u_turn"] <= abs(
+            if self.config.u_turn <= abs(
                 vehicle.get_lat_state(time_step, la).theta
                 - la.orientation(vehicle.get_lon_state(time_step, la).s)
             ):
@@ -515,8 +512,8 @@ class PredMakesUTurn(BasePredicateEvaluator):
                         vehicle.get_lat_state(time_step, la).theta
                         - la.orientation(vehicle.get_lon_state(time_step, la).s)
                     )
-                    - self.config["u_turn"]
-                    - 1.0e-17,  # TODO hardcoded epsilon
+                    - self.config.u_turn
+                    - self.config.eps,
                 )
             )
         return max(robustness_values)

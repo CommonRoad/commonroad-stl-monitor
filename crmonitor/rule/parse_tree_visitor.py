@@ -48,7 +48,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [int(ctx.IntegerLiteral().getText())]
 
     def visitPredicate(self, ctx: FaStlParser.PredicateContext):
-        vehicle_ids = self.visitChildren(ctx)
+        vehicle_ids = tuple(self.visitChildren(ctx))
         pred_basename = ctx.Identifier().getText()
         if ctx.IO_TYPE_INPUT() is not None:
             io_type = IOType.INPUT
@@ -100,18 +100,17 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitSpecNested(self, ctx: FaStlParser.SpecNestedContext):
         children = self.visitChildren(ctx)
         # De-duplicate
-        children = list(dict.fromkeys(children))
         if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
             # Flatten tree to evaluate with rtamt
             return [
                 RuleNode(
+                    f"g{self._sub_rule_counter}",
                     children,
                     self._rewriter.getText(
                         self.DEFAULT_TOKEN_REWRITER_PROGRAM,
                         ctx.start.tokenIndex,
                         ctx.stop.tokenIndex,
                     ),
-                    f"g{self._sub_rule_counter}",
                 )
             ]
         else:

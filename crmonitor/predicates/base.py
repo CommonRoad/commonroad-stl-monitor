@@ -1,8 +1,10 @@
 import abc
 import copy
+from dataclasses import dataclass, field
 import logging
+from pathlib import Path
 import warnings
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.renderer import IRenderer
@@ -12,12 +14,53 @@ from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MprConfig:
+    enabled: bool = False
+    ml: bool = True
+    model_path: Optional[Path] = None
+
+
+@dataclass
+class PredicateEvaluatorConfig:
+    scale_rob: bool = True
+    eps: float = 1e-17
+    mpr: MprConfig = field(default_factory=MprConfig)
+
+    min_interstate_width: float = 7.0
+
+    max_congestion_velocity: float = 2.78
+    num_veh_congestion: float = 3.0
+
+    max_slow_moving_traffic_velocity: float = 8.33
+    num_veh_slow_moving_traffic: float = 3.0
+
+    max_queue_of_vehicles_velocity: float = 3.0
+    num_veh_queue_of_vehicles: float = 3.0
+
+    u_turn: float = 1.57
+
+    standstill_error: float = 0.01
+
+    min_velocity_diff: float = 15
+
+    slightly_higher_speed_difference: float = 5.55
+
+    close_to_other_vehicle: float = 0.5
+    close_to_lane_border: float = 0.2
+
+    d_sl: float = 1.0
+    d_br: float = 15.0
+    a_br: float = -1.0
+
+    a_abrupt: float = -2.0
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -28,17 +71,15 @@ class BasePredicateEvaluator(abc.ABC):
     predicate_name = "interface"
     arity: int
 
-    def __init__(self, config: CommentedMap, scaler=None):
+    def __init__(self, config: PredicateEvaluatorConfig, scaler=None):
         self.config = config
-        self.eps = 1e-5
-        scale_rob = config.get("scale_rob", True)
-        self._scaler = scaler or RobustnessScaler(scale_rob)
+        self._scaler = scaler or RobustnessScaler(self.config.scale_rob)
 
-        if self.config["use_mpr"]:
+        if self.config.mpr.enabled and self.config.mpr.ml:
             try:
                 self._mpr_model = read_model(
                     self.predicate_name,
-                    self.config.get("model_path"),
+                    self.config.mpr.model_path,
                     ScenarioType.INTERSTATE,
                 )
             except ModelLoadError as e:
@@ -50,8 +91,6 @@ class BasePredicateEvaluator(abc.ABC):
                 self._mpr_model = None
         else:
             self._mpr_model = None
-
-        self._use_mpr_for_evaluation = self.config["use_mpr"]
 
     def _scale_speed(self, x):
         return self._scaler.scale_speed(x)
@@ -249,12 +288,9 @@ class BasePredicateEvaluator(abc.ABC):
         Computes the gradient of the MPR w.r.t. the input values.
         """
         default = [0.0] * 35
-        # TODO: The gradient is always requested, even if this predicate is not evaluated with pre-trained models.
-        return default
-        if not self._use_mpr_for_evaluation:
-            # TODO: If the user tries to extract the gradient for a comosed/exempted predicate, should it just be skipped?
+        if not self.config.mpr.enabled:
             warnings.warn(
-                f"Tried to extract the gradient of the model predictive evaluation, but model predictive evaluation is not enabled for '{self.predicate_name}'. This is either because mpr is disabled or this predicate is exempted from MPR."
+                f"Tried to extract the gradient of the model predictive evaluation, but model predictive evaluation is not enabled for '{self.predicate_name}'."
             )
             return default
 
@@ -283,7 +319,7 @@ class BasePredicateEvaluator(abc.ABC):
                     ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
                 )
                 value = self.evaluate_mpr_ml(world, mpr_world, time_step, vehicle_ids)
-            elif self._use_mpr_for_evaluation:
+            elif self.config.mpr.enabled:
                 _LOGGER.debug(
                     "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, without pre-trained models.",
                     self.predicate_name,

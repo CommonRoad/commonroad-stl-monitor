@@ -147,7 +147,7 @@ class PredReverses(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        if vehicle.get_lon_state(time_step).v < -self.config["standstill_error"]:
+        if vehicle.get_lon_state(time_step).v < -self.config.standstill_error:
             return True
         else:
             return False
@@ -155,9 +155,7 @@ class PredReverses(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         return self._scale_speed(
-            -self.config["standstill_error"]
-            - vehicle.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
+            -self.config.standstill_error - vehicle.get_lon_state(time_step).v - self.config.eps,
         )
 
 
@@ -183,8 +181,8 @@ class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
         return self._scale_speed(
             v_max
             - vehicle.get_lon_state(time_step).v
-            - self.config["min_velocity_dif"]
-            - 1.0e-17  # TODO hardcoded epsilon
+            - self.config.min_velocity_diff
+            - self.config.eps
         )
 
 
@@ -229,7 +227,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                 v_type,
             ]
             v_max = min(v for v in v_list if v is not None)
-            if v_max - veh_o.get_lon_state(time_step).v >= self.config["min_velocity_dif"]:
+            if v_max - veh_o.get_lon_state(time_step).v >= self.config.min_velocity_diff:
                 return True
         return False
 
@@ -264,8 +262,8 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                 self._scale_speed(
                     v_max
                     - veh_o.get_lon_state(time_step).v
-                    - self.config["min_velocity_dif"]
-                    - 1.0e-17,  # TODO hardcoded epsilon
+                    - self.config.min_velocity_diff
+                    - self.config.eps,
                 )
             )
         return max(rob_slow_leading_list)
@@ -296,7 +294,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             v_type,
         ]
         v_max = min(v for v in v_list if v is not None)
-        if v_max - vehicle.get_lon_state(time_step).v < self.config["min_velocity_dif"]:
+        if v_max - vehicle.get_lon_state(time_step).v < self.config.min_velocity_diff:
             return True
         else:
             return False
@@ -314,10 +312,10 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         ]
         v_max = min(v for v in v_list if v is not None)
         return self._scale_speed(
-            self.config["min_velocity_dif"]
+            self.config.min_velocity_diff
             - v_max
             + vehicle.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
+            - self.config.eps,
         )
 
 
@@ -334,9 +332,9 @@ class PredInStandStill(BasePredicateEvaluator):
         # ---------------------------------------------------
 
         if (
-            -self.config["standstill_error"]
+            -self.config.standstill_error
             < vehicle.get_lon_state(time_step=time_step, lane=vehicle.ref_path_lane).v
-            < self.config["standstill_error"]
+            < self.config.standstill_error
         ):
             return True
         else:
@@ -351,10 +349,10 @@ class PredInStandStill(BasePredicateEvaluator):
         return self._scale_speed(
             min(
                 vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                + self.config["standstill_error"],
-                self.config["standstill_error"]
+                + self.config.standstill_error,
+                self.config.standstill_error
                 - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                - 1.0e-17,  # TODO hardcoded epsilon
+                - self.config.eps,
             )
         )
 
@@ -431,7 +429,7 @@ class PredDrivesFaster(BasePredicateEvaluator):
         return self._scale_speed(
             vehicle_k.get_lon_state(time_step).v
             - vehicle_p.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
+            - self.config.eps,
         )
 
 
@@ -450,10 +448,10 @@ class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
             min(
                 vehicle_k.get_lon_state(time_step).v
                 - vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,  # TODO hardcoded epsilon
-                self.config["slightly_higher_speed_difference"]
+                - self.config.eps,
+                self.config.slightly_higher_speed_difference
                 - vehicle_k.get_lon_state(time_step).v
                 + vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,  # TODO hardcoded epsilon
+                - self.config.eps,
             )
         )

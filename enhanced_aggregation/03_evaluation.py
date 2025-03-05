@@ -11,26 +11,27 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from crmonitor.common.config import get_traffic_rule_config
-from crmonitor.common.world import World, get_world_config
-from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
+from crmonitor.common.world import World
+from crmonitor.evaluation.evaluation import RuleEvaluatorConfig, OfflineRuleEvaluator
 from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.predicates.base import MprConfig, PredicateEvaluatorConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
-use_mpr = False
+use_mpr = True
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = False
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
-model_path = Path(__file__).parent.parent.joinpath("output/models")
+# model_path = Path(__file__).parent.parent.joinpath("output/models")
+model_path = None
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_I1"
+traffic_rule = "R_G1"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS
@@ -74,28 +75,25 @@ if use_mpr:
     )
 
 
-# config used for the world creation
-config = get_world_config()
-# MPR must be explicitly enabled
-config["use_mpr"] = use_mpr
-
-# MPR must be explicitly enabled
-rule_evaluator_config = get_traffic_rule_config()
-rule_evaluator_config["traffic_rules_param"]["use_mpr"] = use_mpr
-rule_evaluator_config["traffic_rules_param"]["scale_rob"] = scale_rob
-rule_evaluator_config["traffic_rules_param"]["model_path"] = model_path
-
-
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
 # Use the convenience class method to create with default configuration from a scenario.
-world = World.create_from_scenario(scenario, config=config)
-
+world = World.create_from_scenario(scenario)
 
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
-rule_evaluator = OfflineRuleEvaluator.create_from_config(
-    world, ego_vehicle.id, rule_name=traffic_rule, output_type=output_type, use_mpr=use_mpr
+rule_evaluator_config = RuleEvaluatorConfig(
+    output_type=output_type, use_mpr=use_mpr, scale_rob=scale_rob
+)
+predicate_evaluator_config = PredicateEvaluatorConfig(
+    mpr=MprConfig(enabled=use_mpr, model_path=model_path)
+)
+rule_evaluator = OfflineRuleEvaluator.create_for_rule(
+    world,
+    ego_vehicle.id,
+    rule_name=traffic_rule,
+    config=rule_evaluator_config,
+    predicate_evaluator_config=predicate_evaluator_config,
 )
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate()

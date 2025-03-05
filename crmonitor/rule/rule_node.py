@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
 from functools import singledispatchmethod
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, List, Optional, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
@@ -11,93 +12,103 @@ class IOType(Enum):
     INPUT = "input"
 
 
+@dataclass
 class VisitorNode:
-    def __init__(self, name: str) -> None:
-        self.name = name
+    """
+    Base class for nodes that can be processed by a visitor.
+    """
+
+    name: str
+    """The unique name of this node."""
 
 
-class ZeroArityNode(VisitorNode): ...
+@dataclass
+class ZeroArityNode(VisitorNode):
+    """Rule nodes that do not have any children."""
+
+    ...
 
 
+@dataclass
 class OneArityNode(VisitorNode):
-    def __init__(self, name: str, child: VisitorNode) -> None:
-        super().__init__(name)
-        self.child = child
+    """Rule nodes that only have one child. This is used for unary operators."""
+
+    child: VisitorNode
 
 
+@dataclass
 class TwoArityNode(VisitorNode):
-    def __init__(self, name: str, left_child: VisitorNode, right_child: VisitorNode) -> None:
-        super().__init__(name)
-        self.left_child = left_child
-        self.right_child = right_child
+    """Rule nodes that have two children. This is used for binary operators"""
+
+    left_child: VisitorNode
+    right_child: VisitorNode
 
 
+@dataclass
 class RuleNode(VisitorNode):
-    def __init__(self, children, rule_str, name):
-        self.children = children
-        self.name = name
-        self.rule_str = rule_str
+    """A node to contain RTAMT rules, which do not contain any further custom operators."""
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_rule_node(self, *ctx)
+    children: List[VisitorNode]
+    """Children that are referenced in the RTAMT rule."""
+
+    rule_str: str
+    """The RTAMT rule."""
 
 
+@dataclass
 class QuantNode(OneArityNode):
     """
-    Base node for all quantifiers.
-
-    :param name: The name in the RTAMT rule.
-    :param child: The rule for this quantifier.
-    :param quantified_vehicle: The id of the quantification placeholder. E.g. the placeholder 'a0' results in the id 0.
+    A quantifier node fixes a vehicle placeholder and evaluates its child for each vehicle in the scenario.
     """
 
-    def __init__(self, name: str, child: VisitorNode, quantified_vehicle: int):
-        super().__init__(name, child)
-        self.quantified_vehicle = quantified_vehicle
+    quantified_vehicle: int
+    """The ID of the vehicle placeholder. If the placeholder in the rule was `a0` the id will be `0`."""
 
 
+@dataclass
 class AllNode(QuantNode): ...
 
 
+@dataclass
 class ExistNode(QuantNode): ...
 
 
+@dataclass
 class SumIfPositiveNode(QuantNode): ...
 
 
+@dataclass
 class AndsmoothNode(TwoArityNode): ...
 
 
+@dataclass
 class HistoricallyDurationNode(OneArityNode):
-    def __init__(self, name: str, child: VisitorNode, interval: Optional[Interval]):
-        super().__init__(name, child)
-        self.interval = interval
+    interval: Optional[Interval]
 
 
+@dataclass
 class HistoricallyDurationSeverityNode(OneArityNode):
-    def __init__(self, name: str, child: VisitorNode, interval: Optional[Interval]):
-        super().__init__(name, child)
-        self.interval = interval
+    interval: Optional[Interval]
 
 
+@dataclass
 class CompareToThresholdScaledNode(OneArityNode):
-    def __init__(self, name: str, child: VisitorNode, threshold: float):
-        super().__init__(name, child)
-        self.threshold = threshold
+    threshold: float
 
 
+@dataclass
 class PredicateNode(ZeroArityNode):
-    def __init__(
-        self,
-        node_name: str,
-        base_name: str,
-        agent_placeholders: Tuple[int, ...],
-        io_type: IOType = IOType.OUTPUT,
-    ) -> None:
-        super().__init__(node_name)
-        self.base_name = base_name
-        self.agent_placeholders = agent_placeholders
-        self.io_type = io_type
+    base_name: str
+    """The name of the predicate, which can be resolved to an predicate  evaluator."""
+
+    agent_placeholders: Tuple[int, ...]
+    """The agent placeholder IDs (`a0`, `a1`, ...) which were passed to this predicate."""
+
+    io_type: IOType = IOType.OUTPUT
+    """Specifies whether this predicate is an input or output predicate."""
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.agent_placeholders))
 
 
 T = TypeVar("T")
@@ -111,28 +122,11 @@ class RuleTreeVisitorInterface(Generic[T], ABC):
     @singledispatchmethod
     @abstractmethod
     def visit(self, node: VisitorNode, *args, **kwargs) -> T:
-        raise RuntimeError
+        """
+        Dispatch method for visiting different types of nodes.
+        Must be implemented in subclasses.
 
-    @visit.register
-    def _(self, node: RuleNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: AllNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: ExistNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: HistoricallyDurationNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: HistoricallyDurationSeverityNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: SumIfPositiveNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: CompareToThresholdScaledNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def _(self, node: PredicateNode, *args, **kwargs) -> T: ...
+        :param node: The node to visit.
+        :return: Generic type T representing the result of the visit.
+        """
+        ...

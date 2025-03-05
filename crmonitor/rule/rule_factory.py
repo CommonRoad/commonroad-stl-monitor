@@ -32,7 +32,7 @@ class RuleFactory:
 
     def _traffic_rule_parse_pass(self, rule_str: str) -> VisitorNode:
         stream, tree = self._parse_rule_str_to_stream_and_tree(rule_str)
-        visitor = TrafficRuleParseTreeVisitor(stream)
+        visitor = TrafficRuleParseTreeVisitor(stream, self._predicate_factory)
         return visitor.visit(tree)[0]
 
     def parse_rule(self, full_rule_str, name=None) -> VisitorNode:

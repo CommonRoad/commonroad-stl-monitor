@@ -4,15 +4,13 @@ from abc import ABC
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
-from commonroad.scenario.scenario import Scenario
 from commonroad_mpr.common.observation import World as MprWorld
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
-from crmonitor.common.helper import gather
+from crmonitor.common.helper import gather, rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
@@ -24,10 +22,12 @@ from crmonitor.monitor.monitor_node import (
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     MonitorVisitorInterface,
+    OneArityMonitorNode,
     PredicateMonitorNode,
     QuantMonitorNode,
     RuleMonitorNode,
     SumIfPositiveMonitorNode,
+    TwoArityMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from crmonitor.predicates.predicate_factory import PredicateFactory
@@ -40,6 +40,7 @@ from crmonitor.rule.rule_node import (
     HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
+    QuantNode,
     RuleNode,
     RuleTreeVisitorInterface,
     SumIfPositiveNode,
@@ -105,35 +106,6 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
         return PredicateMonitorNode(node.name, evaluator, node.agent_placeholders)
 
 
-def _rtamt_interval_to_commonroad_interval(
-    interval: RtamtInterval, scenario_context: Scenario
-) -> CommonRoadInterval:
-    """
-    Convert a rtamt interval with units to a time step based interval in the context of the scenario.
-
-    :param interval: A rtamt interval, with optional units.
-    :param scenario_context: The scenario in which this interval should be valid.
-
-    :returns: A CommonRoad interval in time steps, which is valid in regards to the scenario context.
-
-    :raises RuntimeError: If an invalid combination of units is used.
-    """
-    if len(interval.begin_unit) == 0 and len(interval.end_unit) == 0:
-        normalized_begin = int(interval.begin)
-        normalized_end = int(interval.end)
-    elif interval.begin_unit == "s" or interval.end_unit == "s":
-        normalized_begin = interval.begin / scenario_context.dt
-        normalized_end = interval.end / scenario_context.dt
-    else:
-        raise RuntimeError(
-            f"Cannot convert rtamt interval: combination of time units '{interval.begin_unit}' and '{interval.end_unit}' is not supported! Use 's' for seconds, or omit for time steps."
-        )
-
-    begin = max(0, normalized_begin)
-
-    return CommonRoadInterval(begin, normalized_end)
-
-
 @dataclass
 class OfflineEvaluationMonitorTreeVisitorContext:
     """
@@ -141,7 +113,7 @@ class OfflineEvaluationMonitorTreeVisitorContext:
     """
 
     world: World
-    mpr_world: MprWorld
+    mpr_world: Optional[MprWorld]
     max_time_step: int
     vehicles: Dict[int, Tuple[int, CommonRoadInterval]]
     """
@@ -151,6 +123,12 @@ class OfflineEvaluationMonitorTreeVisitorContext:
     def with_new_vehicle(
         self, capture_id: int, other_vehicle: Tuple[int, CommonRoadInterval]
     ) -> "OfflineEvaluationMonitorTreeVisitorContext":
+        """
+        Update the context with a newly captured vehicle during quantification.
+
+        :param capture_id: The Id of the placeholder.
+        :param other_vehicle: A tuple with the vehicle Id and its availability time interval.
+        """
         new_vehicles = self.vehicles.copy()
         new_vehicles[capture_id] = other_vehicle
         return OfflineEvaluationMonitorTreeVisitorContext(
@@ -163,20 +141,21 @@ class OfflineEvaluationMonitorTreeVisitorContext:
 
 
 class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
-    def __init__(self, use_boolean=False, output_type=OutputType.STANDARD) -> None:
+    def __init__(
+        self, scale_rob: bool = True, use_boolean=False, output_type=OutputType.STANDARD
+    ) -> None:
         self.use_boolean = use_boolean
         self.output_type = output_type
 
-        # TODO: when this visitor is integrated into crmonitor directly, this option should be read from the config
-        self._rob_scaler = RobustnessScaler(scale=True)
+        self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
     def walk(
         self,
         node: MonitorNode,
         world: World,
-        mpr_world: MprWorld,
         max_time_step: int,
         ego_vehicle: Vehicle,
+        mpr_world: Optional[MprWorld] = None,
     ):
         vehicles = {0: (ego_vehicle.id, CommonRoadInterval(0, max_time_step))}
         ctx = OfflineEvaluationMonitorTreeVisitorContext(world, mpr_world, max_time_step, vehicles)
@@ -189,7 +168,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         raise NotImplementedError
 
     @visit.register
-    def _(
+    def visit_rule_node(
         self, node: RuleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
@@ -205,24 +184,27 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         )
 
         # Save the evaluation results
-        node.record_values(scaled_sample_return)
+        node.values = scaled_sample_return
 
         return scaled_sample_return
 
     @visit.register
-    def _(
+    def visit_all_node(
         self, node: AllMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
-        samples = self._visit_quant_node(node, ctx)
+        samples, selected_ids = self._visit_quant_node(node, ctx)
         robustness_values = []
         for values in samples:
             if len(values) > 0:
                 idx = np.argmin(values)
                 val = values[idx]
 
+                pivotal_monitor = node.monitors[selected_ids[idx]]
+                node.last_selected = pivotal_monitor
             else:
                 val = self._rob_scaler.max
+                node.last_selected = None
 
             robustness_values.append(val)
 
@@ -230,23 +212,27 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             robustness_values, self._rob_scaler.min, self._rob_scaler.max
         )
 
-        node.record_values(scaled_robustness_values)
+        node.values = scaled_robustness_values
 
-        return scaled_robustness_values
+        return list(scaled_robustness_values)
 
     @visit.register
-    def _(
+    def visit_exist_node(
         self, node: ExistMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
-        samples = self._visit_quant_node(node, ctx)
+        samples, selected_ids = self._visit_quant_node(node, ctx)
 
         robustness_values = []
         for values in samples:
             if len(values) > 0:
                 idx = np.argmax(values)
                 val = values[idx]
+
+                pivotal_monitor = node.monitors[selected_ids[idx]]
+                node.last_selected = pivotal_monitor
             else:
                 val = self._rob_scaler.min
+                node.last_selected = None
 
             robustness_values.append(val)
 
@@ -254,12 +240,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             robustness_values, self._rob_scaler.min, self._rob_scaler.max
         )
 
-        node.record_values(scaled_robustness_values)
+        node.values = scaled_robustness_values
 
-        return scaled_robustness_values
+        return list(scaled_robustness_values)
 
     @visit.register
-    def _(
+    def visit_and_smooth_node(
         self, node: AndSmoothMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         samples_left = self.visit(node.left_child, ctx)
@@ -273,17 +259,17 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             smin = b - k * g
             samples_return.append(smin)
 
-        node.record_values(samples_return)
+        node.values = samples_return
 
         return samples_return
 
     @visit.register
-    def _(
+    def visit_historically_duration_node(
         self, node: HistoricallyDurationMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         samples = self.visit(node, ctx)
         if node.interval is not None:
-            interval = _rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
+            interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
             begin = int(interval.start)
             end = min(ctx.max_time_step, int(interval.end))
         else:
@@ -304,12 +290,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 samples_less_0 = list(filter(lambda x: x < 0, window))
                 samples_return.append(len(samples_less_0) / len(window))
 
-        node.record_values(samples_return)
+        node.values = samples_return
 
         return samples_return
 
     @visit.register
-    def _(
+    def visit_historically_duration_severity_node(
         self,
         node: HistoricallyDurationSeverityMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
@@ -317,7 +303,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         samples = self.visit(node.child, ctx)
 
         if node.interval is not None:
-            interval = _rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
+            interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
             begin = int(interval.start)
             end = min(ctx.max_time_step, int(interval.end))
         else:
@@ -338,15 +324,15 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 samples_less_0 = list(filter(lambda x: x < 0, window))
                 samples_return.append(sum(samples_less_0) / len(window))
 
-        node.record_values(samples_return)
+        node.values = samples_return
 
         return samples_return
 
     @visit.register
-    def _(
+    def visit_sum_if_positive_node(
         self, node: SumIfPositiveMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
-        samples = self._visit_quant_node(node, ctx)
+        samples, _ = self._visit_quant_node(node, ctx)
 
         samples_return = []
         for values in samples:
@@ -357,12 +343,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
 
             samples_return.append(val)
 
-        node.record_values(samples_return)
+        node.values = samples_return
 
         return samples_return
 
     @visit.register
-    def _(
+    def visit_compare_to_threshold_scaled_node(
         self,
         node: CompareToThresholdScaledMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
@@ -371,11 +357,11 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         samples_return = [
             1 - 2 * math.exp(-sample / node.threshold * math.log(2)) for sample in samples
         ]
-        node.record_values(samples_return)
+        node.values = samples_return
         return samples_return
 
     @visit.register
-    def _(
+    def visit_predicate_node(
         self, node: PredicateMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         vehicle_ids = []
@@ -391,30 +377,37 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         for time_step in range(0, ctx.max_time_step):
             # Only evaluate the predicate if the other vehicle is available in this time frame.
             if start_time > time_step or end_time < time_step:
-                samples.append(self._rob_scaler.max)
+                samples.append(float("nan"))
                 continue
 
             samples.append(
                 node.evaluate_robustness(ctx.world, ctx.mpr_world, time_step, vehicle_ids)
             )
 
-        node.record_values(samples)
+        node.values = samples
         return samples
 
     def _visit_quant_node(
         self, node: QuantMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ):
+    ) -> Tuple[List[List[float]], List[int]]:
         """
-        This method performs the quantification for the operators all and exist.
+        Performs the quantification of vehicles for quant operators.
+
         Those operators use predicates, which correlate the ego vehicle with all other vehicles in the scenario.
         This method performs this correlation and evaluates each sub-monitor for the permutations of ego vehicle and other vehicles.
         """
+        # Track when each vehicle first appears (enters) and when it is no longer present (leaves).
+        # This is necessary to define the active time intervals for each vehicle in the scenario.
+        # Otherwise we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
         vehicle_start_times = {}
         vehicle_end_times = defaultdict(lambda: ctx.max_time_step)
         for time_step in range(0, ctx.max_time_step):
             all_ids = set(ctx.world.vehicle_ids_for_time_step(time_step))
 
+            # Identify vehicles entering the scene at this timestep.
             entered_vehicle_ids = all_ids.difference(vehicle_start_times.keys())
+
+            # Identify vehicles that have left: they were present but are now gone.
             left_vehicle_ids = (
                 set(vehicle_start_times.keys())
                 .difference(vehicle_end_times.keys())
@@ -424,30 +417,38 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             for entered_vehicle_id in entered_vehicle_ids:
                 vehicle_start_times[entered_vehicle_id] = time_step
 
+            # Record the last timestep vehicles were present before disappearing.
+            # This analysis happens in retrospective, because we only know that a vehicle left if it left in the previous time step.
             for left_vehicle_id in left_vehicle_ids:
                 vehicle_start_times[left_vehicle_id] = time_step - 1
 
+        # Iterate over all vehicles to evaluate the quantified sub-monitors.
+        # Skip vehicles already included in the current context (to avoid duplication).
         values = []
         ret_selected_ids = []
         for vehicle_id in ctx.world.vehicle_ids():
             if vehicle_id in ctx.vehicle_ids:
                 continue
 
+            # Define the active time interval for this vehicle.
             vehicle_interval = CommonRoadInterval(
                 vehicle_start_times[vehicle_id], vehicle_end_times[vehicle_id]
             )
-            other_vehicle_params = (
-                vehicle_id,
-                (vehicle_start_times[vehicle_id], vehicle_end_times[vehicle_id]),
-            )
+            # Prepare updated context that binds the current vehicle to the quantifier placeholder.
             adjusted_ctx = ctx.with_new_vehicle(
                 node.quantified_vehicle, (vehicle_id, vehicle_interval)
             )
-            val = self.visit(node.monitors[tuple(adjusted_ctx.vehicle_ids)], adjusted_ctx)
+            # Retrieve and evaluate the sub-monitor corresponding to this specific vehicle set.
+            # As the quantification needs to evaluate the child of the quantifier node for all other vehicles we cannot plainly evaluate the child, as this would mess up value recording.
+            # Intead new monitors are implicitly created for the currently selected vehicle ids and evaluated.
+            # This basically creates a new sub-monitor tree for each selection of vehicle ids.
+            val = self.visit(node.monitors[vehicle_id], adjusted_ctx)
             values.append(val)
             ret_selected_ids.append(vehicle_id)
 
-        return list(zip(*values))
+        # values is a list of lists with time step ordered samples for each predicate.
+        # This transforms values into a time step ordered list of list of samples, where each list of samples contains the values for each predicate at this time step.
+        return list(zip(*values)), ret_selected_ids
 
 
 @dataclass
@@ -479,7 +480,9 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         )
 
     @visit.register
-    def _(self, node: RuleMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext) -> float:
+    def visit_rule(
+        self, node: RuleMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
+    ) -> float:
         # Collect child_values
         assert node.monitor.dt == ctx.world.dt, (
             f"Monitor constructed with dt="
@@ -505,7 +508,9 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         return values, selected_ids
 
     @visit.register
-    def _(self, node: AllMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext) -> float:
+    def visit_all_node(
+        self, node: AllMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
+    ) -> float:
         values, selected_ids = self._visit_quant_node(node, ctx)
 
         self.all_values_all_ids = {}  # reset to empty
@@ -515,7 +520,9 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
             idx = np.argmin(values)
             val = values[idx]
             self.other_ids = selected_ids[idx]
-            node.last_selected = node.monitors[self.other_ids[-1]]
+
+            pivotal_monitor = node.monitors[selected_ids[idx][-1]]
+            node.last_selected = pivotal_monitor
 
             # Loop through all selected_ids and populate the dictionary
             for i, sid in enumerate(selected_ids):
@@ -530,7 +537,9 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         return val
 
     @visit.register
-    def _(self, node: ExistMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext) -> float:
+    def visit_exist_node(
+        self, node: ExistMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
+    ) -> float:
         values, selected_ids = self._visit_quant_node(node, ctx)
 
         self.all_values_all_ids = {}  # reset to empty
@@ -541,7 +550,8 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
             val = values[idx]
             self.other_ids = selected_ids[idx]
 
-            node.last_selected = node.monitors[self.other_ids[-1]]
+            pivotal_monitor = node.monitors[selected_ids[idx][-1]]
+            node.last_selected = pivotal_monitor
 
             # Loop through all selected_ids and populate the dictionary
             for i, sid in enumerate(selected_ids):
@@ -557,7 +567,7 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         return val
 
     @visit.register
-    def _(
+    def visit_predicate_node(
         self, node: PredicateMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
     ) -> float:
         predicate_ids = gather(ctx.other_ids, node.agent_placeholders)
@@ -573,69 +583,71 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         return value
 
 
-class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[None], ABC):
-    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
-        if all_node.last_selected is None:
+class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]]], ABC):
+    """
+    Collects the values of all leaf nodes in a monitor tree. Can be subclassed to specify which values should be collected.
+    """
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+        raise NotImplementedError
+
+    @visit.register
+    def visit_all_node(self, node: AllMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+        if node.last_selected is None:
             # Visit the prototype monitor
-            val = all_node.children[0].visit(self, *ctx)
+            val = self.visit(node.child, *args, **kwargs)
             val = [(n, v if v is not None else 1.0) for n, v in val]
         else:
-            val = all_node.last_selected.visit(self, *ctx)
+            val = self.visit(node.last_selected, *args, **kwargs)
         return val
 
-    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
-        if exist_node.last_selected is None:
+    @visit.register
+    def visit_exist_node(self, node: ExistMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+        if node.last_selected is None:
             # Visit the prototype monitor
-            val = exist_node.children[0].visit(self, *ctx)
+            val = self.visit(node.child, *args, **kwargs)
             val = [(n, v if v is not None else -1.0) for n, v in val]
         else:
-            val = exist_node.last_selected.visit(self, *ctx)
+            val = self.visit(node.last_selected, *args, **kwargs)
         return val
 
-    def visit_andsmooth_node(self, andsmooth_node: AndSmoothMonitorNode, *ctx):
-        return [c.visit(self, *ctx) for c in andsmooth_node.children]
-
-    def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
-    ):
-        return [c.visit(self, *ctx) for c in historicallyduration_node.children]
-
-    def visit_historicallydurationseverity_node(
-        self, historicallydurationseverity_node: HistoricallyDurationSeverityNode, *ctx
-    ):
-        return [c.visit(self, *ctx) for c in historicallydurationseverity_node.children]
-
-    def visit_compare_to_threshold_scaled_node(
-        self,
-        compare_to_threshold_scaled_node: Union[
-            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
-        ],
-        *ctx,
-    ):
-        return [c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children]
-
-    def visit_sum_if_positive_node(
-        self,
-        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
-        *ctx,
-    ):
-        if sum_if_positive_node.last_selected is None:
+    @visit.register
+    def visit_sum_if_positive_node(self, node: SumIfPositiveMonitorNode, *args, **kwargs):
+        if node.last_selected is None:
             # Visit the prototype monitor
-            val = sum_if_positive_node.children[0].visit(self, *ctx)
-            val = [(n, v if v is not None else -1.0) for n, v in val]
+            val = self.visit(node.child, *args, **kwargs)
+            val = [(n, v if v is not None else float("nan")) for n, v in val]
         else:
-            val = sum_if_positive_node.last_selected.visit(self, *ctx)
+            val = self.visit(node.last_selected, *args, **kwargs)
         return val
+
+    @visit.register
+    def visit_one_arity_node(
+        self, node: OneArityMonitorNode, *args, **kwargs
+    ) -> List[Tuple[str, float]]:
+        return self.visit(node, *args, **kwargs)
+
+    @visit.register
+    def visit_two_arity_node(
+        self, node: TwoArityMonitorNode, *args, **kwargs
+    ) -> List[Tuple[str, float]]:
+        left_values = self.visit(node.left_child, *args, **kwargs)
+        right_values = self.visit(node.right_child, *args, **kwargs)
+
+        return left_values + right_values
 
 
 class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
-    def visit_rule_node(self, rule_node: "RuleMonitorNode", *ctx):
+    @BaseValueMonitorTreeVisitor.visit.register
+    def visit_rule_node(self, rule_node: RuleMonitorNode, *args, **kwargs):
         r = []
         for c in rule_node.children:
-            r.extend(c.visit(self))
+            r.extend(self.visit(c))
         return r
 
-    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
+    @BaseValueMonitorTreeVisitor.visit.register
+    def visit_predicate_node(self, predicate_node: PredicateMonitorNode, *args, **kwargs):
         return [(predicate_node.name, predicate_node.latest_value)]
 
 
@@ -653,75 +665,54 @@ class AstNodeValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
         raise NotImplementedError()
 
 
-class PredicateVisualizerMonitorTreeVisitor(MonitorVisitorInterface[None]):
+class PredicateVisualizerMonitorTreeVisitor(MonitorVisitorInterface[Any]):
     """
     Returns list of dictionaries, each dictionary mapping vehicle ids to a possibly
     nested dict of draw-parameters
     """
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, *args, **kwargs):
+        raise NotImplementedError
 
     def _split_context(self, ctx):
         idx = 6
         is_effective = ctx[idx] if len(ctx) > idx else True
         return ctx[:idx], is_effective
 
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        draw_functions_nested = [c.visit(self, *ctx) for c in rule_node.children]
+    @visit.register
+    def visit_rule_node(self, rule_node: RuleMonitorNode, *args, **kwargs):
+        draw_functions_nested = [self.visit(c, *args, **kwargs) for c in rule_node.children]
         return list(itertools.chain(*draw_functions_nested))
 
-    def _visit_quant_node(self, node, *ctx):
-        ctx, is_effective_so_far = self._split_context(ctx)
+    @visit.register
+    def visit_quant_node(self, node: QuantMonitorNode, *args, **kwargs):
+        ctx, is_effective_so_far = self._split_context(args)
         draw_functions_for_effective_node = []
         if node.last_selected is not None:
-            draw_functions_for_effective_node = node.last_selected.visit(
-                self, *ctx, True and is_effective_so_far
+            draw_functions_for_effective_node = self.visit(
+                node.last_selected, *ctx, True and is_effective_so_far
             )
         draw_functions_nested = [
-            monitor.visit(self, *ctx, False)
+            self.visit(monitor, *ctx, False)
             for i, monitor in node.monitors.items()
             if monitor != node.last_selected
         ]
         return list(itertools.chain(*draw_functions_nested)) + draw_functions_for_effective_node
 
-    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
-        return self._visit_quant_node(all_node, *ctx)
+    @visit.register
+    def visit_one_arity_node(self, node: OneArityMonitorNode, *args, **kwargs):
+        return self.visit(node.child, *args, **kwargs)
 
-    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
-        return self._visit_quant_node(exist_node, *ctx)
+    @visit.register
+    def visit_two_arity_node(self, node: TwoArityMonitorNode, *args, **kwargs):
+        left_draw_params = self.visit(node.left_child, *args, **kwargs)
+        right_draw_params = self.visit(node.right_child, *args, **kwargs)
+        return left_draw_params + right_draw_params
 
-    def visit_andsmooth_node(self, andsmooth_node: AndSmoothMonitorNode, *ctx):
-        print("TODO implement")
-        return self._visit_quant_node(andsmooth_node, *ctx)
-
-    def visit_historicallyduration_node(
-        self, historicallyduration_node: HistoricallyDurationMonitorNode, *ctx
-    ):
-        return self._visit_quant_node(historicallyduration_node, *ctx)
-
-    def visit_historicallydurationseverity_node(
-        self,
-        historicallydurationseverity_node: HistoricallyDurationSeverityMonitorNode,
-        *ctx,
-    ):
-        return self._visit_quant_node(historicallydurationseverity_node, *ctx)
-
-    def visit_sum_if_positive_node(
-        self,
-        sum_if_positive_node: Union[SumIfPositiveNode, SumIfPositiveMonitorNode],
-        *ctx,
-    ):
-        return self._visit_quant_node(sum_if_positive_node, *ctx)
-
-    def visit_compare_to_threshold_scaled_node(
-        self,
-        compare_to_threshold_scaled_node: Union[
-            CompareToThresholdScaledNode, CompareToThresholdScaledMonitorNode
-        ],
-        *ctx,
-    ):
-        return self._visit_quant_node(compare_to_threshold_scaled_node, *ctx)
-
-    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        ctx, is_effective = self._split_context(ctx)
+    @visit.register
+    def visit_predicate_node(self, predicate_node: PredicateMonitorNode, *args, **kwargs):
+        ctx, is_effective = self._split_context(args)
 
         (
             add_vehicle_draw_params,
@@ -759,6 +750,10 @@ class PredicateVisualizerMonitorTreeVisitor(MonitorVisitorInterface[None]):
 
 
 class ResetMonitorTreeVisitor(MonitorVisitorInterface[None]):
+    """
+    Visitor to reset the monitor tree.
+    """
+
     @singledispatchmethod
     def visit(self, node: MonitorNode, *args, **kwargs) -> None:
         node.reset()

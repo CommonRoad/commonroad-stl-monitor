@@ -812,7 +812,7 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
             share_lane = vehicle.get_lane(time_step)
             if (
                 veh_dir_l.right_d(time_step, share_lane) - vehicle.left_d(time_step, share_lane)
-                < self.config["close_to_other_vehicle"]
+                < self.config.close_to_other_vehicle
             ):
                 return True
             else:
@@ -822,7 +822,7 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
             for lane in lanes:
                 left_position = vehicle.left_d(time_step, lane)
                 s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) - left_position > self.config["close_to_lane_border"]:
+                if 0.5 * lane.width(s_ego) - left_position > self.config.close_to_lane_border:
                     return False
             return True
 
@@ -838,21 +838,19 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
         if veh_dir_l is not None:
             share_lane = vehicle.get_lane(time_step)
             return self._scale_lat_dist(
-                self.config["close_to_other_vehicle"]
+                self.config.close_to_other_vehicle
                 - veh_dir_l.right_d(time_step, share_lane)
                 + vehicle.left_d(time_step, share_lane)
             )
         else:
             lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            comparison_list = []  # the 'or' relations between different lanes
+            comparison_list = []  # the 'or relations between different lanes
             for lane in lanes:
                 left_position = vehicle.left_d(time_step, lane)
                 s_ego = vehicle.get_lon_state(time_step, lane).s
                 comparison_list.append(
                     self._scale_lat_dist(
-                        self.config["close_to_lane_border"]
-                        - 0.5 * lane.width(s_ego)
-                        + left_position
+                        self.config.close_to_lane_border - 0.5 * lane.width(s_ego) + left_position
                     )
                 )
             return min(comparison_list)
@@ -879,7 +877,7 @@ class PredDrivesRightmost(BasePredicateEvaluator):
             share_lane = vehicle.get_lane(time_step)
             if (
                 -veh_dir_r.left_d(time_step, share_lane) + vehicle.right_d(time_step, share_lane)
-                < self.config["close_to_other_vehicle"]
+                < self.config.close_to_other_vehicle
             ):
                 return True
             else:
@@ -889,7 +887,7 @@ class PredDrivesRightmost(BasePredicateEvaluator):
             for lane in lanes:
                 right_position = vehicle.right_d(time_step, lane)
                 s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) + right_position > self.config["close_to_lane_border"]:
+                if 0.5 * lane.width(s_ego) + right_position > self.config.close_to_lane_border:
                     return False
             return True
 
@@ -905,21 +903,19 @@ class PredDrivesRightmost(BasePredicateEvaluator):
         if veh_dir_r is not None:
             share_lane = vehicle.get_lane(time_step)
             return self._scale_lat_dist(
-                self.config["close_to_other_vehicle"]
+                self.config.close_to_other_vehicle
                 + veh_dir_r.left_d(time_step, share_lane)
                 - vehicle.right_d(time_step, share_lane)
             )
         else:
             lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            comparison_list = []  # the 'or' relations between different lanes
+            comparison_list = []  # the or' relations between different lanes
             for lane in lanes:
                 right_position = vehicle.right_d(time_step, lane)
                 s_ego = vehicle.get_lon_state(time_step, lane).s
                 comparison_list.append(
                     self._scale_lat_dist(
-                        self.config["close_to_lane_border"]
-                        - 0.5 * lane.width(s_ego)
-                        - right_position
+                        self.config.close_to_lane_border - 0.5 * lane.width(s_ego) - right_position
                     )
                 )
             return min(comparison_list)
@@ -989,7 +985,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
                 continue
             # Get the distance to the stop lines
             stop_line_distance = stop_line_s[i] - front_s
-            if 0 <= stop_line_distance <= self.config["d_sl"]:
+            if 0 <= stop_line_distance <= self.config.d_sl:
                 return True
         return False
 
@@ -1039,7 +1035,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
             # Get the distance to the stop lines
             stop_line_distance = stop_line_s[i] - front_s
             stop_line_robustness = np.fmin(
-                self.config["d_sl"] - stop_line_distance, stop_line_distance
+                self.config.d_sl - stop_line_distance, stop_line_distance
             )
             robustness = max(robustness, stop_line_robustness)
         return self._scale_lon_dist(float(robustness))

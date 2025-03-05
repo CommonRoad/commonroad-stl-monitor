@@ -5,6 +5,10 @@ from functools import reduce
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
+from commonroad.common.util import Interval as CommonRoadInterval
+from commonroad.scenario.scenario import Scenario
+
 # import numba
 import numpy as np
 from commonroad.scenario.lanelet import Lanelet, LaneletType
@@ -1027,3 +1031,32 @@ def merge_dicts_recursively(*dicts):
             else:
                 result[k] = v
     return result
+
+
+def rtamt_interval_to_commonroad_interval(
+    interval: RtamtInterval, scenario_context: Scenario
+) -> CommonRoadInterval:
+    """
+    Convert a rtamt interval with units to a time step based interval in the context of the scenario.
+
+    :param interval: A rtamt interval, with optional units.
+    :param scenario_context: The scenario in which this interval should be valid.
+
+    :returns: A CommonRoad interval in time steps, which is valid in regards to the scenario context.
+
+    :raises RuntimeError: If an invalid combination of units is used.
+    """
+    if len(interval.begin_unit) == 0 and len(interval.end_unit) == 0:
+        normalized_begin = int(interval.begin)
+        normalized_end = int(interval.end)
+    elif interval.begin_unit == "s" or interval.end_unit == "s":
+        normalized_begin = interval.begin / scenario_context.dt
+        normalized_end = interval.end / scenario_context.dt
+    else:
+        raise RuntimeError(
+            f"Cannot convert rtamt interval: combination of time units '{interval.begin_unit}' and '{interval.end_unit}' is not supported! Use 's' for seconds, or omit for time steps."
+        )
+
+    begin = max(0, normalized_begin)
+
+    return CommonRoadInterval(begin, normalized_end)
