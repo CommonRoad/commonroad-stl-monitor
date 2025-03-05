@@ -15,9 +15,9 @@ stages:
 before_script: &default_before_script
   - pip install poetry
   - poetry config virtualenvs.in-project true
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
   - poetry install --with test
   - source .venv/bin/activate
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
 
 unittest:
   stage: test
