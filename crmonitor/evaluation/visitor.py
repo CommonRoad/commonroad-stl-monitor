@@ -22,12 +22,12 @@ from crmonitor.monitor.monitor_node import (
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     MonitorVisitorInterface,
-    OneArityMonitorNode,
+    UnaryMonitorNode,
     PredicateMonitorNode,
     QuantMonitorNode,
     RuleMonitorNode,
     SumIfPositiveMonitorNode,
-    TwoArityMonitorNode,
+    BinaryMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from crmonitor.predicates.predicate_factory import PredicateFactory
@@ -613,24 +613,12 @@ class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]
         return val
 
     @visit.register
-    def visit_sum_if_positive_node(self, node: SumIfPositiveMonitorNode, *args, **kwargs):
-        if node.last_selected is None:
-            # Visit the prototype monitor
-            val = self.visit(node.child, *args, **kwargs)
-            val = [(n, v if v is not None else float("nan")) for n, v in val]
-        else:
-            val = self.visit(node.last_selected, *args, **kwargs)
-        return val
-
-    @visit.register
-    def visit_one_arity_node(
-        self, node: OneArityMonitorNode, *args, **kwargs
-    ) -> List[Tuple[str, float]]:
+    def visit_unary_node(self, node: UnaryMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
         return self.visit(node, *args, **kwargs)
 
     @visit.register
-    def visit_two_arity_node(
-        self, node: TwoArityMonitorNode, *args, **kwargs
+    def visit_binary_node(
+        self, node: BinaryMonitorNode, *args, **kwargs
     ) -> List[Tuple[str, float]]:
         left_values = self.visit(node.left_child, *args, **kwargs)
         right_values = self.visit(node.right_child, *args, **kwargs)
@@ -701,11 +689,11 @@ class PredicateVisualizerMonitorTreeVisitor(MonitorVisitorInterface[Any]):
         return list(itertools.chain(*draw_functions_nested)) + draw_functions_for_effective_node
 
     @visit.register
-    def visit_one_arity_node(self, node: OneArityMonitorNode, *args, **kwargs):
+    def visit_unary_node(self, node: UnaryMonitorNode, *args, **kwargs):
         return self.visit(node.child, *args, **kwargs)
 
     @visit.register
-    def visit_two_arity_node(self, node: TwoArityMonitorNode, *args, **kwargs):
+    def visit_binary_node(self, node: BinaryMonitorNode, *args, **kwargs):
         left_draw_params = self.visit(node.left_child, *args, **kwargs)
         right_draw_params = self.visit(node.right_child, *args, **kwargs)
         return left_draw_params + right_draw_params

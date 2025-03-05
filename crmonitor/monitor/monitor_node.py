@@ -63,34 +63,34 @@ class MonitorNode(VisitorNode):
 class ZeroArityMonitorNode(MonitorNode): ...
 
 
-class OneArityMonitorNode(MonitorNode):
+class UnaryMonitorNode(MonitorNode):
     def __init__(self, name: str, child: MonitorNode) -> None:
         super().__init__(name)
         self.child = child
 
     @classmethod
-    def _copy_cls(cls, node: "OneArityMonitorNode") -> "OneArityMonitorNode":
+    def _copy_cls(cls, node: "UnaryMonitorNode") -> "UnaryMonitorNode":
         return cls(node.name, node.child.copy())
 
 
-class TwoArityMonitorNode(MonitorNode):
+class BinaryMonitorNode(MonitorNode):
     def __init__(self, name: str, left_child: MonitorNode, right_child: MonitorNode) -> None:
         super().__init__(name)
         self.left_child = left_child
         self.right_child = right_child
 
     @classmethod
-    def _copy_cls(cls, node: "TwoArityMonitorNode") -> "TwoArityMonitorNode":
+    def _copy_cls(cls, node: "BinaryMonitorNode") -> "BinaryMonitorNode":
         return cls(node.name, node.left_child.copy(), node.right_child.copy())
 
 
-class NArityMonitorNode(MonitorNode):
+class VaradicMonitorNode(MonitorNode):
     def __init__(self, name: str, children: Sequence[MonitorNode]) -> None:
         super().__init__(name)
         self.children = children
 
 
-class RuleMonitorNode(NArityMonitorNode):
+class RuleMonitorNode(VaradicMonitorNode):
     def __init__(
         self, name: str, children: Sequence[MonitorNode], monitor: RtamtStlMonitor
     ) -> None:
@@ -111,7 +111,7 @@ class RuleMonitorNode(NArityMonitorNode):
         self.monitor.reset()
 
 
-class QuantMonitorNode(OneArityMonitorNode):
+class QuantMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
         super().__init__(name, child)
         self.quantified_vehicle = quantified_vehicle
@@ -123,7 +123,6 @@ class QuantMonitorNode(OneArityMonitorNode):
 
     def reset(self):
         super().reset()
-        self.last_selected = None
         self.monitors.clear()
 
 
@@ -149,6 +148,10 @@ class SelectiveQuantMonitorNode(QuantMonitorNode):
     def last_selected(self, monitor: Optional[MonitorNode]) -> None:
         self._selected.append(monitor)
 
+    def reset(self):
+        super().reset()
+        self._selected = []
+
 
 class AllMonitorNode(SelectiveQuantMonitorNode): ...
 
@@ -156,18 +159,18 @@ class AllMonitorNode(SelectiveQuantMonitorNode): ...
 class ExistMonitorNode(SelectiveQuantMonitorNode): ...
 
 
-class AndSmoothMonitorNode(TwoArityMonitorNode):
+class AndSmoothMonitorNode(BinaryMonitorNode):
     def __init__(self, name: str, child_left: MonitorNode, child_right: MonitorNode) -> None:
         super().__init__(name, child_left, child_right)
 
 
-class HistoricallyDurationMonitorNode(OneArityMonitorNode):
+class HistoricallyDurationMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
         super().__init__(name, child)
         self.interval = interval
 
 
-class HistoricallyDurationSeverityMonitorNode(OneArityMonitorNode):
+class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
         super().__init__(name, child)
         self.interval = interval
@@ -176,7 +179,7 @@ class HistoricallyDurationSeverityMonitorNode(OneArityMonitorNode):
 class SumIfPositiveMonitorNode(QuantMonitorNode): ...
 
 
-class CompareToThresholdScaledMonitorNode(OneArityMonitorNode):
+class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, threshold: float) -> None:
         super().__init__(name, child)
         self.threshold = threshold

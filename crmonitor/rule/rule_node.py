@@ -23,21 +23,21 @@ class VisitorNode:
 
 
 @dataclass
-class ZeroArityNode(VisitorNode):
+class NullaryNode(VisitorNode):
     """Rule nodes that do not have any children."""
 
     ...
 
 
 @dataclass
-class OneArityNode(VisitorNode):
+class UnaryNode(VisitorNode):
     """Rule nodes that only have one child. This is used for unary operators."""
 
     child: VisitorNode
 
 
 @dataclass
-class TwoArityNode(VisitorNode):
+class BinaryNode(VisitorNode):
     """Rule nodes that have two children. This is used for binary operators"""
 
     left_child: VisitorNode
@@ -56,7 +56,7 @@ class RuleNode(VisitorNode):
 
 
 @dataclass
-class QuantNode(OneArityNode):
+class QuantNode(UnaryNode):
     """
     A quantifier node fixes a vehicle placeholder and evaluates its child for each vehicle in the scenario.
     """
@@ -78,26 +78,26 @@ class SumIfPositiveNode(QuantNode): ...
 
 
 @dataclass
-class AndsmoothNode(TwoArityNode): ...
+class AndsmoothNode(BinaryNode): ...
 
 
 @dataclass
-class HistoricallyDurationNode(OneArityNode):
+class HistoricallyDurationNode(UnaryNode):
     interval: Optional[Interval]
 
 
 @dataclass
-class HistoricallyDurationSeverityNode(OneArityNode):
+class HistoricallyDurationSeverityNode(UnaryNode):
     interval: Optional[Interval]
 
 
 @dataclass
-class CompareToThresholdScaledNode(OneArityNode):
+class CompareToThresholdScaledNode(UnaryNode):
     threshold: float
 
 
 @dataclass
-class PredicateNode(ZeroArityNode):
+class PredicateNode(NullaryNode):
     base_name: str
     """The name of the predicate, which can be resolved to an predicate  evaluator."""
 
