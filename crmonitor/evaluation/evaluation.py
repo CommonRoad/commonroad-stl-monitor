@@ -1,5 +1,4 @@
 import copy
-from dataclasses import dataclass
 import logging
 import warnings
 from abc import ABC, abstractmethod
@@ -20,6 +19,7 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
+    EvaluationMonitorTreeVisitor,
     MPRGradientCollectorMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
     OfflineEvaluationMonitorTreeVisitor,
@@ -50,9 +50,7 @@ class RuleEvaluatorInterface(ABC):
         predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
     ):
         rule_str = get_traffic_rule_from_config(rule_name)
-        rule = RuleFactory(PredicateFactory(predicate_evaluator_config)).parse_rule(
-            rule_str, name=rule_name
-        )
+        rule = RuleFactory().parse_rule(rule_str, name=rule_name)
 
         return cls(rule, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
 
@@ -71,7 +69,9 @@ class RuleEvaluatorInterface(ABC):
         self._use_boolean = use_boolean
         self._predicate_evaluator_config = predicate_evaluator_config
 
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(
+            world.dt, output_type, predicate_evaluator_config
+        )
         self._monitor = monitor_creation_visitor.visit(self._rule)
         if self._predicate_evaluator_config.mpr.enabled:
             self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
@@ -190,7 +190,7 @@ class RuleEvaluator:
         self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
         if monitor_evaluation_visitor is None:
-            self._eval_visitor = OfflineEvaluationMonitorTreeVisitor(
+            self._eval_visitor = EvaluationMonitorTreeVisitor(
                 use_boolean=use_boolean, output_type=output_type
             )
         else:
@@ -209,16 +209,16 @@ class RuleEvaluator:
         return self._last_evaluation_time_step
 
     def get_predicates(self) -> Dict[str, float]:
-        predicate_values = dict(self._monitor.visit(self._predicate_collector_visitor))
+        predicate_values = dict(self._predicate_collector_visitor.visit(self._monitor))
         return predicate_values
 
     def get_mpr_gradient(self) -> Dict[str, list]:
         # with the mpr gradient flag to be true
-        mpr_gradient_values = dict(self._monitor.visit(self._mpr_gradient_visitor))
+        mpr_gradient_values = dict(self._mpr_gradient_visitor.visit(self._monitor))
         return mpr_gradient_values
 
     def ast_node_values(self) -> Dict[str, float]:
-        node_values = dict(self._monitor.visit(self._ast_node_value_collector_visitor))
+        node_values = dict(self._ast_node_value_collector_visitor.visit(self._monitor))
         return node_values
 
     @property
@@ -324,8 +324,8 @@ class RuleEvaluator:
 
         predicate_name2predicate_evaluator = {}
 
-        draw_functions = self._monitor.visit(
-            self._visualizer_visitor,
+        draw_functions = self._visualizer_visitor.visit(
+            self._monitor,
             add_vehicle_draw_params,
             predicate_names2vehicle_ids2values,
             predicate_name2predicate_evaluator,

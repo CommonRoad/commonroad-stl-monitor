@@ -15,7 +15,7 @@ from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,
@@ -333,7 +333,7 @@ class PredPreceding(BasePredicateEvaluator):
     predicate_name = PositionPredicates.Precedes
     arity = 2
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
@@ -928,7 +928,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
     predicate_name = PositionPredicates.StopLineInFront
     arity = 1
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
         self._dict_veh_id_stop_line_s = defaultdict(lambda: None)
         self._dict_veh_id_intersection_lanelets = defaultdict(lambda: None)

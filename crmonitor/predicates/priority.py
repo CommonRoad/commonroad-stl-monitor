@@ -5,11 +5,10 @@ from typing import List
 
 import numpy as np
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +145,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
         self._dict_lanelets_traffic_light = defaultdict(lambda: None)
 

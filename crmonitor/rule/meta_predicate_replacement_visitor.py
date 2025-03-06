@@ -11,6 +11,13 @@ from crmonitor.rule.rule_node import IOType
 
 
 class ReplacementRule:
+    """
+    Defines a rule that replaces meta-predicates with concrete expressions in traffic rules.
+
+    This class handles both agent placeholders (variables that represent different agents in the rule)
+    and input/output type placeholders, ensuring that the generated rule correctly interpolates these values.
+    """
+
     def __init__(
         self,
         rule: str,
@@ -23,6 +30,16 @@ class ReplacementRule:
 
     @classmethod
     def from_str(cls, signature: str, rule: str) -> "ReplacementRule":
+        """
+        Parses a meta-predicate signature and extracts placeholders for agents and IO types.
+
+        This function is crucial because meta-predicates follow a structured naming convention
+        where agent variables and IO types are embedded in the predicate name.
+
+        :param signature: The meta-predicate signature, e.g., "$meta_predicate(a0, a1)_x".
+        :param rule: The rule string that replaces the meta-predicate.
+        :return: A `ReplacementRule` object with extracted placeholders.
+        """
         argument_string = re.search(r"\(([^)]+)\)(_.*)?", signature)
         if argument_string is None:
             raise RuntimeError()
@@ -38,6 +55,16 @@ class ReplacementRule:
         return cls(rule, quantified_agent_placeholders, io_type_placeholder)
 
     def get_interpolated_rule(self, quantified_agents: List[str], io_type: IOType) -> str:
+        """
+        Replaces placeholders in the rule string with actual agent names and IO types.
+
+        Ensuring proper interpolation prevents syntax errors and guarantees correctness when translating
+        high-level meta-rules into concrete STL formulas.
+
+        :param quantified_agents: A list of agent names to replace placeholders.
+        :param io_type: The input/output type for the predicate.
+        :return: A fully interpolated rule string.
+        """
         if len(quantified_agents) != len(self._quantified_agents_placeholders):
             raise RuntimeError()
 
@@ -57,11 +84,21 @@ class ReplacementRule:
 
 
 class ReplacementTable:
+    """
+    Stores and manages a mapping of meta-predicate names to their corresponding replacement rules.
+    """
+
     def __init__(self, replacement_table: Dict[str, ReplacementRule]) -> None:
         self._replacement_table = replacement_table
 
     @classmethod
     def from_dict(cls, _dict: dict) -> "ReplacementTable":
+        """
+        Constructs a `ReplacementTable` from a dictionary where the keys are meta-predicate signatures and the values are their replacement rules.
+
+        :param _dict: A dictionary mapping predicate signatures to rule strings.
+        :return: A `ReplacementTable` instance.
+        """
         table = {}
         for meta_predicate_signature, rule in _dict.items():
             meta_predicate_name = meta_predicate_signature.split("(")[0]
@@ -69,14 +106,21 @@ class ReplacementTable:
 
         return cls(table)
 
-    def get_replacement_rule(self, meta_predicate: str) -> ReplacementRule:
-        return self._replacement_table[meta_predicate]
+    def get_replacement_rule(self, meta_predicate: str) -> Optional[ReplacementRule]:
+        """
+        Retrieves the replacement rule for a given meta-predicate.
+
+        :param meta_predicate: The name of the meta-predicate.
+        :return: The corresponding `ReplacementRule`, or None if the meta-predicate is unknown.
+        """
+        return self._replacement_table.get(meta_predicate)
 
 
 class MetaPredicateReplacementVisitor(FaStlParserVisitor):
     """
-    A visitor for traffic rules, which replaces meta rules of the from `$meta_predicate_name(a0, a1)` with their replacement rule.
-    Performs only a simple string replacement and does not interpolate the arguments.
+    A visitor that replaces meta-predicates in traffic rules with concrete expressions.
+
+    This visitor operates on a parsed AST, performing replacements based on a predefined `ReplacementTable`.
     """
 
     # The program name is used to uniquely identify our token stream.
@@ -106,7 +150,13 @@ class MetaPredicateReplacementVisitor(FaStlParserVisitor):
 
     def visit(self, tree) -> str:
         """
-        A custom visit method, that returns the rule source code with all meta predicate replaced.
+        Processes the AST and replaces meta-predicates with their corresponding concrete expressions.
+
+        This function ensures that the transformation maintains syntactic validity by handling replacements
+        within the ANTLR-generated parse tree.
+
+        :param tree: The AST to process.
+        :return: The modified source code as a string.
         """
         tree.accept(self)
 
@@ -115,18 +165,13 @@ class MetaPredicateReplacementVisitor(FaStlParserVisitor):
         )
         return modified_source_code
 
-    # def visitSpecQuantSumIfPositive(self, ctx: FaStlParser.SpecQuantSumIfPositiveContext):
-    #     self._used_quantifiers.append(ctx.vehicle().getText())
-
-    # def visitSpecQuantExist(self, ctx: FaStlParser.SpecQuantExistContext):
-    #     self._used_quantifiers.append(ctx.vehicle().getText())
-
-    # def visitSpecQuantForall(self, ctx: FaStlParser.SpecQuantForallContext):
-    #     self._used_quantifiers.append(ctx.vehicle().getText())
-
     def visitPredicate(self, ctx: FaStlParser.PredicateContext) -> None:
         """
-        Visit a predicate node and perform a replacement if the predicate is a meta-predicate.
+        Visits predicate nodes and replaces meta-predicates with concrete rules.
+
+        This ensures that STL formulas are correctly rewritten before evaluation.
+
+        :param ctx: The predicate node context.
         """
         pred_name = ctx.Identifier().getText()
         if not pred_name.startswith("$"):

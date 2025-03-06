@@ -12,7 +12,7 @@ class IOType(Enum):
     INPUT = "input"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class VisitorNode:
     """
     Base class for nodes that can be processed by a visitor.
@@ -22,21 +22,21 @@ class VisitorNode:
     """The unique name of this node."""
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class NullaryNode(VisitorNode):
     """Rule nodes that do not have any children."""
 
     ...
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class UnaryNode(VisitorNode):
     """Rule nodes that only have one child. This is used for unary operators."""
 
     child: VisitorNode
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BinaryNode(VisitorNode):
     """Rule nodes that have two children. This is used for binary operators"""
 
@@ -44,18 +44,19 @@ class BinaryNode(VisitorNode):
     right_child: VisitorNode
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class RuleNode(VisitorNode):
     """A node to contain RTAMT rules, which do not contain any further custom operators."""
 
-    children: List[VisitorNode]
+    # children are a tuple because they are immutable. This helps with hashing.
+    children: Tuple[VisitorNode, ...]
     """Children that are referenced in the RTAMT rule."""
 
     rule_str: str
     """The RTAMT rule."""
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class QuantNode(UnaryNode):
     """
     A quantifier node fixes a vehicle placeholder and evaluates its child for each vehicle in the scenario.
@@ -65,38 +66,38 @@ class QuantNode(UnaryNode):
     """The ID of the vehicle placeholder. If the placeholder in the rule was `a0` the id will be `0`."""
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class AllNode(QuantNode): ...
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ExistNode(QuantNode): ...
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class SumIfPositiveNode(QuantNode): ...
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class AndsmoothNode(BinaryNode): ...
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class HistoricallyDurationNode(UnaryNode):
     interval: Optional[Interval]
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class HistoricallyDurationSeverityNode(UnaryNode):
     interval: Optional[Interval]
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class CompareToThresholdScaledNode(UnaryNode):
     threshold: float
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class PredicateNode(NullaryNode):
     base_name: str
     """The name of the predicate, which can be resolved to an predicate  evaluator."""
@@ -106,9 +107,6 @@ class PredicateNode(NullaryNode):
 
     io_type: IOType = IOType.OUTPUT
     """Specifies whether this predicate is an input or output predicate."""
-
-    def __hash__(self) -> int:
-        return hash((self.name, self.agent_placeholders))
 
 
 T = TypeVar("T")

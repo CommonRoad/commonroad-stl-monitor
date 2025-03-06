@@ -8,10 +8,9 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
 logger = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
         if speed_limit is None:
             rob = math.inf
         else:
-            rob = speed_limit + self.eps - vehicle.states_cr[time_step].velocity
+            rob = speed_limit + self.config.eps - vehicle.states_cr[time_step].velocity
         rob = self._scale_speed(rob)
         return rob
 
@@ -58,9 +57,9 @@ class PredLaneSpeedLimit(PredGenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsLaneSpeedLimit
     arity = 1
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
-        self.country = SupportedTrafficSignCountry(config.get("country"))
+        self.country = SupportedTrafficSignCountry(config.country)
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -77,7 +76,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle_type = world.vehicle_by_id(vehicle_ids[0]).obstacle_type
         if vehicle_type is ObstacleType.TRUCK:
-            return self.config["max_interstate_speed_truck"]
+            return self.config.max_interstate_speed_truck
         else:
             return None
 
@@ -109,7 +108,7 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
             world, time_step, vehicle_ids
         )
         if speed_limit is None:
-            speed_limit = self.config["desired_interstate_velocity"]
+            speed_limit = self.config.desired_interstate_velocity
         return speed_limit
 
 
@@ -118,7 +117,7 @@ class PredHasSlowMovingVelocity(PredLaneSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config["max_slow_moving_traffic_velocity"]
+        return self.config.max_slow_moving_traffic_velocity
 
 
 class PredHasCongestionVelocity(PredLaneSpeedLimit):
@@ -126,7 +125,7 @@ class PredHasCongestionVelocity(PredLaneSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids) -> float:
-        return self.config["max_congestion_velocity"]
+        return self.config.max_congestion_velocity
 
 
 class PredHasQueueVelocity(PredLaneSpeedLimit):
@@ -134,7 +133,7 @@ class PredHasQueueVelocity(PredLaneSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config["max_queue_of_vehicles_velocity"]
+        return self.config.max_queue_of_vehicles_velocity
 
 
 class PredReverses(BasePredicateEvaluator):

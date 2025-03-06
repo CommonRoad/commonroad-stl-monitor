@@ -31,8 +31,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     # It's value does not really matter, because we only apply one kind of rewrite.
     DEFAULT_TOKEN_REWRITER_PROGRAM = "predicate"
 
-    def __init__(self, tokens, predicate_factory: Optional[PredicateFactory] = None):
-        self._predicate_factory = predicate_factory or PredicateFactory()
+    def __init__(self, tokens):
         self._rewriter: TokenStreamRewriter = TokenStreamRewriter(tokens)
         self._sub_rule_counter = 0
 
@@ -48,6 +47,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [int(ctx.IntegerLiteral().getText())]
 
     def visitPredicate(self, ctx: FaStlParser.PredicateContext):
+        # PredicateNode needs the vehicle ids as tuple, and not as list.
         vehicle_ids = tuple(self.visitChildren(ctx))
         pred_basename = ctx.Identifier().getText()
         if ctx.IO_TYPE_INPUT() is not None:
@@ -57,7 +57,6 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             self._rewriter.delete(self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index)
         else:
             io_type = IOType.OUTPUT
-        predicate_evaluator = self._predicate_factory.get_predicate(pred_basename)
         # Rewrite the predicate name into RTAMT compliant syntax
         suffix = "__" + "_".join(str(i) for i in vehicle_ids)
         self._rewriter.replace(
@@ -66,7 +65,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             ctx.RPAREN().symbol.tokenIndex,
             suffix,
         )
-        p = PredicateNode(pred_basename + suffix, pred_basename, vehicle_ids)
+        p = PredicateNode(pred_basename + suffix, pred_basename, vehicle_ids, io_type)
         return [p]
 
     def visitSpecQuantForall(self, ctx: FaStlParser.SpecQuantForallContext):
@@ -100,6 +99,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitSpecNested(self, ctx: FaStlParser.SpecNestedContext):
         children = self.visitChildren(ctx)
         # De-duplicate
+        children = tuple(dict.fromkeys(children))
         if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
             # Flatten tree to evaluate with rtamt
             return [

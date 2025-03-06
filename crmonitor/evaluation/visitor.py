@@ -4,7 +4,7 @@ from abc import ABC
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
@@ -30,6 +30,7 @@ from crmonitor.monitor.monitor_node import (
     BinaryMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
+from crmonitor.predicates.base import PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.predicates.scaling import RobustnessScaler
 from crmonitor.rule.rule_node import (
@@ -40,7 +41,6 @@ from crmonitor.rule.rule_node import (
     HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
-    QuantNode,
     RuleNode,
     RuleTreeVisitorInterface,
     SumIfPositiveNode,
@@ -53,10 +53,15 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     This visitor is used to transform a rule tree to a monitor tree.
     """
 
-    def __init__(self, dt: float, output_type: OutputType = OutputType.STANDARD):
+    def __init__(
+        self,
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+    ):
         self.dt = dt
         self.output_type = output_type
-        self._predicate_factory = PredicateFactory()
+        self._predicate_factory = PredicateFactory(predicate_evaluator_config)
 
     @singledispatchmethod
     def visit(self, node: VisitorNode, *args, **kwargs) -> MonitorNode:

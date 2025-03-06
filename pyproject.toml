@@ -55,7 +55,9 @@ indent-width = 4
 format.quote-style = "double"
 target-version = "py311"
 src = ["crmonitor", "tests"]
+# TODO: execpt for fastl and external, all folders should be covered by ruff.
 extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/"]
+# force exclude because pre-commit might pass those files explicitly, which will override the exclude.
 force-exclude = true
 
 [tool.ruff.lint]

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import singledispatchmethod
-from typing import Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
@@ -169,11 +169,23 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
         super().__init__(name, child)
         self.interval = interval
 
+    @classmethod
+    def _copy_cls(
+        cls, node: "HistoricallyDurationMonitorNode"
+    ) -> "HistoricallyDurationMonitorNode":
+        return cls(node.name, node.child.copy(), node.interval)
+
 
 class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
         super().__init__(name, child)
         self.interval = interval
+
+    @classmethod
+    def _copy_cls(
+        cls, node: "HistoricallyDurationSeverityMonitorNode"
+    ) -> "HistoricallyDurationSeverityMonitorNode":
+        return cls(node.name, node.child.copy(), node.interval)
 
 
 class SumIfPositiveMonitorNode(QuantMonitorNode): ...
@@ -183,6 +195,12 @@ class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, threshold: float) -> None:
         super().__init__(name, child)
         self.threshold = threshold
+
+    @classmethod
+    def _copy_cls(
+        cls, node: "CompareToThresholdScaledMonitorNode"
+    ) -> "CompareToThresholdScaledMonitorNode":
+        return cls(node.name, node.child.copy(), node.threshold)
 
 
 class PredicateMonitorNode(ZeroArityMonitorNode):
@@ -207,8 +225,12 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
             world, mpr_world, time_step, vehicle_ids
         )
         self.latest_vehicle_ids = tuple(vehicle_ids)
-        if mpr_world is not None:
-            self.mpr_gradient = self.evaluator.gradient_mpr()
+        if (
+            self.evaluator.config.mpr.enabled
+            and self.evaluator.config.mpr.ml
+            and self.evaluator.config.mpr.extract_gradient
+        ):
+            self.mpr_gradient = self.evaluator.last_gradient
         return value
 
 
@@ -219,36 +241,3 @@ class MonitorVisitorInterface(Generic[T], ABC):
     @singledispatchmethod
     @abstractmethod
     def visit(self, node: MonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_rule_node(self, node: RuleMonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_all_node(self, node: AllMonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_exist_node(self, node: ExistMonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_sum_if_positive_node(self, node: SumIfPositiveMonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_and_smooth_node(self, node: AndSmoothMonitorNode, *args, **kwargs) -> T: ...
-
-    @visit.register
-    def visit_historically_duration_node(
-        self, node: HistoricallyDurationMonitorNode, *args, **kwargs
-    ) -> T: ...
-
-    @visit.register
-    def visit_historically_duration_severity_node(
-        self, node: HistoricallyDurationSeverityMonitorNode, *args, **kwargs
-    ) -> T: ...
-
-    @visit.register
-    def visit_compare_to_threshold_scaled_node(
-        self, node: CompareToThresholdScaledMonitorNode, *args, **kwargs
-    ) -> T: ...
-
-    @visit.register
-    def visit_predicate_node(self, node: PredicateMonitorNode, *args, **kwargs) -> T: ...
