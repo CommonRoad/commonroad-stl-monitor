@@ -12,8 +12,7 @@ import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluatorConfig, OfflineRuleEvaluator
-from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
 

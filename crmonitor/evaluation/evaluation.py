@@ -38,14 +38,6 @@ from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class RuleEvaluatorConfig:
-    use_boolean: bool = False
-    output_type: OutputType = OutputType.STANDARD
-    scale_rob: bool = True
-    use_mpr: bool = False
-
-
 class RuleEvaluatorInterface(ABC):
     @classmethod
     def create_for_rule(

@@ -2,10 +2,8 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 import pandas as pd
-from crmonitor.common.config import get_traffic_rule_config
-from crmonitor.common.world import World, get_world_config
-from crmonitor.evaluation.evaluation import OfflineRuleEvaluator, RuleEvaluator, RuleEvaluatorConfig
-from crmonitor.evaluation.visitor import MonitorCreationRuleTreeVisitor
+from crmonitor.common.world import World
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
 
 input_scenarios = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
