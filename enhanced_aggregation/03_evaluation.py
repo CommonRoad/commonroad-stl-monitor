@@ -15,7 +15,7 @@ from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluatorConfig, OfflineRuleEvaluator
 from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import MprConfig, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -82,24 +82,20 @@ world = World.create_from_scenario(scenario)
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
-rule_evaluator_config = RuleEvaluatorConfig(
-    output_type=output_type, use_mpr=use_mpr, scale_rob=scale_rob
-)
 predicate_evaluator_config = PredicateEvaluatorConfig(
-    mpr=MprConfig(enabled=use_mpr, model_path=model_path)
+    scale_rob=scale_rob, mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path)
 )
 rule_evaluator = OfflineRuleEvaluator.create_for_rule(
     world,
     ego_vehicle.id,
+    use_boolean=False,
+    output_type=output_type,
     rule_name=traffic_rule,
-    config=rule_evaluator_config,
     predicate_evaluator_config=predicate_evaluator_config,
 )
 # Either step through time steps sequentially
 robustness = rule_evaluator.evaluate()
 print(f"robustness is {robustness}")
 
-# TODO: Expose the AST values over a public API, such that we no longer need to access the private attributes.
-visualization_visitor = FormulaVisualizationVisitor(scale_rob)
-visualization_visitor.visualize(rule_evaluator._monitor)
+rule_evaluator.visualize()
 plt.show()

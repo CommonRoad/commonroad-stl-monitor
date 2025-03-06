@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class MprConfig:
+class PredicateMprConfig:
     enabled: bool = False
     ml: bool = True
     model_path: Optional[Path] = None
@@ -31,8 +31,8 @@ class MprConfig:
 @dataclass
 class PredicateEvaluatorConfig:
     scale_rob: bool = True
+    mpr: PredicateMprConfig = field(default_factory=PredicateMprConfig)
     eps: float = 1e-17
-    mpr: MprConfig = field(default_factory=MprConfig)
 
     min_interstate_width: float = 7.0
 
