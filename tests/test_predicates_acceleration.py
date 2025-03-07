@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
@@ -34,9 +33,7 @@ class TestIntersectionAccelerationPredicates(unittest.TestCase):
 
         pred = PredCausesBrakingIntersection(self.config)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            sol_monitor_1 = pred.evaluate_boolean(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [ego_vehicle.id, target_vehicle.id]
             )

@@ -5,11 +5,10 @@ from typing import List
 
 import numpy as np
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -48,48 +47,40 @@ class TrafficSignPriority:
         self.priority[
             TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_OPPOSITE_RIGHT_YIELD
         ] = self.PriorityIntersection(5, 4, 4, 1)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD
-        ] = self.PriorityIntersection(5, 4, None, 2)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_RIGHT_YIELD
-        ] = self.PriorityIntersection(5, None, 4, 3)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD] = (
+            self.PriorityIntersection(5, 4, None, 2)
+        )
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TURNING_PRIORITY_WITH_RIGHT_YIELD] = (
+            self.PriorityIntersection(5, None, 4, 3)
+        )
         self.priority[
             TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_OPPOSITE_LEFT_YIELD
         ] = self.PriorityIntersection(4, 4, 5, 4)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD
-        ] = self.PriorityIntersection(None, 4, 5, 5)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_LEFT_YIELD
-        ] = self.PriorityIntersection(4, None, 5, 6)
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_OPPOSITE_YIELD] = (
+            self.PriorityIntersection(None, 4, 5, 5)
+        )
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TURNING_PRIORITY_WITH_LEFT_YIELD] = (
+            self.PriorityIntersection(4, None, 5, 6)
+        )
         self.priority[
             TrafficSignIDGermany.ADDITION_LEFT_TRAFFIC_PRIORITY_WITH_STRAIGHT_RIGHT_YIELD
         ] = self.PriorityIntersection(2, 2, 2, 7)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_LEFT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD
-        ] = self.PriorityIntersection(2, 2, None, 8)
+        self.priority[TrafficSignIDGermany.ADDITION_LEFT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD] = (
+            self.PriorityIntersection(2, 2, None, 8)
+        )
         self.priority[
             TrafficSignIDGermany.ADDITION_RIGHT_TRAFFIC_PRIORITY_WITH_STRAIGHT_LEFT_YIELD
         ] = self.PriorityIntersection(2, 2, 2, 9)
-        self.priority[
-            TrafficSignIDGermany.ADDITION_RIGHT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD
-        ] = self.PriorityIntersection(None, 2, 2, 10)
-        self.priority[TrafficSignIDGermany.PRIORITY] = self.PriorityIntersection(
-            4, 5, 4, 11
+        self.priority[TrafficSignIDGermany.ADDITION_RIGHT_TRAFFIC_PRIORITY_WITH_STRAIGHT_YIELD] = (
+            self.PriorityIntersection(None, 2, 2, 10)
         )
-        self.priority[TrafficSignIDGermany.RIGHT_OF_WAY] = self.PriorityIntersection(
-            4, 5, 4, 12
+        self.priority[TrafficSignIDGermany.PRIORITY] = self.PriorityIntersection(4, 5, 4, 11)
+        self.priority[TrafficSignIDGermany.RIGHT_OF_WAY] = self.PriorityIntersection(4, 5, 4, 12)
+        self.priority[TrafficSignIDGermany.YIELD] = self.PriorityIntersection(2, 2, 2, 13)
+        self.priority[TrafficSignIDGermany.STOP] = self.PriorityIntersection(1, 1, 1, 14)
+        self.priority[TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT] = self.PriorityIntersection(
+            3, 3, 3, 15
         )
-        self.priority[TrafficSignIDGermany.YIELD] = self.PriorityIntersection(
-            2, 2, 2, 13
-        )
-        self.priority[TrafficSignIDGermany.STOP] = self.PriorityIntersection(
-            1, 1, 1, 14
-        )
-        self.priority[
-            TrafficSignIDGermany.WARNING_RIGHT_BEFORE_LEFT
-        ] = self.PriorityIntersection(3, 3, 3, 15)
         self.priority[TrafficSignIDGermany.GREEN_ARROW] = self.PriorityIntersection(
             None, None, 0, 16
         )
@@ -98,9 +89,7 @@ class TrafficSignPriority:
         return self.priority
 
     class PriorityIntersection:
-        def __init__(
-            self, left_priority, straight_priority, right_priority, evaluation_index
-        ):
+        def __init__(self, left_priority, straight_priority, right_priority, evaluation_index):
             self.left = left_priority
             self.straight = straight_priority
             self.right = right_priority
@@ -130,9 +119,7 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
             return True
         return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find all traffic sign elements with type stop (206) in lanelets_dir
@@ -158,7 +145,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
         self._dict_lanelets_traffic_light = defaultdict(lambda: None)
 
@@ -169,9 +156,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         if self._dict_lanelets_traffic_light[vehicle.lanelets_dir[0]] is not None:
-            traffic_light_lanelets = self._dict_lanelets_traffic_light[
-                vehicle.lanelets_dir[0]
-            ]
+            traffic_light_lanelets = self._dict_lanelets_traffic_light[vehicle.lanelets_dir[0]]
         else:
             reach_suc_id = road_network.get_reach_suc_cache(vehicle.lanelets_dir[0])
             traffic_light_lanelets = list()
@@ -180,25 +165,21 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                 if len(lanelet_suc.traffic_lights) == 0:
                     continue
                 assert len(lanelet_suc.traffic_lights) == 1, (
-                    "TODO: Only works for one " "traffic light per lanelet!"
+                    "TODO: Only works for one traffic light per lanelet!"
                 )
                 tl = road_network.lanelet_network.find_traffic_light_by_id(
                     list(lanelet_suc.traffic_lights)[0]
                 )
                 if tl.active:
                     traffic_light_lanelets.append(l_id)
-            self._dict_lanelets_traffic_light[
-                vehicle.lanelets_dir[0]
-            ] = traffic_light_lanelets
+            self._dict_lanelets_traffic_light[vehicle.lanelets_dir[0]] = traffic_light_lanelets
         # check if vehicle in this lanelet in lateral horizon
         if vehicle.lanelet_assignment[time_step].intersection(traffic_light_lanelets):
             return True
         else:
             return False
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         """
         returns the distance to the nearest active traffic light
         """
@@ -219,7 +200,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
             if d_lane < 0:
                 continue
             assert len(lanelet.traffic_lights) == 1, (
-                "TODO: Only works for one " "traffic light per lanelet!"
+                "TODO: Only works for one traffic light per lanelet!"
             )
             tl = road_network.lanelet_network.find_traffic_light_by_id(
                 list(lanelet.traffic_lights)[0]
@@ -260,9 +241,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
                 robustness = max(robustness, lanelet_end_s[i] - rear_s)
             # vehicle inside lanelet
             else:
-                distance_robustness = min(
-                    front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s
-                )
+                distance_robustness = min(front_s - lanelet_start_s[i], lanelet_end_s[i] - rear_s)
                 robustness = max(robustness, distance_robustness)
         return self._scale_lon_dist(float(robustness))
 
@@ -304,9 +283,7 @@ class PredSamePriorityBase(BasePredicateEvaluator):
         )
         return priority_k == priority_p
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
@@ -451,9 +428,7 @@ class PredHasPriorityBase(BasePredicateEvaluator):
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])

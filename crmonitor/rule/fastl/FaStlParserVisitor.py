@@ -27,9 +27,7 @@ class FaStlParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by FaStlParser#SpecQuantSumIfPositive.
-    def visitSpecQuantSumIfPositive(
-        self, ctx: FaStlParser.SpecQuantSumIfPositiveContext
-    ):
+    def visitSpecQuantSumIfPositive(self, ctx: FaStlParser.SpecQuantSumIfPositiveContext):
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by FaStlParser#SpecAndSmooth.
@@ -55,9 +53,7 @@ class FaStlParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by FaStlParser#SpecHistoricallyDuration.
-    def visitSpecHistoricallyDuration(
-        self, ctx: FaStlParser.SpecHistoricallyDurationContext
-    ):
+    def visitSpecHistoricallyDuration(self, ctx: FaStlParser.SpecHistoricallyDurationContext):
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by FaStlParser#SpecHistoricallyDurationSeverity.

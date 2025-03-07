@@ -1,5 +1,6 @@
 from collections import defaultdict
 from enum import Enum
+from functools import singledispatchmethod
 from itertools import groupby
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -10,27 +11,25 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-from crmonitor.evaluation.visitor import RuleTreeVisitor
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
-    AndsmoothMonitorNode,
+    AndSmoothMonitorNode,
     CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
+    MonitorVisitorInterface,
+    PredicateMonitorNode,
     RuleMonitorNode,
     SumIfPositiveMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
-from crmonitor.rule.rule_node import PredicateNode
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
-        "vehicle_shape": {
-            "occupancy": {"shape": {"rectangle": {"facecolor": "yellow"}}}
-        }
+        "vehicle_shape": {"occupancy": {"shape": {"rectangle": {"facecolor": "yellow"}}}}
     }
 }
 
@@ -74,8 +73,7 @@ def plot_predicate_bar_chart(
     df = pd.DataFrame.from_dict(
         {
             predicate_name: {
-                str(vehicle_ids): values
-                for vehicle_ids, values in vehicle_ids2values.items()
+                str(vehicle_ids): values for vehicle_ids, values in vehicle_ids2values.items()
             }
             for predicate_name, vehicle_ids2values in predicate_vehicle_values.items()
         }
@@ -142,9 +140,7 @@ def _plot_scenario_legend(
     width, _ = scenario_fig_size
     figsize = (width, width / 4)
     num_predicates = len(predicate_name2predicate_evaluator)
-    fig, (axes_row_1, axes_row_2) = plt.subplots(
-        figsize=figsize, nrows=2, ncols=num_predicates
-    )
+    fig, (axes_row_1, axes_row_2) = plt.subplots(figsize=figsize, nrows=2, ncols=num_predicates)
     fig.suptitle("Legend: predicate visualization in scenario", fontsize=14)
     for ax1, ax2, (pred_name, pred_evaluator) in zip(
         axes_row_1, axes_row_2, predicate_name2predicate_evaluator.items()
@@ -197,9 +193,7 @@ def plot_rule_visualization(
         "time_begin": time_step,
         "dynamic_obstacle": {
             "show_label": True,
-            "vehicle_shape": {
-                "occupancy": {"shape": {"rectangle": {"facecolor": "#90ee90"}}}
-            },
+            "vehicle_shape": {"occupancy": {"shape": {"rectangle": {"facecolor": "#90ee90"}}}},
         },
     }
 
@@ -219,16 +213,10 @@ def plot_rule_visualization(
             pred_result,
             rule_result,
             draw_functions,
-        ) = rule_evaluator_list[i].visualize_predicates(
-            vehicle2draw_params, visualization_config
-        )
-        all_predicate_name2predicate_evaluator.update(
-            predicate_name2predicate_evaluator
-        )
+        ) = rule_evaluator_list[i].visualize_predicates(vehicle2draw_params, visualization_config)
+        all_predicate_name2predicate_evaluator.update(predicate_name2predicate_evaluator)
         all_draw_functions += draw_functions
-        pred_result_dict[
-            rule_evaluator_list[i]._rule.name
-        ] = pred_result  # merge the dict
+        pred_result_dict[rule_evaluator_list[i]._rule.name] = pred_result  # merge the dict
         rule_result_dict[rule_evaluator_list[i]._rule.name] = rule_result
         rule_name_list.append(rule_evaluator_list[i]._rule.name)
 
@@ -251,20 +239,14 @@ def plot_rule_visualization(
             for _, pred_result_sep in pred_result_dict.items():
                 for veh_ids, rob_pairs in pred_result_sep.items():
                     pred_conjunct_dict[veh_ids].update(rob_pairs)
-            plot_predicate_bar_chart(
-                pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits
-            )
+            plot_predicate_bar_chart(pred_conjunct_dict, bar_chart_axs[0], bar_chart_plot_limits)
 
         if flat_plot_rule_robustness_course:
             # conjunction of all rules, i.e., the min of the robustness is calculated
-            rule_rob_list = [
-                r for _, rule_rob in rule_result_dict.items() for r in rule_rob
-            ]
+            rule_rob_list = [r for _, rule_rob in rule_result_dict.items() for r in rule_rob]
             rule_conjunct_list = [
                 min(time_rob[1])
-                for time_rob in groupby(
-                    rule_rob_list, lambda rule_rob_list: rule_rob_list[0]
-                )
+                for time_rob in groupby(rule_rob_list, lambda rule_rob_list: rule_rob_list[0])
             ]
             plot_rule_robustness_course(
                 rule_conjunct_list,
@@ -370,9 +352,8 @@ def plot_rule_visualization(
     #     f(renderer)
 
 
-class FormulaVisualizationVisitor(RuleTreeVisitor):
-    def __init__(self, values: Dict[str, List[float]], scale_rob: bool = True):
-        self._values = values
+class FormulaVisualizationVisitor(MonitorVisitorInterface[str]):
+    def __init__(self, scale_rob: bool = True):
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
         self._fig, self._ax = plt.subplots()
@@ -384,7 +365,7 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
         monitor: MonitorNode,
         plot_limits: Optional[Tuple[float, float]] = None,
     ) -> None:
-        monitor.visit(self)
+        self.visit(monitor)
         self._ax.grid(True)
 
         if plot_limits is not None:
@@ -394,12 +375,13 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
             # From those we can set the limits with a 5% margin.
             self._ax.set_ylim(self._rob_scaler.min * 1.05, self._rob_scaler.max * 1.05)
 
-        lens = [len(trace) for trace in self._values.values()]
-        self._ax.set_xlim((0.0, max(lens) - 1))
+        # self._ax.set_xlim((0.0, max(lens) - 1))
 
-        leg = self._fig.legend(
-            loc="lower center",
+        fig_legend = plt.figure()
+        leg = fig_legend.legend(
+            *self._ax.get_legend_handles_labels(), loc="center", ncols=2, fontsize=8
         )
+        fig_legend.subplots_adjust(left=0.2, right=0.8, top=0.8, bottom=0.2)  # Centering
         pickradius = 8
 
         map_legend_to_ax = {}
@@ -418,31 +400,32 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
             ax_line.set_visible(visible)
             legend_line.set_alpha(1.0 if visible else 0.2)
             self._fig.canvas.draw()
+            fig_legend.canvas.draw()
 
-        self._fig.canvas.mpl_connect("pick_event", on_pick)
+        fig_legend.canvas.mpl_connect("pick_event", on_pick)
         leg.set_draggable(True)
         self._fig.tight_layout(rect=[0.0, 0.3, 1.0, 1.0])
 
     def _plot_node(self, node: MonitorNode, label: str) -> None:
-        (line,) = self._ax.plot(self._values[node.name], "x-", label=label)
+        (line,) = self._ax.plot(node.values, "x-", label=label)
         self._lines.append(line)
 
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *ctx):
-        label = rule_node.monitor._rule
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, *args, **kwargs) -> str: ...
+
+    @visit.register
+    def _(self, node: RuleMonitorNode, *args, **kwargs) -> str:
+        label = node.monitor._rule
         # Custom operators are replaced by 'g{i}' identifiers in rtamt rules.
         # To enhance the visualization, those placeholders are replaced by their computed label.
         name_replacements = {}
-        for child in rule_node.children:
-            if isinstance(child, PredicateNode):
-                # Predicates are already plotted below from rtamt ast node values
-                continue
-
-            val = child.visit(self, *ctx)
+        for child in node.children:
+            val = self.visit(child, *args, **kwargs)
             name_replacements[child.name] = val
             if child.name in label:
                 label = label.replace(child.name, val)
 
-        values = rule_node.monitor._spec.offline_interpreter.ast_node_values
+        values = node.monitor._spec.offline_interpreter.ast_node_values
         for name, trace in values.items():
             for target_name, name_replacement in name_replacements.items():
                 if target_name in name:
@@ -456,73 +439,69 @@ class FormulaVisualizationVisitor(RuleTreeVisitor):
             self._lines.append(line)
         return label
 
-    def visit_all_node(self, all_node: AllMonitorNode, *ctx):
-        child_values = [c.visit(self, *ctx) for c in all_node.children]
-        label = f"All: ({child_values[0]})"
-        self._plot_node(all_node, label)
+    @visit.register
+    def _(self, node: AllMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        label = f"All: ({child_label})"
+        self._plot_node(node, label)
         return label
 
-    def visit_exist_node(self, exist_node: ExistMonitorNode, *ctx):
-        child_values = [c.visit(self, *ctx) for c in exist_node.children]
-        label = f"Exist: ({child_values[0]})"
-        self._plot_node(exist_node, label)
+    @visit.register
+    def _(self, node: ExistMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        for monitor in node.monitors.values():
+            self.visit(monitor)
+        label = f"Exist: ({child_label})"
+        self._plot_node(node, label)
         return label
 
-    def visit_andsmooth_node(self, andsmooth_node: AndsmoothMonitorNode, *ctx):
-        child_values = [c.visit(self, *ctx) for c in andsmooth_node.children]
-        label = child_values[0] + "andsmooth" + child_values[1]
-        self._plot_node(andsmooth_node, label)
+    @visit.register
+    def _(self, node: AndSmoothMonitorNode, *args, **kwargs) -> str:
+        left_child_label = self.visit(node.left_child, *args, **kwargs)
+        right_child_label = self.visit(node.right_child, *args, **kwargs)
+        label = left_child_label + "andsmooth" + right_child_label
+        self._plot_node(node, label)
         return label
 
-    def visit_historicallyduration_node(
-        self,
-        historicallyduration_node: HistoricallyDurationMonitorNode,
-        *ctx,
-    ):
-        child_values = [c.visit(self, *ctx) for c in historicallyduration_node.children]
-        if historicallyduration_node.interval is not None:
-            label = f"historicallyDuration[{historicallyduration_node.interval.begin}{historicallyduration_node.interval.begin_unit}, {historicallyduration_node.interval.end}{historicallyduration_node.interval.end_unit}] ({child_values[0]})"
+    @visit.register
+    def _(self, node: HistoricallyDurationMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        if node.interval is not None:
+            label = f"historicallyDuration[{node.interval.begin}{node.interval.begin_unit}, {node.interval.end}{node.interval.end_unit}] ({child_label})"
         else:
-            label = f"historicallyDuration ({child_values[0]})"
-        self._plot_node(historicallyduration_node, label)
+            label = f"historicallyDuration ({child_label})"
+        self._plot_node(node, label)
         return label
 
-    def visit_historicallydurationseverity_node(
-        self,
-        historicallydurationseverity_node: HistoricallyDurationSeverityMonitorNode,
-        *ctx,
-    ):
-        child_values = [
-            c.visit(self, *ctx) for c in historicallydurationseverity_node.children
-        ]
-        if historicallydurationseverity_node.interval is not None:
-            label = f"historicallyDurationSeverity[{historicallydurationseverity_node.interval.begin}{historicallydurationseverity_node.interval.begin_unit}, {historicallydurationseverity_node.interval.end}{historicallydurationseverity_node.interval.end_unit}] ({child_values[0]})"
+    @visit.register
+    def _(self, node: HistoricallyDurationSeverityMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        if node.interval is not None:
+            label = f"historicallyDurationSeverity[{node.interval.begin}{node.interval.begin_unit}, {node.interval.end}{node.interval.end_unit}] ({child_label})"
         else:
-            label = f"historicallyDurationSeverity ({child_values[0]})"
-        self._plot_node(historicallydurationseverity_node, label)
+            label = f"historicallyDurationSeverity ({child_label})"
+        self._plot_node(node, label)
         return label
 
-    def visit_sum_if_positive_node(
-        self, sum_if_positive_node: SumIfPositiveMonitorNode, *ctx
-    ):
-        child_values = [c.visit(self, *ctx) for c in sum_if_positive_node.children]
-        label = f"sum_if_positive: ({child_values[0]})"
-        self._plot_node(sum_if_positive_node, label)
+    @visit.register
+    def _(self, node: SumIfPositiveMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        for monitor in node.monitors.values():
+            self.visit(monitor)
+        label = f"sum_if_positive: ({child_label})"
+        self._plot_node(node, label)
         return label
 
-    def visit_compare_to_threshold_scaled_node(
-        self,
-        compare_to_threshold_scaled_node: CompareToThresholdScaledMonitorNode,
-        *ctx,
-    ):
-        child_values = [
-            c.visit(self, *ctx) for c in compare_to_threshold_scaled_node.children
-        ]
-        label = f"compare_to_threshold_scaled[>={compare_to_threshold_scaled_node.threshold}] {child_values[0]}"
-        self._plot_node(compare_to_threshold_scaled_node, label)
+    @visit.register
+    def _(self, node: CompareToThresholdScaledMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        label = f"compare_to_threshold_scaled[>={node.threshold}] {child_label}"
+        self._plot_node(node, label)
         return label
 
-    def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
-        label = predicate_node.base_name.value
-        self._plot_node(predicate_node, label)
+    @visit.register
+    def _(self, node: PredicateMonitorNode, *args, **kwargs) -> str:
+        agents = ", ".join(f"a{vehicle_id}" for vehicle_id in node.agent_placeholders)
+        label = f"{node.evaluator.predicate_name}({agents})"
+        self._plot_node(node, label)
         return label
