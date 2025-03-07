@@ -29,6 +29,7 @@ all_general_predicates = [
     "keeps_lane_speed_limit_star",  # missing
     "slow_leading_vehicle",  # missing; problematic → all other vehicles must be considered
     "preserves_traffic_flow",  # missing
+    "slow_as_leading_vehicle",
 ]
 
 # all missing
@@ -54,6 +55,13 @@ all_interstate_predicates = [
     "drives_rightmost",
     "in_rightmost_lane",  # problematic → missing lane information
     "main_carriageway_right_lane",  # problematic → missing lane information
+    "velocity_below_2",
+    "velocity_below_5",
+    "velocity_below_15",
+    "velocity_below_20",
+    "has_congestion_velocity",
+    "has_slow_moving_velocity",
+    "has_queue_velocity",
 ]
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.

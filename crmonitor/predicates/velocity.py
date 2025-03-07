@@ -33,6 +33,10 @@ class VelocityPredicates(str, Enum):
     InStandstill = "in_standstill"
     DrivesFaster = "drives_faster"
     DrivesWithSlightlyHigherSpeed = "drives_with_slightly_higher_speed"
+    VelocityBelow2 = "velocity_below_2"
+    VelocityBelow5 = "velocity_below_5"
+    VelocityBelow15 = "velocity_below_15"
+    VelocityBelow20 = "velocity_below_20"
 
 
 class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
@@ -134,6 +138,42 @@ class PredHasQueueVelocity(PredLaneSpeedLimit):
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
         return self.config.max_queue_of_vehicles_velocity
+
+
+class PredVelocityBelow2(PredGenericSpeedLimit):
+    predicate_name = VelocityPredicates.VelocityBelow2
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        # Convert 2 km/h to m/s
+        return 2.0 / 3.6
+
+
+class PredVelocityBelow5(PredGenericSpeedLimit):
+    predicate_name = VelocityPredicates.VelocityBelow5
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        # Convert 5 km/h to m/s
+        return 5.0 / 3.6
+
+
+class PredVelocityBelow15(PredGenericSpeedLimit):
+    predicate_name = VelocityPredicates.VelocityBelow15
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        # Convert 15 km/h to m/s
+        return 15.0 / 3.6
+
+
+class PredVelocityBelow20(PredGenericSpeedLimit):
+    predicate_name = VelocityPredicates.VelocityBelow20
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        # Convert 20 km/h to m/s
+        return 20.0 / 3.6
 
 
 class PredReverses(BasePredicateEvaluator):
