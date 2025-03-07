@@ -1,16 +1,16 @@
 import logging
 import math
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ class VelocityPredicates(str, Enum):
     KeepsBrakeSpeedLimit = "keeps_brake_speed_limit"
     Reverses = "reverses"
     HasCongestionVelocity = "has_congestion_velocity"
+    HasSlowMovingVelocity = "has_slow_moving_velocity"
+    HasQueueVelocity = "has_queue_velocity"
     SlowLeadingVehicle = "slow_leading_vehicle"
     SlowAsLeadingVehicle = "slow_as_leading_vehicle"
     PreservesTrafficFlow = "preserves_traffic_flow"
@@ -33,12 +35,11 @@ class VelocityPredicates(str, Enum):
     DrivesWithSlightlyHigherSpeed = "drives_with_slightly_higher_speed"
 
 
-class PredGenericSpeedLimit(BasePredicateEvaluator):
-    def __init__(self, config: CommentedMap):
-        super().__init__(config)
-
-    def get_speed_limit(self, world, time_step, vehicle_ids):
-        raise NotImplementedError
+class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
+    @abstractmethod
+    def get_speed_limit(
+        self, world: World, time_step: int, vehicle_ids: List[int]
+    ) -> Optional[float]: ...
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -47,7 +48,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator):
         if speed_limit is None:
             rob = math.inf
         else:
-            rob = speed_limit + self.eps - vehicle.states_cr[time_step].velocity
+            rob = speed_limit + self.config.eps - vehicle.states_cr[time_step].velocity
         rob = self._scale_speed(rob)
         return rob
 
@@ -56,9 +57,9 @@ class PredLaneSpeedLimit(PredGenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsLaneSpeedLimit
     arity = 1
 
-    def __init__(self, config: CommentedMap):
+    def __init__(self, config: PredicateEvaluatorConfig):
         super().__init__(config)
-        self.country = SupportedTrafficSignCountry(config.get("country"))
+        self.country = SupportedTrafficSignCountry(config.country)
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -75,7 +76,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle_type = world.vehicle_by_id(vehicle_ids[0]).obstacle_type
         if vehicle_type is ObstacleType.TRUCK:
-            return self.config["max_interstate_speed_truck"]
+            return self.config.max_interstate_speed_truck
         else:
             return None
 
@@ -107,8 +108,32 @@ class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
             world, time_step, vehicle_ids
         )
         if speed_limit is None:
-            speed_limit = self.config["desired_interstate_velocity"]
+            speed_limit = self.config.desired_interstate_velocity
         return speed_limit
+
+
+class PredHasSlowMovingVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasSlowMovingVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        return self.config.max_slow_moving_traffic_velocity
+
+
+class PredHasCongestionVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasCongestionVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids) -> float:
+        return self.config.max_congestion_velocity
+
+
+class PredHasQueueVelocity(PredLaneSpeedLimit):
+    predicate_name = VelocityPredicates.HasQueueVelocity
+    arity = 1
+
+    def get_speed_limit(self, world, time_step, vehicle_ids):
+        return self.config.max_queue_of_vehicles_velocity
 
 
 class PredReverses(BasePredicateEvaluator):
@@ -121,7 +146,7 @@ class PredReverses(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        if vehicle.get_lon_state(time_step).v < -self.config["standstill_error"]:
+        if vehicle.get_lon_state(time_step).v < -self.config.standstill_error:
             return True
         else:
             return False
@@ -129,24 +154,7 @@ class PredReverses(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         return self._scale_speed(
-            -self.config["standstill_error"]
-            - vehicle.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
-        )
-
-
-class PredHasCongestionVelocity(BasePredicateEvaluator):
-    predicate_name = VelocityPredicates.HasCongestionVelocity
-    arity = 1
-
-    def __init__(self, config) -> None:
-        super().__init__(config)
-
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        veh_id = vehicle_ids[0]
-        vehicle = world.vehicle_by_id(veh_id)
-        return self._scale_speed(
-            self.config["max_congestion_velocity"] - vehicle.get_lon_state(time_step).v
+            -self.config.standstill_error - vehicle.get_lon_state(time_step).v - self.config.eps,
         )
 
 
@@ -172,8 +180,8 @@ class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
         return self._scale_speed(
             v_max
             - vehicle.get_lon_state(time_step).v
-            - self.config["min_velocity_dif"]
-            - 1.0e-17  # TODO hardcoded epsilon
+            - self.config.min_velocity_diff
+            - self.config.eps
         )
 
 
@@ -218,7 +226,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                 v_type,
             ]
             v_max = min(v for v in v_list if v is not None)
-            if v_max - veh_o.get_lon_state(time_step).v >= self.config["min_velocity_dif"]:
+            if v_max - veh_o.get_lon_state(time_step).v >= self.config.min_velocity_diff:
                 return True
         return False
 
@@ -253,8 +261,8 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
                 self._scale_speed(
                     v_max
                     - veh_o.get_lon_state(time_step).v
-                    - self.config["min_velocity_dif"]
-                    - 1.0e-17,  # TODO hardcoded epsilon
+                    - self.config.min_velocity_diff
+                    - self.config.eps,
                 )
             )
         return max(rob_slow_leading_list)
@@ -285,7 +293,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             v_type,
         ]
         v_max = min(v for v in v_list if v is not None)
-        if v_max - vehicle.get_lon_state(time_step).v < self.config["min_velocity_dif"]:
+        if v_max - vehicle.get_lon_state(time_step).v < self.config.min_velocity_diff:
             return True
         else:
             return False
@@ -303,10 +311,10 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         ]
         v_max = min(v for v in v_list if v is not None)
         return self._scale_speed(
-            self.config["min_velocity_dif"]
+            self.config.min_velocity_diff
             - v_max
             + vehicle.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
+            - self.config.eps,
         )
 
 
@@ -323,9 +331,9 @@ class PredInStandStill(BasePredicateEvaluator):
         # ---------------------------------------------------
 
         if (
-            -self.config["standstill_error"]
+            -self.config.standstill_error
             < vehicle.get_lon_state(time_step=time_step, lane=vehicle.ref_path_lane).v
-            < self.config["standstill_error"]
+            < self.config.standstill_error
         ):
             return True
         else:
@@ -340,10 +348,10 @@ class PredInStandStill(BasePredicateEvaluator):
         return self._scale_speed(
             min(
                 vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                + self.config["standstill_error"],
-                self.config["standstill_error"]
+                + self.config.standstill_error,
+                self.config.standstill_error
                 - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                - 1.0e-17,  # TODO hardcoded epsilon
+                - self.config.eps,
             )
         )
 
@@ -420,7 +428,7 @@ class PredDrivesFaster(BasePredicateEvaluator):
         return self._scale_speed(
             vehicle_k.get_lon_state(time_step).v
             - vehicle_p.get_lon_state(time_step).v
-            - 1.0e-17,  # TODO hardcoded epsilon
+            - self.config.eps,
         )
 
 
@@ -439,10 +447,10 @@ class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
             min(
                 vehicle_k.get_lon_state(time_step).v
                 - vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,  # TODO hardcoded epsilon
-                self.config["slightly_higher_speed_difference"]
+                - self.config.eps,
+                self.config.slightly_higher_speed_difference
                 - vehicle_k.get_lon_state(time_step).v
                 + vehicle_p.get_lon_state(time_step).v
-                - 1.0e-17,  # TODO hardcoded epsilon
+                - self.config.eps,
             )
         )

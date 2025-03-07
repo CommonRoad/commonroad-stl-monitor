@@ -19,7 +19,7 @@ commonroad-io = ">=2024.3"
 ruamel-yaml = ">=0.16.12"
 commonroad-route-planner = "^2025.1.0"
 numba = ">=0.58.1"
-commonroad-mpr = { git = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git", rev = "fceaa80677fe8f86de514eae2e035bba2ca1d2f7" }
+commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad-model-predictive-robustness.git", rev = "ece970273f2853d9b10402f957df3c769a647bd8" }
 pyqt6 = "^6.8.1"
 commonroad-clcs = "^2025.1.1"
 commonroad-drivability-checker = "^2025.1"
@@ -55,7 +55,10 @@ indent-width = 4
 format.quote-style = "double"
 target-version = "py311"
 src = ["crmonitor", "tests"]
-extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/"]
+# TODO: execpt for fastl and external, all folders should be covered by ruff.
+extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/"]
+# force exclude because pre-commit might pass those files explicitly, which will override the exclude.
+force-exclude = true
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "I", "F"]

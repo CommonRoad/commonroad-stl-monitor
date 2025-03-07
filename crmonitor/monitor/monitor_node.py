@@ -1,136 +1,243 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Optional, Sequence
+from functools import singledispatchmethod
+from typing import Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
+from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
+from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.rule.rule_node import VisitorNode
 
-class MonitorNode(ABC):
-    def __init__(self, name, children=None, **kwargs):
-        self.name = name
-        self.children = children
 
-    @abstractmethod
-    def visit(self, visitor, *ctx):
-        pass
+class MonitorNode(VisitorNode):
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+
+        self._values = []
+
+    @property
+    def values(self) -> List[float]:
+        """
+        Retrive all values for the evaluation of this monitor.
+        """
+        return self._values
+
+    @values.setter
+    def values(self, values: Iterable[float]) -> None:
+        """
+        Set the values for the evaluation of this monitor.
+        """
+        self._values.extend(values)
+
+    @property
+    def last_value(self) -> float:
+        """
+        Get the value of the last evaluation of this monitor.
+        """
+        return self._values[-1]
+
+    @last_value.setter
+    def last_value(self, value: float) -> None:
+        """
+        Set the value of the last evaluation of this monitor.
+        """
+        self._values.append(value)
 
     @classmethod
-    def _copy_cls(cls, o):
-        child_copy = [c.copy() for c in o.children] if o.children is not None else None
-        return cls(o.name, child_copy)
+    def _copy_cls(cls, node: "MonitorNode") -> "MonitorNode":
+        return cls(node.name)
 
-    def copy(self):
+    def copy(self) -> "MonitorNode":
+        """
+        Create a copy of this monitor, without including any runtime attributes like its recorded values.
+
+        :returns: A copy of the monitor.
+        """
         return self._copy_cls(self)
 
     def reset(self):
-        if self.children is not None:
-            for c in self.children:
-                c.reset()
+        self._values = []
 
 
-class RuleMonitorNode(MonitorNode):
-    def __init__(self, name: str, children: Sequence[Any], monitor):
+class ZeroArityMonitorNode(MonitorNode): ...
+
+
+class UnaryMonitorNode(MonitorNode):
+    def __init__(self, name: str, child: MonitorNode) -> None:
+        super().__init__(name)
+        self.child = child
+
+    @classmethod
+    def _copy_cls(cls, node: "UnaryMonitorNode") -> "UnaryMonitorNode":
+        return cls(node.name, node.child.copy())
+
+
+class BinaryMonitorNode(MonitorNode):
+    def __init__(self, name: str, left_child: MonitorNode, right_child: MonitorNode) -> None:
+        super().__init__(name)
+        self.left_child = left_child
+        self.right_child = right_child
+
+    @classmethod
+    def _copy_cls(cls, node: "BinaryMonitorNode") -> "BinaryMonitorNode":
+        return cls(node.name, node.left_child.copy(), node.right_child.copy())
+
+
+class VaradicMonitorNode(MonitorNode):
+    def __init__(self, name: str, children: Sequence[MonitorNode]) -> None:
+        super().__init__(name)
+        self.children = children
+
+
+class RuleMonitorNode(VaradicMonitorNode):
+    def __init__(
+        self, name: str, children: Sequence[MonitorNode], monitor: RtamtStlMonitor
+    ) -> None:
         super().__init__(name, children)
         self.monitor = monitor
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_rule_node(self, *ctx)
-
-    def update(self, time, values):
+    def update(self, time, values) -> float:
         return self.monitor.evaluate_monitor_online(time, values)
 
-    def evaluate(self, values):
+    def evaluate(self, values) -> List[float]:
         return self.monitor.evaluate_monitor_offline(values)
 
     def copy(self):
         return RuleMonitorNode(self.name, [c.copy() for c in self.children], self.monitor.copy())
 
     def reset(self):
+        super().reset()
         self.monitor.reset()
 
 
-class AllMonitorNode(MonitorNode):
-    def __init__(self, name, children):
-        assert len(children) == 1
-        super().__init__(name, children)
-        self.monitors = defaultdict(children[0].copy)
-        self.last_selected = None
+class QuantMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
+        super().__init__(name, child)
+        self.quantified_vehicle = quantified_vehicle
+        self.monitors = defaultdict(child.copy)
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_all_node(self, *ctx)
-
-    def reset(self):
-        super().reset()
-        self.last_selected = None
-        self.monitors.clear()
-
-
-class ExistMonitorNode(MonitorNode):
-    def __init__(self, name, children):
-        assert len(children) == 1
-        super().__init__(name, children)
-        self.monitors = defaultdict(children[0].copy)
-        self.last_selected = None
-
-    def visit(self, visitor, *ctx):
-        return visitor.visit_exist_node(self, *ctx)
+    @classmethod
+    def _copy_cls(cls, node: "QuantMonitorNode") -> "QuantMonitorNode":
+        return cls(node.name, node.child.copy(), node.quantified_vehicle)
 
     def reset(self):
         super().reset()
-        self.last_selected = None
         self.monitors.clear()
 
 
-class AndsmoothMonitorNode(MonitorNode):
-    def __init__(self, name, children):
-        assert len(children) == 2
-        super().__init__(name, children)
+class SelectiveQuantMonitorNode(QuantMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
+        super().__init__(name, child, quantified_vehicle)
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_andsmooth_node(self, *ctx)
+        self._selected: List[Optional[MonitorNode]] = []
+
+    @property
+    def selected(self) -> List[Optional[MonitorNode]]:
+        return self._selected
+
+    @selected.setter
+    def selected(self, monitors: List[Optional[MonitorNode]]) -> None:
+        self._selected = monitors
+
+    @property
+    def last_selected(self) -> Optional[MonitorNode]:
+        return self._selected[-1]
+
+    @last_selected.setter
+    def last_selected(self, monitor: Optional[MonitorNode]) -> None:
+        self._selected.append(monitor)
+
+    def reset(self):
+        super().reset()
+        self._selected = []
 
 
-class HistoricallyDurationMonitorNode(MonitorNode):
-    def __init__(self, name, children, interval: Optional[Interval]):
-        assert len(children) == 1
-        super().__init__(name, children)
+class AllMonitorNode(SelectiveQuantMonitorNode): ...
+
+
+class ExistMonitorNode(SelectiveQuantMonitorNode): ...
+
+
+class AndSmoothMonitorNode(BinaryMonitorNode):
+    def __init__(self, name: str, child_left: MonitorNode, child_right: MonitorNode) -> None:
+        super().__init__(name, child_left, child_right)
+
+
+class HistoricallyDurationMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
+        super().__init__(name, child)
         self.interval = interval
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_historicallyduration_node(self, *ctx)
+    @classmethod
+    def _copy_cls(
+        cls, node: "HistoricallyDurationMonitorNode"
+    ) -> "HistoricallyDurationMonitorNode":
+        return cls(node.name, node.child.copy(), node.interval)
 
 
-class HistoricallyDurationSeverityMonitorNode(MonitorNode):
-    def __init__(self, name, children, interval: Optional[Interval]):
-        assert len(children) == 1
-        super().__init__(name, children)
+class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
+        super().__init__(name, child)
         self.interval = interval
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_historicallydurationseverity_node(self, *ctx)
+    @classmethod
+    def _copy_cls(
+        cls, node: "HistoricallyDurationSeverityMonitorNode"
+    ) -> "HistoricallyDurationSeverityMonitorNode":
+        return cls(node.name, node.child.copy(), node.interval)
 
 
-class SumIfPositiveMonitorNode(MonitorNode):
-    def __init__(self, name, children):
-        assert len(children) == 1
-        super().__init__(name, children)
-        self.monitors = defaultdict(children[0].copy)
-        self.last_selected = None
-
-    def visit(self, visitor, *ctx):
-        return visitor.visit_sum_if_positive_node(self, *ctx)
-
-    def reset(self):
-        super().reset()
-        self.last_selected = None
-        self.monitors.clear()
+class SumIfPositiveMonitorNode(QuantMonitorNode): ...
 
 
-class CompareToThresholdScaledMonitorNode(MonitorNode):
-    def __init__(self, name, children, threshold: float):
-        assert len(children) == 1
-        super().__init__(name, children)
+class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode, threshold: float) -> None:
+        super().__init__(name, child)
         self.threshold = threshold
 
-    def visit(self, visitor, *ctx):
-        return visitor.visit_compare_to_threshold_scaled_node(self, *ctx)
+    @classmethod
+    def _copy_cls(
+        cls, node: "CompareToThresholdScaledMonitorNode"
+    ) -> "CompareToThresholdScaledMonitorNode":
+        return cls(node.name, node.child.copy(), node.threshold)
+
+
+class PredicateMonitorNode(ZeroArityMonitorNode):
+    def __init__(
+        self, name: str, evaluator: BasePredicateEvaluator, agent_placeholders: Tuple[int, ...]
+    ) -> None:
+        super().__init__(name)
+        self.evaluator = evaluator
+        self.agent_placeholders = agent_placeholders
+
+    @classmethod
+    def _copy_cls(cls, node: "PredicateMonitorNode") -> "PredicateMonitorNode":
+        return cls(node.name, node.evaluator, node.agent_placeholders)
+
+    def evaluate_boolean(self, world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
+        self.latest_vehicle_ids = tuple(vehicle_ids)
+        return value
+
+    def evaluate_robustness(self, world, mpr_world, time_step, vehicle_ids):
+        value = self.evaluator.evaluate_robustness_with_cache(
+            world, mpr_world, time_step, vehicle_ids
+        )
+        self.latest_vehicle_ids = tuple(vehicle_ids)
+        if (
+            self.evaluator.config.mpr.enabled
+            and self.evaluator.config.mpr.ml
+            and self.evaluator.config.mpr.extract_gradient
+        ):
+            self.mpr_gradient = self.evaluator.last_gradient
+        return value
+
+
+T = TypeVar("T")
+
+
+class MonitorVisitorInterface(Generic[T], ABC):
+    @singledispatchmethod
+    @abstractmethod
+    def visit(self, node: MonitorNode, *args, **kwargs) -> T: ...

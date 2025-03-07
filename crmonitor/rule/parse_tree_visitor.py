@@ -31,8 +31,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     # It's value does not really matter, because we only apply one kind of rewrite.
     DEFAULT_TOKEN_REWRITER_PROGRAM = "predicate"
 
-    def __init__(self, tokens, predicate_factory: Optional[PredicateFactory] = None):
-        self._predicate_factory = predicate_factory or PredicateFactory()
+    def __init__(self, tokens):
         self._rewriter: TokenStreamRewriter = TokenStreamRewriter(tokens)
         self._sub_rule_counter = 0
 
@@ -48,7 +47,8 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [int(ctx.IntegerLiteral().getText())]
 
     def visitPredicate(self, ctx: FaStlParser.PredicateContext):
-        vehicle_ids = self.visitChildren(ctx)
+        # PredicateNode needs the vehicle ids as tuple, and not as list.
+        vehicle_ids = tuple(self.visitChildren(ctx))
         pred_basename = ctx.Identifier().getText()
         if ctx.IO_TYPE_INPUT() is not None:
             io_type = IOType.INPUT
@@ -57,7 +57,6 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             self._rewriter.delete(self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index)
         else:
             io_type = IOType.OUTPUT
-        predicate_evaluator = self._predicate_factory.get_predicate(pred_basename)
         # Rewrite the predicate name into RTAMT compliant syntax
         suffix = "__" + "_".join(str(i) for i in vehicle_ids)
         self._rewriter.replace(
@@ -66,20 +65,14 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             ctx.RPAREN().symbol.tokenIndex,
             suffix,
         )
-        p = PredicateNode(
-            pred_basename + suffix,
-            vehicle_ids,
-            predicate_evaluator,
-            io_type,
-        )
+        p = PredicateNode(pred_basename + suffix, pred_basename, vehicle_ids, io_type)
         return [p]
 
     def visitSpecQuantForall(self, ctx: FaStlParser.SpecQuantForallContext):
-        children = self.visit(ctx.spec())
+        child = self.visit(ctx.spec())[0]
         quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = AllNode(children, quantified_vehicle, node_name)
+        node_name = self._get_new_unique_node_name()
+        node = AllNode(node_name, child, quantified_vehicle)
         # Replace sub-formula inside the quantification by a "virtual" predicate g...
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
@@ -90,11 +83,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [node]
 
     def visitSpecQuantExist(self, ctx: FaStlParser.SpecQuantExistContext):
-        children = self.visit(ctx.spec())
+        child = self.visit(ctx.spec())[0]
         quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = ExistNode(children, quantified_vehicle, node_name)
+        node_name = self._get_new_unique_node_name()
+        node = ExistNode(node_name, child, quantified_vehicle)
         # Replace sub-formula inside the quantification by a "virtual" predicate g...
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
@@ -107,28 +99,28 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitSpecNested(self, ctx: FaStlParser.SpecNestedContext):
         children = self.visitChildren(ctx)
         # De-duplicate
-        children = list(dict.fromkeys(children))
+        children = tuple(dict.fromkeys(children))
         if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
             # Flatten tree to evaluate with rtamt
             return [
                 RuleNode(
+                    f"g{self._sub_rule_counter}",
                     children,
                     self._rewriter.getText(
                         self.DEFAULT_TOKEN_REWRITER_PROGRAM,
                         ctx.start.tokenIndex,
                         ctx.stop.tokenIndex,
                     ),
-                    f"g{self._sub_rule_counter}",
                 )
             ]
         else:
             return children
 
     def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
-        children = self.visitChildren(ctx)
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = AndsmoothNode(children, node_name)
+        left_child = self.visit(ctx.spec(0))[0]
+        right_child = self.visit(ctx.spec(1))[0]
+        node_name = self._get_new_unique_node_name()
+        node = AndsmoothNode(node_name, left_child, right_child)
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
@@ -138,14 +130,13 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [node]
 
     def visitSpecHistoricallyDuration(self, ctx: FaStlParser.SpecHistoricallyDurationContext):
-        children = self.visit(ctx.spec())
+        child = self.visit(ctx.spec())[0]
         if ctx.interval() is None:
             interval = None
         else:
             interval = self.process_interval(ctx.interval())
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = HistoricallyDurationNode(children, node_name, interval)
+        node_name = self._get_new_unique_node_name()
+        node = HistoricallyDurationNode(node_name, child, interval)
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
@@ -157,14 +148,14 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitSpecHistoricallyDurationSeverity(
         self, ctx: FaStlParser.SpecHistoricallyDurationSeverityContext
     ):
-        children = self.visit(ctx.spec())
+        child = self.visit(ctx.spec())[0]
         if ctx.interval() is None:
             interval = None
         else:
             interval = self.process_interval(ctx.interval())
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = HistoricallyDurationSeverityNode(children, node_name, interval)
+        node_name = self._get_new_unique_node_name()
+        node = HistoricallyDurationSeverityNode(node_name, child, interval)
+
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
@@ -190,11 +181,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return interval
 
     def visitSpecQuantSumIfPositive(self, ctx: FaStlParser.SpecQuantSumIfPositiveContext):
-        children = self.visit(ctx.spec())
+        child = self.visit(ctx.spec())[0]
         quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        node = SumIfPositiveNode(children, quantified_vehicle, node_name)
+        node_name = self._get_new_unique_node_name()
+        node = SumIfPositiveNode(node_name, child, quantified_vehicle)
         # Replace sub-formula inside the quantification by a "virtual" predicate g...
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
@@ -207,11 +197,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitSpecCompareToThresholdScaled(
         self, ctx: FaStlParser.SpecCompareToThresholdScaledContext
     ):
-        children = self.visitChildren(ctx)
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
+        child = self.visitChildren(ctx)[0]
         threshold = float(ctx.threshold().literal().getText())
-        node = CompareToThresholdScaledNode(children, node_name, threshold)
+        node_name = self._get_new_unique_node_name()
+        node = CompareToThresholdScaledNode(node_name, child, threshold)
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,
@@ -219,3 +208,8 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             node_name,
         )
         return [node]
+
+    def _get_new_unique_node_name(self) -> str:
+        self._sub_rule_counter += 1
+        node_name = f"g{self._sub_rule_counter}"
+        return node_name

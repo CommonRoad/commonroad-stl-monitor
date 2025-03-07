@@ -185,7 +185,6 @@ class CustomDataGenerator(DataGenerator):
 data_generator = CustomDataGenerator(
     predicate_names=predicate_names,
     scenarios_path=scenarios_load_path,
-    scenario_duration=251,
     dt=0.04,
     output_path=output_path,
     vehicle_pair_steps=20,
