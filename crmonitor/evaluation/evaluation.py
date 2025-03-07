@@ -44,7 +44,7 @@ class RuleEvaluatorInterface(ABC):
         cls,
         world: World,
         ego_id: int,
-        rule_name: str = "R_G1",
+        rule_name: str,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
         predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
