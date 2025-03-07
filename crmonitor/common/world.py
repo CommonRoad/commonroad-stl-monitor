@@ -64,9 +64,7 @@ class World:
             scenario.dt,
         )
         # We have to remove the initial time step
-        trajectory = Trajectory(
-            trajectory.state_list[1].time_step, trajectory.state_list[1:]
-        )
+        trajectory = Trajectory(trajectory.state_list[1].time_step, trajectory.state_list[1:])
         shape = Rectangle(
             length=vehicle_parameters[planning_problem_solution.vehicle_type].l,
             width=vehicle_parameters[planning_problem_solution.vehicle_type].w,
@@ -88,9 +86,7 @@ class World:
         return world, ego_vehicle
 
     def _warn_persistent_cache(self):
-        if len(self.controlled_vehicle_ids) > 0 and isinstance(
-            self.cache, shelve.Shelf
-        ):
+        if len(self.controlled_vehicle_ids) > 0 and isinstance(self.cache, shelve.Shelf):
             warnings.warn(
                 "Using controlled vehicles with persistent caching may result in inconsistent caches and is therfore discouraged!"
             )
@@ -117,9 +113,7 @@ class World:
                 params = config.get("intersection_road_network_param")
             else:  # interstate scenarios
                 params = config.get("road_network_param")
-            road_network = RoadNetwork(
-                scenario.lanelet_network, params, config.get("scenario")
-            )
+            road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
         else:
             road_network = road_network
         others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
@@ -154,11 +148,7 @@ class World:
                 if (
                     (obs.obstacle_type == ObstacleType.CAR)
                     and (obs.prediction is not None)
-                    and (
-                        obs.prediction.final_time_step
-                        - obs.prediction.initial_time_step
-                        > 1
-                    )
+                    and (obs.prediction.final_time_step - obs.prediction.initial_time_step > 1)
                     and (not cls.static_vehicle(obs))
                 ):
                     cls.augment_state_longitudinal(scenario.dt, obs)
@@ -196,11 +186,7 @@ class World:
 
     @property
     def controlled_vehicle_ids(self) -> Set[int]:
-        return {
-            vehicle.id
-            for vehicle in self.vehicles
-            if isinstance(vehicle, ControlledVehicle)
-        }
+        return {vehicle.id for vehicle in self.vehicles if isinstance(vehicle, ControlledVehicle)}
 
     def vehicle_ids_for_time_step(self, time_step: int):
         return [v.id for v in self.vehicles if v.is_valid(time_step)]
@@ -211,10 +197,7 @@ class World:
         Checks whether the obstacle is static.
         """
         velocity = np.array(
-            [
-                state.velocity
-                for state in dynamic_obstacle.prediction.trajectory.state_list
-            ]
+            [state.velocity for state in dynamic_obstacle.prediction.trajectory.state_list]
         )
         return all(velocity <= 0.001)
 
@@ -222,10 +205,7 @@ class World:
     def augment_state_longitudinal(dt, obs):
         accelerations = (
             np.diff(
-                [
-                    s.velocity
-                    for s in [obs.initial_state] + obs.prediction.trajectory.state_list
-                ]
+                [s.velocity for s in [obs.initial_state] + obs.prediction.trajectory.state_list]
             )
             / dt
         ).tolist()

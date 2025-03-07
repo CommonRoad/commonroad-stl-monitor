@@ -9,7 +9,6 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
@@ -18,6 +17,7 @@ from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleNode
+
 from tests.util import parallel_lanes
 
 logging.basicConfig(
@@ -45,9 +45,7 @@ class RuleTest(unittest.TestCase):
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(1)
         lanelet_network.add_lanelet(lanelets[0])
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -319,18 +317,14 @@ class RuleTest(unittest.TestCase):
             self.assertTrue(isinstance(rule, AllNode))
             self.assertEqual(len(rule.children), 1)
             self.assertTrue(isinstance(rule.children[0], RuleNode))
-            self.assertTrue(
-                any([isinstance(c, PredicateNode) for c in rule.children[0].children])
-            )
+            self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
         # output robustness
         # Todo: RuleEvaluator.create_from_rule_str
@@ -400,9 +394,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
         # output robustness
         # Todo: RuleEvaluator.create_from_rule_str
@@ -469,9 +461,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_preserve_traffic_flow(self):
         # two vehicles which preserves traffic flow (1001 ,1004)
@@ -509,9 +499,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_standstill(self):
         # one vehicle which is in standstill with a leading vehicle in standstill(1000)
@@ -556,9 +544,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_overtaking_right_congestion(self):
         # one vehicle which overtakes a congestion slightly faster (1000)
@@ -707,9 +693,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_reversing_and_u_turn(self):
         # one vehicle which drives first in correct direction and than reversely (1000)
@@ -740,9 +724,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_emergency_lane_broad_enough_with_shoulder(self):
         # several vehicles which drive not leftmost (e.g., 1024, 1016)
@@ -801,9 +783,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
     def test_consider_entering_vehicles(self):
         # one vehicle driving always in the left most lane (1001)
@@ -837,9 +817,7 @@ class RuleTest(unittest.TestCase):
                 rule_robustness.append(rob)
             rule_robustness = np.array(rule_robustness)
             bool_value = rule_robustness >= 0.0
-            self.assertEqual(
-                exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}"
-            )
+            self.assertEqual(exp_violation, np.all(bool_value), f"Test failed for ego_id={ego_id}")
 
 
 if __name__ == "__main__":

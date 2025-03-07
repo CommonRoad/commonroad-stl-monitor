@@ -22,6 +22,12 @@ HistoricallyDurationOperator
 HistoricallyDurationSeverityOperator
 	: 'historicallyDurationSeverity' ;
 
+SumIfPositiveOperator
+	: 'sum_if_positive' ;
+
+CompareToThresholdScaledOperator
+	: 'compare_to_threshold_scaled' ;
+
 // Preserve whitespace
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;

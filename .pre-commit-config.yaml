@@ -1,21 +1,19 @@
 repos:
-- repo: https://github.com/pycqa/isort
-  rev: 5.12.0
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.2.0
   hooks:
-  - id: isort
-    name: isort (python)
-    args: [--profile, black, --filter-files, --line-width=88]
-- repo: https://github.com/psf/black
-  rev: 23.1.0
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+  - id: check-added-large-files
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.9.9
   hooks:
-  - id: black
-#  - repo: https://gitlab.com/pycqa/flake8
-#    rev: 3.7.9
-#    hooks:
-#      - id: flake8
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.5.0
+  # TODO: Enable linting with ruff. It is disable for now, because too much of the code base has linting errors.
+  # - id: ruff
+  #   args: [--fix]
+  - id: ruff-format
+- repo: https://github.com/python-poetry/poetry
+  rev: 2.0.0
   hooks:
-  - id: pretty-format-yaml
-    args: [--autofix, --indent, '2']
-
+  - id: poetry-check

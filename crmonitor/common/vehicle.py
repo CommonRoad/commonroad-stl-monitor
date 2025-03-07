@@ -146,19 +146,15 @@ class CurvilinearStateManager:
         except ValueError:
             logger.debug("Vehicle out of projection domain: consider large clcs")
             try:
-                s, d = lane.clcs_large_step.convert_to_curvilinear_coords(
-                    *state.position
-                )
+                s, d = lane.clcs_large_step.convert_to_curvilinear_coords(*state.position)
             except ValueError:
-                logger.debug(
-                    "Vehicle out of projection domain: State will not be considered"
-                )
+                logger.debug("Vehicle out of projection domain: State will not be considered")
                 return None
         theta_cl = lane.orientation(s)
         if state.has_value("velocity_y"):
-            speed = state.velocity * np.cos(
+            speed = state.velocity * np.cos(state.orientation) + state.velocity_y * np.sin(
                 state.orientation
-            ) + state.velocity_y * np.sin(state.orientation)
+            )
         else:
             speed = state.velocity
         if hasattr(state, "acceleration"):
@@ -206,9 +202,7 @@ class CurvilinearStateManager:
                 kappa_dot=state.kappa_dot,
             )
         elif hasattr(state, "kappa"):
-            x_lat = StateLateral(
-                d=d, theta=(state.orientation - theta_cl), kappa=state.kappa
-            )
+            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl), kappa=state.kappa)
         else:
             x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl))
         return x_lon, x_lat
@@ -343,9 +337,7 @@ class Vehicle:
         lane = lane or self.get_lane(time_step)
         if lane is None:
             return None
-        curvi_state = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
+        curvi_state = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         if curvi_state is None:
             return None
         state_lon, state_lat = curvi_state
@@ -364,9 +356,7 @@ class Vehicle:
         :returns front s-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        curvi_state = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
+        curvi_state = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
         if curvi_state is None:
             return None
         state_lon, state_lat = curvi_state
@@ -494,9 +484,7 @@ class Vehicle:
         """
         generate three circle approximation
         """
-        circle_radius = (
-            np.sqrt(self.shape.width**2 + (self.shape.length / 3) ** 2) / 2
-        )
+        circle_radius = np.sqrt(self.shape.width**2 + (self.shape.length / 3) ** 2) / 2
         center_of_vehicle = Point(0, 0)
         front_point = Point(self.shape.length / 3, 0)
         rear_point = Point(-self.shape.length / 3, 0)
@@ -545,22 +533,14 @@ class Vehicle:
         if route is None:
             route = next(replanned_route)
         # extend lanelets from route
-        lanelets_leading_to_goal = self._extend_route_plan(
-            route.lanelet_ids, road_network
-        )
+        lanelets_leading_to_goal = self._extend_route_plan(route.lanelet_ids, road_network)
         # get reference lane from lanelets_leading_to_goal
-        ref_path_lanes = self._initial_ref_path_lane(
-            road_network, lanelets_leading_to_goal
-        )
+        ref_path_lanes = self._initial_ref_path_lane(road_network, lanelets_leading_to_goal)
         # if no reference lane is found, replan the route
         while len(ref_path_lanes) == 0 and route is not None:
             route = next(replanned_route)
-            lanelets_leading_to_goal = self._extend_route_plan(
-                route.lanelet_ids, road_network
-            )
-            ref_path_lanes = self._initial_ref_path_lane(
-                road_network, lanelets_leading_to_goal
-            )
+            lanelets_leading_to_goal = self._extend_route_plan(route.lanelet_ids, road_network)
+            ref_path_lanes = self._initial_ref_path_lane(road_network, lanelets_leading_to_goal)
         # get properties from reference lane
         ref_path_lane = ref_path_lanes[0]
         center_vertices = road_network.lanelet_network.find_lanelet_by_id(
@@ -574,9 +554,7 @@ class Vehicle:
         ).right_vertices
         for lanelet_id in lanelets_leading_to_goal[1:]:
             lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-            center_vertices = np.append(
-                center_vertices, lanelet.center_vertices, axis=0
-            )
+            center_vertices = np.append(center_vertices, lanelet.center_vertices, axis=0)
             left_vertices = np.append(left_vertices, lanelet.left_vertices, axis=0)
             right_vertices = np.append(right_vertices, lanelet.right_vertices, axis=0)
         return (
@@ -676,16 +654,12 @@ class Vehicle:
         yield None
 
     @staticmethod
-    def _extend_route_plan(
-        lanelets_leading_to_goal, road_network: RoadNetwork
-    ) -> List[int]:
+    def _extend_route_plan(lanelets_leading_to_goal, road_network: RoadNetwork) -> List[int]:
         """
         extend lanelets from route
         """
         # extend the route path:
-        first_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            lanelets_leading_to_goal[0]
-        )
+        first_lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelets_leading_to_goal[0])
         if first_lanelet.predecessor:
             selected_predecessor = first_lanelet.predecessor[0]
             # if there are more than one predecessor, find the one with the minimum orientation change
@@ -693,10 +667,8 @@ class Vehicle:
             if len(first_lanelet.predecessor) > 1:
                 min_offset = np.inf
                 for predecessor_lanelet_id in first_lanelet.predecessor:
-                    predecessor_lanelet = (
-                        road_network.lanelet_network.find_lanelet_by_id(
-                            predecessor_lanelet_id
-                        )
+                    predecessor_lanelet = road_network.lanelet_network.find_lanelet_by_id(
+                        predecessor_lanelet_id
                     )
                     orientation_pre = np.arctan2(
                         predecessor_lanelet.center_vertices[0, 1]
@@ -705,19 +677,15 @@ class Vehicle:
                         - predecessor_lanelet.center_vertices[1, 0],
                     )
                     orientation_first = np.arctan2(
-                        first_lanelet.center_vertices[0, 1]
-                        - first_lanelet.center_vertices[1, 1],
-                        first_lanelet.center_vertices[0, 0]
-                        - first_lanelet.center_vertices[1, 0],
+                        first_lanelet.center_vertices[0, 1] - first_lanelet.center_vertices[1, 1],
+                        first_lanelet.center_vertices[0, 0] - first_lanelet.center_vertices[1, 0],
                     )
                     offset = abs(orientation_pre - orientation_first)
                     if np.min(offset) < min_offset:
                         min_offset = np.min(offset)
                         selected_predecessor = predecessor_lanelet_id
             lanelets_leading_to_goal.insert(0, selected_predecessor)
-        last_lanelet = road_network.lanelet_network.find_lanelet_by_id(
-            lanelets_leading_to_goal[-1]
-        )
+        last_lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelets_leading_to_goal[-1])
         if last_lanelet.successor:
             selected_successor = last_lanelet.successor[0]
             # if there are more than one successor, find the one with the minimum orientation change
@@ -735,10 +703,8 @@ class Vehicle:
                         - successor_lanelet.center_vertices[-2, 0],
                     )
                     orientation_last = np.arctan2(
-                        last_lanelet.center_vertices[-1, 1]
-                        - last_lanelet.center_vertices[-2, 1],
-                        last_lanelet.center_vertices[-1, 0]
-                        - last_lanelet.center_vertices[-2, 0],
+                        last_lanelet.center_vertices[-1, 1] - last_lanelet.center_vertices[-2, 1],
+                        last_lanelet.center_vertices[-1, 0] - last_lanelet.center_vertices[-2, 0],
                     )
                     offset = abs(orientation_suc - orientation_last)
                     if np.min(offset) < min_offset:
@@ -828,9 +794,7 @@ class ControlledVehicle(Vehicle):
         ccosy_cache = CurvilinearStateManager(road_network)
         self.lanelet_network = road_network.lanelet_network
         initial_lanelets = road_network.lanelet_network.find_lanelet_by_shape(
-            shape.rotate_translate_local(
-                inital_state.position, inital_state.orientation
-            )
+            shape.rotate_translate_local(inital_state.position, inital_state.orientation)
         )
         lanelet_assignment = {inital_state.time_step: initial_lanelets}
         super().__init__(
@@ -847,9 +811,9 @@ class ControlledVehicle(Vehicle):
     def add_state(self, state: State, signal_state=None):
         self.states_cr[state.time_step] = state
         loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
-        self.lanelet_assignment[
-            state.time_step
-        ] = self.lanelet_network.find_lanelet_by_shape(loc_shape)
+        self.lanelet_assignment[state.time_step] = self.lanelet_network.find_lanelet_by_shape(
+            loc_shape
+        )
         self.signal_series[state.time_step] = signal_state
 
 
@@ -874,8 +838,7 @@ class DynamicObstacleVehicle(Vehicle):
         vehicle_param = vehicle_param
         states_cr = {
             state.time_step: state
-            for state in [obstacle.initial_state]
-            + obstacle.prediction.trajectory.state_list
+            for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
         }
         shape = obstacle.obstacle_shape
         if obstacle.signal_series is not None:
@@ -883,9 +846,7 @@ class DynamicObstacleVehicle(Vehicle):
         else:
             signal_series = None
         ccosy_cache = ccosy_cache
-        lanelet_assignment[
-            obstacle.initial_state.time_step
-        ] = obstacle.initial_shape_lanelet_ids
+        lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
         super().__init__(
             id,
             obstacle_type,

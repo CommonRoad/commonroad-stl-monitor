@@ -44,9 +44,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
     ):
-        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(
-            world.dt, output_type
-        )
+        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(world.dt, output_type)
         self.proposition_collector = PropositionCollectorMonitorTreeVisitor()
         super().__init__(
             rule,

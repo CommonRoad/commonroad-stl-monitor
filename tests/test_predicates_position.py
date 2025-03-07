@@ -13,7 +13,6 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
@@ -77,9 +76,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
             pred = PredOnIncomingLeftOf(self.config)
-            sol_monitor_1 = pred.evaluate_boolean(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [ego_vehicle.id, target_vehicle.id]
@@ -99,9 +96,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
         rob = list()
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
             pred = PredInIntersectionConflictArea(self.config)
-            sol_monitor_1 = pred.evaluate_boolean(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [ego_vehicle.id, target_vehicle.id]
@@ -151,9 +146,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
             pred = PredOnOncomOf(self.config)
-            sol_monitor_1 = pred.evaluate_boolean(
-                world, time, [target_vehicle.id, ego_vehicle.id]
-            )
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [target_vehicle.id, ego_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [target_vehicle.id, ego_vehicle.id]
@@ -486,9 +479,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
         lanelet_network.add_lanelet(self._lanelet_5)
-        self.road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
         cr_state_list_ego = {
@@ -548,51 +539,37 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_1_right, sol_monitor_mode_1)
-        self.assertEqual(
-            exp_sol_monitor_mode_1_right, sol_robustness_monitor_mode_1 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_1_right, sol_robustness_monitor_mode_1 > 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_2_right, sol_monitor_mode_2)
-        self.assertEqual(
-            exp_sol_monitor_mode_2_right, sol_robustness_monitor_mode_2 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_2_right, sol_robustness_monitor_mode_2 > 0)
 
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_3_right, sol_monitor_mode_3)
-        self.assertEqual(
-            exp_sol_monitor_mode_3_right, sol_robustness_monitor_mode_3 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_3_right, sol_robustness_monitor_mode_3 > 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_4_right, sol_monitor_mode_4)
-        self.assertEqual(
-            exp_sol_monitor_mode_4_right, sol_robustness_monitor_mode_4 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_4_right, sol_robustness_monitor_mode_4 > 0)
 
         sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_5_right, sol_monitor_mode_5)
-        self.assertEqual(
-            exp_sol_monitor_mode_5_right, sol_robustness_monitor_mode_5 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_5_right, sol_robustness_monitor_mode_5 > 0)
 
         sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids)
         sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_6_right, sol_monitor_mode_6)
-        self.assertEqual(
-            exp_sol_monitor_mode_6_right, sol_robustness_monitor_mode_6 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_6_right, sol_robustness_monitor_mode_6 > 0)
 
         sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids)
         sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_7_right, sol_monitor_mode_7)
-        self.assertEqual(
-            exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 > 0
-        )
+        self.assertEqual(exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 > 0)
 
         # Left of broad lane markings
         pred = PredLeftOfBroadLaneMarking(self.config)
@@ -763,10 +740,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = self.ego_vehicle.shape
             state = self.ego_vehicle.states_cr[time]
 
-            self.ego_vehicle.lanelet_assignment[
-                time
-            ] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            self.ego_vehicle.lanelet_assignment[time] = (
+                self.road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -812,10 +789,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = self.ego_vehicle.shape
             state = self.ego_vehicle.states_cr[time]
 
-            self.ego_vehicle.lanelet_assignment[
-                time
-            ] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            self.ego_vehicle.lanelet_assignment[time] = (
+                self.road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -861,10 +838,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = self.ego_vehicle.shape
             state = self.ego_vehicle.states_cr[time]
 
-            self.ego_vehicle.lanelet_assignment[
-                time
-            ] = self.road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            self.ego_vehicle.lanelet_assignment[time] = (
+                self.road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -903,9 +880,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_8 = True  # other vehicle exactly right of
         exp_sol_monitor_mode_9 = True  # other vehicle partially right of in front
         exp_sol_monitor_mode_10 = True  # other vehicle partially right of behind
-        exp_sol_monitor_mode_11 = (
-            True  # other vehicle partially right of in front and behind
-        )
+        exp_sol_monitor_mode_11 = True  # other vehicle partially right of in front and behind
 
         # ego vehicle
         cr_state_list_ego = {
@@ -919,9 +894,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             7: CustomState(position=[70, 0], time_step=7, orientation=0, velocity=10),
             8: CustomState(position=[80, 0], time_step=8, orientation=0, velocity=10),
             9: CustomState(position=[90, 0], time_step=9, orientation=0, velocity=10),
-            10: CustomState(
-                position=[100, 0], time_step=10, orientation=0, velocity=10
-            ),
+            10: CustomState(position=[100, 0], time_step=10, orientation=0, velocity=10),
         }
         lanelet_assignments_ego = {
             0: {3},
@@ -985,9 +958,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         # other vehicle 2
         cr_state_list_other_2 = {
             4: CustomState(position=[40, 4], time_step=0, orientation=0, velocity=10),
-            10: CustomState(
-                position=[100, -4], time_step=1, orientation=0, velocity=10
-            ),
+            10: CustomState(position=[100, -4], time_step=1, orientation=0, velocity=10),
         }
         lanelet_assignments_other_2 = {4: {4}, 10: {2}}
         other_vehicle_2 = Vehicle(
@@ -1005,84 +976,60 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         vehicle_ids_1 = [ego_vehicle.id, other_vehicle_1.id]
         vehicle_ids_2 = [ego_vehicle.id, other_vehicle_2.id]
 
-        world = World(
-            {ego_vehicle, other_vehicle_1, other_vehicle_2}, self.road_network
-        )
+        world = World({ego_vehicle, other_vehicle_1, other_vehicle_2}, self.road_network)
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids_1)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(
-            world, 0, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 >= 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids_1)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(
-            world, 1, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
         self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 >= 0)
 
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids_1)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(
-            world, 2, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 >= 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids_1)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(
-            world, 3, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 >= 0)
 
         sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids_2)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(
-            world, 4, vehicle_ids_2
-        )
+        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids_2)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 >= 0)
 
         sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids_1)
-        sol_robustness_monitor_mode_6 = pred.evaluate_robustness(
-            world, 5, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode_6)
         self.assertEqual(exp_sol_monitor_mode_6, sol_robustness_monitor_mode_6 >= 0)
 
         sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids_1)
-        sol_robustness_monitor_mode_7 = pred.evaluate_robustness(
-            world, 6, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode_7)
         self.assertEqual(exp_sol_monitor_mode_7, sol_robustness_monitor_mode_7 >= 0)
 
         sol_monitor_mode_8 = pred.evaluate_boolean(world, 7, vehicle_ids_1)
-        sol_robustness_monitor_mode_8 = pred.evaluate_robustness(
-            world, 7, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_8 = pred.evaluate_robustness(world, 7, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_8, sol_monitor_mode_8)
         self.assertEqual(exp_sol_monitor_mode_8, sol_robustness_monitor_mode_8 >= 0)
 
         sol_monitor_mode_9 = pred.evaluate_boolean(world, 8, vehicle_ids_1)
-        sol_robustness_monitor_mode_9 = pred.evaluate_robustness(
-            world, 8, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_9 = pred.evaluate_robustness(world, 8, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_9, sol_monitor_mode_9)
         self.assertEqual(exp_sol_monitor_mode_9, sol_robustness_monitor_mode_9 >= 0)
 
         sol_monitor_mode_10 = pred.evaluate_boolean(world, 9, vehicle_ids_1)
-        sol_robustness_monitor_mode_10 = pred.evaluate_robustness(
-            world, 9, vehicle_ids_1
-        )
+        sol_robustness_monitor_mode_10 = pred.evaluate_robustness(world, 9, vehicle_ids_1)
         self.assertEqual(exp_sol_monitor_mode_10, sol_monitor_mode_10)
         self.assertEqual(exp_sol_monitor_mode_10, sol_robustness_monitor_mode_10 >= 0)
 
         sol_monitor_mode_11 = pred.evaluate_boolean(world, 10, vehicle_ids_2)
-        sol_robustness_monitor_mode_11 = pred.evaluate_robustness(
-            world, 10, vehicle_ids_2
-        )
+        sol_robustness_monitor_mode_11 = pred.evaluate_robustness(world, 10, vehicle_ids_2)
         self.assertEqual(exp_sol_monitor_mode_11, sol_monitor_mode_11)
         self.assertEqual(exp_sol_monitor_mode_11, sol_robustness_monitor_mode_11 >= 0)
 
@@ -1100,9 +1047,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
         lanelet_network.add_lanelet(self._lanelet_2)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
         cr_state_list_ego = {
@@ -1130,10 +1075,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = ego_vehicle.shape
             state = ego_vehicle.states_cr[time]
 
-            ego_vehicle.lanelet_assignment[
-                time
-            ] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            ego_vehicle.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         # other vehicle 1
@@ -1158,10 +1103,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = other_vehicle_1.shape
             state = other_vehicle_1.states_cr[time]
 
-            other_vehicle_1.lanelet_assignment[
-                time
-            ] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            other_vehicle_1.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         pred = PredDrivesLeftmost(self.config)
@@ -1207,9 +1152,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
         lanelet_network.add_lanelet(self._lanelet_2)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         # ego vehicle
         cr_state_list_ego = {
@@ -1237,10 +1180,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = ego_vehicle.shape
             state = ego_vehicle.states_cr[time]
 
-            ego_vehicle.lanelet_assignment[
-                time
-            ] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            ego_vehicle.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         # other vehicle 1
@@ -1265,10 +1208,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             shape = other_vehicle_1.shape
             state = other_vehicle_1.states_cr[time]
 
-            other_vehicle_1.lanelet_assignment[
-                time
-            ] = road_network.lanelet_network.find_lanelet_by_shape(
-                shape.rotate_translate_local(state.position, state.orientation)
+            other_vehicle_1.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
             )
 
         pred = PredDrivesRightmost(self.config)
