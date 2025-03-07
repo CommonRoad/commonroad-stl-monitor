@@ -1,6 +1,5 @@
 from typing import List, Tuple
 
-from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from rtamt.syntax.node.ltl.conjunction import Conjunction
 from rtamt.syntax.node.ltl.disjunction import Disjunction
 from rtamt.syntax.node.ltl.implies import Implies
@@ -15,15 +14,15 @@ from rtamt.syntax.node.stl.timed_historically import TimedHistorically
 from rtamt.syntax.node.stl.timed_once import TimedOnce
 from rtamt.syntax.node.unary_node import UnaryNode
 
+from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
+
 
 class PropositionRobustnessMonitor(RtamtStlMonitor):
     def __init__(self, rule_str, predicates, dt, output_type=OutputType.STANDARD):
         super().__init__(rule_str, predicates, dt, output_type)
         self._propositions = {}
 
-    def evaluate_monitor_online(
-        self, time_step: int, predicates: List[Tuple[str, float]]
-    ):
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
         robustness = super().evaluate_monitor_online(time_step, predicates)
         self.collect_prop_rob(self._spec.ast.specs[0], self._propositions)
         return robustness
@@ -75,9 +74,7 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
                 else:
                     self.collect_prop_rob(specs_node.children[0], prop_list)
                     self.collect_prop_rob(specs_node.children[1], prop_list)
-            if isinstance(specs_node, Conjunction) or isinstance(
-                specs_node, Disjunction
-            ):
+            if isinstance(specs_node, Conjunction) or isinstance(specs_node, Disjunction):
                 self.collect_prop_rob(specs_node.children[0], prop_list)
                 self.collect_prop_rob(specs_node.children[1], prop_list)
 

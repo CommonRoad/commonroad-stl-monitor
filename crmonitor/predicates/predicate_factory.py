@@ -3,25 +3,21 @@ import re
 import sys
 from typing import Optional
 
-from crmonitor.common.config import get_traffic_rule_config
+
 # by setting __all__ in __init__.py, all relevant modules are imported
 # noinspection PyUnresolvedReferences
 from crmonitor.predicates import *  # noqa: F401,F403
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 
 
 class PredicateFactory:
-    def __init__(self, traffic_rule_params: Optional[dict] = None):
-        self._traffic_rule_params = (
-            traffic_rule_params or get_traffic_rule_config()["traffic_rules_param"]
-        )
+    def __init__(self, predicate_evaluator_config: Optional[PredicateEvaluatorConfig] = None):
+        self._predicate_evaluator_config = predicate_evaluator_config or PredicateEvaluatorConfig()
         self._evaluators = self._get_all_predicate_evaluators()
 
     @staticmethod
     def _get_all_predicate_evaluators():
-        modules = inspect.getmembers(
-            sys.modules["crmonitor.predicates"], inspect.ismodule
-        )
+        modules = inspect.getmembers(sys.modules["crmonitor.predicates"], inspect.ismodule)
         classes = []
         for _, module in modules:
             classes += inspect.getmembers(module, inspect.isclass)
@@ -38,4 +34,4 @@ class PredicateFactory:
             evaluator = self._evaluators[predicate_name]
         except KeyError:
             raise KeyError(f"Unknown predicate '{predicate_name}'")
-        return evaluator(self._traffic_rule_params)
+        return evaluator(self._predicate_evaluator_config)

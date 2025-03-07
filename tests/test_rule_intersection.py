@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
@@ -51,9 +50,7 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
         rule_robustness = list()
         prob_robs = list()
-        for _ in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-        ):
+        for _ in range(rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1):
             rob = rule_eval.update()
             prob_rob = rule_eval.get_propositions()
             prob_robs.append(prob_rob)
@@ -82,9 +79,7 @@ class RuleTest(unittest.TestCase):
         rule_robustness = list()
         pred_robs = list()
         prob_robs = list()
-        for _ in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-        ):
+        for _ in range(rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1):
             rob = rule_eval.update()
             pred_rob = rule_eval.get_predicates()
             pred_robs.append(pred_rob)
@@ -113,9 +108,7 @@ class RuleTest(unittest.TestCase):
         rule = rule_eval._rule
         self.assertTrue(isinstance(rule, AllNode))
         rule_robustness = list()
-        for _ in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-        ):
+        for _ in range(rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1):
             rob = rule_eval.update()
             rule_robustness.append(rob)
         rule_robustness = np.array(rule_robustness)
@@ -139,9 +132,7 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(isinstance(rule, AllNode))
         rule_robustness = list()
         prob_robs = list()
-        for _ in range(
-            rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1
-        ):
+        for _ in range(rule_eval.ego_vehicle.start_time, rule_eval.ego_vehicle.end_time + 1):
             rob = rule_eval.update()
             rule_robustness.append(rob)
             prob_rob, _, _ = rule_eval.get_propositions()

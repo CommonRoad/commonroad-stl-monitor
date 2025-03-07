@@ -12,7 +12,6 @@ from commonroad.scenario.traffic_sign import (
     TrafficSignElement,
     TrafficSignIDGermany,
 )
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (
@@ -31,6 +30,7 @@ from crmonitor.predicates.position import (
     PredSingleLane,
 )
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
+
 from tests.util import parallel_lanes
 
 
@@ -60,9 +60,7 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(3)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -138,21 +136,11 @@ class TestPredicate(unittest.TestCase):
 
         pred = PredCutIn(self.config)
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(
-            world, 0, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        sol_monitor_mode_2 = pred.evaluate_boolean(
-            world, 1, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        sol_monitor_mode_3 = pred.evaluate_boolean(
-            world, 2, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        sol_monitor_mode_4 = pred.evaluate_boolean(
-            world, 3, [ego_vehicle.id, other_vehicle_1.id]
-        )
-        sol_monitor_mode_5 = pred.evaluate_boolean(
-            world, 1, [ego_vehicle.id, other_vehicle_2.id]
-        )
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, [ego_vehicle.id, other_vehicle_1.id])
+        sol_monitor_mode_5 = pred.evaluate_boolean(world, 1, [ego_vehicle.id, other_vehicle_2.id])
 
         self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
         self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
@@ -177,9 +165,7 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(2)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -302,9 +288,7 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(1)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -406,9 +390,7 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(2)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -507,9 +489,7 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(3)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -577,16 +557,12 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(2)
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(lanelets[0])
-        traffic_sign_max_speed = TrafficSignElement(
-            TrafficSignIDGermany.MAX_SPEED, ["50"]
-        )
+        traffic_sign_max_speed = TrafficSignElement(TrafficSignIDGermany.MAX_SPEED, ["50"])
         lanelet_network.add_traffic_sign(
             TrafficSign(111, [traffic_sign_max_speed], {1}, np.array([0.0, 0.0])), {1}
         )
         lanelet_network.add_lanelet(lanelets[1])
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         ego_vehicle_param = self.config.get("ego_vehicle_param")
 
@@ -653,30 +629,22 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(2)
         lanelet_network.add_lanelet(lanelets[0])
         lanelet_network.add_lanelet(lanelets[1])
-        road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
         lat_ego = [0, 1, 1, 0, 0, 0, 0, 4, 0]
         lon_ego = [30, 30, 30, 30, 30, 30, 30, 30, 10]
         lanelets_ego = [{1}, {1, 2}, {1, 2}, {1}, {1}, {1}, {1}, {2}, {1}]
-        ego_vehicle = self.create_vehicle(
-            0, lanelets_ego, lat_ego, lon_ego, road_network
-        )
+        ego_vehicle = self.create_vehicle(0, lanelets_ego, lat_ego, lon_ego, road_network)
 
         lat_other = [0, 0, 1, 0, 0, 0, 4, 0, 2]
         lon_other = [40, 40, 40, 20, 10, 50, 40, 40, 40]
         lanelets_other = [{1}, {1}, {1, 2}, {1}, {1}, {1}, {2}, {1}, {1, 2}]
-        other_vehicle = self.create_vehicle(
-            1, lanelets_other, lat_other, lon_other, road_network
-        )
+        other_vehicle = self.create_vehicle(1, lanelets_other, lat_other, lon_other, road_network)
 
         lat_other = [0, 0, 0, 0, 0, 0, 0, 0, 2]
         lon_other = [10, 10, 10, 10, 20, 40, 10, 10, 20]
         lanelets_other = [{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {2}]
-        other_vehicle_2 = self.create_vehicle(
-            2, lanelets_other, lat_other, lon_other, road_network
-        )
+        other_vehicle_2 = self.create_vehicle(2, lanelets_other, lat_other, lon_other, road_network)
 
         world = World({ego_vehicle, other_vehicle, other_vehicle_2}, road_network)
         vehicle_ids = [ego_vehicle.id, other_vehicle.id]
@@ -691,9 +659,7 @@ class TestPredicate(unittest.TestCase):
     def create_vehicle(self, veh_id, lanelets_ego, lat_ego, lon_ego, road_network):
         ego_vehicle_param = self.config.get("ego_vehicle_param")
         cr_state_list_ego = {
-            t: CustomState(
-                position=(s, d + 0.5 * 4), time_step=t, orientation=0, velocity=45
-            )
+            t: CustomState(position=(s, d + 0.5 * 4), time_step=t, orientation=0, velocity=45)
             for t, (s, d, l) in enumerate(zip(lon_ego, lat_ego, lanelets_ego))
         }
         lanelet_assignments_ego = {t: l for t, l in enumerate(lanelets_ego)}

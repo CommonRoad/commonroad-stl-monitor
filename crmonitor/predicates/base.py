@@ -1,23 +1,88 @@
 import abc
 import copy
+from dataclasses import dataclass, field
 import logging
+from pathlib import Path
 import warnings
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.renderer import IRenderer
-from ruamel.yaml.comments import CommentedMap
-
 from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad_mpr.learning import FeatureExtrator, PredicateEvaluatorML, read_model
+from commonroad_mpr.learning import FeatureExtrator, read_model
 from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
+
 from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PredicateMprConfig:
+    enabled: bool = False
+    """Enable model-predictive robustness evaluation."""
+
+    ml: bool = True
+    """Enable gaussian processes for model-predictive robustness evaluation. This can be used e.g. for the training of new models."""
+
+    extract_gradient: bool = False
+    """Extract gradient from the gaussian process models during evaluation."""
+
+    model_path: Optional[Path] = None
+    """Path to the pre-trained models. If None, the models from the commonroad-mpr package are used."""
+
+
+@dataclass
+class PredicateEvaluatorConfig:
+    scale_rob: bool = True
+    mpr: PredicateMprConfig = field(default_factory=PredicateMprConfig)
+    eps: float = 1e-17
+
+    min_interstate_width: float = 7.0
+
+    max_congestion_velocity: float = 2.78
+    """Determines the velocity of vehicles, when they are considered in congestion. Used for the predicates `PredInCongestion` and `PredHasCongestionVelocity`."""
+
+    num_veh_congestion: float = 3.0
+    """Determines the number of vehicles, when it is considered as congestion. Used for the predicate `PredInCongestion`."""
+
+    max_slow_moving_traffic_velocity: float = 8.33
+    """Determines the velocity of vehicles when they are considered in slow moving traffic. Used for the predicates `PredInSlowMovingTraffic` and `PredHasSlowMovingVelocity`."""
+
+    num_veh_slow_moving_traffic: float = 3.0
+    """Determines the number of vehicles, when it is considered as in slow moving traffic. Used for the predicate `PredInSlowMovingTraffic`."""
+
+    max_queue_of_vehicles_velocity: float = 3.0
+    """Determines the velocity of vehicles when they are considered in a queue of vehicles. Used for the predicates `PredInQueueOfVehicles` and `PredHasQueueVelocity`."""
+
+    num_veh_queue_of_vehicles: float = 3.0
+    """Determines the number of vehicles, when it is considered as in a queue of vehicles. Used for the predicate `PredInQueueOfVehicles`."""
+
+    max_interstate_speed_truck: float = 22.22
+    desired_interstate_velocity: float = 36.11
+
+    u_turn: float = 1.57
+
+    standstill_error: float = 0.01
+
+    min_velocity_diff: float = 15
+
+    slightly_higher_speed_difference: float = 5.55
+
+    close_to_other_vehicle: float = 0.5
+    close_to_lane_border: float = 0.2
+
+    d_sl: float = 1.0
+    d_br: float = 15.0
+    a_br: float = -1.0
+
+    a_abrupt: float = -2.0
+
+    country: str = "DEU"
 
 
 class BasePredicateEvaluator(abc.ABC):
@@ -26,18 +91,17 @@ class BasePredicateEvaluator(abc.ABC):
     """
 
     predicate_name = "interface"
+    arity: int
 
-    def __init__(self, config: CommentedMap, scaler=None):
+    def __init__(self, config: PredicateEvaluatorConfig, scaler=None):
         self.config = config
-        self.eps = 1e-5
-        scale_rob = config.get("scale_rob", True)
-        self._scaler = scaler or RobustnessScaler(scale_rob)
+        self._scaler = scaler or RobustnessScaler(self.config.scale_rob)
 
-        if self.config["use_mpr"]:
+        if self.config.mpr.enabled and self.config.mpr.ml:
             try:
                 self._mpr_model = read_model(
                     self.predicate_name,
-                    self.config.get("model_path"),
+                    self.config.mpr.model_path,
                     ScenarioType.INTERSTATE,
                 )
             except ModelLoadError as e:
@@ -50,7 +114,17 @@ class BasePredicateEvaluator(abc.ABC):
         else:
             self._mpr_model = None
 
-        self._use_mpr_for_evaluation = self.config["use_mpr"]
+        self._mpr_gradients = []
+
+    @property
+    def gradients(self):
+        return self._mpr_gradients
+
+    @property
+    def last_gradient(self):
+        if len(self._mpr_gradients) == 0:
+            return None
+        return self._mpr_gradients[-1]
 
     def _scale_speed(self, x):
         return self._scaler.scale_speed(x)
@@ -71,14 +145,12 @@ class BasePredicateEvaluator(abc.ABC):
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
-    def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
         pass
 
     def evaluate_mpr_ml(
         self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]
-    ) -> float:
+    ) -> Tuple[float, float]:
         """
         Evaluate this predicate with model-predicitive robustness using pre-trained models.
         This method should usually not be called directly. Instead use `evaluate_robustness_with_cache`.
@@ -88,7 +160,7 @@ class BasePredicateEvaluator(abc.ABC):
         :param time_step: The time step for which this predicate should be evaluated.
         :param vehicle_ids: The vehicles that should be considered for the evaluation.
 
-        :returns: The predictated robustness value.
+        :returns: The predicted robustness value.
 
         :raises RuntimeError: If the pre-trained model was not already loaded.
         """
@@ -97,8 +169,6 @@ class BasePredicateEvaluator(abc.ABC):
         desired_features = dict(
             MprCfg["feature_variable"][MprCfg["common"]["scenario"]]["desired_features"]
         )
-        # TODO: arity should be a standard attribute of all predicates.
-        # Currently it is not clear whether all predicates have this attribute.
         if self.arity == 1:
             desired_features.pop("other", None)
             desired_features.pop("ego_other", None)
@@ -112,9 +182,7 @@ class BasePredicateEvaluator(abc.ABC):
         )
 
         features = {
-            vehicle: {
-                name: all_feature_variables[vehicle][name] for name in desired_names
-            }
+            vehicle: {name: all_feature_variables[vehicle][name] for name in desired_names}
             for vehicle, desired_names in desired_features.items()
             if desired_names is not None
         }
@@ -136,14 +204,19 @@ class BasePredicateEvaluator(abc.ABC):
                 f"Failed to evaluate predicate {self.predicate_name} with model-predictive robustness and pre-trained model: No pre-trained model was loaded!"
             )
         robustness, _ = self._mpr_model.predict([list_features])
+        if self.config.mpr.extract_gradient:
+            gradient = self._mpr_model.get_gradient([list_features])
+            self._mpr_gradients.append(gradient)
 
         if robustness * characteristic_value < 0:
             robustness = np.float64(1e-3)
 
-        return np.copysign(
+        scaled_robustness = np.copysign(
             np.clip(robustness, self._scaler.min, self._scaler.max),
             characteristic_value,
         )
+
+        return scaled_robustness
 
     def evaluate_mpr(
         self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]
@@ -173,9 +246,7 @@ class BasePredicateEvaluator(abc.ABC):
             ego_vehicle_mpr,
             time_step,
             MprCfg["common"]["scenario"],
-            **MprCfg["sampling_approach"]["state_based_sampling"][
-                MprCfg["common"]["scenario"]
-            ],
+            **MprCfg["sampling_approach"]["state_based_sampling"][MprCfg["common"]["scenario"]],
         )
 
         orig_ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
@@ -190,7 +261,9 @@ class BasePredicateEvaluator(abc.ABC):
         count_valid = 0
         count_true = 0
         count_error = 0
-        for ego_future_state_mpr in ego_sampler.sample():  # iterates over all states of all predictions.
+        for (
+            ego_future_state_mpr
+        ) in ego_sampler.sample():  # iterates over all states of all predictions.
             try:
                 # To be able to use the states, they need to be converted to CommonRoad states, which are relative to the world.
                 ego_future_state = (
@@ -204,10 +277,8 @@ class BasePredicateEvaluator(abc.ABC):
                 ego_loc_shape = ego_vehicle.shape.rotate_translate_local(
                     ego_future_state.position, ego_future_state.orientation
                 )
-                lanelet_assignment = (
-                    world.road_network.lanelet_network.find_lanelet_by_shape(
-                        ego_loc_shape
-                    )
+                lanelet_assignment = world.road_network.lanelet_network.find_lanelet_by_shape(
+                    ego_loc_shape
                 )
                 if len(lanelet_assignment) == 0:
                     # The state sampler created a state outside the lanelet network.
@@ -249,28 +320,6 @@ class BasePredicateEvaluator(abc.ABC):
 
         return ret
 
-    def gradient_mpr(self):
-        """
-        Computes the gradient of the MPR w.r.t. the input values.
-        """
-        default = [0.0] * 35
-        # TODO: The gradient is always requested, even if this predicate is not evaluated with pre-trained models.
-        return default
-        if not self._use_mpr_for_evaluation:
-            # TODO: If the user tries to extract the gradient for a comosed/exempted predicate, should it just be skipped?
-            warnings.warn(
-                f"Tried to extract the gradient of the model predictive evaluation, but model predictive evaluation is not enabled for '{self.predicate_name}'. This is either because mpr is disabled or this predicate is exempted from MPR."
-            )
-            return default
-
-        if self._mpr_model is None:
-            warnings.warn(
-                f"Tried to extract gradient of the model predictive robustness, but no gaussian processes were used for the evaluation of '{self.predicate_name}' and therefore no gradient is available."
-            )
-            return default
-
-        return self._mpr_model.derivative()[0]
-
     def evaluate_robustness_with_cache(
         self, world: World, mpr_world: WorldMPR, time_step, vehicle_ids: List[int]
     ) -> float:
@@ -288,7 +337,7 @@ class BasePredicateEvaluator(abc.ABC):
                     ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
                 )
                 value = self.evaluate_mpr_ml(world, mpr_world, time_step, vehicle_ids)
-            elif self._use_mpr_for_evaluation:
+            elif self.config.mpr.enabled:
                 _LOGGER.debug(
                     "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, without pre-trained models.",
                     self.predicate_name,
@@ -333,11 +382,14 @@ class BasePredicateEvaluator(abc.ABC):
         time_step: int,
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
-        predicate_names2vehicle_ids2values[self.predicate_name][
-            tuple(vehicle_ids)
-        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
+            self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        )
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):
         ax.axis("off")
         ax.text(0.1, 0.5, "[not visualized]", fontsize=12)
+
+    def reset(self) -> None:
+        self._mpr_gradients = []

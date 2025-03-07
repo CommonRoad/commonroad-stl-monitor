@@ -1,5 +1,4 @@
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 

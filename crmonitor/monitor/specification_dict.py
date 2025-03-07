@@ -26,9 +26,7 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
         return self._ast_node_values
 
     def visit(self, node, *args, **kwargs):
-        result = super(DiscreteTimeOnlineUpdateVisitorDict, self).visit(
-            node, *args, **kwargs
-        )
+        result = super(DiscreteTimeOnlineUpdateVisitorDict, self).visit(node, *args, **kwargs)
         self._ast_node_values.update({node.name: result})
         return result
 

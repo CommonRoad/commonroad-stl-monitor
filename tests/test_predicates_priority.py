@@ -9,14 +9,13 @@ from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState
 from commonroad.scenario.trajectory import Trajectory
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
-from crmonitor.predicates.priority import (  # not covered
-    PredAtTrafficSignStop,
+from crmonitor.predicates.priority import (
+    PredAtTrafficSignStop,  # not covered
+    PredRelevantTrafficLight,  # not covered
+    PredSamePriorityRightStraight,  # not covered
 )
-from crmonitor.predicates.priority import PredRelevantTrafficLight  # not covered
-from crmonitor.predicates.priority import PredSamePriorityRightStraight  # not covered
 
 
 class TestIntersectionPriorityPredicates(unittest.TestCase):
@@ -55,34 +54,22 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
         )
         state_list_ego = []
         state_list_ego.append(
-            CustomState(
-                position=np.array([17, 0.0]), velocity=15, orientation=0.0, time_step=1
-            )
+            CustomState(position=np.array([17, 0.0]), velocity=15, orientation=0.0, time_step=1)
         )
         state_list_ego.append(
-            CustomState(
-                position=np.array([20, 0.0]), velocity=15, orientation=0.0, time_step=2
-            )
+            CustomState(position=np.array([20, 0.0]), velocity=15, orientation=0.0, time_step=2)
         )
         state_list_ego.append(
-            CustomState(
-                position=np.array([21, 0.0]), velocity=10, orientation=0.0, time_step=3
-            )
+            CustomState(position=np.array([21, 0.0]), velocity=10, orientation=0.0, time_step=3)
         )
         state_list_ego.append(
-            CustomState(
-                position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=4
-            )
+            CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=4)
         )
         state_list_ego.append(
-            CustomState(
-                position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=5
-            )
+            CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=5)
         )
         state_list_ego.append(
-            CustomState(
-                position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=6
-            )
+            CustomState(position=np.array([23, 0.0]), velocity=0, orientation=0.0, time_step=6)
         )
         dynamic_obstacle_trajectory = Trajectory(1, state_list_ego)
         dynamic_obstacle_shape = Rectangle(width=2, length=5)
@@ -142,9 +129,7 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
 
         pred = PredSamePriorityRightStraight(self.config)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            sol_monitor_1 = pred.evaluate_boolean(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
+            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
                 world, time, [ego_vehicle.id, target_vehicle.id]
