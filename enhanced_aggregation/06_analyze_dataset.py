@@ -48,7 +48,7 @@ all_interstate_predicates = [
 
 balance = {}
 for predicate in all_general_predicates + all_interstate_predicates:
-    val_true = data[('predicates', predicate, 'bool')].sum()
+    val_true = data[("predicates", predicate, "bool")].sum()
     val_false = len(data) - val_true
     balance[predicate] = (val_true - val_false) / (val_true + val_false)
 

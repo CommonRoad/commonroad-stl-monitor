@@ -108,6 +108,7 @@ MprCfg.build_configuration(
     default_profile="default",
 )
 
+
 def _get_scenario_final_time_step(scenario: Scenario) -> int:
     """
     Determines the maximum time step in a scenario. This is usefull, to determine the length of a scenario.
@@ -128,7 +129,6 @@ def _get_scenario_final_time_step(scenario: Scenario) -> int:
         return int(max_time_step.end)
     else:
         return max_time_step
-
 
 
 class PredicateEvaluationWrapper:
@@ -239,8 +239,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(
-    workers=120, limit=scenario_limit
-)  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=120, limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)
