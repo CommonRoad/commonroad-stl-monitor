@@ -1,11 +1,9 @@
 from decimal import Decimal
 from fractions import Fraction
-from typing import Optional
 
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from rtamt.semantics.interval.interval import Interval
 
-from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.fastl.FaStlParser import FaStlParser
 from crmonitor.rule.fastl.FaStlParserVisitor import FaStlParserVisitor
 from crmonitor.rule.rule_node import (
@@ -104,7 +102,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             # Flatten tree to evaluate with rtamt
             return [
                 RuleNode(
-                    f"g{self._sub_rule_counter}",
+                    self._get_new_unique_node_name(),
                     children,
                     self._rewriter.getText(
                         self.DEFAULT_TOKEN_REWRITER_PROGRAM,

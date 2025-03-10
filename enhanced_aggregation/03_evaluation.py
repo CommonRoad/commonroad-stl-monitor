@@ -29,7 +29,7 @@ scale_rob = not use_mpr
 model_path = None
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_I1"
+traffic_rule = "R_G1"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS
