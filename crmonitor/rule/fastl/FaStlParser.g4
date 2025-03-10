@@ -27,12 +27,12 @@ spec
 	| SumIfPositiveOperator vehicle COLON LPAREN spec RPAREN #SpecQuantSumIfPositive
 
     | spec AndOperator spec                               #SpecNested
-    | spec AndsmoothOperator spec                         #SpecAndSmooth
     | spec OrOperator spec                                #SpecNested
     | spec ImpliesOperator spec                           #SpecNested
     | spec IffOperator spec                               #SpecNested
     | spec XorOperator spec                               #SpecNested
 
+	| SigmoidOperator spec                                #SpecSigmoid
     | HistoricallyDurationOperator ( interval )? spec     #SpecHistoricallyDuration
 	| HistoricallyDurationSeverityOperator ( interval )? spec #SpecHistoricallyDurationSeverity
 	| CompareToThresholdScaledOperator threshold spec     #specCompareToThresholdScaled

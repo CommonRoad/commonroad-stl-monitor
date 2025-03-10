@@ -15,13 +15,13 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
-    AndSmoothMonitorNode,
     CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     MonitorVisitorInterface,
+    SigmoidMonitorNode,
     UnaryMonitorNode,
     PredicateMonitorNode,
     QuantMonitorNode,
@@ -43,6 +43,7 @@ from crmonitor.rule.rule_node import (
     PredicateNode,
     RuleNode,
     RuleTreeVisitorInterface,
+    SigmoidNode,
     SumIfPositiveNode,
     VisitorNode,
 )
@@ -84,6 +85,11 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     def _(self, node: ExistNode, *args, **kwargs) -> MonitorNode:
         child_monitor = self.visit(node.child, *args, **kwargs)
         return ExistMonitorNode(node.name, child_monitor, node.quantified_vehicle)
+
+    @visit.register
+    def _(self, node: SigmoidNode, *args, **kwargs) -> MonitorNode:
+        child_monitor = self.visit(node.child, *args, **kwargs)
+        return SigmoidMonitorNode(node.name, child_monitor)
 
     @visit.register
     def _(self, node: HistoricallyDurationNode, *args, **kwargs) -> MonitorNode:
@@ -250,20 +256,16 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         return list(scaled_robustness_values)
 
     @visit.register
-    def visit_and_smooth_node(
-        self, node: AndSmoothMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
+    def visit_sigmoid_node(
+        self, node: SigmoidMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
-        samples_left = self.visit(node.left_child, ctx)
-        samples_right = self.visit(node.right_child, ctx)
+        samples = self.visit(node.child, ctx)
 
-        samples_return = []
-        for a, b in zip(samples_left, samples_right):
-            k = 2.0 * 1e-6
-            x = (b - a) / k
-            g = 0.5 * (x + math.sqrt(x * x + 1.0))
-            smin = b - k * g
-            samples_return.append(smin)
-
+        scaling_param = 5
+        samples_return = [
+            (1 - math.exp(-scaling_param * sample)) / (1 + math.exp(-scaling_param * sample))
+            for sample in samples
+        ]
         node.values = samples_return
 
         return samples_return

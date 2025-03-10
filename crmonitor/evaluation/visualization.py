@@ -13,7 +13,6 @@ from matplotlib.gridspec import GridSpec
 
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
-    AndSmoothMonitorNode,
     CompareToThresholdScaledMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
@@ -22,6 +21,7 @@ from crmonitor.monitor.monitor_node import (
     MonitorVisitorInterface,
     PredicateMonitorNode,
     RuleMonitorNode,
+    SigmoidMonitorNode,
     SumIfPositiveMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -456,10 +456,9 @@ class FormulaVisualizationVisitor(MonitorVisitorInterface[str]):
         return label
 
     @visit.register
-    def _(self, node: AndSmoothMonitorNode, *args, **kwargs) -> str:
-        left_child_label = self.visit(node.left_child, *args, **kwargs)
-        right_child_label = self.visit(node.right_child, *args, **kwargs)
-        label = left_child_label + "andsmooth" + right_child_label
+    def _(self, node: SigmoidMonitorNode, *args, **kwargs) -> str:
+        child_label = self.visit(node.child, *args, **kwargs)
+        label = "sigmoid" + child_label
         self._plot_node(node, label)
         return label
 
