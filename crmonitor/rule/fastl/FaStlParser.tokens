@@ -1,7 +1,7 @@
 EXIST=1
 FORALL=2
 VEHICLE=3
-AndsmoothOperator=4
+SigmoidOperator=4
 HistoricallyDurationOperator=5
 HistoricallyDurationSeverityOperator=6
 SumIfPositiveOperator=7
@@ -83,7 +83,7 @@ LINE_COMMENT=82
 'E'=1
 'A'=2
 'a'=3
-'andsmooth'=4
+'sigmoid'=4
 'historicallyDuration'=5
 'historicallyDurationSeverity'=6
 'sum_if_positive'=7

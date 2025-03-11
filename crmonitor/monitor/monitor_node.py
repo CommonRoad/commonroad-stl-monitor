@@ -159,9 +159,9 @@ class AllMonitorNode(SelectiveQuantMonitorNode): ...
 class ExistMonitorNode(SelectiveQuantMonitorNode): ...
 
 
-class AndSmoothMonitorNode(BinaryMonitorNode):
-    def __init__(self, name: str, child_left: MonitorNode, child_right: MonitorNode) -> None:
-        super().__init__(name, child_left, child_right)
+class SigmoidMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode) -> None:
+        super().__init__(name, child)
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):
