@@ -6,14 +6,13 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.solution import (
     CostFunction,
     PlanningProblemSolution,
-    Solution,
     VehicleModel,
     VehicleType,
 )
 from commonroad.common.util import Interval
 from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
-from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import (
@@ -25,13 +24,13 @@ from commonroad.scenario.state import (
     PMState,
 )
 from commonroad.scenario.trajectory import Trajectory
-from ruamel.yaml import YAML
-
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleNode
+from ruamel.yaml import YAML
+
 from tests.util import parallel_lanes
 
 
@@ -105,9 +104,7 @@ class TestRuleEvaluator(unittest.TestCase):
 
         self.assertTrue(isinstance(rule.children[1], PredicateNode))
         self.assertEqual(rule.children[1].io_type, IOType.INPUT)
-        self.assertEqual(
-            rule.children[0].children[0].children[0].io_type, IOType.OUTPUT
-        )
+        self.assertEqual(rule.children[0].children[0].children[0].io_type, IOType.OUTPUT)
 
     def test_solution(self):
         lanelet_network = LaneletNetwork()
@@ -124,16 +121,12 @@ class TestRuleEvaluator(unittest.TestCase):
         pp = PlanningProblem(
             10,
             InitialState(0, np.array([2, 2]), 0.0, velocity, 0.0, 0.0, 0.0),
-            GoalRegion(
-                [CustomState(time_step=Interval(0, 10), position=Rectangle(2, 2))]
-            ),
+            GoalRegion([CustomState(time_step=Interval(0, 10), position=Rectangle(2, 2))]),
         )
         pps = pp
 
         # Test solution as PM input trajectory
-        trajectory = Trajectory(
-            0, [PMInputState(i, 0.0, 0.0) for i in range(num_time_steps)]
-        )
+        trajectory = Trajectory(0, [PMInputState(i, 0.0, 0.0) for i in range(num_time_steps)])
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.PM, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )
@@ -161,9 +154,7 @@ class TestRuleEvaluator(unittest.TestCase):
         self.assertTrue(np.all(robs < 0))
 
         # Test solution as KS input trajectory
-        trajectory = Trajectory(
-            0, [InputState(i, 0.0, 0.0) for i in range(num_time_steps)]
-        )
+        trajectory = Trajectory(0, [InputState(i, 0.0, 0.0) for i in range(num_time_steps)])
         pp_sol = PlanningProblemSolution(
             10, VehicleModel.KS, VehicleType.BMW_320i, CostFunction.MW1, trajectory
         )

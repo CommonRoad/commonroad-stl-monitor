@@ -1,9 +1,12 @@
-[tool.poetry]
+[project]
 name = "commonroad-stl-monitor"
 version = "2024.1"
-description = ""
-authors = ["Luis Gressenbuch <luis.gressenbuch@tum.de>, Yuanfei Lin <yuanfei.lin@tum.de>"]
+authors = [{name = "Luis Gressenbuch", email = "luis.gressenbuch@tum.de"}, {name = "Yuanfei Lin", email = "yuanfei.lin@tum.de"}]
 readme = "README.md"
+requires-python = ">=3.9"
+dynamic = ["dependencies"]
+
+[tool.poetry]
 packages = [
     {include = "crmonitor"},
     # Vendor rtamt to let omegaconf decide on the antlr version.
@@ -11,15 +14,15 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <4.0"
-commonroad-io = ">=2024.1"
-#commonroad-vehicle-models = ">=2"
+python = ">=3.9, <3.12"
+commonroad-io = ">=2024.3"
 ruamel-yaml = ">=0.16.12"
-commonroad-drivability-checker = ">=2024.2.0"
-commonroad-route-planner = ">=2024.2.0"
+commonroad-route-planner = "^2025.1.0"
 numba = ">=0.58.1"
-commonroad-mpr = { git = "ssh://git@gitlab.lrz.de/cps/commonroad-model-predictive-robustness.git", rev = "8171b0aaf8cbe51cf0c53a5506ae7ac209f0a5fa" }
+commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad-model-predictive-robustness.git", rev = "ece970273f2853d9b10402f957df3c769a647bd8" }
 pyqt6 = "^6.8.1"
+commonroad-clcs = "^2025.1.1"
+commonroad-drivability-checker = "^2025.1"
 
 [tool.poetry.group.test]
 optional = true
@@ -36,6 +39,29 @@ optional = true
 sphinx = "^5.3.0"
 myst-parser = "^0.18.1"
 
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+format.quote-style = "double"
+target-version = "py311"
+src = ["crmonitor", "tests"]
+# TODO: execpt for fastl and external, all folders should be covered by ruff.
+extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/"]
+# force exclude because pre-commit might pass those files explicitly, which will override the exclude.
+force-exclude = true
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "I", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]

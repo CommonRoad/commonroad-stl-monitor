@@ -1,8 +1,7 @@
 import copy
-from abc import ABC
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Protocol, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import rtamt
 from rtamt.spec.abstract_specification import (
@@ -24,7 +23,7 @@ class OutputType(Enum):
 def _template_spec(
     logic_formula: str,
     output_type: OutputType,
-    predicates,
+    predicates: Tuple[Tuple[str, IOType], ...],
     dt,
     spec_factory: Callable[
         [rtamt.Semantics], AbstractOnlineSpecification
@@ -32,18 +31,16 @@ def _template_spec(
 ) -> AbstractOfflineOnlineSpecification:
     if output_type != OutputType.STANDARD:
         # Workaround for rtamt when working with output-robustness and input vacuity
-        for pred in predicates:
-            logic_formula = logic_formula.replace(
-                pred[0].name, f"({pred[0].name} >= 0)"
-            )
+        for pred_name, _ in predicates:
+            logic_formula = logic_formula.replace(pred_name, f"({pred_name} >= 0)")
 
     spec = spec_factory(output_type.value)
-    for var, io_type in predicates:
-        spec.declare_var(var.name, "float")
+    for pred_name, io_type in predicates:
+        spec.declare_var(pred_name, "float")
         if io_type == IOType.INPUT:
-            spec.set_var_io_type(var.name, "input")
+            spec.set_var_io_type(pred_name, "input")
         else:
-            spec.set_var_io_type(var.name, "output")
+            spec.set_var_io_type(pred_name, "output")
     spec.declare_var("out", "float")
 
     spec.iosem = output_type
@@ -68,9 +65,7 @@ def _create_spec(
         [rtamt.Semantics], AbstractOfflineOnlineSpecification
     ] = stl_discrete_time_online_specification_factory,
 ) -> AbstractOfflineOnlineSpecification:
-    template_spec = _template_spec(
-        rule_str, output_type, tuple(predicates), dt, spec_factory
-    )
+    template_spec = _template_spec(rule_str, output_type, tuple(predicates), dt, spec_factory)
     # The dynamic part of the template spec has to be replaced.
     spec = copy.copy(template_spec)
     # Create a dummy spec to obtain a new interpreter
@@ -90,11 +85,9 @@ class RtamtStlMonitor:
     """
 
     @classmethod
-    def create_from_rule_node(
-        cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD
-    ):
+    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD):
         predicates = [
-            (c, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT)
+            (c.name, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT)
             for c in rule_node.children
         ]
         return cls(rule_node.rule_str, predicates, dt, output_type)
@@ -117,9 +110,7 @@ class RtamtStlMonitor:
     def ast_node_values(self) -> Dict[str, float]:
         return self._spec.online_interpreter.updateVisitor.ast_node_values
 
-    def evaluate_monitor_online(
-        self, time_step: int, predicates: List[Tuple[str, float]]
-    ):
+    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]) -> float:
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob

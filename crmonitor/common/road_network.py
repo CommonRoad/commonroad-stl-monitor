@@ -1,13 +1,13 @@
 from typing import Dict, List, Set, Union
 
-import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
-from commonroad_dc.geometry.geometry import CurvilinearCoordinateSystem
-from commonroad_dc.geometry.util import (
+from commonroad_clcs.clcs import CurvilinearCoordinateSystem
+from commonroad_clcs.config import CLCSParams
+from commonroad_clcs.util import (
     chaikins_corner_cutting,
-    compute_curvature_from_polyline,
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
     resample_polyline,
@@ -37,9 +37,7 @@ class Lane:
         if "large_resampling_step" in road_network_param.keys():
             # intersection, to avoid outside projection domain in clcs
             # TODO: currently only consider AAH1 map
-            weight_left, smooth_factor_left = self._get_smooth_parameter(
-                contained_lanelets, "left"
-            )
+            weight_left, smooth_factor_left = self._get_smooth_parameter(contained_lanelets, "left")
             (
                 self.clcs_left,
                 new_left_vertices,
@@ -65,9 +63,7 @@ class Lane:
                 smooth_factor=smooth_factor_right,
                 road_network_param=road_network_param,
             )
-            weight, smooth_factor = self._get_smooth_parameter(
-                contained_lanelets, "center"
-            )
+            weight, smooth_factor = self._get_smooth_parameter(contained_lanelets, "center")
             (
                 self._clcs,
                 new_center_vertices,
@@ -84,23 +80,15 @@ class Lane:
                 self._orientation = compute_orientation_from_polyline(
                     merged_lanelet.center_vertices
                 )
-                self._curvature = pycrccosy.Util.compute_curvature(
-                    merged_lanelet.center_vertices
-                )
-                self._path_length = compute_pathlength_from_polyline(
-                    merged_lanelet.center_vertices
-                )
+                self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
+                self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
                 self._width = self._compute_width_from_lanalet_boundary(
                     merged_lanelet.left_vertices, merged_lanelet.right_vertices
                 )
             else:
-                self._orientation = compute_orientation_from_polyline(
-                    new_center_vertices
-                )
+                self._orientation = compute_orientation_from_polyline(new_center_vertices)
                 self._curvature = pycrccosy.Util.compute_curvature(new_center_vertices)
-                self._path_length = compute_pathlength_from_polyline(
-                    new_center_vertices
-                )
+                self._path_length = compute_pathlength_from_polyline(new_center_vertices)
                 self._width = self._compute_width_from_lanalet_boundary(
                     new_left_vertices, new_right_vertices
                 )
@@ -120,15 +108,9 @@ class Lane:
             self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
                 merged_lanelet.center_vertices, road_network_param
             )
-            self._orientation = compute_orientation_from_polyline(
-                merged_lanelet.center_vertices
-            )
-            self._curvature = pycrccosy.Util.compute_curvature(
-                merged_lanelet.center_vertices
-            )
-            self._path_length = compute_pathlength_from_polyline(
-                merged_lanelet.center_vertices
-            )
+            self._orientation = compute_orientation_from_polyline(merged_lanelet.center_vertices)
+            self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
+            self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
             self._width = self._compute_width_from_lanalet_boundary(
                 merged_lanelet.left_vertices, merged_lanelet.right_vertices
             )
@@ -140,9 +122,7 @@ class Lane:
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
-        return tuple(sorted(self.contained_lanelets)) < tuple(
-            sorted(other.contained_lanelets)
-        )
+        return tuple(sorted(self.contained_lanelets)) < tuple(sorted(other.contained_lanelets))
 
     @property
     def lanelet(self) -> Lanelet:
@@ -223,9 +203,7 @@ class Lane:
         :return: curvature along  polyline
         """
         assert (
-            isinstance(polyline, np.ndarray)
-            and polyline.ndim == 2
-            and len(polyline[:, 0]) > 2
+            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
         ), "Polyline malformed for curvature computation p={}".format(polyline)
 
         x_d = np.gradient(polyline[:, 0])
@@ -245,16 +223,12 @@ class Lane:
         :return: path length along polyline
         """
         assert (
-            isinstance(polyline, np.ndarray)
-            and polyline.ndim == 2
-            and len(polyline[:, 0]) > 2
+            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
         ), "Polyline malformed for pathlenth computation p={}".format(polyline)
 
         distance = np.zeros((len(polyline),))
         for i in range(1, len(polyline)):
-            distance[i] = distance[i - 1] + np.linalg.norm(
-                polyline[i] - polyline[i - 1]
-            )
+            distance[i] = distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1])
 
         return np.array(distance)
 
@@ -271,9 +245,7 @@ class Lane:
         """
         width_along_lanelet = np.zeros((len(left_polyline),))
         for i in range(len(left_polyline)):
-            width_along_lanelet[i] = np.linalg.norm(
-                left_polyline[i] - right_polyline[i]
-            )
+            width_along_lanelet[i] = np.linalg.norm(left_polyline[i] - right_polyline[i])
         return width_along_lanelet
 
     @staticmethod
@@ -294,14 +266,12 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, 20, 0.1, 5.0)
+        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, CLCSParams())  # 20, 0.1, 5.0)
 
         return curvilinear_cosy
 
     @staticmethod
-    def _get_smooth_parameter(
-        contained_lanelets: List[int], bound: str
-    ) -> (float, float):
+    def _get_smooth_parameter(contained_lanelets: List[int], bound: str) -> (float, float):
         """
         Gets smooth parameters for different lanes.
         """
@@ -342,19 +312,17 @@ class Lane:
                 reference_path, smooth_factor=smooth_factor, weight_coefficient=weight
             )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(
-            reference_path_smooth,
-            road_network_param.get("lateral_projection_domain_limit"),
-            road_network_param.get("lateral_eps"),
+        clcs_params = CLCSParams(
+            default_proj_domain_limit=road_network_param.get("lateral_projection_domain_limit"),
+            eps=road_network_param.get("lateral_eps"),
         )
+        curvilinear_cosy = CurvilinearCoordinateSystem(reference_path_smooth, clcs_params)
 
         ref_path_resample_large_step = resample_polyline(
             reference_path_smooth, road_network_param.get("large_resampling_step")
         )
         curvilinear_cosy_large_step = CurvilinearCoordinateSystem(
-            ref_path_resample_large_step,
-            road_network_param.get("lateral_projection_domain_limit"),
-            road_network_param.get("lateral_eps"),
+            ref_path_resample_large_step, clcs_params
         )
         return (
             curvilinear_cosy,
@@ -382,9 +350,7 @@ class Lane:
         curvature = pycrccosy.Util.compute_curvature(np.array([xp, yp]).T)
         # set weights for interpolation:
         # see details: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splprep.html
-        weights = np.exp(
-            -weight_coefficient * (abs(curvature) - np.min(abs(curvature)))
-        )
+        weights = np.exp(-weight_coefficient * (abs(curvature) - np.min(abs(curvature))))
         # B spline interpolation
         tck, u = splprep([xp, yp], s=smooth_factor, w=weights)
         u_new = np.linspace(u.min(), u.max(), 2000)
@@ -393,9 +359,7 @@ class Lane:
         return ref_path_smooth
 
     @staticmethod
-    def _extrapolate_resample_polyline(
-        polyline: np.ndarray, step: float = 2.0
-    ) -> np.ndarray:
+    def _extrapolate_resample_polyline(polyline: np.ndarray, step: float = 2.0) -> np.ndarray:
         """
         Extrapolates polyline for resampling.
         """
@@ -462,9 +426,7 @@ class RoadNetwork:
         lanes = []
         lane_lanelets = []
         start_lanelets = [
-            lanelet
-            for lanelet in self.lanelet_network.lanelets
-            if len(lanelet.predecessor) == 0
+            lanelet for lanelet in self.lanelet_network.lanelets if len(lanelet.predecessor) == 0
         ]
         for lanelet in start_lanelets:
             if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
@@ -617,9 +579,7 @@ class RoadNetwork:
             incoming_dict[incoming_element.incoming_id] = incoming_element
         return incoming_dict
 
-    def _create_lanes_of_incoming(
-        self, lanelet_network: LaneletNetwork
-    ) -> Dict[int, List[Lane]]:
+    def _create_lanes_of_incoming(self, lanelet_network: LaneletNetwork) -> Dict[int, List[Lane]]:
         """
         find right turning, left turning, and going straight lanes with respect to incomings
 
@@ -630,9 +590,7 @@ class RoadNetwork:
             for incoming in intersection.incomings:
                 lanes_incoming[incoming.incoming_id] = [
                     self.get_turning_lane_from_incoming(self.lanes, incoming, "right"),
-                    self.get_turning_lane_from_incoming(
-                        self.lanes, incoming, "straight"
-                    ),
+                    self.get_turning_lane_from_incoming(self.lanes, incoming, "straight"),
                     self.get_turning_lane_from_incoming(self.lanes, incoming, "left"),
                 ]
         return lanes_incoming
@@ -736,18 +694,14 @@ class RoadNetwork:
         # get all possible occupied lanelets with respect to lanelets_dir
         lanelet_pre = self.get_reach_pre_cache(lanelets_dir[0])
         lanelet_suc = self.get_reach_suc_cache(lanelets_dir[-1])
-        possible_occupied_lanelets = (
-            lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
-        )
+        possible_occupied_lanelets = lanelets_dir + list(lanelet_pre) + list(lanelet_suc)
         # find possible incoming elements
         if len(self.lanelet_network.intersections) == 0:
             return None
         for incoming_element in self.lanelet_network.intersections[0].incomings:
             if (
                 len(
-                    incoming_element.incoming_lanelets.intersection(
-                        set(possible_occupied_lanelets)
-                    )
+                    incoming_element.incoming_lanelets.intersection(set(possible_occupied_lanelets))
                 )
                 > 0
             ):
@@ -809,15 +763,11 @@ class RoadNetwork:
         for lane in possible_lanes:
             subset_find = False
             for index, selected_lane in enumerate(selected_lanes):
-                if set(selected_lane.contained_lanelets).issubset(
-                    lane.contained_lanelets
-                ):
+                if set(selected_lane.contained_lanelets).issubset(lane.contained_lanelets):
                     subset_find = True
                     selected_lanes[index] = lane
                     break
-                elif set(lane.contained_lanelets).issubset(
-                    selected_lane.contained_lanelets
-                ):
+                elif set(lane.contained_lanelets).issubset(selected_lane.contained_lanelets):
                     subset_find = True
                     break
                 else:

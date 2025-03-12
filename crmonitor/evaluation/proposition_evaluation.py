@@ -3,13 +3,11 @@ from typing import Optional
 
 from commonroad_mpr.common.observation import World as WorldMPR
 
-from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import (
     BaseValueMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
-    RuleTreeVisitor,
 )
 from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
@@ -46,9 +44,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
     ):
-        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(
-            world.dt, output_type
-        )
+        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(world.dt, output_type)
         self.proposition_collector = PropositionCollectorMonitorTreeVisitor()
         super().__init__(
             rule,

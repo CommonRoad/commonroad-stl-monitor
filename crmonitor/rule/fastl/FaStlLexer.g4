@@ -13,14 +13,20 @@ FORALL
 VEHICLE
     : 'a' ;
 
-AndsmoothOperator
-    : 'andsmooth' ;
+SigmoidOperator
+    : 'sigmoid' ;
 
 HistoricallyDurationOperator
 	: 'historicallyDuration' ;
 
 HistoricallyDurationSeverityOperator
 	: 'historicallyDurationSeverity' ;
+
+SumIfPositiveOperator
+	: 'sum_if_positive' ;
+
+CompareToThresholdScaledOperator
+	: 'compare_to_threshold_scaled' ;
 
 // Preserve whitespace
 WHITESPACE

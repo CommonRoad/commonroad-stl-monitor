@@ -9,7 +9,6 @@ from rtamt.semantics.abstract_discrete_time_online_interpreter import (
     DiscreteTimeOnlineUpdateVisitor,
 )
 from rtamt.semantics.iastl.discrete_time.offline.ast_visitor import (
-    IAStlDiscreteTimeOfflineAstVisitor,
     IAStlOutputRobustnessDiscreteTimeOfflineAstVisitor,
 )
 from rtamt.semantics.stl.discrete_time.offline.ast_visitor import (
@@ -27,9 +26,7 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
         return self._ast_node_values
 
     def visit(self, node, *args, **kwargs):
-        result = super(DiscreteTimeOnlineUpdateVisitorDict, self).visit(
-            node, *args, **kwargs
-        )
+        result = super(DiscreteTimeOnlineUpdateVisitorDict, self).visit(node, *args, **kwargs)
         self._ast_node_values.update({node.name: result})
         return result
 

@@ -1,47 +1,33 @@
 import logging
 import multiprocessing
-import traceback
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.common.util import Interval
+from commonroad.scenario.scenario import Scenario
+
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-
+from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.common.world import World
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
-# List of all predicates that are needed for
-all_general_predicates = [
-    "in_front_of",
-    "in_same_lane",
-    "cut_in",
-    "keeps_safe_distance_prec",
-    "brakes_abruptly",
-    "rel_brakes_abruptly",
-    "precedes",
-    "keeps_lane_speed_limit",
-    "keeps_type_speed_limit",
-    "keeps_fov_speed_limit",
-    "keeps_lane_speed_limit_star",
-    "slow_leading_vehicle",
-    "preserves_traffic_flow",
-]
-# Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
-# Alternativly, supply specific predicates you want to evaluate.
-predicate_names = all_general_predicates
-scenarios_load_path = (
-    Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
-)
-output_path = (
-    Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
-)
-# Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = 1
+from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
 
-logging.basicConfig(level=logging.INFO)
+# Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
+# Alternatively, supply a list of specific predicates you want to evaluate.
+predicate_names = all_general_predicates + all_interstate_predicates
+scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
+
+output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
+# Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
+scenario_limit = None
+
+logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,12 +53,32 @@ MprCfg.build_configuration(
     # Path root must point to a local revision of commonroad-model-predictive-robustness.
     # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
     # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(
-        Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"
-    ),
+    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
     folder_config="config_files",
     default_profile="default",
 )
+
+
+def _get_scenario_final_time_step(scenario: Scenario) -> int:
+    """
+    Determines the maximum time step in a scenario. This is usefull, to determine the length of a scenario.
+
+    :param scenario: The scenario to analyze.
+
+    :return: The final time step in the scenario, or 0 if no obstacles are in the scenario.
+    """
+    max_time_step = 0
+    for dynamic_obstacle in scenario.dynamic_obstacles:
+        if dynamic_obstacle.prediction is None:
+            max_time_step = max(max_time_step, dynamic_obstacle.initial_state.time_step)
+            continue
+
+        max_time_step = max(max_time_step, dynamic_obstacle.prediction.final_time_step)
+
+    if isinstance(max_time_step, Interval):
+        return int(max_time_step.end)
+    else:
+        return max_time_step
 
 
 class PredicateEvaluationWrapper:
@@ -127,6 +133,8 @@ class CustomDataGenerator(DataGenerator):
         features_dict = FeatureExtrator.all_feature_variables(
             world_state=world_mpr, vehicle_ids=vehicle_ids, time_step=time_step
         )
+        # Not all of these features will be used for training the GPs for each of the predicates.
+        # The relevant features can still be selected later on.
 
         dict_entry_id = {
             "scenario_id": str(world.scenario.scenario_id),
@@ -134,44 +142,42 @@ class CustomDataGenerator(DataGenerator):
             "ego_id": vehicle_ids[0],
             "other_id": vehicle_ids[1],
         }
-        return (dict_entry_id, features_dict, predicates_dict)
+        return dict_entry_id, features_dict, predicates_dict
 
     def _process_scenario(self, scenario_path: Path) -> List[Tuple[dict, dict, dict]]:
-        try:
-            scenario, _ = CommonRoadFileReader(scenario_path).open(
-                lanelet_assignment=True
-            )
-            world_mpr = MprWorld.create_from_scenario(scenario)
-            # Create an additional world for crmonitor predicates
-            world = World.create_from_scenario(scenario)
-            data_entries = []
+        scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+        world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
+        # Create an additional world for crmonitor predicates
+        world = World.create_from_scenario(scenario)  # everything still cartesian
+        data_entries = []
 
-            for time_step in self._time_step_iteration:
-                for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
-                    data_entry = self._process_vehicles_patched(
-                        vehicle_ids, time_step, world_mpr, world
-                    )
-                    data_entries.append(data_entry)
+        end_time = _get_scenario_final_time_step(scenario) - self._state_sampling_ts - 1
 
-                    data_entry = self._process_vehicles_patched(
-                        tuple(reversed(vehicle_ids)), time_step, world_mpr, world
-                    )
-                    data_entries.append(data_entry)
+        for time_step in np.linspace(0, end_time, self._time_steps_per_scenario, dtype=int):
+            for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
+                data_entry = self._process_vehicles_patched(
+                    vehicle_ids, time_step, world_mpr, world
+                )
+                data_entries.append(data_entry)
 
-            return data_entries
-        except Exception as e:
-            _LOGGER.debug(traceback.format_exc())
-            raise RuntimeError(
-                f"Failed to process scenario {scenario_path.stem}: {e}"
-            ) from e
+                data_entry = self._process_vehicles_patched(
+                    tuple(reversed(vehicle_ids)), time_step, world_mpr, world
+                )
+                data_entries.append(data_entry)
+
+        return data_entries
 
 
 data_generator = CustomDataGenerator(
-    predicate_names,
-    scenarios_load_path,
-    scenario_duration=50,
-    dt=0.2,
-    time_steps_per_scenario=1,
+    predicate_names=predicate_names,
+    scenarios_path=scenarios_load_path,
+    dt=0.04,
+    output_path=output_path,
+    vehicle_pair_steps=20,
+    state_sampling_time_horizon=1.5,
+    time_steps_per_scenario=5,
+    scenario_type=ScenarioType.INTERSTATE,
+    snapshot_frequency=10,
 )
 
 
@@ -180,6 +186,9 @@ _LOGGER.info(
     scenarios_load_path,
     ", ".join(predicate_names),
 )
-data_generator.generate_data(workers=multiprocessing.cpu_count(), limit=scenario_limit)
+
+_LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
+
+data_generator.generate_data(workers=120, limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

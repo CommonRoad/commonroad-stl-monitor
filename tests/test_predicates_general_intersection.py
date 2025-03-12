@@ -9,7 +9,6 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
@@ -307,9 +306,7 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_2)
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
-        self.road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
     def test_interstate_broad_enough(self):
         self.config["min_interstate_width"] = 7.0

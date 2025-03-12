@@ -6,7 +6,6 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
@@ -239,9 +238,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_2)
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
-        self.road_network = RoadNetwork(
-            lanelet_network, self.config.get("road_network_param")
-        )
+        self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
 
     def test_reverses(self):
         self.config["standstill_error"] = 0.01
@@ -249,9 +246,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         exp_sol_monitor_mode_1 = False  # ego has velocity of zero
         exp_sol_monitor_mode_2 = False  # ego vehicle has positive velocity
         exp_sol_monitor_mode_3 = False  # ego vehicle has velocity of -standstill_error
-        exp_sol_monitor_mode_4 = (
-            True  # ego vehicle has velocity smaller than -standstill_error
-        )
+        exp_sol_monitor_mode_4 = True  # ego vehicle has velocity smaller than -standstill_error
 
         # ego vehicle
         cr_state_list_ego = {
@@ -316,9 +311,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
 
         # expected solutions
         exp_sol_monitor_mode_1 = False  # no leading vehicle at all
-        exp_sol_monitor_mode_2 = (
-            False  # two leading vehicles which drive with speed limit
-        )
+        exp_sol_monitor_mode_2 = False  # two leading vehicles which drive with speed limit
         exp_sol_monitor_mode_3 = True  # first leading vehicle is drives to slow
         exp_sol_monitor_mode_4 = True  # third leading vehicle drives to slow
 
@@ -511,9 +504,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
             0: CustomState(position=[0, 0], time_step=0, orientation=0, velocity=1),
             1: CustomState(position=[1, 0], time_step=1, orientation=0, velocity=0),
             2: CustomState(position=[1, 0], time_step=2, orientation=0, velocity=0.001),
-            3: CustomState(
-                position=[1, 0], time_step=3, orientation=0, velocity=-0.001
-            ),
+            3: CustomState(position=[1, 0], time_step=3, orientation=0, velocity=-0.001),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
         ego_vehicle_param = self.config.get("ego_vehicle_param")
@@ -755,9 +746,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle has lower velocity
         exp_sol_monitor_mode_2 = False  # ego vehicle has same velocity
-        exp_sol_monitor_mode_3 = (
-            True  # ego vehicle drives with only slightly higher speed
-        )
+        exp_sol_monitor_mode_3 = True  # ego vehicle drives with only slightly higher speed
         exp_sol_monitor_mode_4 = False  # ego vehicle drives too fast
 
         # ego vehicle

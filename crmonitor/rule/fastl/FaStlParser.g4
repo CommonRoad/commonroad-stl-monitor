@@ -14,6 +14,8 @@ vehicle
 predicate
     : Identifier LPAREN vehicle (COMMA vehicle)* RPAREN IO_TYPE_INPUT?;
 
+threshold
+	: LBRACK GreaterOrEqualOperator literal RBRACK;
 spec
 	:
     real_expression                                       #SpecNested
@@ -22,16 +24,18 @@ spec
 
     | EXIST vehicle COLON LPAREN spec RPAREN              #SpecQuantExist
 	| FORALL vehicle COLON LPAREN spec RPAREN             #SpecQuantForall
+	| SumIfPositiveOperator vehicle COLON LPAREN spec RPAREN #SpecQuantSumIfPositive
 
     | spec AndOperator spec                               #SpecNested
-    | spec AndsmoothOperator spec                         #SpecAndSmooth
     | spec OrOperator spec                                #SpecNested
     | spec ImpliesOperator spec                           #SpecNested
     | spec IffOperator spec                               #SpecNested
     | spec XorOperator spec                               #SpecNested
 
+	| SigmoidOperator spec                                #SpecSigmoid
     | HistoricallyDurationOperator ( interval )? spec     #SpecHistoricallyDuration
 	| HistoricallyDurationSeverityOperator ( interval )? spec #SpecHistoricallyDurationSeverity
+	| CompareToThresholdScaledOperator threshold spec     #specCompareToThresholdScaled
 	| AlwaysOperator ( interval )? spec                   #SpecNested
     | EventuallyOperator ( interval )? spec               #SpecNested
     | spec UntilOperator ( interval )? spec               #SpecNested

@@ -19,9 +19,7 @@ def get_all_predicate_evaluators():
         classes += inspect.getmembers(module, inspect.isclass)
     classes = list(filter(lambda p: p[0][:4] == "Pred", classes))
     predicate_class_map = {
-        cls.predicate_name: cls
-        for name, cls in classes
-        if len(name) > 4 and name[:4] == "Pred"
+        cls.predicate_name: cls for name, cls in classes if len(name) > 4 and name[:4] == "Pred"
     }
     return predicate_class_map
 
@@ -36,9 +34,7 @@ def parse_rule(full_rule_str, config, name=None):
         r"(?P<pred>((?P<pred_name>[a-z]+(?:_[a-z]+)*?)(?P<io_type>_i)"
         r"?_(?P<agents>(_a(\d)+)+)))"
     )
-    quantification_pattern = re.compile(
-        r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$"
-    )
+    quantification_pattern = re.compile(r"^(?P<quant>[AE])\sa(?P<veh_id>\d+):\s\((?P<rule>.*)\)$")
     subrule_pattern = re.compile(r"[AE]\sa\d+:\s\(.*\)")
     if name is None:
         name = full_rule_str
@@ -61,9 +57,7 @@ def parse_rule(full_rule_str, config, name=None):
         m = subrule_pattern.search(mod_rule_str)
         while m is not None:
             mod_rule_str = (
-                mod_rule_str[: m.start()]
-                + f"g{len(sub_rules)}"
-                + mod_rule_str[m.end() :]
+                mod_rule_str[: m.start()] + f"g{len(sub_rules)}" + mod_rule_str[m.end() :]
             )
             sub_rule_str = m[0]
             sub_rules.append(parse_rule(sub_rule_str, config, f"g{len(sub_rules)}"))
@@ -167,9 +161,7 @@ class PredicateNode(MonitorNode, VisitorNode):
         return value
 
     def evaluate_robustness(self, world, time_step, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
-        )
+        value = self.evaluator.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         self.latest_value = value
         self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
