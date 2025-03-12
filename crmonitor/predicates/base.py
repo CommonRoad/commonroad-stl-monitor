@@ -150,7 +150,7 @@ class BasePredicateEvaluator(abc.ABC):
 
     def evaluate_mpr_ml(
         self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]
-    ) -> Tuple[float, float]:
+    ) -> float:
         """
         Evaluate this predicate with model-predicitive robustness using pre-trained models.
         This method should usually not be called directly. Instead use `evaluate_robustness_with_cache`.

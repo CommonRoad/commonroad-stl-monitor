@@ -16,7 +16,8 @@ models_path = Path(__file__).parent.parent / "output" / "models"
 # models_path = Path("/home/finf/pretrainedMPR/interstate/2023-07-04")
 # models_path = Path("/home/finf/gp_training/commonroad-stl-monitor/output/model_bkp")
 
-metrics_output_path = Path(__file__).parent.parent / "output" / "gp_metrics.csv"
+metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_metrics.csv"
+metrics_output_path.parent.mkdir(exist_ok=True)
 
 MprCfg.build_configuration(
     config={
