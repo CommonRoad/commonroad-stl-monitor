@@ -364,9 +364,6 @@ class AstVisualizier:
     """
 
     def __init__(self, ax: Optional[Axes] = None):
-        # Record the matplotlib artists (=texts) here, so that we can map clicks on texts to their respective nodes.
-        self._artist_to_node = {}
-
         if ax is None:
             self._fig, self._ax = plt.subplots()
         else:
@@ -376,7 +373,8 @@ class AstVisualizier:
         self._ax.axis("off")
 
         self._vars = {}
-
+        # Record the matplotlib artists (=texts) here, so that we can map clicks on texts to their respective nodes.
+        self._artist_to_node = {}
         # To achieve an efficient layout networkx + graphiz is used.
         self._graph = nx.DiGraph()
 
@@ -398,7 +396,7 @@ class AstVisualizier:
             rep_node = self._vars[node.var]
             return self.build_graph(rep_node)
 
-        # We do not realy care about the node_id, so the only requirement is that it is unique for all our nodes (which the node name might not!).
+        # We do not really care about the node_id, so the only requirement is that it is unique for all our nodes (which the node name might not!).
         node_id = str(id(node))
         label = str(node)
         # By default, all nodes are inactive (greyed out).
@@ -560,7 +558,7 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
         labels = []
         lines = []
         fig_width = self._legend_fig.get_figwidth()
-        # Calculate approximate characters per inch (adjust the divisor as needed)
+        # Calculate approximate characters per inch.
         chars_per_line = int(fig_width * 10)  # Roughly 10 chars per inch
         for ax_line, node in self._lines.items():
             if not self._is_active(node):
@@ -713,6 +711,9 @@ class VisualizationController:
 
     def visualize(self, node: MonitorNode) -> None:
         self._trace_visualization_visitor.visualize(node)
+        # Disable interactivity, because the controller overrides the pick event.
+        # If interactivity for the AstVisualizer would be enabled,
+        # this would override the pick event and picking in the trace visualization would no longer work.
         self._ast_visualizier.visualize(node, interactive=False)
 
     def _on_pick(self, event) -> None:
