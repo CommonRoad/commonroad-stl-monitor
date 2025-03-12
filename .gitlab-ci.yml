@@ -13,6 +13,7 @@ stages:
   - deploy
 
 before_script: &default_before_script
+  - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
   - pip install poetry
   - poetry config virtualenvs.in-project true
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
