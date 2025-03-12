@@ -158,12 +158,12 @@ class SelectiveQuantMonitorNode(QuantMonitorNode):
 
 class AllMonitorNode(SelectiveQuantMonitorNode):
     def __str__(self) -> str:
-        return f"A {self.quantified_vehicle}:"
+        return f"A a{self.quantified_vehicle}:"
 
 
 class ExistMonitorNode(SelectiveQuantMonitorNode):
     def __str__(self) -> str:
-        return f"E {self.quantified_vehicle}:"
+        return f"E a{self.quantified_vehicle}:"
 
 
 class AndSmoothMonitorNode(BinaryMonitorNode):
@@ -209,7 +209,7 @@ class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
 
 class SumIfPositiveMonitorNode(QuantMonitorNode):
     def __str__(self) -> str:
-        return f"sum_if_positive {self.quantified_vehicle}:"
+        return f"sum_if_positive a{self.quantified_vehicle}:"
 
 
 class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):

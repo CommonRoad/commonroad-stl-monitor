@@ -88,14 +88,6 @@ class RuleEvaluatorInterface(ABC):
     def evaluate(self) -> List[float]: ...
 
     def visualize(self) -> None:
-        # visitor = MonitorToStringVisitor()
-        # print(visitor.visit(self._monitor))
-        # visitor = AstVisualizationVisitor()
-        # visitor.visualize(self._monitor)
-        # formula_visualization_visitor = FormulaVisualizationVisitor(
-        #     self._predicate_evaluator_config.scale_rob
-        # )
-        # formula_visualization_visitor.visualize(self._monitor)
         ctrl = VisualizationController()
         ctrl.visualize(self._monitor)
 

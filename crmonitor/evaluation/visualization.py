@@ -4,7 +4,7 @@ from enum import Enum
 import textwrap
 from functools import singledispatchmethod
 from itertools import groupby
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import networkx as nx
 from matplotlib.axes import Axes
@@ -20,7 +20,7 @@ from rtamt.syntax.node.binary_node import BinaryNode as RtamtBinaryNode
 from rtamt.syntax.node.ltl.variable import Variable as RtamtVariableNode
 from rtamt.syntax.node.unary_node import UnaryNode as RtamtUnaryNode
 
-from crmonitor.evaluation.visitor import MonitorToStringVisitor
+from crmonitor.evaluation.visitor import MonitorToStringVisitor, VariableCollectionVisitor
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
     MonitorVisitorInterface,
@@ -355,28 +355,6 @@ def plot_rule_visualization(
     #
     # for f in all_draw_functions:
     #     f(renderer)
-
-
-class VariableCollectionVisitor(MonitorVisitorInterface[Dict[str, MonitorNode]]):
-    def collect_variables(self, node: MonitorNode) -> Dict[str, MonitorNode]:
-        return self.visit(node, {})
-
-    @singledispatchmethod
-    def visit(self, node: MonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
-        state[node.name] = node
-        return state
-
-    @visit.register
-    def _(self, node: UnaryMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
-        self.visit(node.child, state)
-        state[node.name] = node
-        return state
-
-    @visit.register
-    def _(self, node: RuleMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
-        [self.visit(child, state) for child in node.children]
-        state[node.name] = node
-        return state
 
 
 class AstVisualizier:

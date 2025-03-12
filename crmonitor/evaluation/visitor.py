@@ -760,15 +760,15 @@ class ResetMonitorTreeVisitor(MonitorVisitorInterface[None]):
 
 class MonitorToStringVisitor(MonitorVisitorInterface[str]):
     """
-    Visitor to convert a monitor tree to a human readable string representation. The resulting string, should be very similar to the original rule.
+    Visitor to convert a monitor tree to a human readable string representation. The resulting string should be very similar to the original rule.
     """
 
     def to_string(self, node: MonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
         """
         Serialize a monitor node tree as a string.
 
-        :param node: The root node of the monitor tree that should be serialized. Can either be the canonical root node, or also some intermediate node.
-        :param vehicle_ids: Optionally provide a lookup table to resolve vehicle quantifier placeholders (a0, a1) to vehicle ids from a scenario.
+        :param node: The root node of the monitor tree that should be serialized. Can either be the canonical root node, or also intermediate node.
+        :param vehicle_ids: Optionally provide a lookup table to resolve vehicle quantifier placeholders (e.g. a0, a1) to vehicle ids from a scenario.
 
         :returns: The serialized rule.
         """
@@ -800,3 +800,30 @@ class MonitorToStringVisitor(MonitorVisitorInterface[str]):
     def _(self, node: UnaryMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
         child_label = self.visit(node.child, vehicle_ids)
         return f"{str(node)} ({child_label})"
+
+
+class VariableCollectionVisitor(MonitorVisitorInterface[Dict[str, MonitorNode]]):
+    """
+    Visitor to map node names (variables in rtamt rules) to the respective nodes.
+    This is usefull to lookup which node belongs to which variable when processing RTAMT ASTs.
+    """
+
+    def collect_variables(self, node: MonitorNode) -> Dict[str, MonitorNode]:
+        return self.visit(node, {})
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        state[node.name] = node
+        return state
+
+    @visit.register
+    def _(self, node: UnaryMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        self.visit(node.child, state)
+        state[node.name] = node
+        return state
+
+    @visit.register
+    def _(self, node: RuleMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        [self.visit(child, state) for child in node.children]
+        state[node.name] = node
+        return state
