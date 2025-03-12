@@ -3,7 +3,11 @@ import multiprocessing
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.common.util import Interval
+from commonroad.scenario.scenario import Scenario
+
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
@@ -105,6 +109,28 @@ MprCfg.build_configuration(
 )
 
 
+def _get_scenario_final_time_step(scenario: Scenario) -> int:
+    """
+    Determines the maximum time step in a scenario. This is usefull, to determine the length of a scenario.
+
+    :param scenario: The scenario to analyze.
+
+    :return: The final time step in the scenario, or 0 if no obstacles are in the scenario.
+    """
+    max_time_step = 0
+    for dynamic_obstacle in scenario.dynamic_obstacles:
+        if dynamic_obstacle.prediction is None:
+            max_time_step = max(max_time_step, dynamic_obstacle.initial_state.time_step)
+            continue
+
+        max_time_step = max(max_time_step, dynamic_obstacle.prediction.final_time_step)
+
+    if isinstance(max_time_step, Interval):
+        return int(max_time_step.end)
+    else:
+        return max_time_step
+
+
 class PredicateEvaluationWrapper:
     """
     Wrapper around the crmonitor predicate evaluators that mimicks the return of the default MPR evaluator, to ensure the learning data can be used for GP regression.
@@ -175,7 +201,9 @@ class CustomDataGenerator(DataGenerator):
         world = World.create_from_scenario(scenario)  # everything still cartesian
         data_entries = []
 
-        for time_step in self._time_step_iteration:
+        end_time = _get_scenario_final_time_step(scenario) - self._state_sampling_ts - 1
+
+        for time_step in np.linspace(0, end_time, self._time_steps_per_scenario, dtype=int):
             for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
                 data_entry = self._process_vehicles_patched(
                     vehicle_ids, time_step, world_mpr, world
@@ -211,8 +239,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(
-    workers=int(min(60, multiprocessing.cpu_count() / 2 - 2)), limit=scenario_limit
-)  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=120, limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

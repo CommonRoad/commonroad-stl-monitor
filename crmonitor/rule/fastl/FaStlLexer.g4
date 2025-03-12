@@ -13,8 +13,8 @@ FORALL
 VEHICLE
     : 'a' ;
 
-AndsmoothOperator
-    : 'andsmooth' ;
+SigmoidOperator
+    : 'sigmoid' ;
 
 HistoricallyDurationOperator
 	: 'historicallyDuration' ;

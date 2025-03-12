@@ -166,9 +166,12 @@ class ExistMonitorNode(SelectiveQuantMonitorNode):
         return f"E a{self.quantified_vehicle}:"
 
 
-class AndSmoothMonitorNode(BinaryMonitorNode):
-    def __init__(self, name: str, child_left: MonitorNode, child_right: MonitorNode) -> None:
-        super().__init__(name, child_left, child_right)
+class SigmoidMonitorNode(UnaryMonitorNode):
+    def __init__(self, name: str, child: MonitorNode) -> None:
+        super().__init__(name, child)
+
+    def __str__(self) -> str:
+        return "sigmoid"
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):

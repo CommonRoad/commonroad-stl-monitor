@@ -8,7 +8,6 @@ from crmonitor.rule.fastl.FaStlParser import FaStlParser
 from crmonitor.rule.fastl.FaStlParserVisitor import FaStlParserVisitor
 from crmonitor.rule.rule_node import (
     AllNode,
-    AndsmoothNode,
     CompareToThresholdScaledNode,
     ExistNode,
     HistoricallyDurationNode,
@@ -16,6 +15,7 @@ from crmonitor.rule.rule_node import (
     IOType,
     PredicateNode,
     RuleNode,
+    SigmoidNode,
     SumIfPositiveNode,
 )
 
@@ -114,11 +114,10 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         else:
             return children
 
-    def visitSpecAndSmooth(self, ctx: FaStlParser.SpecAndSmoothContext):
-        left_child = self.visit(ctx.spec(0))[0]
-        right_child = self.visit(ctx.spec(1))[0]
+    def visitSpecSigmoid(self, ctx: FaStlParser.SpecSigmoidContext):
+        child = self.visit(ctx.spec())[0]
         node_name = self._get_new_unique_node_name()
-        node = AndsmoothNode(node_name, left_child, right_child)
+        node = SigmoidNode(node_name, child)
         self._rewriter.replace(
             self.DEFAULT_TOKEN_REWRITER_PROGRAM,
             ctx.start.tokenIndex,

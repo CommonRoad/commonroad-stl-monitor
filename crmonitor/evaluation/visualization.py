@@ -28,6 +28,7 @@ from crmonitor.monitor.monitor_node import (
     QuantMonitorNode,
     RuleMonitorNode,
     UnaryMonitorNode,
+    SigmoidMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
