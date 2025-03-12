@@ -5,7 +5,6 @@ from pathlib import Path
 import csv
 
 import numpy as np
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
@@ -23,9 +22,9 @@ metrics_output_path = (
 metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 
 scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
-iterations = 1000
-models_path = None
-selected_predicates = ["in_front_of", "in_same_lane"]
+iterations = 10
+models_path = Path(__file__).parent.parent / "output" / "models"
+selected_predicates = ["single_lane", "in_front_of", "in_same_lane", "keeps_brake_speed_limit"]  # TODO there's an error when using "cut_in" → please check for all predicates
 rand_seed = 3478134569078
 
 MprCfg.build_configuration(
@@ -66,8 +65,7 @@ predicates = [
 ]
 random = Random(rand_seed)
 
-mpr_rob = defaultdict(list)
-mpr_predicted_rob = defaultdict(list)
+mpr_rob = defaultdict(list)  # GP predicted
 mfr_rob = defaultdict(list)
 for i in range(0, iterations):
     scenario_path = scenarios.pop(random.randint(0, len(scenarios)))
@@ -76,6 +74,8 @@ for i in range(0, iterations):
     world = World.create_from_scenario(scenario)
     mpr_world = WorldMPR.create_from_scenario(scenario)
 
+    # TODO this setup of first selecting two vehicles and then selecting an intersecting time step will often cause empty ranges.
+    #  I'd therefore first randomly select a time step, and then select two vehicles that are active at that time step.
     vehicles = list(world.vehicles)
     if len(vehicles) < 2:
         _LOGGER.warning(
@@ -85,19 +85,20 @@ for i in range(0, iterations):
     ego_vehicle, other_vehicle = random.sample(vehicles, 2)
     end_time = min(ego_vehicle.end_time, other_vehicle.end_time)
     start_time = max(ego_vehicle.start_time, other_vehicle.start_time)
+    try:
+        time_step = random.randint(start_time, end_time)
+    except ValueError as e:
+        _LOGGER.warning(
+            f"Start time {start_time} after end time {end_time}."
+        )
+        continue
 
-    time_step = random.randint(start_time, end_time)
 
     for predicate_evaluator in predicates:
         predicted_robustness = predicate_evaluator.evaluate_mpr_ml(
             world, mpr_world, time_step, [ego_vehicle.id, other_vehicle.id]
         )
-        robustness = predicate_evaluator.evaluate_mpr(
-            world, mpr_world, time_step, [ego_vehicle.id, other_vehicle.id]
-        )["robustness"]
-
-        mpr_rob[predicate_evaluator.predicate_name].append(robustness)
-        mpr_predicted_rob[predicate_evaluator.predicate_name].append(predicted_robustness)
+        mpr_rob[predicate_evaluator.predicate_name].append(predicted_robustness)
 
     for predicate_evaluator in predicates:
         robustness = predicate_evaluator.evaluate_robustness(
@@ -109,8 +110,8 @@ for i in range(0, iterations):
 
 metrics = []
 for predicate_name in selected_predicates:
-    y_true = np.array([rob > 0 for rob in mpr_rob[predicate_name]])
-    y_pred = np.array([rob > 0 for rob in mpr_predicted_rob[predicate_name]])
+    y_true = np.array([rob > 0 for rob in mfr_rob[predicate_name]])
+    y_pred = np.array([rob > 0 for rob in mpr_rob[predicate_name]])
 
     TP = np.logical_and(y_true, y_pred).sum()
     FP = np.logical_and(~y_true, y_pred).sum()
@@ -121,14 +122,11 @@ for predicate_name in selected_predicates:
     precision = (TP + eps) / (TP + FP + eps)
     recall = (TP + eps) / (TP + FN + eps)
     f1_score = 2 * precision * recall / (precision + recall + eps)
-    mpr_gp_variance = np.var(mpr_predicted_rob[predicate_name])
-    mpr_gp_span = max(mpr_predicted_rob[predicate_name]) - min(mpr_predicted_rob[predicate_name])
-
     mpr_variance = np.var(mpr_rob[predicate_name])
-    mpr_span = max(mpr_rob[predicate_name]) - min(mpr_rob[predicate_name])
+    mpr_span = np.ptp(mpr_rob[predicate_name])
 
     mfr_variance = np.var(mfr_rob[predicate_name])
-    mfr_span = max(mfr_rob[predicate_name]) - min(mfr_rob[predicate_name])
+    mfr_span = np.ptp(mfr_rob[predicate_name])
 
     metrics.append(
         {
@@ -138,8 +136,6 @@ for predicate_name in selected_predicates:
             "f1": f1_score,
             "mpr_var": mpr_variance,
             "mpr_span": mpr_span,
-            "mpr_gp_var": mpr_gp_variance,
-            "mpr_gp_span": mpr_gp_span,
             "mfr_var": mfr_variance,
             "mfr_span": mfr_span,
         }
@@ -155,8 +151,6 @@ with open(metrics_output_path, "w") as f:
             "f1",
             "mpr_var",
             "mpr_span",
-            "mpr_gp_var",
-            "mpr_gp_span",
             "mfr_var",
             "mfr_span",
         ],
