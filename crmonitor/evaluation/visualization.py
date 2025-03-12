@@ -1,28 +1,34 @@
 from collections import defaultdict
+from copy import deepcopy
 from enum import Enum
+import textwrap
 from functools import singledispatchmethod
 from itertools import groupby
 from typing import Dict, List, Optional, Tuple, Union
 
+import networkx as nx
+from matplotlib.axes import Axes
+from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
+from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
+from rtamt.syntax.node.binary_node import BinaryNode as RtamtBinaryNode
+from rtamt.syntax.node.ltl.variable import Variable as RtamtVariableNode
+from rtamt.syntax.node.unary_node import UnaryNode as RtamtUnaryNode
 
+from crmonitor.evaluation.visitor import MonitorToStringVisitor, VariableCollectionVisitor
 from crmonitor.monitor.monitor_node import (
-    AllMonitorNode,
-    CompareToThresholdScaledMonitorNode,
-    ExistMonitorNode,
-    HistoricallyDurationMonitorNode,
-    HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     MonitorVisitorInterface,
     PredicateMonitorNode,
+    QuantMonitorNode,
     RuleMonitorNode,
+    UnaryMonitorNode,
     SigmoidMonitorNode,
-    SumIfPositiveMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
@@ -352,81 +358,302 @@ def plot_rule_visualization(
     #     f(renderer)
 
 
-class FormulaVisualizationVisitor(MonitorVisitorInterface[str]):
-    def __init__(self, scale_rob: bool = True):
+class AstVisualizier:
+    """
+    Visualize the AST of a monitor rule. Visualizes the whole tree, including the rtamt nodes.
+    """
+
+    def __init__(self, ax: Optional[Axes] = None):
+        if ax is None:
+            self._fig, self._ax = plt.subplots()
+        else:
+            self._ax = ax
+            self._fig = self._ax.figure
+
+        self._ax.axis("off")
+
+        self._vars = {}
+        # Record the matplotlib artists (=texts) here, so that we can map clicks on texts to their respective nodes.
+        self._artist_to_node = {}
+        # To achieve an efficient layout networkx + graphiz is used.
+        self._graph = nx.DiGraph()
+
+    def build_graph(self, node: Union[MonitorNode, RtamtAbstractNode]) -> str:
+        """
+        Construct a networkx graph from the AST to make the layouting easier.
+
+        :param node: The node from which on the graph is created.
+
+        :returns: The node id. Can be used by the caller to establish a relationship to it's canonical child in the AST.
+        """
+        if isinstance(node, RuleMonitorNode):
+            # Skip rule nodes and only visualize their constituents aka. the rtamt rule.
+            ast = node.monitor._spec.offline_interpreter.ast
+            return self.build_graph(ast.specs[0])
+        elif isinstance(node, RtamtVariableNode):
+            # During parsing the predicates and custom operators are replaced with variables.
+            # To correctly visualizes them in the tree, they are resolved here and the variable itself is not visualized.
+            rep_node = self._vars[node.var]
+            return self.build_graph(rep_node)
+
+        # We do not really care about the node_id, so the only requirement is that it is unique for all our nodes (which the node name might not!).
+        node_id = str(id(node))
+        label = str(node)
+        # By default, all nodes are inactive (greyed out).
+        self._graph.add_node(node_id, label=label, ast_node=node, active=False)
+
+        if isinstance(node, UnaryMonitorNode):
+            child_node = self.build_graph(node.child)
+            self._graph.add_edge(node_id, child_node)
+        elif isinstance(node, RtamtBinaryNode):
+            left_child = self.build_graph(node.children[0])
+            right_child = self.build_graph(node.children[1])
+            self._graph.add_edge(node_id, left_child)
+            self._graph.add_edge(node_id, right_child)
+        elif isinstance(node, RtamtUnaryNode):
+            child_node = self.build_graph(node.children[0])
+            self._graph.add_edge(node_id, child_node)
+
+        # The node_id is important to establish the parent -> child relationship, because RuleMonitorNode and RtamtVariableNode are not recorded in the graph.
+        # Therefore, they should passthrough the id of their children, so that their parent establishes the relationship with the correct node.
+        return node_id
+
+    def visualize(self, root_node: MonitorNode, interactive: bool = True):
+        self._vars = VariableCollectionVisitor().collect_variables(root_node)
+        self.build_graph(root_node)
+        self.redraw()
+        if interactive:
+            self._fig.canvas.mpl_connect("pick_event", self.on_pick)
+
+    def redraw(self) -> None:
+        # Use graphiz to layout the tree, as this is more efficient than doing our own layouting.
+        pos = nx.nx_agraph.graphviz_layout(self._graph, prog="dot")
+
+        # Get node attributes
+        labels = nx.get_node_attributes(self._graph, "label")
+        active_states = nx.get_node_attributes(self._graph, "active")
+
+        # Clear previous drawing
+        self._ax.clear()
+
+        edge_colors = []
+        for u, v in self._graph.edges():
+            # If either connected node is active, color the edge black, otherwise gray
+            if active_states.get(u, False) or active_states.get(v, False):
+                edge_colors.append("black")
+            else:
+                edge_colors.append("gray")
+        nx.draw_networkx_edges(
+            self._graph,
+            pos,
+            ax=self._ax,
+            arrows=False,
+            arrowsize=10,
+            width=1.0,
+            alpha=1.0,
+            edge_color=edge_colors,
+        )
+
+        # Custom draw logic for the labels, to make interactivity easier.
+        # This way, we can store the artists which are associated in the event and thus achieve a direct mapping between text element and AST node.
+        # Otherwise, we would need to do our own position based matching.
+        for node, (x, y) in pos.items():
+            is_active = active_states[node]
+            label = labels[node]
+
+            # Choose colors based on active state
+            color = "black" if is_active else "gray"
+            bbox_props = dict(
+                boxstyle="round,pad=0.3",
+                facecolor="white",
+                edgecolor=color,
+                alpha=1.0,
+            )
+
+            # Draw the text with appropriate styling
+            text = self._ax.text(
+                x,
+                y,
+                label,
+                fontsize=8,
+                ha="center",
+                va="center",
+                color=color,
+                bbox=bbox_props,
+                picker=True,
+            )
+            self._artist_to_node[text] = node
+
+        self._ax.figure.canvas.draw()
+
+    def on_pick(self, event) -> Optional[Union[MonitorNode, RtamtAbstractNode]]:
+        """Handle pick events on the graph nodes (text objects)"""
+        # Check if the picked artist is in our mapping
+        if event.artist not in self._artist_to_node:
+            return None
+
+        node = self._artist_to_node[event.artist]
+        self._graph.nodes[node]["active"] = not self._graph.nodes[node]["active"]
+
+        self.redraw()
+
+        return self._graph.nodes[node]["ast_node"]
+
+
+class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
+    def __init__(
+        self,
+        scale_rob: bool = True,
+        trace_ax: Optional[Axes] = None,
+        legend_ax: Optional[Axes] = None,
+    ):
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
-        self._fig, self._ax = plt.subplots()
+        if trace_ax is None:
+            self._trace_fig, self._trace_ax = plt.subplots()
+        else:
+            self._trace_ax = trace_ax
+            trace_fig = self._trace_ax.figure
+            assert trace_fig is not None
+            self._trace_fig = trace_fig
 
-        self._lines = []
+        if legend_ax is None:
+            self._legend_fig, self._legend_ax = plt.subplots()
+        else:
+            self._legend_ax = legend_ax
+            # Make the type checker happy...
+            legend_fig = self._legend_ax.figure
+            assert legend_fig is not None
+            self._legend_fig = legend_fig
+        self._legend_ax.axis("off")
+
+        self._legend = None
+        self._map_legend_to_line = {}
+        self._active_nodes = []
+        self._lines = {}
+
+        self._to_string_visitor = MonitorToStringVisitor()
 
     def visualize(
         self,
         monitor: MonitorNode,
         plot_limits: Optional[Tuple[float, float]] = None,
     ) -> None:
-        self.visit(monitor)
-        self._ax.grid(True)
+        self.visit(monitor, {})
+        self._trace_ax.grid(True)
 
         if plot_limits is not None:
-            self._ax.set_ylim(plot_limits)
+            self._trace_ax.set_ylim(plot_limits)
         elif self._rob_scaler.scale:
             # If no explict plot limit is given, but robustness scaling is active, we have some other lower and upper bounds.
             # From those we can set the limits with a 5% margin.
-            self._ax.set_ylim(self._rob_scaler.min * 1.05, self._rob_scaler.max * 1.05)
+            self._trace_ax.set_ylim(self._rob_scaler.min * 1.05, self._rob_scaler.max * 1.05)
 
-        # self._ax.set_xlim((0.0, max(lens) - 1))
+        self._redraw()
 
-        fig_legend = plt.figure()
-        leg = fig_legend.legend(
-            *self._ax.get_legend_handles_labels(), loc="center", ncols=2, fontsize=8
+    def _redraw(
+        self, new_active_node: Optional[Union[MonitorNode, RtamtAbstractNode]] = None
+    ) -> None:
+        handles = []
+        labels = []
+        lines = []
+        fig_width = self._legend_fig.get_figwidth()
+        # Calculate approximate characters per inch.
+        chars_per_line = int(fig_width * 10)  # Roughly 10 chars per inch
+        for ax_line, node in self._lines.items():
+            if not self._is_active(node):
+                ax_line.set_visible(False)
+                continue
+            elif node == new_active_node:
+                # If a node was not previously shown, make it visible by default.
+                ax_line.set_visible(True)
+
+            color = ax_line.get_color()
+            linestyle = ax_line.get_linestyle()
+            marker = ax_line.get_marker()
+            visible = ax_line.get_visible()
+
+            # The line that is shown in the legend.
+            handle = Line2D(
+                [0],
+                [0],
+                color=color,
+                linestyle=linestyle,
+                marker=marker,
+                alpha=1.0 if visible else 0.2,
+            )
+            handles.append(handle)
+            original_label = ax_line.get_label()
+            wrapped_label = "\n".join(textwrap.wrap(original_label, width=chars_per_line))
+            labels.append(wrapped_label)
+            lines.append(ax_line)
+
+        # Clear the old legend, to make room for the new one.
+        if self._legend is not None:
+            self._legend.remove()
+
+        self._legend = self._legend_ax.legend(
+            handles, labels, loc="center", ncols=2, fontsize=8, framealpha=1, fancybox=True
         )
-        fig_legend.subplots_adjust(left=0.2, right=0.8, top=0.8, bottom=0.2)  # Centering
-        pickradius = 8
+        self._legend.set_draggable(True)
 
-        map_legend_to_ax = {}
-
-        for legend_line, ax_line in zip(leg.get_lines(), self._lines):
+        pickradius = 5
+        for legend_line, ax_line in zip(self._legend.get_lines(), lines):
             legend_line.set_picker(pickradius)
-            map_legend_to_ax[legend_line] = ax_line
+            self._map_legend_to_line[legend_line] = ax_line
 
-        def on_pick(event):
-            legend_line = event.artist
-            if legend_line not in map_legend_to_ax:
-                return
+        self._trace_fig.canvas.draw()
+        self._legend_fig.canvas.draw()
 
-            ax_line = map_legend_to_ax[legend_line]
-            visible = not ax_line.get_visible()
-            ax_line.set_visible(visible)
-            legend_line.set_alpha(1.0 if visible else 0.2)
-            self._fig.canvas.draw()
-            fig_legend.canvas.draw()
+    def on_pick(self, event) -> None:
+        legend_line = event.artist
+        if legend_line not in self._map_legend_to_line:
+            return
 
-        fig_legend.canvas.mpl_connect("pick_event", on_pick)
-        leg.set_draggable(True)
-        self._fig.tight_layout(rect=[0.0, 0.3, 1.0, 1.0])
+        ax_line = self._map_legend_to_line[legend_line]
+        visible = not ax_line.get_visible()
+        ax_line.set_visible(visible)
+        legend_line.set_alpha(1.0 if visible else 0.2)
+        self._trace_fig.canvas.draw()
+        self._legend_fig.canvas.draw()
 
     def _plot_node(self, node: MonitorNode, label: str) -> None:
-        (line,) = self._ax.plot(node.values, "x-", label=label)
-        self._lines.append(line)
+        # If the line plot is created with `visible=False` it will get no color by default.
+        # To make sure a color is assigned, the private implementation from matplotlib is used here.
+        # TODO: Is there a better way?
+        color = self._trace_ax._get_lines.get_next_color()
+        (line,) = self._trace_ax.plot(node.values, "x-", label=label, visible=False, color=color)
+        self._lines[line] = node
+
+    def _is_active(self, node: Union[MonitorNode, RtamtAbstractNode]) -> bool:
+        return node in self._active_nodes
+
+    def toggle_active(self, node: Union[MonitorNode, RtamtAbstractNode]) -> None:
+        if self._is_active(node):
+            self._active_nodes.remove(node)
+        else:
+            self._active_nodes.append(node)
+
+        self._redraw(node)
 
     @singledispatchmethod
-    def visit(self, node: MonitorNode, *args, **kwargs) -> str: ...
+    def visit(self, node: MonitorNode, vehicle_ids: Dict[int, int]) -> None: ...
 
     @visit.register
-    def _(self, node: RuleMonitorNode, *args, **kwargs) -> str:
-        label = node.monitor._rule
+    def _(self, node: RuleMonitorNode, vehicle_ids: Dict[int, int]) -> None:
+        [self.visit(child, vehicle_ids) for child in node.children]
+        label = self._to_string_visitor.to_string(node, vehicle_ids)
+        self._plot_node(node, label)
         # Custom operators are replaced by 'g{i}' identifiers in rtamt rules.
         # To enhance the visualization, those placeholders are replaced by their computed label.
         name_replacements = {}
         for child in node.children:
-            val = self.visit(child, *args, **kwargs)
-            name_replacements[child.name] = val
-            if child.name in label:
-                label = label.replace(child.name, val)
+            child_label = self._to_string_visitor.to_string(child, vehicle_ids)
+            name_replacements[child.name] = child_label
 
         values = node.monitor._spec.offline_interpreter.ast_node_values
-        for name, trace in values.items():
+        for rtamt_ast_node, trace in values.items():
+            name = rtamt_ast_node.name
             for target_name, name_replacement in name_replacements.items():
                 if target_name in name:
                     name = name.replace(target_name, name_replacement)
@@ -435,72 +662,69 @@ class FormulaVisualizationVisitor(MonitorVisitorInterface[str]):
             # in a plot, the lines will be missing from the plot. For the case, where
             # robustness scaling is enabled, we can normalize the intermediate traces, such that they are displayed in the plot.
             scaled_trace = np.clip(trace, self._rob_scaler.min, self._rob_scaler.max)
-            (line,) = self._ax.plot(scaled_trace, "x-", label=name)
-            self._lines.append(line)
-        return label
+            color = self._trace_ax._get_lines.get_next_color()
+            (line,) = self._trace_ax.plot(
+                scaled_trace, "x-", label=name, visible=False, color=color
+            )
+            self._lines[line] = rtamt_ast_node
 
     @visit.register
-    def _(self, node: AllMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        label = f"All: ({child_label})"
+    def _(self, node: UnaryMonitorNode, vehicle_ids: Dict[int, int]) -> None:
+        self.visit(node.child, vehicle_ids)
+        label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
-        return label
 
     @visit.register
-    def _(self, node: ExistMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        for monitor in node.monitors.values():
-            self.visit(monitor)
-        label = f"Exist: ({child_label})"
+    def _(self, node: QuantMonitorNode, vehicle_ids: Dict[int, int]) -> None:
+        for vehicle_id, monitor in node.monitors.items():
+            new_vehicle_ids = deepcopy(vehicle_ids)
+            new_vehicle_ids[node.quantified_vehicle] = vehicle_id
+            self.visit(monitor, new_vehicle_ids)
+        label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
-        return label
 
     @visit.register
-    def _(self, node: SigmoidMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        label = "sigmoid" + child_label
+    def _(self, node: PredicateMonitorNode, vehicle_ids: Dict[int, int]) -> None:
+        label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
-        return label
 
-    @visit.register
-    def _(self, node: HistoricallyDurationMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        if node.interval is not None:
-            label = f"historicallyDuration[{node.interval.begin}{node.interval.begin_unit}, {node.interval.end}{node.interval.end_unit}] ({child_label})"
-        else:
-            label = f"historicallyDuration ({child_label})"
-        self._plot_node(node, label)
-        return label
 
-    @visit.register
-    def _(self, node: HistoricallyDurationSeverityMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        if node.interval is not None:
-            label = f"historicallyDurationSeverity[{node.interval.begin}{node.interval.begin_unit}, {node.interval.end}{node.interval.end_unit}] ({child_label})"
-        else:
-            label = f"historicallyDurationSeverity ({child_label})"
-        self._plot_node(node, label)
-        return label
+class VisualizationController:
+    def __init__(self) -> None:
+        self._fig = plt.figure()
+        self._fig.canvas.mpl_connect("pick_event", lambda e: self._on_pick(e))
 
-    @visit.register
-    def _(self, node: SumIfPositiveMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        for monitor in node.monitors.values():
-            self.visit(monitor)
-        label = f"sum_if_positive: ({child_label})"
-        self._plot_node(node, label)
-        return label
+        gs = self._fig.add_gridspec(2, 2)
+        self._trace_ax = self._fig.add_subplot(gs[0, 0])
+        self._ast_ax = self._fig.add_subplot(gs[0, 1])
+        self._leg_ax = self._fig.add_subplot(gs[1, :])
+        self._fig.tight_layout(pad=0.0)
+        self._fig.subplots_adjust(
+            wspace=0.01, hspace=0.01, left=0.03, right=0.99, top=0.95, bottom=0.05
+        )
 
-    @visit.register
-    def _(self, node: CompareToThresholdScaledMonitorNode, *args, **kwargs) -> str:
-        child_label = self.visit(node.child, *args, **kwargs)
-        label = f"compare_to_threshold_scaled[>={node.threshold}] {child_label}"
-        self._plot_node(node, label)
-        return label
+        self._trace_visualization_visitor = TraceVisualizationVisitor(
+            trace_ax=self._trace_ax, legend_ax=self._leg_ax
+        )
+        self._ast_visualizier = AstVisualizier(ax=self._ast_ax)
+        self._to_string_visitor = MonitorToStringVisitor()
 
-    @visit.register
-    def _(self, node: PredicateMonitorNode, *args, **kwargs) -> str:
-        agents = ", ".join(f"a{vehicle_id}" for vehicle_id in node.agent_placeholders)
-        label = f"{node.evaluator.predicate_name}({agents})"
-        self._plot_node(node, label)
-        return label
+    def visualize(self, node: MonitorNode) -> None:
+        self._trace_visualization_visitor.visualize(node)
+        # Disable interactivity, because the controller overrides the pick event.
+        # If interactivity for the AstVisualizer would be enabled,
+        # this would override the pick event and picking in the trace visualization would no longer work.
+        self._ast_visualizier.visualize(node, interactive=False)
+
+    def _on_pick(self, event) -> None:
+        artist = event.artist
+        if artist is None:
+            return
+
+        # Correctly dispatch the pick event.
+        if artist.axes == self._trace_ax or artist.axes == self._leg_ax:
+            self._trace_visualization_visitor.on_pick(event)
+        elif artist.axes == self._ast_ax:
+            node = self._ast_visualizier.on_pick(event)
+            if node:
+                self._trace_visualization_visitor.toggle_active(node)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import singledispatchmethod
-from typing import Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
+from typing import Dict, Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
@@ -110,6 +110,9 @@ class RuleMonitorNode(VaradicMonitorNode):
         super().reset()
         self.monitor.reset()
 
+    def __str__(self) -> str:
+        return self.monitor._rule
+
 
 class QuantMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
@@ -153,15 +156,22 @@ class SelectiveQuantMonitorNode(QuantMonitorNode):
         self._selected = []
 
 
-class AllMonitorNode(SelectiveQuantMonitorNode): ...
+class AllMonitorNode(SelectiveQuantMonitorNode):
+    def __str__(self) -> str:
+        return f"A a{self.quantified_vehicle}:"
 
 
-class ExistMonitorNode(SelectiveQuantMonitorNode): ...
+class ExistMonitorNode(SelectiveQuantMonitorNode):
+    def __str__(self) -> str:
+        return f"E a{self.quantified_vehicle}:"
 
 
 class SigmoidMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode) -> None:
         super().__init__(name, child)
+
+    def __str__(self) -> str:
+        return "sigmoid"
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):
@@ -175,6 +185,12 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
     ) -> "HistoricallyDurationMonitorNode":
         return cls(node.name, node.child.copy(), node.interval)
 
+    def __str__(self) -> str:
+        if self.interval is not None:
+            return f"historically_duration[{self.interval.begin}{self.interval.begin_unit}, {self.interval.end}{self.interval.end_unit}]"
+        else:
+            return "historically_duration"
+
 
 class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
@@ -187,8 +203,16 @@ class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
     ) -> "HistoricallyDurationSeverityMonitorNode":
         return cls(node.name, node.child.copy(), node.interval)
 
+    def __str__(self) -> str:
+        if self.interval is not None:
+            return f"historically_duration_severity[{self.interval.begin}{self.interval.begin_unit}, {self.interval.end}{self.interval.end_unit}]"
+        else:
+            return "historically_duration_severity"
 
-class SumIfPositiveMonitorNode(QuantMonitorNode): ...
+
+class SumIfPositiveMonitorNode(QuantMonitorNode):
+    def __str__(self) -> str:
+        return f"sum_if_positive a{self.quantified_vehicle}:"
 
 
 class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
@@ -201,6 +225,9 @@ class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
         cls, node: "CompareToThresholdScaledMonitorNode"
     ) -> "CompareToThresholdScaledMonitorNode":
         return cls(node.name, node.child.copy(), node.threshold)
+
+    def __str__(self) -> str:
+        return f"compare_to_threshold_scaled[>={self.threshold}]"
 
 
 class PredicateMonitorNode(ZeroArityMonitorNode):
@@ -232,6 +259,20 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
         ):
             self.mpr_gradient = self.evaluator.last_gradient
         return value
+
+    def __str__(self) -> str:
+        placeholders = ", ".join(f"a{placeholder}" for placeholder in self.agent_placeholders)
+        return f"{self.evaluator.predicate_name.value}({placeholders})"
+
+    def format_with_vehicle_ids(self, vehicle_ids: Dict[int, int] = {}) -> str:
+        optionally_filled_placeholders = map(
+            lambda placeholder_id: str(vehicle_ids[placeholder_id])
+            if placeholder_id in vehicle_ids
+            else f"a{placeholder_id}",
+            self.agent_placeholders,
+        )
+        argument_str = ", ".join(optionally_filled_placeholders)
+        return f"{self.evaluator.predicate_name.value}({argument_str})"
 
 
 T = TypeVar("T")

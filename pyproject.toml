@@ -14,7 +14,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.12"
+python = ">=3.10, <3.12"
 commonroad-io = ">=2024.3"
 ruamel-yaml = ">=0.16.12"
 commonroad-route-planner = "^2025.1.0"
@@ -23,6 +23,8 @@ commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad-model-predictive-robu
 pyqt6 = "^6.8.1"
 commonroad-clcs = "^2025.1.1"
 commonroad-drivability-checker = "^2025.1"
+networkx = "^3.4.2"
+pygraphviz = "^1.14"
 
 [tool.poetry.group.test]
 optional = true

@@ -756,5 +756,76 @@ class ResetMonitorTreeVisitor(MonitorVisitorInterface[None]):
     @visit.register
     def _(self, node: QuantMonitorNode, *args, **kwargs) -> None:
         for monitor in node.monitors.values():
-            self.visit(monitor)
+            self.visit(monitor, *args, **kwargs)
         node.reset()
+
+
+class MonitorToStringVisitor(MonitorVisitorInterface[str]):
+    """
+    Visitor to convert a monitor tree to a human readable string representation. The resulting string should be very similar to the original rule.
+    """
+
+    def to_string(self, node: MonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+        """
+        Serialize a monitor node tree as a string.
+
+        :param node: The root node of the monitor tree that should be serialized. Can either be the canonical root node, or also intermediate node.
+        :param vehicle_ids: Optionally provide a lookup table to resolve vehicle quantifier placeholders (e.g. a0, a1) to vehicle ids from a scenario.
+
+        :returns: The serialized rule.
+        """
+        return self.visit(node, vehicle_ids)
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+        return str(node)
+
+    @visit.register
+    def _(self, node: RuleMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+        label = node.monitor._rule
+        for child in node.children:
+            # Sub-Rules are represent by their placeholders (child.name) in the rule.
+            # To mimic the original rule, we replace the placeholders with the rule of the sub-rules.
+            child_label = self.visit(child, vehicle_ids)
+            if child.name in label:
+                label = label.replace(child.name, child_label)
+        return label
+
+    @visit.register
+    def _(self, node: PredicateMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+        if vehicle_ids is not None:
+            return node.format_with_vehicle_ids(vehicle_ids)
+        else:
+            return str(node)
+
+    @visit.register
+    def _(self, node: UnaryMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+        child_label = self.visit(node.child, vehicle_ids)
+        return f"{str(node)} ({child_label})"
+
+
+class VariableCollectionVisitor(MonitorVisitorInterface[Dict[str, MonitorNode]]):
+    """
+    Visitor to map node names (variables in rtamt rules) to the respective nodes.
+    This is usefull to lookup which node belongs to which variable when processing RTAMT ASTs.
+    """
+
+    def collect_variables(self, node: MonitorNode) -> Dict[str, MonitorNode]:
+        return self.visit(node, {})
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        state[node.name] = node
+        return state
+
+    @visit.register
+    def _(self, node: UnaryMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        self.visit(node.child, state)
+        state[node.name] = node
+        return state
+
+    @visit.register
+    def _(self, node: RuleMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+        [self.visit(child, state) for child in node.children]
+        state[node.name] = node
+        return state

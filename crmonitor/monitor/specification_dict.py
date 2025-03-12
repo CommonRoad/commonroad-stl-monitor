@@ -15,6 +15,7 @@ from rtamt.semantics.stl.discrete_time.offline.ast_visitor import (
     StlDiscreteTimeOfflineAstVisitor,
 )
 from rtamt.spec.abstract_specification import AbstractOfflineOnlineSpecification
+from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 
 
 class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
@@ -39,7 +40,7 @@ class DiscreteTimeOfflineEvaluationVisitorDict(StlDiscreteTimeOfflineAstVisitor)
     """
 
     @property
-    def ast_node_values(self) -> Dict[str, List[float]]:
+    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -50,7 +51,7 @@ class DiscreteTimeOfflineEvaluationVisitorDict(StlDiscreteTimeOfflineAstVisitor)
         if not hasattr(self, "_ast_node_values"):
             self._ast_node_values = dict()
         result = super().visit(node, *args, **kwargs)
-        self._ast_node_values.update({node.name: result})
+        self._ast_node_values.update({node: result})
         return result
 
 
@@ -64,7 +65,7 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
     """
 
     @property
-    def ast_node_values(self) -> Dict[str, List[float]]:
+    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -75,7 +76,7 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
         if not hasattr(self, "_ast_node_values"):
             self._ast_node_values = dict()
         result = super().visit(node, *args, **kwargs)
-        self._ast_node_values.update({node.name: result})
+        self._ast_node_values.update({node: result})
         return result
 
 

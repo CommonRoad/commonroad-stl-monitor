@@ -102,7 +102,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             # Flatten tree to evaluate with rtamt
             return [
                 RuleNode(
-                    f"g{self._sub_rule_counter}",
+                    self._get_new_unique_node_name(),
                     children,
                     self._rewriter.getText(
                         self.DEFAULT_TOKEN_REWRITER_PROGRAM,

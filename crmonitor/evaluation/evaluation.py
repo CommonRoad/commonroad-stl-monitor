@@ -27,7 +27,9 @@ from crmonitor.evaluation.visitor import (
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
-from crmonitor.evaluation.visualization import FormulaVisualizationVisitor
+from crmonitor.evaluation.visualization import (
+    VisualizationController,
+)
 from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
@@ -35,7 +37,7 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class RuleEvaluatorInterface(ABC):
@@ -86,10 +88,8 @@ class RuleEvaluatorInterface(ABC):
     def evaluate(self) -> List[float]: ...
 
     def visualize(self) -> None:
-        formula_visualization_visitor = FormulaVisualizationVisitor(
-            self._predicate_evaluator_config.scale_rob
-        )
-        formula_visualization_visitor.visualize(self._monitor)
+        ctrl = VisualizationController()
+        ctrl.visualize(self._monitor)
 
 
 class OfflineRuleEvaluator(RuleEvaluatorInterface):
@@ -237,7 +237,7 @@ class RuleEvaluator:
             self.ego_vehicle.start_time > self._last_evaluation_time_step
             or self._last_evaluation_time_step > self.ego_vehicle.end_time
         ):
-            logger.warning("Evaluating vehicle outside its lifetime!")
+            _LOGGER.warning("Evaluating vehicle outside its lifetime!")
             return np.inf
         rule_value = self._eval_visitor.walk(
             self._monitor,
