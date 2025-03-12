@@ -58,9 +58,6 @@ if use_mpr:
                     }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
                 },
             },
-            "path": {
-                "path_models": "/home/beicekol/projects/work/uni/commonroad-model-predictive-robustness/output/models/"
-            },  # point to the models, either the ones you have trained or the pre-trained ones.
         },
         # Path root must point to a local revision of commonroad-model-predictive-robustness.
         # This configuration, assumes that the repo is in the same directory as stl-monitor repo.

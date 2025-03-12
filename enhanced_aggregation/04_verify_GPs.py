@@ -8,7 +8,8 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 models_path = Path(__file__).parent.parent / "output" / "models"
 
-metrics_output_path = Path(__file__).parent.parent / "output" / "gp_metrics.csv"
+metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_metrics.csv"
+metrics_output_path.parent.mkdir(exist_ok=True)
 
 MprCfg.build_configuration(
     config={
