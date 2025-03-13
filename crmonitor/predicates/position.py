@@ -383,7 +383,7 @@ class PredPreceding(BasePredicateEvaluator):
             world, None, time_step, vehicle_ids
         )
         if bool_val:
-            assert same_lane >= -self.eps
+            assert same_lane >= -self.config.eps
             same_lane = max(same_lane, 0.0)
 
         for dist, veh, _, __ in veh_lon_dist:
