@@ -84,11 +84,6 @@ def get_scenario_final_time_step(scenario: Scenario) -> int:
 
 
 scenarios = list(scenarios_load_path.glob("*.xml"))
-if len(scenarios) < iterations:
-    _LOGGER.warning(
-        f"Specified {iterations} iterations but only {len(scenarios)} scenarios are available. Limiting iterations to {len(scenarios)}."
-    )
-    iterations = len(scenarios) - 1
 
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=True,
@@ -103,7 +98,7 @@ random = Random(rand_seed)
 mpr_rob = defaultdict(list)  # GP predicted
 mfr_rob = defaultdict(list)
 for i in range(0, iterations + 1):
-    scenario_path = scenarios.pop(random.randint(0, len(scenarios)) - 1)
+    scenario_path = random.choice(scenarios)
 
     scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
     world = World.create_from_scenario(scenario)
