@@ -4,6 +4,8 @@ from random import Random
 from pathlib import Path
 import csv
 
+from commonroad.common.util import Interval
+from commonroad.scenario.scenario import Scenario
 import numpy as np
 from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -11,6 +13,11 @@ from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as M
 from crmonitor.common.world import World
 from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
+from crmonitor.predicate_grouping import (
+    all_general_predicates,
+    all_interstate_predicates,
+    insufficient,
+)
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
@@ -22,10 +29,10 @@ metrics_output_path = (
 metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 
 scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
-iterations = 10
+iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = ["single_lane", "in_front_of", "in_same_lane", "keeps_brake_speed_limit"]  # TODO there's an error when using "cut_in" → please check for all predicates
-rand_seed = 3478134569078
+selected_predicates = all_general_predicates + all_interstate_predicates + insufficient
+rand_seed = 3478134569079
 
 MprCfg.build_configuration(
     config={
@@ -54,7 +61,30 @@ MprCfg.build_configuration(
 )
 
 
+def get_scenario_final_time_step(scenario: Scenario) -> int:
+    """
+    Determines the maximum time step in a scenario. This is usefull, to determine the length of a scenario.
+
+    :param scenario: The scenario to analyze.
+
+    :return: The final time step in the scenario, or 0 if no obstacles are in the scenario.
+    """
+    max_time_step = 0
+    for dynamic_obstacle in scenario.dynamic_obstacles:
+        if dynamic_obstacle.prediction is None:
+            max_time_step = max(max_time_step, dynamic_obstacle.initial_state.time_step)
+            continue
+
+        max_time_step = max(max_time_step, dynamic_obstacle.prediction.final_time_step)
+
+    if isinstance(max_time_step, Interval):
+        return int(max_time_step.end)
+    else:
+        return max_time_step
+
+
 scenarios = list(scenarios_load_path.glob("*.xml"))
+
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=True,
     mpr=PredicateMprConfig(enabled=True, model_path=models_path),
@@ -67,45 +97,51 @@ random = Random(rand_seed)
 
 mpr_rob = defaultdict(list)  # GP predicted
 mfr_rob = defaultdict(list)
-for i in range(0, iterations):
-    scenario_path = scenarios.pop(random.randint(0, len(scenarios)))
+for i in range(0, iterations + 1):
+    scenario_path = random.choice(scenarios)
 
     scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
     world = World.create_from_scenario(scenario)
     mpr_world = WorldMPR.create_from_scenario(scenario)
 
-    # TODO this setup of first selecting two vehicles and then selecting an intersecting time step will often cause empty ranges.
-    #  I'd therefore first randomly select a time step, and then select two vehicles that are active at that time step.
-    vehicles = list(world.vehicles)
-    if len(vehicles) < 2:
+    # Search for a time step, where at least two vehicles are present.
+    end_time = get_scenario_final_time_step(scenario)
+    # Keep track of time steps, which were not yet considered.
+    time_steps = [i for i in range(0, end_time + 1)]
+    time_step = 0
+    vehicle_ids_at_time_step = []
+    # WorldMPR does not necessarily create a vehicle for each dynamic obstacle at it only considers vehicles which have a trajetory which covers more then one time step.
+    are_vehicles_in_both_worlds = False
+    are_enough_vehicles_at_time_step = False
+    while (not are_enough_vehicles_at_time_step or not are_vehicles_in_both_worlds) and len(
+        time_steps
+    ) > 0:
+        time_step = time_steps.pop(random.randint(0, len(time_steps) - 1))
+        vehicle_ids_at_time_step = world.vehicle_ids_for_time_step(time_step)
+
+        are_vehicles_in_both_worlds = all(
+            mpr_world.has_vehicle(vehicle_id) for vehicle_id in vehicle_ids_at_time_step
+        )
+        are_enough_vehicles_at_time_step = len(vehicle_ids_at_time_step) >= 2
+
+    if not are_enough_vehicles_at_time_step or not are_vehicles_in_both_worlds:
         _LOGGER.warning(
-            f"Cannot process scenario {scenario.scenario_id}: Only one vehicle in scenario!"
+            f"Cannot process scenario {scenario.scenario_id}: No time step with at least two active vehicles in both worlds was found!"
         )
         continue
-    ego_vehicle, other_vehicle = random.sample(vehicles, 2)
-    end_time = min(ego_vehicle.end_time, other_vehicle.end_time)
-    start_time = max(ego_vehicle.start_time, other_vehicle.start_time)
-    try:
-        time_step = random.randint(start_time, end_time)
-    except ValueError as e:
-        _LOGGER.warning(
-            f"Start time {start_time} after end time {end_time}."
-        )
-        continue
 
+    ego_vehicle_id, other_vehicle_id = random.sample(vehicle_ids_at_time_step, 2)
 
     for predicate_evaluator in predicates:
-        predicted_robustness = predicate_evaluator.evaluate_mpr_ml(
-            world, mpr_world, time_step, [ego_vehicle.id, other_vehicle.id]
+        mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
+            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
         )
-        mpr_rob[predicate_evaluator.predicate_name].append(predicted_robustness)
+        mpr_rob[predicate_evaluator.predicate_name].append(mpr_robustness)
 
-    for predicate_evaluator in predicates:
-        robustness = predicate_evaluator.evaluate_robustness(
-            world, time_step, [ego_vehicle.id, other_vehicle.id]
+        mfr_robustness = predicate_evaluator.evaluate_robustness(
+            world, time_step, [ego_vehicle_id, other_vehicle_id]
         )
-
-        mfr_rob[predicate_evaluator.predicate_name].append(robustness)
+        mfr_rob[predicate_evaluator.predicate_name].append(mfr_robustness)
 
 
 metrics = []

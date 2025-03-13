@@ -5,7 +5,11 @@ from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
-from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates, insufficient
+from crmonitor.predicate_grouping import (
+    all_general_predicates,
+    all_interstate_predicates,
+    insufficient,
+)
 
 import logging
 

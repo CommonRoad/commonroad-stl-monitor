@@ -3,7 +3,6 @@ import copy
 from dataclasses import dataclass, field
 import logging
 from pathlib import Path
-import warnings
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -329,7 +328,7 @@ class BasePredicateEvaluator(abc.ABC):
             time_step, self.predicate_name, vehicle_ids_tuple[1:]
         )
         if value is None:
-            if self._mpr_model is not None:
+            if self._mpr_model is not None and mpr_world is not None:
                 _LOGGER.debug(
                     "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, with pre-trained models.",
                     self.predicate_name,
@@ -337,7 +336,7 @@ class BasePredicateEvaluator(abc.ABC):
                     ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
                 )
                 value = self.evaluate_mpr_ml(world, mpr_world, time_step, vehicle_ids)
-            elif self.config.mpr.enabled:
+            elif self.config.mpr.enabled and mpr_world is not None:
                 _LOGGER.debug(
                     "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, without pre-trained models.",
                     self.predicate_name,
