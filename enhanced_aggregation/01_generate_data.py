@@ -27,7 +27,7 @@ output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learn
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
 scenario_limit = None
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -118,7 +118,7 @@ class CustomDataGenerator(DataGenerator):
         world_mpr: MprWorld,
         world: World,
     ) -> Tuple[dict, dict, dict]:
-        _LOGGER.debug(
+        _LOGGER.info(
             f"Processing the vehicles {vehicle_ids} in scenario {world.scenario.scenario_id} at time step {time_step}"
         )
 
@@ -177,7 +177,7 @@ data_generator = CustomDataGenerator(
     state_sampling_time_horizon=1.5,
     time_steps_per_scenario=5,
     scenario_type=ScenarioType.INTERSTATE,
-    snapshot_frequency=10,
+    snapshot_frequency=5,
 )
 
 
