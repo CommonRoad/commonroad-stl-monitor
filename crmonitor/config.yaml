@@ -99,7 +99,7 @@ traffic_rules_param:
   num_veh_slow_moving_traffic: 3
   max_slow_moving_traffic_velocity: 8.33
   num_veh_queue_of_vehicles: 3
-  max_queue_of_vehicles_velocity: 3
+  max_queue_of_vehicles_velocity: 16.67
   max_velocity_limit_free_driving: 16.67
   desired_interstate_velocity: 36.11
   min_interstate_width: 7.0

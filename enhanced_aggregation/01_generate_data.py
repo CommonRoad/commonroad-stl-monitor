@@ -189,6 +189,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(workers=120, limit=scenario_limit)  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=70, limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

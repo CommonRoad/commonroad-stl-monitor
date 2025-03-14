@@ -186,10 +186,9 @@ class PredReverses(BasePredicateEvaluator):
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        if vehicle.get_lon_state(time_step).v < -self.config.standstill_error:
-            return True
-        else:
-            return False
+        vel = vehicle.get_lon_state(time_step).v
+        val = vel < -self.config.standstill_error
+        return val
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -387,11 +386,8 @@ class PredInStandStill(BasePredicateEvaluator):
 
         return self._scale_speed(
             min(
-                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                + self.config.standstill_error,
-                self.config.standstill_error
-                - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
-                - self.config.eps,
+                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v + self.config.standstill_error,
+                self.config.standstill_error - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v - self.config.eps,  # TODO why eps only here and not above?
             )
         )
 

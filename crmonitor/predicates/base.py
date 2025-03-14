@@ -55,7 +55,7 @@ class PredicateEvaluatorConfig:
     num_veh_slow_moving_traffic: float = 3.0
     """Determines the number of vehicles, when it is considered as in slow moving traffic. Used for the predicate `PredInSlowMovingTraffic`."""
 
-    max_queue_of_vehicles_velocity: float = 3.0
+    max_queue_of_vehicles_velocity: float = 16.67
     """Determines the velocity of vehicles when they are considered in a queue of vehicles. Used for the predicates `PredInQueueOfVehicles` and `PredHasQueueVelocity`."""
 
     num_veh_queue_of_vehicles: float = 3.0
