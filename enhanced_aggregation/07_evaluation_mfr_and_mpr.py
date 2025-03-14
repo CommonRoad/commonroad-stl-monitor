@@ -31,7 +31,7 @@ metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
 iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = all_general_predicates + all_interstate_predicates + insufficient
+selected_predicates = all_general_predicates + all_interstate_predicates
 rand_seed = 3478134569079
 
 MprCfg.build_configuration(
@@ -98,6 +98,8 @@ random = Random(rand_seed)
 mpr_rob = defaultdict(list)  # GP predicted
 mfr_rob = defaultdict(list)
 for i in range(0, iterations + 1):
+    if i % 10 == 0:
+        _LOGGER.info(f"Iteration {i}/{iterations}")
     scenario_path = random.choice(scenarios)
 
     scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
