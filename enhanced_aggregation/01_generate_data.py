@@ -174,7 +174,7 @@ class CustomDataGenerator(DataGenerator):
 
 
 data_generator = CustomDataGenerator(
-    predicate_names=predicate_names,
+    predicate_names=["reverses"],
     scenarios_path=scenarios_load_path,
     dt=0.04,
     output_path=output_path,
@@ -182,7 +182,7 @@ data_generator = CustomDataGenerator(
     state_sampling_time_horizon=1.5,
     time_steps_per_scenario=5,
     scenario_type=ScenarioType.INTERSTATE,
-    snapshot_frequency=2,
+    snapshot_frequency=1,
 )
 
 
@@ -194,6 +194,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(workers=8, limit=scenario_limit)  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=8, limit=2)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)
