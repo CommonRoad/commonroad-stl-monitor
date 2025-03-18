@@ -151,21 +151,14 @@ class CurvilinearStateManager:
                 logger.debug("Vehicle out of projection domain: State will not be considered")
                 return None
         theta_cl = lane.orientation(s)
-        if state.has_value("velocity_y"):
-            speed = state.velocity * np.cos(state.orientation) + state.velocity_y * np.sin(
-                state.orientation
-            )
-        else:
-            speed = state.velocity
+        # Originally, the speed was calcuclated as the magnitude of the combined directed vector of velocity and velocity_y.
+        # However, this resulted in issues because the orientation of the vehicle was not considered relative to the lane orientation.
+        # This could result in negative velocities (=reversing) even though the vehicle was driving forward (https://gitlab.lrz.de/cps/commonroad/commonroad-stl-monitor/-/issues/59).
+        # As velocity_y is usually very small, and velocity is good enough, we can also simply use the velocity.
+        speed = state.velocity
         if hasattr(state, "acceleration"):
-            if state.has_value("acceleration_y"):
-                # todo: if state has acceleration_y, we assume that acceleration and acceleration_y
-                #  are components on the x- and y-axes  in the Cartesian coordinate system.
-                accel = state.acceleration * np.cos(
-                    state.orientation
-                ) + state.acceleration_y * np.sin(state.orientation)
-            else:
-                accel = state.acceleration
+            # Similarly to speed, this was originally calculated from acceleration and acceleration_y.
+            accel = state.acceleration
             if hasattr(state, "jerk"):
                 if hasattr(state, "jerk_dot"):
                     x_lon = StateLongitudinal(

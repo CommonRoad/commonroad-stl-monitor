@@ -52,7 +52,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
         if speed_limit is None:
             rob = math.inf
         else:
-            rob = speed_limit + self.config.eps - vehicle.states_cr[time_step].velocity
+            rob = speed_limit + self.config.eps - vehicle.get_lon_state(time_step).v
         rob = self._scale_speed(rob)
         return rob
 
@@ -386,8 +386,11 @@ class PredInStandStill(BasePredicateEvaluator):
 
         return self._scale_speed(
             min(
-                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v + self.config.standstill_error,
-                self.config.standstill_error - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v - self.config.eps,  # TODO why eps only here and not above?
+                vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
+                + self.config.standstill_error,
+                self.config.standstill_error
+                - vehicle.get_lon_state(time_step=time_step, lane=ref_path).v
+                - self.config.eps,  # TODO why eps only here and not above?
             )
         )
 

@@ -304,7 +304,7 @@ class BasePredicateEvaluator(abc.ABC):
         world.add_vehicle(orig_ego_vehicle)
 
         satisfied = self.evaluate_boolean(world, time_step, vehicle_ids)
-        probability = count_true / (count_valid + MprCfg["robustness"]["eps"])
+        probability = count_true / (count_valid + self.config.eps)
         robustness = probability if satisfied else -(1 - probability)
 
         # This is the format used by the original MPR evaluator.
