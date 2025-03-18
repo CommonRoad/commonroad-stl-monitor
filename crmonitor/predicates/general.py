@@ -494,10 +494,7 @@ class PredMakesUTurn(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
         for la in lanes:
-            if self.config.u_turn <= abs(
-                vehicle.get_lat_state(time_step, la).theta
-                - la.orientation(vehicle.get_lon_state(time_step, la).s)
-            ):
+            if self.config.u_turn <= abs(vehicle.get_lat_state(time_step, la).theta):
                 return True
         return False
 
@@ -508,15 +505,12 @@ class PredMakesUTurn(BasePredicateEvaluator):
         for la in lanes:
             robustness_values.append(
                 self._scale_angle(
-                    abs(
-                        vehicle.get_lat_state(time_step, la).theta
-                        - la.orientation(vehicle.get_lon_state(time_step, la).s)
-                    )
+                    abs(vehicle.get_lat_state(time_step, la).theta)
                     - self.config.u_turn
                     - self.config.eps,
                 )
             )
-        return max(robustness_values)
+        return max(robustness_values)  # TODO why not min?
 
 
 ##############
