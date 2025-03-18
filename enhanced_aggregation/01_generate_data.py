@@ -9,21 +9,19 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
-
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.common.world import World
-from crmonitor.predicates.predicate_factory import PredicateFactory
-
 from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
+from crmonitor.predicates.predicate_factory import PredicateFactory
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
 predicate_names = all_general_predicates + all_interstate_predicates
-scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
+scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
 
 output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
@@ -146,7 +144,7 @@ class CustomDataGenerator(DataGenerator):
         }
         return dict_entry_id, features_dict, predicates_dict
 
-    def _process_scenario(self, scenario_path: Path, result_pipe: multiprocessing.connection.Connection) -> None:
+    def _process_scenario(self, scenario_path: Path, result_queue: multiprocessing.Queue) -> None:
         try:
             scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
             world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
@@ -157,24 +155,26 @@ class CustomDataGenerator(DataGenerator):
 
             for time_step in np.linspace(0, end_time, self._time_steps_per_scenario, dtype=int):
                 for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
-                    data_entry = self._process_vehicles_patched(vehicle_ids, time_step, world_mpr, world)
-                    result_pipe.send(data_entry)
+                    data_entry = self._process_vehicles_patched(
+                        vehicle_ids, time_step, world_mpr, world
+                    )
+                    result_queue.put(data_entry)
 
                     data_entry = self._process_vehicles_patched(
                         tuple(reversed(vehicle_ids)), time_step, world_mpr, world
                     )
-                    result_pipe.send(data_entry)
+                    result_queue.put(data_entry)
 
         except Exception as exp:
             _LOGGER.debug(traceback.format_exc())
             raise RuntimeError(f"Failed to process scenario {scenario_path.stem}: {exp}") from exp
         finally:
             # Signal to the main process, that the scenario was fully processed.
-            result_pipe.send(None)
+            result_queue.put(None)
 
 
 data_generator = CustomDataGenerator(
-    predicate_names=["reverses"],
+    predicate_names=predicate_names,
     scenarios_path=scenarios_load_path,
     dt=0.04,
     output_path=output_path,
@@ -194,6 +194,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(workers=8, limit=2)  # multiprocessing.cpu_count()
+data_generator.generate_data()  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

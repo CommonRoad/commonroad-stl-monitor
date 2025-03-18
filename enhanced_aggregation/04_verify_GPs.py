@@ -1,17 +1,10 @@
+import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.predicates.predicate_factory import PredicateFactory
-
-from crmonitor.predicate_grouping import (
-    all_general_predicates,
-    all_interstate_predicates,
-    insufficient,
-)
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
@@ -58,10 +51,8 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-evaluator = ModelEvaluator(insufficient, data_loader, models_path)
+evaluator = ModelEvaluator(["in_front_of"], data_loader, models_path)
 
-# model = read_model(evaluator.predicate_names[0], models_path)
-# lengthscales = model.covar_module.base_kernel.lengthscale.detach().cpu().numpy()
 
 results = evaluator.evaluate()
 evaluator.visualize(results)

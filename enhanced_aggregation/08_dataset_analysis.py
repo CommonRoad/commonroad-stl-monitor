@@ -18,7 +18,9 @@ data_loader = DataLoader.create_from_file(learning_data_path)
 # check mean, std, and span
 for predicate in selected_predicates:
     data = data_loader.data[("predicates", predicate, "normalized_robustness")]
-    _LOGGER.info(f"Predicate {predicate}: mean={np.mean(data):.3f}, std={np.std(data):.3f}, span={np.max(data)-np.min(data):.3f}")
+    _LOGGER.info(
+        f"Predicate {predicate}: mean={np.mean(data):.3f}, std={np.std(data):.3f}, span={np.max(data) - np.min(data):.3f}"
+    )
 
 # check velocity stuff
 velocity_results = {}
@@ -43,10 +45,10 @@ for predicate in [
     "has_queue_velocity",
     "velocity_below_15",
     "velocity_below_20",
-    "has_slow_moving_velocity"
+    "has_slow_moving_velocity",
 ]:
     data = data_loader.data[("predicates", predicate, "bool")]
-    velocity_results[predicate] = sum([1 for x in data if x==True]) / len(data)
+    velocity_results[predicate] = sum([1 for x in data if x == True]) / len(data)
     # data = data_loader.data[("predicates", predicate, "robustness")]
     # velocity_results[predicate] =  np.mean([x for x in data if x > 0])
 

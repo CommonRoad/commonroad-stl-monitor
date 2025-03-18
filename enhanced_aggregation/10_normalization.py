@@ -23,4 +23,6 @@ for predicate in selected_predicates:
 
     # data_rob_nor = data_loader.data[("predicates", predicate, "normalized_robustness")]
     for i, rob_raw, rob_nor in zip(range(len(data_rob_raw)), data_rob_raw, data_rob_nor):
-        assert abs(rob_raw) <= abs(rob_nor), f"Predicate {predicate}, row {i} has raw robustness {rob_raw:.3f} and normalized robustness {rob_nor:.3f}"
+        assert abs(rob_raw) <= abs(rob_nor), (
+            f"Predicate {predicate}, row {i} has raw robustness {rob_raw:.3f} and normalized robustness {rob_nor:.3f}"
+        )

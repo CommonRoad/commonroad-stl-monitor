@@ -28,10 +28,10 @@ metrics_output_path = (
 )
 metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 
-scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
-iterations = 1000
+scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
+iterations = 5
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = all_general_predicates + all_interstate_predicates
+selected_predicates = all_general_predicates + all_interstate_predicates + insufficient
 rand_seed = 3478134569079
 
 MprCfg.build_configuration(
@@ -84,6 +84,8 @@ def get_scenario_final_time_step(scenario: Scenario) -> int:
 
 
 scenarios = list(scenarios_load_path.glob("*.xml"))
+if len(scenarios) == 0:
+    raise RuntimeError(f"No scenarios were found in {scenarios_load_path}.")
 
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=True,
@@ -97,7 +99,7 @@ random = Random(rand_seed)
 
 mpr_rob = defaultdict(list)  # GP predicted
 mfr_rob = defaultdict(list)
-for i in range(0, iterations + 1):
+for i in range(0, iterations):
     if i % 10 == 0:
         _LOGGER.info(f"Iteration {i}/{iterations}")
     scenario_path = random.choice(scenarios)
@@ -135,15 +137,16 @@ for i in range(0, iterations + 1):
     ego_vehicle_id, other_vehicle_id = random.sample(vehicle_ids_at_time_step, 2)
 
     for predicate_evaluator in predicates:
-        mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
+        mpr_robustness = predicate_evaluator.evaluate_mpr(
             world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
-        )
-        mpr_rob[predicate_evaluator.predicate_name].append(mpr_robustness)
+        )["robustness"]
 
         mfr_robustness = predicate_evaluator.evaluate_robustness(
             world, time_step, [ego_vehicle_id, other_vehicle_id]
         )
+        print(scenario.scenario_id, time_step, ego_vehicle_id, mpr_robustness, mfr_robustness)
         mfr_rob[predicate_evaluator.predicate_name].append(mfr_robustness)
+        mpr_rob[predicate_evaluator.predicate_name].append(mpr_robustness)
 
 
 metrics = []

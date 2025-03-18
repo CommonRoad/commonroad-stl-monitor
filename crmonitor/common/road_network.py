@@ -266,7 +266,9 @@ class Lane:
             new_ref_path, road_network_param.get("polyline_resampling_step")
         )
 
-        curvilinear_cosy = CurvilinearCoordinateSystem(new_ref_path, CLCSParams())  # 20, 0.1, 5.0)
+        curvilinear_cosy = CurvilinearCoordinateSystem(
+            new_ref_path, CLCSParams(), preprocess_path=False
+        )  # 20, 0.1, 5.0)
 
         return curvilinear_cosy
 
@@ -316,13 +318,15 @@ class Lane:
             default_proj_domain_limit=road_network_param.get("lateral_projection_domain_limit"),
             eps=road_network_param.get("lateral_eps"),
         )
-        curvilinear_cosy = CurvilinearCoordinateSystem(reference_path_smooth, clcs_params)
+        curvilinear_cosy = CurvilinearCoordinateSystem(
+            reference_path_smooth, clcs_params, preprocess_path=False
+        )
 
         ref_path_resample_large_step = resample_polyline(
             reference_path_smooth, road_network_param.get("large_resampling_step")
         )
         curvilinear_cosy_large_step = CurvilinearCoordinateSystem(
-            ref_path_resample_large_step, clcs_params
+            ref_path_resample_large_step, clcs_params, preprocess_path=False
         )
         return (
             curvilinear_cosy,
