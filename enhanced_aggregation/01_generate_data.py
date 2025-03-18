@@ -20,7 +20,7 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
 predicate_names = all_general_predicates + all_interstate_predicates
-scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
+scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
 
 output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
