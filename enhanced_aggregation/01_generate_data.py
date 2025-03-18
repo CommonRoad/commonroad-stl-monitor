@@ -26,7 +26,7 @@ scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenar
 
 output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = None
+scenario_limit = 5000
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
