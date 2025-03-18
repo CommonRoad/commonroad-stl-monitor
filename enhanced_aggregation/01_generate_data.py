@@ -1,5 +1,4 @@
 import logging
-import multiprocessing
 import multiprocessing.connection
 import traceback
 from pathlib import Path
@@ -25,7 +24,7 @@ scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
 
 output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 # Optional: Limit the number of scenarios that are processed e.g. for faster prototyping
-scenario_limit = None
+scenario_limit = 5000
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +152,7 @@ class CustomDataGenerator(DataGenerator):
 
             end_time = _get_scenario_final_time_step(scenario) - self._state_sampling_ts - 1
 
-            for time_step in np.linspace(0, end_time, self._time_steps_per_scenario, dtype=int):
+            for time_step in np.linspace(1, end_time, self._time_steps_per_scenario, dtype=int):
                 for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
                     data_entry = self._process_vehicles_patched(
                         vehicle_ids, time_step, world_mpr, world
@@ -182,7 +181,7 @@ data_generator = CustomDataGenerator(
     state_sampling_time_horizon=1.5,
     time_steps_per_scenario=5,
     scenario_type=ScenarioType.INTERSTATE,
-    snapshot_frequency=1,
+    snapshot_frequency=50,
 )
 
 
@@ -194,6 +193,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data()  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=70, limit=scenario_limit)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)

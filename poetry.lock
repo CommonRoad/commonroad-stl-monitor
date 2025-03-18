@@ -314,8 +314,8 @@ shap = "^0.47.0"
 [package.source]
 type = "git"
 url = "ssh://git@gitlab.lrz.de/cps/commonroad/commonroad-model-predictive-robustness.git"
-reference = "377267d9c648938e39525645ddeb83e7095133d7"
-resolved_reference = "377267d9c648938e39525645ddeb83e7095133d7"
+reference = "305b39757bb6a9e6929ac7b99baa0d73a195aee2"
+resolved_reference = "305b39757bb6a9e6929ac7b99baa0d73a195aee2"
 
 [[package]]
 name = "commonroad-route-planner"
@@ -3093,4 +3093,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.12"
-content-hash = "3969880313716993912e6328cca3f31cb84e2e46e063bf41ca529c9902defd79"
+content-hash = "cf603581611d326bd9090a4a8f9898a206175996f57388310679c63e052067ad"

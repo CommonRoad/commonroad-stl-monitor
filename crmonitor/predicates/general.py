@@ -510,7 +510,7 @@ class PredMakesUTurn(BasePredicateEvaluator):
                     - self.config.eps,
                 )
             )
-        return max(robustness_values)
+        return max(robustness_values)  # TODO why not min?
 
 
 ##############
