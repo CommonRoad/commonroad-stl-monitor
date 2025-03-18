@@ -1,5 +1,5 @@
 import logging
-import multiprocessing.connection
+import multiprocessing
 import traceback
 from pathlib import Path
 from typing import List, Tuple
@@ -8,14 +8,16 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
+
 from commonroad_mpr.common import World as MprWorld
 from commonroad_mpr.learning import DataGenerator
 from commonroad_mpr.learning.feature_variable import FeatureExtrator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.common.world import World
-from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
 from crmonitor.predicates.predicate_factory import PredicateFactory
+
+from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
