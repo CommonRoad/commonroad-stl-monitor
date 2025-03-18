@@ -1,5 +1,5 @@
 import logging
-import multiprocessing.connection
+import multiprocessing
 import traceback
 from pathlib import Path
 from typing import List, Tuple
@@ -145,7 +145,7 @@ class CustomDataGenerator(DataGenerator):
         }
         return dict_entry_id, features_dict, predicates_dict
 
-    def _process_scenario(self, scenario_path: Path, result_pipe: multiprocessing.connection.Connection) -> None:
+    def _process_scenario(self, scenario_path: Path, result_queue: multiprocessing.Queue) -> None:
         try:
             scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
             world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
@@ -157,23 +157,23 @@ class CustomDataGenerator(DataGenerator):
             for time_step in np.linspace(1, end_time, self._time_steps_per_scenario, dtype=int):
                 for vehicle_ids in self._vehicle_ids_iter(scenario, time_step):
                     data_entry = self._process_vehicles_patched(vehicle_ids, time_step, world_mpr, world)
-                    result_pipe.send(data_entry)
+                    result_queue.put(data_entry)
 
                     data_entry = self._process_vehicles_patched(
                         tuple(reversed(vehicle_ids)), time_step, world_mpr, world
                     )
-                    result_pipe.send(data_entry)
+                    result_queue.put(data_entry)
 
         except Exception as exp:
             _LOGGER.debug(traceback.format_exc())
             raise RuntimeError(f"Failed to process scenario {scenario_path.stem}: {exp}") from exp
         finally:
             # Signal to the main process, that the scenario was fully processed.
-            result_pipe.send(None)
+            result_queue.put(None)
 
 
 data_generator = CustomDataGenerator(
-    predicate_names=all_general_predicates+all_interstate_predicates,
+    predicate_names=predicate_names,
     scenarios_path=scenarios_load_path,
     dt=0.04,
     output_path=output_path,
