@@ -3,22 +3,48 @@ from pathlib import Path
 
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
 _LOGGER = logging.getLogger(__name__)
-_LOG
 
-input_scenarios = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
+input_scenarios = Path(__file__).parent.parent.parent / "highD-scenarios"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 
-results = []
 
 scale_rob = True
 model_path = Path("/path/to/mpr/models")
 
-for scenario_path in sorted(input_scenarios.glob("*.xml"))[1:1]:
+MprCfg.build_configuration(
+    config={
+        "common": {
+            "scenario": "interstate",
+            "lane": {
+                # Increased the default parameters to work around projection limit issues in MPR
+                "lateral_projection_domain_limit": 500,
+                "extend_length": 500,
+                "large_resampling_step": 3.5,
+                "num_chankins_corner_cutting": 1,
+            },
+            "road_network": {
+                "interstate": {
+                    "use_phantom_lane": False
+                }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
+            },
+        },
+    },
+    # Path root must point to a local revision of commonroad-model-predictive-robustness.
+    # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
+    # If this is not the case for your setup, adjust the path here accordingly.
+    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
+    folder_config="config_files",
+    default_profile="default",
+)
+
+results = []
+for scenario_path in sorted(input_scenarios.glob("*.xml"))[0:1]:
     for rule in (
         "R_G1",
         "R_G2",
@@ -58,10 +84,10 @@ for scenario_path in sorted(input_scenarios.glob("*.xml"))[1:1]:
 
             results.append(
                 {
-                    "Scenario": scenario.scenario_id,
-                    "Rule": rule,
-                    "MPR": use_mpr,
-                    "Robustness": robustness,
+                    "scenario": scenario.scenario_id,
+                    "rule": rule,
+                    "mpr": use_mpr,
+                    "robustness": robustness,
                 }
             )
             # except Exception as e:

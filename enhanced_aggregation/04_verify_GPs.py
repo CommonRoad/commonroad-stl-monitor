@@ -51,7 +51,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-evaluator = ModelEvaluator(["in_front_of", "in_same_lane"], data_loader, models_path)
+evaluator = ModelEvaluator(["in_same_lane"], data_loader, models_path)
 
 
 results = evaluator.evaluate()
