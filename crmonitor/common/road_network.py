@@ -124,6 +124,12 @@ class Lane:
         assert isinstance(other, Lane)
         return tuple(sorted(self.contained_lanelets)) < tuple(sorted(other.contained_lanelets))
 
+    def __eq__(self, other):
+        return self.lane_id == other.lane_id
+
+    def __hash__(self) -> int:
+        return hash(self.lane_id)
+
     @property
     def lanelet(self) -> Lanelet:
         return self._lanelet
