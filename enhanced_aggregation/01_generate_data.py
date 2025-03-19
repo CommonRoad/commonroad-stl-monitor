@@ -180,7 +180,7 @@ data_generator = CustomDataGenerator(
     state_sampling_time_horizon=1.5,
     time_steps_per_scenario=5,
     scenario_type=ScenarioType.INTERSTATE,
-    snapshot_frequency=50,
+    snapshot_frequency=10,
 )
 
 
