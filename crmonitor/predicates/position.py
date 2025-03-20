@@ -628,7 +628,19 @@ class PredInRightmostLane(BasePredicateEvaluator):
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
-            if lanelet.adj_right_same_direction is None:
+            if (
+                LaneletType.SHOULDER not in lanelet.lanelet_type # Shoulder is not considered rightmost lane
+                and (
+                    lanelet.adj_right is None
+                    or lanelet.adj_right_same_direction is False
+                    or (
+                        LaneletType.SHOULDER
+                        in world.road_network.lanelet_network.find_lanelet_by_id(
+                            lanelet.adj_right
+                        ).lanelet_type
+                    )
+                )
+            ):
                 return True
         return False
 
@@ -637,7 +649,17 @@ class PredInRightmostLane(BasePredicateEvaluator):
         rightmost_lanelet_ids = [
             l.lanelet_id
             for l in world.road_network.lanelet_network.lanelets
-            if l.adj_right_same_direction is None
+            if LaneletType.SHOULDER not in l.lanelet_type  # Shoulder is not considered rightmost lane
+            and (
+                l.adj_right is None
+                or l.adj_right_same_direction is False
+                or (
+                    LaneletType.SHOULDER
+                    in world.road_network.lanelet_network.find_lanelet_by_id(
+                        l.adj_right
+                    ).lanelet_type
+                )
+            )
         ]
         dis_to_lane = distance_to_lanes(vehicle, rightmost_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)

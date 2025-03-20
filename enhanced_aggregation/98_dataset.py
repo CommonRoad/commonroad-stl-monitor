@@ -16,9 +16,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-learning_data_path = (
-    Path(__file__).parent.parent / "output" / "learning_data" / "learning_data_20250314.csv"
-)
+learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
 selected_predicates = all_general_predicates + all_interstate_predicates
 data_loader = DataLoader.create_from_file(learning_data_path)
