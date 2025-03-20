@@ -184,15 +184,15 @@ traffic_rules_param:
   max_slow_moving_traffic_velocity: 8.33
   num_veh_queue_of_vehicles: 3
   max_queue_of_vehicles_velocity: 16.67
-  max_velocity_limit_free_driving: 16.67
-  desired_interstate_velocity: 36.11
+  max_velocity_limit_free_driving: 16.67  # not defined in Maierhofer paper
+  desired_interstate_velocity: 36.11  # slightly different from Maierhofer paper
   min_interstate_width: 7.0
-  close_to_lane_border: 0.2
-  close_to_other_vehicle: 0.5
+  close_to_lane_border: 0.2  # Maierhofer paper: 0.1
+  close_to_other_vehicle: 0.5  # Maierhofer paper: 0.75
   slightly_higher_speed_difference: 5.55
   u_turn: 1.57
   country: DEU
-  above_centerline_th: 0.1
+  above_centerline_th: 0.1  # not defined in Maierhofer paper
   max_interstate_speed_truck: 22.22
 
   #parameters from intersection paper
