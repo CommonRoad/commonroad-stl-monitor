@@ -72,8 +72,8 @@ class PredicateEvaluatorConfig:
 
     slightly_higher_speed_difference: float = 5.55
 
-    close_to_other_vehicle: float = 0.5
-    close_to_lane_border: float = 0.2
+    close_to_other_vehicle: float = 0.75
+    close_to_lane_border: float = 0.1
 
     d_sl: float = 1.0
     d_br: float = 15.0
