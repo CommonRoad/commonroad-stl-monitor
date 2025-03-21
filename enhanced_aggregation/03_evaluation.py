@@ -54,7 +54,7 @@ if use_mpr:
                 },
                 "road_network": {
                     "interstate": {
-                        "use_phantom_lane": False
+                        "use_phantom_lane": True
                     }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
                 },
             },

@@ -29,7 +29,7 @@ MprCfg.build_configuration(
             },
             "road_network": {
                 "interstate": {
-                    "use_phantom_lane": False
+                    "use_phantom_lane": True
                 }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
             },
         },
@@ -51,7 +51,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-evaluator = ModelEvaluator(["in_same_lane"], data_loader, models_path)
+evaluator = ModelEvaluator(["makes_u_turn"], data_loader, models_path)
 
 
 results = evaluator.evaluate()

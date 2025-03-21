@@ -629,7 +629,8 @@ class PredInRightmostLane(BasePredicateEvaluator):
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
-                LaneletType.SHOULDER not in lanelet.lanelet_type # Shoulder is not considered rightmost lane
+                LaneletType.SHOULDER
+                not in lanelet.lanelet_type  # Shoulder is not considered rightmost lane
                 and (
                     lanelet.adj_right is None
                     or lanelet.adj_right_same_direction is False
@@ -649,7 +650,8 @@ class PredInRightmostLane(BasePredicateEvaluator):
         rightmost_lanelet_ids = [
             l.lanelet_id
             for l in world.road_network.lanelet_network.lanelets
-            if LaneletType.SHOULDER not in l.lanelet_type  # Shoulder is not considered rightmost lane
+            if LaneletType.SHOULDER
+            not in l.lanelet_type  # Shoulder is not considered rightmost lane
             and (
                 l.adj_right is None
                 or l.adj_right_same_direction is False
@@ -857,7 +859,9 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
         ]
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         veh_dir_l = vehicle_directly_left(time_step, vehicle, other_vehicles)
-        if veh_dir_l is not None:
+        if (
+            veh_dir_l is not None
+        ):  # TODO if there is a vehicle directly left, the distance to the lane boundary is not even considered. → doesn't match Maierhofer paper.
             share_lane = vehicle.get_lane(time_step)
             return self._scale_lat_dist(
                 self.config.close_to_other_vehicle
@@ -872,7 +876,9 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
                 s_ego = vehicle.get_lon_state(time_step, lane).s
                 comparison_list.append(
                     self._scale_lat_dist(
-                        self.config.close_to_lane_border - 0.5 * lane.width(s_ego) + left_position
+                        self.config.close_to_lane_border
+                        - 0.5 * lane.width(s_ego)
+                        + left_position  # TODO if left_position → \infty, the robustness becomes \infty → doesn't make sense and doesn't match Maierhofer paper.I'd suggest the abs(...) approach from #61
                     )
                 )
             return min(comparison_list)

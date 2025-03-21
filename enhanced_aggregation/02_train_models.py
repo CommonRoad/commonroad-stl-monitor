@@ -33,7 +33,7 @@ MprCfg.build_configuration(
             },
             "road_network": {
                 "interstate": {
-                    "use_phantom_lane": False
+                    "use_phantom_lane": True
                 }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
             },
         },
@@ -55,7 +55,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-trainer = ModelTrainer(data_loader, insufficient, ScenarioType.INTERSTATE, training_iter=200)
+trainer = ModelTrainer(data_loader, ["precedes"], ScenarioType.INTERSTATE, training_iter=100)
 
 models = trainer.train()
 

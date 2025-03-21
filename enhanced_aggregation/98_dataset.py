@@ -34,10 +34,10 @@ for predicate in selected_predicates:
     count_true = sum([1 for x in data if x > 0])
     count_false = sum([1 for x in data if x < 0])
     count_zero = sum([1 for x in data if x == 0])
-    math.isclose(count_true, orig_count_true, rel_tol=0.02, abs_tol=2) or _LOGGER.warning(
+    math.isclose(count_true, orig_count_true, rel_tol=0.02, abs_tol=3) or _LOGGER.warning(
         f"Predicate {predicate} has different count_true: {count_true} vs {orig_count_true}"
     )
-    math.isclose(count_false, orig_count_false, rel_tol=0.02, abs_tol=2) or _LOGGER.warning(
+    math.isclose(count_false, orig_count_false, rel_tol=0.02, abs_tol=3) or _LOGGER.warning(
         f"Predicate {predicate} has different count_false: {count_false} vs {orig_count_false}"
     )
     analysis[predicate] = {
@@ -55,15 +55,18 @@ for predicate in selected_predicates:
         "rob_neg_span": np.ptp([x for x in data if x < 0]) if count_false > 0 else 0,
         "rob_all_span": np.max(data) - np.min(data),
     }
+    # balance
     abs(analysis[predicate]["balance"]) < 0.95 or _LOGGER.info(
         f"Unbalanced predicate {predicate}: {analysis[predicate]['balance']:.3f}"
     )
-    analysis[predicate]["rob_all_span"] > 0.3 or _LOGGER.info(
-        f"Small span for predicate {predicate}: {analysis[predicate]['rob_all_span']:.3f}"
-    )
-    analysis[predicate]["rob_all_std"] > 0.1 or _LOGGER.info(
-        f"Small std for predicate {predicate}: {analysis[predicate]['rob_all_std']:.3f}"
-    )
+    # span
+    # analysis[predicate]["rob_all_span"] > 0.3 or _LOGGER.info(
+    #     f"Small span for predicate {predicate}: {analysis[predicate]['rob_all_span']:.3f}"
+    # )
+    # std
+    # analysis[predicate]["rob_all_std"] > 0.1 or _LOGGER.info(
+    #     f"Small std for predicate {predicate}: {analysis[predicate]['rob_all_std']:.3f}"
+    # )
     analysis[predicate]["count_zero"] < (
         analysis[predicate]["count_true"] + analysis[predicate]["count_false"]
     ) * 0.01 or _LOGGER.info(
