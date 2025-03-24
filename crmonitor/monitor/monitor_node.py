@@ -175,7 +175,7 @@ class SigmoidMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
+    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval] = None) -> None:
         super().__init__(name, child)
         self.interval = interval
 
@@ -193,7 +193,7 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval]) -> None:
+    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval] = None) -> None:
         super().__init__(name, child)
         self.interval = interval
 
@@ -273,6 +273,11 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
         )
         argument_str = ", ".join(optionally_filled_placeholders)
         return f"{self.evaluator.predicate_name.value}({argument_str})"
+
+
+class ConstantTraceMonitorNode(ZeroArityMonitorNode):
+    def __init__(self, trace: List[float]) -> None:
+        self.trace = trace
 
 
 T = TypeVar("T")

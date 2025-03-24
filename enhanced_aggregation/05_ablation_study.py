@@ -9,6 +9,7 @@ from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
 _LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 input_scenarios = Path(__file__).parent.parent.parent / "highD-scenarios"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
@@ -44,17 +45,17 @@ MprCfg.build_configuration(
 )
 
 results = []
-for scenario_path in sorted(input_scenarios.glob("*.xml"))[0:1]:
+for scenario_path in list(input_scenarios.glob("*.xml"))[0:1]:
     for rule in (
         "R_G1",
-        "R_G2",
-        "R_G3",
-        "R_G4",
-        "R_I1",
-        "R_I2",
-        "R_I3",
-        "R_I4",
-        "R_I5",
+        # "R_G2",
+        # "R_G3",
+        # "R_G4",
+        # "R_I1",
+        # "R_I2",
+        # "R_I3",
+        # "R_I4",
+        # "R_I5",
     ):
         for use_mpr in (True, False):
             scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
@@ -73,6 +74,9 @@ for scenario_path in sorted(input_scenarios.glob("*.xml"))[0:1]:
             # Create a rule evaluator
             # Provide the vehicle to evaluate traffic rules for as ego vehicle
             ego_vehicle = next(iter(world.vehicles))
+            _LOGGER.info(
+                f"Evaluating rule {rule} {'with mpr' if use_mpr else 'without mpr'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from {ego_vehicle.start_time} to {ego_vehicle.end_time}"
+            )
             rule_evaluator = OfflineRuleEvaluator.create_for_rule(
                 world,
                 ego_vehicle.id,
@@ -84,10 +88,13 @@ for scenario_path in sorted(input_scenarios.glob("*.xml"))[0:1]:
 
             results.append(
                 {
-                    "scenario": scenario.scenario_id,
+                    "scenario_id": scenario.scenario_id,
                     "rule": rule,
                     "mpr": use_mpr,
-                    "robustness": robustness,
+                    "vehicle_id": ego_vehicle.id,
+                    "start_time_step": ego_vehicle.start_time,
+                    "end_time_step": ego_vehicle.end_time,
+                    "robustness": ", ".join(map(str, robustness)),
                 }
             )
             # except Exception as e:

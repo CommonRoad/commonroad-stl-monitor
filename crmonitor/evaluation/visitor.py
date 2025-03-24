@@ -4,7 +4,7 @@ from abc import ABC
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
@@ -15,19 +15,20 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
+    BinaryMonitorNode,
     CompareToThresholdScaledMonitorNode,
+    ConstantTraceMonitorNode,
     ExistMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
     MonitorVisitorInterface,
-    SigmoidMonitorNode,
-    UnaryMonitorNode,
     PredicateMonitorNode,
     QuantMonitorNode,
     RuleMonitorNode,
+    SigmoidMonitorNode,
     SumIfPositiveMonitorNode,
-    BinaryMonitorNode,
+    UnaryMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
 from crmonitor.predicates.base import PredicateEvaluatorConfig
@@ -125,7 +126,8 @@ class OfflineEvaluationMonitorTreeVisitorContext:
 
     world: World
     mpr_world: Optional[MprWorld]
-    max_time_step: int
+    start_time_step: int
+    final_time_step: int
     vehicles: Dict[int, Tuple[int, CommonRoadInterval]]
     """
     Optionally provide one other vehicle that should be considered for the evaluation of binary predicates. This field is populated during the evaluation by the quantifiers.
@@ -143,7 +145,7 @@ class OfflineEvaluationMonitorTreeVisitorContext:
         new_vehicles = self.vehicles.copy()
         new_vehicles[capture_id] = other_vehicle
         return OfflineEvaluationMonitorTreeVisitorContext(
-            self.world, self.mpr_world, self.max_time_step, new_vehicles
+            self.world, self.mpr_world, self.start_time_step, self.final_time_step, new_vehicles
         )
 
     @property
@@ -168,8 +170,11 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         ego_vehicle: Vehicle,
         mpr_world: Optional[MprWorld] = None,
     ):
-        vehicles = {0: (ego_vehicle.id, CommonRoadInterval(0, max_time_step))}
-        ctx = OfflineEvaluationMonitorTreeVisitorContext(world, mpr_world, max_time_step, vehicles)
+        start_time_step = ego_vehicle.start_time
+        vehicles = {0: (ego_vehicle.id, CommonRoadInterval(start_time_step, max_time_step))}
+        ctx = OfflineEvaluationMonitorTreeVisitorContext(
+            world, mpr_world, start_time_step, max_time_step, vehicles
+        )
         return self.visit(node, ctx)
 
     @singledispatchmethod
@@ -274,14 +279,14 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     def visit_historically_duration_node(
         self, node: HistoricallyDurationMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
-        samples = self.visit(node, ctx)
+        samples = self.visit(node.child, ctx)
         if node.interval is not None:
             interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
             begin = int(interval.start)
-            end = min(ctx.max_time_step, int(interval.end))
+            end = min(ctx.final_time_step, int(interval.end))
         else:
             begin = 0
-            end = ctx.max_time_step
+            end = ctx.final_time_step
 
         # Extend the samples, so that we can iterate with a static window size
         # and to make sure that the returned trace covers the interval [0, max_time_step].
@@ -312,10 +317,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         if node.interval is not None:
             interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
             begin = int(interval.start)
-            end = min(ctx.max_time_step, int(interval.end))
+            end = min(ctx.final_time_step, int(interval.end))
         else:
             begin = 0
-            end = ctx.max_time_step
+            end = ctx.final_time_step
 
         # Extend the samples, so that we can iterate with a static window size
         # and to make sure that the returned trace covers the interval [0, max_time_step].
@@ -373,7 +378,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     ) -> List[float]:
         vehicle_ids = []
         start_time = 0
-        end_time = ctx.max_time_step
+        end_time = ctx.final_time_step
         for agent_placeholder in node.agent_placeholders:
             vehicle_id, vehicle_interval = ctx.vehicles[agent_placeholder]
             vehicle_ids.append(vehicle_id)
@@ -381,7 +386,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             end_time = min(vehicle_interval.end, end_time)
 
         samples = []
-        for time_step in range(0, ctx.max_time_step):
+        for time_step in range(ctx.start_time_step, ctx.final_time_step):
             # Only evaluate the predicate if the other vehicle is available in this time frame.
             if start_time > time_step or end_time < time_step:
                 samples.append(float("nan"))
@@ -393,6 +398,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
 
         node.values = samples
         return samples
+
+    @visit.register
+    def visit_constant_trace_node(
+        self, node: ConstantTraceMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
+    ) -> List[float]:
+        return node.trace
 
     def _visit_quant_node(
         self, node: QuantMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
@@ -407,8 +418,8 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         # This is necessary to define the active time intervals for each vehicle in the scenario.
         # Otherwise we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
         vehicle_start_times = {}
-        vehicle_end_times = defaultdict(lambda: ctx.max_time_step)
-        for time_step in range(0, ctx.max_time_step):
+        vehicle_end_times = defaultdict(lambda: ctx.final_time_step)
+        for time_step in range(ctx.start_time_step, ctx.final_time_step):
             all_ids = set(ctx.world.vehicle_ids_for_time_step(time_step))
 
             # Identify vehicles entering the scene at this timestep.
@@ -427,13 +438,13 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             # Record the last timestep vehicles were present before disappearing.
             # This analysis happens in retrospective, because we only know that a vehicle left if it left in the previous time step.
             for left_vehicle_id in left_vehicle_ids:
-                vehicle_start_times[left_vehicle_id] = time_step - 1
+                vehicle_end_times[left_vehicle_id] = time_step - 1
 
         # Iterate over all vehicles to evaluate the quantified sub-monitors.
         # Skip vehicles already included in the current context (to avoid duplication).
         values = []
         ret_selected_ids = []
-        for vehicle_id in ctx.world.vehicle_ids():
+        for vehicle_id in vehicle_start_times.keys():
             if vehicle_id in ctx.vehicle_ids:
                 continue
 
