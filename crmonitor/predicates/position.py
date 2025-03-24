@@ -996,13 +996,12 @@ class PredCloseToVehicleLeft(BasePredicateEvaluator):
             )
         )
         lon_dist = self._scale_lon_dist(
-            (ego_vehicle.shape.length / 2)
+            ((ego_vehicle.shape.length + other_vehicle.shape.length) / 2)
             - abs(
                 other_vehicle.get_lon_state(time_step, share_lane).s
                 - ego_vehicle.get_lon_state(time_step, share_lane).s
             )
         )
-        print(lon_dist, lat_dist)
         return min(lat_dist, lon_dist)
 
 
@@ -1022,7 +1021,7 @@ class PredCloseToVehicleRight(BasePredicateEvaluator):
             )
         )
         lon_dist = self._scale_lon_dist(
-            (ego_vehicle.shape.length / 2)
+            ((ego_vehicle.shape.length + other_vehicle.shape.length) / 2)
             - abs(
                 other_vehicle.get_lon_state(time_step, share_lane).s
                 - ego_vehicle.get_lon_state(time_step, share_lane).s
