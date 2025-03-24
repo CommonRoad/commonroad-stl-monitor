@@ -867,21 +867,19 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
 
         lane_bound_dist = np.inf
         for lane in lanes:
-            dists_to_left_bounds = map(
-                abs, distance_to_left_bounds_clcs(ego_vehicle, lane, time_step)
-            )
+            dists_to_left_bounds = map(abs, distance_to_left_bounds_clcs(vehicle, lane, time_step))
             lane_bound_dist = min(min(dists_to_left_bounds), lane_bound_dist)
         lane_bound_dist = self.config.close_to_lane_border - lane_bound_dist
 
         veh_dir_l = vehicle_directly_left(time_step, vehicle, other_vehicles)
-        veh_dir_l_dist = np.inf
+        veh_dir_l_dist = -np.inf
         if veh_dir_l is not None:
             share_lane = vehicle.get_lane(time_step)
             veh_dir_l_dist = self.config.close_to_other_vehicle - abs(
                 veh_dir_l.right_d(time_step, share_lane) + vehicle.left_d(time_step, share_lane)
             )
 
-        return self._scale_lat_dist(min(veh_dir_l_dist, lane_bound_dist))
+        return self._scale_lat_dist(max(veh_dir_l_dist, lane_bound_dist))
 
 
 class PredDrivesRightmost(BasePredicateEvaluator):
@@ -931,20 +929,20 @@ class PredDrivesRightmost(BasePredicateEvaluator):
         lane_bound_dist = np.inf
         for lane in lanes:
             dists_to_right_bounds = map(
-                abs, distance_to_right_bounds_clcs(ego_vehicle, lane, time_step)
+                abs, distance_to_right_bounds_clcs(vehicle, lane, time_step)
             )
 
             lane_bound_dist = min(min(dists_to_right_bounds), lane_bound_dist)
         lane_bound_dist = self.config.close_to_lane_border - lane_bound_dist
 
         veh_dir_r = vehicle_directly_right(time_step, vehicle, other_vehicles)
-        veh_dir_r_dist = np.inf
+        veh_dir_r_dist = -np.inf
         if veh_dir_r is not None:
             share_lane = vehicle.get_lane(time_step)
             veh_dir_r_dist = self.config.close_to_other_vehicle - abs(
                 veh_dir_r.left_d(time_step, share_lane) - vehicle.right_d(time_step, share_lane)
             )
-        return self._scale_lat_dist(min(veh_dir_r_dist, lane_bound_dist))
+        return self._scale_lat_dist(max(veh_dir_r_dist, lane_bound_dist))
 
 
 class PredCloseToLeftBound(BasePredicateEvaluator):
@@ -990,13 +988,22 @@ class PredCloseToVehicleLeft(BasePredicateEvaluator):
         ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicle = world.vehicle_by_id(vehicle_ids[1])
         share_lane = ego_vehicle.get_lane(time_step)
-        return self._scale_lat_dist(
+        lat_dist = self._scale_lat_dist(
             self.config.close_to_other_vehicle
             - abs(
                 other_vehicle.right_d(time_step, share_lane)
                 - ego_vehicle.left_d(time_step, share_lane)
             )
         )
+        lon_dist = self._scale_lon_dist(
+            (ego_vehicle.shape.length / 2)
+            - abs(
+                other_vehicle.get_lon_state(time_step, share_lane).s
+                - ego_vehicle.get_lon_state(time_step, share_lane).s
+            )
+        )
+        print(lon_dist, lat_dist)
+        return min(lat_dist, lon_dist)
 
 
 class PredCloseToVehicleRight(BasePredicateEvaluator):
@@ -1007,13 +1014,21 @@ class PredCloseToVehicleRight(BasePredicateEvaluator):
         ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicle = world.vehicle_by_id(vehicle_ids[1])
         share_lane = ego_vehicle.get_lane(time_step)
-        return self._scale_lat_dist(
+        lat_dist = self._scale_lat_dist(
             self.config.close_to_other_vehicle
             - abs(
                 other_vehicle.left_d(time_step, share_lane)
                 - ego_vehicle.right_d(time_step, share_lane)
             )
         )
+        lon_dist = self._scale_lon_dist(
+            (ego_vehicle.shape.length / 2)
+            - abs(
+                other_vehicle.get_lon_state(time_step, share_lane).s
+                - ego_vehicle.get_lon_state(time_step, share_lane).s
+            )
+        )
+        return min(lat_dist, lon_dist)
 
 
 ##################
