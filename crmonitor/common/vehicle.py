@@ -245,7 +245,7 @@ class PredicateCache:
     def get_robustness(
         self, time_step: int, predicate_name: str, other_ids: Union[Tuple[int], int]
     ) -> Optional[float]:
-        return self.cache[time_step][predicate_name].get(other_ids)
+        return self.cache.get(time_step, {}).get(predicate_name, {}).get(other_ids)
 
     def set_robustness(
         self,
@@ -254,6 +254,12 @@ class PredicateCache:
         other_ids: Union[Tuple[int], int],
         robustness: float,
     ):
+        if time_step not in self.cache:
+            self.cache[time_step] = {}
+
+        if predicate_name not in self.cache[time_step]:
+            self.cache[time_step][predicate_name] = {}
+
         self.cache[time_step][predicate_name][other_ids] = robustness
 
     def __contains__(self, item):
