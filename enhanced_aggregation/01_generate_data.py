@@ -143,9 +143,8 @@ class CustomDataGenerator(DataGenerator):
         }
         return dict_entry_id, features_dict, predicates_dict
 
-    def _process_scenario(self, scenario_path: Path) -> List[Tuple[dict, dict, dict]]:
+    def _process_scenario(self, scenario: Scenario) -> List[Tuple[dict, dict, dict]]:
         try:
-            scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
             world_mpr = MprWorld.create_from_scenario(scenario)  # everything still cartesian
             # Create an additional world for crmonitor predicates
             world = World.create_from_scenario(scenario)  # everything still cartesian
@@ -168,7 +167,7 @@ class CustomDataGenerator(DataGenerator):
             return data_entries
         except Exception as exp:
             _LOGGER.debug(traceback.format_exc())
-            raise RuntimeError(f"Failed to process scenario {scenario_path.stem}: {exp}") from exp
+            raise RuntimeError(f"Failed to process scenario {scenario.scenario_id}: {exp}") from exp
 
 
 data_generator = CustomDataGenerator(
@@ -192,6 +191,6 @@ _LOGGER.info(
 
 _LOGGER.info(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
-data_generator.generate_data(workers=70, limit=scenario_limit)  # multiprocessing.cpu_count()
+data_generator.generate_data(workers=1, limit=1)  # multiprocessing.cpu_count()
 _LOGGER.info("Finished processing scenarios; writing output to %s", output_path)
 data_generator.save_data(output_path)
