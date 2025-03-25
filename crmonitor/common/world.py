@@ -167,6 +167,11 @@ class World:
                         )
                     )
             else:  # interstate scenarios
+                if (
+                    obs.prediction is None
+                    or obs.prediction.final_time_step - obs.prediction.initial_time_step < 2
+                ):
+                    continue
                 cls.augment_state_longitudinal(scenario.dt, obs)
                 cls.augment_state_lateral(scenario.dt, obs)
                 curvi_cache, predicate_dict = cache.setdefault(

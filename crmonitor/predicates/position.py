@@ -7,7 +7,6 @@ from typing import Callable, Dict, List, Set, Tuple
 import numpy as np
 import shapely.ops
 from commonroad.scenario.lanelet import LaneletType, LineMarking
-from ruamel.yaml.comments import CommentedMap
 from shapely.geometry.polygon import Polygon
 
 from crmonitor.common.helper import union_set
@@ -19,6 +18,8 @@ from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluator
 from crmonitor.predicates.utils import (
     distance_to_bounds,
     distance_to_lanes,
+    distance_to_left_bounds_clcs,
+    distance_to_right_bounds_clcs,
     lanelets_left_of_vehicle,
     lanelets_right_of_vehicle,
     vehicle_directly_left,
@@ -43,6 +44,10 @@ class PositionPredicates(str, Enum):
     OnExitRamp = "on_exit_ramp"  # not used
     InRightmostLane = "in_rightmost_lane"
     InLeftmostLane = "in_leftmost_lane"
+    CloseToLeftBound = "close_to_left_bound"
+    CloseToRightBound = "close_to_right_bound"
+    CloseToVehicleLeft = "close_to_vehicle_left"
+    CloseToVehicleRight = "close_to_vehicle_right"
     MainCarriagewayRightLane = "main_carriageway_right_lane"
     LeftOf = "left_of"
     DrivesLeftmost = "drives_leftmost"
@@ -839,16 +844,15 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
                 < self.config.close_to_other_vehicle
             ):
                 return True
-            else:
-                return False
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            for lane in lanes:
-                left_position = vehicle.left_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) - left_position > self.config.close_to_lane_border:
-                    return False
-            return True
+
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        for lane in lanes:
+            left_position = vehicle.left_d(time_step, lane)
+            s_ego = vehicle.get_lon_state(time_step, lane).s
+            if 0.5 * lane.width(s_ego) - left_position < self.config.close_to_lane_border:
+                return True
+
+        return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -858,30 +862,23 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
             if v_id != vehicle.id
         ]
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+
+        lane_bound_dist = np.inf
+        for lane in lanes:
+            dists_to_left_bounds = map(abs, distance_to_left_bounds_clcs(vehicle, lane, time_step))
+            lane_bound_dist = min(min(dists_to_left_bounds), lane_bound_dist)
+        lane_bound_dist = self.config.close_to_lane_border - lane_bound_dist
+
         veh_dir_l = vehicle_directly_left(time_step, vehicle, other_vehicles)
-        if (
-            veh_dir_l is not None
-        ):  # TODO if there is a vehicle directly left, the distance to the lane boundary is not even considered. → doesn't match Maierhofer paper.
+        veh_dir_l_dist = -np.inf
+        if veh_dir_l is not None:
             share_lane = vehicle.get_lane(time_step)
-            return self._scale_lat_dist(
-                self.config.close_to_other_vehicle
-                - veh_dir_l.right_d(time_step, share_lane)
-                + vehicle.left_d(time_step, share_lane)
+            veh_dir_l_dist = self.config.close_to_other_vehicle - abs(
+                veh_dir_l.right_d(time_step, share_lane) + vehicle.left_d(time_step, share_lane)
             )
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            comparison_list = []  # the 'or relations between different lanes
-            for lane in lanes:
-                left_position = vehicle.left_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                comparison_list.append(
-                    self._scale_lat_dist(
-                        self.config.close_to_lane_border
-                        - 0.5 * lane.width(s_ego)
-                        + left_position  # TODO if left_position → \infty, the robustness becomes \infty → doesn't make sense and doesn't match Maierhofer paper.I'd suggest the abs(...) approach from #61
-                    )
-                )
-            return min(comparison_list)
+
+        return self._scale_lat_dist(max(veh_dir_l_dist, lane_bound_dist))
 
 
 class PredDrivesRightmost(BasePredicateEvaluator):
@@ -908,16 +905,15 @@ class PredDrivesRightmost(BasePredicateEvaluator):
                 < self.config.close_to_other_vehicle
             ):
                 return True
-            else:
-                return False
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            for lane in lanes:
-                right_position = vehicle.right_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) + right_position > self.config.close_to_lane_border:
-                    return False
-            return True
+
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        for lane in lanes:
+            right_position = vehicle.right_d(time_step, lane)
+            s_ego = vehicle.get_lon_state(time_step, lane).s
+            if 0.5 * lane.width(s_ego) + right_position < self.config.close_to_lane_border:
+                return True
+
+        return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -927,26 +923,109 @@ class PredDrivesRightmost(BasePredicateEvaluator):
             if v_id != vehicle.id
         ]
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        lane_bound_dist = np.inf
+        for lane in lanes:
+            dists_to_right_bounds = map(
+                abs, distance_to_right_bounds_clcs(vehicle, lane, time_step)
+            )
+
+            lane_bound_dist = min(min(dists_to_right_bounds), lane_bound_dist)
+        lane_bound_dist = self.config.close_to_lane_border - lane_bound_dist
+
         veh_dir_r = vehicle_directly_right(time_step, vehicle, other_vehicles)
+        veh_dir_r_dist = -np.inf
         if veh_dir_r is not None:
             share_lane = vehicle.get_lane(time_step)
-            return self._scale_lat_dist(
-                self.config.close_to_other_vehicle
-                + veh_dir_r.left_d(time_step, share_lane)
-                - vehicle.right_d(time_step, share_lane)
+            veh_dir_r_dist = self.config.close_to_other_vehicle - abs(
+                veh_dir_r.left_d(time_step, share_lane) - vehicle.right_d(time_step, share_lane)
             )
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            comparison_list = []  # the or' relations between different lanes
-            for lane in lanes:
-                right_position = vehicle.right_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                comparison_list.append(
-                    self._scale_lat_dist(
-                        self.config.close_to_lane_border - 0.5 * lane.width(s_ego) - right_position
-                    )
-                )
-            return min(comparison_list)
+        return self._scale_lat_dist(max(veh_dir_r_dist, lane_bound_dist))
+
+
+class PredCloseToLeftBound(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.CloseToLeftBound
+    arity = 1
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanes = world.road_network.find_lanes_by_lanelets(ego_vehicle.lanelet_assignment[time_step])
+
+        dist = np.inf
+        for lane in lanes:
+            dists_to_left_bounds = map(
+                abs, distance_to_left_bounds_clcs(ego_vehicle, lane, time_step)
+            )
+            dist = min(min(dists_to_left_bounds), dist)
+        return self._scale_lat_dist(self.config.close_to_lane_border - dist)
+
+
+class PredCloseToRightBound(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.CloseToRightBound
+    arity = 1
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lanes = world.road_network.find_lanes_by_lanelets(ego_vehicle.lanelet_assignment[time_step])
+
+        dist = np.inf
+        for lane in lanes:
+            dists_to_right_bounds = map(
+                abs, distance_to_right_bounds_clcs(ego_vehicle, lane, time_step)
+            )
+
+            dist = min(min(dists_to_right_bounds), dist)
+        return self._scale_lat_dist(self.config.close_to_lane_border - dist)
+
+
+class PredCloseToVehicleLeft(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.CloseToVehicleLeft
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+        lat_dist = self._scale_lat_dist(
+            self.config.close_to_other_vehicle
+            - abs(
+                other_vehicle.right_d(time_step, share_lane)
+                - ego_vehicle.left_d(time_step, share_lane)
+            )
+        )
+        lon_dist = self._scale_lon_dist(
+            ((ego_vehicle.shape.length + other_vehicle.shape.length) / 2)
+            - abs(
+                other_vehicle.get_lon_state(time_step, share_lane).s
+                - ego_vehicle.get_lon_state(time_step, share_lane).s
+            )
+        )
+        return min(lat_dist, lon_dist)
+
+
+class PredCloseToVehicleRight(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.CloseToVehicleRight
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+        lat_dist = self._scale_lat_dist(
+            self.config.close_to_other_vehicle
+            - abs(
+                other_vehicle.left_d(time_step, share_lane)
+                - ego_vehicle.right_d(time_step, share_lane)
+            )
+        )
+        lon_dist = self._scale_lon_dist(
+            ((ego_vehicle.shape.length + other_vehicle.shape.length) / 2)
+            - abs(
+                other_vehicle.get_lon_state(time_step, share_lane).s
+                - ego_vehicle.get_lon_state(time_step, share_lane).s
+            )
+        )
+        return min(lat_dist, lon_dist)
 
 
 ##################
