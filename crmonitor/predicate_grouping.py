@@ -48,6 +48,10 @@ all_interstate_predicates = [
     "has_congestion_velocity",
     "has_slow_moving_velocity",
     "has_queue_velocity",
+    "close_to_left_bound",
+    "close_to_right_bound",
+    "close_to_vehicle_left",
+    "close_to_vehicle_right",
 ]
 
 insufficient = [
