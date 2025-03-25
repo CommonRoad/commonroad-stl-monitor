@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
 from commonroad_mpr.common import World as MprWorld
@@ -177,7 +176,7 @@ data_generator = CustomDataGenerator(
     output_path=output_path,
     vehicle_pair_steps=20,
     state_sampling_time_horizon=1.5,
-    time_steps_per_scenario=5,
+    time_steps_per_scenario=1,
     scenario_type=ScenarioType.INTERSTATE,
     snapshot_frequency=10,
 )
