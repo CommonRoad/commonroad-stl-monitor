@@ -844,16 +844,15 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
                 < self.config.close_to_other_vehicle
             ):
                 return True
-            else:
-                return False
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            for lane in lanes:
-                left_position = vehicle.left_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) - left_position > self.config.close_to_lane_border:
-                    return False
-            return True
+
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        for lane in lanes:
+            left_position = vehicle.left_d(time_step, lane)
+            s_ego = vehicle.get_lon_state(time_step, lane).s
+            if 0.5 * lane.width(s_ego) - left_position < self.config.close_to_lane_border:
+                return True
+
+        return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -906,16 +905,15 @@ class PredDrivesRightmost(BasePredicateEvaluator):
                 < self.config.close_to_other_vehicle
             ):
                 return True
-            else:
-                return False
-        else:
-            lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
-            for lane in lanes:
-                right_position = vehicle.right_d(time_step, lane)
-                s_ego = vehicle.get_lon_state(time_step, lane).s
-                if 0.5 * lane.width(s_ego) + right_position > self.config.close_to_lane_border:
-                    return False
-            return True
+
+        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        for lane in lanes:
+            right_position = vehicle.right_d(time_step, lane)
+            s_ego = vehicle.get_lon_state(time_step, lane).s
+            if 0.5 * lane.width(s_ego) + right_position < self.config.close_to_lane_border:
+                return True
+
+        return False
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])

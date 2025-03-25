@@ -9,8 +9,8 @@ from crmonitor.predicates.predicate_factory import PredicateFactory
 
 scenario_name = "DEU_LocationBUpper1-1_14217_T-4267"
 time_step = 0
-ego_vehicle_id = 10973
-other_vehicle_id = 10977
+ego_vehicle_id = 10980
+other_vehicle_id = 10981
 predicate = "close_to_vehicle_right"
 
 scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
