@@ -3,7 +3,6 @@ import logging
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from commonroad.scenario.scenario import Scenario
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
@@ -89,11 +88,11 @@ rules = [
     "R_G2",
     "R_G3",
     "R_G4",
-    "R_I1",
-    "R_I2",
-    "R_I3",
-    "R_I4",
-    "R_I5",
+    # "R_I1",
+    # "R_I2",
+    # "R_I3",
+    # "R_I4",
+    # "R_I5",
 ]
 
 scenarios_paths = list(input_scenarios.glob("*.xml"))[0:1]

@@ -14,7 +14,7 @@ from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as M
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,10 +29,10 @@ scale_rob = not use_mpr
 model_path = None
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_G1"
+traffic_rule = "R_I4"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
-output_type = OutputType.OUTPUT_ROBUSTNESS
+output_type = OutputType.STANDARD
 
 logging.basicConfig(level=logging.INFO)
 

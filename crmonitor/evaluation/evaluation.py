@@ -1,5 +1,6 @@
 import copy
 import logging
+import pprint
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -20,8 +21,8 @@ from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
     EvaluationMonitorTreeVisitor,
-    MPRGradientCollectorMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
+    MPRGradientCollectorMonitorTreeVisitor,
     OfflineEvaluationMonitorTreeVisitor,
     PredicateCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
@@ -34,8 +35,8 @@ from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
-from crmonitor.rule.rule_factory import RuleFactory
 from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
+from crmonitor.rule.rule_parser import RuleParser
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,8 @@ class RuleEvaluatorInterface(ABC):
         predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
     ):
         rule_str = get_traffic_rule_from_config(rule_name)
-        rule = RuleFactory().parse_rule(rule_str, name=rule_name)
+        rule = RuleParser().parse(rule_str, name=rule_name)
+        pprint.pprint(rule)
 
         return cls(rule, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
 
@@ -75,6 +77,7 @@ class RuleEvaluatorInterface(ABC):
             world.dt, output_type, predicate_evaluator_config
         )
         self._monitor = monitor_creation_visitor.visit(self._rule)
+
         if self._predicate_evaluator_config.mpr.enabled:
             self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
         else:

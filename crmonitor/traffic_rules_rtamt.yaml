@@ -12,12 +12,19 @@ meta_predicates:
   $in_slow_moving_traffic(a0)_x: "compare_to_threshold_scaled[>=3] (sum_if_positive a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_slow_moving_velocity(a99)_x))"
   $in_queue_of_vehicles(a0)_x: "compare_to_threshold_scaled[>=3] (sum_if_positive a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_queue_velocity(a99)_x))"
   $precedes(a0, a1)_x: "in_same_lane(a0, a1)_x and in_front_of(a0, a1)_x and (not(E a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and in_front_of(a99, a1)_x)))"
-  $drives_leftmost(a0)_x: "close_to_left_bound(a0)_x or (E a99: close_to_vehicle_left(a0, a99)_x)"
-  $drives_rightmost(a0)_x: "close_to_right_bound(a0)_x or (E a99: close_to_vehicle_right(a0, a99)_x)"
+  $drives_leftmost(a0)_x: "close_to_left_bound(a0)_x or (E a99: ($close_to_vehicle_left(a0, a99)_x))"
+  $drives_rightmost(a0)_x: "close_to_right_bound(a0)_x or (E a99: ($close_to_vehicle_right(a0, a99)_x))"
+  $cut_in(a0, a1)_x: "not single_lane(a0)_x and ($approach_from_left(a0, a1)_x or $approach_from_right(a0, a1)_x) and in_same_lane(a0, a1)_x"  # a0 is the cutting, a1 the cutted vehicle
+  $approach_from_left(a0, a1)_x: "lat_left_of(a0, a1)_x and heading_right(a0)_x"  # a0 approaches a1
+  $approach_from_right(a0, a1)_x: "not lat_left_of(a0, a1)_x and not heading_right(a0)_x"  # a0 approaches a1
+  $left_of(a0, a1)_x: "lat_left_of_vehicle(a0, a1)_x and $lon_intersecting_vehicle(a0, a1)_x"  # a0 is left of a1
+  $lon_intersecting_vehicles(a0, a1)_x: "rear_behind_front(a0, a1)_x and rear_behind_front(a1, a0)_x"
+  $close_to_vehicle_left(a0, a1)_x: "lat_close_to_vehicle_left(a0, a1)_x and $lon_intersecting_vehicles(a0, a1)_x"  # a0 is the right, a1 the left vehicle
+  $close_to_vehicle_right(a0, a1)_x: "lat_close_to_vehicle_right(a0, a1)_x and $lon_intersecting_vehicles(a0, a1)_x"  # a0 is the left, a1 the right vehicle
 
 
 traffic_rules:
-  R_G1: 'A a1: ((in_front_of(a0,a1)_i and in_same_lane(a0,a1)_i and !once[0, 3s](cut_in(a1,a0)_i and prev(not cut_in(a1,a0)_i)) ) implies keeps_safe_distance_prec(a0,a1))'
+  R_G1: 'A a1: ((in_front_of(a0,a1)_i and in_same_lane(a0,a1)_i and !once[0, 3s]($cut_in(a1,a0)_i and prev(not $cut_in(a1,a0)_i)) ) implies keeps_safe_distance_prec(a0,a1))'
   R_G2: 'brakes_abruptly(a0)_i implies E a1: ($precedes(a0, a1) and (not keeps_safe_distance_prec(a0, a1) or not brakes_abruptly_relative(a0, a1)))'
   R_G3: keeps_lane_speed_limit(a0) and keeps_type_speed_limit(a0) and keeps_fov_speed_limit(a0) and keeps_brake_speed_limit(a0)
   R_G4: not $slow_leading_vehicle(a0)_i implies preserves_traffic_flow(a0)
