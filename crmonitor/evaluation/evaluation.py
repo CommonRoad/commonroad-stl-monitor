@@ -54,7 +54,6 @@ class RuleEvaluatorInterface(ABC):
     ):
         rule_str = get_traffic_rule_from_config(rule_name)
         rule = RuleParser().parse(rule_str, name=rule_name)
-        pprint.pprint(rule)
 
         return cls(rule, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
 
@@ -77,7 +76,6 @@ class RuleEvaluatorInterface(ABC):
             world.dt, output_type, predicate_evaluator_config
         )
         self._monitor = monitor_creation_visitor.visit(self._rule)
-
         if self._predicate_evaluator_config.mpr.enabled:
             self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
         else:

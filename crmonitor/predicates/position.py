@@ -1057,8 +1057,6 @@ class PredHeadingRight(BasePredicateEvaluator):
         ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
         lane = ego_vehicle.get_lane(time_step)
 
-        print(ego_vehicle.states_cr[time_step].orientation)
-        print(ego_vehicle.get_lat_state(time_step, lane).theta)
         return self._scale_angle(-ego_vehicle.get_lat_state(time_step, lane).theta)
 
 

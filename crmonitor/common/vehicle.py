@@ -175,6 +175,7 @@ class CurvilinearStateManager:
         else:
             x_lon = StateLongitudinal(s=s, v=speed)
 
+        # Make sure the resulting theta lies in [-pi, +pi].
         theta_cl = lane.orientation(s) % (2 * math.pi)
         orientation = state.orientation % (2 * math.pi)
         theta = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
