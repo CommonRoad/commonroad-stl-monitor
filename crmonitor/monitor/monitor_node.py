@@ -276,8 +276,17 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
 
 
 class ConstantTraceMonitorNode(ZeroArityMonitorNode):
-    def __init__(self, trace: List[float]) -> None:
+    """
+    Helper node for artificial monitor tree constructions.
+
+    Use this node to inject a constant trace into the tree.
+    """
+
+    def __init__(self, name: str, trace: List[float]) -> None:
         self.trace = trace
+
+    def __str__(self) -> str:
+        return self.name
 
 
 T = TypeVar("T")
