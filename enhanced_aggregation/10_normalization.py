@@ -1,12 +1,9 @@
-import numpy as np
-
+import logging
 from pathlib import Path
 
 from commonroad_mpr.learning import DataLoader
 from commonroad_mpr.learning.data_loader import normalize
 from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
-
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

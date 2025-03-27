@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from commonroad_mpr.learning.data_loader import DataLoader
@@ -5,14 +6,6 @@ from commonroad_mpr.learning.gp_regression import ModelTrainer
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.predicates.predicate_factory import PredicateFactory
-
-from crmonitor.predicate_grouping import (
-    all_general_predicates,
-    all_interstate_predicates,
-    insufficient,
-)
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
 

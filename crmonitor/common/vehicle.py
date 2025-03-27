@@ -1,9 +1,9 @@
 import copy
 import logging
+import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import lru_cache, partial
-import math
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 # import numba

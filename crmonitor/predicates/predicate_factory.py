@@ -3,7 +3,6 @@ import re
 import sys
 from typing import Optional
 
-
 # by setting __all__ in __init__.py, all relevant modules are imported
 # noinspection PyUnresolvedReferences
 from crmonitor.predicates import *  # noqa: F401,F403

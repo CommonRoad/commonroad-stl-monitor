@@ -1,23 +1,23 @@
-from collections import defaultdict
-import logging
-from random import Random
-from pathlib import Path
 import csv
+import logging
+from collections import defaultdict
+from pathlib import Path
+from random import Random
 
+import numpy as np
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
-import numpy as np
 from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateMprConfig, PredicateEvaluatorConfig
-from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
     insufficient,
 )
+from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
+from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)

@@ -171,7 +171,6 @@ class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
         )
         if meta_predicate_rule is None:
             raise RuntimeError(f"Unkown meta-predicate '{node.metapredicate_name}'!")
-        print("replacing", node.metapredicate_name, meta_predicate_rule.rule_str)
         meta_predicate_tree = self._parser.parse(meta_predicate_rule.rule_str, name=node.name)
 
         agents_replacement_table = {

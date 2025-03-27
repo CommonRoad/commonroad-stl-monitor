@@ -1,6 +1,6 @@
 from functools import lru_cache
-from typing import Dict
 from importlib import resources as pkg_resources
+from typing import Dict
 
 import crmonitor
 from crmonitor.common.helper import load_yaml

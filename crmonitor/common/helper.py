@@ -5,16 +5,15 @@ from functools import reduce
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple, Union
 
-from rtamt.semantics.interval.interval import Interval as RtamtInterval
-from commonroad.common.util import Interval as CommonRoadInterval
-from commonroad.scenario.scenario import Scenario
-
 # import numba
 import numpy as np
+from commonroad.common.util import Interval as CommonRoadInterval
 from commonroad.scenario.lanelet import Lanelet, LaneletType
 from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
 from ruamel.yaml import YAML
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2

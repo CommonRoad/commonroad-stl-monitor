@@ -1,9 +1,8 @@
-import pandas as pd
-
 from pathlib import Path
-from tqdm import tqdm
 
+import pandas as pd
 from commonroad_mpr.learning.data_generation import min_max_vel_acc_in_scenario
+from tqdm import tqdm
 
 highd_scenarios = Path(__file__).parents[3] / "highD-scenarios"
 save_path = Path(__file__).parents[1] / "output" / "metrics" / "min_max_velocity.csv"

@@ -31,6 +31,7 @@ class RuleParser(RuleParserInterface):
         self._sub_rule_counter = 0
 
     def _new_unique_sub_rule_name(self) -> str:
+        self._sub_rule_counter += 1
         return f"g{self._sub_rule_counter}"
 
     def parse(self, rule: str, name: Optional[str] = None) -> VisitorNode:

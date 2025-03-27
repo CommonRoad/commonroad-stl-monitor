@@ -1,6 +1,7 @@
-from pathlib import Path
-from commonroad.common.file_reader import CommonRoadFileReader
 import logging
+from pathlib import Path
+
+from commonroad.common.file_reader import CommonRoadFileReader
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

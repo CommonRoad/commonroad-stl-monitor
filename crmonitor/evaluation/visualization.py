@@ -1,20 +1,20 @@
+import textwrap
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-import textwrap
 from functools import singledispatchmethod
 from itertools import groupby
 from typing import Dict, List, Optional, Tuple, Union
 
 import networkx as nx
-from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 from commonroad.scenario.scenario import Scenario
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpec
+from matplotlib.lines import Line2D
 from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 from rtamt.syntax.node.binary_node import BinaryNode as RtamtBinaryNode
 from rtamt.syntax.node.ltl.variable import Variable as RtamtVariableNode
@@ -28,7 +28,6 @@ from crmonitor.monitor.monitor_node import (
     QuantMonitorNode,
     RuleMonitorNode,
     UnaryMonitorNode,
-    SigmoidMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
 from crmonitor.predicates.scaling import RobustnessScaler
