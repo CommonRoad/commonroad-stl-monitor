@@ -17,7 +17,7 @@ meta_predicates:
   $cut_in(a0, a1)_x: "not single_lane(a0)_x and ($approach_from_left(a0, a1)_x or $approach_from_right(a0, a1)_x) and in_same_lane(a0, a1)_x"  # a0 is the cutting, a1 the cutted vehicle
   $approach_from_left(a0, a1)_x: "lat_left_of(a0, a1)_x and heading_right(a0)_x"  # a0 approaches a1
   $approach_from_right(a0, a1)_x: "not lat_left_of(a0, a1)_x and not heading_right(a0)_x"  # a0 approaches a1
-  $left_of(a0, a1)_x: "lat_left_of_vehicle(a0, a1)_x and $lon_intersecting_vehicle(a0, a1)_x"  # a0 is left of a1
+  $left_of(a0, a1)_x: "lat_left_of_vehicle(a0, a1)_x and $lon_intersecting_vehicles(a0, a1)_x"  # a0 is left of a1
   $lon_intersecting_vehicles(a0, a1)_x: "rear_behind_front(a0, a1)_x and rear_behind_front(a1, a0)_x"
   $close_to_vehicle_left(a0, a1)_x: "lat_close_to_vehicle_left(a0, a1)_x and $lon_intersecting_vehicles(a0, a1)_x"  # a0 is the right, a1 the left vehicle
   $close_to_vehicle_right(a0, a1)_x: "lat_close_to_vehicle_right(a0, a1)_x and $lon_intersecting_vehicles(a0, a1)_x"  # a0 is the left, a1 the right vehicle
