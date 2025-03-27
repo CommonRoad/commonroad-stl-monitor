@@ -109,7 +109,7 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
 
     def evaluate(self) -> List[float]:
         return self._eval_visitor.walk(
-            self._monitor, self._world, self.ego_vehicle.end_time, self.ego_vehicle, self._mpr_world
+            self._monitor, self._world, 10, self.ego_vehicle, self._mpr_world
         )
 
 

@@ -22,13 +22,32 @@ class EmbedingVisitor(RuleTreeVisitorInterface[None]):
         root: VisitorNode,
         io_type: IOType,
         agent_placeholder_replacements: Dict[int, int],
-        namespace: str,
     ) -> None:
-        return self.visit(root, io_type, agent_placeholder_replacements, namespace)
+        return self.visit(root, io_type, agent_placeholder_replacements)
 
     @singledispatchmethod
-    def visit(self, node: VisitorNode, io_type, agent_placeholder_replacements, namespace) -> None:
+    def visit(self, node: VisitorNode, io_type, agent_placeholder_replacements) -> None:
         return
+
+    @visit.register(UnaryNode)
+    def _(
+        self, node: UnaryNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
+    ) -> None:
+        self.visit(node.child, io_type, agent_placeholder_replacements)
+
+    @visit.register(BinaryNode)
+    def _(
+        self, node: BinaryNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
+    ) -> None:
+        self.visit(node.left_child, io_type, agent_placeholder_replacements)
+        self.visit(node.right_child, io_type, agent_placeholder_replacements)
+
+    @visit.register(RuleNode)
+    def _(
+        self, node: RuleNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
+    ) -> None:
+        for child in node.children:
+            self.visit(child, io_type, agent_placeholder_replacements)
 
     @visit.register(PredicateNode)
     def _(
@@ -38,9 +57,31 @@ class EmbedingVisitor(RuleTreeVisitorInterface[None]):
 
         replacement_agent_placeholders = []
         for agent_placeholder in node.agent_placeholders:
-            if agent_placeholder not in agent_placeholder_replacements:
-                raise RuntimeError()
-            replacement_agent_placeholders.append(agent_placeholder_replacements[agent_placeholder])
+            if agent_placeholder in agent_placeholder_replacements:
+                replacement_agent_placeholders.append(
+                    agent_placeholder_replacements[agent_placeholder]
+                )
+            else:
+                replacement_agent_placeholders.append(agent_placeholder)
+
+        node.agent_placeholders = tuple(replacement_agent_placeholders)
+
+    @visit.register(MetaPredicateNode)
+    def _(
+        self,
+        node: MetaPredicateNode,
+        io_type: IOType,
+        agent_placeholder_replacements: Dict[int, int],
+    ) -> None:
+        node.io_type = io_type
+        replacement_agent_placeholders = []
+        for agent_placeholder in node.agent_placeholders:
+            if agent_placeholder in agent_placeholder_replacements:
+                replacement_agent_placeholders.append(
+                    agent_placeholder_replacements[agent_placeholder]
+                )
+            else:
+                replacement_agent_placeholders.append(agent_placeholder)
 
         node.agent_placeholders = tuple(replacement_agent_placeholders)
 
@@ -174,12 +215,10 @@ class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
         meta_predicate_tree = self._parser.parse(meta_predicate_rule.rule_str, name=node.name)
 
         agents_replacement_table = {
-            x: y for (x, y) in zip(node.quantified_agents, meta_predicate_rule.agent_placeholders)
+            x: y for (x, y) in zip(meta_predicate_rule.agent_placeholders, node.agent_placeholders)
         }
 
         embeding_visior = EmbedingVisitor()
-        embeding_visior.embed(
-            copy.deepcopy(meta_predicate_tree), node.io_type, agents_replacement_table, node.name
-        )
+        embeding_visior.embed(meta_predicate_tree, node.io_type, agents_replacement_table)
 
         return meta_predicate_tree

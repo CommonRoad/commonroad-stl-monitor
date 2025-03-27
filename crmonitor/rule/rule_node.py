@@ -113,7 +113,7 @@ class PredicateNode(NullaryNode):
 class MetaPredicateNode(VisitorNode):
     metapredicate_name: str
 
-    quantified_agents: Tuple[int, ...]
+    agent_placeholders: Tuple[int, ...]
 
     io_type: Optional[IOType] = IOType.OUTPUT
 
