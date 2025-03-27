@@ -52,19 +52,17 @@ all_interstate_predicates = [
     "close_to_right_bound",
     "close_to_vehicle_left",
     "close_to_vehicle_right",
+    "lat_left_of",
+    "heading_right",
+    "lat_left_of_vehicle",
+    "rear_behind_front",
+    "lat_close_to_vehicle_left",
+    "lat_close_to_vehicle_right"
 ]
 
 insufficient = [
     "cut_in",
     "brakes_abruptly_relative",
-    # "has_slow_moving_velocity",
-    # "reverses",
-    # "drives_faster",
-    # "drives_with_slightly_higher_speed",
-    # "preserves_traffic_flow",
-    # "drives_leftmost",
-    # "drives_rightmost",
-    # "slow_as_leading_vehicle",
 ]
 
 yuanfei_predicates = [
