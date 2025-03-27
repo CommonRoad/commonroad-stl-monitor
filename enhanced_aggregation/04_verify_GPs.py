@@ -4,6 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from crmonitor.predicate_grouping import all_general_predicates
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +52,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-evaluator = ModelEvaluator(["makes_u_turn"], data_loader, models_path)
+evaluator = ModelEvaluator(all_general_predicates, data_loader, models_path)
 
 
 results = evaluator.evaluate()

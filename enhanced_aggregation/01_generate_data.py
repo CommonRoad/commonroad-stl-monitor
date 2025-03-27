@@ -13,12 +13,12 @@ from commonroad_mpr.learning.feature_variable import FeatureExtrator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
 from crmonitor.common.world import World
-from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
+from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates, changed_to_meta
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 # Use 'all_general_predicates' to generate learning data for all predicates that are used for general traffic rules.
 # Alternatively, supply a list of specific predicates you want to evaluate.
-predicate_names = all_general_predicates + all_interstate_predicates
+predicate_names = all_general_predicates + all_interstate_predicates + changed_to_meta
 scenarios_load_path = Path(__file__).parent.parent.parent.parent / "highD-scenarios"
 
 output_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"

@@ -5,6 +5,7 @@ from commonroad_mpr.learning.data_loader import DataLoader
 from commonroad_mpr.learning.gp_regression import ModelTrainer
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
+from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +49,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-trainer = ModelTrainer(data_loader, ["precedes"], ScenarioType.INTERSTATE, training_iter=100)
+trainer = ModelTrainer(data_loader, all_general_predicates + all_interstate_predicates, ScenarioType.INTERSTATE, training_iter=100)
 
 models = trainer.train()
 

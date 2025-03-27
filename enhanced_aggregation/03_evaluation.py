@@ -17,16 +17,16 @@ from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
 logging.basicConfig(level=logging.INFO)
+_LOGGER = logging.getLogger(__name__)
 
 scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
-scale_rob = not use_mpr
+scale_rob = True # not use_mpr
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
-# model_path = Path(__file__).parent.parent.joinpath("output/models")
-model_path = None
+model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
 traffic_rule = "R_I4"
@@ -77,6 +77,7 @@ world = World.create_from_scenario(scenario)
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
+_LOGGER.info(f"ego vehicle: {ego_vehicle.id}")
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=scale_rob, mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path)
 )
