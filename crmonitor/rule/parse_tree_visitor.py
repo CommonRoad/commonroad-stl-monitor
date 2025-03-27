@@ -1,5 +1,6 @@
 from decimal import Decimal
 from fractions import Fraction
+from typing import Callable
 
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from rtamt.semantics.interval.interval import Interval
@@ -13,6 +14,7 @@ from crmonitor.rule.rule_node import (
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
     IOType,
+    MetaPredicateNode,
     PredicateNode,
     RuleNode,
     SigmoidNode,
@@ -29,9 +31,9 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     # It's value does not really matter, because we only apply one kind of rewrite.
     DEFAULT_TOKEN_REWRITER_PROGRAM = "predicate"
 
-    def __init__(self, tokens):
+    def __init__(self, tokens, sub_rule_id_generator: Callable[[], str]):
         self._rewriter: TokenStreamRewriter = TokenStreamRewriter(tokens)
-        self._sub_rule_counter = 0
+        self._sub_rule_id_generator = sub_rule_id_generator
 
     def defaultResult(self):
         return []
@@ -47,10 +49,13 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     def visitPredicate(self, ctx: FaStlParser.PredicateContext):
         # PredicateNode needs the vehicle ids as tuple, and not as list.
         vehicle_ids = tuple(self.visitChildren(ctx))
-        pred_basename = ctx.Identifier().getText()
-        if ctx.IO_TYPE_INPUT() is not None:
-            io_type = IOType.INPUT
-            token_index = ctx.IO_TYPE_INPUT().symbol.tokenIndex
+        pred_basename: str = ctx.Identifier().getText()
+        if ctx.IO_TYPE() is not None:
+            if ctx.IO_TYPE().getText() == "_i":
+                io_type = IOType.INPUT
+            else:
+                io_type = None
+            token_index = ctx.IO_TYPE().symbol.tokenIndex
             # Delete the input indicator, only keep the predicate name.
             self._rewriter.delete(self.DEFAULT_TOKEN_REWRITER_PROGRAM, token_index, token_index)
         else:
@@ -63,7 +68,11 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             ctx.RPAREN().symbol.tokenIndex,
             suffix,
         )
-        p = PredicateNode(pred_basename + suffix, pred_basename, vehicle_ids, io_type)
+        if pred_basename.startswith("$"):
+            meta_predicate_name = pred_basename.lstrip("$")
+            p = MetaPredicateNode(pred_basename + suffix, meta_predicate_name, vehicle_ids, io_type)
+        else:
+            p = PredicateNode(pred_basename + suffix, pred_basename, vehicle_ids, io_type)
         return [p]
 
     def visitSpecQuantForall(self, ctx: FaStlParser.SpecQuantForallContext):
@@ -207,6 +216,4 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return [node]
 
     def _get_new_unique_node_name(self) -> str:
-        self._sub_rule_counter += 1
-        node_name = f"g{self._sub_rule_counter}"
-        return node_name
+        return self._sub_rule_id_generator()

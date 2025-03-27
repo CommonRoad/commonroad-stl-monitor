@@ -1,4 +1,6 @@
+import itertools
 import logging
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import pandas as pd
@@ -44,61 +46,66 @@ MprCfg.build_configuration(
     default_profile="default",
 )
 
+
+def process_scenario_with_rule(scenario_path: Path, rule: str, use_mpr: bool) -> dict:
+    scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+    world = World.create_from_scenario(scenario)
+    # Create a rule evaluator
+    # Provide the vehicle to evaluate traffic rules for as ego vehicle
+    predicate_evaluator_config = PredicateEvaluatorConfig(
+        mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
+        scale_rob=not use_mpr,
+    )
+
+    # Create a rule evaluator
+    # Provide the vehicle to evaluate traffic rules for as ego vehicle
+    ego_vehicle = next(iter(world.vehicles))
+    _LOGGER.info(
+        f"Evaluating rule {rule} {'with mpr' if use_mpr else 'without mpr'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
+    )
+    rule_evaluator = OfflineRuleEvaluator.create_for_rule(
+        world,
+        ego_vehicle.id,
+        rule,
+        predicate_evaluator_config=predicate_evaluator_config,
+    )
+    # Either step through time steps sequentially
+    robustness = rule_evaluator.evaluate()
+
+    return {
+        "scenario_id": str(scenario.scenario_id),
+        "rule": rule,
+        "mpr": use_mpr,
+        "vehicle_id": ego_vehicle.id,
+        "start_time_step": ego_vehicle.start_time,
+        "end_time_step": ego_vehicle.end_time,
+        "robustness": ", ".join(map(str, robustness)),
+    }
+
+
+rules = [
+    "R_G1",
+    "R_G2",
+    "R_G3",
+    "R_G4",
+    # "R_I1",
+    # "R_I2",
+    # "R_I3",
+    # "R_I4",
+    # "R_I5",
+]
+
+scenarios_paths = list(input_scenarios.glob("*.xml"))[0:1]
+use_mpr = [True, False]
+
+
 results = []
-for scenario_path in list(input_scenarios.glob("*.xml"))[0:1]:
-    for rule in (
-        "R_G1",
-        # "R_G2",
-        # "R_G3",
-        # "R_G4",
-        # "R_I1",
-        # "R_I2",
-        # "R_I3",
-        # "R_I4",
-        # "R_I5",
+with ProcessPoolExecutor() as executor:
+    for result in executor.map(
+        process_scenario_with_rule,
+        *zip(*itertools.product(scenarios_paths, rules, (True, False))),
     ):
-        for use_mpr in (True, False):
-            scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
-
-            # Create a world state, which is a holder class for intermediate results produced by the monitoring.
-            # Use the convenience class method to create with default configuration from a scenario.
-            world = World.create_from_scenario(scenario)
-
-            # Create a rule evaluator
-            # Provide the vehicle to evaluate traffic rules for as ego vehicle
-            predicate_evaluator_config = PredicateEvaluatorConfig(
-                mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
-                scale_rob=not use_mpr,
-            )
-
-            # Create a rule evaluator
-            # Provide the vehicle to evaluate traffic rules for as ego vehicle
-            ego_vehicle = next(iter(world.vehicles))
-            _LOGGER.info(
-                f"Evaluating rule {rule} {'with mpr' if use_mpr else 'without mpr'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from {ego_vehicle.start_time} to {ego_vehicle.end_time}"
-            )
-            rule_evaluator = OfflineRuleEvaluator.create_for_rule(
-                world,
-                ego_vehicle.id,
-                rule,
-                predicate_evaluator_config=predicate_evaluator_config,
-            )
-            # Either step through time steps sequentially
-            robustness = rule_evaluator.evaluate()
-
-            results.append(
-                {
-                    "scenario_id": scenario.scenario_id,
-                    "rule": rule,
-                    "mpr": use_mpr,
-                    "vehicle_id": ego_vehicle.id,
-                    "start_time_step": ego_vehicle.start_time,
-                    "end_time_step": ego_vehicle.end_time,
-                    "robustness": ", ".join(map(str, robustness)),
-                }
-            )
-            # except Exception as e:
-            #     print(f"Failed to process {scenario.scenario_id}, {rule}, {use_mpr}, {use_enhanced_aggregation}: {e}")
+        results.append(result)
 
 
 results_df = pd.DataFrame(results)

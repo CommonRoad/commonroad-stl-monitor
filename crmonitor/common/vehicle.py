@@ -3,6 +3,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import lru_cache, partial
+import math
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 # import numba
@@ -150,7 +151,6 @@ class CurvilinearStateManager:
             except ValueError:
                 logger.debug("Vehicle out of projection domain: State will not be considered")
                 return None
-        theta_cl = lane.orientation(s)
         # Originally, the speed was calcuclated as the magnitude of the combined directed vector of velocity and velocity_y.
         # However, this resulted in issues because the orientation of the vehicle was not considered relative to the lane orientation.
         # This could result in negative velocities (=reversing) even though the vehicle was driving forward (https://gitlab.lrz.de/cps/commonroad/commonroad-stl-monitor/-/issues/59).
@@ -175,6 +175,10 @@ class CurvilinearStateManager:
         else:
             x_lon = StateLongitudinal(s=s, v=speed)
 
+        # Make sure the resulting theta lies in [-pi, +pi].
+        theta_cl = lane.orientation(s) % (2 * math.pi)
+        orientation = state.orientation % (2 * math.pi)
+        theta = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
         if (
             hasattr(state, "kappa")
             and hasattr(state, "kappa_dot")
@@ -182,7 +186,7 @@ class CurvilinearStateManager:
         ):
             x_lat = StateLateral(
                 d=d,
-                theta=(state.orientation - theta_cl),
+                theta=theta,
                 kappa=state.kappa,
                 kappa_dot=state.kappa_dot,
                 kappa_dot_dot=state.kappa_dot_dot,
@@ -190,14 +194,14 @@ class CurvilinearStateManager:
         elif hasattr(state, "kappa") and hasattr(state, "kappa_dot"):
             x_lat = StateLateral(
                 d=d,
-                theta=(state.orientation - theta_cl),
+                theta=theta,
                 kappa=state.kappa,
                 kappa_dot=state.kappa_dot,
             )
         elif hasattr(state, "kappa"):
-            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl), kappa=state.kappa)
+            x_lat = StateLateral(d=d, theta=theta, kappa=state.kappa)
         else:
-            x_lat = StateLateral(d=d, theta=(state.orientation - theta_cl))
+            x_lat = StateLateral(d=d, theta=theta)
         return x_lon, x_lat
 
     def get_curvilinear_state(
