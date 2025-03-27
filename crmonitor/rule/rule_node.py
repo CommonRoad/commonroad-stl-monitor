@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from functools import singledispatchmethod
-from typing import Generic, List, Optional, Tuple, TypeVar
+from typing import Generic, Optional, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
@@ -105,8 +105,17 @@ class PredicateNode(NullaryNode):
     agent_placeholders: Tuple[int, ...]
     """The agent placeholder IDs (`a0`, `a1`, ...) which were passed to this predicate."""
 
-    io_type: IOType = IOType.OUTPUT
+    io_type: Optional[IOType] = IOType.OUTPUT
     """Specifies whether this predicate is an input or output predicate."""
+
+
+@dataclass(unsafe_hash=True)
+class MetaPredicateNode(VisitorNode):
+    metapredicate_name: str
+
+    quantified_agents: Tuple[int, ...]
+
+    io_type: Optional[IOType] = IOType.OUTPUT
 
 
 T = TypeVar("T")

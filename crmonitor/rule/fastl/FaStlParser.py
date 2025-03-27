@@ -243,7 +243,7 @@ class FaStlParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'E'", "'A'", "'a'", "'sigmoid'", "'historicallyDuration'",
                      "'historicallyDurationSeverity'", "'sum_if_positive'",
-                     "'compare_to_threshold_scaled'", "<INVALID>", "'_i'",
+                     "'compare_to_threshold_scaled'", "<INVALID>", "<INVALID>",
                      "'-'", "'+'", "'*'", "'/'", "'('", "')'", "'{'", "'}'",
                      "'['", "']'", "';'", "':'", "','", "'.'", "'@'", "'abs'",
                      "'sqrt'", "'exp'", "'pow'", "'s'", "'ms'", "'us'",
@@ -259,7 +259,7 @@ class FaStlParser ( Parser ):
     symbolicNames = [ "<INVALID>", "EXIST", "FORALL", "VEHICLE", "SigmoidOperator",
                       "HistoricallyDurationOperator", "HistoricallyDurationSeverityOperator",
                       "SumIfPositiveOperator", "CompareToThresholdScaledOperator",
-                      "WHITESPACE", "IO_TYPE_INPUT", "MINUS", "PLUS", "TIMES",
+                      "WHITESPACE", "IO_TYPE", "MINUS", "PLUS", "TIMES",
                       "DIVIDE", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
                       "LBRACK", "RBRACK", "SEMICOLON", "COLON", "COMMA",
                       "DOT", "AT", "ABS", "SQRT", "EXP", "POW", "SEC", "MSEC",
@@ -322,7 +322,7 @@ class FaStlParser ( Parser ):
     SumIfPositiveOperator=7
     CompareToThresholdScaledOperator=8
     WHITESPACE=9
-    IO_TYPE_INPUT=10
+    IO_TYPE=10
     MINUS=11
     PLUS=12
     TIMES=13
@@ -523,8 +523,8 @@ class FaStlParser ( Parser ):
             else:
                 return self.getToken(FaStlParser.COMMA, i)
 
-        def IO_TYPE_INPUT(self):
-            return self.getToken(FaStlParser.IO_TYPE_INPUT, 0)
+        def IO_TYPE(self):
+            return self.getToken(FaStlParser.IO_TYPE, 0)
 
         def getRuleIndex(self):
             return FaStlParser.RULE_predicate
@@ -570,7 +570,7 @@ class FaStlParser ( Parser ):
             la_ = self._interp.adaptivePredict(self._input,1,self._ctx)
             if la_ == 1:
                 self.state = 67
-                self.match(FaStlParser.IO_TYPE_INPUT)
+                self.match(FaStlParser.IO_TYPE)
 
 
         except RecognitionException as re:

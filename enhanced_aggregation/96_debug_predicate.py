@@ -8,10 +8,10 @@ from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConf
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 scenario_name = "DEU_LocationBUpper1-1_14217_T-4267"
-time_step = 0
-ego_vehicle_id = 10980
-other_vehicle_id = 10981
-predicate = "close_to_vehicle_right"
+time_step = 30
+ego_vehicle_id = 10981
+other_vehicle_id = 10980
+predicate = "lat_left_of_vehicle"
 
 scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
 
@@ -53,10 +53,10 @@ scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
 world = World.create_from_scenario(scenario)
 mpr_world = WorldMPR.create_from_scenario(scenario)
 
-mpr_robustness = predicate_evaluator.evaluate_mpr(
-    world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
-)
-print("MPR:", mpr_robustness)
+# mpr_robustness = predicate_evaluator.evaluate_mpr(
+#     world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
+# )
+# print("MPR:", mpr_robustness)
 
 mfr_robustness = predicate_evaluator.evaluate_robustness(
     world, time_step, [ego_vehicle_id, other_vehicle_id]

@@ -3,7 +3,7 @@ from collections import defaultdict
 from functools import singledispatchmethod
 from typing import Dict, Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
 
-from rtamt.semantics.interval.interval import Interval
+from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -175,7 +175,9 @@ class SigmoidMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval] = None) -> None:
+    def __init__(
+        self, name: str, child: MonitorNode, interval: Optional[RtamtInterval] = None
+    ) -> None:
         super().__init__(name, child)
         self.interval = interval
 
@@ -193,7 +195,9 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, interval: Optional[Interval] = None) -> None:
+    def __init__(
+        self, name: str, child: MonitorNode, interval: Optional[RtamtInterval] = None
+    ) -> None:
         super().__init__(name, child)
         self.interval = interval
 
@@ -283,6 +287,7 @@ class ConstantTraceMonitorNode(ZeroArityMonitorNode):
     """
 
     def __init__(self, name: str, trace: List[float]) -> None:
+        super().__init__(name)
         self.trace = trace
 
     def __str__(self) -> str:

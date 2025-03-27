@@ -57,6 +57,12 @@ class PositionPredicates(str, Enum):
     OnOncomOf = "on_oncom_of"
     InIntersectionConflictArea = "in_intersection_conflict_area"
     StopLineInFront = "stop_line_in_front"
+    LatLeftOf = "lat_left_of"
+    HeadingRight = "heading_right"
+    LatLeftOfVehicle = "lat_left_of_vehicle"
+    RearBehindFront = "rear_behind_front"
+    LatCloseToVehicleLeft = "lat_close_to_vehicle_left"
+    LatCloseToVehicleRight = "lat_close_to_vehicle_right"
 
 
 class PredInSameLane(BasePredicateEvaluator):
@@ -1026,6 +1032,96 @@ class PredCloseToVehicleRight(BasePredicateEvaluator):
             )
         )
         return min(lat_dist, lon_dist)
+
+
+class PredLatLeftOf(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.LatLeftOf
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+
+        return self._scale_lat_dist(
+            ego_vehicle.get_lat_state(time_step, share_lane).d
+            - other_vehicle.get_lat_state(time_step, share_lane).d
+        )
+
+
+class PredHeadingRight(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.HeadingRight
+    arity = 1
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        lane = ego_vehicle.get_lane(time_step)
+
+        return self._scale_angle(-ego_vehicle.get_lat_state(time_step, lane).theta)
+
+
+class PredLatLeftOfVehicle(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.LatLeftOfVehicle
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+
+        return self._scale_lat_dist(
+            ego_vehicle.right_d(time_step, share_lane) - other_vehicle.left_d(time_step, share_lane)
+        )
+
+
+class PredRearBehindFront(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.RearBehindFront
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+
+        return self._scale_lon_dist(
+            other_vehicle.front_s(time_step, share_lane) - ego_vehicle.rear_s(time_step, share_lane)
+        )
+
+
+class PredLatCloseToVehicleLeft(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.LatCloseToVehicleLeft
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+        lat_dist = self._scale_lat_dist(
+            self.config.close_to_other_vehicle
+            - abs(
+                other_vehicle.right_d(time_step, share_lane)
+                - ego_vehicle.left_d(time_step, share_lane)
+            )
+        )
+        return lat_dist
+
+
+class PredLatCloseToVehicleRight(BasePredicateEvaluator):
+    predicate_name = PositionPredicates.LatCloseToVehicleRight
+    arity = 2
+
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        other_vehicle = world.vehicle_by_id(vehicle_ids[1])
+        share_lane = ego_vehicle.get_lane(time_step)
+        lat_dist = self._scale_lat_dist(
+            self.config.close_to_other_vehicle
+            - abs(
+                other_vehicle.left_d(time_step, share_lane)
+                - ego_vehicle.right_d(time_step, share_lane)
+            )
+        )
+        return lat_dist
 
 
 ##################

@@ -12,7 +12,7 @@ vehicle
     : VEHICLE IntegerLiteral;
 
 predicate
-    : Identifier LPAREN vehicle (COMMA vehicle)* RPAREN IO_TYPE_INPUT?;
+    : Identifier LPAREN vehicle (COMMA vehicle)* RPAREN IO_TYPE?;
 
 threshold
 	: LBRACK GreaterOrEqualOperator literal RBRACK;

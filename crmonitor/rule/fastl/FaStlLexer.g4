@@ -32,5 +32,5 @@ CompareToThresholdScaledOperator
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;
 
-IO_TYPE_INPUT
-	: '_i';
+IO_TYPE
+	: ('_i' | '_x');
