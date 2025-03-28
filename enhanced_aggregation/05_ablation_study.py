@@ -1,5 +1,6 @@
 import itertools
 import logging
+import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -13,12 +14,12 @@ from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConf
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-input_scenarios = Path(__file__).parent.parent.parent / "highD-scenarios"
+input_scenarios = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 
 
 scale_rob = True
-model_path = Path("/path/to/mpr/models")
+model_path = Path(__file__).parent.parent / "output" / "models"
 
 MprCfg.build_configuration(
     config={
@@ -59,7 +60,7 @@ def process_scenario_with_rule(scenario_path: Path, rule: str, use_mpr: bool) ->
 
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
-    ego_vehicle = next(iter(world.vehicles))
+    ego_vehicle = next(iter(world.vehicles))  # TODO random sample
     _LOGGER.info(
         f"Evaluating rule {rule} {'with mpr' if use_mpr else 'without mpr'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
     )
@@ -88,25 +89,24 @@ rules = [
     "R_G2",
     "R_G3",
     "R_G4",
-    # "R_I1",
-    # "R_I2",
-    # "R_I3",
-    # "R_I4",
-    # "R_I5",
+    "R_I1",
+    "R_I2",
+    "R_I3",
+    "R_I4",
+    "R_I5",
 ]
 
 scenarios_paths = list(input_scenarios.glob("*.xml"))[0:1]
-use_mpr = [True, False]
-
 
 results = []
-with ProcessPoolExecutor() as executor:
-    for result in executor.map(
-        process_scenario_with_rule,
-        *zip(*itertools.product(scenarios_paths, rules, (True, False))),
-    ):
-        results.append(result)
+if __name__ == "__main__":
+    ctx = mp.get_context('spawn')
+    with ProcessPoolExecutor(max_workers=8, mp_context=ctx) as executor:
+        for result in executor.map(
+            process_scenario_with_rule,
+            *zip(*itertools.product(scenarios_paths, rules, (True, False))),
+        ):
+            results.append(result)
 
-
-results_df = pd.DataFrame(results)
-results_df.to_csv(output_file, index=False)
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(output_file, index=False)
