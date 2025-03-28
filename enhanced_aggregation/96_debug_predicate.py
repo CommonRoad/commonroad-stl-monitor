@@ -7,13 +7,13 @@ from crmonitor.common.world import World
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
-scenario_name = "DEU_LocationBUpper1-1_14217_T-4267"
-time_step = 30
-ego_vehicle_id = 10981
-other_vehicle_id = 10980
-predicate = "lat_left_of_vehicle"
+scenario_name = "DEU_LocationALower26-1_261256_T-1506"
+time_step = 0
+ego_vehicle_id = 10186
+other_vehicle_id = 10176
+predicate = "lat_close_to_vehicle_left"
 
-scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
+scenarios_load_path = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
 
 MprCfg.build_configuration(
     config={

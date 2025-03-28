@@ -78,3 +78,7 @@ yuanfei_predicates = [
     "keeps_brake_speed_limit",
     "keeps_fov_speed_limit",
 ]
+
+insufficient = [
+    "lat_close_to_vehicle_right",
+]

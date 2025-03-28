@@ -3,10 +3,11 @@ import math
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from commonroad_mpr.learning import DataLoader
 from crmonitor.predicate_grouping import (
     all_general_predicates,
-    all_interstate_predicates,
+    all_interstate_predicates, insufficient,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
-selected_predicates = all_general_predicates + all_interstate_predicates
+selected_predicates = insufficient  # all_general_predicates + all_interstate_predicates
 data_loader = DataLoader.create_from_file(learning_data_path)
 
 
@@ -69,4 +70,7 @@ for predicate in selected_predicates:
         f"Many zero values for predicate {predicate}: {analysis[predicate]['count_zero'] / (analysis[predicate]['count_true'] + analysis[predicate]['count_false']):.3f}"
     )
 
-print(analysis)
+# dict to dataframe
+df = pd.DataFrame.from_dict(analysis, orient="index")
+
+print(df)
