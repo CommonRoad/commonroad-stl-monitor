@@ -34,7 +34,9 @@ def evaluate_with_operator(operator, scenario: Scenario, trace, ego_vehicle_id: 
     ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
 
     eval_visitor = OfflineEvaluationMonitorTreeVisitor()
-    final_trace = eval_visitor.evaluate(operator, world, ego_vehicle.end_time, ego_vehicle)
+    final_trace = eval_visitor.evaluate(
+        operator, world, ego_vehicle, ego_vehicle.start_time, ego_vehicle.end_time
+    )
     return final_trace
 
 
