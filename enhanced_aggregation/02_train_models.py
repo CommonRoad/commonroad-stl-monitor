@@ -53,7 +53,7 @@ MprCfg.update_with_config({"feature_variable": arities})
 
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-trainer = ModelTrainer(data_loader, insufficient, ScenarioType.INTERSTATE, training_iter=100)
+trainer = ModelTrainer(data_loader, insufficient, ScenarioType.INTERSTATE, training_iter=400)
 
 models = trainer.train()
 

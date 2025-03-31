@@ -79,5 +79,7 @@ yuanfei_predicates = [
 ]
 
 insufficient = [
+    "lat_close_to_vehicle_left",
     "lat_close_to_vehicle_right",
+    "brakes_abruptly_relative",
 ]
