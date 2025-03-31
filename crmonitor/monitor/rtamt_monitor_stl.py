@@ -1,7 +1,7 @@
 import copy
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import rtamt
 from rtamt.spec.abstract_specification import (
@@ -101,21 +101,24 @@ class RtamtStlMonitor:
         # Flat copy spec and only recreate the online evaluator to
         # avoid parsing the rule.
         self._spec = _create_spec(rule_str, output_type, predicates, dt)
+        self._ast_node_values = {}
 
     @property
     def dt(self) -> float:
         return self._dt
 
     @property
-    def ast_node_values(self) -> Dict[str, float]:
-        return self._spec.online_interpreter.updateVisitor.ast_node_values
+    def ast_node_values(self) -> Dict[str, Dict[str, float]]:
+        return self._ast_node_values
 
     def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]) -> float:
         time = time_step * self.dt
         rob = self._spec.update(time, predicates)
         return rob
 
-    def evaluate_monitor_offline(self, predicates: List[Tuple[str, List[float]]]):
+    def evaluate_monitor_offline(
+        self, predicates: List[Tuple[str, List[float]]], marker: Optional[str] = None
+    ) -> List[float]:
         dataset = {}
         max_time = 0
         for i, (predicate_name, values) in enumerate(predicates):
@@ -126,6 +129,12 @@ class RtamtStlMonitor:
         for i in range(0, max_time):
             dataset["time"].append(i)
         robustness_values = self._spec.evaluate(dataset)
+
+        # Extract the node values and save them with the marker.
+        self._ast_node_values[marker] = copy.deepcopy(
+            self._spec.offline_interpreter.ast_node_values
+        )
+        self._spec.offline_interpreter.ast_nodes_values = {}
 
         # The robustness values are of the form [[time_step, robustness_value], [time_step + 1, robustness_value]]
         return [entry[1] for entry in robustness_values]

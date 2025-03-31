@@ -44,10 +44,10 @@ all_interstate_predicates = [
     "lat_left_of_vehicle",
     "rear_behind_front",
     "lat_close_to_vehicle_left",
-    "lat_close_to_vehicle_right"
+    "lat_close_to_vehicle_right",
 ]
 
-changed_to_meta  =[
+changed_to_meta = [
     "slow_leading_vehicle",
     "exist_standing_leading_vehicle",
     "in_congestion",
@@ -59,8 +59,7 @@ changed_to_meta  =[
     "cut_in",
     "approach_from_left",
     "approach_from_right",
-    "left_of"
-    "lon_intersecting_vehicles",
+    "left_oflon_intersecting_vehicles",
     "close_to_vehicle_left",
     "close_to_vehicle_right",
 ]

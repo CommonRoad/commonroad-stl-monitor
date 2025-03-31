@@ -1,4 +1,3 @@
-import copy
 import re
 from functools import singledispatchmethod
 from typing import Dict, Optional, Tuple

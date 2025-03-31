@@ -23,7 +23,7 @@ scenario_path = "./scenarios/test_interstate/DEU_test_unnecessary_braking.xml"
 use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
-scale_rob = True # not use_mpr
+scale_rob = True  # not use_mpr
 
 # Optionally provide a Path where pre-trained models can be found. If None is specified, the models from the mpr repo are used.
 model_path = Path(__file__).parent.parent.joinpath("output/models")

@@ -189,7 +189,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     ) -> List[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
 
-        sample_return = node.evaluate(list(child_values.items()))
+        sample_return = node.evaluate(list(child_values.items()), marker=str(ctx.vehicle_ids[-1]))
 
         # When the rule is evaluated with IA-STL, some robustness values might be +inf.
         # This can lead to problems if the user expects scaled values.

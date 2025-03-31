@@ -7,7 +7,8 @@ import pandas as pd
 from commonroad_mpr.learning import DataLoader
 from crmonitor.predicate_grouping import (
     all_general_predicates,
-    all_interstate_predicates, insufficient,
+    all_interstate_predicates,
+    insufficient,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -4,7 +4,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates, insufficient
+from crmonitor.predicate_grouping import (
+    all_general_predicates,
+    all_interstate_predicates,
+    insufficient,
+)
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)

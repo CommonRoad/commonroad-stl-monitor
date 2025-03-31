@@ -563,7 +563,7 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
             if not self._is_active(node):
                 ax_line.set_visible(False)
                 continue
-            elif node == new_active_node:
+            elif new_active_node is not None and node.name == new_active_node.name:
                 # If a node was not previously shown, make it visible by default.
                 ax_line.set_visible(True)
 
@@ -625,15 +625,15 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
         self._lines[line] = node
 
     def _is_active(self, node: Union[MonitorNode, RtamtAbstractNode]) -> bool:
-        return node in self._active_nodes
+        return node.name in self._active_nodes
 
     def toggle_active(self, node: Union[MonitorNode, RtamtAbstractNode]) -> None:
         if self._is_active(node):
-            self._active_nodes.remove(node)
+            self._active_nodes.remove(node.name)
+            self._redraw()
         else:
-            self._active_nodes.append(node)
-
-        self._redraw(node)
+            self._active_nodes.append(node.name)
+            self._redraw(node)
 
     @singledispatchmethod
     def visit(self, node: MonitorNode, vehicle_ids: Dict[int, int]) -> None: ...
@@ -650,7 +650,8 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
             child_label = self._to_string_visitor.to_string(child, vehicle_ids)
             name_replacements[child.name] = child_label
 
-        values = node.monitor._spec.offline_interpreter.ast_node_values
+        marker = str(list(vehicle_ids.values())[-1])
+        values = node.monitor.ast_node_values[marker]
         for rtamt_ast_node, trace in values.items():
             name = rtamt_ast_node.name
             for target_name, name_replacement in name_replacements.items():

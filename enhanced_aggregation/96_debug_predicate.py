@@ -13,7 +13,9 @@ ego_vehicle_id = 10186
 other_vehicle_id = 10176
 predicate = "lat_close_to_vehicle_left"
 
-scenarios_load_path = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
+scenarios_load_path = (
+    Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
+)
 
 MprCfg.build_configuration(
     config={

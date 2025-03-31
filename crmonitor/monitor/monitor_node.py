@@ -100,8 +100,8 @@ class RuleMonitorNode(VaradicMonitorNode):
     def update(self, time, values) -> float:
         return self.monitor.evaluate_monitor_online(time, values)
 
-    def evaluate(self, values) -> List[float]:
-        return self.monitor.evaluate_monitor_offline(values)
+    def evaluate(self, values, marker: Optional[str] = None) -> List[float]:
+        return self.monitor.evaluate_monitor_offline(values, marker)
 
     def copy(self):
         return RuleMonitorNode(self.name, [c.copy() for c in self.children], self.monitor.copy())
