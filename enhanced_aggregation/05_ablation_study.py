@@ -1,9 +1,11 @@
 import itertools
+import random
 import logging
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+from commonroad.scenario.scenario import Scenario
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
@@ -18,6 +20,7 @@ input_scenarios = Path(__file__).parent.parent.parent / "scenarios-for-semantic-
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 
 
+num_vehicles_per_scenarios = 1
 scale_rob = True
 model_path = Path(__file__).parent.parent / "output" / "models"
 
@@ -48,8 +51,9 @@ MprCfg.build_configuration(
 )
 
 
-def process_scenario_with_rule(scenario_path: Path, rule: str, use_mpr: bool) -> dict:
-    scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+def process_scenario_with_rule(
+    scenario: Scenario, ego_vehicle_id: int, rule: str, use_mpr: bool
+) -> dict:
     world = World.create_from_scenario(scenario)
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
@@ -60,7 +64,8 @@ def process_scenario_with_rule(scenario_path: Path, rule: str, use_mpr: bool) ->
 
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
-    ego_vehicle = next(iter(world.vehicles))  # TODO random sample
+    ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
+    assert ego_vehicle is not None
     _LOGGER.info(
         f"Evaluating rule {rule} {'with mpr' if use_mpr else 'without mpr'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
     )
@@ -97,15 +102,31 @@ rules = [
 ]
 
 scenarios_paths = list(input_scenarios.glob("*.xml"))[0:1]
+scenarios = list(
+    map(
+        lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],
+        scenarios_paths,
+    )
+)
+
+ego_vehicles_per_scenario = {}
+for scenario in scenarios:
+    vehicle_ids = list(map(lambda v: v.obstacle_id, scenario.dynamic_obstacles))
+    ego_vehicles_per_scenario[scenario.scenario_id] = random.sample(
+        vehicle_ids, k=num_vehicles_per_scenarios
+    )
+
 
 results = []
 if __name__ == "__main__":
-    ctx = mp.get_context('spawn')
+    ctx = mp.get_context("spawn")
     with ProcessPoolExecutor(max_workers=8, mp_context=ctx) as executor:
-        for result in executor.map(
-            process_scenario_with_rule,
-            *zip(*itertools.product(scenarios_paths, rules, (True, False))),
-        ):
+        tasks = []
+        for scenario, rule, use_mpr in itertools.product(scenarios, rules, (True, False)):
+            for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
+                tasks.append((scenario, ego_vehicle_id, rule, use_mpr))
+
+        for result in executor.map(process_scenario_with_rule, *zip(*tuple(tasks))):
             results.append(result)
 
     results_df = pd.DataFrame(results)

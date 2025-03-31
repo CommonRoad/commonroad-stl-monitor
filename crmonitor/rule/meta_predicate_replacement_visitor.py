@@ -17,6 +17,19 @@ from crmonitor.rule.rule_parser_interface import RuleParserInterface
 
 
 class EmbedingVisitor(RuleTreeVisitorInterface[None]):
+    """
+    Applies context information to a subtree being embedded during meta-predicate replacement.
+
+    When a meta-predicate is replaced with its concrete implementation, this visitor ensures
+    that the replacement subtree inherits the appropriate context from its parent, including
+    I/O type specifications and agent placeholder mappings. This maintains semantic consistency
+    between the abstract meta-predicate and its concrete implementation.
+
+    :param root: Root node of the subtree being embedded
+    :param io_type: I/O type to apply throughout the subtree
+    :param agent_placeholder_replacements: Mappings for agent placeholders
+    """
+
     def embed(
         self,
         root: VisitorNode,
@@ -90,8 +103,14 @@ class MetaPredicateRule:
     """
     Defines a rule that replaces meta-predicates with concrete expressions in traffic rules.
 
-    This class handles both agent placeholders (variables that represent different agents in the rule)
-    and input/output type placeholders, ensuring that the generated rule correctly interpolates these values.
+    This class serves as a template for rule substitution, capturing both the pattern to
+    be replaced (via meta-predicate signatures) and the replacement logic (rule string).
+    It preserves critical contextual information such as agent placeholders and I/O types
+    that must be carried over during substitution.
+
+    :param rule: The rule string that will replace the meta-predicate
+    :param quantified_agents_placeholders: Tuple of agent IDs referenced in the rule
+    :param io_type_placeholder: Optional I/O type specifier for the rule context
     """
 
     def __init__(
@@ -143,6 +162,12 @@ class MetaPredicateRule:
 class MetaPredicateLookupTable:
     """
     Stores and manages a mapping of meta-predicate names to their corresponding replacement rules.
+
+    This registry acts as the central repository for meta-predicate definitions, allowing the
+    system to look up the appropriate substitution rules when processing a rule tree. It provides
+    a clean separation between rule definition and rule processing.
+
+    :param meta_predicates: Dictionary mapping meta-predicate names to their replacement rules
     """
 
     def __init__(self, meta_predicates: Dict[str, MetaPredicateRule]) -> None:
@@ -151,7 +176,7 @@ class MetaPredicateLookupTable:
     @classmethod
     def from_dict(cls, _dict: dict) -> "MetaPredicateLookupTable":
         """
-        Constructs a `ReplacementTable` from a dictionary where the keys are meta-predicate signatures and the values are their replacement rules.
+        Constructs a `MetaPredicateLookupTable` from a dictionary where the keys are meta-predicate signatures and the values are their replacement rules.
 
         :param _dict: A dictionary mapping predicate signatures to rule strings.
         :return: A `ReplacementTable` instance.
@@ -175,6 +200,17 @@ class MetaPredicateLookupTable:
 
 
 class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
+    """
+    Traverses a rule tree and replaces meta-predicate nodes with their concrete implementations.
+
+    This visitor performs the core substitution logic, identifying meta-predicate nodes in the
+    rule tree and replacing them with parsed subtrees based on their defined replacement rules.
+    The visitor preserves all contextual information including agent bindings and I/O types.
+
+    :param meta_predicate_loopkup_table: Registry of meta-predicates and their replacement rules
+    :param parser: Rule parser for generating subtrees from replacement rule strings
+    """
+
     def __init__(
         self, meta_predicate_loopkup_table: MetaPredicateLookupTable, parser: RuleParserInterface
     ):
@@ -212,12 +248,17 @@ class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
         )
         if meta_predicate_rule is None:
             raise RuntimeError(f"Unkown meta-predicate '{node.metapredicate_name}'!")
+
         meta_predicate_tree = self._parser.parse(meta_predicate_rule.rule_str, name=node.name)
 
+        # Construct a mapping from the agent placeholders in the meta-predicate sub-tree to the agents in our current tree.
+        # This allows the `EmbedingVisitor` to lookup which agent placeholderss it should replace.
         agents_replacement_table = {
             x: y for (x, y) in zip(meta_predicate_rule.agent_placeholders, node.agent_placeholders)
         }
 
+        # Embed the replacement tree into our main tree.
+        # This ensures that context information, such as the agent bindings and I/O types are correctly preserved.
         embeding_visior = EmbedingVisitor()
         embeding_visior.embed(meta_predicate_tree, node.io_type, agents_replacement_table)
 

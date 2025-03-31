@@ -212,8 +212,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         samples, selected_ids = self._visit_quant_node(node, ctx)
         robustness_values = []
         for values in samples:
-            if len(values) > 0:
-                idx = np.argmin(values)
+            # Check if any non-nan value is present, because if not, np.nanargmin will fail.
+            if len(values) > 0 and not np.all(np.isnan(values)):
+                # Use np.nanargmin instead of np.argmin because the latter will select `nan` as the min.
+                idx = np.nanargmin(values)
                 val = values[idx]
 
                 pivotal_monitor = node.monitors[selected_ids[idx]]
@@ -240,8 +242,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
 
         robustness_values = []
         for values in samples:
-            if len(values) > 0:
-                idx = np.argmax(values)
+            # Check if any non-nan value is present, because if not, np.nanargmax will fail.
+            if len(values) > 0 and not np.all(np.isnan(values)):
+                # Use np.nanargmax instead of np.argmax because the latter will select `nan` as the max.
+                idx = np.nanargmax(values)
                 val = values[idx]
 
                 pivotal_monitor = node.monitors[selected_ids[idx]]
