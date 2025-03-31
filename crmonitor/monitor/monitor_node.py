@@ -7,12 +7,12 @@ from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.predicates.base import BasePredicateEvaluator
-from crmonitor.rule.rule_node import VisitorNode
+from crmonitor.rule.rule_node import IOType
 
 
-class MonitorNode(VisitorNode):
+class MonitorNode:
     def __init__(self, name: str) -> None:
-        super().__init__(name)
+        self.name = name
 
         self._values = []
 
@@ -59,6 +59,14 @@ class MonitorNode(VisitorNode):
     def reset(self):
         self._values = []
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MonitorNode):
+            return False
+        return self.name == other.name
+
 
 class ZeroArityMonitorNode(MonitorNode): ...
 
@@ -72,6 +80,14 @@ class UnaryMonitorNode(MonitorNode):
     def _copy_cls(cls, node: "UnaryMonitorNode") -> "UnaryMonitorNode":
         return cls(node.name, node.child.copy())
 
+    def __hash__(self) -> int:
+        return hash((self.name, self.child))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UnaryMonitorNode):
+            return False
+        return super().__eq__(other) and self.child == other.child
+
 
 class BinaryMonitorNode(MonitorNode):
     def __init__(self, name: str, left_child: MonitorNode, right_child: MonitorNode) -> None:
@@ -83,14 +99,34 @@ class BinaryMonitorNode(MonitorNode):
     def _copy_cls(cls, node: "BinaryMonitorNode") -> "BinaryMonitorNode":
         return cls(node.name, node.left_child.copy(), node.right_child.copy())
 
+    def __hash__(self) -> int:
+        return hash((self.name, self.left_child, self.right_child))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BinaryMonitorNode):
+            return False
+        return (
+            super().__eq__(other)
+            and self.left_child == other.left_child
+            and self.right_child == other.right_child
+        )
+
 
 class VaradicMonitorNode(MonitorNode):
-    def __init__(self, name: str, children: Sequence[MonitorNode]) -> None:
+    def __init__(self, name: str, children: Tuple[MonitorNode, ...]) -> None:
         super().__init__(name)
         self.children = children
 
+    def __hash__(self) -> int:
+        return hash((self.name, tuple(self.children)))
 
-class RuleMonitorNode(VaradicMonitorNode):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, VaradicMonitorNode):
+            return False
+        return super().__eq__(other) and self.children == other.children
+
+
+class RtamtRuleMonitorNode(VaradicMonitorNode):
     def __init__(
         self, name: str, children: Sequence[MonitorNode], monitor: RtamtStlMonitor
     ) -> None:
@@ -104,7 +140,9 @@ class RuleMonitorNode(VaradicMonitorNode):
         return self.monitor.evaluate_monitor_offline(values, marker)
 
     def copy(self):
-        return RuleMonitorNode(self.name, [c.copy() for c in self.children], self.monitor.copy())
+        return RtamtRuleMonitorNode(
+            self.name, [c.copy() for c in self.children], self.monitor.copy()
+        )
 
     def reset(self):
         super().reset()
@@ -236,15 +274,20 @@ class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
 
 class PredicateMonitorNode(ZeroArityMonitorNode):
     def __init__(
-        self, name: str, evaluator: BasePredicateEvaluator, agent_placeholders: Tuple[int, ...]
+        self,
+        name: str,
+        evaluator: BasePredicateEvaluator,
+        agent_placeholders: Tuple[int, ...],
+        io_type: IOType,
     ) -> None:
         super().__init__(name)
         self.evaluator = evaluator
         self.agent_placeholders = agent_placeholders
+        self.io_type = io_type
 
     @classmethod
     def _copy_cls(cls, node: "PredicateMonitorNode") -> "PredicateMonitorNode":
-        return cls(node.name, node.evaluator, node.agent_placeholders)
+        return cls(node.name, node.evaluator, node.agent_placeholders, node.io_type)
 
     def evaluate_boolean(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)

@@ -12,7 +12,7 @@ from crmonitor.rule.meta_predicate_replacement_visitor import (
 )
 from crmonitor.rule.parse_tree_visitor import TrafficRuleParseTreeVisitor
 from crmonitor.rule.rule_node import (
-    VisitorNode,
+    RuleAstNode,
 )
 from crmonitor.rule.rule_parser_interface import RuleParserInterface
 
@@ -34,7 +34,9 @@ class RuleParser(RuleParserInterface):
         self._sub_rule_counter += 1
         return f"g{self._sub_rule_counter}"
 
-    def parse(self, rule: str, name: Optional[str] = None) -> VisitorNode:
+    def parse(
+        self, rule: str, name: Optional[str] = None, replace_meta_predicates: bool = True
+    ) -> RuleAstNode:
         stream = InputStream(rule)
         lexer = FaStlLexer(stream)
         stream = CommonTokenStream(lexer)
@@ -45,6 +47,7 @@ class RuleParser(RuleParserInterface):
         if name is not None:
             rule_node_tree.name = name
 
-        visitor = MetaPredicateReplacementVisitor(self._meta_predicate_lookup_table, self)
-        rule_node_tree = visitor.visit(rule_node_tree)
+        if replace_meta_predicates:
+            visitor = MetaPredicateReplacementVisitor(self._meta_predicate_lookup_table, self)
+            rule_node_tree = visitor.visit(rule_node_tree)
         return rule_node_tree

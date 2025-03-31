@@ -5,15 +5,11 @@ import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
 from crmonitor.common.world import World
-
-from commonroad.common.file_reader import CommonRoadFileReader
-import pandas as pd
-
 from crmonitor.evaluation.visitor import OfflineEvaluationMonitorTreeVisitor
 from crmonitor.monitor.monitor_node import (
     ConstantTraceMonitorNode,
     HistoricallyDurationMonitorNode,
-    RuleMonitorNode,
+    RtamtRuleMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.rule.rule_node import HistoricallyDurationSeverityNode, IOType
@@ -38,7 +34,7 @@ def evaluate_with_operator(operator, scenario: Scenario, trace, ego_vehicle_id: 
     ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
 
     eval_visitor = OfflineEvaluationMonitorTreeVisitor()
-    final_trace = eval_visitor.walk(operator, world, ego_vehicle.end_time, ego_vehicle)
+    final_trace = eval_visitor.evaluate(operator, world, ego_vehicle.end_time, ego_vehicle)
     return final_trace
 
 
@@ -61,7 +57,9 @@ for _, row in results_df.iterrows():
         rtamt_stl_monitor = RtamtStlMonitor(
             f"always[0,{duration_sec}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt
         )
-        rule_monitor = RuleMonitorNode(name="g1", children=[trace_node], monitor=rtamt_stl_monitor)
+        rule_monitor = RtamtRuleMonitorNode(
+            name="g1", children=[trace_node], monitor=rtamt_stl_monitor
+        )
         final_trace = evaluate_with_operator(rule_monitor, scenario, trace, row["vehicle_id"])
 
         row[str(rule_monitor)] = final_trace

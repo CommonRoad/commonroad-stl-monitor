@@ -26,7 +26,7 @@ from crmonitor.monitor.monitor_node import (
     MonitorVisitorInterface,
     PredicateMonitorNode,
     QuantMonitorNode,
-    RuleMonitorNode,
+    RtamtRuleMonitorNode,
     UnaryMonitorNode,
 )
 from crmonitor.predicates.base import BasePredicateEvaluator
@@ -385,7 +385,7 @@ class AstVisualizier:
 
         :returns: The node id. Can be used by the caller to establish a relationship to it's canonical child in the AST.
         """
-        if isinstance(node, RuleMonitorNode):
+        if isinstance(node, RtamtRuleMonitorNode):
             # Skip rule nodes and only visualize their constituents aka. the rtamt rule.
             ast = node.monitor._spec.offline_interpreter.ast
             return self.build_graph(ast.specs[0])
@@ -639,7 +639,7 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
     def visit(self, node: MonitorNode, vehicle_ids: Dict[int, int]) -> None: ...
 
     @visit.register
-    def _(self, node: RuleMonitorNode, vehicle_ids: Dict[int, int]) -> None:
+    def _(self, node: RtamtRuleMonitorNode, vehicle_ids: Dict[int, int]) -> None:
         [self.visit(child, vehicle_ids) for child in node.children]
         label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
@@ -650,8 +650,11 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
             child_label = self._to_string_visitor.to_string(child, vehicle_ids)
             name_replacements[child.name] = child_label
 
-        marker = str(list(vehicle_ids.values())[-1])
-        values = node.monitor.ast_node_values[marker]
+        if len(vehicle_ids) == 0:
+            values = node.monitor.ast_node_values[list(node.monitor.ast_node_values.keys())[0]]
+        else:
+            marker = str(list(vehicle_ids.values())[-1])
+            values = node.monitor.ast_node_values[marker]
         for rtamt_ast_node, trace in values.items():
             name = rtamt_ast_node.name
             for target_name, name_replacement in name_replacements.items():

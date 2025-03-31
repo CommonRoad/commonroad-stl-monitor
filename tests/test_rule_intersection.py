@@ -8,7 +8,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
-from crmonitor.rule.rule_node import AllNode, PredicateNode, RuleNode
+from crmonitor.rule.rule_node import AllNode, PredicateNode, RuleAstNode
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
@@ -45,7 +45,7 @@ class RuleTest(unittest.TestCase):
             world, ego_vehicle, "R_IN1", self.traffic_rules
         )
         rule = rule_eval._rule
-        self.assertTrue(isinstance(rule, RuleNode))
+        self.assertTrue(isinstance(rule, RuleAstNode))
         self.assertEqual(len(rule.children), 4)
         self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
         rule_robustness = list()

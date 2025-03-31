@@ -25,7 +25,7 @@ from crmonitor.monitor.monitor_node import (
     MonitorVisitorInterface,
     PredicateMonitorNode,
     QuantMonitorNode,
-    RuleMonitorNode,
+    RtamtRuleMonitorNode,
     SigmoidMonitorNode,
     SumIfPositiveMonitorNode,
     UnaryMonitorNode,
@@ -42,11 +42,11 @@ from crmonitor.rule.rule_node import (
     HistoricallyDurationSeverityNode,
     IOType,
     PredicateNode,
-    RuleNode,
+    RtamtRuleNode,
+    RuleAstNode,
     RuleTreeVisitorInterface,
     SigmoidNode,
     SumIfPositiveNode,
-    VisitorNode,
 )
 
 
@@ -66,16 +66,16 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
         self._predicate_factory = PredicateFactory(predicate_evaluator_config)
 
     @singledispatchmethod
-    def visit(self, node: VisitorNode, *args, **kwargs) -> MonitorNode:
+    def visit(self, node: RuleAstNode, *args, **kwargs) -> MonitorNode:
         raise NotImplementedError(
             f"Failed to create monitor for node '{node}': Transformation for this node is currently not implemented!"
         )
 
     @visit.register
-    def _(self, node: RuleNode, *args, **kwargs) -> MonitorNode:
+    def _(self, node: RtamtRuleNode, *args, **kwargs) -> MonitorNode:
         children = [self.visit(child, *args, **kwargs) for child in node.children]
         monitor = RtamtStlMonitor.create_from_rule_node(node, self.dt, self.output_type)
-        return RuleMonitorNode(node.name, children, monitor)
+        return RtamtRuleMonitorNode(node.name, children, monitor)
 
     @visit.register
     def _(self, node: AllNode, *args, **kwargs) -> MonitorNode:
@@ -114,8 +114,11 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
 
     @visit.register
     def _(self, node: PredicateNode, *args, **kwargs) -> MonitorNode:
+        if node.io_type is None:
+            raise RuntimeError(f"I/O type of predicate {node.base_name} is not set!")
+
         evaluator = self._predicate_factory.get_predicate(node.base_name)
-        return PredicateMonitorNode(node.name, evaluator, node.agent_placeholders)
+        return PredicateMonitorNode(node.name, evaluator, node.agent_placeholders, node.io_type)
 
 
 @dataclass
@@ -162,18 +165,18 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
 
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
-    def walk(
+    def evaluate(
         self,
         node: MonitorNode,
         world: World,
-        max_time_step: int,
         ego_vehicle: Vehicle,
+        start_time_step: int,
+        end_time_step: int,
         mpr_world: Optional[MprWorld] = None,
     ):
-        start_time_step = ego_vehicle.start_time
-        vehicles = {0: (ego_vehicle.id, CommonRoadInterval(start_time_step, max_time_step))}
+        vehicles = {0: (ego_vehicle.id, CommonRoadInterval(start_time_step, end_time_step))}
         ctx = OfflineEvaluationMonitorTreeVisitorContext(
-            world, mpr_world, start_time_step, max_time_step, vehicles
+            world, mpr_world, start_time_step, end_time_step, vehicles
         )
         return self.visit(node, ctx)
 
@@ -185,7 +188,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
 
     @visit.register
     def visit_rule_node(
-        self, node: RuleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
+        self, node: RtamtRuleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
     ) -> List[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
 
@@ -503,7 +506,7 @@ class EvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
 
     @visit.register
     def visit_rule(
-        self, node: RuleMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
+        self, node: RtamtRuleMonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext
     ) -> float:
         # Collect child_values
         assert node.monitor.dt == ctx.world.dt, (
@@ -650,7 +653,7 @@ class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]
 
 class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     @BaseValueMonitorTreeVisitor.visit.register
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *args, **kwargs):
+    def visit_rule_node(self, rule_node: RtamtRuleMonitorNode, *args, **kwargs):
         r = []
         for c in rule_node.children:
             r.extend(self.visit(c))
@@ -668,7 +671,7 @@ class MPRGradientCollectorMonitorTreeVisitor(PredicateCollectorMonitorTreeVisito
 
 class AstNodeValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     @staticmethod
-    def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):
+    def visit_rule_node(rule_node: "RtamtRuleMonitorNode", *ctx):
         return list(rule_node.monitor.ast_node_values.items())
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -691,7 +694,7 @@ class PredicateVisualizerMonitorTreeVisitor(MonitorVisitorInterface[Any]):
         return ctx[:idx], is_effective
 
     @visit.register
-    def visit_rule_node(self, rule_node: RuleMonitorNode, *args, **kwargs):
+    def visit_rule_node(self, rule_node: RtamtRuleMonitorNode, *args, **kwargs):
         draw_functions_nested = [self.visit(c, *args, **kwargs) for c in rule_node.children]
         return list(itertools.chain(*draw_functions_nested))
 
@@ -796,7 +799,7 @@ class MonitorToStringVisitor(MonitorVisitorInterface[str]):
         return str(node)
 
     @visit.register
-    def _(self, node: RuleMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def _(self, node: RtamtRuleMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
         label = node.monitor._rule
         for child in node.children:
             # Sub-Rules are represent by their placeholders (child.name) in the rule.
@@ -840,7 +843,9 @@ class VariableCollectionVisitor(MonitorVisitorInterface[Dict[str, MonitorNode]])
         return state
 
     @visit.register
-    def _(self, node: RuleMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+    def _(
+        self, node: RtamtRuleMonitorNode, state: Dict[str, MonitorNode]
+    ) -> Dict[str, MonitorNode]:
         [self.visit(child, state) for child in node.children]
         state[node.name] = node
         return state

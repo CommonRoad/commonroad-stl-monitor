@@ -9,24 +9,24 @@ from crmonitor.evaluation.visitor import (
     BaseValueMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
 )
-from crmonitor.monitor.monitor_node import RuleMonitorNode
+from crmonitor.monitor.monitor_node import RtamtRuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
+from crmonitor.rule.rule_node import PredicateNode, RuleAstNode
 
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
-    def visit_rule_node(self, rule_node: RuleNode, *ctx):
+    def visit_rule_node(self, rule_node: RuleAstNode, *ctx):
         children = [c.visit(self, *ctx) for c in rule_node.children]
         monitor = PropositionRobustnessMonitor.create_from_rule_node(
             rule_node, self.dt, self.output_type
         )
-        return RuleMonitorNode(rule_node.name, children, monitor)
+        return RtamtRuleMonitorNode(rule_node.name, children, monitor)
 
 
 class PropositionCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     @staticmethod
-    def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):
+    def visit_rule_node(rule_node: "RtamtRuleMonitorNode", *ctx):
         return list(rule_node.monitor.ast_node_values.items())
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
@@ -36,7 +36,7 @@ class PropositionCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
 class PropositionRuleEvaluator(RuleEvaluator):
     def __init__(
         self,
-        rule: VisitorNode,
+        rule: RuleAstNode,
         ego_id: int,
         world: World,
         world_mpr: Optional[WorldMPR] = (None,),
@@ -57,7 +57,7 @@ class PropositionRuleEvaluator(RuleEvaluator):
             monitor_creation_visitor,
         )
         monitor_copied = copy.copy(self._monitor)
-        while not isinstance(monitor_copied, RuleMonitorNode):
+        while not isinstance(monitor_copied, RtamtRuleMonitorNode):
             if isinstance(monitor_copied, list):
                 monitor_copied = copy.copy(monitor_copied[0])
             else:

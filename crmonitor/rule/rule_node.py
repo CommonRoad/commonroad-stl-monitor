@@ -13,9 +13,9 @@ class IOType(Enum):
 
 
 @dataclass(unsafe_hash=True)
-class VisitorNode:
+class RuleAstNode:
     """
-    Base class for nodes that can be processed by a visitor.
+    Base class for nodes that can be processed by a rule AST visitor.
     """
 
     name: str
@@ -23,34 +23,37 @@ class VisitorNode:
 
 
 @dataclass(unsafe_hash=True)
-class NullaryNode(VisitorNode):
+class NullaryNode(RuleAstNode):
     """Rule nodes that do not have any children."""
 
     ...
 
 
 @dataclass(unsafe_hash=True)
-class UnaryNode(VisitorNode):
+class UnaryNode(RuleAstNode):
     """Rule nodes that only have one child. This is used for unary operators."""
 
-    child: VisitorNode
+    child: RuleAstNode
 
 
 @dataclass(unsafe_hash=True)
-class BinaryNode(VisitorNode):
+class BinaryNode(RuleAstNode):
     """Rule nodes that have two children. This is used for binary operators"""
 
-    left_child: VisitorNode
-    right_child: VisitorNode
+    left_child: RuleAstNode
+    right_child: RuleAstNode
 
 
 @dataclass(unsafe_hash=True)
-class RuleNode(VisitorNode):
-    """A node to contain RTAMT rules, which do not contain any further custom operators."""
-
+class VaradicNode(RuleAstNode):
     # children are a tuple because they are immutable. This helps with hashing.
-    children: Tuple[VisitorNode, ...]
+    children: Tuple[RuleAstNode, ...]
     """Children that are referenced in the RTAMT rule."""
+
+
+@dataclass(unsafe_hash=True)
+class RtamtRuleNode(VaradicNode):
+    """A node to contain RTAMT rules, which do not contain any further custom operators."""
 
     rule_str: str
     """The RTAMT rule."""
@@ -106,16 +109,18 @@ class PredicateNode(NullaryNode):
     """The agent placeholder IDs (`a0`, `a1`, ...) which were passed to this predicate."""
 
     io_type: Optional[IOType] = IOType.OUTPUT
-    """Specifies whether this predicate is an input or output predicate."""
+    """Specifies whether this predicate is an input or output predicate. If None, the I/O type must be set when this node is embeded (e.g. during meta-predicate replacement) into another tree."""
 
 
 @dataclass(unsafe_hash=True)
-class MetaPredicateNode(VisitorNode):
+class MetaPredicateNode(NullaryNode):
     metapredicate_name: str
 
     agent_placeholders: Tuple[int, ...]
+    """The agent placeholder IDs (`a0`, `a1`, ...) which can be set with the invocation of this meta-predicate."""
 
     io_type: Optional[IOType] = IOType.OUTPUT
+    """Specifies whether this predicate is an input or output predicate. If None, the I/O type must be set when this node is embeded (e.g. during meta-predicate replacement) into another tree."""
 
 
 T = TypeVar("T")
@@ -128,7 +133,7 @@ class RuleTreeVisitorInterface(Generic[T], ABC):
 
     @singledispatchmethod
     @abstractmethod
-    def visit(self, node: VisitorNode, *args, **kwargs) -> T:
+    def visit(self, node: RuleAstNode, *args, **kwargs) -> T:
         """
         Dispatch method for visiting different types of nodes.
         Must be implemented in subclasses.
