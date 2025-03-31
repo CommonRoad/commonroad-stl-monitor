@@ -16,7 +16,7 @@ from crmonitor.rule.rule_node import (
     IOType,
     MetaPredicateNode,
     PredicateNode,
-    RuleNode,
+    RtamtRuleNode,
     SigmoidNode,
     SumIfPositiveNode,
 )
@@ -110,7 +110,7 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         if not isinstance(ctx.parentCtx, FaStlParser.SpecNestedContext):
             # Flatten tree to evaluate with rtamt
             return [
-                RuleNode(
+                RtamtRuleNode(
                     self._get_new_unique_node_name(),
                     children,
                     self._rewriter.getText(

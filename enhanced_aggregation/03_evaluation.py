@@ -29,10 +29,10 @@ scale_rob = True  # not use_mpr
 model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_I4"
+traffic_rule = "R_G2"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
-output_type = OutputType.STANDARD
+output_type = OutputType.OUTPUT_ROBUSTNESS
 
 logging.basicConfig(level=logging.INFO)
 

@@ -101,9 +101,10 @@ class PredicateEvaluationWrapper:
     ) -> dict:
         robustness = {}
         for predicate_name, evaluator in self._evaluators.items():
-            robustness[predicate_name] = evaluator.evaluate_mpr(
-                world, world_mpr, time_step, vehicle_ids
-            )
+            ret = evaluator.evaluate_mpr(world, world_mpr, time_step, vehicle_ids)
+
+            ret["mfr_robustness"] = evaluator.evaluate_robustness(world, time_step, vehicle_ids)
+            robustness[predicate_name] = ret
 
         return robustness
 

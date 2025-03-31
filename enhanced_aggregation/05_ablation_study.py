@@ -11,6 +11,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
+from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.
 
 num_vehicles_per_scenarios = 1
 scale_rob = True
+output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 
 MprCfg.build_configuration(
@@ -73,6 +75,7 @@ def process_scenario_with_rule(
         world,
         ego_vehicle.id,
         rule,
+        output_type=output_type,
         predicate_evaluator_config=predicate_evaluator_config,
     )
     # Either step through time steps sequentially

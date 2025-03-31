@@ -9,7 +9,7 @@ from rtamt.spec.abstract_specification import (
     AbstractOnlineSpecification,
 )
 
-from crmonitor.rule.rule_node import IOType, RuleNode
+from crmonitor.rule.rule_node import IOType, RuleAstNode
 
 from .specification_dict import stl_discrete_time_online_specification_factory
 
@@ -85,7 +85,9 @@ class RtamtStlMonitor:
     """
 
     @classmethod
-    def create_from_rule_node(cls, rule_node: RuleNode, dt: float, output_type=OutputType.STANDARD):
+    def create_from_rule_node(
+        cls, rule_node: RuleAstNode, dt: float, output_type=OutputType.STANDARD
+    ):
         predicates = [
             (c.name, c.io_type if hasattr(c, "io_type") else IOType.OUTPUT)
             for c in rule_node.children

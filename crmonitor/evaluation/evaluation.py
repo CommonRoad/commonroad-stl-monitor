@@ -34,7 +34,7 @@ from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
-from crmonitor.rule.rule_node import RuleTreeVisitorInterface, VisitorNode
+from crmonitor.rule.rule_node import RuleAstNode, RuleTreeVisitorInterface
 from crmonitor.rule.rule_parser import RuleParser
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class RuleEvaluatorInterface(ABC):
 
     def __init__(
         self,
-        rule: VisitorNode,
+        rule: RuleAstNode,
         world: World,
         ego_id: int,
         use_boolean: bool = False,
@@ -85,9 +85,12 @@ class RuleEvaluatorInterface(ABC):
         return self._world.vehicle_by_id(self._ego_id)
 
     @abstractmethod
-    def evaluate(self) -> List[float]: ...
+    def evaluate(
+        self, start_time: Optional[int] = None, end_time: Optional[int] = None
+    ) -> List[float]: ...
 
     def visualize(self) -> None:
+        """Visualize the result of the evaluation."""
         ctrl = VisualizationController()
         ctrl.visualize(self._monitor)
 
@@ -95,7 +98,7 @@ class RuleEvaluatorInterface(ABC):
 class OfflineRuleEvaluator(RuleEvaluatorInterface):
     def __init__(
         self,
-        rule: VisitorNode,
+        rule: RuleAstNode,
         world: World,
         ego_id: int,
         use_boolean: bool = False,
@@ -107,9 +110,22 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
             self._predicate_evaluator_config.scale_rob, use_boolean, output_type
         )
 
-    def evaluate(self) -> List[float]:
-        return self._eval_visitor.walk(
-            self._monitor, self._world, self.ego_vehicle.end_time, self.ego_vehicle, self._mpr_world
+    def evaluate(
+        self, start_time: Optional[int] = None, end_time: Optional[int] = None
+    ) -> List[float]:
+        if start_time is None:
+            start_time = self.ego_vehicle.start_time
+
+        if end_time is None:
+            end_time = self.ego_vehicle.end_time
+
+        return self._eval_visitor.evaluate(
+            self._monitor,
+            self._world,
+            self.ego_vehicle,
+            start_time,
+            end_time,
+            self._mpr_world,
         )
 
 
@@ -150,16 +166,14 @@ class RuleEvaluator:
         )
         world.vehicles.add(ego_vehicle)
 
-        rule = RuleFactory(
-            PredicateFactory(traffic_rules_config["traffic_rules_param"])
-        ).parse_rule(rule_str_dict[rule], name=rule)
+        monitor = RuleParser().parse(rule_str_dict[rule], name=rule)
 
         if traffic_rules_config["traffic_rules_param"]["use_mpr"]:
             world_mpr = WorldMPR.create_from_scenario(world.scenario)
         else:
             world_mpr = None
         return cls(
-            rule,
+            monitor,
             ego_vehicle.id,
             world,
             world_mpr=world_mpr,
@@ -171,7 +185,7 @@ class RuleEvaluator:
 
     def __init__(
         self,
-        rule: VisitorNode,
+        rule: RuleAstNode,
         ego_id: Optional[Union[Vehicle, int]] = None,
         world: Optional[World] = None,
         world_mpr: Optional[WorldMPR] = None,

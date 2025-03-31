@@ -7,95 +7,12 @@ from crmonitor.rule.rule_node import (
     IOType,
     MetaPredicateNode,
     PredicateNode,
-    RuleNode,
     RuleTreeVisitorInterface,
     UnaryNode,
-    VisitorNode,
+    VaradicNode,
+    RuleAstNode,
 )
 from crmonitor.rule.rule_parser_interface import RuleParserInterface
-
-
-class EmbedingVisitor(RuleTreeVisitorInterface[None]):
-    """
-    Applies context information to a subtree being embedded during meta-predicate replacement.
-
-    When a meta-predicate is replaced with its concrete implementation, this visitor ensures
-    that the replacement subtree inherits the appropriate context from its parent, including
-    I/O type specifications and agent placeholder mappings. This maintains semantic consistency
-    between the abstract meta-predicate and its concrete implementation.
-
-    :param root: Root node of the subtree being embedded
-    :param io_type: I/O type to apply throughout the subtree
-    :param agent_placeholder_replacements: Mappings for agent placeholders
-    """
-
-    def embed(
-        self,
-        root: VisitorNode,
-        io_type: IOType,
-        agent_placeholder_replacements: Dict[int, int],
-    ) -> None:
-        return self.visit(root, io_type, agent_placeholder_replacements)
-
-    @singledispatchmethod
-    def visit(self, node: VisitorNode, io_type, agent_placeholder_replacements) -> None:
-        return
-
-    @visit.register(UnaryNode)
-    def _(
-        self, node: UnaryNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
-    ) -> None:
-        self.visit(node.child, io_type, agent_placeholder_replacements)
-
-    @visit.register(BinaryNode)
-    def _(
-        self, node: BinaryNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
-    ) -> None:
-        self.visit(node.left_child, io_type, agent_placeholder_replacements)
-        self.visit(node.right_child, io_type, agent_placeholder_replacements)
-
-    @visit.register(RuleNode)
-    def _(
-        self, node: RuleNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
-    ) -> None:
-        for child in node.children:
-            self.visit(child, io_type, agent_placeholder_replacements)
-
-    @visit.register(PredicateNode)
-    def _(
-        self, node: PredicateNode, io_type: IOType, agent_placeholder_replacements: Dict[int, int]
-    ) -> None:
-        node.io_type = io_type
-
-        replacement_agent_placeholders = []
-        for agent_placeholder in node.agent_placeholders:
-            if agent_placeholder in agent_placeholder_replacements:
-                replacement_agent_placeholders.append(
-                    agent_placeholder_replacements[agent_placeholder]
-                )
-            else:
-                replacement_agent_placeholders.append(agent_placeholder)
-
-        node.agent_placeholders = tuple(replacement_agent_placeholders)
-
-    @visit.register(MetaPredicateNode)
-    def _(
-        self,
-        node: MetaPredicateNode,
-        io_type: IOType,
-        agent_placeholder_replacements: Dict[int, int],
-    ) -> None:
-        node.io_type = io_type
-        replacement_agent_placeholders = []
-        for agent_placeholder in node.agent_placeholders:
-            if agent_placeholder in agent_placeholder_replacements:
-                replacement_agent_placeholders.append(
-                    agent_placeholder_replacements[agent_placeholder]
-                )
-            else:
-                replacement_agent_placeholders.append(agent_placeholder)
-
-        node.agent_placeholders = tuple(replacement_agent_placeholders)
 
 
 class MetaPredicateRule:
@@ -198,7 +115,7 @@ class MetaPredicateLookupTable:
         return self._meta_predicates.get(meta_predicate)
 
 
-class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
+class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[RuleAstNode]):
     """
     Traverses a rule tree and replaces meta-predicate nodes with their concrete implementations.
 
@@ -217,48 +134,147 @@ class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[VisitorNode]):
         self._parser = parser
 
     @singledispatchmethod
-    def visit(self, node: VisitorNode, *args, **kwargs) -> VisitorNode:
+    def visit(self, node: RuleAstNode, *args, **kwargs) -> RuleAstNode:
         return node
 
     @visit.register(UnaryNode)
-    def _(self, node: UnaryNode) -> VisitorNode:
+    def _(self, node: UnaryNode) -> RuleAstNode:
         new_child = self.visit(node.child)
         node.child = new_child
         return node
 
     @visit.register(BinaryNode)
-    def _(self, node: BinaryNode) -> VisitorNode:
+    def _(self, node: BinaryNode) -> RuleAstNode:
         new_left_child = self.visit(node.left_child)
         new_right_child = self.visit(node.right_child)
         node.left_child = new_left_child
         node.right_child = new_right_child
         return node
 
-    @visit.register(RuleNode)
-    def _(self, node: RuleNode) -> VisitorNode:
+    @visit.register(VaradicNode)
+    def _(self, node: VaradicNode) -> RuleAstNode:
         new_children = [self.visit(child) for child in node.children]
         node.children = tuple(new_children)
         return node
 
     @visit.register(MetaPredicateNode)
-    def _(self, node: MetaPredicateNode, *args, **kwargs) -> VisitorNode:
+    def _(self, node: MetaPredicateNode, *args, **kwargs) -> RuleAstNode:
+        if node.io_type is None:
+            raise RuntimeError(f"I/O type of meta-predicate {node.metapredicate_name} is not set!")
+
         meta_predicate_rule = self._meta_predicate_lookup_table.get_meta_predicate_rule(
             node.metapredicate_name
         )
         if meta_predicate_rule is None:
             raise RuntimeError(f"Unkown meta-predicate '{node.metapredicate_name}'!")
 
-        meta_predicate_tree = self._parser.parse(meta_predicate_rule.rule_str, name=node.name)
+        # Parse the meta-predicate into a generic rule AST.
+        meta_predicate_tree = self._parser.parse(
+            meta_predicate_rule.rule_str, name=node.name, replace_meta_predicates=False
+        )
 
         # Construct a mapping from the agent placeholders in the meta-predicate sub-tree to the agents in our current tree.
         # This allows the `EmbedingVisitor` to lookup which agent placeholderss it should replace.
         agents_replacement_table = {
-            x: y for (x, y) in zip(meta_predicate_rule.agent_placeholders, node.agent_placeholders)
+            replacement_target: replacement
+            for (replacement_target, replacement) in zip(
+                meta_predicate_rule.agent_placeholders, node.agent_placeholders
+            )
         }
 
         # Embed the replacement tree into our main tree.
         # This ensures that context information, such as the agent bindings and I/O types are correctly preserved.
         embeding_visior = EmbedingVisitor()
-        embeding_visior.embed(meta_predicate_tree, node.io_type, agents_replacement_table)
+        embeding_visior.embed(
+            meta_predicate_tree, node.io_type, agents_replacement_table, node.metapredicate_name
+        )
 
-        return meta_predicate_tree
+        return self.visit(meta_predicate_tree)
+
+
+class EmbedingVisitor(RuleTreeVisitorInterface[None]):
+    """
+    Applies context information to a subtree being embedded during meta-predicate replacement.
+
+    When a meta-predicate is replaced with its concrete implementation, this visitor ensures
+    that the replacement subtree inherits the appropriate context from its parent, including
+    I/O type specifications and agent placeholder mappings. This maintains semantic consistency
+    between the abstract meta-predicate and its concrete implementation.
+
+    :param root: Root node of the subtree being embedded
+    :param io_type: I/O type to apply throughout the subtree
+    :param agent_placeholder_replacements: Mappings for agent placeholders
+    """
+
+    def embed(
+        self,
+        root: RuleAstNode,
+        io_type: IOType,
+        agent_placeholder_replacements: Dict[int, int],
+        namespace: str,
+    ) -> None:
+        return self.visit(root, io_type, agent_placeholder_replacements, namespace)
+
+    @singledispatchmethod
+    def visit(self, node: RuleAstNode, *args, **kwargs) -> None:
+        raise NotImplementedError(
+            f"Embeding Visitor does not implement embeding for node {node}! This is a bug, and this node must be handled!"
+        )
+
+    @visit.register(UnaryNode)
+    def _(self, node: UnaryNode, *args, **kwargs) -> None:
+        self.visit(node.child, *args, **kwargs)
+
+    @visit.register(BinaryNode)
+    def _(self, node: BinaryNode, *args, **kwargs) -> None:
+        self.visit(node.left_child, *args, **kwargs)
+        self.visit(node.right_child, *args, **kwargs)
+
+    @visit.register(VaradicNode)
+    def _(self, node: VaradicNode, *args, **kwargs) -> None:
+        for child in node.children:
+            self.visit(child, *args, **kwargs)
+
+    @visit.register(PredicateNode)
+    def _(
+        self,
+        node: PredicateNode,
+        io_type: IOType,
+        agent_placeholder_replacements: Dict[int, int],
+        namespace: str,
+    ) -> None:
+        node.io_type = io_type
+
+        replacement_agent_placeholders = []
+        for agent_placeholder in node.agent_placeholders:
+            if agent_placeholder in agent_placeholder_replacements:
+                replacement_agent_placeholders.append(
+                    agent_placeholder_replacements[agent_placeholder]
+                )
+            else:
+                replacement_agent_placeholders.append(agent_placeholder)
+
+        node.agent_placeholders = tuple(replacement_agent_placeholders)
+        # node.name = f"{namespace}_{node.name}"
+
+    @visit.register(MetaPredicateNode)
+    def _(
+        self,
+        node: MetaPredicateNode,
+        io_type: IOType,
+        agent_placeholder_replacements: Dict[int, int],
+        namespace: str,
+    ) -> None:
+        node.io_type = io_type
+
+        replacement_agent_placeholders = []
+        for agent_placeholder in node.agent_placeholders:
+            if agent_placeholder in agent_placeholder_replacements:
+                replacement_agent_placeholders.append(
+                    agent_placeholder_replacements[agent_placeholder]
+                )
+            else:
+                replacement_agent_placeholders.append(agent_placeholder)
+
+        node.agent_placeholders = tuple(replacement_agent_placeholders)
+        # node.name = f"{namespace}_{node.name}"

@@ -31,8 +31,6 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 coverage = "^6.5.0"
-# To run the tests, we necessarily need this commonroad-io version
-commonroad-io = ">=2024.1"
 
 [tool.poetry.group.doc]
 optional = true

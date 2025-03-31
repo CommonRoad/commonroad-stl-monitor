@@ -14,10 +14,9 @@ from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.predicates.predicate_factory import PredicateFactory
-from crmonitor.rule.rule_factory import RuleFactory
-from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleNode
+from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleAstNode
 
+from crmonitor.rule.rule_parser import RuleParser
 from tests.util import parallel_lanes
 
 logging.basicConfig(
@@ -36,10 +35,7 @@ class RuleTest(unittest.TestCase):
         rules_path = root_path / "traffic_rules_rtamt.yaml"
         self.traffic_rules = load_yaml(str(rules_path))
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.traffic_rules["traffic_rules_param"]["use_mpr"] = False
-        self.parse_rule = RuleFactory(
-            PredicateFactory(self.traffic_rules["traffic_rules_param"])
-        ).parse_rule
+        self.parse_rule = RuleParser().parse
 
     def test_single_vehicle(self):
         lanelet_network = LaneletNetwork()
@@ -316,7 +312,7 @@ class RuleTest(unittest.TestCase):
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, AllNode))
             self.assertEqual(len(rule.children), 1)
-            self.assertTrue(isinstance(rule.children[0], RuleNode))
+            self.assertTrue(isinstance(rule.children[0], RuleAstNode))
             self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children[0].children]))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
@@ -380,7 +376,7 @@ class RuleTest(unittest.TestCase):
         rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
         self.traffic_rules["scale_rob"] = False
         rule = self.parse_rule(rule_str, name="UnnecessaryBraking")
-        self.assertTrue(isinstance(rule, RuleNode))
+        self.assertTrue(isinstance(rule, RuleAstNode))
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
         self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
@@ -452,7 +448,7 @@ class RuleTest(unittest.TestCase):
                 world, ego_vehicle.id, "R_G3", self.traffic_rules
             )
             rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, RuleNode))
+            self.assertTrue(isinstance(rule, RuleAstNode))
             self.assertEqual(len(rule.children), 4)
             self.assertTrue(all([isinstance(c, PredicateNode) for c in rule.children]))
             rule_robustness = []
@@ -492,7 +488,7 @@ class RuleTest(unittest.TestCase):
                 world, ego_vehicle.id, "R_G4", self.traffic_rules
             )
             rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, RuleNode))
+            self.assertTrue(isinstance(rule, RuleAstNode))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
@@ -537,7 +533,7 @@ class RuleTest(unittest.TestCase):
                 world, ego_vehicle.id, "R_I1", self.traffic_rules
             )
             rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, RuleNode))
+            self.assertTrue(isinstance(rule, RuleAstNode))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
@@ -717,7 +713,7 @@ class RuleTest(unittest.TestCase):
                 world, ego_vehicle.id, "R_I3", self.traffic_rules
             )
             rule = rule_eval._rule
-            self.assertTrue(isinstance(rule, RuleNode))
+            self.assertTrue(isinstance(rule, RuleAstNode))
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
