@@ -14,7 +14,7 @@ from crmonitor.common.world import World
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
-    insufficient,
+    insufficient, changed_to_meta,
 )
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
@@ -28,11 +28,11 @@ metrics_output_path = (
 )
 metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 
-scenarios_load_path = Path(__file__).parent.parent.parent / "highD-scenarios"
-iterations = 5
+scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
+iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = all_general_predicates + all_interstate_predicates + insufficient
-rand_seed = 3478134569079
+selected_predicates =  all_general_predicates + all_interstate_predicates + changed_to_meta
+rand_seed = 12345
 
 MprCfg.build_configuration(
     config={
@@ -137,14 +137,21 @@ for i in range(0, iterations):
     ego_vehicle_id, other_vehicle_id = random.sample(vehicle_ids_at_time_step, 2)
 
     for predicate_evaluator in predicates:
-        mpr_robustness = predicate_evaluator.evaluate_mpr(
-            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
-        )["robustness"]
+        # TODO the evaluate_mpr_ml method has two drawbacks
+        #  - by default, it performs rectification
+        #  - It must recompute the features for each predicate
+        #  Therefore, please implement a solution that directly makes use of the ExactGPModel.predict method.
+        mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
+            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id], rectification=False
+        )
+        if (not -1 <= mpr_robustness <= 1) or np.isnan(mpr_robustness):
+            _LOGGER.warning(f"MPR: {mpr_robustness:.3f}")
+            continue
 
         mfr_robustness = predicate_evaluator.evaluate_robustness(
             world, time_step, [ego_vehicle_id, other_vehicle_id]
         )
-        print(scenario.scenario_id, time_step, ego_vehicle_id, mpr_robustness, mfr_robustness)
+        # print(scenario.scenario_id, time_step, ego_vehicle_id, mpr_robustness, mfr_robustness)
         mfr_rob[predicate_evaluator.predicate_name].append(mfr_robustness)
         mpr_rob[predicate_evaluator.predicate_name].append(mpr_robustness)
 
@@ -164,10 +171,10 @@ for predicate_name in selected_predicates:
     recall = (TP + eps) / (TP + FN + eps)
     f1_score = 2 * precision * recall / (precision + recall + eps)
     mpr_variance = np.var(mpr_rob[predicate_name])
-    mpr_span = np.ptp(mpr_rob[predicate_name])
+    mpr_span = np.max(mpr_rob[predicate_name]) - np.min(mpr_rob[predicate_name])
 
     mfr_variance = np.var(mfr_rob[predicate_name])
-    mfr_span = np.ptp(mfr_rob[predicate_name])
+    mfr_span = np.max(mfr_rob[predicate_name]) - np.min(mfr_rob[predicate_name])
 
     metrics.append(
         {

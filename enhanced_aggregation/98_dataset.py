@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
-selected_predicates = insufficient  # all_general_predicates + all_interstate_predicates
+selected_predicates = all_general_predicates + all_interstate_predicates
 data_loader = DataLoader.create_from_file(learning_data_path)
 
 
@@ -28,7 +28,7 @@ for predicate in selected_predicates:
     orig_count_false = sum(
         [1 for x in data_loader.data[("predicates", predicate, "bool")] if x == False]
     )
-    data = data_loader.data[("predicates", predicate, "robustness")]
+    data = data_loader.data[("predicates", predicate, "normalized_robustness")]
     count_true = sum([1 for x in data if x > 0])
     count_false = sum([1 for x in data if x < 0])
     count_zero = sum([1 for x in data if x == 0])
@@ -54,13 +54,13 @@ for predicate in selected_predicates:
         "rob_all_span": np.max(data) - np.min(data),
     }
     # balance
-    abs(analysis[predicate]["balance"]) < 0.95 or _LOGGER.info(
-        f"Unbalanced predicate {predicate}: {analysis[predicate]['balance']:.3f}"
-    )
-    # span
-    # analysis[predicate]["rob_all_span"] > 0.3 or _LOGGER.info(
-    #     f"Small span for predicate {predicate}: {analysis[predicate]['rob_all_span']:.3f}"
+    # abs(analysis[predicate]["balance"]) < 0.95 or _LOGGER.info(
+    #     f"Unbalanced predicate {predicate}: {analysis[predicate]['balance']:.3f}"
     # )
+    # span
+    analysis[predicate]["rob_all_span"] > 1.5 or _LOGGER.info(
+        f"Small span for predicate {predicate}: {analysis[predicate]['rob_all_span']:.3f}"
+    )
     # std
     # analysis[predicate]["rob_all_std"] > 0.1 or _LOGGER.info(
     #     f"Small std for predicate {predicate}: {analysis[predicate]['rob_all_std']:.3f}"

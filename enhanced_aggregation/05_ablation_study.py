@@ -17,12 +17,11 @@ from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConf
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-input_scenarios = Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
+input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 
 
 num_vehicles_per_scenarios = 1
-scale_rob = True
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 
@@ -61,7 +60,7 @@ def process_scenario_with_rule(
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
     predicate_evaluator_config = PredicateEvaluatorConfig(
         mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
-        scale_rob=not use_mpr,
+        scale_rob=True,
     )
 
     # Create a rule evaluator
@@ -94,14 +93,14 @@ def process_scenario_with_rule(
 
 rules = [
     "R_G1",
-    "R_G2",
-    "R_G3",
-    "R_G4",
-    "R_I1",
-    "R_I2",
-    "R_I3",
-    "R_I4",
-    "R_I5",
+    # "R_G2",
+    # "R_G3",
+    # "R_G4",
+    # "R_I1",
+    # "R_I2",
+    # "R_I3",
+    # "R_I4",
+    # "R_I5",
 ]
 
 scenarios_paths = list(input_scenarios.glob("*.xml"))[0:1]
@@ -123,7 +122,7 @@ for scenario in scenarios:
 results = []
 if __name__ == "__main__":
     ctx = mp.get_context("spawn")
-    with ProcessPoolExecutor(max_workers=8, mp_context=ctx) as executor:
+    with ProcessPoolExecutor(max_workers=1, mp_context=ctx) as executor:
         tasks = []
         for scenario, rule, use_mpr in itertools.product(scenarios, rules, (True, False)):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
