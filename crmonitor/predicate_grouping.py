@@ -57,11 +57,15 @@ changed_to_meta = [
     "drives_leftmost",
     "drives_rightmost",
     "cut_in",
-    "approach_from_left",
-    "approach_from_right",
-    "left_oflon_intersecting_vehicles",
+    "left_of",
+]
+
+meta_only = [
+    "lon_intersecting_vehicles",
     "close_to_vehicle_left",
     "close_to_vehicle_right",
+    "approach_from_left",
+    "approach_from_right",
 ]
 
 yuanfei_predicates = [
