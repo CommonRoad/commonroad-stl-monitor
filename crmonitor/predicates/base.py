@@ -148,7 +148,12 @@ class BasePredicateEvaluator(abc.ABC):
         pass
 
     def evaluate_mpr_ml(
-        self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int], rectification: bool = False
+        self,
+        world: World,
+        world_mpr: WorldMPR,
+        time_step: int,
+        vehicle_ids: List[int],
+        rectification: bool = False,
     ) -> float:
         """
         Evaluate this predicate with model-predicitive robustness using pre-trained models.
@@ -210,8 +215,12 @@ class BasePredicateEvaluator(abc.ABC):
 
         # rectification
         if rectification and robustness * characteristic_value < 0:
-            _LOGGER.warning(f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}")
-            robustness = np.sign(characteristic_value) * np.float64(1e-3)  # TODO is this change correct?
+            _LOGGER.warning(
+                f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}"
+            )
+            robustness = np.sign(characteristic_value) * np.float64(
+                1e-3
+            )  # TODO is this change correct?
 
         scaled_robustness = np.copysign(
             np.clip(robustness, self._scaler.min, self._scaler.max),
