@@ -14,7 +14,8 @@ from crmonitor.common.world import World
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
-    insufficient, changed_to_meta,
+    insufficient,
+    changed_to_meta,
 )
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
@@ -31,7 +32,7 @@ metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates =  all_general_predicates + all_interstate_predicates + changed_to_meta
+selected_predicates = all_general_predicates + all_interstate_predicates + changed_to_meta
 rand_seed = 12345
 
 MprCfg.build_configuration(
