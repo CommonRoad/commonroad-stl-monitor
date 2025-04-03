@@ -323,7 +323,6 @@ class Vehicle:
                 self.circle_radius,
             ) = self._initial_circle_approximation()
 
-    @lru_cache(128)
     def rear_s(self, time_step: int, lane: Lane = None) -> float:
         """
         Calculates rear s-coordinate of vehicle

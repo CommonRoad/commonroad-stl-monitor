@@ -4,9 +4,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
+from tqdm import tqdm
+
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import OfflineEvaluationMonitorTreeVisitor
 from crmonitor.monitor.monitor_node import (
@@ -33,7 +36,11 @@ input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_processed.csv"
 
 results_df = pd.read_csv(ablation_study_results_input)
+results_df.dropna(inplace=True)
+results_df["start_time_step"] = results_df["start_time_step"].astype(int)
+results_df["end_time_step"] = results_df["end_time_step"].astype(int)
 
+operator_str = ["historically_duration", "historically_duration_severity", "historically"]
 
 @lru_cache()
 def load_scenario(scenario_id: str) -> Scenario:
@@ -61,7 +68,7 @@ def evaluate_with_operator(
 
 
 output_rows = []
-for _, row in results_df.iterrows():
+for _, row in tqdm(results_df.iterrows(), total=len(results_df)):
     trace = list(map(float, row["robustness"].split(",")))
     # Need to load scenario, because evaluation requires dt for interpretation of the operator durations.
     scenario = load_scenario(row["scenario_id"])
@@ -71,43 +78,28 @@ for _, row in results_df.iterrows():
     result = {}
     trace_node = ConstantTraceMonitorNode("x", trace)
     for duration_sec in durations:
+        start_index = int(duration_sec / scenario.dt)
         rtamt_interval = RtamtInterval(begin=0, end=duration_sec, begin_unit="s")
+        for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
+            if duration_sec <= (len(trace)-1)*scenario.dt:
+                final_trace = evaluate_with_operator(
+                    operator, trace, world, row["start_time_step"], row["end_time_step"]
+                )
+                row[f"{operator_str[i]}_{duration_sec}_max"] = max(final_trace[start_index:])
+                row[f"{operator_str[i]}_{duration_sec}_min"] = min(final_trace[start_index:])
+                row[f"{operator_str[i]}_{duration_sec}_last"] = final_trace[-1]
+            else:
+                row[f"{operator_str[i]}_{duration_sec}_max"] = np.nan
+                row[f"{operator_str[i]}_{duration_sec}_min"] = np.nan
+                row[f"{operator_str[i]}_{duration_sec}_last"] = np.nan
 
-        # Historically Duration  # TODO shorten final trace according to duration for further evaluation? → how to handle input traces that are shorter than the desired duration of the operator? nan?
-        operator = HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval)
+    duration_sec = (len(trace)-1)*scenario.dt
+    for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec:.2  f}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
         final_trace = evaluate_with_operator(
             operator, trace, world, row["start_time_step"], row["end_time_step"]
         )
-        row[f"{operator}_{duration_sec}_max"] = max(final_trace)
-        row[f"{operator}_{duration_sec}_min"] = min(final_trace)
-        row[f"{operator}_{duration_sec}_last"] = final_trace[-1]
-
-        # Historically Duration Severity
-        operator = HistoricallyDurationSeverityMonitorNode(
-            "g1", trace_node, interval=rtamt_interval
-        )
-        final_trace = evaluate_with_operator(
-            operator, trace, world, row["start_time_step"], row["end_time_step"]
-        )
-        row[f"{operator}_{duration_sec}_max"] = max(final_trace)
-        row[f"{operator}_{duration_sec}_min"] = min(final_trace)
-        row[f"{operator}_{duration_sec}_last"] = final_trace[-1]
-
-        # Historically  # TODO is this correct?
-        rtamt_stl_monitor = RtamtStlMonitor(
-            f"historically[0,{duration_sec}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt
-        )
-        rule_monitor = RtamtRuleMonitorNode(
-            name="g1", children=[trace_node], monitor=rtamt_stl_monitor
-        )
-        final_trace = evaluate_with_operator(
-            rule_monitor, trace, world, row["start_time_step"], row["end_time_step"]
-        )
-        row[f"historically_{duration_sec}_max"] = max(final_trace)
-        row[f"historically_{duration_sec}_min"] = min(final_trace)
-        row[f"historically_{duration_sec}_last"] = final_trace[-1]
+        row[f"{operator_str[i]}_full_last"] = final_trace[-1]
 
     output_rows.append(row)
-
 
 pd.DataFrame(output_rows).to_csv(output_file, index=False)
