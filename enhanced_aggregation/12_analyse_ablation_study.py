@@ -31,7 +31,12 @@ rule_to_operator_mapping = {
 
 results = defaultdict(list)  # mfr - mpr
 for _, row_mfr in df[~df["mpr"]].iterrows():  # iterate over mfr rows
-    row_mpr = df[(df["scenario_id"] == row_mfr["scenario_id"]) & (df["rule"] == row_mfr["rule"]) & df["mpr"] & (df["vehicle_id"] == row_mfr["vehicle_id"])]
+    row_mpr = df[
+        (df["scenario_id"] == row_mfr["scenario_id"])
+        & (df["rule"] == row_mfr["rule"])
+        & df["mpr"]
+        & (df["vehicle_id"] == row_mfr["vehicle_id"])
+    ]
     assert len(row_mpr) == 1
     row_mpr = row_mpr.iloc[0]
     if row_mfr["historically_full_last"] < 0:
@@ -75,4 +80,3 @@ for rule in ["R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I3", "R_I4", "R_I5"]:
 df_results = pd.DataFrame(rows)
 
 print(df_results)
-

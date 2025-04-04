@@ -42,6 +42,7 @@ results_df["end_time_step"] = results_df["end_time_step"].astype(int)
 
 operator_str = ["historically_duration", "historically_duration_severity", "historically"]
 
+
 @lru_cache()
 def load_scenario(scenario_id: str) -> Scenario:
     scenario_path = input_scenarios / f"{scenario_id}.xml"
@@ -80,8 +81,22 @@ for _, row in tqdm(results_df.iterrows(), total=len(results_df)):
     for duration_sec in durations:
         start_index = int(duration_sec / scenario.dt)
         rtamt_interval = RtamtInterval(begin=0, end=duration_sec, begin_unit="s")
-        for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
-            if duration_sec <= (len(trace)-1)*scenario.dt:
+        for i, operator in enumerate(
+            [
+                HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval),
+                HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval),
+                RtamtRuleMonitorNode(
+                    name="g1",
+                    children=[trace_node],
+                    monitor=RtamtStlMonitor(
+                        f"historically[0,{duration_sec}s](x)",
+                        predicates=[("x", IOType.OUTPUT)],
+                        dt=scenario.dt,
+                    ),
+                ),
+            ]
+        ):
+            if duration_sec <= (len(trace) - 1) * scenario.dt:
                 final_trace = evaluate_with_operator(
                     operator, trace, world, row["start_time_step"], row["end_time_step"]
                 )
@@ -93,8 +108,22 @@ for _, row in tqdm(results_df.iterrows(), total=len(results_df)):
                 row[f"{operator_str[i]}_{duration_sec}_min"] = np.nan
                 row[f"{operator_str[i]}_{duration_sec}_last"] = np.nan
 
-    duration_sec = (len(trace)-1)*scenario.dt
-    for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec:.2f}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
+    duration_sec = (len(trace) - 1) * scenario.dt
+    for i, operator in enumerate(
+        [
+            HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval),
+            HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval),
+            RtamtRuleMonitorNode(
+                name="g1",
+                children=[trace_node],
+                monitor=RtamtStlMonitor(
+                    f"historically[0,{duration_sec:.2f}s](x)",
+                    predicates=[("x", IOType.OUTPUT)],
+                    dt=scenario.dt,
+                ),
+            ),
+        ]
+    ):
         final_trace = evaluate_with_operator(
             operator, trace, world, row["start_time_step"], row["end_time_step"]
         )
