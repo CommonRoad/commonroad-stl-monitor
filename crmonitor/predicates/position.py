@@ -118,9 +118,7 @@ class PredInFrontOf(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         rear = world.vehicle_by_id(vehicle_ids[0])
         front = world.vehicle_by_id(vehicle_ids[1])
-        return self._scale_lon_dist(
-            front.rear_s(time_step, rear.get_lane(time_step)) - rear.front_s(time_step)
-        )
+        return self._scale_lon_dist(front.rear_s(time_step) - rear.front_s(time_step))
 
 
 class PredSingleLane(BasePredicateEvaluator):
@@ -163,9 +161,6 @@ class PredSingleLane(BasePredicateEvaluator):
 class PredSafeDistPrec(BasePredicateEvaluator):
     predicate_name = PositionPredicates.KeepsSafeDistancePrec
     arity = 2
-
-    def __init__(self, config):
-        super().__init__(config)
 
     @classmethod
     def calculate_safe_distance(cls, v_follow, v_lead, a_min_lead, a_min_follow, t_react_follow):

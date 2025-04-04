@@ -253,6 +253,12 @@ class BasePredicateEvaluator(abc.ABC):
         ego_vehicle_id = vehicle_ids[0]
         ego_vehicle_mpr = world_mpr.vehicle_by_id(ego_vehicle_id)
 
+        if self.arity == 2:
+            # If arity is 2, the other vehicle must also be moved forward in time.
+            # We extract it from the world, so that we can later check whether it has a state at the sampled time step.
+            other_vehicle_id = vehicle_ids[1]
+            other_vehicle = world.vehicle_by_id(other_vehicle_id)
+
         ego_sampler = StateBasedSampling(
             ego_vehicle_mpr,
             time_step,
@@ -280,8 +286,22 @@ class BasePredicateEvaluator(abc.ABC):
                 ego_future_state = (
                     ego_future_state_mpr.get_state_in_world_frame().convert_to_commonroad_state()
                 )
+                # From now on we use the time step of the sampled state as the current time step.
+                sampled_time_step = ego_future_state.time_step
+                if self.arity == 2 and (
+                    other_vehicle.start_time > sampled_time_step
+                    or other_vehicle.end_time < sampled_time_step
+                ):
+                    # If the sampled state lies outside the time frame of the other vehicle we
+                    # cannot evaluate the predicate.
+                    # Usually, the evaluation of the predicate should just fail in this case,
+                    # because they cannot access the state at the requested time step.
+                    # However, we take a shortcut here and speed things up a bit.
+                    count_error += 1
+                    continue
+
                 # Inject the sampled state at the specific time step into the model-free world.
-                ego_vehicle.states_cr[time_step] = ego_future_state
+                ego_vehicle.states_cr[sampled_time_step] = ego_future_state
 
                 # Many predicates rely on the pre-computed lanelet assignments.
                 # To make sure they match the sampled state, the lanelet assignment must also be updated.
@@ -296,9 +316,11 @@ class BasePredicateEvaluator(abc.ABC):
                     # TODO mitigate by activating phantom lanes?
                     count_error += 1
                     continue
-                ego_vehicle.lanelet_assignment[time_step] = lanelet_assignment
+                ego_vehicle.lanelet_assignment[sampled_time_step] = lanelet_assignment
 
-                satisfied = self.evaluate_boolean(world, time_step, vehicle_ids)
+                # Evaluate the predicate at the *sampled* time step, so that the correct
+                # state of the other vehicle is considered.
+                satisfied = self.evaluate_boolean(world, sampled_time_step, vehicle_ids)
                 if satisfied:
                     count_true += 1
                 count_valid += 1
