@@ -118,7 +118,10 @@ class PredInFrontOf(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         rear = world.vehicle_by_id(vehicle_ids[0])
         front = world.vehicle_by_id(vehicle_ids[1])
-        return self._scale_lon_dist(front.rear_s(time_step) - rear.front_s(time_step))
+        ref_lane = rear.get_lane(time_step)
+        return self._scale_lon_dist(
+            front.rear_s(time_step, ref_lane) - rear.front_s(time_step, ref_lane)
+        )
 
 
 class PredSingleLane(BasePredicateEvaluator):
@@ -175,7 +178,6 @@ class PredSafeDistPrec(BasePredicateEvaluator):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
         vehicle_lead = world.vehicle_by_id(vehicle_ids[1])
-        time_step = time_step
 
         if vehicle_lead.get_lane(time_step) is None:
             return self._scale_lon_dist(math.inf)
@@ -190,7 +192,10 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             t_react_follow,
         )
 
-        delta_s = vehicle_lead.rear_s(time_step) - vehicle_follow.front_s(time_step)
+        ref_lane = vehicle_follow.get_lane(time_step)
+        delta_s = vehicle_lead.rear_s(time_step, ref_lane) - vehicle_follow.front_s(
+            time_step, ref_lane
+        )
         rob = self._scale_lon_dist(delta_s - safe_distance)
         return rob
 
