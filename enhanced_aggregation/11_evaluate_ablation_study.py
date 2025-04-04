@@ -94,7 +94,7 @@ for _, row in tqdm(results_df.iterrows(), total=len(results_df)):
                 row[f"{operator_str[i]}_{duration_sec}_last"] = np.nan
 
     duration_sec = (len(trace)-1)*scenario.dt
-    for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec:.2  f}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
+    for i, operator in enumerate([HistoricallyDurationMonitorNode("g1", trace_node, interval=rtamt_interval), HistoricallyDurationSeverityMonitorNode("g1", trace_node, interval=rtamt_interval), RtamtRuleMonitorNode(name="g1", children=[trace_node], monitor=RtamtStlMonitor(f"historically[0,{duration_sec:.2f}s](x)", predicates=[("x", IOType.OUTPUT)], dt=scenario.dt))]):
         final_trace = evaluate_with_operator(
             operator, trace, world, row["start_time_step"], row["end_time_step"]
         )

@@ -307,7 +307,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 samples_return.append(min(window))
             else:
                 samples_less_0 = list(filter(lambda x: x < 0, window))
-                samples_return.append(len(samples_less_0) / len(window))
+                samples_return.append(-len(samples_less_0) / len(window))
 
         node.values = samples_return
 
