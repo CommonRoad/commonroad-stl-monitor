@@ -1,6 +1,5 @@
 import itertools
 import logging
-import sys
 import multiprocessing as mp
 import random
 from concurrent import futures
@@ -20,7 +19,7 @@ from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConf
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
-input_scenarios = Path(__file__).parents[2] / "scenarios-for-semantic-aware-stl" / "highD"
+input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 
 
@@ -119,7 +118,7 @@ rules = [
     "R_I5",
 ]
 
-scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 1, replace=False)
+scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 100, replace=False)
 scenarios = list(
     map(
         lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],
@@ -148,7 +147,7 @@ if __name__ == "__main__":
                 task = executor.submit(
                     process_scenario_with_rule, scenario, ego_vehicle_id, rule, use_mpr
                 )
-                tasks[task] = (scenario, ego_vehicle_id, rule, use_mpr)
+                tasks[task] = (scenario.scenario_id, ego_vehicle_id, rule, use_mpr)
 
         for finished_future in futures.as_completed(tasks.keys()):
             exec = finished_future.exception()
@@ -160,6 +159,7 @@ if __name__ == "__main__":
             result = finished_future.result()
             results.append(finished_future.result())
             results_since_last_snapshot += 1
+            del tasks[finished_future]
 
             if results_since_last_snapshot >= snapshot_frequency:
                 _LOGGER.info(f"Writing snapshot to {output_file}")
