@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
-from tqdm import tqdm
-
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import OfflineEvaluationMonitorTreeVisitor
 from crmonitor.monitor.monitor_node import (
@@ -21,6 +19,7 @@ from crmonitor.monitor.monitor_node import (
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.rule.rule_node import IOType
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ durations = [1, 2, 5, 10]
 ablation_study_results_input = (
     Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
 )
-input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
+input_scenarios = Path(__file__).parents[2] / "scenarios-for-semantic-aware-stl" / "highD"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_processed.csv"
 
 results_df = pd.read_csv(ablation_study_results_input)
