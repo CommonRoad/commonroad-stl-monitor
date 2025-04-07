@@ -1,22 +1,23 @@
 import itertools
-import random
 import logging
 import multiprocessing as mp
+import random
+from concurrent import futures
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
-from commonroad.scenario.scenario import Scenario
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
+from commonroad.scenario.scenario import Scenario
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 
-_LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+_LOGGER = logging.getLogger(__name__)
 
 input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
@@ -25,6 +26,7 @@ output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.
 num_vehicles_per_scenarios = 4
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
+snapshot_frequency = 1
 
 MprCfg.build_configuration(
     config={
@@ -134,17 +136,36 @@ for scenario in scenarios:
     )
 
 
-results = []
 if __name__ == "__main__":
     ctx = mp.get_context("spawn")
+    results_since_last_snapshot = 0
+    results = []
+    tasks = {}
     with ProcessPoolExecutor(max_workers=6, mp_context=ctx) as executor:
-        tasks = []
         for scenario, rule, use_mpr in itertools.product(scenarios, rules, (True, False)):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
-                tasks.append((scenario, ego_vehicle_id, rule, use_mpr))
+                task = executor.submit(
+                    process_scenario_with_rule, scenario, ego_vehicle_id, rule, use_mpr
+                )
+                tasks[task] = (scenario.scenario_id, ego_vehicle_id, rule, use_mpr)
 
-        for result in executor.map(process_scenario_with_rule, *zip(*tuple(tasks))):
-            results.append(result)
+        for finished_future in futures.as_completed(tasks.keys()):
+            exec = finished_future.exception()
+            if exec is not None:
+                task_arguments = tasks[finished_future]
+                _LOGGER.warning(f"Exception {exec} occured while processing {task_arguments}")
+                continue
+
+            result = finished_future.result()
+            results.append(finished_future.result())
+            results_since_last_snapshot += 1
+            del tasks[finished_future]
+
+            if results_since_last_snapshot >= snapshot_frequency:
+                _LOGGER.info(f"Writing snapshot to {output_file}")
+                results_df = pd.DataFrame(results)
+                results_df.to_csv(output_file, index=False)
+                results_since_last_snapshot = 0
 
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_file, index=False)

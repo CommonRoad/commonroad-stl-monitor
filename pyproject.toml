@@ -19,7 +19,7 @@ commonroad-io = ">=2024.3"
 ruamel-yaml = ">=0.16.12"
 commonroad-route-planner = "^2025.1.0"
 numba = ">=0.58.1"
-commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-model-predictive-robustness.git", rev = "bb9aefa38c4c7eb4eb057c3cf0c595e6036cbe8d" }
+commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-model-predictive-robustness.git", rev = "861de3112ef14c56f9a63424f8bc59df24d89144" }
 pyqt6 = "^6.8.1"
 commonroad-clcs = "^2025.1.1"
 commonroad-drivability-checker = "^2025.1"

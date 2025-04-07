@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
-from tqdm import tqdm
-
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import OfflineEvaluationMonitorTreeVisitor
 from crmonitor.monitor.monitor_node import (
@@ -21,6 +19,7 @@ from crmonitor.monitor.monitor_node import (
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.rule.rule_node import IOType
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
