@@ -9,7 +9,7 @@ from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
     insufficient,
-    yuanfei_predicates,
+    yuanfei_predicates, changed_to_meta,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
-selected_predicates = yuanfei_predicates  # all_general_predicates + all_interstate_predicates
+selected_predicates = all_general_predicates + all_interstate_predicates + changed_to_meta
 data_loader = DataLoader.create_from_file(learning_data_path)
 _eps = 1e-7
 
@@ -30,7 +30,7 @@ for predicate in selected_predicates:
         [1 for x in data_loader.data[("predicates", predicate, "bool")] if x == False]
     )
     data_raw = data_loader.data[("predicates", predicate, "robustness")]
-    data_norm = data_loader.data[("predicates", predicate, "normalized_robustness")]
+    data_norm = data_loader.data[("predicates", predicate, "robustness")]
     count_true = sum([1 for x in data_norm if x > 0])
     count_false = sum([1 for x in data_norm if x < 0])
     count_zero = sum([1 for x in data_norm if x == 0])

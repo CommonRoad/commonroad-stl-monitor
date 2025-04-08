@@ -30,35 +30,36 @@ rule_to_operator_mapping = {
 # d) model-predictive, enhanced stl
 
 results = defaultdict(list)  # mfr - mpr
-for _, row_mfr in df[~df["mpr"]].iterrows():  # iterate over mfr rows
+for i, row_mfr in df[~df["mpr"]].iterrows():  # iterate over mfr rows
     row_mpr = df[
         (df["scenario_id"] == row_mfr["scenario_id"])
         & (df["rule"] == row_mfr["rule"])
         & df["mpr"]
         & (df["vehicle_id"] == row_mfr["vehicle_id"])
     ]
+    if len(row_mpr) < 1:
+        _LOGGER.warning(f"no matching mpr found {i}. Skipping.")
+        continue
     assert len(row_mpr) == 1
     row_mpr = row_mpr.iloc[0]
     if row_mfr["historically_full_last"] < 0:
+        if np.isnan(row_mfr["historically_full_last"]) or np.isnan(row_mpr["historically_full_last"]):
+            _LOGGER.warning("Skipping nan value.")
+            continue
+        # assert row_mpr["historically_full_last"] < 0, f"{row_mpr["historically_full_last"]}"
         results[(row_mfr["rule"], "a")] += [row_mfr["historically_full_last"]]
-    if row_mpr["historically_full_last"] < 0:
         results[(row_mpr["rule"], "b")] += [row_mpr["historically_full_last"]]
-    if row_mfr[rule_to_operator_mapping[row_mfr["rule"]]] < 0:
         results[(row_mfr["rule"], "c")] += [row_mfr[rule_to_operator_mapping[row_mfr["rule"]]]]
-    if row_mpr[rule_to_operator_mapping[row_mpr["rule"]]] < 0:
         results[(row_mpr["rule"], "d")] += [row_mpr[rule_to_operator_mapping[row_mpr["rule"]]]]
 
 rows = []
-for rule in ["R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I3", "R_I4", "R_I5"]:
+for rule in ["R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I2", "R_I3", "R_I4", "R_I5"]:
     a = results[(rule, "a")]
     b = results[(rule, "b")]
     c = results[(rule, "c")]
     d = results[(rule, "d")]
 
-    # _LOGGER.info(f"{rule}: a span {np.ptp(a):.2f}, std {np.std(a):.2f}")
-    # _LOGGER.info(f"{rule}: b span {np.ptp(b):.2f}, std {np.std(b):.2f}")
-    # _LOGGER.info(f"{rule}: c span {np.ptp(c):.2f}, std {np.std(c):.2f}")
-    # _LOGGER.info(f"{rule}: d span {np.ptp(d):.2f}, std {np.std(d):.2f}")
+    assert len(a) == len(b) == len(c) == len(d)
 
     try:
         rows.append(

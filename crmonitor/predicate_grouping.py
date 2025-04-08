@@ -48,16 +48,16 @@ all_interstate_predicates = [
 ]
 
 changed_to_meta = [
-    "slow_leading_vehicle",
-    "exist_standing_leading_vehicle",
-    "in_congestion",
-    "in_slow_moving_traffic",
-    "in_queue_of_vehicles",
-    "precedes",
-    "drives_leftmost",
-    "drives_rightmost",
-    "cut_in",
-    "left_of",
+    "slow_leading_vehicle",  # arity
+    "exist_standing_leading_vehicle",  # arity
+    "in_congestion",  # arity; threshold
+    "in_slow_moving_traffic",  # arity; threshold
+    "in_queue_of_vehicles",  # arity; threshold
+    "precedes",  # arity
+    "drives_leftmost",  # scarcity
+    "drives_rightmost",  # scarcity
+    "cut_in",  # scarcity
+    "left_of",  # scarcity
 ]
 
 meta_only = [
@@ -83,7 +83,7 @@ yuanfei_predicates = [
 ]
 
 insufficient = [
+    "brakes_abruptly_relative",
     "lat_close_to_vehicle_left",
     "lat_close_to_vehicle_right",
-    "brakes_abruptly_relative",
 ]
