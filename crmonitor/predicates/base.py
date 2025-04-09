@@ -171,13 +171,7 @@ class BasePredicateEvaluator(abc.ABC):
         """
         # The feature extraction is usually performed by `PredicateEvaluatorML`. It must be adapted here, because
         # it originally does not support predicates which are not part of commonroad-mpr.
-        desired_features = dict(
-            MprCfg["feature_variable"][MprCfg["common"]["scenario"]]["desired_features"]
-        )
-        if self.arity == 1:
-            desired_features.pop("other", None)
-            desired_features.pop("ego_other", None)
-            desired_features.pop("other_ego", None)
+        desired_features = FeatureExtrator.get_desired_features(self.predicate_name)
 
         vehicles = []
         for vehicle_id in vehicle_ids:
@@ -215,7 +209,7 @@ class BasePredicateEvaluator(abc.ABC):
 
         # rectification
         if rectification and robustness * characteristic_value < 0:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}"
             )
             robustness = np.float64(1e-3) * np.sign(characteristic_value)
