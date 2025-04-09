@@ -26,7 +26,7 @@ output_file = Path(__file__).parent.parent / "output" / "ablation_study_results.
 num_vehicles_per_scenarios = 4
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
-snapshot_frequency = 1
+snapshot_frequency = 4
 
 MprCfg.build_configuration(
     config={
@@ -112,7 +112,7 @@ rules = [
     "R_G3",
     "R_G4",
     "R_I1",
-    # "R_I2",
+    "R_I2",
     "R_I3",
     "R_I4",
     "R_I5",
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     results_since_last_snapshot = 0
     results = []
     tasks = {}
-    with ProcessPoolExecutor(max_workers=6, mp_context=ctx) as executor:
+    with ProcessPoolExecutor(max_workers=4, mp_context=ctx) as executor:
         for scenario, rule, use_mpr in itertools.product(scenarios, rules, (True, False)):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
                 task = executor.submit(
@@ -153,7 +153,7 @@ if __name__ == "__main__":
             exec = finished_future.exception()
             if exec is not None:
                 task_arguments = tasks[finished_future]
-                _LOGGER.warning(f"Exception {exec} occured while processing {task_arguments}")
+                _LOGGER.warning(f"Exception {exec} occurred while processing {task_arguments}")
                 continue
 
             result = finished_future.result()
