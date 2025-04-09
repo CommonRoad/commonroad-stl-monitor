@@ -272,6 +272,21 @@ class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
         return f"compare_to_threshold_scaled[>={self.threshold}]"
 
 
+class ExistsMultipleMonitorNode(QuantMonitorNode):
+    def __init__(
+        self, name: str, child: MonitorNode, quantified_vehicle: int, threshold: int
+    ) -> None:
+        super().__init__(name, child, quantified_vehicle)
+        self.threshold = threshold
+
+    @classmethod
+    def _copy_cls(cls, node: "ExistsMultipleMonitorNode") -> "ExistsMultipleMonitorNode":
+        return cls(node.name, node.child.copy(), node.threshold)
+
+    def __str__(self) -> str:
+        return f"exists_multiple[{self.threshold}]"
+
+
 class PredicateMonitorNode(ZeroArityMonitorNode):
     def __init__(
         self,

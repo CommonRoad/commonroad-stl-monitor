@@ -16,6 +16,9 @@ predicate
 
 threshold
 	: LBRACK GreaterOrEqualOperator literal RBRACK;
+
+
+
 spec
 	:
     real_expression                                       #SpecNested
@@ -36,6 +39,7 @@ spec
     | HistoricallyDurationOperator ( interval )? spec     #SpecHistoricallyDuration
 	| HistoricallyDurationSeverityOperator ( interval )? spec #SpecHistoricallyDurationSeverity
 	| CompareToThresholdScaledOperator threshold spec     #specCompareToThresholdScaled
+	| ExistsMultipleOperator LBRACK IntegerLiteral RBRACK vehicle COLON LPAREN spec RPAREN   #specExistsMultiple
 	| AlwaysOperator ( interval )? spec                   #SpecNested
     | EventuallyOperator ( interval )? spec               #SpecNested
     | spec UntilOperator ( interval )? spec               #SpecNested

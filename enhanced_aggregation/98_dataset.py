@@ -9,7 +9,8 @@ from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
     insufficient,
-    yuanfei_predicates, changed_to_meta,
+    yuanfei_predicates,
+    changed_to_meta,
 )
 
 _LOGGER = logging.getLogger(__name__)

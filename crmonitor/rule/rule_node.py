@@ -101,6 +101,11 @@ class CompareToThresholdScaledNode(UnaryNode):
 
 
 @dataclass(unsafe_hash=True)
+class ExistsMultipleNode(QuantNode):
+    threshold: int
+
+
+@dataclass(unsafe_hash=True)
 class PredicateNode(NullaryNode):
     base_name: str
     """The name of the predicate, which can be resolved to an predicate  evaluator."""
