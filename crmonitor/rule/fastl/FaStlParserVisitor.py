@@ -44,6 +44,11 @@ class FaStlParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by FaStlParser#specExistsMultiple.
+    def visitSpecExistsMultiple(self, ctx:FaStlParser.SpecExistsMultipleContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by FaStlParser#SpecQuantForall.
     def visitSpecQuantForall(self, ctx:FaStlParser.SpecQuantForallContext):
         return self.visitChildren(ctx)

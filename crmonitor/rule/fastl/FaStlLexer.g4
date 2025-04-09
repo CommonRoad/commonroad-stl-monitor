@@ -28,6 +28,9 @@ SumIfPositiveOperator
 CompareToThresholdScaledOperator
 	: 'compare_to_threshold_scaled' ;
 
+ExistsMultipleOperator
+	: 'exists_multiple' ;
+
 // Preserve whitespace
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;

@@ -19,6 +19,7 @@ from crmonitor.monitor.monitor_node import (
     CompareToThresholdScaledMonitorNode,
     ConstantTraceMonitorNode,
     ExistMonitorNode,
+    ExistsMultipleMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
@@ -38,6 +39,7 @@ from crmonitor.rule.rule_node import (
     AllNode,
     CompareToThresholdScaledNode,
     ExistNode,
+    ExistsMultipleNode,
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
     IOType,
@@ -111,6 +113,13 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     def _(self, node: CompareToThresholdScaledNode, *args, **kwargs) -> MonitorNode:
         child_monitor = self.visit(node.child, *args, **kwargs)
         return CompareToThresholdScaledMonitorNode(node.name, child_monitor, node.threshold)
+
+    @visit.register
+    def _(self, node: ExistsMultipleNode, *args, **kwargs) -> MonitorNode:
+        child_monitor = self.visit(node.child, *args, **kwargs)
+        return ExistsMultipleMonitorNode(
+            node.name, child_monitor, node.quantified_vehicle, node.threshold
+        )
 
     @visit.register
     def _(self, node: PredicateNode, *args, **kwargs) -> MonitorNode:
@@ -376,6 +385,24 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         samples_return = [
             1 - 2 * math.exp(-sample / node.threshold * math.log(2)) for sample in samples
         ]
+        node.values = samples_return
+        return samples_return
+
+    @visit.register
+    def visit_exists_multiple_node(
+        self, node: ExistsMultipleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
+    ) -> List[float]:
+        samples, _ = self._visit_quant_node(node, ctx)
+
+        samples_return = []
+        for values in samples:
+            if len(values) >= node.threshold:
+                nth_largest_value_index = np.argsort(values)[-node.threshold]
+                nth_largest_value = values[nth_largest_value_index]
+                samples_return.append(nth_largest_value)
+            else:
+                samples_return.append(float("nan"))
+
         node.values = samples_return
         return samples_return
 

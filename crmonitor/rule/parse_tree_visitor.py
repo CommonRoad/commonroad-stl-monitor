@@ -11,6 +11,7 @@ from crmonitor.rule.rule_node import (
     AllNode,
     CompareToThresholdScaledNode,
     ExistNode,
+    ExistsMultipleNode,
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
     IOType,
@@ -170,22 +171,6 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         )
         return [node]
 
-    # Not visitor methods, because this breaks the parsing when intervals occur outside of our custom operators
-    def process_interval_time(self, ctx):
-        time_bound = Fraction(Decimal(ctx.literal().getText()))
-        if ctx.unit() is None:
-            unit = ""
-        else:
-            unit = ctx.unit().getText()
-
-        return time_bound, unit
-
-    def process_interval(self, ctx):
-        begin, begin_unit = self.process_interval_time(ctx.intervalTime(0))
-        end, end_unit = self.process_interval_time(ctx.intervalTime(1))
-        interval = Interval(begin, end, begin_unit, end_unit)
-        return interval
-
     def visitSpecQuantSumIfPositive(self, ctx: FaStlParser.SpecQuantSumIfPositiveContext):
         child = self.visit(ctx.spec())[0]
         quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
@@ -214,6 +199,36 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
             node_name,
         )
         return [node]
+
+    def visitSpecExistsMultiple(self, ctx: FaStlParser.SpecExistsMultipleContext):
+        child = self.visit(ctx.spec())[0]
+        quantified_vehicle = self.visitVehicle(ctx.vehicle())[0]
+        threshold = int(ctx.IntegerLiteral().getText())
+        node_name = self._get_new_unique_node_name()
+        node = ExistsMultipleNode(node_name, child, quantified_vehicle, threshold)
+        self._rewriter.replace(
+            self.DEFAULT_TOKEN_REWRITER_PROGRAM,
+            ctx.start.tokenIndex,
+            ctx.stop.tokenIndex,
+            node_name,
+        )
+        return [node]
+
+    # Not visitor methods, because this breaks the parsing when intervals occur outside of our custom operators
+    def process_interval_time(self, ctx):
+        time_bound = Fraction(Decimal(ctx.literal().getText()))
+        if ctx.unit() is None:
+            unit = ""
+        else:
+            unit = ctx.unit().getText()
+
+        return time_bound, unit
+
+    def process_interval(self, ctx):
+        begin, begin_unit = self.process_interval_time(ctx.intervalTime(0))
+        end, end_unit = self.process_interval_time(ctx.intervalTime(1))
+        interval = Interval(begin, end, begin_unit, end_unit)
+        return interval
 
     def _get_new_unique_node_name(self) -> str:
         return self._sub_rule_id_generator()
