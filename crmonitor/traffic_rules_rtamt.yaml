@@ -8,9 +8,9 @@
 meta_predicates:
   $slow_leading_vehicle(a0)_x: "E a99: (slow_as_leading_vehicle(a99)_x and in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x)"
   $exist_standing_leading_vehicle(a0)_x: "E a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and in_standstill(a99)_x)"
-  $in_congestion(a0)_x: "compare_to_threshold_scaled[>=3] (sum_if_positive a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and has_congestion_velocity(a99)_x))"
-  $in_slow_moving_traffic(a0)_x: "compare_to_threshold_scaled[>=3] (sum_if_positive a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_slow_moving_velocity(a99)_x))"
-  $in_queue_of_vehicles(a0)_x: "compare_to_threshold_scaled[>=3] (sum_if_positive a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_queue_velocity(a99)_x))"
+  $in_congestion(a0)_x: "exists_multiple[3] a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and has_congestion_velocity(a99)_x)"
+  $in_slow_moving_traffic(a0)_x: "exists_multiple[3] a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_slow_moving_velocity(a99)_x)"
+  $in_queue_of_vehicles(a0)_x: "exists_multiple[3] a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_queue_velocity(a99)_x)"
   $precedes(a0, a1)_x: "in_same_lane(a0, a1)_x and in_front_of(a0, a1)_x and (not(E a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and in_front_of(a99, a1)_x)))"
   $drives_leftmost(a0)_x: "close_to_left_bound(a0)_x or (E a99: ($close_to_vehicle_left(a0, a99)_x))"
   $drives_rightmost(a0)_x: "close_to_right_bound(a0)_x or (E a99: ($close_to_vehicle_right(a0, a99)_x))"
