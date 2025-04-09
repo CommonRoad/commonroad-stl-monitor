@@ -59,55 +59,41 @@ MprCfg.build_configuration(
 def process_scenario_with_rule(
     scenario: Scenario, ego_vehicle_id: int, rule: str, use_mpr: bool
 ) -> dict:
-    try:
-        world = World.create_from_scenario(scenario)
-        # Create a rule evaluator
-        # Provide the vehicle to evaluate traffic rules for as ego vehicle
-        predicate_evaluator_config = PredicateEvaluatorConfig(
-            mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
-            scale_rob=True,
-        )
+    world = World.create_from_scenario(scenario)
+    # Create a rule evaluator
+    # Provide the vehicle to evaluate traffic rules for as ego vehicle
+    predicate_evaluator_config = PredicateEvaluatorConfig(
+        mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
+        scale_rob=True,
+    )
 
-        # Create a rule evaluator
-        # Provide the vehicle to evaluate traffic rules for as ego vehicle
-        ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
-        assert ego_vehicle is not None
-        _LOGGER.info(
-            f"Evaluating rule {rule} with {'MPR' if use_mpr else 'MFR'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
-        )
-        rule_evaluator = OfflineRuleEvaluator.create_for_rule(
-            world,
-            ego_vehicle.id,
-            rule,
-            output_type=output_type,
-            predicate_evaluator_config=predicate_evaluator_config,
-        )
-        # Either step through time steps sequentially
-        robustness = rule_evaluator.evaluate()
+    # Create a rule evaluator
+    # Provide the vehicle to evaluate traffic rules for as ego vehicle
+    ego_vehicle = world.vehicle_by_id(ego_vehicle_id)
+    assert ego_vehicle is not None
+    _LOGGER.info(
+        f"Evaluating rule {rule} with {'MPR' if use_mpr else 'MFR'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
+    )
+    rule_evaluator = OfflineRuleEvaluator.create_for_rule(
+        world,
+        ego_vehicle.id,
+        rule,
+        output_type=output_type,
+        predicate_evaluator_config=predicate_evaluator_config,
+    )
+    # Either step through time steps sequentially
+    robustness = rule_evaluator.evaluate()
 
-        return {
-            "scenario_id": str(scenario.scenario_id),
-            "rule": rule,
-            "mpr": use_mpr,
-            "vehicle_id": ego_vehicle.id,
-            "start_time_step": ego_vehicle.start_time,
-            "end_time_step": ego_vehicle.end_time,
-            "violation": any(value < 0.0 for value in robustness),
-            "robustness": ", ".join(map(str, robustness)),
-        }
-    except Exception as e:
-        _LOGGER.warning(e)
-        return {
-            "scenario_id": str(scenario.scenario_id),
-            "rule": rule,
-            "mpr": use_mpr,
-            "vehicle_id": np.nan,
-            "start_time_step": np.nan,
-            "end_time_step": np.nan,
-            "violation": False,
-            "robustness": ", ".join(map(str, [np.nan, np.nan])),
-        }
-
+    return {
+        "scenario_id": str(scenario.scenario_id),
+        "rule": rule,
+        "mpr": use_mpr,
+        "vehicle_id": ego_vehicle.id,
+        "start_time_step": ego_vehicle.start_time,
+        "end_time_step": ego_vehicle.end_time,
+        "violation": any(value < 0.0 for value in robustness),
+        "robustness": ", ".join(map(str, robustness)),
+    }
 
 def process_scenario(scenario: Scenario, ego_vehicle_id: int, rule: str) -> list:
     mfr_result = process_scenario_with_rule(scenario, ego_vehicle_id, rule, use_mpr=False)
@@ -131,7 +117,7 @@ rules = [
     "R_I5",
 ]
 
-scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 100, replace=False)
+scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 6, replace=False)
 scenarios = list(
     map(
         lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],
@@ -154,7 +140,7 @@ if __name__ == "__main__":
     results_since_last_snapshot = 0
     results = []
     tasks = {}
-    with ProcessPoolExecutor(max_workers=4, mp_context=ctx) as executor:
+    with ProcessPoolExecutor(max_workers=1, mp_context=ctx) as executor:
         for scenario, rule in itertools.product(scenarios, rules):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
                 task = executor.submit(process_scenario, scenario, ego_vehicle_id, rule)
