@@ -57,6 +57,7 @@ for i, row_mpr in df[df["mpr"]].iterrows():  # iterate over mfr rows
         if np.isnan(row_mfr["historically_full_last"]) or np.isnan(row_mpr["historically_full_last"]):
             skipped_nan += 1
             continue
+        # assert row_mpr["historically_full_last"] < 0, f"{row_mpr["historically_full_last"]}"
         results[(row_mfr["rule"], "a")] += [row_mfr["historically_full_last"]]
         results[(row_mpr["rule"], "b")] += [row_mpr["historically_full_last"]]
         results[(row_mfr["rule"], "c")] += [row_mfr[rule_to_operator_mapping[row_mfr["rule"]]]]
