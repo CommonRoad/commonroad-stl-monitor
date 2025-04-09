@@ -117,7 +117,7 @@ rules = [
     "R_I5",
 ]
 
-scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 6, replace=False)
+scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 100, replace=False)
 scenarios = list(
     map(
         lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],
