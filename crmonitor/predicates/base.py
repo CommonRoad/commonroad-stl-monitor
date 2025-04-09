@@ -218,14 +218,11 @@ class BasePredicateEvaluator(abc.ABC):
             _LOGGER.warning(
                 f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}"
             )
-            robustness = np.float64(1e-3)
+            robustness = np.float64(1e-3) * np.sign(characteristic_value)
 
-        scaled_robustness = np.copysign(
-            np.clip(robustness, self._scaler.min, self._scaler.max),
-            characteristic_value,
-        )
+        clipped_robustness = np.clip(robustness, self._scaler.min, self._scaler.max)
 
-        return scaled_robustness
+        return clipped_robustness
 
     def evaluate_mpr(
         self, world: World, world_mpr: WorldMPR, time_step: int, vehicle_ids: List[int]

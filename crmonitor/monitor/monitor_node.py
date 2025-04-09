@@ -281,7 +281,7 @@ class ExistsMultipleMonitorNode(QuantMonitorNode):
 
     @classmethod
     def _copy_cls(cls, node: "ExistsMultipleMonitorNode") -> "ExistsMultipleMonitorNode":
-        return cls(node.name, node.child.copy(), node.threshold)
+        return cls(node.name, node.child.copy(), node.quantified_vehicle, node.threshold)
 
     def __str__(self) -> str:
         return f"exists_multiple[{self.threshold}]"

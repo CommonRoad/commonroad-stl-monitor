@@ -401,7 +401,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 nth_largest_value = values[nth_largest_value_index]
                 samples_return.append(nth_largest_value)
             else:
-                samples_return.append(float("nan"))
+                samples_return.append(self._rob_scaler.min)
 
         node.values = samples_return
         return samples_return
