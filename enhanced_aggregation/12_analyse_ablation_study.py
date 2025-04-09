@@ -43,7 +43,9 @@ for i, row_mfr in df[~df["mpr"]].iterrows():  # iterate over mfr rows
     assert len(row_mpr) == 1
     row_mpr = row_mpr.iloc[0]
     if row_mfr["historically_full_last"] < 0:
-        if np.isnan(row_mfr["historically_full_last"]) or np.isnan(row_mpr["historically_full_last"]):
+        if np.isnan(row_mfr["historically_full_last"]) or np.isnan(
+            row_mpr["historically_full_last"]
+        ):
             _LOGGER.warning("Skipping nan value.")
             continue
         # assert row_mpr["historically_full_last"] < 0, f"{row_mpr["historically_full_last"]}"

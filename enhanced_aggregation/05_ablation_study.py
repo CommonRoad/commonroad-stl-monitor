@@ -27,6 +27,7 @@ num_vehicles_per_scenarios = 4
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 snapshot_frequency = 1
+mpr_only_on_violation = False
 
 MprCfg.build_configuration(
     config={
@@ -91,6 +92,7 @@ def process_scenario_with_rule(
             "vehicle_id": ego_vehicle.id,
             "start_time_step": ego_vehicle.start_time,
             "end_time_step": ego_vehicle.end_time,
+            "violation": any(value < 0.0 for value in robustness),
             "robustness": ", ".join(map(str, robustness)),
         }
     except Exception as e:
@@ -102,8 +104,19 @@ def process_scenario_with_rule(
             "vehicle_id": np.nan,
             "start_time_step": np.nan,
             "end_time_step": np.nan,
+            "violation": False,
             "robustness": ", ".join(map(str, [np.nan, np.nan])),
         }
+
+
+def process_scenario(scenario: Scenario, ego_vehicle_id: int, rule: str) -> list:
+    mfr_result = process_scenario_with_rule(scenario, ego_vehicle_id, rule, use_mpr=False)
+    results = [mfr_result]
+    if not mpr_only_on_violation or mfr_result["violation"] is True:
+        mpr_result = process_scenario_with_rule(scenario, ego_vehicle_id, rule, use_mpr=True)
+        results.append(mpr_result)
+
+    return results
 
 
 rules = [
@@ -142,12 +155,10 @@ if __name__ == "__main__":
     results = []
     tasks = {}
     with ProcessPoolExecutor(max_workers=6, mp_context=ctx) as executor:
-        for scenario, rule, use_mpr in itertools.product(scenarios, rules, (True, False)):
+        for scenario, rule in itertools.product(scenarios, rules):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
-                task = executor.submit(
-                    process_scenario_with_rule, scenario, ego_vehicle_id, rule, use_mpr
-                )
-                tasks[task] = (scenario.scenario_id, ego_vehicle_id, rule, use_mpr)
+                task = executor.submit(process_scenario, scenario, ego_vehicle_id, rule)
+                tasks[task] = (scenario.scenario_id, ego_vehicle_id, rule)
 
         for finished_future in futures.as_completed(tasks.keys()):
             exec = finished_future.exception()
@@ -157,7 +168,7 @@ if __name__ == "__main__":
                 continue
 
             result = finished_future.result()
-            results.append(finished_future.result())
+            results.extend(finished_future.result())
             results_since_last_snapshot += 1
             del tasks[finished_future]
 
