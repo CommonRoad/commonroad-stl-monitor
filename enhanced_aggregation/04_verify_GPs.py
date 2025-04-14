@@ -1,10 +1,7 @@
 import logging
-import itertools
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.predicate_grouping import (
@@ -57,15 +54,14 @@ arities = {
 }
 MprCfg.update_with_config({"feature_variable": arities})
 
-data_loader = DataLoader.create_from_file(learning_data_path)
-
-all_predicates = all_interstate_predicates + all_general_predicates + meta_only
-evaluator = ModelEvaluator(all_predicates, data_loader, models_path)
-
-results = evaluator.evaluate()
 
 META_PREDICATES = {
-    "$slow_leading_vehicle": (np.logical_and, "slow_as_leading_vehicle", "in_same_lane"),
+    "$slow_leading_vehicle": (
+        np.logical_and,
+        "slow_as_leading_vehicle",
+        "in_same_lane",
+        "in_front_of",
+    ),
     "$exist_standing_leading_vehicle": (
         np.logical_and,
         "in_same_lane",
@@ -109,12 +105,20 @@ META_PREDICATES = {
     ),
 }
 
+data_loader = DataLoader.create_from_file(learning_data_path)
 
-def _resolve_definition(definition):
+all_predicates = all_interstate_predicates + all_general_predicates + meta_only
+evaluator = ModelEvaluator(all_predicates, data_loader, models_path)
+
+results = evaluator.evaluate()
+
+
+def _resolve_meta_predicate_definition(definition):
+    """resolve the definition of a meta-predicate to the metrics of the atomic predicates."""
     if isinstance(definition, str):
         if definition.startswith("$"):
             # recursive meta-predicate
-            return _resolve_definition(META_PREDICATES[definition])
+            return _resolve_meta_predicate_definition(META_PREDICATES[definition])
         else:
             return results[definition]["bool_pred"], results[definition]["bool_gt"]
     else:
@@ -123,7 +127,7 @@ def _resolve_definition(definition):
         preds = []
         gts = []
         for operand in operands:
-            pred, gt = _resolve_definition(operand)
+            pred, gt = _resolve_meta_predicate_definition(operand)
             preds.append(pred)
             gts.append(gt)
 
@@ -131,6 +135,9 @@ def _resolve_definition(definition):
         # TODO: Should another strategy be used here?
         min_pred_len = min([len(p) for p in preds]) if preds else 0
         min_gt_len = min([len(g) for g in gts]) if gts else 0
+        assert min_pred_len == min_gt_len, (
+            f"Prediction and ground truth vector lengths for definition {definition} are not equal!"
+        )
         preds = [pred[0:min_pred_len] for pred in preds]
         gts = [gt[0:min_gt_len] for gt in gts]
 
@@ -140,7 +147,7 @@ def _resolve_definition(definition):
 meta_predicate_results = {}
 _eps = 1e-9
 for meta_predicate_name, definition in META_PREDICATES.items():
-    bool_pred, bool_gt = _resolve_definition(definition)
+    bool_pred, bool_gt = _resolve_meta_predicate_definition(definition)
 
     TP = np.logical_and(bool_pred, bool_gt).sum()
     FP = np.logical_and(bool_pred, ~bool_gt).sum()
@@ -151,6 +158,7 @@ for meta_predicate_name, definition in META_PREDICATES.items():
     recall = (TP + _eps) / (TP + FN + _eps)
     f1_score = 2 * precision * recall / (precision + recall)
     results[meta_predicate_name] = {
+        "size": len(bool_pred),
         "TP": TP,
         "FP": FP,
         "FN": FN,
@@ -160,22 +168,7 @@ for meta_predicate_name, definition in META_PREDICATES.items():
         "f1_score": f1_score,
     }
 
-# TODO: No visualization because meta-predicates do not compute SHAP
-# evaluator.visualize(results)
-# evaluator.save(results, metrics_output_path)
-#
-# TODO: move to ModelEvaluator
-columns_to_exclude = {"shap_values", "bool_gt", "bool_pred", "y_test", "y_pred"}
-flattened_results = []
-for key, nested_dict in results.items():
-    filtered_nested_dict = {"predicate": key}
-    for nested_key, nested_value in nested_dict.items():
-        if nested_key in columns_to_exclude:
-            continue
-        filtered_nested_dict[nested_key] = nested_value
-
-    flattened_results.append(filtered_nested_dict)
-results_df = pd.DataFrame(flattened_results)
-results_df.to_csv(metrics_output_path)
+evaluator.visualize(results)
+evaluator.save(results, metrics_output_path)
 
 # plt.show()
