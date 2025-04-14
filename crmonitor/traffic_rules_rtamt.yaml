@@ -1,4 +1,4 @@
-# changes: in_standstill → velocity_below_5
+# changes: in_standstill → velocity_below_five
 
 # Traffic rules formalized in metric temporal logic (MTL)
 ###
@@ -9,7 +9,7 @@
 #   - R_G3: speed limit
 meta_predicates:
   $slow_leading_vehicle(a0)_x: "E a99: (slow_as_leading_vehicle(a99)_x and in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x)"
-  $exist_standing_leading_vehicle(a0)_x: "E a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and velocity_below_5(a99)_x)"
+  $exist_standing_leading_vehicle(a0)_x: "E a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and velocity_below_five(a99)_x)"
   $in_congestion(a0)_x: "exists_multiple[3] a99: (in_same_lane(a0, a99)_x and in_front_of(a0, a99)_x and has_congestion_velocity(a99)_x)"
   $in_slow_moving_traffic(a0)_x: "exists_multiple[3] a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_slow_moving_velocity(a99)_x)"
   $in_queue_of_vehicles(a0)_x: "exists_multiple[3] a99: (in_front_of(a0, a99)_x and in_same_lane(a0, a99)_x and has_queue_velocity(a99)_x)"
@@ -31,23 +31,23 @@ traffic_rules:
   R_G3: keeps_lane_speed_limit(a0) and keeps_type_speed_limit(a0) and keeps_fov_speed_limit(a0) and keeps_brake_speed_limit(a0)
   R_G4: not $slow_leading_vehicle(a0) implies preserves_traffic_flow(a0)
 
-  R_I1: not($in_congestion(a0) or $exist_standing_leading_vehicle(a0)_i) implies not velocity_below_5(a0)
-  R_I2: 'A a1: ($left_of(a1,a0) and drives_faster(a0, a1) implies (($in_congestion(a1) or $in_slow_moving_traffic(a1) or $in_queue_of_vehicles(a1)) and drives_with_slightly_higher_speed(a0, a1)) or (right_of_broad_lane_marking(a0) and left_of_broad_lane_marking(a1)) or (on_access_ramp(a0) and on_main_carriage_way(a1) and not ($in_congestion(a1) or $in_slow_moving_traffic(a1) or $in_queue_of_vehicles(a1))))'
+  R_I1: not($in_congestion(a0) or $exist_standing_leading_vehicle(a0)_i) implies not velocity_below_five(a0)
+  R_I2: 'A a1: ($left_of(a1,a0) and drives_faster(a0, a1) implies (($in_congestion(a1) or $in_slow_moving_traffic(a1) or $in_queue_of_vehicles(a1)) and drives_with_slightly_higher_speed(a0, a1)))'
   R_I3: not makes_u_turn(a0) and not reverses(a0)
-  R_I4: $in_congestion(a0) or $in_slow_moving_traffic(a0) implies (interstate_broad_enough(a0) implies not on_shoulder(a0) and (in_leftmost_lane(a0) implies $drives_leftmost(a0) and single_lane(a0)) and (not in_leftmost_lane(a0) implies $drives_rightmost(a0))) and (not interstate_broad_enough(a0) implies $drives_rightmost(a0) and in_rightmost_lane(a0) and single_lane(a0))
+  R_I4: $in_congestion(a0) or $in_slow_moving_traffic(a0) implies (on_shoulder(a0) and (in_leftmost_lane(a0) implies $drives_leftmost(a0) and single_lane(a0)) and (not in_leftmost_lane(a0) implies $drives_rightmost(a0)))
   R_I5: 'A a1: ((on_main_carriage_way(a0) and in_front_of(a0, a1) and on_access_ramp(a1) and eventually[0, 5s](on_main_carriage_way(a1)_i)) implies (not(not(main_carriageway_right_lane(a0)) and eventually[0, 5s](main_carriageway_right_lane(a0)))))'
     # Wait at traffic light with turn on red exception
   R_IN2_TOR: (once (not (prev not sl_in_front(a0)_i)) and (not sl_in_front(a0)_i) and on_intersection(a0)_i and tl_red(a0)_i) implies (on_right_turn(a0) or (not on_intersection(a0)))
     # RTAMT implements the weak previous operator, which has value inf at time step 0.
     # Using "not (weak) prev not A <=> (strong) prev A" we can rewrite the formula using only the weak prev operator.
     # Stop sign rule translated to past-time
-  R_IN1_past: ((not prev not sl_in_front(a0)_i) and (not sl_in_front(a0)_i)) implies once(historically[0, 3s](sl_in_front(a0) and velocity_below_5(a0)))
+  R_IN1_past: ((not prev not sl_in_front(a0)_i) and (not sl_in_front(a0)_i)) implies once(historically[0, 3s](sl_in_front(a0) and velocity_below_five(a0)))
   R_IN1: "(
               (not prev (not (stop_line_in_front(a0)_i))) and
               (not stop_line_in_front(a0)_i) and
               at_traffic_sign_stop(a0)_i and
               (not relevant_traffic_light(a0)_i)) implies
-              once(historically[0, 3s](stop_line_in_front(a0)_i and velocity_below_5(a0)_i))"
+              once(historically[0, 3s](stop_line_in_front(a0)_i and velocity_below_five(a0)_i))"
 
 
   R_IN3: "A a1: (

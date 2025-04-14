@@ -34,7 +34,7 @@ class VelocityPredicates(str, Enum):
     DrivesFaster = "drives_faster"
     DrivesWithSlightlyHigherSpeed = "drives_with_slightly_higher_speed"
     VelocityBelow2 = "velocity_below_2"
-    VelocityBelow5 = "velocity_below_5"
+    VelocityBelow5 = "velocity_below_five"
     VelocityBelow15 = "velocity_below_15"
     VelocityBelow20 = "velocity_below_20"
 

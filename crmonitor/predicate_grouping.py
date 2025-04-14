@@ -14,7 +14,7 @@ all_general_predicates = [
 ]
 
 all_interstate_predicates = [
-    "velocity_below_5",
+    "velocity_below_five",
     "velocity_below_15",
     "velocity_below_20",
     "has_congestion_velocity",
