@@ -1,8 +1,11 @@
+import itertools
 import logging
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
+from commonroad_mpr.learning.gp_regression import read_model
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.predicate_grouping import (
     all_general_predicates,
@@ -20,6 +23,12 @@ models_path = Path(__file__).parent.parent / "output" / "models"
 
 metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_metrics.csv"
 metrics_output_path.parent.mkdir(exist_ok=True)
+
+# Select the atomic predicates that should be evaluated.
+predicates = ["in_same_lane"]
+# Select the meta-predicates that should be evaluated (prefixed with '$'!). NOTE: only select top-level meta-predicates here.
+meta_predicates = ["$slow_leading_vehicle", "$precedes"]
+
 
 MprCfg.build_configuration(
     config={
@@ -55,7 +64,7 @@ arities = {
 MprCfg.update_with_config({"feature_variable": arities})
 
 
-META_PREDICATES = {
+META_PREDICATE_DEFINITIONS = {
     "$slow_leading_vehicle": (
         np.logical_and,
         "slow_as_leading_vehicle",
@@ -91,7 +100,7 @@ META_PREDICATES = {
     ),
     "$approach_from_left": (np.logical_and, "lat_left_of", "heading_right"),
     "$approach_from_right": (np.logical_and, "lat_left_of", "heading_right"),
-    "$left_of": (np.logical_and, "lat_left_of_vehicle", "lon_intersecting_vehicles"),
+    "$left_of": (np.logical_and, "lat_left_of_vehicle", "$lon_intersecting_vehicles"),
     "$lon_intersecting_vehicles": "rear_behind_front",  # TODO: Meta predicate consists only of one atomic predicate?
     "$close_to_vehicle_left": (
         np.logical_and,
@@ -106,56 +115,104 @@ META_PREDICATES = {
 }
 
 data_loader = DataLoader.create_from_file(learning_data_path)
-
-all_predicates = all_interstate_predicates + all_general_predicates + meta_only
-evaluator = ModelEvaluator(all_predicates, data_loader, models_path)
+evaluator = ModelEvaluator(predicates, data_loader, models_path)
 
 results = evaluator.evaluate()
 
 
-def _resolve_meta_predicate_definition(definition):
+def _get_all_atomic_predicates(definition):
+    if isinstance(definition, str):
+        if definition.startswith("$"):
+            return _get_all_atomic_predicates(META_PREDICATE_DEFINITIONS[definition])
+        else:
+            return [definition]
+    else:
+        operands = definition[1:]
+        return list(
+            itertools.chain.from_iterable(
+                _get_all_atomic_predicates(operand) for operand in operands
+            )
+        )
+
+
+def _resolve_meta_predicate_definition(definition, balanced_df):
     """resolve the definition of a meta-predicate to the metrics of the atomic predicates."""
     if isinstance(definition, str):
         if definition.startswith("$"):
             # recursive meta-predicate
-            return _resolve_meta_predicate_definition(META_PREDICATES[definition])
+            return _resolve_meta_predicate_definition(
+                META_PREDICATE_DEFINITIONS[definition], balanced_df
+            )
         else:
-            return results[definition]["bool_pred"], results[definition]["bool_gt"]
+            model = read_model(definition, models_path)
+            # Use the existing data loader functionality, because it also handles the feature extraction.
+            _data_loader = DataLoader([definition], balanced_df)
+            X_test, y_test = _data_loader.Xy(definition)
+            y_pred, _ = model.predict(X_test.astype(float))
+
+            # Copied from `ModelEvaluator`.
+            y_pred = np.clip(y_pred, -1, 1)
+            bool_pred = (y_pred > 0).flatten()
+            bool_gt = (y_test > 0).flatten()
+            return (bool_pred, bool_gt)
     else:
         operator = definition[0]
         operands = definition[1:]
+
         preds = []
         gts = []
         for operand in operands:
-            pred, gt = _resolve_meta_predicate_definition(operand)
+            pred, gt = _resolve_meta_predicate_definition(operand, balanced_df)
             preds.append(pred)
             gts.append(gt)
 
-        # Reduce both arrays to the same length.
-        # TODO: Should another strategy be used here?
-        min_pred_len = min([len(p) for p in preds]) if preds else 0
-        min_gt_len = min([len(g) for g in gts]) if gts else 0
-        assert min_pred_len == min_gt_len, (
-            f"Prediction and ground truth vector lengths for definition {definition} are not equal!"
+        return operator.reduce(preds), operator.reduce(gts)
+
+
+eps = 1e-9
+n_samples_each = 500  # Configure the number of positive and negative samples.
+count_valid_threshold = 10000  # This value must match the value in the `DataLoader`.
+for meta_predicate_name in meta_predicates:
+    definition = META_PREDICATE_DEFINITIONS[meta_predicate_name]
+
+    # The `DataLoader` filters based on count_valid. Therefore, we must already make sure
+    # that our sample contains enough valid samples, for any downstream operation.
+    atomic_predicates = _get_all_atomic_predicates(definition)
+    valid_masks = []
+    for atomic_predicate in atomic_predicates:
+        valid_mask = (
+            data_loader.data[("predicates", atomic_predicate, "count_valid")]
+            > count_valid_threshold
         )
-        preds = [pred[0:min_pred_len] for pred in preds]
-        gts = [gt[0:min_gt_len] for gt in gts]
+        valid_masks.append(valid_mask)
 
-        return operator(*preds), operator(*gts)
+    filtered_data = data_loader.data.loc[np.logical_and.reduce(valid_masks)]
+    # The `DataLoader` also removes duplicates for predicates with arity 1.
+    # It's difficult to check this here, so all duplicates are removed instead.
+    filtered_data_reset = filtered_data.reset_index("other_id")
+    filtered_data = filtered_data[~filtered_data_reset.index.duplicated(keep="first")]
 
+    # Select the data of the non-meta-predicate
+    original_atomic_predicate_data = filtered_data.predicates[meta_predicate_name.lstrip("$")]
+    rows_true = filtered_data[original_atomic_predicate_data.robustness > 0.0]
+    rows_false = filtered_data[original_atomic_predicate_data.robustness <= 0.0]
 
-meta_predicate_results = {}
-_eps = 1e-9
-for meta_predicate_name, definition in META_PREDICATES.items():
-    bool_pred, bool_gt = _resolve_meta_predicate_definition(definition)
+    # Handles the cases where one of the rows does not have at least n_samples_each.
+    min_row_length = min(len(rows_true), len(rows_false), n_samples_each)
+    rows_true_balanced = rows_true.sample(min_row_length)
+    rows_false_balanced = rows_false.sample(min_row_length)
+
+    balanced_df = pd.concat([rows_true_balanced, rows_false_balanced])
+
+    bool_pred, bool_gt = _resolve_meta_predicate_definition(definition, balanced_df)
 
     TP = np.logical_and(bool_pred, bool_gt).sum()
     FP = np.logical_and(bool_pred, ~bool_gt).sum()
     FN = np.logical_and(~bool_pred, bool_gt).sum()
     TN = np.logical_and(~bool_pred, ~bool_gt).sum()
 
-    precision = (TP + _eps) / (TP + FP + _eps)
-    recall = (TP + _eps) / (TP + FN + _eps)
+    precision = (TP + eps) / (TP + FP + eps)
+    recall = (TP + eps) / (TP + FN + eps)
     f1_score = 2 * precision * recall / (precision + recall)
     results[meta_predicate_name] = {
         "size": len(bool_pred),
