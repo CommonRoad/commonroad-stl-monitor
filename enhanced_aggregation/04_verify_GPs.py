@@ -166,7 +166,7 @@ def _resolve_meta_predicate_definition(definition, balanced_df):
             preds.append(pred)
             gts.append(gt)
 
-        return operator.reduce(preds), operator.reduce(gts)
+        return operator(*preds), operator(*gts)
 
 
 eps = 1e-9
@@ -176,7 +176,7 @@ for meta_predicate_name in meta_predicates:
     definition = META_PREDICATE_DEFINITIONS[meta_predicate_name]
 
     # The `DataLoader` filters based on count_valid. Therefore, we must already make sure
-    # that our sample contains enough valid samples, for any downstream operation.
+    # that our sample contains enough valid samples for any downstream operation.
     atomic_predicates = _get_all_atomic_predicates(definition)
     valid_masks = []
     for atomic_predicate in atomic_predicates:
