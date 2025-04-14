@@ -112,9 +112,9 @@ rules = [
     "R_G4",
     "R_I1",
     "R_I2",
-    "R_I3",
+    # "R_I3",
     "R_I4",
-    "R_I5",
+    # "R_I5",
 ]
 
 scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 100, replace=False)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     results_since_last_snapshot = 0
     results = []
     tasks = {}
-    with ProcessPoolExecutor(max_workers=1, mp_context=ctx) as executor:
+    with ProcessPoolExecutor(max_workers=2, mp_context=ctx) as executor:
         for scenario, rule in itertools.product(scenarios, rules):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
                 task = executor.submit(process_scenario, scenario, ego_vehicle_id, rule)
