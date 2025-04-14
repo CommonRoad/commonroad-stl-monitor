@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+import numpy as np
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
-    insufficient,
+    meta_only,
 )
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
@@ -54,13 +54,121 @@ arities = {
 }
 MprCfg.update_with_config({"feature_variable": arities})
 
+
+META_PREDICATES = {
+    "$slow_leading_vehicle": (
+        np.logical_and,
+        "slow_as_leading_vehicle",
+        "in_same_lane",
+        "in_front_of",
+    ),
+    "$exist_standing_leading_vehicle": (
+        np.logical_and,
+        "in_same_lane",
+        "in_front_of",
+        "in_standstill",
+    ),
+    "$in_congestion": (np.logical_and, "in_same_lane", "in_front_of", "has_congestion_velocity"),
+    "$in_slow_moving_traffic": (
+        np.logical_and,
+        "in_front_of",
+        "in_same_lane",
+        "has_slow_moving_velocity",
+    ),
+    "$in_queue_of_vehicles": (np.logical_and, "in_front_of", "in_same_lane", "has_queue_velocity"),
+    "$precedes": (np.logical_and, "in_same_lane", "in_front_of"),
+    "$drives_leftmost": (np.logical_or, "close_to_left_bound", "close_to_vehicle_left"),
+    "$drives_rightmost": (
+        np.logical_or,
+        "close_to_right_bound",
+        "close_to_vehicle_right",
+    ),
+    "$cut_in": (
+        np.logical_and,
+        (np.logical_not, "single_lane"),
+        (np.logical_or, "$approach_from_left", "$approach_from_right"),
+        "in_same_lane",
+    ),
+    "$approach_from_left": (np.logical_and, "lat_left_of", "heading_right"),
+    "$approach_from_right": (np.logical_and, "lat_left_of", "heading_right"),
+    "$left_of": (np.logical_and, "lat_left_of_vehicle", "lon_intersecting_vehicles"),
+    "$lon_intersecting_vehicles": "rear_behind_front",  # TODO: Meta predicate consists only of one atomic predicate?
+    "$close_to_vehicle_left": (
+        np.logical_and,
+        "lat_close_to_vehicle_left",
+        "lon_intersecting_vehicles",
+    ),
+    "$close_to_vehicle_right": (
+        np.logical_and,
+        "lat_close_to_vehicle_right",
+        "lon_intersecting_vehicles",
+    ),
+}
+
 data_loader = DataLoader.create_from_file(learning_data_path)
 
-evaluator = ModelEvaluator(insufficient, data_loader, models_path)
-
+all_predicates = all_interstate_predicates + all_general_predicates + meta_only
+evaluator = ModelEvaluator(all_predicates, data_loader, models_path)
 
 results = evaluator.evaluate()
-# evaluator.visualize(results)
+
+
+def _resolve_meta_predicate_definition(definition):
+    """resolve the definition of a meta-predicate to the metrics of the atomic predicates."""
+    if isinstance(definition, str):
+        if definition.startswith("$"):
+            # recursive meta-predicate
+            return _resolve_meta_predicate_definition(META_PREDICATES[definition])
+        else:
+            return results[definition]["bool_pred"], results[definition]["bool_gt"]
+    else:
+        operator = definition[0]
+        operands = definition[1:]
+        preds = []
+        gts = []
+        for operand in operands:
+            pred, gt = _resolve_meta_predicate_definition(operand)
+            preds.append(pred)
+            gts.append(gt)
+
+        # Reduce both arrays to the same length.
+        # TODO: Should another strategy be used here?
+        min_pred_len = min([len(p) for p in preds]) if preds else 0
+        min_gt_len = min([len(g) for g in gts]) if gts else 0
+        assert min_pred_len == min_gt_len, (
+            f"Prediction and ground truth vector lengths for definition {definition} are not equal!"
+        )
+        preds = [pred[0:min_pred_len] for pred in preds]
+        gts = [gt[0:min_gt_len] for gt in gts]
+
+        return operator(*preds), operator(*gts)
+
+
+meta_predicate_results = {}
+_eps = 1e-9
+for meta_predicate_name, definition in META_PREDICATES.items():
+    bool_pred, bool_gt = _resolve_meta_predicate_definition(definition)
+
+    TP = np.logical_and(bool_pred, bool_gt).sum()
+    FP = np.logical_and(bool_pred, ~bool_gt).sum()
+    FN = np.logical_and(~bool_pred, bool_gt).sum()
+    TN = np.logical_and(~bool_pred, ~bool_gt).sum()
+
+    precision = (TP + _eps) / (TP + FP + _eps)
+    recall = (TP + _eps) / (TP + FN + _eps)
+    f1_score = 2 * precision * recall / (precision + recall)
+    results[meta_predicate_name] = {
+        "size": len(bool_pred),
+        "TP": TP,
+        "FP": FP,
+        "FN": FN,
+        "TN": TN,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1_score,
+    }
+
+evaluator.visualize(results)
 evaluator.save(results, metrics_output_path)
 
-plt.show()
+# plt.show()
