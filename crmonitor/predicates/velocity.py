@@ -90,8 +90,7 @@ class PredFovSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        return vehicle.vehicle_param.get("fov_speed_limit")
+        return self.config.fov_speed_limit
 
 
 class PredBrSpeedLimit(PredGenericSpeedLimit):
@@ -99,8 +98,7 @@ class PredBrSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        return vehicle.vehicle_param.get("braking_speed_limit")
+        return self.config.braking_speed_limit
 
 
 class PredLaneSpeedLimitStar(PredLaneSpeedLimit):

@@ -83,6 +83,9 @@ class PredicateEvaluatorConfig:
 
     country: str = "DEU"
 
+    fov_speed_limit: float = 50.0
+    braking_speed_limit: float = 43.0
+
 
 class BasePredicateEvaluator(abc.ABC):
     """
