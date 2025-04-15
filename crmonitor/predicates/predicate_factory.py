@@ -24,7 +24,7 @@ class PredicateFactory:
         predicate_class_map = {
             cls.predicate_name: cls
             for name, cls in classes
-            if re.match(r"^Pred[A-Z].*$", name) is not None
+            if re.match(r"^Pred[A-Z0-9].*$", name) is not None
         }
         return predicate_class_map
 
