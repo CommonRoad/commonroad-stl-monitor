@@ -13,6 +13,9 @@ from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
+from omegaconf import DictConfig
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
+from vehiclemodels.vehicle_parameters import VehicleParameters as VehicleModelParameters
 
 from crmonitor.common.world import World
 from crmonitor.predicates.scaling import RobustnessScaler
@@ -33,6 +36,39 @@ class PredicateMprConfig:
 
     model_path: Optional[Path] = None
     """Path to the pre-trained models. If None, the models from the commonroad-mpr package are used."""
+
+
+@dataclass
+class VehicleParams:
+    a_max: float
+    a_min: float
+    v_min: float = 0.0
+    j_max: float = 10.0
+    j_min: float = -10.0
+    t_react: float = 0.4
+
+    dynamics_param: DictConfig = field(default_factory=parameters_vehicle2)
+
+
+@dataclass
+class EgoVehicleParams(VehicleParams):
+    a_max: float = 3.0
+    a_min: float = -10.0
+    a_corr: float = 0.0
+    v_des: float = 30.0
+    fov: float = 200
+
+    # TODO: caluclate these values based on the dynamic model.
+    fov_speed_limit: float = 50.0
+    braking_speed_limit: float = 43.0
+    road_condition_speed_limit: float = 50
+
+
+@dataclass
+class OtherVehiclesParams:
+    v_max: float = 60.0
+    a_max: float = 5.0
+    a_min: float = -10.5
 
 
 @dataclass
@@ -83,8 +119,8 @@ class PredicateEvaluatorConfig:
 
     country: str = "DEU"
 
-    fov_speed_limit: float = 50.0
-    braking_speed_limit: float = 43.0
+    ego_vehicle_params: EgoVehicleParams = field(default_factory=EgoVehicleParams)
+    other_vehicles_params: OtherVehiclesParams = field(default_factory=OtherVehiclesParams)
 
 
 class BasePredicateEvaluator(abc.ABC):

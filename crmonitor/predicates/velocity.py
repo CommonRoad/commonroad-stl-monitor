@@ -90,7 +90,7 @@ class PredFovSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config.fov_speed_limit
+        return self.config.ego_vehicle_params.fov_speed_limit
 
 
 class PredBrSpeedLimit(PredGenericSpeedLimit):
@@ -98,7 +98,7 @@ class PredBrSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config.braking_speed_limit
+        return self.config.ego_vehicle_params.braking_speed_limit
 
 
 class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
@@ -258,7 +258,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             )
             v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
-                vehicle.vehicle_param.get("road_condition_speed_limit"),
+                self.config.ego_vehicle_params.road_condition_speed_limit,
                 v_max_lane,
                 v_type,
             ]
@@ -289,7 +289,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             )
             v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
-                vehicle.vehicle_param.get("road_condition_speed_limit"),
+                self.config.ego_vehicle_params.road_condition_speed_limit,
                 v_max_lane,
                 v_type,
             ]
@@ -317,15 +317,21 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         super().__init__(config)
         self._lane_speed_limit_evaluator = PredLaneSpeedLimitStar(config)
         self._type_speed_limit_evaluator = PredTypeSpeedLimit(config)
+        self._fov_speed_limit_evaluator = PredFovSpeedLimit(config)
+        self._breaking_speed_limit_evaluator = PredBrSpeedLimit(config)
 
     def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
         v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_fov = self._fov_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_breaking = self._breaking_speed_limit_evaluator.get_speed_limit(
+            world, time_step, vehicle_ids
+        )
         v_list = [
-            vehicle.vehicle_param.get("road_condition_speed_limit"),
-            vehicle.vehicle_param.get("fov_speed_limit"),
-            vehicle.vehicle_param.get("braking_speed_limit"),
+            self.config.ego_vehicle_params.road_condition_speed_limit,
+            v_fov,
+            v_breaking,
             v_max_lane,
             v_type,
         ]
@@ -339,10 +345,14 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         v_max_lane = self._lane_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
         v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_fov = self._fov_speed_limit_evaluator.get_speed_limit(world, time_step, vehicle_ids)
+        v_breaking = self._breaking_speed_limit_evaluator.get_speed_limit(
+            world, time_step, vehicle_ids
+        )
         v_list = [
-            vehicle.vehicle_param.get("road_condition_speed_limit"),
-            vehicle.vehicle_param.get("fov_speed_limit"),
-            vehicle.vehicle_param.get("braking_speed_limit"),
+            self.config.ego_vehicle_params.road_condition_speed_limit,
+            v_fov,
+            v_breaking,
             v_max_lane,
             v_type,
         ]

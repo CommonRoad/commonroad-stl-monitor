@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
 scenarios_load_path = Path(__file__).parents[2] / "scenarios-for-semantic-aware-stl" / "highD"
-scenario_id = "DEU_LocationALower42-1_4223093_T-23343"
+scenario_id = "DEU_LocationELower15-1_1510041_T-10291"
 use_mpr = False
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
