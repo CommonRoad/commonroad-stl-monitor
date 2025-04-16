@@ -28,6 +28,7 @@ output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 snapshot_frequency = 4
 mpr_only_on_violation = False
+enable_gps = True  # Enable/Disable the MPR evaluation with GPs
 
 MprCfg.build_configuration(
     config={
@@ -63,7 +64,7 @@ def process_scenario_with_rule(
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
     predicate_evaluator_config = PredicateEvaluatorConfig(
-        mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path),
+        mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path, ml=enable_gps),
         scale_rob=True,
     )
 

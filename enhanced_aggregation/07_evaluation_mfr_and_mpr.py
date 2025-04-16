@@ -14,7 +14,6 @@ from crmonitor.common.world import World
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
-    insufficient,
     changed_to_meta,
 )
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
