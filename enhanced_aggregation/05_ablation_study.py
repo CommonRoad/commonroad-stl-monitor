@@ -28,7 +28,7 @@ output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 snapshot_frequency = 4
 mpr_only_on_violation = False
-enable_gps = True  # Enable/Disable the MPR evaluation with GPs
+enable_gps = False  # Enable/Disable the MPR evaluation with GPs
 
 MprCfg.build_configuration(
     config={

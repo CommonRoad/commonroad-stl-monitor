@@ -11,7 +11,6 @@ from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad_mpr.learning import FeatureExtrator, read_model
 from commonroad_mpr.learning.gp_regression import ModelLoadError
 from commonroad_mpr.prediction.ego_sampling import StateBasedSampling
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from commonroad_mpr.utils.configuration_builder import ScenarioType
 
 from crmonitor.common.world import World
@@ -33,6 +32,15 @@ class PredicateMprConfig:
 
     model_path: Optional[Path] = None
     """Path to the pre-trained models. If None, the models from the commonroad-mpr package are used."""
+
+    rectification: bool = True
+    """Control the behaviour if the sign of the MPR value does not match the sign of the characteristic value during MPR evaluation with GPs. If rectification is disabled, the evaluation will fallback to MPR evaluation without GPs."""
+
+    sampler_time_horizon: float = 1.5
+    """Set the time horizon for the MPR `StateBasedSampler`."""
+
+    sample_number: int = 1000
+    """Set the number of samples for the MPR `StateBasedSampler`."""
 
 
 @dataclass
@@ -153,7 +161,6 @@ class BasePredicateEvaluator(abc.ABC):
         world_mpr: WorldMPR,
         time_step: int,
         vehicle_ids: List[int],
-        rectification: bool = True,
     ) -> float:
         """
         Evaluate this predicate with model-predicitive robustness using pre-trained models.
@@ -207,12 +214,19 @@ class BasePredicateEvaluator(abc.ABC):
             gradient = self._mpr_model.get_gradient([list_features])
             self._mpr_gradients.append(gradient)
 
-        # rectification
-        if rectification and robustness * characteristic_value < 0:
-            _LOGGER.debug(
-                f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}"
-            )
-            robustness = np.float64(1e-3) * np.sign(characteristic_value)
+        if robustness * characteristic_value < 0:
+            if self.config.mpr.rectification:
+                # rectification
+                _LOGGER.debug(
+                    f"Apply rectification. MPR: {robustness:.3f}, Characteristic value: {characteristic_value}"
+                )
+                robustness = np.float64(1e-3) * np.sign(characteristic_value)
+            else:
+                _LOGGER.debug(
+                    f"Sign of characterstic value {characteristic_value} and MPR {robustness:.3f} do not match. Falling back to evaluation without GPs."
+                )
+                mpr_dict = self.evaluate_mpr(world, world_mpr, time_step, vehicle_ids)
+                robustness = mpr_dict["robustness"]
 
         clipped_robustness = np.clip(robustness, self._scaler.min, self._scaler.max)
 
@@ -251,8 +265,19 @@ class BasePredicateEvaluator(abc.ABC):
         ego_sampler = StateBasedSampling(
             ego_vehicle_mpr,
             time_step,
-            MprCfg["common"]["scenario"],
-            **MprCfg["sampling_approach"]["state_based_sampling"][MprCfg["common"]["scenario"]],
+            # TODO: support for intersection scenarios.
+            ScenarioType.INTERSTATE.to_str(),
+            time_horizon=self.config.mpr.sampler_time_horizon,
+            # TODO: hardcoded values and weird way to pass the arguments.
+            samplingxd={"distribution": "uniform", "simulation": "monte-carlo"},
+            end_state_options={
+                "sample_long_lat": [[1], [0, 1]],
+                "zero_long_lat": [[2], [2]],
+                "size": [12, 12, 12],
+                "number": self.config.mpr.sample_number,
+                "d_radius": 5,
+                "d_dot_radius": 3,
+            },
         )
 
         orig_ego_vehicle = world.vehicle_by_id(ego_vehicle_id)

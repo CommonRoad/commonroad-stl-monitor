@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -6,6 +7,8 @@ from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as M
 from crmonitor.common.world import World
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
+
+logging.basicConfig(level=logging.INFO)
 
 scenario_name = "DEU_LocationALower26-1_261256_T-1506"
 time_step = 0
@@ -16,6 +19,7 @@ predicate = "lat_close_to_vehicle_left"
 scenarios_load_path = (
     Path(__file__).parent.parent.parent / "scenarios-for-semantic-aware-stl" / "highD"
 )
+model_path = Path(__file__).parent.parent / "output" / "models"
 
 MprCfg.build_configuration(
     config={
@@ -46,7 +50,7 @@ scenario_path = scenarios_load_path / f"{scenario_name}.xml"
 
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=True,
-    mpr=PredicateMprConfig(enabled=True),
+    mpr=PredicateMprConfig(enabled=True, ml=True, rectification=False, model_path=model_path),
 )
 predicate_factory = PredicateFactory(predicate_evaluator_config)
 predicate_evaluator = predicate_factory.get_predicate(predicate)
@@ -55,10 +59,15 @@ scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
 world = World.create_from_scenario(scenario)
 mpr_world = WorldMPR.create_from_scenario(scenario)
 
-# mpr_robustness = predicate_evaluator.evaluate_mpr(
-#     world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
-# )
-# print("MPR:", mpr_robustness)
+mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
+    world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
+)
+print("MPR (GP):", mpr_robustness)
+
+mpr_robustness = predicate_evaluator.evaluate_mpr(
+    world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
+)
+print("MPR:", mpr_robustness)
 
 mfr_robustness = predicate_evaluator.evaluate_robustness(
     world, time_step, [ego_vehicle_id, other_vehicle_id]

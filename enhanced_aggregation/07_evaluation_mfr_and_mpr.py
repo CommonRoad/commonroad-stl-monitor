@@ -89,7 +89,7 @@ if len(scenarios) == 0:
 
 predicate_evaluator_config = PredicateEvaluatorConfig(
     scale_rob=True,
-    mpr=PredicateMprConfig(enabled=True, model_path=models_path),
+    mpr=PredicateMprConfig(enabled=True, model_path=models_path, rectification=False),
 )
 predicate_factory = PredicateFactory(predicate_evaluator_config)
 predicates = [
@@ -142,7 +142,7 @@ for i in range(0, iterations):
         #  - It must recompute the features for each predicate
         #  Therefore, please implement a solution that directly makes use of the ExactGPModel.predict method.
         mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
-            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id], rectification=False
+            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
         )
         if (not -1 <= mpr_robustness <= 1) or np.isnan(mpr_robustness):
             _LOGGER.warning(f"MPR: {mpr_robustness:.3f}")
