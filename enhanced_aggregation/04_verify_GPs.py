@@ -27,7 +27,7 @@ metrics_output_path.parent.mkdir(exist_ok=True)
 # Select the atomic predicates that should be evaluated.
 predicates = []
 # Select the meta-predicates that should be evaluated (prefixed with '$'!). NOTE: only select top-level meta-predicates here.
-meta_predicates = ["$drives_leftmost"]
+meta_predicates = ["$cut_in", "$drives_leftmost", "$drives_rightmost", "$left_of"]
 
 
 MprCfg.build_configuration(
@@ -142,24 +142,74 @@ def _resolve_meta_predicate_definition(definition, balanced_df):
             _data_loader = DataLoader([definition], balanced_df)
             X_test, y_test = _data_loader.Xy(definition)
             y_pred, _ = model.predict(X_test.astype(float))
+            y_pred = np.clip(y_pred, -1, 1)
+            max_pred = np.max(y_pred)
+            min_pred = np.min(y_pred)
+            max_test = np.max(y_test)
+            min_test = np.min(y_test)
+            std_pred = np.std(y_pred)
+            std_test = np.std(y_pred)
 
             # Copied from `ModelEvaluator`.
-            y_pred = np.clip(y_pred, -1, 1)
             bool_pred = (y_pred > 0).flatten()
             bool_gt = (y_test > 0).flatten()
-            return (bool_pred, bool_gt)
+            return (bool_pred, bool_gt, std_pred, std_test, max_pred, min_pred, max_test, min_test)
     else:
         operator = definition[0]
         operands = definition[1:]
 
-        preds = []
-        gts = []
-        for operand in operands:
-            pred, gt = _resolve_meta_predicate_definition(operand, balanced_df)
-            preds.append(pred)
-            gts.append(gt)
+        results = []
 
-        return operator(*preds), operator(*gts)
+        # Process each operand
+        for operand in operands:
+            results.append(_resolve_meta_predicate_definition(operand, balanced_df))
+
+        # Unzip the results into separate lists
+        preds, gts, std_preds, std_tests, max_preds, min_preds, max_tests, min_tests = zip(*results)
+
+        if operator == np.logical_not:
+            std_test = std_tests[0]
+            std_pred = std_preds[0]
+
+            max_pred = max_preds[0]
+            min_pred = min_preds[0]
+
+            max_test = max_tests[0]
+            min_test = min_tests[0]
+        elif operator == np.logical_and:
+            std_test = min(std_tests)
+            std_pred = min(std_preds)
+
+            max_pred = min(max_preds)
+            min_pred = max(min_preds)
+
+            max_test = min(max_tests)
+            min_test = max(min_tests)
+        elif operator == np.logical_or:
+            std_test = max(std_tests)
+            std_pred = max(std_preds)
+
+            max_pred = max(max_preds)
+            min_pred = min(min_preds)
+
+            max_test = max(max_tests)
+            min_test = min(min_tests)
+        else:
+            raise RuntimeError(f"Invalid operator {operator}")
+
+        print(definition, operator)
+        print(max_preds, max_pred)
+        print(min_preds, min_pred)
+        return (
+            operator(*preds),
+            operator(*gts),
+            std_pred,
+            std_test,
+            max_pred,
+            min_pred,
+            max_test,
+            min_test,
+        )
 
 
 eps = 1e-9
@@ -197,7 +247,9 @@ for meta_predicate_name in meta_predicates:
 
     balanced_df = pd.concat([rows_true_balanced, rows_false_balanced])
 
-    bool_pred, bool_gt = _resolve_meta_predicate_definition(definition, balanced_df)
+    bool_pred, bool_gt, std_pred, std_test, max_pred, min_pred, max_test, min_test = (
+        _resolve_meta_predicate_definition(definition, balanced_df)
+    )
 
     TP = np.logical_and(bool_pred, bool_gt).sum()
     FP = np.logical_and(bool_pred, ~bool_gt).sum()
@@ -216,6 +268,10 @@ for meta_predicate_name in meta_predicates:
         "precision": precision,
         "recall": recall,
         "f1_score": f1_score,
+        "std_test": std_test,
+        "std_pred": std_pred,
+        "span_test": max_test - min_test,
+        "span_pred": max_pred - min_pred,
     }
 
 evaluator.visualize(results)
