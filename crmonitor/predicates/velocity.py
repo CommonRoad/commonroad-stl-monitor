@@ -90,7 +90,8 @@ class PredFovSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config.ego_vehicle_params.fov_speed_limit
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        return vehicle.vehicle_param.fov_speed_limit
 
 
 class PredBrSpeedLimit(PredGenericSpeedLimit):
@@ -98,7 +99,8 @@ class PredBrSpeedLimit(PredGenericSpeedLimit):
     arity = 1
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
-        return self.config.ego_vehicle_params.braking_speed_limit
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
+        return vehicle.vehicle_param.braking_speed_limit
 
 
 class PredLaneSpeedLimitStar(PredLaneSpeedLimit):
@@ -258,7 +260,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             )
             v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
-                self.config.ego_vehicle_params.road_condition_speed_limit,
+                vehicle.vehicle_param.road_condition_speed_limit,
                 v_max_lane,
                 v_type,
             ]
@@ -289,7 +291,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
             )
             v_type = self._type_speed_limit_evaluator.get_speed_limit(world, time_step, [veh_o.id])
             v_list = [
-                self.config.ego_vehicle_params.road_condition_speed_limit,
+                vehicle.vehicle_param.road_condition_speed_limit,
                 v_max_lane,
                 v_type,
             ]
@@ -329,7 +331,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             world, time_step, vehicle_ids
         )
         v_list = [
-            self.config.ego_vehicle_params.road_condition_speed_limit,
+            vehicle.vehicle_param.road_condition_speed_limit,
             v_fov,
             v_breaking,
             v_max_lane,
@@ -350,7 +352,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
             world, time_step, vehicle_ids
         )
         v_list = [
-            self.config.ego_vehicle_params.road_condition_speed_limit,
+            vehicle.vehicle_param.road_condition_speed_limit,
             v_fov,
             v_breaking,
             v_max_lane,

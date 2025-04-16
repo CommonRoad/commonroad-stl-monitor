@@ -160,7 +160,6 @@ def _resolve_meta_predicate_definition(definition, balanced_df):
 
         results = []
 
-        # Process each operand
         for operand in operands:
             results.append(_resolve_meta_predicate_definition(operand, balanced_df))
 
@@ -197,9 +196,6 @@ def _resolve_meta_predicate_definition(definition, balanced_df):
         else:
             raise RuntimeError(f"Invalid operator {operator}")
 
-        print(definition, operator)
-        print(max_preds, max_pred)
-        print(min_preds, min_pred)
         return (
             operator(*preds),
             operator(*gts),

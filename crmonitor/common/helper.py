@@ -15,9 +15,6 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.trajectory import State
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 from ruamel.yaml import YAML
-from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
-from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
-from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
@@ -27,54 +24,6 @@ from crmonitor.common.vehicle import Vehicle
 class OperatingMode(enum.Enum):
     MONITOR = "monitor"
     ROBUSTNESS = "robustness"
-
-
-def create_ego_vehicle_param(ego_vehicle_param: Dict, dt: float) -> Dict:
-    """
-    Update ego vehicle parameters
-
-    :param ego_vehicle_param: dictionary with physical parameters of the ego vehicle
-    :param simulation_param: dictionary with parameters of the simulation environment
-    :returns updated dictionary with parameters of ACC vehicle
-    """
-    if ego_vehicle_param.get("vehicle_number") == 1:
-        ego_vehicle_param["dynamics_param"] = parameters_vehicle1()
-    elif ego_vehicle_param.get("vehicle_number") == 2:
-        ego_vehicle_param["dynamics_param"] = parameters_vehicle2()
-    elif ego_vehicle_param.get("vehicle_number") == 3:
-        ego_vehicle_param["dynamics_param"] = parameters_vehicle3()
-    else:
-        raise ValueError("Wrong vehicle number for ACC vehicle in config file defined.")
-
-    emergency_profile = ego_vehicle_param.get("emergency_profile")
-    emergency_profile += [ego_vehicle_param.get("j_min")] * ego_vehicle_param.get(
-        "emergency_profile_num_steps_fb"
-    )
-    ego_vehicle_param["emergency_profile"] = emergency_profile
-
-    if not -1e-12 <= (Decimal(str(ego_vehicle_param.get("t_react"))) % Decimal(str(dt))) <= 1e-12:
-        raise ValueError("Reaction time must be multiple of time step size.")
-
-    return ego_vehicle_param
-
-
-def create_other_vehicles_param(other_vehicles_param: Dict) -> Dict:
-    """
-    Update other vehicle's parameters
-
-    :param other_vehicles_param: dictionary with physical parameters of other vehicles
-    :returns updated dictionary with parameters of other vehicles
-    """
-    if other_vehicles_param.get("vehicle_number") == 1:
-        other_vehicles_param["dynamics_param"] = parameters_vehicle1()
-    elif other_vehicles_param.get("vehicle_number") == 2:
-        other_vehicles_param["dynamics_param"] = parameters_vehicle2()
-    elif other_vehicles_param.get("vehicle_number") == 3:
-        other_vehicles_param["dynamics_param"] = parameters_vehicle3()
-    else:
-        raise ValueError("Wrong vehicle number for leading vehicle in config file defined.")
-
-    return other_vehicles_param
 
 
 def create_simulation_param(simulation_param: Dict, dt: float, country: str) -> Dict:

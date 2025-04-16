@@ -95,6 +95,7 @@ def process_scenario_with_rule(
         "robustness": ", ".join(map(str, robustness)),
     }
 
+
 def process_scenario(scenario: Scenario, ego_vehicle_id: int, rule: str) -> list:
     mfr_result = process_scenario_with_rule(scenario, ego_vehicle_id, rule, use_mpr=False)
     results = [mfr_result]
