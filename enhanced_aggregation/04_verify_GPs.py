@@ -25,9 +25,9 @@ metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_
 metrics_output_path.parent.mkdir(exist_ok=True)
 
 # Select the atomic predicates that should be evaluated.
-predicates = ["in_same_lane"]
+predicates = []
 # Select the meta-predicates that should be evaluated (prefixed with '$'!). NOTE: only select top-level meta-predicates here.
-meta_predicates = ["$slow_leading_vehicle", "$precedes"]
+meta_predicates = ["$drives_leftmost"]
 
 
 MprCfg.build_configuration(
@@ -55,13 +55,6 @@ MprCfg.build_configuration(
     folder_config="config_files",
     default_profile="default",
 )
-# The ModelTrainer requires the arity of each predicate to determine the number of samples that should be used to train the model for each predicate.
-arities = {
-    predicate_name.value: {"arity": predicate.arity}
-    for predicate_name, predicate in PredicateFactory()._evaluators.items()
-    if predicate_name != "interface"
-}
-MprCfg.update_with_config({"feature_variable": arities})
 
 
 META_PREDICATE_DEFINITIONS = {
@@ -86,11 +79,11 @@ META_PREDICATE_DEFINITIONS = {
     ),
     "$in_queue_of_vehicles": (np.logical_and, "in_front_of", "in_same_lane", "has_queue_velocity"),
     "$precedes": (np.logical_and, "in_same_lane", "in_front_of"),
-    "$drives_leftmost": (np.logical_or, "close_to_left_bound", "close_to_vehicle_left"),
+    "$drives_leftmost": (np.logical_or, "close_to_left_bound", "$close_to_vehicle_left"),
     "$drives_rightmost": (
         np.logical_or,
         "close_to_right_bound",
-        "close_to_vehicle_right",
+        "$close_to_vehicle_right",
     ),
     "$cut_in": (
         np.logical_and,
@@ -105,12 +98,12 @@ META_PREDICATE_DEFINITIONS = {
     "$close_to_vehicle_left": (
         np.logical_and,
         "lat_close_to_vehicle_left",
-        "lon_intersecting_vehicles",
+        "$lon_intersecting_vehicles",
     ),
     "$close_to_vehicle_right": (
         np.logical_and,
         "lat_close_to_vehicle_right",
-        "lon_intersecting_vehicles",
+        "$lon_intersecting_vehicles",
     ),
 }
 
