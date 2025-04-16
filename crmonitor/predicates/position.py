@@ -181,18 +181,19 @@ class PredSafeDistPrec(BasePredicateEvaluator):
 
         if vehicle_lead.get_lane(time_step) is None:
             return self._scale_lon_dist(math.inf)
-        a_min_follow = vehicle_follow.vehicle_param.get("a_min")
-        a_min_lead = vehicle_lead.vehicle_param.get("a_min")
-        t_react_follow = vehicle_follow.vehicle_param.get("t_react")
+        a_min_follow = vehicle_follow.vehicle_param.a_min
+        a_min_lead = vehicle_lead.vehicle_param.a_min
+        t_react_follow = vehicle_follow.vehicle_param.t_react
+        ref_lane = vehicle_follow.get_lane(time_step)
+
         safe_distance = self.calculate_safe_distance(
-            vehicle_follow.states_cr[time_step].velocity,
-            vehicle_lead.states_cr[time_step].velocity,
+            vehicle_follow.get_lon_state(time_step, ref_lane).v,
+            vehicle_lead.get_lon_state(time_step, ref_lane).v,
             a_min_lead,
             a_min_follow,
             t_react_follow,
         )
 
-        ref_lane = vehicle_follow.get_lane(time_step)
         delta_s = vehicle_lead.rear_s(time_step, ref_lane) - vehicle_follow.front_s(
             time_step, ref_lane
         )

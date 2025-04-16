@@ -63,9 +63,13 @@ for i, row_mfr in df[~df["mpr"]].iterrows():
         continue
     if all_traces or row_mfr["historically_full_last"] < 0:
         # assert row_mpr["historically_full_last"] < 0, f"{row_mpr["historically_full_last"]}"
-        results[(row_mfr["rule"], "a")] += [row_mfr[f"historically_{duration}_min"]] # , row_mfr[f"historically_{duration}_max"]]
+        results[(row_mfr["rule"], "a")] += [
+            row_mfr[f"historically_{duration}_min"]
+        ]  # , row_mfr[f"historically_{duration}_max"]]
         # results[(row_mpr["rule"], "b")] += [row_mpr[f"historically_{duration}_min"], row_mpr[f"historically_{duration}_max"]]
-        results[(row_mfr["rule"], "c")] += [row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_min"]] # , row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_max"]]
+        results[(row_mfr["rule"], "c")] += [
+            row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_min"]
+        ]  # , row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_max"]]
         # results[(row_mpr["rule"], "d")] += [row_mpr[rule_to_operator_mapping[row_mpr["rule"]] + f"{duration}_min"], row_mpr[rule_to_operator_mapping[row_mpr["rule"]] + f"{duration}_max"]]
     else:
         skipped_positive_only += 1
@@ -85,13 +89,13 @@ for rule in ["R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I2", "R_I3", "R_I4", "R_
                 "rule": rule,
                 "a span": np.ptp(a),
                 "a std": np.std(a),
-                #"b span": np.ptp(b),
-                #"b std": np.std(b),
+                # "b span": np.ptp(b),
+                # "b std": np.std(b),
                 "c span": np.ptp(c),
                 "c std": np.std(c),
-                #"d span": np.ptp(d),
-                #"d std": np.std(d),
-                "number": len(a)
+                # "d span": np.ptp(d),
+                # "d std": np.std(d),
+                "number": len(a),
             }
         )
     except ValueError:

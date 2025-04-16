@@ -1,10 +1,14 @@
 import copy
+from decimal import Decimal
 import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import lru_cache, partial
+from functools import partial
 from typing import Dict, List, Optional, Set, Tuple, Union
+from omegaconf import DictConfig
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 
 # import numba
 import numpy as np
@@ -17,6 +21,7 @@ from commonroad.scenario.state import CustomState, InitialState, State
 from commonroad_route_planner.route_planner import RoutePlanner
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
+from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import Lane, RoadNetwork
 
@@ -273,19 +278,74 @@ class PredicateCache:
         self.set_robustness(*key, value)
 
 
+# The vehicle parameters somewhat duplicate the existing paramters from commonroad-vehicle-models.
+# TODO: Are they still required, or could they be merged with the paramters from commonroad-vehicle-models?
+@dataclass
+class VehicleParameters:
+    # TODO: most of the following parameters are not used anywhere. Can we get rid of them, or only require them in the constructor to compute the speed limits?
+    a_max: float = 5.0
+    a_min: float = -10.5
+    a_corr: float = 0.0
+    v_max: float = 60.0
+    v_min: float = 0.0
+    j_max: float = 10.0
+    j_min: float = -10.0
+    t_react: float = 0.4
+    fov: float = 20
+    v_des: float = 30.0
+    const_dist_offset: float = 0.0
+
+    fov_speed_limit: float = 50.0
+    braking_speed_limit: float = 43.0
+    road_condition_speed_limit: float = 50.0
+
+    emergency_profile: List[float] = field(default_factory=list)
+    emergency_profile_num_steps_fb: float = 200.0
+
+    dynamics_param: DictConfig = field(default_factory=parameters_vehicle2)
+
+    def __post_init__(self) -> None:
+        self.emergency_profile += [self.j_min * self.emergency_profile_num_steps_fb]
+
+    @classmethod
+    def create(cls, dt: float, vehicle_number: int = 2, **kwargs) -> "VehicleParameters":
+        if vehicle_number == 1:
+            dynamics_param = parameters_vehicle1()
+        elif vehicle_number == 2:
+            dynamics_param = parameters_vehicle2()
+        elif vehicle_number == 3:
+            dynamics_param = parameters_vehicle3()
+        else:
+            raise ValueError(f"Vehicle number {vehicle_number} is not supported.")
+
+        # TODO: The construction with the dynamics parmaters is not clean, because the caller could also provide custom dynamic params which would conflict.
+        ego_vehicle_param = cls(dynamics_param=dynamics_param, **kwargs)
+        if not -1e-12 <= (Decimal(str(ego_vehicle_param.t_react)) % Decimal(str(dt))) <= 1e-12:
+            raise ValueError("Reaction time must be multiple of time step size.")
+
+        return ego_vehicle_param
+
+    # TODO: This pattern is also not very clean, because a_max and a_min are treated special and are kind of obscure defaults.
+    @classmethod
+    def create_for_ego_vehicle(
+        cls, dt: float, vehicle_number: int = 2, a_max=3.0, a_min=-10.0, **kwargs
+    ) -> "VehicleParameters":
+        return cls.create(dt, vehicle_number, a_max=a_max, a_min=a_min, **kwargs)
+
+
 class Vehicle:
     def __init__(
         self,
         id,
         obstacle_type,
-        vehicle_param,
+        vehicle_param: VehicleParameters,
         shape,
         states_cr,
         signal_series,
         ccosy_cache,
         lanelet_assignment: Dict[int, Set[int]],
         predicate_cache=None,
-        road_network: "Optional[RoadNetwork]" = None,
+        road_network: Optional[RoadNetwork] = None,
         goal=None,
     ):
         self.id = id
@@ -823,7 +883,7 @@ class DynamicObstacleVehicle(Vehicle):
         self,
         obstacle: DynamicObstacle,
         ccosy_cache: CurvilinearStateManager,
-        vehicle_param,
+        vehicle_param: Optional[VehicleParameters] = None,
         predicate_cache=None,
         road_network=None,
         goal=None,
@@ -831,7 +891,6 @@ class DynamicObstacleVehicle(Vehicle):
         lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
         id = obstacle.obstacle_id
         obstacle_type = obstacle.obstacle_type
-        vehicle_param = vehicle_param
         states_cr = {
             state.time_step: state
             for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
@@ -843,6 +902,9 @@ class DynamicObstacleVehicle(Vehicle):
             signal_series = None
         ccosy_cache = ccosy_cache
         lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
+
+        if vehicle_param is None:
+            vehicle_param = VehicleParameters()
         super().__init__(
             id,
             obstacle_type,

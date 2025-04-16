@@ -14,8 +14,8 @@ from crmonitor.common.config import (
     get_traffic_rule_config,
     get_traffic_rule_from_config,
 )
-from crmonitor.common.helper import create_ego_vehicle_param, merge_dicts_recursively
-from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.helper import merge_dicts_recursively
+from crmonitor.common.vehicle import Vehicle, VehicleParameters
 from crmonitor.common.world import World
 from crmonitor.evaluation.visitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
@@ -33,7 +33,6 @@ from crmonitor.evaluation.visualization import (
 from crmonitor.monitor.monitor_node import MonitorNode
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
-from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_node import RuleAstNode, RuleTreeVisitorInterface
 from crmonitor.rule.rule_parser import RuleParser
 
@@ -67,7 +66,16 @@ class RuleEvaluatorInterface(ABC):
     ) -> None:
         self._rule = rule
         self._ego_id = ego_id
-        self._world = world
+        self._world = copy.deepcopy(world)
+        ego_vehicle = self._world.vehicle_by_id(self._ego_id)
+        if ego_vehicle is None:
+            raise RuntimeError(
+                f"Cannot create rule evaluator for rule {rule}: Ego vehicle {ego_id} is not part of the scenario!"
+            )
+        ego_vehicle.vehicle_param = VehicleParameters.create_for_ego_vehicle(
+            self._world.scenario.dt
+        )
+        self._ego_vehicle = ego_vehicle
         self._use_boolean = use_boolean
         self._predicate_evaluator_config = predicate_evaluator_config
 
@@ -81,8 +89,8 @@ class RuleEvaluatorInterface(ABC):
             self._mpr_world = None
 
     @property
-    def ego_vehicle(self) -> Optional[Vehicle]:
-        return self._world.vehicle_by_id(self._ego_id)
+    def ego_vehicle(self) -> Vehicle:
+        return self._ego_vehicle
 
     @abstractmethod
     def evaluate(
@@ -161,9 +169,7 @@ class RuleEvaluator:
         ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
         world.vehicles.remove(world.vehicle_by_id(ego_id))
 
-        ego_vehicle.vehicle_param = create_ego_vehicle_param(
-            get_evaluation_config().get("ego_vehicle_param"), world.dt
-        )
+        ego_vehicle.vehicle_param = VehicleParameters.create_for_ego_vehicle(world.scenario.dt)
         world.vehicles.add(ego_vehicle)
 
         monitor = RuleParser().parse(rule_str_dict[rule], name=rule)

@@ -22,7 +22,7 @@ from commonroad_dc.feasibility.solution_checker import (
 )
 
 import crmonitor
-from crmonitor.common.helper import create_other_vehicles_param, load_yaml
+from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (
     ControlledVehicle,
@@ -116,7 +116,6 @@ class World:
             road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
         else:
             road_network = road_network
-        others_params = create_other_vehicles_param(config.get("other_vehicles_param"))
         vehicles = set()
         if cache_dir is not None:
             cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
@@ -161,9 +160,8 @@ class World:
                         DynamicObstacleVehicle(
                             obs,
                             CurvilinearStateManager(road_network, curvi_cache),
-                            others_params,
-                            PredicateCache(predicate_dict),
-                            road_network,
+                            predicate_cache=PredicateCache(predicate_dict),
+                            road_network=road_network,
                         )
                     )
             else:  # interstate scenarios
@@ -182,8 +180,7 @@ class World:
                     DynamicObstacleVehicle(
                         obs,
                         CurvilinearStateManager(road_network, curvi_cache),
-                        others_params,
-                        PredicateCache(predicate_dict),
+                        predicate_cache=PredicateCache(predicate_dict),
                         road_network=None,
                     )
                 )
