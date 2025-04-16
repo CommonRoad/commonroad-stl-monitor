@@ -170,11 +170,11 @@ def _resolve_meta_predicate_definition(definition, balanced_df):
             std_test = std_tests[0]
             std_pred = std_preds[0]
 
-            max_pred = max_preds[0]
-            min_pred = min_preds[0]
+            max_pred = -min_preds[0]
+            min_pred = -max_preds[0]
 
-            max_test = max_tests[0]
-            min_test = min_tests[0]
+            max_test = -min_tests[0]
+            min_test = -max_tests[0]
         elif operator == np.logical_and:
             std_test = min(std_tests)
             std_pred = min(std_preds)

@@ -300,7 +300,7 @@ class VehicleParameters:
     road_condition_speed_limit: float = 50.0
 
     emergency_profile: List[float] = field(default_factory=list)
-    emergency_profile_num_steps_fb: float = 200
+    emergency_profile_num_steps_fb: float = 200.0
 
     dynamics_param: DictConfig = field(default_factory=parameters_vehicle2)
 
