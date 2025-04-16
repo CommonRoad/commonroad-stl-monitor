@@ -34,7 +34,7 @@ class PredicateMprConfig:
     """Path to the pre-trained models. If None, the models from the commonroad-mpr package are used."""
 
     rectification: bool = True
-    """Control the behaviour if the sign of the MPR value does not match the sign of the characteristic value during MPR evaluation with GPs. If rectification is disabled, the evaluation will back to MPR evaluation without GPs."""
+    """Control the behaviour if the sign of the MPR value does not match the sign of the characteristic value during MPR evaluation with GPs. If rectification is disabled, the evaluation will fallback to MPR evaluation without GPs."""
 
     sampler_time_horizon: float = 1.5
     """Set the time horizon for the MPR `StateBasedSampler`."""
