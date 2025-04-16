@@ -285,18 +285,19 @@ class VehicleParameters:
     # TODO: most of the following parameters are not used anywhere. Can we get rid of them, or only require them in the constructor to compute the speed limits?
     a_max: float = 5.0
     a_min: float = -10.5
+    a_corr: float = 0.0
     v_max: float = 60.0
     v_min: float = 0.0
     j_max: float = 10.0
     j_min: float = -10.0
     t_react: float = 0.4
-    fov: float = 2000
-    a_corr: float = 0.0
+    fov: float = 20
     v_des: float = 30.0
+    const_dist_offset: float = 0.0
 
     fov_speed_limit: float = 50.0
     braking_speed_limit: float = 43.0
-    road_condition_speed_limit: float = 50
+    road_condition_speed_limit: float = 50.0
 
     emergency_profile: List[float] = field(default_factory=list)
     emergency_profile_num_steps_fb: float = 200

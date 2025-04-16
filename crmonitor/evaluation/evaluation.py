@@ -169,9 +169,7 @@ class RuleEvaluator:
         ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
         world.vehicles.remove(world.vehicle_by_id(ego_id))
 
-        ego_vehicle.vehicle_param = create_ego_vehicle_param(
-            get_evaluation_config().get("ego_vehicle_param"), world.dt
-        )
+        ego_vehicle.vehicle_param = VehicleParameters.create_for_ego_vehicle(world.scenario.dt)
         world.vehicles.add(ego_vehicle)
 
         monitor = RuleParser().parse(rule_str_dict[rule], name=rule)
