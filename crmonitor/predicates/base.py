@@ -209,7 +209,7 @@ class BasePredicateEvaluator(abc.ABC):
             raise RuntimeError(
                 f"Failed to evaluate predicate {self.predicate_name} with model-predictive robustness and pre-trained model: No pre-trained model was loaded!"
             )
-        robustness, _ = self._mpr_model.predict([list_features])
+        robustness, _ = self._mpr_model.model.predict([list_features])
         if self.config.mpr.extract_gradient:
             gradient = self._mpr_model.get_gradient([list_features])
             self._mpr_gradients.append(gradient)
