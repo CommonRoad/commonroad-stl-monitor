@@ -14,18 +14,25 @@ from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as M
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
+from crmonitor.predicates.base import (
+    PredicateEvaluatorConfig,
+    PredicateMprConfig,
+    load_normalization_values,
+)
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
-input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD_downsample"
+input_scenarios = (
+    Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD_downsample"
+)
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_no_gps.csv"
 
 
 num_vehicles_per_scenarios = 1
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
+normalization_file = Path(__file__).parent.parent / "output" / "normalization.csv"
 snapshot_frequency = 4
 mpr_only_on_violation = False
 enable_gps = True  # Enable/Disable the MPR evaluation with GPs
@@ -56,6 +63,8 @@ MprCfg.build_configuration(
     default_profile="default",
 )
 
+normalization_values = load_normalization_values(normalization_file)
+
 
 def process_scenario_with_rule(
     scenario: Scenario, ego_vehicle_id: int, rule: str, use_mpr: bool
@@ -64,7 +73,14 @@ def process_scenario_with_rule(
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
     predicate_evaluator_config = PredicateEvaluatorConfig(
-        mpr=PredicateMprConfig(enabled=use_mpr, model_path=model_path, ml=enable_gps, sample_number=100),
+        mpr=PredicateMprConfig(
+            enabled=use_mpr,
+            model_path=model_path,
+            ml=enable_gps,
+            sample_number=100,
+            normalization=True,
+            normalization_values=normalization_values,
+        ),
         scale_rob=True,
     )
 

@@ -1,6 +1,7 @@
 import abc
 import copy
 import logging
+import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
@@ -19,6 +20,21 @@ from crmonitor.predicates.scaling import RobustnessScaler
 _LOGGER = logging.getLogger(__name__)
 
 
+def load_normalization_values(normalization_file: Path) -> dict:
+    results = {}
+    with normalization_file.open() as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            results[row["predicate"]] = {
+                "p+min": row["p+min"],
+                "p+max": row["p+max"],
+                "p-min": row["p-min"],
+                "p-max": row["p-max"],
+            }
+
+    return results
+
+
 @dataclass
 class PredicateMprConfig:
     enabled: bool = False
@@ -35,6 +51,11 @@ class PredicateMprConfig:
 
     rectification: bool = True
     """Control the behaviour if the sign of the MPR value does not match the sign of the characteristic value during MPR evaluation with GPs. If rectification is disabled, the evaluation will fallback to MPR evaluation without GPs."""
+
+    normalization: bool = False
+    """Enable normalization"""
+
+    normalization_values: Dict = field(default_factory=dict)
 
     sampler_time_horizon: float = 1.5
     """Set the time horizon for the MPR `StateBasedSampler`."""
@@ -353,6 +374,18 @@ class BasePredicateEvaluator(abc.ABC):
 
         satisfied = self.evaluate_boolean(world, time_step, vehicle_ids)
         probability = count_true / (count_valid + self.config.eps)
+
+        if self.config.mpr.normalization:
+            normalization_values = self.config.mpr.normalization_values[self.predicate_name]
+            if satisfied:
+                probability = (probability - normalization_values["p+min"]) / (
+                    normalization_values["p+max"] - normalization_values["p+min"]
+                )
+            else:
+                probability = (probability - normalization_values["p-min"]) / (
+                    normalization_values["p-max"] - normalization_values["p-min"]
+                )
+
         robustness = probability if satisfied else -(1 - probability)
 
         # This is the format used by the original MPR evaluator.
