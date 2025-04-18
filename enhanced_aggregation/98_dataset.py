@@ -22,6 +22,9 @@ selected_predicates = all_general_predicates + all_interstate_predicates + chang
 data_loader = DataLoader.create_from_file(learning_data_path)
 _eps = 1e-7
 
+selected_predicates.remove("velocity_below_five")
+selected_predicates.append("velocity_below_5")
+
 analysis = {}
 for predicate in selected_predicates:
     orig_count_true = sum(
@@ -80,5 +83,8 @@ for predicate in selected_predicates:
 
 # dict to dataframe
 df = pd.DataFrame.from_dict(analysis, orient="index")
+
+df_normalization = pd.concat([df["p+min"], df["p+max"], df["p-min"]+1, df["p-max"]+1], axis=1)
+df_normalization.to_csv("/tmp/normalization.csv", index=True)
 
 print(df)
