@@ -84,7 +84,7 @@ for predicate in selected_predicates:
 # dict to dataframe
 df = pd.DataFrame.from_dict(analysis, orient="index")
 
-df_normalization = pd.concat([df["p+min"], df["p+max"], df["p-min"]+1, df["p-max"]+1], axis=1)
+df_normalization = pd.concat([df["p+min"], df["p+max"], df["p-min"] + 1, df["p-max"] + 1], axis=1)
 df_normalization.to_csv("/tmp/normalization.csv", index=True)
 
 print(df)

@@ -26,10 +26,10 @@ def load_normalization_values(normalization_file: Path) -> dict:
         reader = csv.DictReader(f)
         for row in reader:
             results[row["predicate"]] = {
-                "p+min": row["p+min"],
-                "p+max": row["p+max"],
-                "p-min": row["p-min"],
-                "p-max": row["p-max"],
+                "p+min": float(row["p+min"]),
+                "p+max": float(row["p+max"]),
+                "p-min": float(row["p-min"]),
+                "p-max": float(row["p-max"]),
             }
 
     return results

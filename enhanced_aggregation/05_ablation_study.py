@@ -33,7 +33,7 @@ num_vehicles_per_scenarios = 1
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 normalization_file = Path(__file__).parent.parent / "output" / "normalization.csv"
-snapshot_frequency = 4
+snapshot_frequency = 10
 mpr_only_on_violation = False
 enable_gps = False  # Enable/Disable the MPR evaluation with GPs
 
@@ -158,17 +158,17 @@ if __name__ == "__main__":
     results_since_last_snapshot = 0
     results = []
     tasks = {}
-    with ProcessPoolExecutor(max_workers=2, mp_context=ctx) as executor:
+    with ProcessPoolExecutor(max_workers=70, mp_context=ctx) as executor:
         for scenario, rule in itertools.product(scenarios, rules):
             for ego_vehicle_id in ego_vehicles_per_scenario[scenario.scenario_id]:
                 task = executor.submit(process_scenario, scenario, ego_vehicle_id, rule)
                 tasks[task] = (scenario.scenario_id, ego_vehicle_id, rule)
 
         for finished_future in futures.as_completed(tasks.keys()):
-            exec = finished_future.exception()
-            if exec is not None:
+            exception = finished_future.exception()
+            if exception is not None:
                 task_arguments = tasks[finished_future]
-                _LOGGER.warning(f"Exception {exec} occurred while processing {task_arguments}")
+                _LOGGER.warning(f"Exception {exception} occurred while processing {task_arguments}")
                 continue
 
             result = finished_future.result()
