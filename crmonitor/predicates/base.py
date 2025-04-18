@@ -348,7 +348,6 @@ class BasePredicateEvaluator(abc.ABC):
                 )
                 if len(lanelet_assignment) == 0:
                     # The state sampler created a state outside the lanelet network.
-                    # TODO mitigate by activating phantom lanes?
                     count_error += 1
                     continue
                 ego_vehicle.lanelet_assignment[sampled_time_step] = lanelet_assignment
@@ -378,15 +377,19 @@ class BasePredicateEvaluator(abc.ABC):
         if self.config.mpr.normalization:
             normalization_values = self.config.mpr.normalization_values[self.predicate_name]
             if satisfied:
-                probability = (probability - normalization_values["p+min"]) / (
+                robustness = (probability - normalization_values["p+min"]) / (
                     normalization_values["p+max"] - normalization_values["p+min"]
                 )
             else:
-                probability = (probability - normalization_values["p-min"]) / (
+                robustness = -(probability - normalization_values["p-min"]) / (
                     normalization_values["p-max"] - normalization_values["p-min"]
                 )
+        else:  # no normalization, just setting the sign
+            robustness = probability if satisfied else -(1 - probability)
 
-        robustness = probability if satisfied else -(1 - probability)
+        robustness = np.clip(
+            robustness, -1, 1
+        )  # only relevant if normalization is used; raw robustness in [-1, 1]
 
         # This is the format used by the original MPR evaluator.
         # It is used here too, to keep backwards compatibility with GP regression for the time being.

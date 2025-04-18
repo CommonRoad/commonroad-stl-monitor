@@ -35,7 +35,7 @@ model_path = Path(__file__).parent.parent / "output" / "models"
 normalization_file = Path(__file__).parent.parent / "output" / "normalization.csv"
 snapshot_frequency = 4
 mpr_only_on_violation = False
-enable_gps = True  # Enable/Disable the MPR evaluation with GPs
+enable_gps = False  # Enable/Disable the MPR evaluation with GPs
 
 MprCfg.build_configuration(
     config={
@@ -130,12 +130,12 @@ rules = [
     "R_G4",
     "R_I1",
     "R_I2",
-    # "R_I3",
+    "R_I3",
     "R_I4",
-    # "R_I5",
+    "R_I5",
 ]
 
-scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 100, replace=False)
+scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 1000, replace=False)
 scenarios = list(
     map(
         lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],

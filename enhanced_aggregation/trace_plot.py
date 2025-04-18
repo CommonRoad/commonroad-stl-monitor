@@ -17,17 +17,27 @@ with open("smooth_data_trace.dat", "w") as f:
         f.write(f"{x:.1f} {y:.4f} \\\\ \n")
 
 
-y_min = [min(y_interp[max(0, k-10): k+1]) for k in range(len(y_interp))]
+y_min = [min(y_interp[max(0, k - 10) : k + 1]) for k in range(len(y_interp))]
 with open("smooth_data_min.dat", "a") as f:
     for x, y in zip(x_interp, y_min):
         f.write(f"{x:.1f} {y:.4f} \\\\ \n")
 
-y_d = [min(y_interp[max(0, k-10): k+1]) if all([y >=0 for y in y_interp[max(0, k-10): k+1]]) else -sum([y < 0 for y in y_interp[max(0, k-10): k+1]]) / 11 for k in range(len(y_interp))]
+y_d = [
+    min(y_interp[max(0, k - 10) : k + 1])
+    if all([y >= 0 for y in y_interp[max(0, k - 10) : k + 1]])
+    else -sum([y < 0 for y in y_interp[max(0, k - 10) : k + 1]]) / 11
+    for k in range(len(y_interp))
+]
 with open("smooth_data_d.dat", "a") as f:
     for x, y in zip(x_interp, y_d):
         f.write(f"{x:.1f} {y:.4f} \\\\ \n")
 
-y_ds = [min(y_interp[max(0, k-10): k+1]) if all([y >=0 for y in y_interp[max(0, k-10): k+1]]) else sum([y if y < 0 else 0 for y in y_interp[max(0, k-10): k+1]]) / 11 for k in range(len(y_interp))]
+y_ds = [
+    min(y_interp[max(0, k - 10) : k + 1])
+    if all([y >= 0 for y in y_interp[max(0, k - 10) : k + 1]])
+    else sum([y if y < 0 else 0 for y in y_interp[max(0, k - 10) : k + 1]]) / 11
+    for k in range(len(y_interp))
+]
 with open("smooth_data_ds.dat", "a") as f:
     for x, y in zip(x_interp, y_ds):
         f.write(f"{x:.1f} {y:.4f} \\\\ \n")
