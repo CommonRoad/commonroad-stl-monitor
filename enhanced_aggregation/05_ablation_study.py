@@ -29,7 +29,7 @@ input_scenarios = (
 output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_no_gps.csv"
 
 
-num_vehicles_per_scenarios = 1
+num_vehicles_per_scenarios = 5
 output_type = OutputType.OUTPUT_ROBUSTNESS
 model_path = Path(__file__).parent.parent / "output" / "models"
 normalization_file = Path(__file__).parent.parent / "output" / "normalization.csv"
@@ -78,7 +78,7 @@ def process_scenario_with_rule(
             model_path=model_path,
             ml=enable_gps,
             sample_number=100,
-            normalization=True,
+            normalization=False,
             normalization_values=normalization_values,
         ),
         scale_rob=True,
@@ -135,7 +135,7 @@ rules = [
     "R_I5",
 ]
 
-scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 1000, replace=False)
+scenarios_paths = np.random.choice(list(input_scenarios.glob("*.xml")), 200, replace=False)
 scenarios = list(
     map(
         lambda scenario_path: CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)[0],

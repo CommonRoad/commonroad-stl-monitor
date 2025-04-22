@@ -29,10 +29,10 @@ operator_types = [HistoricallyDurationMonitorNode, HistoricallyDurationSeverityM
 durations = [1, 2, 5, 10]
 
 ablation_study_results_input = (
-    Path(__file__).parent.parent / "output" / "ablation_study_results.csv"
+    Path(__file__).parent.parent / "output" / "ablation_study_results_no_gps_bckup.csv"
 )
-input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
-output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_processed.csv"
+input_scenarios = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD_downsample"
+output_file = Path(__file__).parent.parent / "output" / "ablation_study_results_processed_no_gps.csv"
 
 results_df = pd.read_csv(ablation_study_results_input)
 results_df.dropna(inplace=True)

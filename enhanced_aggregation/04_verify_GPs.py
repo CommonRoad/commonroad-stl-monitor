@@ -13,6 +13,7 @@ from crmonitor.predicate_grouping import (
     meta_only,
 )
 from crmonitor.predicates.predicate_factory import PredicateFactory
+import matplotlib.pyplot as plt
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,9 +26,9 @@ metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_
 metrics_output_path.parent.mkdir(exist_ok=True)
 
 # Select the atomic predicates that should be evaluated.
-predicates = []
+predicates = ["preserves_traffic_flow"]
 # Select the meta-predicates that should be evaluated (prefixed with '$'!). NOTE: only select top-level meta-predicates here.
-meta_predicates = ["$cut_in", "$drives_leftmost", "$drives_rightmost", "$left_of"]
+meta_predicates = []  # ["$cut_in", "$drives_leftmost", "$drives_rightmost", "$left_of"]
 
 
 MprCfg.build_configuration(
@@ -271,6 +272,7 @@ for meta_predicate_name in meta_predicates:
     }
 
 evaluator.visualize(results)
-evaluator.save(results, metrics_output_path)
+# evaluator.save(results, metrics_output_path)
 
-# plt.show()
+plt.show()
+print("hey")
