@@ -399,7 +399,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
             values_non_nan = list(filter(lambda v: not math.isnan(v), values))
             if len(values_non_nan) >= node.threshold:
                 nth_largest_value_index = np.argsort(values_non_nan)[-node.threshold]
-                nth_largest_value = values[nth_largest_value_index]
+                nth_largest_value = values_non_nan[nth_largest_value_index]
                 samples_return.append(nth_largest_value)
             else:
                 samples_return.append(self._rob_scaler.min)
