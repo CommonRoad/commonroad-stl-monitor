@@ -8,7 +8,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
-processed_file = Path(__file__).parents[1] / "output" / "ablation_study_results_processed_no_gps.csv"
+processed_file = (
+    Path(__file__).parents[1] / "output" / "ablation_study_results_processed_no_gps.csv"
+)
 df = pd.read_csv(processed_file)
 
 rule_to_operator_mapping = {
@@ -70,7 +72,9 @@ for i, row_mpr in df[df["mpr"]].iterrows():
         results[(row_mfr["rule"], "c")] += [
             row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_min"]
         ]  # , row_mfr[rule_to_operator_mapping[row_mfr["rule"]] + f"{duration}_max"]]
-        results[(row_mpr["rule"], "d")] += [row_mpr[rule_to_operator_mapping[row_mpr["rule"]] + f"{duration}_min"]]
+        results[(row_mpr["rule"], "d")] += [
+            row_mpr[rule_to_operator_mapping[row_mpr["rule"]] + f"{duration}_min"]
+        ]
     else:
         skipped_positive_only += 1
 
@@ -81,7 +85,9 @@ for rule in ["R_G1", "R_G2", "R_G3", "R_G4", "R_I1", "R_I2", "R_I3", "R_I4", "R_
     c = results[(rule, "c")]
     d = results[(rule, "d")]
 
-    assert len(a) == len(b) == len(c) == len(d), f"Length mismatch for {rule}: {len(a)}, {len(b)}, {len(c)}, {len(d)}"
+    assert len(a) == len(b) == len(c) == len(d), (
+        f"Length mismatch for {rule}: {len(a)}, {len(b)}, {len(c)}, {len(d)}"
+    )
 
     try:
         rows.append(
