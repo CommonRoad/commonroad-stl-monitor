@@ -3,14 +3,13 @@ from functools import singledispatchmethod
 from typing import Dict, Optional, Tuple
 
 from crmonitor.rule.rule_node import (
-    BinaryNode,
     IOType,
     MetaPredicateNode,
     PredicateNode,
+    RuleAstNode,
     RuleTreeVisitorInterface,
     UnaryNode,
     VaradicNode,
-    RuleAstNode,
 )
 from crmonitor.rule.rule_parser_interface import RuleParserInterface
 
@@ -143,14 +142,6 @@ class MetaPredicateReplacementVisitor(RuleTreeVisitorInterface[RuleAstNode]):
         node.child = new_child
         return node
 
-    @visit.register(BinaryNode)
-    def _(self, node: BinaryNode) -> RuleAstNode:
-        new_left_child = self.visit(node.left_child)
-        new_right_child = self.visit(node.right_child)
-        node.left_child = new_left_child
-        node.right_child = new_right_child
-        return node
-
     @visit.register(VaradicNode)
     def _(self, node: VaradicNode) -> RuleAstNode:
         new_children = [self.visit(child) for child in node.children]
@@ -224,11 +215,6 @@ class EmbedingVisitor(RuleTreeVisitorInterface[None]):
     @visit.register(UnaryNode)
     def _(self, node: UnaryNode, *args, **kwargs) -> None:
         self.visit(node.child, *args, **kwargs)
-
-    @visit.register(BinaryNode)
-    def _(self, node: BinaryNode, *args, **kwargs) -> None:
-        self.visit(node.left_child, *args, **kwargs)
-        self.visit(node.right_child, *args, **kwargs)
 
     @visit.register(VaradicNode)
     def _(self, node: VaradicNode, *args, **kwargs) -> None:

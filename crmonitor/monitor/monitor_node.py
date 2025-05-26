@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import singledispatchmethod
-from typing import Dict, Generic, Iterable, List, Optional, Sequence, Tuple, TypeVar
+from typing import Dict, Generic, Iterable, List, Optional, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
@@ -11,6 +11,12 @@ from crmonitor.rule.rule_node import IOType
 
 
 class MonitorNode:
+    """
+    Base class for all monitor nodes.
+
+    :param name: Unique name for the monitor node.
+    """
+
     def __init__(self, name: str) -> None:
         self.name = name
 
@@ -24,11 +30,11 @@ class MonitorNode:
         return self._values
 
     @values.setter
-    def values(self, values: Iterable[float]) -> None:
+    def values(self, values: List[float]) -> None:
         """
         Set the values for the evaluation of this monitor.
         """
-        self._values.extend(values)
+        self._values = list(values)
 
     @property
     def last_value(self) -> float:
@@ -44,17 +50,13 @@ class MonitorNode:
         """
         self._values.append(value)
 
-    @classmethod
-    def _copy_cls(cls, node: "MonitorNode") -> "MonitorNode":
-        return cls(node.name)
-
     def copy(self) -> "MonitorNode":
         """
         Create a copy of this monitor, without including any runtime attributes like its recorded values.
 
         :returns: A copy of the monitor.
         """
-        return self._copy_cls(self)
+        return type(self)(self.name)
 
     def reset(self):
         self._values = []
@@ -68,17 +70,28 @@ class MonitorNode:
         return self.name == other.name
 
 
-class ZeroArityMonitorNode(MonitorNode): ...
+class ZeroArityMonitorNode(MonitorNode):
+    """
+    Monitor node with no children.
+    """
+
+    ...
 
 
 class UnaryMonitorNode(MonitorNode):
+    """
+    Monitor node with a single child.
+
+    :param name: Unique name for the monitor node.
+    :param child: Child monitor node.
+    """
+
     def __init__(self, name: str, child: MonitorNode) -> None:
         super().__init__(name)
         self.child = child
 
-    @classmethod
-    def _copy_cls(cls, node: "UnaryMonitorNode") -> "UnaryMonitorNode":
-        return cls(node.name, node.child.copy())
+    def copy(self) -> "UnaryMonitorNode":
+        return type(self)(self.name, self.child.copy())
 
     def __hash__(self) -> int:
         return hash((self.name, self.child))
@@ -89,36 +102,20 @@ class UnaryMonitorNode(MonitorNode):
         return super().__eq__(other) and self.child == other.child
 
 
-class BinaryMonitorNode(MonitorNode):
-    def __init__(self, name: str, left_child: MonitorNode, right_child: MonitorNode) -> None:
-        super().__init__(name)
-        self.left_child = left_child
-        self.right_child = right_child
-
-    @classmethod
-    def _copy_cls(cls, node: "BinaryMonitorNode") -> "BinaryMonitorNode":
-        return cls(node.name, node.left_child.copy(), node.right_child.copy())
-
-    def __hash__(self) -> int:
-        return hash((self.name, self.left_child, self.right_child))
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, BinaryMonitorNode):
-            return False
-        return (
-            super().__eq__(other)
-            and self.left_child == other.left_child
-            and self.right_child == other.right_child
-        )
-
-
 class VaradicMonitorNode(MonitorNode):
+    """
+    Monitor node with a variable number of children.
+
+    :param name: Unique name for the monitor node.
+    :param children: Tuple of child monitor nodes.
+    """
+
     def __init__(self, name: str, children: Tuple[MonitorNode, ...]) -> None:
         super().__init__(name)
         self.children = children
 
     def __hash__(self) -> int:
-        return hash((self.name, tuple(self.children)))
+        return hash((self.name, tuple(child.copy() for child in self.children)))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, VaradicMonitorNode):
@@ -127,22 +124,30 @@ class VaradicMonitorNode(MonitorNode):
 
 
 class RtamtRuleMonitorNode(VaradicMonitorNode):
+    """
+    Monitor node wrapping an RTAMT STL monitor.
+
+    :param name: Unique name for the monitor node.
+    :param children: Iterable of child monitor nodes.
+    :param monitor: RtamtStlMonitor instance for evaluation.
+    """
+
     def __init__(
-        self, name: str, children: Sequence[MonitorNode], monitor: RtamtStlMonitor
+        self, name: str, children: Iterable[MonitorNode], monitor: RtamtStlMonitor
     ) -> None:
-        super().__init__(name, children)
+        super().__init__(name, tuple(children))
         self.monitor = monitor
 
-    def update(self, time, values) -> float:
+    def update(self, time: int, values: List[Tuple[str, float]]) -> float:
         return self.monitor.evaluate_monitor_online(time, values)
 
-    def evaluate(self, values, marker: Optional[str] = None) -> List[float]:
+    def evaluate(
+        self, values: List[Tuple[str, List[float]]], marker: Optional[str] = None
+    ) -> List[float]:
         return self.monitor.evaluate_monitor_offline(values, marker)
 
     def copy(self):
-        return RtamtRuleMonitorNode(
-            self.name, [c.copy() for c in self.children], self.monitor.copy()
-        )
+        return type(self)(self.name, [c.copy() for c in self.children], self.monitor.copy())
 
     def reset(self):
         super().reset()
@@ -153,14 +158,21 @@ class RtamtRuleMonitorNode(VaradicMonitorNode):
 
 
 class QuantMonitorNode(UnaryMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
+    """
+    Monitor node for quantified expressions over agents.
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param quantified_agent: Index of the quantified agent.
+    """
+
+    def __init__(self, name: str, child: MonitorNode, quantified_agent: int) -> None:
         super().__init__(name, child)
-        self.quantified_vehicle = quantified_vehicle
+        self.quantified_agent = quantified_agent
         self.monitors = defaultdict(child.copy)
 
-    @classmethod
-    def _copy_cls(cls, node: "QuantMonitorNode") -> "QuantMonitorNode":
-        return cls(node.name, node.child.copy(), node.quantified_vehicle)
+    def copy(self) -> "QuantMonitorNode":
+        return type(self)(self.name, self.child.copy(), self.quantified_agent)
 
     def reset(self):
         super().reset()
@@ -168,8 +180,16 @@ class QuantMonitorNode(UnaryMonitorNode):
 
 
 class SelectiveQuantMonitorNode(QuantMonitorNode):
-    def __init__(self, name: str, child: MonitorNode, quantified_vehicle: int) -> None:
-        super().__init__(name, child, quantified_vehicle)
+    """
+    Quantified monitor node that tracks monitors which were selected during evaluation (e.g. pivotal monitor for 'ALL').
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param quantified_agent: Index of the quantified agent.
+    """
+
+    def __init__(self, name: str, child: MonitorNode, quantified_agent: int) -> None:
+        super().__init__(name, child, quantified_agent)
 
         self._selected: List[Optional[MonitorNode]] = []
 
@@ -195,16 +215,28 @@ class SelectiveQuantMonitorNode(QuantMonitorNode):
 
 
 class AllMonitorNode(SelectiveQuantMonitorNode):
+    """
+    Quantified monitor node representing a universal quantifier (∀).
+    """
+
     def __str__(self) -> str:
-        return f"A a{self.quantified_vehicle}:"
+        return f"A a{self.quantified_agent}:"
 
 
 class ExistMonitorNode(SelectiveQuantMonitorNode):
+    """
+    Quantified monitor node representing an existential quantifier (∃).
+    """
+
     def __str__(self) -> str:
-        return f"E a{self.quantified_vehicle}:"
+        return f"E a{self.quantified_agent}:"
 
 
 class SigmoidMonitorNode(UnaryMonitorNode):
+    """
+    Monitor node applying a sigmoid transformation to its child.
+    """
+
     def __init__(self, name: str, child: MonitorNode) -> None:
         super().__init__(name, child)
 
@@ -213,17 +245,22 @@ class SigmoidMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationMonitorNode(UnaryMonitorNode):
+    """
+    Monitor node representing a historically-duration temporal operator.
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param interval: Optional RtamtInterval specifying duration bounds.
+    """
+
     def __init__(
         self, name: str, child: MonitorNode, interval: Optional[RtamtInterval] = None
     ) -> None:
         super().__init__(name, child)
         self.interval = interval
 
-    @classmethod
-    def _copy_cls(
-        cls, node: "HistoricallyDurationMonitorNode"
-    ) -> "HistoricallyDurationMonitorNode":
-        return cls(node.name, node.child.copy(), node.interval)
+    def copy(self) -> "HistoricallyDurationMonitorNode":
+        return type(self)(self.name, self.child.copy(), self.interval)
 
     def __str__(self) -> str:
         if self.interval is not None:
@@ -233,17 +270,22 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
 
 
 class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
+    """
+    Monitor node representing a historically-duration operator with severity evaluation.
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param interval: Optional RtamtInterval specifying duration bounds.
+    """
+
     def __init__(
         self, name: str, child: MonitorNode, interval: Optional[RtamtInterval] = None
     ) -> None:
         super().__init__(name, child)
         self.interval = interval
 
-    @classmethod
-    def _copy_cls(
-        cls, node: "HistoricallyDurationSeverityMonitorNode"
-    ) -> "HistoricallyDurationSeverityMonitorNode":
-        return cls(node.name, node.child.copy(), node.interval)
+    def copy(self) -> "HistoricallyDurationSeverityMonitorNode":
+        return type(self)(self.name, self.child.copy(), self.interval)
 
     def __str__(self) -> str:
         if self.interval is not None:
@@ -253,41 +295,67 @@ class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
 
 
 class SumIfPositiveMonitorNode(QuantMonitorNode):
+    """
+    Quantified monitor node that sums values if they are positive.
+    """
+
     def __str__(self) -> str:
-        return f"sum_if_positive a{self.quantified_vehicle}:"
+        return f"sum_if_positive a{self.quantified_agent}:"
 
 
 class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
+    """
+    Monitor node that compares child output to a scaled threshold.
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param threshold: Threshold value for comparison.
+    """
+
     def __init__(self, name: str, child: MonitorNode, threshold: float) -> None:
         super().__init__(name, child)
         self.threshold = threshold
 
-    @classmethod
-    def _copy_cls(
-        cls, node: "CompareToThresholdScaledMonitorNode"
-    ) -> "CompareToThresholdScaledMonitorNode":
-        return cls(node.name, node.child.copy(), node.threshold)
+    def copy(self) -> "CompareToThresholdScaledMonitorNode":
+        return type(self)(self.name, self.child.copy(), self.threshold)
 
     def __str__(self) -> str:
         return f"compare_to_threshold_scaled[>={self.threshold}]"
 
 
 class ExistsMultipleMonitorNode(QuantMonitorNode):
+    """
+    Quantified monitor that checks for the existence of multiple agents satisfying a condition.
+
+    :param name: Unique name.
+    :param child: Child monitor node.
+    :param quantified_vehicle: Quantified agent index.
+    :param threshold: Minimum number of agents that must satisfy the condition.
+    """
+
     def __init__(
         self, name: str, child: MonitorNode, quantified_vehicle: int, threshold: int
     ) -> None:
         super().__init__(name, child, quantified_vehicle)
         self.threshold = threshold
 
-    @classmethod
-    def _copy_cls(cls, node: "ExistsMultipleMonitorNode") -> "ExistsMultipleMonitorNode":
-        return cls(node.name, node.child.copy(), node.quantified_vehicle, node.threshold)
+    def copy(self) -> "ExistsMultipleMonitorNode":
+        return type(self)(self.name, self.child.copy(), self.quantified_agent, self.threshold)
 
     def __str__(self) -> str:
         return f"exists_multiple[{self.threshold}]"
 
 
 class PredicateMonitorNode(ZeroArityMonitorNode):
+    """
+    Monitor node for evaluating a predicate.
+
+    :param name: Unique name.
+    :param evaluator: BasePredicateEvaluator instance.
+    :param agent_placeholders: Tuple of agent placeholder indices.
+    :param io_type: IOType representing the input/output type.
+    """
+
     def __init__(
         self,
         name: str,
@@ -300,9 +368,8 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
         self.agent_placeholders = agent_placeholders
         self.io_type = io_type
 
-    @classmethod
-    def _copy_cls(cls, node: "PredicateMonitorNode") -> "PredicateMonitorNode":
-        return cls(node.name, node.evaluator, node.agent_placeholders, node.io_type)
+    def copy(self) -> "PredicateMonitorNode":
+        return type(self)(self.name, self.evaluator, self.agent_placeholders, self.io_type)
 
     def evaluate_boolean(self, world, time_step, vehicle_ids):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
@@ -339,9 +406,10 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
 
 class ConstantTraceMonitorNode(ZeroArityMonitorNode):
     """
-    Helper node for artificial monitor tree constructions.
+    Helper node that injects a constant trace into the monitor tree.
 
-    Use this node to inject a constant trace into the tree.
+    :param name: Unique name.
+    :param trace: List of float values representing the constant trace.
     """
 
     def __init__(self, name: str, trace: List[float]) -> None:

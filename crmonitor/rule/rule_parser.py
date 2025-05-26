@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 from antlr4 import CommonTokenStream
+from antlr4.error.ErrorListener import ErrorListener
 from antlr4.InputStream import InputStream
 
 from crmonitor.common.config import get_traffic_rule_config
@@ -14,7 +15,29 @@ from crmonitor.rule.parse_tree_visitor import TrafficRuleParseTreeVisitor
 from crmonitor.rule.rule_node import (
     RuleAstNode,
 )
+from crmonitor.rule.rule_parser_context import RuleParserContext
 from crmonitor.rule.rule_parser_interface import RuleParserInterface
+
+
+class RuleParseError(Exception):
+    def __init__(
+        self, rule: str, reason: str, line: int, column: int, name: Optional[str] = None
+    ) -> None:
+        if name is not None:
+            rule_description = f"{name} ({rule})"
+        else:
+            rule_description = rule
+        super().__init__(f"Syntax error in {rule_description} at {line}:{column}: {reason}")
+
+
+class PropagatingErrorListener(ErrorListener):
+    def __init__(self, rule: str, rule_name: Optional[str] = None):
+        super().__init__()
+        self._rule = rule
+        self._rule_name = rule_name
+
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+        raise RuleParseError(self._rule, msg, line, column, self._rule_name)
 
 
 class RuleParser(RuleParserInterface):
@@ -28,21 +51,25 @@ class RuleParser(RuleParserInterface):
             self._meta_predicates
         )
 
-        self._sub_rule_counter = 0
-
-    def _new_unique_sub_rule_name(self) -> str:
-        self._sub_rule_counter += 1
-        return f"g{self._sub_rule_counter}"
-
     def parse(
         self, rule: str, name: Optional[str] = None, replace_meta_predicates: bool = True
     ) -> RuleAstNode:
         stream = InputStream(rule)
         lexer = FaStlLexer(stream)
+        error_listener = PropagatingErrorListener(rule, name)
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(error_listener)
+
         stream = CommonTokenStream(lexer)
         parser = FaStlParser(stream)
+
+        parser.removeErrorListeners()
+        parser.addErrorListener(error_listener)
+
         tree = parser.compile_unit()
-        visitor = TrafficRuleParseTreeVisitor(stream, self._new_unique_sub_rule_name)
+
+        parser_context = RuleParserContext()
+        visitor = TrafficRuleParseTreeVisitor(stream, parser_context)
         rule_node_tree = visitor.visit(tree)[0]
         if name is not None:
             rule_node_tree.name = name

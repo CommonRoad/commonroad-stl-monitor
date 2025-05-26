@@ -8,8 +8,6 @@ from commonroad_mpr.learning import DataLoader
 from crmonitor.predicate_grouping import (
     all_general_predicates,
     all_interstate_predicates,
-    insufficient,
-    yuanfei_predicates,
     changed_to_meta,
 )
 

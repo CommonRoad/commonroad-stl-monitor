@@ -33,6 +33,8 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 coverage = "^6.5.0"
+pytest = "^8.3.5"
+# commonroad-scenario-factory = { git = "git@gitlab.lrz.de:cps/commonroad/scenario-factory.git", rev="03cd254372c996d72737f413e208f66621d6ea96"}
 
 [tool.poetry.group.doc]
 optional = true
@@ -58,7 +60,7 @@ format.quote-style = "double"
 target-version = "py311"
 src = ["crmonitor", "tests"]
 # TODO: execpt for fastl and external, all folders should be covered by ruff.
-extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/"]
+extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/", "enhanced_aggregation"]
 # force exclude because pre-commit might pass those files explicitly, which will override the exclude.
 force-exclude = true
 

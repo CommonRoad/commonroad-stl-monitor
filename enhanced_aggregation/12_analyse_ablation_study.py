@@ -1,9 +1,9 @@
+import logging
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import logging
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)

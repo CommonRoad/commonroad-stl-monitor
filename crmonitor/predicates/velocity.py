@@ -1,7 +1,6 @@
 import logging
 import math
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import List, Optional
 
 import numpy as np
@@ -10,13 +9,17 @@ from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
+from crmonitor.predicates.base import (
+    BasePredicateEvaluator,
+    PredicateEvaluatorConfig,
+    PredicateName,
+)
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
 logger = logging.getLogger(__name__)
 
 
-class VelocityPredicates(str, Enum):
+class VelocityPredicates(PredicateName):
     KeepsLaneSpeedLimit = "keeps_lane_speed_limit"
     KeepsTypeSpeedLimit = "keeps_type_speed_limit"
     KeepsLaneSpeedLimitStar = "keeps_lane_speed_limit_star"
@@ -39,7 +42,7 @@ class VelocityPredicates(str, Enum):
     VelocityBelow20 = "velocity_below_20"
 
 
-class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
+class GenericSpeedLimit(BasePredicateEvaluator, ABC):
     @abstractmethod
     def get_speed_limit(
         self, world: World, time_step: int, vehicle_ids: List[int]
@@ -57,7 +60,7 @@ class PredGenericSpeedLimit(BasePredicateEvaluator, ABC):
         return rob
 
 
-class PredLaneSpeedLimit(PredGenericSpeedLimit):
+class PredLaneSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsLaneSpeedLimit
     arity = 1
 
@@ -73,7 +76,7 @@ class PredLaneSpeedLimit(PredGenericSpeedLimit):
         return speed_limit
 
 
-class PredTypeSpeedLimit(PredGenericSpeedLimit):
+class PredTypeSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsTypeSpeedLimit
     arity = 1
 
@@ -85,7 +88,7 @@ class PredTypeSpeedLimit(PredGenericSpeedLimit):
             return None
 
 
-class PredFovSpeedLimit(PredGenericSpeedLimit):
+class PredFovSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsFovSpeedLimit
     arity = 1
 
@@ -94,7 +97,7 @@ class PredFovSpeedLimit(PredGenericSpeedLimit):
         return vehicle.vehicle_param.fov_speed_limit
 
 
-class PredBrSpeedLimit(PredGenericSpeedLimit):
+class PredBrSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsBrakeSpeedLimit
     arity = 1
 
@@ -140,7 +143,7 @@ class PredHasQueueVelocity(PredLaneSpeedLimit):
         return self.config.max_queue_of_vehicles_velocity
 
 
-class PredVelocityBelow2(PredGenericSpeedLimit):
+class PredVelocityBelow2(GenericSpeedLimit):
     predicate_name = VelocityPredicates.VelocityBelow2
     arity = 1
 
@@ -149,7 +152,7 @@ class PredVelocityBelow2(PredGenericSpeedLimit):
         return 2.0 / 3.6
 
 
-class PredVelocityBelow5(PredGenericSpeedLimit):
+class PredVelocityBelow5(GenericSpeedLimit):
     predicate_name = VelocityPredicates.VelocityBelow5
     arity = 1
 
@@ -158,7 +161,7 @@ class PredVelocityBelow5(PredGenericSpeedLimit):
         return 5.0 / 3.6
 
 
-class PredVelocityBelow15(PredGenericSpeedLimit):
+class PredVelocityBelow15(GenericSpeedLimit):
     predicate_name = VelocityPredicates.VelocityBelow15
     arity = 1
 
@@ -167,7 +170,7 @@ class PredVelocityBelow15(PredGenericSpeedLimit):
         return 15.0 / 3.6
 
 
-class PredVelocityBelow20(PredGenericSpeedLimit):
+class PredVelocityBelow20(GenericSpeedLimit):
     predicate_name = VelocityPredicates.VelocityBelow20
     arity = 1
 

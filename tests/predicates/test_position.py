@@ -2,6 +2,7 @@ import os
 import unittest
 from pathlib import Path
 
+from commonroad.common.reader.file_reader_protobuf import ScenarioInformationFactory
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
@@ -13,10 +14,11 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from crmonitor.common.helper import load_yaml
+from crmonitor.common.config import ScenarioType
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
-from crmonitor.common.world import World
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
+from crmonitor.common.world import World, WorldConfig
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
 from crmonitor.predicates.position import (
     PredDrivesLeftmost,
     PredDrivesRightmost,
@@ -41,24 +43,20 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = True
-        self.config["d_sl"] = 1.0
-        self.config["scenario"] = "intersection"
-        self.config["use_mpr"] = False
+        self.world_confg = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
+        self.prediicate_config = PredicateEvaluatorConfig()
 
     def testStopLineInFront(self):
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(31)
 
         for time in range(ego_vehicle.end_time + 1):
-            pred = PredStopLineInFront(self.config)
+            pred = PredStopLineInFront()
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
@@ -71,11 +69,11 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
             "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredOnIncomingLeftOf(self.config)
+            pred = PredOnIncomingLeftOf()
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
@@ -90,12 +88,12 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
             "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_confg)
         ego_vehicle = world.vehicle_by_id(31)
         target_vehicle = world.vehicle_by_id(30)
         rob = list()
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredInIntersectionConflictArea(self.config)
+            pred = PredInIntersectionConflictArea(self.prediicate_config)
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
@@ -125,10 +123,10 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_confg)
         ego_vehicle = world.vehicle_by_id(31)
         for time in range(ego_vehicle.end_time + 1):
-            pred = PredOnLaneletWithTypeIntersection(self.config)
+            pred = PredOnLaneletWithTypeIntersection()
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
@@ -141,11 +139,11 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
             "test_intersection/DEU_TestIntersection.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_confg)
         ego_vehicle = world.vehicle_by_id(32)
         target_vehicle = world.vehicle_by_id(31)
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredOnOncomOf(self.config)
+            pred = PredOnOncomOf(self.prediicate_config)
             sol_monitor_1 = pred.evaluate_boolean(world, time, [target_vehicle.id, ego_vehicle.id])
 
             sol_monitor_2 = pred.evaluate_robustness(
@@ -158,10 +156,10 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
 class TestInterstatePositionPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = False
-        self.config["use_mpr"] = False
+        self.predicate_config = PredicateEvaluatorConfig(
+            scale_rob=False, mode=PredicateEvaluationMode.MFR
+        )
+        self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSTATE)
 
         right_vertices_lane_1 = np.array(
             [
@@ -479,7 +477,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
         lanelet_network.add_lanelet(self._lanelet_5)
-        self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        self.road_network = RoadNetwork(lanelet_network)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -500,7 +498,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             5: {2, 3},
             6: {2, 3},
         }
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         self.ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
@@ -533,7 +531,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         world = World({self.ego_vehicle}, self.road_network)
 
         # Right of broad lane markings
-        pred = PredRightOfBroadLaneMarking(self.config)
+        pred = PredRightOfBroadLaneMarking(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -572,7 +570,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 > 0)
 
         # Left of broad lane markings
-        pred = PredLeftOfBroadLaneMarking(self.config)
+        pred = PredLeftOfBroadLaneMarking(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -620,7 +618,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         world = World({self.ego_vehicle}, self.road_network)
 
         # Left of broad lane markings
-        pred = PredOnAccessRamp(self.config)
+        pred = PredOnAccessRamp(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -658,7 +656,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         world = World({self.ego_vehicle}, self.road_network)
 
         # Left of broad lane markings
-        pred = PredOnShoulder(self.config)
+        pred = PredOnShoulder(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -695,7 +693,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
 
         world = World({self.ego_vehicle}, self.road_network)
 
-        pred = PredOnMainCarriageway(self.config)
+        pred = PredOnMainCarriageway(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -732,7 +730,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
 
         world = World({self.ego_vehicle}, self.road_network)
 
-        pred = PredMainCarriageWayRightLane(self.config)
+        pred = PredMainCarriageWayRightLane(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         # fix the lanelet assignment
@@ -781,7 +779,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
 
         world = World({self.ego_vehicle}, self.road_network)
 
-        pred = PredInRightmostLane(self.config)
+        pred = PredInRightmostLane(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         # fix the lanelet assignment
@@ -830,7 +828,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
 
         world = World({self.ego_vehicle}, self.road_network)
 
-        pred = PredInLeftmostLane(self.config)
+        pred = PredInLeftmostLane(self.predicate_config)
         vehicle_ids = [self.ego_vehicle.id]
 
         # fix the lanelet assignment
@@ -909,7 +907,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             9: {3},
             10: {3},
         }
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
@@ -972,7 +970,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             lanelet_assignments_other_2,
         )
 
-        pred = PredLeftOf(self.config)
+        pred = PredLeftOf(self.predicate_config)
         vehicle_ids_1 = [ego_vehicle.id, other_vehicle_1.id]
         vehicle_ids_2 = [ego_vehicle.id, other_vehicle_2.id]
 
@@ -1034,8 +1032,9 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_11, sol_robustness_monitor_mode_11 >= 0)
 
     def test_drives_leftmost(self):
-        self.config["close_to_lane_border"] = 0.2
-        self.config["close_to_other_vehicle"] = 0.5
+        predicate_evaluator_config = PredicateEvaluatorConfig(
+            close_to_lane_border=0.2, close_to_other_vehicle=0.5
+        )
 
         # expected solutions for leftmost
         exp_sol_monitor_mode_1 = True
@@ -1047,7 +1046,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
         lanelet_network.add_lanelet(self._lanelet_2)
-        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(lanelet_network)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -1058,7 +1057,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             4: CustomState(position=[40, 2], time_step=4, orientation=0, velocity=10),
         }
         lanelet_assignments_ego = {0: {2}, 1: {2}, 2: {1, 2}, 3: {1, 2}, 4: {1}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
@@ -1109,7 +1108,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
                 )
             )
 
-        pred = PredDrivesLeftmost(self.config)
+        pred = PredDrivesLeftmost(predicate_evaluator_config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World({ego_vehicle, other_vehicle_1}, road_network)
@@ -1139,8 +1138,9 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
 
     def test_drives_rightmost(self):
-        self.config["close_to_lane_border"] = 0.2
-        self.config["close_to_other_vehicle"] = 0.5
+        evaluator_config = PredicateEvaluatorConfig(
+            close_to_lane_border=0.2, close_to_other_vehicle=0.5
+        )
 
         # expected solutions for rightmost
         exp_sol_monitor_mode_1 = True
@@ -1152,7 +1152,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network = LaneletNetwork()
         lanelet_network.add_lanelet(self._lanelet_1)
         lanelet_network.add_lanelet(self._lanelet_2)
-        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(lanelet_network)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -1163,7 +1163,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             4: CustomState(position=[40, 7], time_step=4, orientation=0, velocity=10),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1, 2}, 3: {1, 2}, 4: {2}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
@@ -1214,7 +1214,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
                 )
             )
 
-        pred = PredDrivesRightmost(self.config)
+        pred = PredDrivesRightmost(evaluator_config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World({ego_vehicle, other_vehicle_1}, road_network)

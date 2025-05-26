@@ -1,8 +1,9 @@
 import abc
 import copy
-import logging
 import csv
+import logging
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
@@ -35,6 +36,13 @@ def load_normalization_values(normalization_file: Path) -> dict:
     return results
 
 
+class PredicateEvaluationMode(Enum):
+    BOOLEAN = auto()
+    MFR = auto()
+    MPR = auto()
+    MPR_GP = auto()
+
+
 @dataclass
 class PredicateMprConfig:
     enabled: bool = False
@@ -64,10 +72,14 @@ class PredicateMprConfig:
     """Set the number of samples for the MPR `StateBasedSampler`."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PredicateEvaluatorConfig:
     scale_rob: bool = True
+
+    mode: PredicateEvaluationMode = PredicateEvaluationMode.MFR
+
     mpr: PredicateMprConfig = field(default_factory=PredicateMprConfig)
+
     eps: float = 1e-17
 
     min_interstate_width: float = 7.0
@@ -113,19 +125,24 @@ class PredicateEvaluatorConfig:
     country: str = "DEU"
 
 
+class PredicateName(str, Enum): ...
+
+
 class BasePredicateEvaluator(abc.ABC):
     """
     Base class for the predicate evaluator
     """
 
-    predicate_name = "interface"
+    predicate_name: PredicateName
     arity: int
 
-    def __init__(self, config: PredicateEvaluatorConfig, scaler=None):
+    def __init__(self, config: Optional[PredicateEvaluatorConfig] = None, scaler=None):
+        if config is None:
+            config = PredicateEvaluatorConfig()
         self.config = config
         self._scaler = scaler or RobustnessScaler(self.config.scale_rob)
 
-        if self.config.mpr.enabled and self.config.mpr.ml:
+        if self.config.mode == PredicateEvaluationMode.MPR_GP:
             try:
                 self._mpr_model = read_model(
                     self.predicate_name,
@@ -145,11 +162,11 @@ class BasePredicateEvaluator(abc.ABC):
         self._mpr_gradients = []
 
     @property
-    def gradients(self):
+    def gradients(self) -> List[float]:
         return self._mpr_gradients
 
     @property
-    def last_gradient(self):
+    def last_gradient(self) -> Optional[float]:
         if len(self._mpr_gradients) == 0:
             return None
         return self._mpr_gradients[-1]
@@ -169,7 +186,7 @@ class BasePredicateEvaluator(abc.ABC):
     def _scale_angle(self, x):
         return self._scaler.scale_angle(x)
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: List[int]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
@@ -271,8 +288,6 @@ class BasePredicateEvaluator(abc.ABC):
             - count_true: The number of successfull evaluations of the model-free predicate, where its return value is True.
             - count_error: The number of failed evaluations of the model-free predicate.
             - bool: The single boolean evaluation of the model-free predicate.
-
-        :raises RuntimeError: If the pre-trained model was not already loaded.
         """
         ego_vehicle_id = vehicle_ids[0]
         ego_vehicle_mpr = world_mpr.vehicle_by_id(ego_vehicle_id)
@@ -420,7 +435,7 @@ class BasePredicateEvaluator(abc.ABC):
                     ",".join(str(vehicle_id) for vehicle_id in vehicle_ids_tuple),
                 )
                 value = self.evaluate_mpr_ml(world, mpr_world, time_step, vehicle_ids)
-            elif self.config.mpr.enabled and mpr_world is not None:
+            elif self.config.mode == PredicateEvaluationMode.MPR and mpr_world is not None:
                 _LOGGER.debug(
                     "Evaluating predicate %s at time step %d with vehicles %s using model-predictive robustness, without pre-trained models.",
                     self.predicate_name,

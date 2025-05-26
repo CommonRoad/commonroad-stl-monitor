@@ -1,4 +1,6 @@
-from typing import Dict, List, Set, Union
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Dict, List, Optional, Set, Union
 
 import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
@@ -14,6 +16,24 @@ from commonroad_clcs.util import (
 )
 from scipy.interpolate import splev, splprep
 
+from crmonitor.common.config import ScenarioType
+
+
+class MapType(Enum):
+    HAND_DRAFT = auto()
+    DATASET = auto()
+
+
+@dataclass
+class RoadNetworkParam:
+    num_chankins_corner_cutting: int = 1
+    polyline_resampling_step: float = 0.5
+    large_resampling_step: float = 3.5
+    merging_length: int = 10000
+    lateral_projection_domain_limit: int = 50
+    lateral_eps: float = 0.1
+    map_type: MapType = MapType.DATASET
+
 
 class Lane:
     """
@@ -24,7 +44,8 @@ class Lane:
         self,
         merged_lanelet: Lanelet,
         contained_lanelets: List[int],
-        road_network_param: Dict,
+        road_network_param: Optional[RoadNetworkParam] = None,
+        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
     ):
         """
         :param merged_lanelet: lanelet element of lane
@@ -34,7 +55,11 @@ class Lane:
         self._lanelet = merged_lanelet
         self._contained_lanelets = set(contained_lanelets)
         self.lane_id = int("".join((str(i) for i in self._contained_lanelets)))
-        if "large_resampling_step" in road_network_param.keys():
+
+        if road_network_param is None:
+            road_network_param = RoadNetworkParam()
+
+        if scenario_type == ScenarioType.INTERSECTION:
             # intersection, to avoid outside projection domain in clcs
             # TODO: currently only consider AAH1 map
             weight_left, smooth_factor_left = self._get_smooth_parameter(contained_lanelets, "left")
@@ -76,7 +101,7 @@ class Lane:
                 road_network_param=road_network_param,
             )
             # TODO: there are some errors when using smoothed vertices in hand draft maps (crdesigner).
-            if road_network_param.get("map_type") == "hand_draft":
+            if road_network_param.map_type == MapType.HAND_DRAFT:
                 self._orientation = compute_orientation_from_polyline(
                     merged_lanelet.center_vertices
                 )
@@ -256,7 +281,7 @@ class Lane:
 
     @staticmethod
     def create_curvilinear_coordinate_system_from_reference(
-        ref_path: np.array, road_network_param: Dict
+        ref_path: np.ndarray, road_network_param: RoadNetworkParam
     ) -> CurvilinearCoordinateSystem:
         """
         Generates curvilinear coordinate system for a reference path
@@ -266,11 +291,9 @@ class Lane:
         :returns curvilinear coordinate system for reference path
         """
         new_ref_path = ref_path
-        for i in range(0, road_network_param.get("num_chankins_corner_cutting")):
+        for _ in range(0, road_network_param.num_chankins_corner_cutting):
             new_ref_path = chaikins_corner_cutting(new_ref_path)
-        new_ref_path = resample_polyline(
-            new_ref_path, road_network_param.get("polyline_resampling_step")
-        )
+        new_ref_path = resample_polyline(new_ref_path, road_network_param.polyline_resampling_step)
 
         curvilinear_cosy = CurvilinearCoordinateSystem(
             new_ref_path, CLCSParams(), preprocess_path=False
@@ -303,16 +326,16 @@ class Lane:
         ref_path: np.ndarray,
         weight: float,
         smooth_factor: float,
-        road_network_param: Dict,
+        road_network_param: RoadNetworkParam,
     ) -> (
         CurvilinearCoordinateSystem,
         np.ndarray,
         CurvilinearCoordinateSystem,
         np.ndarray,
     ):
-        if road_network_param.get("map_type") == "hand_draft":
+        if road_network_param.map_type == MapType.HAND_DRAFT:
             reference_path_smooth = resample_polyline(
-                ref_path, road_network_param.get("polyline_resampling_step")
+                ref_path, road_network_param.polyline_resampling_step
             )
         else:
             reference_path = self._extrapolate_resample_polyline(ref_path)
@@ -321,15 +344,15 @@ class Lane:
             )
 
         clcs_params = CLCSParams(
-            default_proj_domain_limit=road_network_param.get("lateral_projection_domain_limit"),
-            eps=road_network_param.get("lateral_eps"),
+            default_proj_domain_limit=road_network_param.lateral_projection_domain_limit,
+            eps=road_network_param.lateral_eps,
         )
         curvilinear_cosy = CurvilinearCoordinateSystem(
             reference_path_smooth, clcs_params, preprocess_path=False
         )
 
         ref_path_resample_large_step = resample_polyline(
-            reference_path_smooth, road_network_param.get("large_resampling_step")
+            reference_path_smooth, road_network_param.large_resampling_step
         )
         curvilinear_cosy_large_step = CurvilinearCoordinateSystem(
             ref_path_resample_large_step, clcs_params, preprocess_path=False
@@ -403,8 +426,8 @@ class RoadNetwork:
     def __init__(
         self,
         lanelet_network: LaneletNetwork,
-        road_network_param: Dict,
-        scenario_type="interstate",
+        road_network_param: Optional[RoadNetworkParam] = None,
+        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
     ):
         """
         :param lanelet_network: CommonRoad lanelet network
@@ -413,7 +436,11 @@ class RoadNetwork:
         """
         self.lanelet_network = lanelet_network
         self.scenario_type = scenario_type
-        self.lanes = self._create_lanes(road_network_param)
+
+        if road_network_param is None:
+            road_network_param = RoadNetworkParam()
+
+        self.lanes = self._create_lanes(road_network_param, self.scenario_type)
         # add intersection elements for intersection scenarios
         if len(lanelet_network.intersections) != 0:
             self.incoming = self._create_incoming_dict(lanelet_network)
@@ -427,7 +454,9 @@ class RoadNetwork:
             self.reach_suc_cache = {}
             self.reach_pre_cache = {}
 
-    def _create_lanes(self, road_network_param: Dict) -> List[Lane]:
+    def _create_lanes(
+        self, road_network_param: RoadNetworkParam, scenario_type: ScenarioType
+    ) -> List[Lane]:
         """
         Creates lanes for road network
 
@@ -439,21 +468,13 @@ class RoadNetwork:
             lanelet for lanelet in self.lanelet_network.lanelets if len(lanelet.predecessor) == 0
         ]
         for lanelet in start_lanelets:
-            if LaneletType.ACCESS_RAMP in lanelet.lanelet_type:
-                lanelet_type = LaneletType.ACCESS_RAMP
-            elif LaneletType.EXIT_RAMP in lanelet.lanelet_type:
-                lanelet_type = LaneletType.EXIT_RAMP
-            elif LaneletType.MAIN_CARRIAGE_WAY in lanelet.lanelet_type:
-                lanelet_type = LaneletType.MAIN_CARRIAGE_WAY
-            else:
-                lanelet_type = None
             (
                 merged_lanelets,
                 merge_jobs,
             ) = Lanelet.all_lanelets_by_merging_successors_from_lanelet(
                 lanelet,
                 self.lanelet_network,
-                road_network_param.get("merging_length"),
+                road_network_param.merging_length,
             )
             if len(merged_lanelets) == 0 or len(merge_jobs) == 0:
                 merged_lanelets.append(lanelet)
@@ -461,7 +482,7 @@ class RoadNetwork:
             for idx in range(len(merged_lanelets)):
                 lane_lanelets.append((merged_lanelets[idx], merge_jobs[idx]))
         for lane_element in lane_lanelets:
-            lanes.append(Lane(lane_element[0], lane_element[1], road_network_param))
+            lanes.append(Lane(lane_element[0], lane_element[1], road_network_param, scenario_type))
 
         lanes.sort(key=lambda x: x.lane_id)
 

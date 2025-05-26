@@ -5,9 +5,10 @@ from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-from crmonitor.common.helper import load_yaml
-from crmonitor.common.world import World
+from crmonitor.common.config import ScenarioType, get_traffic_rule_config
+from crmonitor.common.world import World, WorldConfig
 from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
+from crmonitor.predicates.base import PredicateEvaluatorConfig
 from crmonitor.rule.rule_node import AllNode, PredicateNode, RuleAstNode
 
 logging.basicConfig(
@@ -21,25 +22,21 @@ class RuleTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        config_path = root_path / "config.yaml"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = True
-        self.config["d_sl"] = 1.0
-        self.config["scenario"] = "intersection"
+        self.predicate_config = PredicateEvaluatorConfig(scale_rob=True, d_sl=1.0)
+        self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
 
-        rules_path = root_path / "traffic_rules_rtamt.yaml"
-        self.traffic_rules = load_yaml(str(rules_path))
+        self.traffic_rules = get_traffic_rule_config()
         self.traffic_rules["traffic_rules_param"]["use_mpr"] = False
         self.scenario_root_path = root_path.parent / "scenarios"
 
     def test_R_IN1(self):
         exp_violation_time_step = 24
-        self.config["intersection_road_network_param"]["map_type"] = "hand_draft"
+        self.predicate_config["intersection_road_network_param"]["map_type"] = "hand_draft"
         scenario_file = os.path.join(
             self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = PropositionRuleEvaluator.create_from_config(
             world, ego_vehicle, "R_IN1", self.traffic_rules
@@ -60,7 +57,7 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
 
     def test_R_IN3(self):
-        self.config["intersection_road_network_param"]["map_type"] = "hand_draft"
+        self.predicate_config["intersection_road_network_param"]["map_type"] = "hand_draft"
         rtamt_further_time_range = 10
         exp_violation_time_step = 20 + rtamt_further_time_range
         exp_violation_end_time_step = 27 + rtamt_further_time_range
@@ -69,7 +66,7 @@ class RuleTest(unittest.TestCase):
             "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         ego_vehicle = world.vehicle_by_id(30)
         rule_eval = PropositionRuleEvaluator.create_from_config(
             world, ego_vehicle, "R_IN3_hand_draft", self.traffic_rules
@@ -93,14 +90,14 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(rule_robustness[exp_violation_end_time_step] >= 0)
 
     def test_R_IN4(self):
-        self.config["intersection_road_network_param"]["map_type"] = "dataset"
+        self.predicate_config["intersection_road_network_param"]["map_type"] = "dataset"
         exp_violation_time_step = 133
         scenario_file = os.path.join(
             self.scenario_root_path,
             "test_intersection/DEU_AAH1-2_176000_T-6149.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         ego_vehicle = world.vehicle_by_id(10093)
         rule_eval = PropositionRuleEvaluator.create_from_config(
             world, ego_vehicle, "R_IN4", self.traffic_rules
@@ -116,14 +113,14 @@ class RuleTest(unittest.TestCase):
         self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
 
     def test_R_IN5(self):
-        self.config["intersection_road_network_param"]["map_type"] = "dataset"
+        self.predicate_config["intersection_road_network_param"]["map_type"] = "dataset"
         exp_violation_time_step = 68
         scenario_file = os.path.join(
             self.scenario_root_path,
             "test_intersection/DEU_AAH1-2_7900_T-1049.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         ego_vehicle = world.vehicle_by_id(10020)
         rule_eval = PropositionRuleEvaluator.create_from_config(
             world, ego_vehicle, "R_IN5", traffic_rules_config=self.traffic_rules

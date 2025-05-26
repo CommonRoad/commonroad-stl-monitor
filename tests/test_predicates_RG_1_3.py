@@ -12,7 +12,6 @@ from commonroad.scenario.traffic_sign import (
     TrafficSignElement,
     TrafficSignIDGermany,
 )
-from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (
     CurvilinearStateManager,
@@ -21,6 +20,7 @@ from crmonitor.common.vehicle import (
     Vehicle,
 )
 from crmonitor.common.world import World
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
     PredInFrontOf,
@@ -37,10 +37,7 @@ from tests.util import parallel_lanes
 class TestPredicate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = False
-        self.config["use_mpr"] = False
+        self.config = PredicateEvaluatorConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
 
     def test_cut_in(self):
         # expected solutions

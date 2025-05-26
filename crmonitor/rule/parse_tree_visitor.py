@@ -1,6 +1,5 @@
 from decimal import Decimal
 from fractions import Fraction
-from typing import Callable
 
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from rtamt.semantics.interval.interval import Interval
@@ -21,6 +20,7 @@ from crmonitor.rule.rule_node import (
     SigmoidNode,
     SumIfPositiveNode,
 )
+from crmonitor.rule.rule_parser_context import RuleParserContext
 
 
 class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
@@ -32,9 +32,9 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
     # It's value does not really matter, because we only apply one kind of rewrite.
     DEFAULT_TOKEN_REWRITER_PROGRAM = "predicate"
 
-    def __init__(self, tokens, sub_rule_id_generator: Callable[[], str]):
+    def __init__(self, tokens, rule_parser_ctx: RuleParserContext):
         self._rewriter: TokenStreamRewriter = TokenStreamRewriter(tokens)
-        self._sub_rule_id_generator = sub_rule_id_generator
+        self._rule_parser_ctx = rule_parser_ctx
 
     def defaultResult(self):
         return []
@@ -231,4 +231,4 @@ class TrafficRuleParseTreeVisitor(FaStlParserVisitor):
         return interval
 
     def _get_new_unique_node_name(self) -> str:
-        return self._sub_rule_id_generator()
+        return self._rule_parser_ctx.generate_new_unique_sub_rule_name()

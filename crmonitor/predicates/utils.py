@@ -24,9 +24,11 @@ def distance_to_left_bounds(
     lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
     left_bounds = tuple(
         [
-            l.left_vertices
-            for l in lanelets
-            if l.adj_left is None or l.adj_left not in lanelet_ids and not l.adj_left_same_direction
+            lanelet.left_vertices
+            for lanelet in lanelets
+            if lanelet.adj_left is None
+            or lanelet.adj_left not in lanelet_ids
+            and not lanelet.adj_left_same_direction
         ]
     )
     if len(left_bounds) > 0:
@@ -45,11 +47,11 @@ def distance_to_right_bounds(
     lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
     right_bounds = tuple(
         [
-            l.right_vertices
-            for l in lanelets
-            if l.adj_right is None
-            or l.adj_right not in lanelet_ids
-            and not l.adj_left_same_direction
+            lanelet.right_vertices
+            for lanelet in lanelets
+            if lanelet.adj_right is None
+            or lanelet.adj_right not in lanelet_ids
+            and not lanelet.adj_left_same_direction
         ]
     )
     if len(right_bounds) > 0:
@@ -66,16 +68,16 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
     lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
     left_bounds = tuple(
         [
-            l.left_vertices
-            for l in lanelets
-            if l.adj_left is not None and l.adj_left not in lanelet_ids
+            lanelet.left_vertices
+            for lanelet in lanelets
+            if lanelet.adj_left is not None and lanelet.adj_left not in lanelet_ids
         ]
     )
     right_bounds = tuple(
         [
-            l.right_vertices
-            for l in lanelets
-            if l.adj_right is not None and l.adj_right not in lanelet_ids
+            lanelet.right_vertices
+            for lanelet in lanelets
+            if lanelet.adj_right is not None and lanelet.adj_right not in lanelet_ids
         ]
     )
     if len(left_bounds) > 0:
@@ -108,7 +110,7 @@ def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_
         dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(
             veh_position[0], veh_position[1]
         )[1]
-    except:
+    except ValueError:
         dis_to_left = -lane.clcs_left_large_step.convert_to_curvilinear_coords(
             veh_position[0], veh_position[1]
         )[1]
@@ -116,7 +118,7 @@ def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_
         dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(
             veh_position[0], veh_position[1]
         )[1]
-    except:
+    except ValueError:
         dis_to_right = lane.clcs_right_large_step.convert_to_curvilinear_coords(
             veh_position[0], veh_position[1]
         )[1]
@@ -563,7 +565,7 @@ def distance_to_left_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
     for point in occ_points:
         try:
             d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
-        except:
+        except ValueError:
             d_left = lane.clcs_left_large_step.convert_to_curvilinear_coords(*point)[1]
         distance.append(d_left)
     return distance
@@ -576,7 +578,7 @@ def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
     for point in occ_points:
         try:
             d_right = lane.clcs_right.convert_to_curvilinear_coords(*point)[1]
-        except:
+        except ValueError:
             d_right = lane.clcs_right_large_step.convert_to_curvilinear_coords(*point)[1]
         distance.append(d_right)
     return distance
