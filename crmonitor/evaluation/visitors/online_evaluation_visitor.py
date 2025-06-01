@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, Optional
 
 import numpy as np
-from commonroad_mpr.common.observation import World as MprWorld
 
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -26,9 +24,8 @@ from crmonitor.rule.rule_node import (
 @dataclass
 class OnlineEvaluationMonitorTreeVisitorContext:
     world: World
-    mpr_world: Optional[MprWorld]
     time_step: int
-    captured_agents: Dict[int, int]
+    captured_agents: dict[int, int]
 
     def capture_agent(
         self, capture_id: int, agent_id: int
@@ -43,7 +40,6 @@ class OnlineEvaluationMonitorTreeVisitorContext:
         new_captured_agents[capture_id] = agent_id
         return OnlineEvaluationMonitorTreeVisitorContext(
             self.world,
-            self.mpr_world,
             self.time_step,
             new_captured_agents,
         )
@@ -67,13 +63,10 @@ class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
         world: World,
         time_step: int,
         ego_vehicle: Vehicle,
-        mpr_world: Optional[MprWorld] = None,
     ):
         # TODO: Default ego agent always has ID 0.
         captured_agents = {0: ego_vehicle.id}
-        ctx = OnlineEvaluationMonitorTreeVisitorContext(
-            world, mpr_world, time_step, captured_agents
-        )
+        ctx = OnlineEvaluationMonitorTreeVisitorContext(world, time_step, captured_agents)
 
         return self.visit(node, ctx)
 
@@ -173,10 +166,10 @@ class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
             or node.io_type == IOType.INPUT
             and self._output_type == OutputType.OUTPUT_ROBUSTNESS
         ):
-            value = node.evaluate_boolean(ctx.world, ctx.time_step, vehicle_ids)
+            value = node.evaluate_boolean(ctx.world, ctx.time_step, tuple(vehicle_ids))
             value = self._rob_scaler.max if value else self._rob_scaler.min
         else:
-            value = node.evaluate_robustness(ctx.world, ctx.mpr_world, ctx.time_step, vehicle_ids)
+            value = node.evaluate_robustness(ctx.world, ctx.time_step, tuple(vehicle_ids))
 
         node.last_value = value
 

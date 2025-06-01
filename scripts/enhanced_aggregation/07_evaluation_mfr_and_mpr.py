@@ -12,8 +12,8 @@ from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
 from crmonitor.predicate_grouping import (
-    all_general_predicates,
-    all_interstate_predicates,
+    ALL_GENERAL_PREDICATES,
+    ALL_INTERSTATE_PREDICATE_NAMES,
     changed_to_meta,
 )
 from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
@@ -31,7 +31,7 @@ metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = all_general_predicates + all_interstate_predicates + changed_to_meta
+selected_predicates = ALL_GENERAL_PREDICATES + ALL_INTERSTATE_PREDICATE_NAMES + changed_to_meta
 rand_seed = 12345
 
 MprCfg.build_configuration(

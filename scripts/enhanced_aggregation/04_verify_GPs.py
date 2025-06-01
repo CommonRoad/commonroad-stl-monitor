@@ -5,51 +5,24 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from commonroad_mpr.learning import DataLoader, ModelEvaluator
-from commonroad_mpr.learning.gp_regression import read_model
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
+from crmonitor.mpr.learning import DataLoader, ModelEvaluator
+from crmonitor.predicates.velocity import PredPreservesTrafficFlow
 
 logging.basicConfig(level=logging.INFO)
 
-learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
-models_path = Path(__file__).parent.parent / "output" / "models"
+base_output_path = Path(__file__).parents[2] / "output"
+learning_data_path = base_output_path / "learning_data" / "learning_data.csv"
+models_path = base_output_path / "models"
 # models_path = Path("/home/finf/pretrainedMPR/interstate/2023-07-04")
 # models_path = Path("/home/finf/gp_training/commonroad-stl-monitor/output/model_bkp")
 
-metrics_output_path = Path(__file__).parent.parent / "output" / "metrics" / "gp_metrics.csv"
+metrics_output_path = base_output_path / "metrics" / "gp_metrics.csv"
 metrics_output_path.parent.mkdir(exist_ok=True)
 
 # Select the atomic predicates that should be evaluated.
-predicates = ["preserves_traffic_flow"]
+predicates = [PredPreservesTrafficFlow]
 # Select the meta-predicates that should be evaluated (prefixed with '$'!). NOTE: only select top-level meta-predicates here.
 meta_predicates = []  # ["$cut_in", "$drives_leftmost", "$drives_rightmost", "$left_of"]
-
-
-MprCfg.build_configuration(
-    config={
-        "common": {
-            "scenario": "interstate",
-            "lane": {
-                # Increased the default parameters to work around projection limit issues in MPR
-                "lateral_projection_domain_limit": 500,
-                "extend_length": 500,
-                "large_resampling_step": 3.5,
-                "num_chankins_corner_cutting": 1,
-            },
-            "road_network": {
-                "interstate": {
-                    "use_phantom_lane": True
-                }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
-            },
-        },
-    },
-    # Path root must point to a local revision of commonroad-model-predictive-robustness.
-    # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
-    # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
-    folder_config="config_files",
-    default_profile="default",
-)
 
 
 META_PREDICATE_DEFINITIONS = {
@@ -103,9 +76,9 @@ META_PREDICATE_DEFINITIONS = {
 }
 
 data_loader = DataLoader.create_from_file(learning_data_path)
-evaluator = ModelEvaluator(predicates, data_loader, models_path)
+evaluator = ModelEvaluator(data_loader, models_path)
 
-results = evaluator.evaluate()
+results = evaluator.evaluate(predicates)
 
 
 def _get_all_atomic_predicates(definition):
@@ -265,7 +238,7 @@ for meta_predicate_name in meta_predicates:
         "span_pred": max_pred - min_pred,
     }
 
-evaluator.visualize(results)
+evaluator.visualize_prediction(results)
 # evaluator.save(results, metrics_output_path)
 
 plt.show()

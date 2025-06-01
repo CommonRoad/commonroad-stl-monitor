@@ -3,14 +3,14 @@ from pathlib import Path
 
 from commonroad_mpr.learning import DataLoader
 from commonroad_mpr.learning.data_loader import normalize
-from crmonitor.predicate_grouping import all_general_predicates, all_interstate_predicates
+from crmonitor.predicate_grouping import ALL_GENERAL_PREDICATE_NAMES, ALL_INTERSTATE_PREDICATE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
-selected_predicates = all_general_predicates + all_interstate_predicates
+selected_predicates = ALL_GENERAL_PREDICATE_NAMES + ALL_INTERSTATE_PREDICATE_NAMES
 data_loader = DataLoader.create_from_file(learning_data_path)
 
 # check mean, std, and span

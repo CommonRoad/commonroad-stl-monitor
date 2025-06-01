@@ -7,7 +7,7 @@ from decimal import Decimal
 from functools import partial
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-# import numba
+import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
 from commonroad.common.util import AngleInterval, Interval
 from commonroad.geometry.shape import Rectangle
@@ -15,6 +15,14 @@ from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState, InitialState, State
+from commonroad.scenario.trajectory import Trajectory
+from commonroad_clcs.clcs import CurvilinearCoordinateSystem
+from commonroad_clcs.util import (
+    compute_orientation_from_polyline,
+    compute_pathlength_from_polyline,
+)
+from commonroad_dc.feasibility.feasibility_checker import InputState
+from commonroad_dc.feasibility.vehicle_dynamics import VehicleDynamics, VehicleType
 from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import DictConfig
 from shapely import affinity, unary_union
@@ -27,7 +35,16 @@ from crmonitor.common.road_network import Lane, RoadNetwork
 
 rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
+
+# The custom vehicle dynamics are used here, because for low velocity vehicles
+# the model-predictive sampling was not producing any feasible states.
+# Increasing the steering velocity bounds (by factor of 200...) yields more feasible states.
+# However, it is not clear whether this has other unintended consequences.
+# TODO: Find out whether the vehicle dynamics are the problem here, or if its a problem with the sampling.
+CUSTOM_DEFAULT_VEHICLE_DYNAMICS = VehicleDynamics.KS(VehicleType.BMW_320i)
+CUSTOM_DEFAULT_VEHICLE_DYNAMICS.parameters.steering.v_min = -80
+CUSTOM_DEFAULT_VEHICLE_DYNAMICS.parameters.steering.v_max = 80
 
 
 # @numba.njit
@@ -105,6 +122,185 @@ class StateLateral:
         return state
 
 
+@dataclass
+class CurvilinearVehicleState(CustomState):
+    position: np.ndarray = None
+    velocity: float = None
+    acceleration: float = None
+    orientation: float = None
+    steering_angle: float = None
+    steering_angle_speed: float = None
+    s: float = None
+    d: float = None
+    jerk: float = None
+    jerk_dot: float = None
+    theta: float = None
+    kappa: float = None
+    kappa_dot: float = None
+    kappa_ddot: float = None
+
+
+class CurvilinearVehicleTrajectory:
+    def __init__(
+        self,
+        initial_time_step: int,
+        final_time_step: int,
+        dt: float,
+        s: np.ndarray,
+        d: np.ndarray,
+        v: np.ndarray | None,
+        a: np.ndarray | None,
+        kappa: np.ndarray | None,
+        vehicle_dynamics: VehicleDynamics = CUSTOM_DEFAULT_VEHICLE_DYNAMICS,
+    ) -> None:
+        self.initial_time_step = initial_time_step
+        self.final_time_step = final_time_step
+
+        self._dt = dt
+        self._l_wb = vehicle_dynamics.parameters.a + vehicle_dynamics.parameters.b
+
+        self._s = s
+        self._d = d
+        self._polyline = np.array([self._s, self._d]).T
+        self._pathlength = compute_pathlength_from_polyline(self._polyline)
+
+        self._v = self._compute_v_from_pathlength(self._pathlength) if v is None else v
+        self._a = self._compute_a_from_v(self._v) if a is None else a
+        self._jerk = self._compute_jerk_from_a(self._a)
+        self._jerk_dot = self._compute_j_dot_from_j(self._jerk)
+        self._theta = compute_orientation_from_polyline(self._polyline)
+        self._kappa = pycrccosy.Util.compute_curvature(self._polyline) if kappa is None else kappa
+        self._kappa_dot = self._compute_kappa_dot_from_kappa(self._kappa)
+        self._kappa_ddot = self._compute_kappa_ddot_from_kappa_dot(self._kappa_dot)
+        self._steering_angle = self._compute_steering_angle_from_kappa(self._kappa)
+        self._steering_angle_speed = self._compute_steering_angle_speed_from_kappa_and_kappa_dot(
+            self._kappa, self._kappa_dot
+        )
+
+    def _time_step_to_index(self, time_step: int) -> int:
+        if time_step > self.final_time_step:
+            raise ValueError()
+        if time_step < self.initial_time_step:
+            raise ValueError()
+
+        return time_step - self.initial_time_step
+
+    def s(self, time_step: int) -> float:
+        return self._s[self._time_step_to_index(time_step)]
+
+    def d(self, time_step: int) -> float:
+        return self._d[self._time_step_to_index(time_step)]
+
+    def position(self, time_step: int, clcs: CurvilinearCoordinateSystem) -> np.ndarray:
+        position = clcs.convert_to_cartesian_coords(self.s(time_step), self.d(time_step))
+        return position
+
+    def velocity(self, time_step: int) -> float:
+        return self._v[self._time_step_to_index(time_step)]
+
+    def acceleration(self, time_step: int) -> float:
+        return self._a[self._time_step_to_index(time_step)]
+
+    def orientation(self, time_step: int) -> float:
+        return self._theta[self._time_step_to_index(time_step)]
+
+    def steering_angle(self, time_step: int) -> float:
+        return self._steering_angle[self._time_step_to_index(time_step)]
+
+    def steering_angle_speed(self, time_step: int) -> float:
+        return self._steering_angle_speed[self._time_step_to_index(time_step)]
+
+    def state_at_time_step(
+        self, time_step: int, clcs: CurvilinearCoordinateSystem
+    ) -> CurvilinearVehicleState:
+        return CurvilinearVehicleState(
+            time_step=time_step,
+            position=self.position(time_step, clcs),
+            velocity=self.velocity(time_step),
+            acceleration=self.acceleration(time_step),
+            orientation=self.orientation(time_step),
+        )
+
+    def initial_state_at_time_step(
+        self, time_step: int, clcs: CurvilinearCoordinateSystem
+    ) -> InitialState:
+        return InitialState(
+            time_step=int(time_step),
+            position=self.position(time_step, clcs),
+            velocity=self.velocity(time_step),
+            orientation=self.orientation(time_step),
+            acceleration=self.acceleration(time_step),
+        )
+
+    def input_state_at_time_step(
+        self, time_step: int, clcs: CurvilinearCoordinateSystem
+    ) -> InputState:
+        return InputState(
+            time_step=int(time_step),
+            steering_angle_speed=self.steering_angle_speed(time_step),
+            acceleration=self.acceleration(time_step),
+        )
+
+    def _convert_to_commonroad_trajectory(
+        self,
+        state_converter,
+        clcs: CurvilinearCoordinateSystem,
+        initial_time_step: int | None = None,
+        final_time_step: int | None = None,
+    ) -> Trajectory:
+        if initial_time_step is None:
+            initial_time_step = self.initial_time_step
+
+        if final_time_step is None:
+            final_time_step = self.final_time_step
+
+        state_list = [
+            state_converter(time_step, clcs)
+            for time_step in range(initial_time_step, final_time_step + 1)
+        ]
+
+        return Trajectory(int(initial_time_step), state_list)
+
+    def convert_to_commonroad_input_trajectory(
+        self,
+        clcs: CurvilinearCoordinateSystem,
+        initial_time_step: int | None = None,
+        final_time_step: int | None = None,
+    ) -> Trajectory:
+        return self._convert_to_commonroad_trajectory(
+            self.input_state_at_time_step, clcs, initial_time_step, final_time_step
+        )
+
+    def convert_to_commonroad_trajectory(self, clcs: CurvilinearCoordinateSystem) -> Trajectory:
+        return self._convert_to_commonroad_trajectory(self.state_at_time_step, clcs)
+
+    def _compute_v_from_pathlength(self, pathlength: np.ndarray) -> np.ndarray:
+        return np.gradient(pathlength, self._dt)
+
+    def _compute_a_from_v(self, v: np.ndarray) -> np.ndarray:
+        return np.gradient(v, self._dt)
+
+    def _compute_jerk_from_a(self, a: np.ndarray) -> np.ndarray:
+        return np.gradient(a, self._dt)
+
+    def _compute_j_dot_from_j(self, j: np.ndarray) -> np.ndarray:
+        return np.gradient(j, self._dt)
+
+    def _compute_kappa_dot_from_kappa(self, kappa: np.ndarray) -> np.ndarray:
+        return np.gradient(kappa, self._pathlength)
+
+    def _compute_kappa_ddot_from_kappa_dot(self, kappa_dot: np.ndarray) -> np.ndarray:
+        return np.gradient(kappa_dot, self._pathlength)
+
+    def _compute_steering_angle_from_kappa(self, kappa: np.ndarray) -> np.ndarray:
+        return np.arctan(kappa * self._l_wb)
+
+    def _compute_steering_angle_speed_from_kappa_and_kappa_dot(
+        self, kappa: np.ndarray, kappa_dot: np.ndarray
+    ) -> np.ndarray:
+        return self._l_wb * kappa_dot / (1 + self._l_wb**2 * kappa**2)
+
+
 class Input:
     """
     Lateral and longitudinal vehicle input
@@ -150,11 +346,11 @@ class CurvilinearStateManager:
         try:
             s, d = lane.clcs.convert_to_curvilinear_coords(*state.position)
         except ValueError:
-            logger.debug("Vehicle out of projection domain: consider large clcs")
+            _LOGGER.debug("Vehicle out of projection domain: consider large clcs")
             try:
                 s, d = lane.clcs_large_step.convert_to_curvilinear_coords(*state.position)
             except ValueError:
-                logger.debug("Vehicle out of projection domain: State will not be considered")
+                _LOGGER.debug("Vehicle out of projection domain: State will not be considered")
                 return None
         # Originally, the speed was calcuclated as the magnitude of the combined directed vector of velocity and velocity_y.
         # However, this resulted in issues because the orientation of the vehicle was not considered relative to the lane orientation.

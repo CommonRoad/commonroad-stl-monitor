@@ -5,8 +5,10 @@ from typing import Dict, Generic, Iterable, List, Optional, Tuple, TypeVar
 
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
+from crmonitor.common.world import World
+from crmonitor.evaluation.predicate_interface import PredicateInterface
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import PredicateName
 from crmonitor.rule.rule_node import IOType
 
 
@@ -359,39 +361,39 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
     def __init__(
         self,
         name: str,
-        evaluator: BasePredicateEvaluator,
-        agent_placeholders: Tuple[int, ...],
+        predicate_name: PredicateName,
+        predicate_interface: PredicateInterface,
+        agent_placeholders: tuple[int, ...],
         io_type: IOType,
     ) -> None:
         super().__init__(name)
-        self.evaluator = evaluator
+        self.predicate_name = predicate_name
+        self.predicate_interface = predicate_interface
         self.agent_placeholders = agent_placeholders
         self.io_type = io_type
 
     def copy(self) -> "PredicateMonitorNode":
-        return type(self)(self.name, self.evaluator, self.agent_placeholders, self.io_type)
+        return type(self)(
+            self.name,
+            self.predicate_name,
+            self.predicate_interface,
+            self.agent_placeholders,
+            self.io_type,
+        )
 
-    def evaluate_boolean(self, world, time_step, vehicle_ids):
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]):
         value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
         self.latest_vehicle_ids = tuple(vehicle_ids)
         return value
 
-    def evaluate_robustness(self, world, mpr_world, time_step, vehicle_ids):
-        value = self.evaluator.evaluate_robustness_with_cache(
-            world, mpr_world, time_step, vehicle_ids
-        )
-        self.latest_vehicle_ids = tuple(vehicle_ids)
-        if (
-            self.evaluator.config.mpr.enabled
-            and self.evaluator.config.mpr.ml
-            and self.evaluator.config.mpr.extract_gradient
-        ):
-            self.mpr_gradient = self.evaluator.last_gradient
-        return value
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]):
+        result = self.predicate_interface.evaluate_robustness(world, time_step, vehicle_ids)
+        # TODO: MPR gradients
+        return result[self.predicate_name]
 
     def __str__(self) -> str:
         placeholders = ", ".join(f"a{placeholder}" for placeholder in self.agent_placeholders)
-        return f"{self.evaluator.predicate_name.value}({placeholders})"
+        return f"{self.predicate_name.value}({placeholders})"
 
     def format_with_vehicle_ids(self, vehicle_ids: Dict[int, int] = {}) -> str:
         optionally_filled_placeholders = map(
@@ -401,7 +403,7 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
             self.agent_placeholders,
         )
         argument_str = ", ".join(optionally_filled_placeholders)
-        return f"{self.evaluator.predicate_name.value}({argument_str})"
+        return f"{self.predicate_name.value}({argument_str})"
 
 
 class ConstantTraceMonitorNode(ZeroArityMonitorNode):

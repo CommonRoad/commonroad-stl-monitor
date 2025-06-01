@@ -1,5 +1,9 @@
 from functools import singledispatchmethod
 
+from crmonitor.evaluation.predicate_interface import (
+    PredicateInterface,
+    PredicateInterfaceConfig,
+)
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     CompareToThresholdScaledMonitorNode,
@@ -14,7 +18,6 @@ from crmonitor.monitor.monitor_node import (
     SumIfPositiveMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
-from crmonitor.predicates.base import PredicateEvaluatorConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule import (
     AllNode,
@@ -37,11 +40,9 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     This visitor is used to transform a rule tree to a monitor tree.
     """
 
-    def __init__(
-        self,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
-    ):
-        self._predicate_factory = PredicateFactory(predicate_evaluator_config)
+    def __init__(self, predicate_interface_config: PredicateInterfaceConfig):
+        self._predicate_interface_config = predicate_interface_config
+        self._predicate_factory = PredicateFactory(predicate_interface_config.base)
 
     def create_monitors(
         self, rule_node: RuleAstNode, dt: float, output_type: OutputType = OutputType.STANDARD
@@ -108,4 +109,11 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
             raise RuntimeError(f"I/O type of predicate {node.base_name} is not set!")
 
         evaluator = self._predicate_factory.get_predicate(node.base_name)
-        return PredicateMonitorNode(node.name, evaluator, node.agent_placeholders, node.io_type)
+        predicate_interface = PredicateInterface([evaluator], self._predicate_interface_config)
+        return PredicateMonitorNode(
+            node.name,
+            evaluator.predicate_name,
+            predicate_interface,
+            node.agent_placeholders,
+            node.io_type,
+        )

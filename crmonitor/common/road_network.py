@@ -8,6 +8,7 @@ from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
 from commonroad_clcs.clcs import CurvilinearCoordinateSystem
 from commonroad_clcs.config import CLCSParams
+from commonroad_clcs.pycrccosy import CartesianProjectionDomainError
 from commonroad_clcs.util import (
     chaikins_corner_cutting,
     compute_orientation_from_polyline,
@@ -16,7 +17,7 @@ from commonroad_clcs.util import (
 )
 from scipy.interpolate import splev, splprep
 
-from crmonitor.common.config import ScenarioType
+from .scenario_type import ScenarioType
 
 
 class MapType(Enum):
@@ -417,6 +418,47 @@ class Lane:
 
         return np.concatenate((polyline_origin, polyline_extend[1:, :]), axis=0)
 
+    def distance_to_left(self, x: float, y: float) -> float:
+        # inside lane is positive
+        try:
+            return -self.clcs_left.convert_to_curvilinear_coords(x, y)[1]
+        except CartesianProjectionDomainError:
+            # A CartesianProjectionDomainError occurs if x and/or y are outside of the projection domain.
+            # If this is the case, we can retry with the larger sampled CLCS, which sometimes works.
+            try:
+                return -self.clcs_left_large_step.convert_to_curvilinear_coords(x, y)[1]
+            except CartesianProjectionDomainError:
+                return -np.inf
+
+    def distance_to_right(self, x: float, y: float) -> float:
+        try:
+            return self.clcs_right.convert_to_curvilinear_coords(x, y)[1]
+        except CartesianProjectionDomainError:
+            # A CartesianProjectionDomainError occurs if x and/or y are outside of the projection domain.
+            # If this is the case, we can retry with the larger sampled CLCS, which sometimes works.
+            try:
+                return self.clcs_right_large_step.convert_to_curvilinear_coords(x, y)[1]
+            except CartesianProjectionDomainError:
+                return np.inf
+
+    def min_max_distance_to_left(self, points: np.ndarray) -> tuple[float, float]:
+        minimum = np.inf
+        maximum = -np.inf
+        for x, y in points:
+            distance = self.distance_to_left(x, y)
+            minimum = min(minimum, distance)
+            maximum = max(maximum, distance)
+        return minimum, maximum
+
+    def min_max_distance_to_right(self, points: np.ndarray) -> tuple[float, float]:
+        minimum = np.inf
+        maximum = -np.inf
+        for x, y in points:
+            distance = self.distance_to_right(x, y)
+            minimum = min(minimum, distance)
+            maximum = max(maximum, distance)
+        return minimum, maximum
+
 
 class RoadNetwork:
     """
@@ -486,7 +528,7 @@ class RoadNetwork:
 
         lanes.sort(key=lambda x: x.lane_id)
 
-        # todo: the adjacency assignments only work for highway so far. For intersections, more dedicated approach
+        # TODO: the adjacency assignments only work for highway so far. For intersections, more dedicated approach
         #  is needed
         if len(lanes) == 0:
             pass
@@ -502,6 +544,13 @@ class RoadNetwork:
                 lanes[k].set_adj_lanes(lanes[k + 1], lanes[k - 1])
 
         return lanes
+
+    def find_lane_by_id(self, lane_id: int) -> Lane | None:
+        for lane in self.lanes:
+            if lane.lane_id == lane_id:
+                return lane
+
+        return None
 
     def find_lane_ids_by_obstacle(self, obstacle_id: int, time_step: int) -> Set[int]:
         """

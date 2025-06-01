@@ -308,7 +308,7 @@ class PredSafeDistPrec(BasePredicateEvaluator):
             vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
         )
         # TODO: FIXME mpr world
-        latest_value = self.evaluate_robustness_with_cache(world, None, time_step, vehicle_ids)
+        latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         latest_value_unscaled = (
             latest_value * self._scaler._scale_constants.MAX_LONG_DIST
         )  # un-scale to actual range and make positive
@@ -382,7 +382,7 @@ class PredPreceding(BasePredicateEvaluator):
             veh.append((dist, vehicle_front, lane, same_lane))
         return sorted(veh, key=lambda d: d[0])
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         rear_vehicle_id = vehicle_ids[0]
         front_vehicle_id = vehicle_ids[1]
         rear_vehicle = world.vehicle_by_id(rear_vehicle_id)
@@ -390,15 +390,15 @@ class PredPreceding(BasePredicateEvaluator):
         pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         rear_veh = world.vehicle_by_id(vehicle_ids[0])
         front_veh = world.vehicle_by_id(vehicle_ids[1])
         veh_lon_dist = self._get_candidates(world, time_step, rear_veh)
         veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
         bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
-        same_lane = self.same_lane.evaluate_robustness_with_cache(
-            world, None, time_step, vehicle_ids
-        )
+        same_lane = self.same_lane.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
         if bool_val:
             assert same_lane >= -self.config.eps
             same_lane = max(same_lane, 0.0)

@@ -3,11 +3,10 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
-from commonroad_mpr.common.observation import World as MprWorld
 
 from crmonitor.common.helper import rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
@@ -40,7 +39,6 @@ class OfflineEvaluationMonitorTreeVisitorContext:
     """
 
     world: World
-    mpr_world: Optional[MprWorld]
     start_time_step: int
     final_time_step: int
     captured_agents: Dict[int, Tuple[int, CommonRoadInterval]]
@@ -61,7 +59,6 @@ class OfflineEvaluationMonitorTreeVisitorContext:
         new_captured_agents[capture_id] = agent_info
         return OfflineEvaluationMonitorTreeVisitorContext(
             self.world,
-            self.mpr_world,
             self.start_time_step,
             self.final_time_step,
             new_captured_agents,
@@ -86,11 +83,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         ego_vehicle: Vehicle,
         start_time_step: int,
         end_time_step: int,
-        mpr_world: Optional[MprWorld] = None,
     ):
         vehicles = {0: (ego_vehicle.id, CommonRoadInterval(start_time_step, end_time_step))}
         ctx = OfflineEvaluationMonitorTreeVisitorContext(
-            world, mpr_world, start_time_step, end_time_step, vehicles
+            world, start_time_step, end_time_step, vehicles
         )
         return self.visit(node, ctx)
 
@@ -333,10 +329,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 continue
 
             if self._should_use_boolean_predicate_evaluation(node):
-                value = node.evaluate_boolean(ctx.world, time_step, vehicle_ids)
+                value = node.evaluate_boolean(ctx.world, time_step, tuple(vehicle_ids))
                 value = self._rob_scaler.max if value else self._rob_scaler.min
             else:
-                value = node.evaluate_robustness(ctx.world, ctx.mpr_world, time_step, vehicle_ids)
+                value = node.evaluate_robustness(ctx.world, time_step, tuple(vehicle_ids))
             samples.append(value)
 
         node.values = samples

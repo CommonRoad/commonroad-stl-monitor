@@ -1,16 +1,15 @@
 import logging
-from enum import Enum
 from typing import List
 
 import numpy as np
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
 
 logger = logging.getLogger(__name__)
 
 
-class AccelerationPredicates(str, Enum):
+class AccelerationPredicates(PredicateName):
     BrakesAbruptly = "brakes_abruptly"
     BrakesAbruptlyRelative = "brakes_abruptly_relative"
     CausesBrakingIntersection = "causes_braking_intersection"

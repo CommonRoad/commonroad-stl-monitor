@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from commonroad_mpr.learning import DataLoader
 from crmonitor.predicate_grouping import (
-    all_general_predicates,
-    all_interstate_predicates,
+    ALL_GENERAL_PREDICATE_NAMES,
+    ALL_INTERSTATE_PREDICATE_NAMES,
     changed_to_meta,
 )
 
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 learning_data_path = Path(__file__).parent.parent / "output" / "learning_data" / "learning_data.csv"
 
-selected_predicates = all_general_predicates + all_interstate_predicates + changed_to_meta
+selected_predicates = ALL_GENERAL_PREDICATE_NAMES + ALL_INTERSTATE_PREDICATE_NAMES + changed_to_meta
 data_loader = DataLoader.create_from_file(learning_data_path)
 _eps = 1e-7
 

@@ -19,7 +19,6 @@ commonroad-io = ">=2024.3"
 ruamel-yaml = ">=0.16.12"
 commonroad-route-planner = "^2025.1.0"
 numba = ">=0.58.1"
-commonroad-mpr = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-model-predictive-robustness.git", rev = "4a58148cf8434b7972a3adb7c0b37a88dd1db3ea" }
 pyqt6 = "^6.8.1"
 commonroad-clcs = "^2025.1.1"
 commonroad-drivability-checker = "^2025.1"
@@ -34,7 +33,6 @@ optional = true
 [tool.poetry.group.test.dependencies]
 coverage = "^6.5.0"
 pytest = "^8.3.5"
-# commonroad-scenario-factory = { git = "git@gitlab.lrz.de:cps/commonroad/scenario-factory.git", rev="03cd254372c996d72737f413e208f66621d6ea96"}
 
 [tool.poetry.group.doc]
 optional = true

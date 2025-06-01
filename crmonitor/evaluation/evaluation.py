@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad_mpr.common.observation import World as WorldMPR
 
 from crmonitor.common.config import (
     get_traffic_rule_config,
@@ -16,6 +15,9 @@ from crmonitor.common.config import (
 from crmonitor.common.helper import merge_dicts_recursively
 from crmonitor.common.vehicle import Vehicle, VehicleParameters
 from crmonitor.common.world import World
+from crmonitor.evaluation.predicate_interface import (
+    PredicateInterfaceConfig,
+)
 from crmonitor.evaluation.visitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
     MPRGradientCollectorMonitorTreeVisitor,
@@ -30,7 +32,6 @@ from crmonitor.evaluation.visitors import (
 from crmonitor.monitor import MonitorCreationRuleTreeVisitor, MonitorNode, OutputType
 from crmonitor.predicates.base import (
     BasePredicateEvaluator,
-    PredicateEvaluationMode,
     PredicateEvaluatorConfig,
 )
 from crmonitor.rule.rule_node import RuleAstNode, RuleTreeVisitorInterface
@@ -46,32 +47,30 @@ class RuleEvaluatorInterface(ABC):
     @classmethod
     def create_for_rule(
         cls,
-        rule: str,
+        rule_name: str,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
     ):
-        rule_str = get_traffic_rule_from_config(rule)
+        rule_str = get_traffic_rule_from_config(rule_name)
         if rule_str is None:
             _LOGGER.debug(
-                f"Rule {rule} is not a known rule identifier. Interpreting it as the rule definition."
+                f"Rule {rule_name} is not a known rule identifier. Interpreting it as the rule definition."
             )
-            rule_str = rule
+            rule_str = rule_name
 
-        rule_node = RuleParser().parse(rule_str, name=rule)
+        rule_node = RuleParser().parse(rule_str, name=rule_name)
 
-        return cls(rule_node, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
+        return cls(rule_node, world, ego_id, output_type, predicate_interface_config)
 
     def __init__(
         self,
         rule: RuleAstNode,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
     ) -> None:
         self._rule = rule
         self._ego_id = ego_id
@@ -85,18 +84,10 @@ class RuleEvaluatorInterface(ABC):
             self._world.scenario.dt
         )
         self._ego_vehicle = ego_vehicle
-        self._use_boolean = use_boolean
-        self._predicate_evaluator_config = predicate_evaluator_config
+        self._predicate_evaluator_config = predicate_interface_config.base
 
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(predicate_evaluator_config)
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(predicate_interface_config)
         self._monitor = monitor_creation_visitor.visit(self._rule, world.dt, output_type)
-        if (
-            self._predicate_evaluator_config.mode == PredicateEvaluationMode.MPR
-            or self._predicate_evaluator_config.mode == PredicateEvaluationMode.MPR_GP
-        ):
-            self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
-        else:
-            self._mpr_world = None
 
     @property
     def ego_vehicle(self) -> Vehicle:
@@ -136,7 +127,6 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
             self.ego_vehicle,
             start_time,
             end_time,
-            self._mpr_world,
         )
 
 
@@ -185,7 +175,6 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
             self._world,
             self._last_evaluation_time_step,
             self.ego_vehicle,
-            self._mpr_world,
         )
         rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
@@ -229,15 +218,10 @@ class RuleEvaluator:
 
         monitor = RuleParser().parse(rule_str_dict[rule], name=rule)
 
-        if traffic_rules_config["traffic_rules_param"]["use_mpr"]:
-            world_mpr = WorldMPR.create_from_scenario(world.scenario)
-        else:
-            world_mpr = None
         return cls(
             monitor,
             ego_vehicle.id,
             world,
-            world_mpr=world_mpr,
             use_boolean=use_boolean,
             output_type=output_type,
             monitor_creation_visitor=monitor_creation_visitor,
@@ -249,7 +233,6 @@ class RuleEvaluator:
         rule: RuleAstNode,
         ego_id: Optional[Union[Vehicle, int]] = None,
         world: Optional[World] = None,
-        world_mpr: Optional[WorldMPR] = None,
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -274,7 +257,6 @@ class RuleEvaluator:
         self._rule_value_course = []
         self._ego_id = None
         self._world = None
-        self._mpr_world = world_mpr
         if ego_id is not None:
             assert world is not None
             self.reset(ego_id, world, start_time_step)
