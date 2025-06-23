@@ -3,8 +3,36 @@ name = "commonroad-stl-monitor"
 version = "2024.1"
 authors = [{name = "Luis Gressenbuch", email = "luis.gressenbuch@tum.de"}, {name = "Yuanfei Lin", email = "yuanfei.lin@tum.de"}]
 readme = "README.md"
-requires-python = ">=3.9"
-dynamic = ["dependencies"]
+requires-python = ">=3.10,<3.12"
+dependencies = [
+    "commonroad-io>=2024.3",
+    "ruamel-yaml>=0.16.12",
+    "commonroad-route-planner>=2025.1.0,<2026.0.0",
+    "commonroad-clcs>=2025.1.1,<2026.0.0",
+    "commonroad-drivability-checker>=2025.1,<2026.0.0",
+    "matplotlib>=3.10.1", # Although, matplotlib would make more sense in visualization extra, it is usefull here, since it is used quite extensively throught the library and not yet modularized enough.
+]
+
+
+[project.optional-dependencies]
+visualization = [
+    "matplot2tikz>=0.3.3",
+    "pyqt6>=6.8.1",
+    "networkx>=3.4.2",
+    "pygraphviz>=1.14"
+]
+test = [
+    "coverage[toml]>=6.5.0,<7.0.0",
+    "pytest>=8.3.5,<9.0.0",
+]
+doc = [
+    "sphinx>=5.3.0",
+    "myst-parser>=0.18.1",
+]
+dev = [
+    "pre-commit>=3.7.1",
+]
+
 
 [tool.poetry]
 packages = [
@@ -12,40 +40,6 @@ packages = [
     # Vendor rtamt to let omegaconf decide on the antlr version.
     { from = "external/rtamt", include = "rtamt" }
 ]
-
-[tool.poetry.dependencies]
-python = ">=3.10, <3.12"
-commonroad-io = ">=2024.3"
-ruamel-yaml = ">=0.16.12"
-commonroad-route-planner = "^2025.1.0"
-numba = ">=0.58.1"
-pyqt6 = "^6.8.1"
-commonroad-clcs = "^2025.1.1"
-commonroad-drivability-checker = "^2025.1"
-networkx = "^3.4.2"
-pygraphviz = "^1.14"
-matplotlib = "3.10.1"
-tikzplotlib = "^0.10.1"
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-coverage = "^6.5.0"
-pytest = "^8.3.5"
-
-[tool.poetry.group.doc]
-optional = true
-
-[tool.poetry.group.doc.dependencies]
-sphinx = "^5.3.0"
-myst-parser = "^0.18.1"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^3.7.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -55,10 +49,10 @@ build-backend = "poetry.core.masonry.api"
 line-length = 100
 indent-width = 4
 format.quote-style = "double"
-target-version = "py311"
+target-version = "py310"
 src = ["crmonitor", "tests"]
-# TODO: execpt for fastl and external, all folders should be covered by ruff.
-extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/", "enhanced_aggregation"]
+# TODO: execept for fastl and external, all folders should be covered by ruff.
+extend-exclude = ["crmonitor/rule/fastl/*.py", "tutorials/", "scenarios/", "external/", "tests/", "scripts"]
 # force exclude because pre-commit might pass those files explicitly, which will override the exclude.
 force-exclude = true
 

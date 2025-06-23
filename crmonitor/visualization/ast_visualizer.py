@@ -1,8 +1,14 @@
 from typing import Optional, Union
 
-import networkx as nx
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
+try:
+    import networkx as nx
+    from matplotlib import pyplot as plt
+    from matplotlib.axes import Axes
+
+    _VISUALIZATION_AVAILABLE = True
+except ImportError:
+    _VISUALIZATION_AVAILABLE = False
+
 from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 from rtamt.syntax.node.binary_node import BinaryNode as RtamtBinaryNode
 from rtamt.syntax.node.ltl.variable import Variable as RtamtVariableNode
@@ -24,7 +30,7 @@ class AstVisualizer:
     and their corresponding rtamt nodes. Nodes can be interactively toggled via matplotlib.
     """
 
-    def __init__(self, ax: Optional[Axes] = None):
+    def __init__(self, ax: Axes | None = None):
         """
         Initialize the AST visualizer.
 
@@ -33,6 +39,10 @@ class AstVisualizer:
         ax : Optional[Axes]
             An optional matplotlib Axes to draw the tree on. If None, a new figure and axes are created.
         """
+        if not _VISUALIZATION_AVAILABLE:
+            raise RuntimeError(
+                "Visualization is not available because dependencies are missing. Please install the 'visualization' extra."
+            )
         if ax is None:
             self._fig, self._ax = plt.subplots()
         else:
