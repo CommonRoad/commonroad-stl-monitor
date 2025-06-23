@@ -5,12 +5,13 @@ authors = [{name = "Luis Gressenbuch", email = "luis.gressenbuch@tum.de"}, {name
 readme = "README.md"
 requires-python = ">=3.10,<3.12"
 dependencies = [
-    "commonroad-io>=2024.3",
-    "ruamel-yaml>=0.16.12",
-    "commonroad-route-planner>=2025.1.0,<2026.0.0",
-    "commonroad-clcs>=2025.1.1,<2026.0.0",
-    "commonroad-drivability-checker>=2025.1,<2026.0.0",
-    "matplotlib>=3.10.1", # Although, matplotlib would make more sense in visualization extra, it is usefull here, since it is used quite extensively throught the library and not yet modularized enough.
+    "commonroad-io (>=2024.3)",
+    "ruamel-yaml (>=0.16.12)",
+    "commonroad-route-planner (>=2025.1.0,<2026.0.0)",
+    "commonroad-clcs (>=2025.1.1,<2026.0.0)",
+    "commonroad-drivability-checker (>=2025.1,<2026.0.0)",
+    "matplotlib (>=3.10.1)", # Although it makes more sense to include matplotlib in the visualization extra, it is used quite extensively throught the library and the codebase is not yet modular enough for this dependency to be optional.
+    "typing-extensions (>=4.14.0,<5.0.0)",
 ]
 
 
