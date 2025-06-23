@@ -3,7 +3,6 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Tuple
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
@@ -41,13 +40,13 @@ class OfflineEvaluationMonitorTreeVisitorContext:
     world: World
     start_time_step: int
     final_time_step: int
-    captured_agents: Dict[int, Tuple[int, CommonRoadInterval]]
+    captured_agents: dict[int, tuple[int, CommonRoadInterval]]
     """
     Optionally provide one other vehicle that should be considered for the evaluation of binary predicates. This field is populated during the evaluation by the quantifiers.
     """
 
     def capture_agent(
-        self, capture_id: int, agent_info: Tuple[int, CommonRoadInterval]
+        self, capture_id: int, agent_info: tuple[int, CommonRoadInterval]
     ) -> "OfflineEvaluationMonitorTreeVisitorContext":
         """
         Update the context with a newly captured vehicle during quantification.
@@ -65,11 +64,11 @@ class OfflineEvaluationMonitorTreeVisitorContext:
         )
 
     @property
-    def vehicle_ids(self) -> List[int]:
+    def vehicle_ids(self) -> list[int]:
         return [params[0] for params in self.captured_agents.values()]
 
 
-class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
+class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
     def __init__(
         self,
         scale_rob: bool = True,
@@ -93,13 +92,13 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @singledispatchmethod
     def visit(
         self, node: MonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         raise NotImplementedError
 
     @visit.register
     def visit_rule_node(
         self, node: RtamtRuleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
 
         sample_return = node.evaluate(list(child_values.items()), marker=str(ctx.vehicle_ids[-1]))
@@ -120,7 +119,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_all_node(
         self, node: AllMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(node, ctx)
         robustness_values = []
@@ -150,7 +149,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_exist_node(
         self, node: ExistMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, selected_ids = self._visit_quant_node(node, ctx)
 
         robustness_values = []
@@ -180,7 +179,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_sigmoid_node(
         self, node: SigmoidMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
 
         scaling_param = 5
@@ -195,7 +194,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_historically_duration_node(
         self, node: HistoricallyDurationMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
         if node.interval is not None:
             interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
@@ -228,7 +227,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         self,
         node: HistoricallyDurationSeverityMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
 
         if node.interval is not None:
@@ -260,7 +259,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_sum_if_positive_node(
         self, node: SumIfPositiveMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, _ = self._visit_quant_node(node, ctx)
 
         samples_return = []
@@ -281,7 +280,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         self,
         node: CompareToThresholdScaledMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
         samples_return = [
             1 - 2 * math.exp(-sample / node.threshold * math.log(2)) for sample in samples
@@ -292,7 +291,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_exists_multiple_node(
         self, node: ExistsMultipleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, _ = self._visit_quant_node(node, ctx)
 
         samples_return = []
@@ -311,7 +310,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_predicate_node(
         self, node: PredicateMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         vehicle_ids = []
         start_time = 0
         end_time = ctx.final_time_step
@@ -341,12 +340,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_constant_trace_node(
         self, node: ConstantTraceMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         return node.trace
 
     def _visit_quant_node(
         self, node: QuantMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> Tuple[List[List[float]], List[int]]:
+    ) -[list[list[float]], list[int]]:
         """
         Performs the quantification of vehicles for quant operators.
 

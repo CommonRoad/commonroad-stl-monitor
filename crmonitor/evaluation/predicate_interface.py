@@ -40,16 +40,16 @@ class PredicateInterface:
         config: PredicateInterfaceConfig | None = None,
     ) -> None:
         self._predicate_evaluators = predicates
+
         if config is None:
             config = PredicateInterfaceConfig()
         self._config = config
-        self._mode = self._config.mode
 
         self._mpr_gp_evaluator = None
         self._mpr_evaluator = None
-        if self._mode == PredicateEvaluationMode.MPR_GP:
+        if self._config.mode == PredicateEvaluationMode.MPR_GP:
             self._setup_mpr_gp_evaluator()
-        elif self._mode == PredicateEvaluationMode.MPR:
+        elif self._config.mode == PredicateEvaluationMode.MPR:
             self._setup_mpr_evaluator()
 
     def _setup_mpr_gp_evaluator(self) -> None:
@@ -75,15 +75,19 @@ class PredicateInterface:
     ) -> dict[PredicateName, float]:
         if self._mpr_gp_evaluator is not None:
             mpr_gp_result_dict = self._mpr_gp_evaluator.evaluate(world, time_step, vehicle_ids)
+
             result_dict = {}
             for predicate_name, result in mpr_gp_result_dict.items():
                 result_dict[predicate_name] = result.robustness
+
             return result_dict
         elif self._mpr_evaluator is not None:
             mpr_result_dict = self._mpr_evaluator.evaluate(world, time_step, vehicle_ids)
+
             result_dict = {}
             for predicate_name, result in mpr_result_dict.items():
                 result_dict[predicate_name] = result.robustness
+
             return result_dict
         else:
             result_dict = {}

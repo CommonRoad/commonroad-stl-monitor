@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from rtamt.syntax.node.ltl.conjunction import Conjunction
 from rtamt.syntax.node.ltl.disjunction import Disjunction
 from rtamt.syntax.node.ltl.implies import Implies
@@ -22,7 +20,7 @@ class PropositionRobustnessMonitor(RtamtStlMonitor):
         super().__init__(rule_str, predicates, dt, output_type)
         self._propositions = {}
 
-    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]):
+    def evaluate_monitor_online(self, time_step: int, predicates: list[tuple[str, float]]):
         robustness = super().evaluate_monitor_online(time_step, predicates)
         self.collect_prop_rob(self._spec.ast.specs[0], self._propositions)
         return robustness

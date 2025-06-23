@@ -73,7 +73,7 @@ class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
     @singledispatchmethod
     def visit(self, node: MonitorNode, ctx: OnlineEvaluationMonitorTreeVisitorContext) -> float:
         raise NotImplementedError(
-            f"The monitor '{node}' is not supported in the online evaluation!"
+            f"The monitor node '{node}' is not supported in the online evaluation!"
         )
 
     @visit.register

@@ -8,14 +8,15 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
+
 from crmonitor.common.config import ScenarioType, get_traffic_rule_from_config
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
 from crmonitor.common.world import World, WorldConfig
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator, OnlineRuleEvaluator, RuleEvaluator
 from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RtamtRuleNode, RuleAstNode
-
 from crmonitor.rule.rule_parser import RuleParser
+
 from tests.util import parallel_lanes
 
 

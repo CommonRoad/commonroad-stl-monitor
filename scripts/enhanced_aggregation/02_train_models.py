@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from crmonitor.mpr.learning import DataLoader, ModelTrainer
+from crmonitor.mpr import DataLoader, ModelTrainer
 from crmonitor.common import ScenarioType
 from crmonitor.predicates.position import PredInFrontOf
 

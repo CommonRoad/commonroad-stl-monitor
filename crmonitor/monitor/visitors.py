@@ -1,6 +1,6 @@
 import itertools
 from functools import singledispatchmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
@@ -17,17 +17,17 @@ from crmonitor.rule.rule_node import (
 )
 
 
-class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]]]):
+class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[list[tuple[str, float]]]):
     """
     Collects the values of all leaf nodes in a monitor tree. Can be subclassed to specify which values should be collected.
     """
 
     @singledispatchmethod
-    def visit(self, node: MonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+    def visit(self, node: MonitorNode, *args, **kwargs) -> list[tuple[str, float]]:
         return []
 
     @visit.register
-    def visit_all_node(self, node: AllMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+    def visit_all_node(self, node: AllMonitorNode, *args, **kwargs) -> list[tuple[str, float]]:
         if node.last_selected is None:
             # Visit the prototype monitor
             val = self.visit(node.child, *args, **kwargs)
@@ -37,7 +37,7 @@ class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]
         return val
 
     @visit.register
-    def visit_exist_node(self, node: ExistMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+    def visit_exist_node(self, node: ExistMonitorNode, *args, **kwargs) -> list[tuple[str, float]]:
         if node.last_selected is None:
             # Visit the prototype monitor
             val = self.visit(node.child, *args, **kwargs)
@@ -47,7 +47,7 @@ class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[List[Tuple[str, float]
         return val
 
     @visit.register
-    def visit_unary_node(self, node: UnaryMonitorNode, *args, **kwargs) -> List[Tuple[str, float]]:
+    def visit_unary_node(self, node: UnaryMonitorNode, *args, **kwargs) -> list[tuple[str, float]]:
         return self.visit(node.child, *args, **kwargs)
 
     @visit.register
@@ -188,7 +188,7 @@ class MonitorToStringVisitor(MonitorVisitorInterface[str]):
     Visitor to convert a monitor tree to a human readable string representation. The resulting string should be very similar to the original rule.
     """
 
-    def to_string(self, node: MonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def to_string(self, node: MonitorNode, vehicle_ids: Optional[dict[int, int]] = None) -> str:
         """
         Serialize a monitor node tree as a string.
 
@@ -200,11 +200,11 @@ class MonitorToStringVisitor(MonitorVisitorInterface[str]):
         return self.visit(node, vehicle_ids)
 
     @singledispatchmethod
-    def visit(self, node: MonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def visit(self, node: MonitorNode, vehicle_ids: Optional[dict[int, int]] = None) -> str:
         return str(node)
 
     @visit.register
-    def _(self, node: RtamtRuleMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def _(self, node: RtamtRuleMonitorNode, vehicle_ids: Optional[dict[int, int]] = None) -> str:
         label = node.monitor._rule
         for child in node.children:
             # Sub-Rules are represent by their placeholders (child.name) in the rule.
@@ -215,42 +215,42 @@ class MonitorToStringVisitor(MonitorVisitorInterface[str]):
         return label
 
     @visit.register
-    def _(self, node: PredicateMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def _(self, node: PredicateMonitorNode, vehicle_ids: Optional[dict[int, int]] = None) -> str:
         if vehicle_ids is not None:
             return node.format_with_vehicle_ids(vehicle_ids)
         else:
             return str(node)
 
     @visit.register
-    def _(self, node: UnaryMonitorNode, vehicle_ids: Optional[Dict[int, int]] = None) -> str:
+    def _(self, node: UnaryMonitorNode, vehicle_ids: Optional[dict[int, int]] = None) -> str:
         child_label = self.visit(node.child, vehicle_ids)
         return f"{str(node)} ({child_label})"
 
 
-class VariableCollectionVisitor(MonitorVisitorInterface[Dict[str, MonitorNode]]):
+class VariableCollectionVisitor(MonitorVisitorInterface[dict[str, MonitorNode]]):
     """
     Visitor to map node names (variables in rtamt rules) to the respective nodes.
     This is usefull to lookup which node belongs to which variable when processing RTAMT ASTs.
     """
 
-    def collect_variables(self, node: MonitorNode) -> Dict[str, MonitorNode]:
+    def collect_variables(self, node: MonitorNode) -> dict[str, MonitorNode]:
         return self.visit(node, {})
 
     @singledispatchmethod
-    def visit(self, node: MonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+    def visit(self, node: MonitorNode, state: dict[str, MonitorNode]) -> dict[str, MonitorNode]:
         state[node.name] = node
         return state
 
     @visit.register
-    def _(self, node: UnaryMonitorNode, state: Dict[str, MonitorNode]) -> Dict[str, MonitorNode]:
+    def _(self, node: UnaryMonitorNode, state: dict[str, MonitorNode]) -> dict[str, MonitorNode]:
         self.visit(node.child, state)
         state[node.name] = node
         return state
 
     @visit.register
     def _(
-        self, node: RtamtRuleMonitorNode, state: Dict[str, MonitorNode]
-    ) -> Dict[str, MonitorNode]:
+        self, node: RtamtRuleMonitorNode, state: dict[str, MonitorNode]
+    ) -> dict[str, MonitorNode]:
         [self.visit(child, state) for child in node.children]
         state[node.name] = node
         return state

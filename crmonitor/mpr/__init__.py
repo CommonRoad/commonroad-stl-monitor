@@ -7,9 +7,11 @@ __all__ = [
     "MprGpPredicateEvaluator",
     "MprGpPredicateEvaluatorConfig",
     "MprGpPredicateEvaluationResult",
+    "DataLoader",
+    "ModelTrainer",
 ]
 
-from .learning import ExactGPModelContainer, ModelLoadError
+from .learning import DataLoader, ExactGPModelContainer, ModelLoadError, ModelTrainer
 from .mpr_gp_predicate_evaluator import (
     MprGpPredicateEvaluationResult,
     MprGpPredicateEvaluator,

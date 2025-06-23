@@ -91,6 +91,10 @@ class PredicateRegistryExtension: ...
 
 
 class PredicateRegistry:
+    """
+    A singleton which provides an overview of all predicates.
+    """
+
     _instance: "PredicateRegistry | None" = None
     _predicate_evaluators: dict[str, type[BasePredicateEvaluator]]
     _extensions: dict[type[PredicateRegistryExtension], PredicateRegistryExtension]
