@@ -2,7 +2,11 @@ import itertools
 from functools import singledispatchmethod
 from typing import Any, Optional
 
-from crmonitor.monitor.monitor_node import (
+from crmonitor.rule import (
+    PredicateNode,
+)
+
+from .monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
     MonitorNode,
@@ -11,9 +15,6 @@ from crmonitor.monitor.monitor_node import (
     QuantMonitorNode,
     RtamtRuleMonitorNode,
     UnaryMonitorNode,
-)
-from crmonitor.rule.rule_node import (
-    PredicateNode,
 )
 
 
@@ -60,7 +61,31 @@ class BaseValueMonitorTreeVisitor(MonitorVisitorInterface[list[tuple[str, float]
         return r
 
 
-class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
+class PredicateNameCollectionMonitorTreeVisitor(MonitorVisitorInterface[list[str]]):
+    def collect_predicate_names(self, node: MonitorNode) -> list[str]:
+        return self.visit(node)
+
+    @singledispatchmethod
+    def visit(self, node: MonitorNode, *args, **kwargs) -> list[str]:
+        return []
+
+    @visit.register
+    def visit_unary_node(self, node: UnaryMonitorNode, *args, **kwargs) -> list[str]:
+        return self.visit(node.child, *args, **kwargs)
+
+    @visit.register
+    def visit_rule_node(self, rule_node: RtamtRuleMonitorNode, *args, **kwargs) -> list[str]:
+        r = []
+        for c in rule_node.children:
+            r.extend(self.visit(c))
+        return r
+
+    @visit.register
+    def visit_predicate_node(self, node: PredicateMonitorNode, *args, **kwargs) -> list[str]:
+        return [node.predicate_name]
+
+
+class PredicateValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     def collect_predicate_values(self, root_node: MonitorNode) -> dict[str, float]:
         predicate_value_list = self.visit(root_node)
         return dict(predicate_value_list)
@@ -72,7 +97,7 @@ class PredicateCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
         return [(predicate_node.name, predicate_node.last_value)]
 
 
-class MPRGradientCollectorMonitorTreeVisitor(PredicateCollectorMonitorTreeVisitor):
+class MPRGradientCollectorMonitorTreeVisitor(PredicateValueCollectorMonitorTreeVisitor):
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         return [(predicate_node.name, predicate_node.mpr_gradient)]
 

@@ -115,7 +115,9 @@ class PredicateRegistry:
 
         return cls._instance
 
-    def get_predicate_evaluator(self, predicate_name: str) -> type[BasePredicateEvaluator]:
+    def get_predicate_evaluator(
+        self, predicate_name: str | PredicateName
+    ) -> type[BasePredicateEvaluator]:
         if predicate_name not in self._predicate_evaluators:
             raise UnkownPredicateError(predicate_name)
 

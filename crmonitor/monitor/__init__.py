@@ -20,7 +20,7 @@ __all__ = [
     "OutputType",
     "AstNodeValueCollectorMonitorTreeVisitor",
     "MPRGradientCollectorMonitorTreeVisitor",
-    "PredicateCollectorMonitorTreeVisitor",
+    "PredicateValueCollectorMonitorTreeVisitor",
     "PredicateVisualizerMonitorTreeVisitor",
     "ResetMonitorTreeVisitor",
 ]
@@ -50,7 +50,7 @@ from .rtamt_monitor_stl import OutputType
 from .visitors import (
     AstNodeValueCollectorMonitorTreeVisitor,
     MPRGradientCollectorMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
+    PredicateValueCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )

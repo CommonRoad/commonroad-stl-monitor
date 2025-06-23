@@ -21,7 +21,7 @@ $ poetry install --extras dev
 $ poetry run pre-commit install
 ```
 
-Additionally, you can install extras like `visualization` to enable advanced AST visualizations. The visualization requires a working `graphiz` installation, which you should be able to source from your distros package registry.  
+Additionally, you can install extras like `visualization` to enable advanced AST visualizations. The visualization requires a working `graphiz` installation, which you should be able to source from your distros package registry.
 ```bash
 $ poetry install --extras visualization
 ```

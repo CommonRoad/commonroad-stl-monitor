@@ -10,6 +10,7 @@ from commonroad.common.util import Interval as CommonRoadInterval
 from crmonitor.common.helper import rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from crmonitor.evaluation.predicate_interface import PredicateInterface, PredicateInterfaceConfig
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     CompareToThresholdScaledMonitorNode,
@@ -72,8 +73,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
     def __init__(
         self,
         scale_rob: bool = True,
+        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
     ) -> None:
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
+        self._predicate_interface_config = predicate_interface_config
 
     def evaluate(
         self,
@@ -87,6 +90,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
         ctx = OfflineEvaluationMonitorTreeVisitorContext(
             world, start_time_step, end_time_step, vehicles
         )
+
         return self.visit(node, ctx)
 
     @singledispatchmethod
@@ -327,12 +331,16 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
                 samples.append(float("nan"))
                 continue
 
-            if self._should_use_boolean_predicate_evaluation(node):
-                value = node.evaluate_boolean(ctx.world, time_step, tuple(vehicle_ids))
-                value = self._rob_scaler.max if value else self._rob_scaler.min
-            else:
-                value = node.evaluate_robustness(ctx.world, time_step, tuple(vehicle_ids))
-            samples.append(value)
+            if node.predicate_name not in self._predicate_interfaces:
+                self._predicate_interfaces[node.predicate_name] = PredicateInterface(
+                    node.predicate_name, self._predicate_interface_config
+                )
+
+            predicate_interface = self._predicate_interfaces[node.predicate_name]
+            robustness = predicate_interface.evaluate_robustness(
+                node, ctx.world, time_step, tuple(vehicle_ids)
+            )
+            samples.append(robustness)
 
         node.values = samples
         return samples
@@ -345,7 +353,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
 
     def _visit_quant_node(
         self, node: QuantMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -[list[list[float]], list[int]]:
+    ) -> tuple[list[list[float]], list[int]]:
         """
         Performs the quantification of vehicles for quant operators.
 
@@ -354,7 +362,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
         """
         # Track when each vehicle first appears (enters) and when it is no longer present (leaves).
         # This is necessary to define the active time intervals for each vehicle in the scenario.
-        # Otherwise we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
+        # Otherwise, we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
         vehicle_start_times = {}
         vehicle_end_times = defaultdict(lambda: ctx.final_time_step)
         for time_step in range(ctx.start_time_step, ctx.final_time_step):
@@ -403,11 +411,3 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
         # values is a list of lists with time step ordered samples for each predicate.
         # This transforms values into a time step ordered list of list of samples, where each list of samples contains the values for each predicate at this time step.
         return list(zip(*values)), ret_selected_ids
-
-    def _should_use_boolean_predicate_evaluation(self, node: PredicateMonitorNode) -> bool:
-        # TODO: When should boolean evaluation be used?
-        return False
-        # Disabled for now, since it is not clear whether this also applies to MPR.
-        # return self._use_boolean or (
-        #     node.io_type == IOType.INPUT and self._output_type == OutputType.OUTPUT_ROBUSTNESS
-        # )

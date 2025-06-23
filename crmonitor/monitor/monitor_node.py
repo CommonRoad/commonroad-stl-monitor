@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
+from copy import deepcopy
 from functools import singledispatchmethod
-from typing import Dict, Generic, Iterable, List, Optional, Tuple, TypeVar
+from typing import Dict, Generic, Optional, TypeVar
 
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
-from crmonitor.common.world import World
-from crmonitor.evaluation.predicate_interface import PredicateInterface
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.predicates.base import PredicateName
 from crmonitor.rule.rule_node import IOType
 
 
@@ -25,14 +24,14 @@ class MonitorNode:
         self._values = []
 
     @property
-    def values(self) -> List[float]:
+    def values(self) -> list[float]:
         """
         Retrive all values for the evaluation of this monitor.
         """
         return self._values
 
     @values.setter
-    def values(self, values: List[float]) -> None:
+    def values(self, values: list[float]) -> None:
         """
         Set the values for the evaluation of this monitor.
         """
@@ -52,11 +51,11 @@ class MonitorNode:
         """
         self._values.append(value)
 
-    def copy(self) -> "MonitorNode":
+    def __deepcopy__(self, memo) -> "MonitorNode":
         """
-        Create a copy of this monitor, without including any runtime attributes like its recorded values.
+        Create a deepcopy of this monitor, without including any runtime attributes like its recorded values.
 
-        :returns: A copy of the monitor.
+        :returns: A deepcopy of the monitor.
         """
         return type(self)(self.name)
 
@@ -92,8 +91,8 @@ class UnaryMonitorNode(MonitorNode):
         super().__init__(name)
         self.child = child
 
-    def copy(self) -> "UnaryMonitorNode":
-        return type(self)(self.name, self.child.copy())
+    def __deepcopy__(self, memo) -> "UnaryMonitorNode":
+        return type(self)(self.name, deepcopy(self.child, memo))
 
     def __hash__(self) -> int:
         return hash((self.name, self.child))
@@ -109,15 +108,18 @@ class VaradicMonitorNode(MonitorNode):
     Monitor node with a variable number of children.
 
     :param name: Unique name for the monitor node.
-    :param children: Tuple of child monitor nodes.
+    :param children: tuple of child monitor nodes.
     """
 
-    def __init__(self, name: str, children: Tuple[MonitorNode, ...]) -> None:
+    def __init__(self, name: str, children: tuple[MonitorNode, ...]) -> None:
         super().__init__(name)
         self.children = children
 
+    def __deepcopy__(self, memo) -> "VaradicMonitorNode":
+        return type(self)(self.name, tuple(deepcopy(child, memo) for child in self.children))
+
     def __hash__(self) -> int:
-        return hash((self.name, tuple(child.copy() for child in self.children)))
+        return hash((self.name, tuple(child for child in self.children)))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, VaradicMonitorNode):
@@ -140,16 +142,18 @@ class RtamtRuleMonitorNode(VaradicMonitorNode):
         super().__init__(name, tuple(children))
         self.monitor = monitor
 
-    def update(self, time: int, values: List[Tuple[str, float]]) -> float:
+    def update(self, time: int, values: list[tuple[str, float]]) -> float:
         return self.monitor.evaluate_monitor_online(time, values)
 
     def evaluate(
-        self, values: List[Tuple[str, List[float]]], marker: Optional[str] = None
-    ) -> List[float]:
+        self, values: list[tuple[str, list[float]]], marker: Optional[str] = None
+    ) -> list[float]:
         return self.monitor.evaluate_monitor_offline(values, marker)
 
-    def copy(self):
-        return type(self)(self.name, [c.copy() for c in self.children], self.monitor.copy())
+    def __deepcopy__(self, memo):
+        return type(self)(
+            self.name, [deepcopy(c, memo) for c in self.children], deepcopy(self.monitor, memo)
+        )
 
     def reset(self):
         super().reset()
@@ -171,10 +175,10 @@ class QuantMonitorNode(UnaryMonitorNode):
     def __init__(self, name: str, child: MonitorNode, quantified_agent: int) -> None:
         super().__init__(name, child)
         self.quantified_agent = quantified_agent
-        self.monitors = defaultdict(child.copy)
+        self.monitors = defaultdict(lambda: deepcopy(child))
 
-    def copy(self) -> "QuantMonitorNode":
-        return type(self)(self.name, self.child.copy(), self.quantified_agent)
+    def __deepcopy__(self, memo) -> "QuantMonitorNode":
+        return type(self)(self.name, deepcopy(self.child, memo), self.quantified_agent)
 
     def reset(self):
         super().reset()
@@ -193,14 +197,14 @@ class SelectiveQuantMonitorNode(QuantMonitorNode):
     def __init__(self, name: str, child: MonitorNode, quantified_agent: int) -> None:
         super().__init__(name, child, quantified_agent)
 
-        self._selected: List[Optional[MonitorNode]] = []
+        self._selected: list[Optional[MonitorNode]] = []
 
     @property
-    def selected(self) -> List[Optional[MonitorNode]]:
+    def selected(self) -> list[Optional[MonitorNode]]:
         return self._selected
 
     @selected.setter
-    def selected(self, monitors: List[Optional[MonitorNode]]) -> None:
+    def selected(self, monitors: list[Optional[MonitorNode]]) -> None:
         self._selected = monitors
 
     @property
@@ -261,8 +265,8 @@ class HistoricallyDurationMonitorNode(UnaryMonitorNode):
         super().__init__(name, child)
         self.interval = interval
 
-    def copy(self) -> "HistoricallyDurationMonitorNode":
-        return type(self)(self.name, self.child.copy(), self.interval)
+    def __deepcopy__(self, memo) -> "HistoricallyDurationMonitorNode":
+        return type(self)(self.name, deepcopy(self.child, memo), self.interval)
 
     def __str__(self) -> str:
         if self.interval is not None:
@@ -286,8 +290,8 @@ class HistoricallyDurationSeverityMonitorNode(UnaryMonitorNode):
         super().__init__(name, child)
         self.interval = interval
 
-    def copy(self) -> "HistoricallyDurationSeverityMonitorNode":
-        return type(self)(self.name, self.child.copy(), self.interval)
+    def __deepcopy__(self, memo) -> "HistoricallyDurationSeverityMonitorNode":
+        return type(self)(self.name, deepcopy(self.child, memo), self.interval)
 
     def __str__(self) -> str:
         if self.interval is not None:
@@ -318,8 +322,8 @@ class CompareToThresholdScaledMonitorNode(UnaryMonitorNode):
         super().__init__(name, child)
         self.threshold = threshold
 
-    def copy(self) -> "CompareToThresholdScaledMonitorNode":
-        return type(self)(self.name, self.child.copy(), self.threshold)
+    def __deepcopy__(self, memo) -> "CompareToThresholdScaledMonitorNode":
+        return type(self)(self.name, deepcopy(self.child, memo), self.threshold)
 
     def __str__(self) -> str:
         return f"compare_to_threshold_scaled[>={self.threshold}]"
@@ -341,8 +345,10 @@ class ExistsMultipleMonitorNode(QuantMonitorNode):
         super().__init__(name, child, quantified_vehicle)
         self.threshold = threshold
 
-    def copy(self) -> "ExistsMultipleMonitorNode":
-        return type(self)(self.name, self.child.copy(), self.quantified_agent, self.threshold)
+    def __deepcopy__(self, memo) -> "ExistsMultipleMonitorNode":
+        return type(self)(
+            self.name, deepcopy(self.child, memo), self.quantified_agent, self.threshold
+        )
 
     def __str__(self) -> str:
         return f"exists_multiple[{self.threshold}]"
@@ -354,46 +360,34 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
 
     :param name: Unique name.
     :param evaluator: BasePredicateEvaluator instance.
-    :param agent_placeholders: Tuple of agent placeholder indices.
+    :param agent_placeholders: tuple of agent placeholder indices.
     :param io_type: IOType representing the input/output type.
     """
 
     def __init__(
         self,
         name: str,
-        predicate_name: PredicateName,
-        predicate_interface: PredicateInterface,
+        predicate_name: str,
         agent_placeholders: tuple[int, ...],
         io_type: IOType,
     ) -> None:
         super().__init__(name)
         self.predicate_name = predicate_name
-        self.predicate_interface = predicate_interface
         self.agent_placeholders = agent_placeholders
         self.io_type = io_type
 
-    def copy(self) -> "PredicateMonitorNode":
+    def __deepcopy__(self, memo) -> "PredicateMonitorNode":
         return type(self)(
             self.name,
             self.predicate_name,
-            self.predicate_interface,
             self.agent_placeholders,
             self.io_type,
         )
 
-    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]):
-        value = self.evaluator.evaluate_boolean(world, time_step, vehicle_ids)
-        self.latest_vehicle_ids = tuple(vehicle_ids)
-        return value
-
-    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]):
-        result = self.predicate_interface.evaluate_robustness(world, time_step, vehicle_ids)
-        # TODO: MPR gradients
-        return result[self.predicate_name]
-
     def __str__(self) -> str:
         placeholders = ", ".join(f"a{placeholder}" for placeholder in self.agent_placeholders)
-        return f"{self.predicate_name.value}({placeholders})"
+        io_type_str = "" if self.io_type == IOType.OUTPUT else "_i"
+        return f"{self.predicate_name}({placeholders}){io_type_str}"
 
     def format_with_vehicle_ids(self, vehicle_ids: Dict[int, int] = {}) -> str:
         optionally_filled_placeholders = map(
@@ -403,7 +397,8 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
             self.agent_placeholders,
         )
         argument_str = ", ".join(optionally_filled_placeholders)
-        return f"{self.predicate_name.value}({argument_str})"
+        io_type_str = "" if self.io_type == IOType.OUTPUT else "_i"
+        return f"{self.predicate_name}({argument_str}){io_type_str}"
 
 
 class ConstantTraceMonitorNode(ZeroArityMonitorNode):
@@ -411,12 +406,15 @@ class ConstantTraceMonitorNode(ZeroArityMonitorNode):
     Helper node that injects a constant trace into the monitor tree.
 
     :param name: Unique name.
-    :param trace: List of float values representing the constant trace.
+    :param trace: list of float values representing the constant trace.
     """
 
-    def __init__(self, name: str, trace: List[float]) -> None:
+    def __init__(self, name: str, trace: list[float]) -> None:
         super().__init__(name)
         self.trace = trace
+
+    def __deepcopy__(self, memo) -> "ConstantTraceMonitorNode":
+        return type(self)(self.name, deepcopy(self.trace, memo))
 
     def __str__(self) -> str:
         return self.name

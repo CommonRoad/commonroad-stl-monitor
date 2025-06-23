@@ -24,7 +24,7 @@ from crmonitor.monitor import (
     MonitorNode,
     MPRGradientCollectorMonitorTreeVisitor,
     OutputType,
-    PredicateCollectorMonitorTreeVisitor,
+    PredicateValueCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
@@ -91,7 +91,7 @@ class RuleEvaluatorInterface(ABC):
         self._ego_vehicle = ego_vehicle
         self._predicate_interface_config = predicate_interface_config
 
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(predicate_interface_config)
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
         self._monitor = monitor_creation_visitor.visit(self._rule, world.dt, output_type)
 
     @property
@@ -113,7 +113,7 @@ class RuleEvaluatorInterface(ABC):
         ctrl.visualize(self.monitor)
 
     def get_predicate_values(self) -> dict[str, float]:
-        predicate_collector = PredicateCollectorMonitorTreeVisitor()
+        predicate_collector = PredicateValueCollectorMonitorTreeVisitor()
         return predicate_collector.collect_predicate_values(self.monitor)
 
 
@@ -126,7 +126,7 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
             end_time = self.ego_vehicle.end_time
 
         eval_visitor = OfflineEvaluationMonitorTreeVisitor(
-            self._predicate_interface_config.base.scale_rob,
+            self._predicate_interface_config.base.scale_rob, self._predicate_interface_config
         )
         return eval_visitor.evaluate(
             self._monitor,
@@ -249,7 +249,7 @@ class RuleEvaluator:
             monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = monitor_creation_visitor.visit(rule)
-        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._predicate_collector_visitor = PredicateValueCollectorMonitorTreeVisitor()
         self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
         self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
