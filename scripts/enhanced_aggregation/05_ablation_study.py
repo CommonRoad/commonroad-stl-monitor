@@ -10,14 +10,29 @@ import numpy as np
 import pandas as pd
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
+from crmonitor.evaluation.predicate_interface import (
+    PredicateInterfaceConfig,
+    PredicateEvaluationMode,
+)
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.mpr import (
+    MprGpPredicateEvaluator,
+    MprGpPredicateEvaluatorConfig,
+)
+from crmonitor.mpr.mpr_predicate_evaluator import (
+    MprPredicateEvaluatorConfig,
+    RobustnessNormalizationProvider,
+)
+from crmonitor.mpr.prediction.state_sampling import (
+    EndStateOptions,
+    FutureStateSamplerConfig,
+    SwitchableEndStateOptions,
+    VelocityMode,
+)
 from crmonitor.predicates.base import (
     PredicateEvaluatorConfig,
-    PredicateMprConfig,
-    load_normalization_values,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -37,33 +52,8 @@ snapshot_frequency = 10
 mpr_only_on_violation = False
 enable_gps = False  # Enable/Disable the MPR evaluation with GPs
 
-MprCfg.build_configuration(
-    config={
-        "common": {
-            "scenario": "interstate",
-            "lane": {
-                # Increased the default parameters to work around projection limit issues in MPR
-                "lateral_projection_domain_limit": 500,
-                "extend_length": 500,
-                "large_resampling_step": 3.5,
-                "num_chankins_corner_cutting": 1,
-            },
-            "road_network": {
-                "interstate": {
-                    "use_phantom_lane": True
-                }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
-            },
-        },
-    },
-    # Path root must point to a local revision of commonroad-model-predictive-robustness.
-    # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
-    # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
-    folder_config="config_files",
-    default_profile="default",
-)
 
-normalization_values = load_normalization_values(normalization_file)
+normalization_provider = RobustnessNormalizationProvider.from_csv(normalization_file)
 
 
 def process_scenario_with_rule(
@@ -72,16 +62,22 @@ def process_scenario_with_rule(
     world = World.create_from_scenario(scenario)
     # Create a rule evaluator
     # Provide the vehicle to evaluate traffic rules for as ego vehicle
-    predicate_evaluator_config = PredicateEvaluatorConfig(
-        mpr=PredicateMprConfig(
-            enabled=use_mpr,
-            model_path=model_path,
-            ml=enable_gps,
-            sample_number=100,
-            normalization=False,
-            normalization_values=normalization_values,
+    evaluation_mode = (
+        (PredicateEvaluationMode.MPR_GP if enable_gps else PredicateEvaluationMode.MPR)
+        if use_mpr
+        else PredicateEvaluationMode.MFR
+    )
+    predicate_interface_config = PredicateInterfaceConfig(
+        mode=evaluation_mode,
+        base=PredicateEvaluatorConfig(scale_rob=True),
+        mpr=MprPredicateEvaluatorConfig(
+            sampler_config=FutureStateSamplerConfig(
+                SwitchableEndStateOptions(
+                    modes={VelocityMode.HIGH_VELOCITY_MODE: EndStateOptions(number=100)}
+                )
+            )
         ),
-        scale_rob=True,
+        mpr_gp=MprGpPredicateEvaluatorConfig(model_path=model_path),
     )
 
     # Create a rule evaluator
@@ -92,11 +88,11 @@ def process_scenario_with_rule(
         f"Evaluating rule {rule} with {'MPR' if use_mpr else 'MFR'} for vehicle {ego_vehicle.id} in scenario {scenario.scenario_id} from time step {ego_vehicle.start_time} to {ego_vehicle.end_time}"
     )
     rule_evaluator = OfflineRuleEvaluator.create_for_rule(
+        rule,
         world,
         ego_vehicle.id,
-        rule,
         output_type=output_type,
-        predicate_evaluator_config=predicate_evaluator_config,
+        predicate_interface_config=predicate_interface_config,
     )
     # Either step through time steps sequentially
     robustness = rule_evaluator.evaluate()

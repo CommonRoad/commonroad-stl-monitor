@@ -11,6 +11,9 @@ from typing import Generic, TypeVar
 
 import numpy as np
 from scipy.stats import norm, uniform
+from typing_extensions import Self
+
+from crmonitor.mpr.prediction.error import SamplingError
 
 # TODO: The original implementation had this hard coded value for monte-carlo size.
 _DEFAULT_MONTE_CARLO_SIZE = 1
@@ -134,7 +137,7 @@ class SamplingDimension(Enum):
     Usually used in combination with `SamplingOrder` to denote the
     """
 
-    LONG = "long"
+    LON = "long"
     LAT = "lat"
 
     def __str__(self) -> str:
@@ -154,10 +157,85 @@ class SamplingSimulation(Enum):
 @dataclass(kw_only=True)
 class SamplingXDParams:
     sample_number: int = 1000
-    sampling_dimensions: dict[SamplingDimension, Sampling1DParams]
+    sampling_dimensions: dict[SamplingDimension, dict[SamplingOrder, Sampling1DParams]]
 
 
 _T = TypeVar("_T")
+
+
+class DimensionData(Generic[_T]):
+    def __init__(
+        self,
+        *,
+        position: _T | None = None,
+        velocity: _T | None = None,
+        acceleration: _T | None = None,
+    ) -> None:
+        self._position = position
+        self._velocity = velocity
+        self._acceleration = acceleration
+
+    @property
+    def position(self) -> _T:
+        if self._position is None:
+            raise SamplingError(
+                "Tried to access order 'position' of state, but 'position' is not available for the dimension!"
+            )
+        return self._position
+
+    @property
+    def velocity(self) -> _T:
+        if self._velocity is None:
+            raise SamplingError(
+                "Tried to access order 'velocity' of state, but 'velocity' is not available for the dimension!"
+            )
+        return self._velocity
+
+    @property
+    def acceleration(self) -> _T:
+        if self._acceleration is None:
+            raise SamplingError(
+                "Tried to access order 'acceleration' of state, but 'acceleration' is not available for the dimension!"
+            )
+        return self._acceleration
+
+    @classmethod
+    def from_dict(cls, dict_: dict[SamplingOrder, _T]) -> Self:
+        return cls(
+            position=dict_.get(SamplingOrder.POSITION),
+            velocity=dict_.get(SamplingOrder.VELOCITY),
+            acceleration=dict_.get(SamplingOrder.ACCELERATION),
+        )
+
+    def has_order(self, order: SamplingOrder) -> bool:
+        return self.get_order(order) is not None
+
+    def get_order(self, order: SamplingOrder) -> _T | None:
+        if order == SamplingOrder.POSITION:
+            return self._position
+        elif order == SamplingOrder.VELOCITY:
+            return self._velocity
+        else:
+            return self._acceleration
+
+
+@dataclass
+class LonLatData(Generic[_T]):
+    lon: DimensionData[_T]
+    lat: DimensionData[_T]
+
+    @classmethod
+    def from_dict(cls, dict_: dict[SamplingDimension, dict[SamplingOrder, _T]]) -> Self:
+        return cls(
+            lon=DimensionData.from_dict(dict_[SamplingDimension.LON]),
+            lat=DimensionData.from_dict(dict_[SamplingDimension.LAT]),
+        )
+
+    def get_dimension(self, dimension: SamplingDimension) -> DimensionData[_T]:
+        if dimension == SamplingDimension.LON:
+            return self.lon
+        else:
+            return self.lat
 
 
 XDimensionalData = dict[SamplingDimension, dict[SamplingOrder, _T]]
@@ -175,6 +253,12 @@ class XDimensionalIterator(Generic[_T]):
         for dimension, inner_dict in self._dimension_data.items():
             for order, item in inner_dict.items():
                 yield (dimension, order, item)
+
+
+@dataclass
+class SamplingXDConfig:
+    distribution: SamplingDistribution = SamplingDistribution.UNIFORM
+    simulation: SamplingSimulation = SamplingSimulation.MONTE_CARLO
 
 
 class SamplingXD:

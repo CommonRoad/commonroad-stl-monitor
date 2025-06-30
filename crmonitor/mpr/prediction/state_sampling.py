@@ -2,7 +2,6 @@ import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Generator, Iterable
-from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
@@ -25,14 +24,14 @@ from crmonitor.common.world import World
 from crmonitor.mpr.prediction.error import SamplingError
 from crmonitor.mpr.prediction.polynomial import Polynomial
 from crmonitor.mpr.prediction.sampling_x_dimensional import (
+    DimensionData,
+    LonLatData,
     Sampling1DParams,
     SamplingDimension,
-    SamplingDistribution,
     SamplingOrder,
-    SamplingSimulation,
     SamplingXD,
+    SamplingXDConfig,
     SamplingXDParams,
-    XDimensionalData,
     XDimensionalIterator,
 )
 from crmonitor.mpr.state_context import StateContext
@@ -51,16 +50,14 @@ class VelocityMode(Enum):
 
 
 @dataclass
-class XDimensionalState:
-    dimensions: XDimensionalData[float]
-
+class LonLatState(LonLatData[float]):
     @classmethod
     def long_lat_state_from_curvilinear_state(
         cls,
         state: tuple[StateLongitudinal, StateLateral],
         clcs: CurvilinearCoordinateSystem,
         velocity_mode: VelocityMode = VelocityMode.HIGH_VELOCITY_MODE,
-    ) -> "XDimensionalState":
+    ) -> "LonLatState":
         state_lon, state_lat = state
         s, d = state_lon.s, state_lat.d
 
@@ -93,19 +90,9 @@ class XDimensionalState:
             d_d = d_p
             d_dd = d_pp
 
-        return XDimensionalState(
-            dimensions={
-                SamplingDimension.LONG: {
-                    SamplingOrder.POSITION: s,
-                    SamplingOrder.VELOCITY: s_d,
-                    SamplingOrder.ACCELERATION: s_dd,
-                },
-                SamplingDimension.LAT: {
-                    SamplingOrder.POSITION: d,
-                    SamplingOrder.VELOCITY: d_d,
-                    SamplingOrder.ACCELERATION: d_dd,
-                },
-            }
+        return LonLatState(
+            lon=DimensionData(position=s, velocity=s_d, acceleration=s_dd),
+            lat=DimensionData(position=d, velocity=d_d, acceleration=d_dd),
         )
 
     def get_dimension_boundaries(self, dimension: SamplingDimension) -> list[float | None]:
@@ -119,25 +106,15 @@ class XDimensionalState:
         return boundaries
 
 
-# TODO: move to sampling_x_dimensional.py?
-@dataclass
-class SamplingXDConfig:
-    distribution: SamplingDistribution = SamplingDistribution.UNIFORM
-    simulation: SamplingSimulation = SamplingSimulation.MONTE_CARLO
+_DEFAULT_SAMPLING_SIZE = LonLatData(
+    lon=DimensionData(position=12.0, velocity=12.0, acceleration=12.0),
+    lat=DimensionData(position=12.0, velocity=12.0, acceleration=12.0),
+)
+_DEFAULT_SAMPLING_ORDERS_LON = frozenset({SamplingOrder.VELOCITY})
+_DEFAULT_SAMPLING_ORDERS_LAT = frozenset({SamplingOrder.POSITION, SamplingOrder.VELOCITY})
 
 
-_DEFAULT_SAMPLING_ORDERS = {
-    SamplingDimension.LONG: {SamplingOrder.VELOCITY},
-    SamplingDimension.LAT: {SamplingOrder.POSITION, SamplingOrder.VELOCITY},
-}
-
-_DEFAULT_SAMPLING_SIZE = {
-    SamplingDimension.LONG: {SamplingOrder.VELOCITY: 12},
-    SamplingDimension.LAT: {SamplingOrder.POSITION: 12, SamplingOrder.VELOCITY: 12},
-}
-
-
-@dataclass
+@dataclass(kw_only=True)
 class EndStateOptions:
     number: int
     """Number of samples for monte-carlo prediction."""
@@ -148,59 +125,120 @@ class EndStateOptions:
     d_dot_radius: float
     """Absolute allowed lateral velocity interval [-d_dot_radius, d_dot_radius]."""
 
-    # TODO: Size should be configured for the sampling simulation, not as an end state option.
-    size: XDimensionalData[int]
+    size: LonLatData[float] = field(default_factory=lambda: _DEFAULT_SAMPLING_SIZE)
     """The size of the grid during grid sampling."""
 
-    # TODO: Is there a better way to specify the default sampling orders?
-    # This makes it very hard to selectively override the defaults.
-    sampling_orders: dict[SamplingDimension, set[SamplingOrder]]
     """The selected sampling orders for each sampling dimension."""
+    lon_orders: frozenset[SamplingOrder] = field(
+        default_factory=lambda: _DEFAULT_SAMPLING_ORDERS_LON
+    )
+    lat_orders: frozenset[SamplingOrder] = field(
+        default_factory=lambda: _DEFAULT_SAMPLING_ORDERS_LAT
+    )
 
     s_d_max: float = float("inf")
 
     v_delta: float = 1.0
 
+    def iter_orders(self) -> Generator[tuple[SamplingDimension, SamplingOrder], None, None]:
+        for order in self.lon_orders:
+            yield SamplingDimension.LON, order
 
-@dataclass
+        for order in self.lat_orders:
+            yield SamplingDimension.LAT, order
+
+
+DEFAULT_HIGH_VELOCITY_END_STATE_OPTIONS_INTERSTATE = EndStateOptions(
+    number=100,
+    d_radius=5,
+    d_dot_radius=3,
+)
+
+DEFAULT_LOW_VELOCITY_END_STATE_OPTIONS_INTERSECTION = EndStateOptions(
+    number=1000,
+    d_radius=1.56,
+    d_dot_radius=0.2,
+)
+
+DEFAULT_HIGH_VELOCITY_END_STATE_OPTIONS_INTERSECTION = EndStateOptions(
+    number=1500,
+    d_radius=1.5,
+    d_dot_radius=3,
+)
+
+
+@dataclass(kw_only=True)
 class SwitchableEndStateOptions:
-    modes: dict[VelocityMode, EndStateOptions]
+    low_velocity_mode: EndStateOptions | None = None
+    high_velocity_mode: EndStateOptions | None = None
+
     mode_switch_threshold: float | None = None
 
+    def __post_init__(self) -> None:
+        has_both_modes = self.high_velocity_mode is not None and self.low_velocity_mode is not None
+        has_mode_switch_threshold = self.mode_switch_threshold is not None
 
-DEFAULT_SWITCHABLE_END_STATE_OPTIONS_INTERSTATE = SwitchableEndStateOptions(
-    modes={
-        VelocityMode.HIGH_VELOCITY_MODE: EndStateOptions(
-            number=100,
-            d_radius=5,
-            d_dot_radius=3,
-            # TODO: see attribute definition.
-            size=_DEFAULT_SAMPLING_SIZE,
-            sampling_orders=_DEFAULT_SAMPLING_ORDERS,
-        )
-    }
-)
-DEFAULT_SWITCHABLE_END_STATE_OPTIONS_INTERSECTION = SwitchableEndStateOptions(
-    modes={
-        VelocityMode.LOW_VELOCITY_MODE: EndStateOptions(
-            number=1000,
-            d_radius=1.56,
-            d_dot_radius=0.2,
-            # TODO: see attribute definition.
-            size=_DEFAULT_SAMPLING_SIZE,
-            sampling_orders=_DEFAULT_SAMPLING_ORDERS,
-        ),
-        VelocityMode.HIGH_VELOCITY_MODE: EndStateOptions(
-            number=1500,
-            d_radius=1.5,
-            d_dot_radius=3,
-            # TODO: see attribute definition.
-            size=_DEFAULT_SAMPLING_SIZE,
-            sampling_orders=_DEFAULT_SAMPLING_ORDERS,
-        ),
-    },
-    mode_switch_threshold=4.0,
-)
+        if has_mode_switch_threshold and not has_both_modes:
+            raise ValueError("If ")
+
+        if has_both_modes and not has_mode_switch_threshold:
+            raise ValueError()
+
+    @classmethod
+    def default_for_scenario_type(cls, scenario_type: ScenarioType) -> "SwitchableEndStateOptions":
+        if scenario_type == ScenarioType.INTERSTATE:
+            return cls(high_velocity_mode=DEFAULT_HIGH_VELOCITY_END_STATE_OPTIONS_INTERSTATE)
+        else:
+            return cls(
+                low_velocity_mode=DEFAULT_LOW_VELOCITY_END_STATE_OPTIONS_INTERSECTION,
+                high_velocity_mode=DEFAULT_HIGH_VELOCITY_END_STATE_OPTIONS_INTERSECTION,
+                mode_switch_threshold=4.0,
+            )
+
+    def get_velocity_mode_for_state(self, state: LonLatState) -> VelocityMode:
+        """
+        Determine the appropriate velocity mode based on current longitudinal velocity.
+
+        The velocity mode affects which sampling parameters are used. Different modes
+        may have different sampling strategies for low-speed vs high-speed scenarios.
+
+        Args:
+            state: Current multi-dimensional state containing velocity information.
+
+        Returns:
+            The determined velocity mode.
+        """
+        has_multiple_velocity_modes = self.mode_switch_threshold is None
+        if not has_multiple_velocity_modes:
+            velocity_mode = (
+                VelocityMode.HIGH_VELOCITY_MODE
+                if self.high_velocity_mode is not None
+                else VelocityMode.LOW_VELOCITY_MODE
+            )
+            return velocity_mode
+
+        if state.lon.velocity <= self.mode_switch_threshold:
+            return VelocityMode.LOW_VELOCITY_MODE
+        else:
+            return VelocityMode.HIGH_VELOCITY_MODE
+
+    def get_end_state_options_for_state(self, state: LonLatState) -> EndStateOptions:
+        """
+        Get the end state options appropriate for the given state's velocity mode.
+
+        Use this instead of directly retrieving the end state options from the sampler config.
+
+        Args:
+            state: Current multi-dimensional state
+
+        Returns:
+            Sampling parameters for the appropriate velocity mode.
+        """
+        velocity_mode = self.get_velocity_mode_for_state(state)
+        if velocity_mode == VelocityMode.HIGH_VELOCITY_MODE:
+            return self.high_velocity_mode
+        else:
+            return self.low_velocity_mode
 
 
 @dataclass
@@ -229,10 +267,7 @@ class FutureStateSamplerConfig:
     def default_config_for_scenario_type(
         cls, scenario_type: ScenarioType = ScenarioType.INTERSTATE
     ) -> "FutureStateSamplerConfig":
-        if scenario_type == ScenarioType.INTERSTATE:
-            return cls(deepcopy(DEFAULT_SWITCHABLE_END_STATE_OPTIONS_INTERSTATE))
-        else:
-            return cls(deepcopy(DEFAULT_SWITCHABLE_END_STATE_OPTIONS_INTERSECTION))
+        return cls(SwitchableEndStateOptions.default_for_scenario_type(scenario_type))
 
 
 class StateBasedSamplingResult:
@@ -356,7 +391,7 @@ class AbstractFutureStateSampler(ABC):
     @abstractmethod
     def _get_sampling_1d_params_for_dimension(
         self,
-        state: XDimensionalState,
+        state: LonLatState,
         vehicle_dynamics: VehicleDynamics,
         dimension: SamplingDimension,
         order: SamplingOrder,
@@ -381,49 +416,8 @@ class AbstractFutureStateSampler(ABC):
         """
         ...
 
-    def _get_velocity_mode_for_state(self, state: XDimensionalState) -> VelocityMode:
-        """
-        Determine the appropriate velocity mode based on current longitudinal velocity.
-
-        The velocity mode affects which sampling parameters are used. Different modes
-        may have different sampling strategies for low-speed vs high-speed scenarios.
-
-        Args:
-            state: Current multi-dimensional state containing velocity information.
-
-        Returns:
-            The determined velocity mode.
-        """
-        has_multiple_velocity_modes = (
-            self._config.end_state_options.mode_switch_threshold is not None
-            and len(self._config.end_state_options.modes) > 1
-        )
-        if not has_multiple_velocity_modes:
-            velocity_mode = list(self._config.end_state_options.modes.keys())[0]
-            return velocity_mode
-
-        long_velocity = state.dimensions[SamplingDimension.LONG][SamplingOrder.VELOCITY]
-        if long_velocity <= self._config.end_state_options.mode_switch_threshold:
-            return VelocityMode.LOW_VELOCITY_MODE
-        else:
-            return VelocityMode.HIGH_VELOCITY_MODE
-
-    def _get_end_state_options_for_state(self, state: XDimensionalState) -> EndStateOptions:
-        """
-        Get the end state options appropriate for the given state's velocity mode.
-
-        Use this instead of directly retrieving the end state options from the sampler config.
-
-        Args:
-            state: Current multi-dimensional state
-
-        Returns:
-            Sampling parameters for the appropriate velocity mode.
-        """
-        return self._config.end_state_options.modes[self._get_velocity_mode_for_state(state)]
-
     def _get_sampling_xd_params_for_state(
-        self, state: XDimensionalState, vehicle_dynamics: VehicleDynamics
+        self, state: LonLatState, vehicle_dynamics: VehicleDynamics
     ) -> SamplingXDParams:
         """
         Generate multi-dimensional sampling parameters for the given state.
@@ -443,30 +437,26 @@ class AbstractFutureStateSampler(ABC):
             SamplingError: If sampling parameters cannot be generated for any
                           required dimension/order combination
         """
-        end_state_options = self._get_end_state_options_for_state(state)
+        end_state_options = self._config.end_state_options.get_end_state_options_for_state(state)
 
         sampling_xd_params = defaultdict(dict)
-        for sampling_dimension, sampling_orders in end_state_options.sampling_orders.items():
-            if sampling_dimension not in state.dimensions:
-                raise SamplingError()
-
-            for sampling_order in sampling_orders:
-                try:
-                    sampling_1d_params = self._get_sampling_1d_params_for_dimension(
-                        state, vehicle_dynamics, sampling_dimension, sampling_order
-                    )
-                except ValueError as e:
-                    raise SamplingError(
-                        f"Failed to get 1d sampling params for dimension '{sampling_dimension}' and order '{sampling_order}': {e}"
-                    ) from e
-                sampling_xd_params[sampling_dimension][sampling_order] = sampling_1d_params
+        for sampling_dimension, sampling_order in end_state_options.iter_orders():
+            try:
+                sampling_1d_params = self._get_sampling_1d_params_for_dimension(
+                    state, vehicle_dynamics, sampling_dimension, sampling_order
+                )
+            except ValueError as e:
+                raise SamplingError(
+                    f"Failed to get 1d sampling params for dimension '{sampling_dimension}' and order '{sampling_order}': {e}"
+                ) from e
+            sampling_xd_params[sampling_dimension][sampling_order] = sampling_1d_params
 
         return SamplingXDParams(
             sample_number=end_state_options.number, sampling_dimensions=sampling_xd_params
         )
 
     def _is_valid_end_state(
-        self, end_state: XDimensionalState, vehicle_dynamics: VehicleDynamics
+        self, end_state: LonLatState, vehicle_dynamics: VehicleDynamics
     ) -> bool:
         """
         Test whether a sampled end state is valid for the vehicle dynamics.
@@ -478,34 +468,30 @@ class AbstractFutureStateSampler(ABC):
         Returns:
             Whether the state is a valid end state or not.
         """
-        long_values = end_state.dimensions[SamplingDimension.LONG]
-        lat_values = end_state.dimensions[SamplingDimension.LAT]
         vehicle_params: VehicleParameters = vehicle_dynamics.parameters
-        if SamplingOrder.VELOCITY in long_values and SamplingOrder.VELOCITY in lat_values:
-            long_velocity = long_values[SamplingOrder.VELOCITY]
-            lat_velocity = lat_values[SamplingOrder.VELOCITY]
+        long_velocity = end_state.lon.velocity
+        lat_velocity = end_state.lat.velocity
 
-            # no backwards
-            # TODO: Shouldn't backward driving be allowed?
-            if long_velocity <= 0.001:
-                return False
+        # no backwards
+        # TODO: Shouldn't backward driving be allowed?
+        if long_velocity <= 0.001:
+            return False
 
-            velocity = np.linalg.norm([long_velocity, lat_velocity])
-            if velocity > vehicle_params.longitudinal.v_max:
-                return False
+        velocity = np.linalg.norm([long_velocity, lat_velocity])
+        if velocity > vehicle_params.longitudinal.v_max:
+            return False
 
-        if SamplingOrder.ACCELERATION in long_values and SamplingOrder.ACCELERATION in lat_values:
-            long_acceleration = long_values[SamplingOrder.ACCELERATION]
-            lat_acceleration = lat_values[SamplingOrder.ACCELERATION]
-            acceleration = np.linalg.norm([long_acceleration, lat_acceleration])
-            if acceleration > vehicle_params.longitudinal.a_max:
-                return False
+        long_acceleration = end_state.lon.acceleration
+        lat_acceleration = end_state.lat.acceleration
+        acceleration = np.linalg.norm([long_acceleration, lat_acceleration])
+        if acceleration > vehicle_params.longitudinal.a_max:
+            return False
 
         return True
 
     def _end_state_sample(
         self, sampling_xd_params: SamplingXDParams, vehicle_dynamics: VehicleDynamics
-    ) -> Iterable[XDimensionalState]:
+    ) -> Iterable[LonLatState]:
         """
         Generate and validate end state samples using multi-dimensional sampling.
 
@@ -541,7 +527,7 @@ class AbstractFutureStateSampler(ABC):
             for dimension, order, samples in XDimensionalIterator(sampling_results):
                 state_prototype[dimension][order] = samples[i]
 
-            x_dimensional_state = XDimensionalState(state_prototype)
+            x_dimensional_state = LonLatState.from_dict(state_prototype)
             if self._is_valid_end_state(x_dimensional_state, vehicle_dynamics):
                 yield x_dimensional_state
 
@@ -559,7 +545,7 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
         vehicle_dynamics: VehicleDynamics,
     ) -> StateBasedSamplingResult:
         ref_lane = ctx.vehicle(0).get_lane(ctx.time_step)
-        start_long_lat_state = XDimensionalState.long_lat_state_from_curvilinear_state(
+        start_long_lat_state = LonLatState.long_lat_state_from_curvilinear_state(
             (ctx.lon_state(0), ctx.lat_state(0)), ref_lane.clcs
         )
 
@@ -568,15 +554,13 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
             start_long_lat_state, vehicle_dynamics
         )
 
-        start_long_boundaries = start_long_lat_state.get_dimension_boundaries(
-            SamplingDimension.LONG
-        )
+        start_long_boundaries = start_long_lat_state.get_dimension_boundaries(SamplingDimension.LON)
         start_lat_boundaries = start_long_lat_state.get_dimension_boundaries(SamplingDimension.LAT)
         results = []
         for end_long_lat_state in self._end_state_sample(sample_params, vehicle_dynamics):
             long_fun = Polynomial.from_boundary(
                 start_long_boundaries,
-                end_long_lat_state.get_dimension_boundaries(SamplingDimension.LONG),
+                end_long_lat_state.get_dimension_boundaries(SamplingDimension.LON),
                 self._config.time_horizon_sec,
             )  # TODO I dint verify the .from_boundary method.
 
@@ -621,43 +605,53 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
 
     def _get_sampling_1d_params_for_dimension(
         self,
-        state: XDimensionalState,
+        state: LonLatState,
         vehicle_dynamics: VehicleDynamics,
         dimension: SamplingDimension,
         order: SamplingOrder,
     ) -> Sampling1DParams:
         vehicle_params: VehicleParameters = vehicle_dynamics.parameters
-        end_state_options = self._get_end_state_options_for_state(state)
+        end_state_options = self._config.end_state_options.get_end_state_options_for_state(state)
+
+        dimension_value = state.get_dimension(dimension).get_order(order)
+        if dimension_value is None:
+            raise SamplingError(
+                f"State value for order '{order}' in dimension '{dimension}' is None. Expected a valid value."
+            )
+
+        grid_size = end_state_options.size.get_dimension(dimension).get_order(order)
+        if grid_size is None:
+            raise SamplingError(
+                f"Grid size for order '{order}' in dimension '{dimension}' is None. Expected a valid value."
+            )
 
         match dimension:
-            case SamplingDimension.LONG:
+            case SamplingDimension.LON:
                 if order != SamplingOrder.VELOCITY:
                     raise NotImplementedError(
                         "Only 'velocity' is supported for longitudinal sampling"
                     )
-                long_velocity = state.dimensions[dimension][order]
                 return Sampling1DParams(
-                    min_val=long_velocity
+                    min_val=dimension_value
                     - vehicle_params.longitudinal.a_max * self._config.time_horizon_sec,
-                    max_val=long_velocity
+                    max_val=dimension_value
                     + vehicle_params.longitudinal.a_max * self._config.time_horizon_sec,
-                    size=end_state_options.size[dimension][order],
+                    size=grid_size,
                 )
 
             case SamplingDimension.LAT:
                 match order:
                     case SamplingOrder.POSITION:
-                        lat_position = state.dimensions[dimension][order]
                         return Sampling1DParams(
-                            min_val=lat_position - end_state_options.d_radius,
-                            max_val=lat_position + end_state_options.d_radius,
-                            size=end_state_options.size[dimension][order],
+                            min_val=dimension_value - end_state_options.d_radius,
+                            max_val=dimension_value + end_state_options.d_radius,
+                            size=grid_size,
                         )
                     case SamplingOrder.VELOCITY:
                         return Sampling1DParams(
                             min_val=-end_state_options.d_dot_radius,
                             max_val=end_state_options.d_dot_radius,
-                            size=end_state_options.size[dimension][order],
+                            size=grid_size,
                         )
                     case _:
                         raise NotImplementedError(
