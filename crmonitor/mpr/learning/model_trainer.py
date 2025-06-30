@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from crmonitor.common import ScenarioType
-from crmonitor.predicates import BasePredicateEvaluator
+from crmonitor.predicates import AbstractPredicate
 
 from ._split_data import split_data
 from .data_loader import DataLoader
@@ -28,7 +28,7 @@ class ModelTrainer:
         self._training_iter = training_iter
 
     def train(
-        self, predicates: Iterable[type[BasePredicateEvaluator]]
+        self, predicates: Iterable[type[AbstractPredicate]]
     ) -> dict[str, ExactGPModelContainer]:
         models: dict[str, ExactGPModelContainer] = {}
         for predicate in predicates:
@@ -36,7 +36,7 @@ class ModelTrainer:
             models[predicate.predicate_name] = res
         return models
 
-    def train_predicate(self, predicate: type[BasePredicateEvaluator]) -> ExactGPModelContainer:
+    def train_predicate(self, predicate: type[AbstractPredicate]) -> ExactGPModelContainer:
         _LOGGER.info(
             "training predicate %s for scenario type %s",
             predicate.predicate_name,

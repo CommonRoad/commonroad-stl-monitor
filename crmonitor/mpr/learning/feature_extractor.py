@@ -8,7 +8,7 @@ from crmonitor.mpr.learning.feature_variables import (
     default_feature_variable_classes_for_scenario_type,
 )
 from crmonitor.mpr.state_context import StateContext
-from crmonitor.predicates import BasePredicateEvaluator
+from crmonitor.predicates import AbstractPredicate
 
 from .feature_variables import AbstractFeatureVariable, DesiredFeatureVariables
 from .predicate_features import (
@@ -84,7 +84,7 @@ class FeatureExtractor:
     @classmethod
     def for_predicate_evaluator(
         cls,
-        predicate_evaluator: BasePredicateEvaluator,
+        predicate_evaluator: AbstractPredicate,
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,
     ) -> "FeatureExtractor":
         feature_variables = get_desired_features_for_predicate(predicate_evaluator)

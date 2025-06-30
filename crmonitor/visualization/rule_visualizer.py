@@ -10,7 +10,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import AbstractPredicate
 
 EGO_VEHICLE_DRAW_PARAMS = {
     "dynamic_obstacle": {
@@ -119,7 +119,7 @@ def _create_axes(
 
 
 def _plot_scenario_legend(
-    predicate_name2predicate_evaluator: Dict[str, BasePredicateEvaluator],
+    predicate_name2predicate_evaluator: Dict[str, AbstractPredicate],
     scenario_fig_size: Tuple[float, float],
 ):
     width, _ = scenario_fig_size

@@ -1,6 +1,6 @@
-__all__ = ["BasePredicateEvaluator", "PredicateName"]
+__all__ = ["AbstractPredicate", "PredicateName"]
 
-from .base import BasePredicateEvaluator, PredicateName
+from .base import AbstractPredicate, PredicateName
 from .predicate_registry import (
     ALL_GENERAL_PREDICATE_NAMES,
     ALL_GENERAL_PREDICATES,

@@ -10,7 +10,9 @@ from commonroad.common.util import Interval as CommonRoadInterval
 from crmonitor.common.helper import rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.predicate_interface import PredicateInterface, PredicateInterfaceConfig
+from crmonitor.evaluation.predicate_interface import (
+    PredicateEvaluationInterface,
+)
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     CompareToThresholdScaledMonitorNode,
@@ -72,11 +74,11 @@ class OfflineEvaluationMonitorTreeVisitorContext:
 class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
     def __init__(
         self,
+        predicate_evaluation_interface: PredicateEvaluationInterface,
         scale_rob: bool = True,
-        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
     ) -> None:
+        self._predicate_interface = predicate_evaluation_interface
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
-        self._predicate_interface_config = predicate_interface_config
 
     def evaluate(
         self,
@@ -331,14 +333,8 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
                 samples.append(float("nan"))
                 continue
 
-            if node.predicate_name not in self._predicate_interfaces:
-                self._predicate_interfaces[node.predicate_name] = PredicateInterface(
-                    node.predicate_name, self._predicate_interface_config
-                )
-
-            predicate_interface = self._predicate_interfaces[node.predicate_name]
-            robustness = predicate_interface.evaluate_robustness(
-                node, ctx.world, time_step, tuple(vehicle_ids)
+            robustness = self._predicate_interface.evaluate_robustness(
+                node.predicate_name, ctx.world, time_step, tuple(vehicle_ids)
             )
             samples.append(robustness)
 

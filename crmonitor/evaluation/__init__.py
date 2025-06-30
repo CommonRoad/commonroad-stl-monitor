@@ -3,9 +3,9 @@ __all__ = [
     "OfflineEvaluationMonitorTreeVisitor",
     "OnlineEvaluationMonitorTreeVisitor",
     "PredicateEvaluationMode",
-    "PredicateInterfaceConfig",
+    "PredicateEvaluationInterfaceConfig",
 ]
 
 from .evaluation import OfflineRuleEvaluator
-from .predicate_interface import PredicateEvaluationMode, PredicateInterfaceConfig
+from .predicate_interface import PredicateEvaluationInterfaceConfig, PredicateEvaluationMode
 from .visitors import OfflineEvaluationMonitorTreeVisitor, OnlineEvaluationMonitorTreeVisitor

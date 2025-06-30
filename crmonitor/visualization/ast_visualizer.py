@@ -14,12 +14,12 @@ from rtamt.syntax.node.binary_node import BinaryNode as RtamtBinaryNode
 from rtamt.syntax.node.ltl.variable import Variable as RtamtVariableNode
 from rtamt.syntax.node.unary_node import UnaryNode as RtamtUnaryNode
 
-from crmonitor.evaluation.visitor import VariableCollectionVisitor
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
     RtamtRuleMonitorNode,
     UnaryMonitorNode,
 )
+from crmonitor.monitor.visitors import VariableCollectionVisitor
 
 
 class AstVisualizer:

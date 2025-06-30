@@ -8,23 +8,13 @@ import numpy as np
 from crmonitor.common import ScenarioType
 from crmonitor.common.world import World
 from crmonitor.mpr.learning import FeatureExtractor, get_desired_features_for_predicate, read_model
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 
 @dataclass
 class MprGpPredicateEvaluationResult:
     """
     Results from Gaussian Process-based Model Predictive Predicate Robustness evaluation.
-
-    This class encapsulates the results of predicate evaluation using Gaussian Processes
-    that have been trained to predict robustness values directly from scenario features,
-    avoiding the computational cost of sampling.
-
-    Attributes:
-        robustness:
-        satisfied:
-        std:
-        gradient: Optional gradient information for sensitivity analysis.
     """
 
     robustness: float
@@ -69,7 +59,7 @@ class MprGpPredicateEvaluator:
 
     def __init__(
         self,
-        predicates: Iterable[BasePredicateEvaluator],
+        predicates: Iterable[AbstractPredicate],
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,
         config: MprGpPredicateEvaluatorConfig | None = None,
     ) -> None:
@@ -81,7 +71,7 @@ class MprGpPredicateEvaluator:
         self._setup_gp_models(predicates, scenario_type)
         self._setup_feature_extractor(predicates)
 
-    def _setup_feature_extractor(self, predicates: Iterable[BasePredicateEvaluator]) -> None:
+    def _setup_feature_extractor(self, predicates: Iterable[AbstractPredicate]) -> None:
         self._predicates_desired_features = {}
         all_predicates_desired_features = defaultdict(set)
         for predicate in predicates:
@@ -96,7 +86,7 @@ class MprGpPredicateEvaluator:
         )
 
     def _setup_gp_models(
-        self, predicates: Iterable[BasePredicateEvaluator], scenario_type: ScenarioType
+        self, predicates: Iterable[AbstractPredicate], scenario_type: ScenarioType
     ):
         self._gp_models = {
             predicate.predicate_name: read_model(

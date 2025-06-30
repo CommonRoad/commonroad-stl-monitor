@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from crmonitor.common import ScenarioType
-from crmonitor.predicates.base import BasePredicateEvaluator
+from crmonitor.predicates.base import AbstractPredicate
 
 from .feature_extractor import FeatureExtractor
 from .feature_variables import (
@@ -171,7 +171,7 @@ class DataLoader:
 
     def Xy(
         self,
-        predicate: BasePredicateEvaluator,
+        predicate: AbstractPredicate,
         mfr_data: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         """get the input X and output y of the predicate for training and testing regression models.

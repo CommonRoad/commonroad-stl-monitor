@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import (
-    BasePredicateEvaluator,
-    PredicateEvaluatorConfig,
+    AbstractPredicate,
+    PredicateConfig,
     PredicateName,
 )
 from crmonitor.predicates.position import (
@@ -105,11 +105,11 @@ class GeneralPredicates(PredicateName):
     )
 
 
-class PredCutIn(BasePredicateEvaluator):
+class PredCutIn(AbstractPredicate):
     predicate_name = GeneralPredicates.CutIn
     arity = 2
 
-    def __init__(self, config: PredicateEvaluatorConfig):
+    def __init__(self, config: PredicateConfig):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)
@@ -229,7 +229,7 @@ class PredCutIn(BasePredicateEvaluator):
         ax.set_ylabel("vehicle color")
 
 
-class PredInterstateBroadEnough(BasePredicateEvaluator):
+class PredInterstateBroadEnough(AbstractPredicate):
     """
     Evaluates if an interstate is broad enough to build a standard emergency lane.
     """
@@ -264,7 +264,7 @@ class PredInterstateBroadEnough(BasePredicateEvaluator):
         return min(comparison_list)
 
 
-class PredInCongestion(BasePredicateEvaluator):
+class PredInCongestion(AbstractPredicate):
     """
     Evaluates if a vehicle is in a congestion.
     """
@@ -337,7 +337,7 @@ class PredInCongestion(BasePredicateEvaluator):
             return max(rob for rob in rob_cong_veh_list if rob < 0)
 
 
-class PredInSlowMovingTraffic(BasePredicateEvaluator):
+class PredInSlowMovingTraffic(AbstractPredicate):
     """
     Evaluates if a vehicle is part of slow moving traffic.
     """
@@ -410,7 +410,7 @@ class PredInSlowMovingTraffic(BasePredicateEvaluator):
             return max(rob for rob in rob_cong_veh_list if rob < 0)
 
 
-class PredInQueueOfVehicles(BasePredicateEvaluator):
+class PredInQueueOfVehicles(AbstractPredicate):
     """
     Evaluates if a vehicle is part of a queue of vehicles
     """
@@ -483,7 +483,7 @@ class PredInQueueOfVehicles(BasePredicateEvaluator):
             return max(rob for rob in rob_cong_veh_list if rob < 0)
 
 
-class PredMakesUTurn(BasePredicateEvaluator):
+class PredMakesUTurn(AbstractPredicate):
     """
     Predicate which evaluates if vehicle makes U-turn
     """
@@ -520,7 +520,7 @@ class PredMakesUTurn(BasePredicateEvaluator):
 
 
 # ---------------------------------------------------------------------- #
-class PredTurningRight(BasePredicateEvaluator):
+class PredTurningRight(AbstractPredicate):
     """
     evaluates if a vehicle is turning right
     """
@@ -628,7 +628,7 @@ class PredTurningRight(BasePredicateEvaluator):
         return rob
 
 
-class PredTurningLeft(BasePredicateEvaluator):
+class PredTurningLeft(AbstractPredicate):
     """
     evaluates if a vehicle is turning left
     """
@@ -734,7 +734,7 @@ class PredTurningLeft(BasePredicateEvaluator):
         return rob
 
 
-class PredGoingStraight(BasePredicateEvaluator):
+class PredGoingStraight(AbstractPredicate):
     """
     evaluates if a vehicle is going straight
     """
@@ -859,7 +859,7 @@ class PredGoingStraight(BasePredicateEvaluator):
         return rob
 
 
-class PredTurningSamePriorityBase(BasePredicateEvaluator):
+class PredTurningSamePriorityBase(AbstractPredicate):
     predicate_name = GeneralPredicates.TurningSamePriorityBase
     arity = 2
 
@@ -994,7 +994,7 @@ class PredStraightEgoStraightTargetSamePriority(PredTurningSamePriorityBase):
         self._turning_target = PredGoingStraight(config)
 
 
-class PredTurningHasPriorityBase(BasePredicateEvaluator):
+class PredTurningHasPriorityBase(AbstractPredicate):
     predicate_name = GeneralPredicates.TurningHasPriorityBase
     arity = 2
 

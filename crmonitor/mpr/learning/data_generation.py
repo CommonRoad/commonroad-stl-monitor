@@ -23,7 +23,7 @@ from crmonitor.mpr.mpr_predicate_evaluator import (
     MprPredicateEvaluationResult,
     MprPredicateEvaluator,
 )
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class DataGenerator:
 
     def __init__(
         self,
-        predicates: Iterable[BasePredicateEvaluator],
+        predicates: Iterable[AbstractPredicate],
         scenarios_path: Path,
         dt: float,
         output_path: Path,

@@ -16,7 +16,7 @@ from crmonitor.predicate_grouping import (
     ALL_INTERSTATE_PREDICATE_NAMES,
     changed_to_meta,
 )
-from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
+from crmonitor.predicates.base import PredicateConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
@@ -87,7 +87,7 @@ scenarios = list(scenarios_load_path.glob("*.xml"))
 if len(scenarios) == 0:
     raise RuntimeError(f"No scenarios were found in {scenarios_load_path}.")
 
-predicate_evaluator_config = PredicateEvaluatorConfig(
+predicate_evaluator_config = PredicateConfig(
     scale_rob=True,
     mpr=PredicateMprConfig(enabled=True, model_path=models_path, rectification=False),
 )

@@ -98,17 +98,14 @@ class LonLatState(LonLatData[float]):
     def get_dimension_boundaries(self, dimension: SamplingDimension) -> list[float | None]:
         boundaries = []
         for order in SamplingOrder:
-            if order not in self.dimensions[dimension]:
-                boundaries.append(None)
-            else:
-                boundaries.append(self.dimensions[dimension][order])
+            boundaries.append(self.get_dimension(dimension).get_order(order))
 
         return boundaries
 
 
 _DEFAULT_SAMPLING_SIZE = LonLatData(
-    lon=DimensionData(position=12.0, velocity=12.0, acceleration=12.0),
-    lat=DimensionData(position=12.0, velocity=12.0, acceleration=12.0),
+    lon=DimensionData(position=12, velocity=12, acceleration=12),
+    lat=DimensionData(position=12, velocity=12, acceleration=12),
 )
 _DEFAULT_SAMPLING_ORDERS_LON = frozenset({SamplingOrder.VELOCITY})
 _DEFAULT_SAMPLING_ORDERS_LAT = frozenset({SamplingOrder.POSITION, SamplingOrder.VELOCITY})
@@ -149,7 +146,7 @@ class EndStateOptions:
 
 
 DEFAULT_HIGH_VELOCITY_END_STATE_OPTIONS_INTERSTATE = EndStateOptions(
-    number=100,
+    number=1000,
     d_radius=5,
     d_dot_radius=3,
 )
@@ -208,7 +205,7 @@ class SwitchableEndStateOptions:
         Returns:
             The determined velocity mode.
         """
-        has_multiple_velocity_modes = self.mode_switch_threshold is None
+        has_multiple_velocity_modes = self.mode_switch_threshold is not None
         if not has_multiple_velocity_modes:
             velocity_mode = (
                 VelocityMode.HIGH_VELOCITY_MODE
@@ -255,13 +252,6 @@ class FutureStateSamplerConfig:
     """Specify the sampling time horizon in seconds."""
 
     eps: float = 1e-6
-
-    def __post_init__(self) -> None:
-        if self.end_state_options.mode_switch_threshold is None:
-            if len(self.end_state_options.modes) > 1:
-                raise ValueError(
-                    "Invalid end_state_options: If more then one end state options are given, `mode_switch_threshold` must also be specified"
-                )
 
     @classmethod
     def default_config_for_scenario_type(
@@ -469,23 +459,30 @@ class AbstractFutureStateSampler(ABC):
             Whether the state is a valid end state or not.
         """
         vehicle_params: VehicleParameters = vehicle_dynamics.parameters
-        long_velocity = end_state.lon.velocity
-        lat_velocity = end_state.lat.velocity
 
-        # no backwards
-        # TODO: Shouldn't backward driving be allowed?
-        if long_velocity <= 0.001:
-            return False
+        if end_state.lon.has_order(SamplingOrder.VELOCITY) and end_state.lat.has_order(
+            SamplingOrder.VELOCITY
+        ):
+            long_velocity = end_state.lon.velocity
+            lat_velocity = end_state.lat.velocity
 
-        velocity = np.linalg.norm([long_velocity, lat_velocity])
-        if velocity > vehicle_params.longitudinal.v_max:
-            return False
+            # no backwards
+            # TODO: Shouldn't backward driving be allowed?
+            if long_velocity <= 0.001:
+                return False
 
-        long_acceleration = end_state.lon.acceleration
-        lat_acceleration = end_state.lat.acceleration
-        acceleration = np.linalg.norm([long_acceleration, lat_acceleration])
-        if acceleration > vehicle_params.longitudinal.a_max:
-            return False
+            velocity = np.linalg.norm([long_velocity, lat_velocity])
+            if velocity > vehicle_params.longitudinal.v_max:
+                return False
+
+        if end_state.lon.has_order(SamplingOrder.ACCELERATION) and end_state.lat.has_order(
+            SamplingOrder.ACCELERATION
+        ):
+            long_acceleration = end_state.lon.acceleration
+            lat_acceleration = end_state.lat.acceleration
+            acceleration = np.linalg.norm([long_acceleration, lat_acceleration])
+            if acceleration > vehicle_params.longitudinal.a_max:
+                return False
 
         return True
 
@@ -557,6 +554,15 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
         start_long_boundaries = start_long_lat_state.get_dimension_boundaries(SamplingDimension.LON)
         start_lat_boundaries = start_long_lat_state.get_dimension_boundaries(SamplingDimension.LAT)
         results = []
+        num_unfeasible_trajectories = 0
+        _LOGGER.debug(
+            "Sampling for vehicle %s from time step %s in %s with start boundaries: lon %s; lat %s",
+            ctx.vehicle(0).id,
+            ctx.time_step,
+            ctx.scenario.scenario_id,
+            start_long_boundaries,
+            start_lat_boundaries,
+        )
         for end_long_lat_state in self._end_state_sample(sample_params, vehicle_dynamics):
             long_fun = Polynomial.from_boundary(
                 start_long_boundaries,
@@ -597,9 +603,21 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
             )
 
             if not feasible:
+                num_unfeasible_trajectories += 1
                 continue
 
             results.append(curvilinear_trajectory)
+
+        num_feasible_trajectories = len(results)
+        _LOGGER.debug(
+            "Out of %s sampled trajectories for vehicle %s at time step %s in %s, %s trajectories are feasible while %s trajectories are infeasible.",
+            num_feasible_trajectories + num_unfeasible_trajectories,
+            ctx.vehicle(0).id,
+            ctx.time_step,
+            ctx.scenario.scenario_id,
+            num_feasible_trajectories,
+            num_unfeasible_trajectories,
+        )
 
         return StateBasedSamplingResult(results, ref_lane.clcs)
 

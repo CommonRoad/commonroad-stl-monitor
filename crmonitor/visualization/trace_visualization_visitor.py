@@ -9,7 +9,6 @@ from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 
-from crmonitor.evaluation.visitor import MonitorToStringVisitor
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
     MonitorVisitorInterface,
@@ -18,6 +17,7 @@ from crmonitor.monitor.monitor_node import (
     RtamtRuleMonitorNode,
     UnaryMonitorNode,
 )
+from crmonitor.monitor.visitors import MonitorToStringVisitor
 from crmonitor.predicates.scaling import RobustnessScaler
 
 

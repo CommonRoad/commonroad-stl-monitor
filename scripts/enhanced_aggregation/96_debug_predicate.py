@@ -5,7 +5,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad_mpr.common.observation import World as WorldMPR
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateEvaluatorConfig, PredicateMprConfig
+from crmonitor.predicates.base import PredicateConfig, PredicateMprConfig
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +48,7 @@ MprCfg.build_configuration(
 )
 scenario_path = scenarios_load_path / f"{scenario_name}.xml"
 
-predicate_evaluator_config = PredicateEvaluatorConfig(
+predicate_evaluator_config = PredicateConfig(
     scale_rob=True,
     mpr=PredicateMprConfig(enabled=True, ml=True, rectification=False, model_path=model_path),
 )

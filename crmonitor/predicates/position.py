@@ -14,8 +14,8 @@ from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import (
-    BasePredicateEvaluator,
-    PredicateEvaluatorConfig,
+    AbstractPredicate,
+    PredicateConfig,
     PredicateName,
 )
 from crmonitor.predicates.utils import (
@@ -68,7 +68,7 @@ class PositionPredicates(PredicateName):
     LatCloseToVehicleRight = "lat_close_to_vehicle_right"
 
 
-class PredInSameLane(BasePredicateEvaluator):
+class PredInSameLane(AbstractPredicate):
     predicate_name = PositionPredicates.InSameLane
     arity = 2
 
@@ -114,7 +114,7 @@ class PredInSameLane(BasePredicateEvaluator):
         return self._scale_lat_dist(rob)
 
 
-class PredInFrontOf(BasePredicateEvaluator):
+class PredInFrontOf(AbstractPredicate):
     predicate_name = PositionPredicates.InFrontOf
     arity = 2
 
@@ -127,7 +127,7 @@ class PredInFrontOf(BasePredicateEvaluator):
         )
 
 
-class PredSingleLane(BasePredicateEvaluator):
+class PredSingleLane(AbstractPredicate):
     predicate_name = PositionPredicates.SingleLane
     arity = 1
 
@@ -166,7 +166,7 @@ class PredSingleLane(BasePredicateEvaluator):
         return self._scale_lat_dist(rob)
 
 
-class PredSafeDistPrec(BasePredicateEvaluator):
+class PredSafeDistPrec(AbstractPredicate):
     predicate_name = PositionPredicates.KeepsSafeDistancePrec
     arity = 2
 
@@ -346,11 +346,11 @@ class PredSafeDistPrec(BasePredicateEvaluator):
         PredSafeDistPrec._plot_red_arrow(ax, [0, -1], [0.5, 0.5], size=0.1)
 
 
-class PredPreceding(BasePredicateEvaluator):
+class PredPreceding(AbstractPredicate):
     predicate_name = PositionPredicates.Precedes
     arity = 2
 
-    def __init__(self, config: PredicateEvaluatorConfig | None):
+    def __init__(self, config: PredicateConfig | None):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
@@ -426,7 +426,7 @@ class PredPreceding(BasePredicateEvaluator):
         return rob
 
 
-class PredRightOfBroadLaneMarking(BasePredicateEvaluator):
+class PredRightOfBroadLaneMarking(AbstractPredicate):
     predicate_name = PositionPredicates.RightOfBroadLaneMarking
     arity = 1
 
@@ -479,7 +479,7 @@ class PredRightOfBroadLaneMarking(BasePredicateEvaluator):
         return self._scale_lat_dist(-np.inf)
 
 
-class PredLeftOfBroadLaneMarking(BasePredicateEvaluator):
+class PredLeftOfBroadLaneMarking(AbstractPredicate):
     predicate_name = PositionPredicates.LeftOfBroadLaneMarking
     arity = 1
 
@@ -532,7 +532,7 @@ class PredLeftOfBroadLaneMarking(BasePredicateEvaluator):
         return self._scale_lat_dist(-np.inf)
 
 
-class PredOnAccessRamp(BasePredicateEvaluator):
+class PredOnAccessRamp(AbstractPredicate):
     """
     Evaluates if a vehicle is on an access ramp.
     """
@@ -566,7 +566,7 @@ class PredOnAccessRamp(BasePredicateEvaluator):
             return self._scale_lat_dist(-np.inf)
 
 
-class PredOnShoulder(BasePredicateEvaluator):
+class PredOnShoulder(AbstractPredicate):
     """
     Evaluates if a vehicle is on a shoulder lane.
     """
@@ -598,7 +598,7 @@ class PredOnShoulder(BasePredicateEvaluator):
             return self._scale_lat_dist(-np.inf)
 
 
-class PredOnMainCarriageway(BasePredicateEvaluator):
+class PredOnMainCarriageway(AbstractPredicate):
     """
     Evaluates if a vehicle is on a main carriage way.
     """
@@ -632,7 +632,7 @@ class PredOnMainCarriageway(BasePredicateEvaluator):
             return self._scale_lat_dist(-np.inf)
 
 
-class PredInRightmostLane(BasePredicateEvaluator):
+class PredInRightmostLane(AbstractPredicate):
     """
     check if any assigned lanelet of ego vehicle is in rightmost lane
     """
@@ -684,7 +684,7 @@ class PredInRightmostLane(BasePredicateEvaluator):
         return self._scale_lat_dist(dis_to_lane)
 
 
-class PredInLeftmostLane(BasePredicateEvaluator):
+class PredInLeftmostLane(AbstractPredicate):
     """
     check if any assigned lanelet of ego vehicle is in leftmost lane
     """
@@ -712,7 +712,7 @@ class PredInLeftmostLane(BasePredicateEvaluator):
         return self._scale_lat_dist(dis_to_lane)
 
 
-class PredMainCarriageWayRightLane(BasePredicateEvaluator):
+class PredMainCarriageWayRightLane(AbstractPredicate):
     """
     Evaluates if a vehicle occupies the rightmost main carriageway lane.
     """
@@ -755,7 +755,7 @@ class PredMainCarriageWayRightLane(BasePredicateEvaluator):
         return self._scale_lat_dist(dis_to_lane)
 
 
-class PredLeftOf(BasePredicateEvaluator):
+class PredLeftOf(AbstractPredicate):
     predicate_name = PositionPredicates.LeftOf
     arity = 2
 
@@ -832,7 +832,7 @@ class PredLeftOf(BasePredicateEvaluator):
         return rob
 
 
-class PredDrivesLeftmost(BasePredicateEvaluator):
+class PredDrivesLeftmost(AbstractPredicate):
     """
     Evaluates if a vehicle drives leftmost within its occupied lanes.
     """
@@ -893,7 +893,7 @@ class PredDrivesLeftmost(BasePredicateEvaluator):
         return self._scale_lat_dist(max(veh_dir_l_dist, lane_bound_dist))
 
 
-class PredDrivesRightmost(BasePredicateEvaluator):
+class PredDrivesRightmost(AbstractPredicate):
     """
     Evaluates if a vehicle drives rightmost within its occupied lanes.
     """
@@ -955,7 +955,7 @@ class PredDrivesRightmost(BasePredicateEvaluator):
         return self._scale_lat_dist(max(veh_dir_r_dist, lane_bound_dist))
 
 
-class PredCloseToLeftBound(BasePredicateEvaluator):
+class PredCloseToLeftBound(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToLeftBound
     arity = 1
 
@@ -972,7 +972,7 @@ class PredCloseToLeftBound(BasePredicateEvaluator):
         return self._scale_lat_dist(self.config.close_to_lane_border - dist)
 
 
-class PredCloseToRightBound(BasePredicateEvaluator):
+class PredCloseToRightBound(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToRightBound
     arity = 1
 
@@ -990,7 +990,7 @@ class PredCloseToRightBound(BasePredicateEvaluator):
         return self._scale_lat_dist(self.config.close_to_lane_border - dist)
 
 
-class PredCloseToVehicleLeft(BasePredicateEvaluator):
+class PredCloseToVehicleLeft(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToVehicleLeft
     arity = 2
 
@@ -1015,7 +1015,7 @@ class PredCloseToVehicleLeft(BasePredicateEvaluator):
         return min(lat_dist, lon_dist)
 
 
-class PredCloseToVehicleRight(BasePredicateEvaluator):
+class PredCloseToVehicleRight(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToVehicleRight
     arity = 2
 
@@ -1040,7 +1040,7 @@ class PredCloseToVehicleRight(BasePredicateEvaluator):
         return min(lat_dist, lon_dist)
 
 
-class PredLatLeftOf(BasePredicateEvaluator):
+class PredLatLeftOf(AbstractPredicate):
     predicate_name = PositionPredicates.LatLeftOf
     arity = 2
 
@@ -1055,7 +1055,7 @@ class PredLatLeftOf(BasePredicateEvaluator):
         )
 
 
-class PredHeadingRight(BasePredicateEvaluator):
+class PredHeadingRight(AbstractPredicate):
     predicate_name = PositionPredicates.HeadingRight
     arity = 1
 
@@ -1066,7 +1066,7 @@ class PredHeadingRight(BasePredicateEvaluator):
         return self._scale_angle(-ego_vehicle.get_lat_state(time_step, lane).theta)
 
 
-class PredLatLeftOfVehicle(BasePredicateEvaluator):
+class PredLatLeftOfVehicle(AbstractPredicate):
     predicate_name = PositionPredicates.LatLeftOfVehicle
     arity = 2
 
@@ -1080,7 +1080,7 @@ class PredLatLeftOfVehicle(BasePredicateEvaluator):
         )
 
 
-class PredRearBehindFront(BasePredicateEvaluator):
+class PredRearBehindFront(AbstractPredicate):
     predicate_name = PositionPredicates.RearBehindFront
     arity = 2
 
@@ -1094,7 +1094,7 @@ class PredRearBehindFront(BasePredicateEvaluator):
         )
 
 
-class PredLatCloseToVehicleLeft(BasePredicateEvaluator):
+class PredLatCloseToVehicleLeft(AbstractPredicate):
     predicate_name = PositionPredicates.LatCloseToVehicleLeft
     arity = 2
 
@@ -1112,7 +1112,7 @@ class PredLatCloseToVehicleLeft(BasePredicateEvaluator):
         return lat_dist
 
 
-class PredLatCloseToVehicleRight(BasePredicateEvaluator):
+class PredLatCloseToVehicleRight(AbstractPredicate):
     predicate_name = PositionPredicates.LatCloseToVehicleRight
     arity = 2
 
@@ -1133,11 +1133,11 @@ class PredLatCloseToVehicleRight(BasePredicateEvaluator):
 ##################
 #  intersection  #
 ##################
-class PredStopLineInFront(BasePredicateEvaluator):
+class PredStopLineInFront(AbstractPredicate):
     predicate_name = PositionPredicates.StopLineInFront
     arity = 1
 
-    def __init__(self, config: PredicateEvaluatorConfig | None = None):
+    def __init__(self, config: PredicateConfig | None = None):
         super().__init__(config)
         self._dict_veh_id_stop_line_s = defaultdict(lambda: None)
         self._dict_veh_id_intersection_lanelets = defaultdict(lambda: None)
@@ -1256,7 +1256,7 @@ class PredStopLineInFront(BasePredicateEvaluator):
         return self._scale_lon_dist(float(robustness))
 
 
-class PredOnIncomingLeftOf(BasePredicateEvaluator):
+class PredOnIncomingLeftOf(AbstractPredicate):
     """
     evaluate if the k-th vehicle occupies a lane that is left of the lane of the p-th vehicle in terms of incoming
     consider in multiple intersections
@@ -1316,7 +1316,7 @@ class PredOnIncomingLeftOf(BasePredicateEvaluator):
         return rob
 
 
-class PredInIntersectionConflictArea(BasePredicateEvaluator):
+class PredInIntersectionConflictArea(AbstractPredicate):
     predicate_name = PositionPredicates.InIntersectionConflictArea
     arity = 2
 
@@ -1443,7 +1443,7 @@ class PredInIntersectionConflictArea(BasePredicateEvaluator):
         return rob
 
 
-class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
+class PredOnLaneletWithTypeIntersection(AbstractPredicate):
     """
     evaluates if a vehicle is on a lanelet with a specific type.
     """
@@ -1505,7 +1505,7 @@ class PredOnLaneletWithTypeIntersection(BasePredicateEvaluator):
         return self._scale_lon_dist(rob)
 
 
-class PredOnOncomOf(BasePredicateEvaluator):
+class PredOnOncomOf(AbstractPredicate):
     predicate_name = PositionPredicates.OnOncomOf
     arity = 2
 

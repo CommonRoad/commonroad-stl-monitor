@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class AccelerationPredicates(PredicateName):
     CausesBrakingIntersection = "causes_braking_intersection"
 
 
-class PredAbruptBreaking(BasePredicateEvaluator):
+class PredAbruptBreaking(AbstractPredicate):
     predicate_name = AccelerationPredicates.BrakesAbruptly
     arity = 1
 
@@ -25,7 +25,7 @@ class PredAbruptBreaking(BasePredicateEvaluator):
         return self._scale_acc(rob)
 
 
-class PredAbruptBreakingRelative(BasePredicateEvaluator):
+class PredAbruptBreakingRelative(AbstractPredicate):
     predicate_name = AccelerationPredicates.BrakesAbruptlyRelative
     arity = 2
 
@@ -36,7 +36,7 @@ class PredAbruptBreakingRelative(BasePredicateEvaluator):
         return self._scale_acc(rob)
 
 
-class PredCausesBrakingIntersection(BasePredicateEvaluator):
+class PredCausesBrakingIntersection(AbstractPredicate):
     """
     evaluates if the k-th vehicle causes the braking of the p-th vehicle.
 

@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True)
-class PredicateEvaluatorConfig:
+class PredicateConfig:
     scale_rob: bool = True
 
     eps: float = 1e-17
@@ -67,7 +67,7 @@ class PredicateName(str, Enum):
         return self.value
 
 
-class BasePredicateEvaluator(abc.ABC):
+class AbstractPredicate(abc.ABC):
     """
     Base class for the predicate evaluator
     """
@@ -77,11 +77,11 @@ class BasePredicateEvaluator(abc.ABC):
 
     def __init__(
         self,
-        config: PredicateEvaluatorConfig | None = None,
+        config: PredicateConfig | None = None,
         scaler: IRobustnessScaler | None = None,
     ) -> None:
         if config is None:
-            config = PredicateEvaluatorConfig()
+            config = PredicateConfig()
         self.config = config
         self._scaler = scaler or RobustnessScaler(self.config.scale_rob)
 
@@ -158,6 +158,3 @@ class BasePredicateEvaluator(abc.ABC):
     def plot_predicate_visualization_legend(ax):
         ax.axis("off")
         ax.text(0.1, 0.5, "[not visualized]", fontsize=12)
-
-    def reset(self) -> None:
-        self._mpr_gradients = []

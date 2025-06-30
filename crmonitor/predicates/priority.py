@@ -8,8 +8,8 @@ from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import (
-    BasePredicateEvaluator,
-    PredicateEvaluatorConfig,
+    AbstractPredicate,
+    PredicateConfig,
     PredicateName,
 )
 
@@ -99,7 +99,7 @@ class TrafficSignPriority:
             self.evaluation_idx = evaluation_index
 
 
-class PredAtTrafficSignStop(BasePredicateEvaluator):
+class PredAtTrafficSignStop(AbstractPredicate):
     predicate_name = PriorityPredicates.AtTrafficSignStop
     arity = 1
     stop_traffic_sign_deu = TrafficSignIDGermany.STOP
@@ -140,7 +140,7 @@ class PredAtTrafficSignStop(BasePredicateEvaluator):
         return -1.0
 
 
-class PredRelevantTrafficLight(BasePredicateEvaluator):
+class PredRelevantTrafficLight(AbstractPredicate):
     """
     evaluates if an upcoming intersection is regulated by traffic lights
     """
@@ -148,7 +148,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
-    def __init__(self, config: PredicateEvaluatorConfig):
+    def __init__(self, config: PredicateConfig):
         super().__init__(config)
         self._dict_lanelets_traffic_light = defaultdict(lambda: None)
 
@@ -249,7 +249,7 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
         return self._scale_lon_dist(float(robustness))
 
 
-class PredSamePriorityBase(BasePredicateEvaluator):
+class PredSamePriorityBase(AbstractPredicate):
     predicate_name = PriorityPredicates.SamePriorityBase
     arity = 2
     first_direction = None
@@ -421,7 +421,7 @@ class PredSamePriorityStraightStraight(PredSamePriorityBase):
     second_direction = "straight"
 
 
-class PredHasPriorityBase(BasePredicateEvaluator):
+class PredHasPriorityBase(AbstractPredicate):
     predicate_name = PriorityPredicates.HasPriorityBase
     arity = 2
     first_direction = None

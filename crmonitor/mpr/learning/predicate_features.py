@@ -2,7 +2,7 @@ import logging
 
 from crmonitor.common.scenario_type import ScenarioType
 from crmonitor.mpr.learning.feature_variables import VelocityFeatureVariable
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 from crmonitor.predicates.predicate_registry import PredicateRegistry, PredicateRegistryExtension
 from crmonitor.predicates.velocity import VelocityPredicates
 
@@ -50,7 +50,7 @@ def initialize_feature_predicate_registry_extension():
 
 
 def get_desired_features_for_predicate(
-    predicate: BasePredicateEvaluator, scenario_type: ScenarioType = ScenarioType.INTERSTATE
+    predicate: AbstractPredicate, scenario_type: ScenarioType = ScenarioType.INTERSTATE
 ) -> DesiredFeatureVariables | None:
     registry = PredicateRegistry.get_registry()
     extension = registry.get_extension(FeatureRegistryExtension)

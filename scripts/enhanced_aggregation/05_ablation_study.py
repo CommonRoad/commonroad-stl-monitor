@@ -13,7 +13,7 @@ from commonroad.scenario.scenario import Scenario
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.evaluation.predicate_interface import (
-    PredicateInterfaceConfig,
+    PredicateEvaluationInterfaceConfig,
     PredicateEvaluationMode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
@@ -32,7 +32,7 @@ from crmonitor.mpr.prediction.state_sampling import (
     VelocityMode,
 )
 from crmonitor.predicates.base import (
-    PredicateEvaluatorConfig,
+    PredicateConfig,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -67,9 +67,9 @@ def process_scenario_with_rule(
         if use_mpr
         else PredicateEvaluationMode.MFR
     )
-    predicate_interface_config = PredicateInterfaceConfig(
+    predicate_interface_config = PredicateEvaluationInterfaceConfig(
         mode=evaluation_mode,
-        base=PredicateEvaluatorConfig(scale_rob=True),
+        base=PredicateConfig(scale_rob=True),
         mpr=MprPredicateEvaluatorConfig(
             sampler_config=FutureStateSamplerConfig(
                 SwitchableEndStateOptions(

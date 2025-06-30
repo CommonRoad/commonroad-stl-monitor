@@ -6,7 +6,7 @@ import numpy as np
 
 from crmonitor.common import ScenarioType
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 from .exact_gp_model import read_model
 from .feature_extractor import FeatureExtractor, FeatureVariableAgentCombination
@@ -35,7 +35,7 @@ class MprGpPredicateEvaluatorConfig:
 class MprGpPredicateEvaluator:
     def __init__(
         self,
-        predicates: Iterable[BasePredicateEvaluator],
+        predicates: Iterable[AbstractPredicate],
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,
         config: MprGpPredicateEvaluatorConfig | None = None,
     ) -> None:

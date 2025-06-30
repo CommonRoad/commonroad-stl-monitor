@@ -14,23 +14,22 @@ from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.evaluation.predicate_interface import (
     PredicateEvaluationMode,
-    PredicateInterfaceConfig,
+    PredicateEvaluationInterfaceConfig,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.mpr import (
     MprPredicateEvaluatorConfig,
     MprGpPredicateEvaluatorConfig,
-    MprPredicateEvaluator,
-    MprGpPredicateEvaluator,
 )
-from crmonitor.predicates.base import PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateConfig
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARN)
+logging.getLogger("crmonitor").setLevel(logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 scenario_id = "DEU_LocationELower15-1_1510041_T-10291"
-predicate_evaluation_mode = PredicateEvaluationMode.MPR_GP
+predicate_evaluation_mode = PredicateEvaluationMode.MPR
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True  # not use_mpr
@@ -43,8 +42,6 @@ traffic_rule = "R_G3"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS
-
-logging.basicConfig(level=logging.INFO)
 
 scenario_path = scenarios_load_path / scenario_id
 # Open the scenario
@@ -62,9 +59,9 @@ ego_vehicle = next(iter(world.vehicles))
 _LOGGER.info(
     f"Evaluating rule {traffic_rule} for ego vehicle {ego_vehicle.id} in scenario {scenario_id}"
 )
-predicate_interface_config = PredicateInterfaceConfig(
+predicate_interface_config = PredicateEvaluationInterfaceConfig(
     mode=predicate_evaluation_mode,
-    base=PredicateEvaluatorConfig(scale_rob=scale_rob),
+    base=PredicateConfig(scale_rob=scale_rob),
     mpr=MprPredicateEvaluatorConfig(),
     mpr_gp=MprGpPredicateEvaluatorConfig(model_path=model_path),
 )

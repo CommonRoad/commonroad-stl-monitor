@@ -11,7 +11,7 @@ import shap
 from matplotlib.figure import Figure
 from sklearn.metrics import mean_squared_error
 
-from crmonitor.predicates import BasePredicateEvaluator
+from crmonitor.predicates import AbstractPredicate
 
 from ._split_data import split_data
 from .data_loader import DataLoader
@@ -63,9 +63,7 @@ class ModelEvaluator:
         self._models_path = models_path
         self._eps = eps
 
-    def evaluate(
-        self, predicates: Iterable[BasePredicateEvaluator]
-    ) -> dict[str, EvaluationMetrics]:
+    def evaluate(self, predicates: Iterable[AbstractPredicate]) -> dict[str, EvaluationMetrics]:
         """plot the comparison between ground truth and prediction,
         and calculate mean squared error for all predicate models.
 
@@ -80,7 +78,7 @@ class ModelEvaluator:
 
         return results
 
-    def evaluate_predicate(self, predicate: BasePredicateEvaluator) -> EvaluationMetrics:
+    def evaluate_predicate(self, predicate: AbstractPredicate) -> EvaluationMetrics:
         """Evaluate a single predicate and return its metrics.
 
         Args:
@@ -178,7 +176,7 @@ class ModelEvaluator:
         balanced_indices = np.concatenate([indices_true, indices_false])
         return X_test[balanced_indices].astype(np.float32)
 
-    def _get_feature_indices(self, predicate: BasePredicateEvaluator) -> list[tuple[str, str, Any]]:
+    def _get_feature_indices(self, predicate: AbstractPredicate) -> list[tuple[str, str, Any]]:
         """Get feature indices for a given predicate."""
         feature_extractor = FeatureExtractor.for_predicate_evaluator(predicate)
         index_features = feature_extractor.feature_variable_labels()

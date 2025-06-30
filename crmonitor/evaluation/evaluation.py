@@ -28,8 +28,9 @@ from crmonitor.monitor import (
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
+from crmonitor.monitor.visitors import PredicateNameCollectionMonitorTreeVisitor
 from crmonitor.predicates import (
-    BasePredicateEvaluator,
+    AbstractPredicate,
 )
 from crmonitor.rule import RuleAstNode, RuleParser, RuleTreeVisitorInterface
 from crmonitor.visualization import (
@@ -37,8 +38,9 @@ from crmonitor.visualization import (
 )
 
 from .predicate_interface import (
+    PredicateEvaluationInterface,
+    PredicateEvaluationInterfaceConfig,
     PredicateEvaluationMode,
-    PredicateInterfaceConfig,
 )
 from .visitors import (
     OfflineEvaluationMonitorTreeVisitor,
@@ -56,7 +58,7 @@ class RuleEvaluatorInterface(ABC):
         world: World,
         ego_id: int,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ):
         rule_str = get_traffic_rule_from_config(rule_name)
         if rule_str is None:
@@ -75,7 +77,7 @@ class RuleEvaluatorInterface(ABC):
         world: World,
         ego_id: int,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         self._rule = rule
         self._ego_id = ego_id
@@ -125,8 +127,17 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
         if end_time is None:
             end_time = self.ego_vehicle.end_time
 
+        predicate_names = PredicateNameCollectionMonitorTreeVisitor().collect_predicate_names(
+            self._monitor
+        )
+
+        predicate_interface = PredicateEvaluationInterface(
+            predicate_names, self._predicate_interface_config
+        )
+
         eval_visitor = OfflineEvaluationMonitorTreeVisitor(
-            self._predicate_interface_config.base.scale_rob, self._predicate_interface_config
+            predicate_interface,
+            self._predicate_interface_config.base.scale_rob,
         )
         return eval_visitor.evaluate(
             self._monitor,
@@ -144,7 +155,7 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         world: World,
         ego_id: int,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_interface_config: PredicateInterfaceConfig = PredicateInterfaceConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         super().__init__(rule, world, ego_id, output_type, predicate_interface_config)
         self._eval_visitor = OnlineEvaluationMonitorTreeVisitor(
@@ -338,7 +349,7 @@ class RuleEvaluator:
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
     ) -> Tuple[
-        Dict[str, BasePredicateEvaluator],
+        Dict[str, AbstractPredicate],
         Dict[Any, Dict],
         List,
         List[Callable[[MPRenderer], None]],

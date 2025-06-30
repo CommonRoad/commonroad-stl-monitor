@@ -6,13 +6,17 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import numpy as np
 
 from crmonitor.common import ScenarioType, Vehicle, World
-from crmonitor.mpr.prediction import FutureStateSampler, FutureStateSamplerConfig
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateName
+from crmonitor.mpr.prediction import (
+    FutureStateSampler,
+    FutureStateSamplerConfig,
+    StateBasedSamplingResult,
+)
+from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,6 +179,19 @@ class RobustnessNormalizationProvider:
         return robustness
 
 
+class MprSampledStatesCache(Protocol):
+    def set_sampling_result(
+        self,
+        time_step: int,
+        vehicle_id: int,
+        result: StateBasedSamplingResult,
+    ) -> None: ...
+
+    def get_sampling_result(
+        self, time_step: int, vehicle_id: int
+    ) -> StateBasedSamplingResult | None: ...
+
+
 @dataclass(frozen=True, kw_only=True)
 class MprPredicateEvaluatorConfig:
     eps: float = 1e-17
@@ -189,9 +206,10 @@ class MprPredicateEvaluator:
 
     def __init__(
         self,
-        predicates: Iterable[BasePredicateEvaluator],
+        predicates: Iterable[AbstractPredicate],
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,
         config: MprPredicateEvaluatorConfig | None = None,
+        state_sampling_cache: MprSampledStatesCache | None = None,
     ) -> None:
         self._predicates = predicates
         if config is None:
@@ -199,6 +217,8 @@ class MprPredicateEvaluator:
 
         self._config = config
         self._state_sampler = FutureStateSampler(scenario_type, config.sampler_config)
+
+        self._state_sampling_cache = state_sampling_cache
 
     def evaluate(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
@@ -260,7 +280,7 @@ class MprPredicateEvaluator:
         predicates_error_count = defaultdict(lambda: 0)
         general_error_count = 0
 
-        for ego_future_state in self._state_sampler.sample(world, time_step, ego_vehicle_id):
+        for ego_future_state in self._get_state_samples(world, time_step, ego_vehicle_id):
             injection_successfull = _inject_sampled_state_into_vehicle_trajectory(
                 world, ego_vehicle, ego_future_state
             )
@@ -343,6 +363,21 @@ class MprPredicateEvaluator:
             return self._config.normalization_provider.normalize(probability, satisfied)
         else:  # no normalization, just setting the sign
             return probability if satisfied else -(1 - probability)
+
+    def _get_state_samples(
+        self, world: World, time_step: int, ego_vehicle_id: int
+    ) -> StateBasedSamplingResult:
+        if self._state_sampling_cache is not None:
+            result = self._state_sampling_cache.get_sampling_result(time_step, ego_vehicle_id)
+            if result is not None:
+                return result
+
+        result = self._state_sampler.sample(world, time_step, ego_vehicle_id)
+
+        if self._state_sampling_cache is not None:
+            self._state_sampling_cache.set_sampling_result(time_step, ego_vehicle_id, result)
+
+        return result
 
 
 def _inject_sampled_state_into_vehicle_trajectory(

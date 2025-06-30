@@ -4,7 +4,7 @@ import logging
 import pkgutil
 from pathlib import Path
 
-from .base import BasePredicateEvaluator, PredicateName
+from .base import AbstractPredicate, PredicateName
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class UnkownPredicateError(Exception): ...
 PREDICATE_MODULES = {"general", "position", "velocity", "acceleration"}
 
 
-def _get_all_predicate_evaluators() -> dict[str, type[BasePredicateEvaluator]]:
+def _get_all_predicate_evaluators() -> dict[str, type[AbstractPredicate]]:
     package_path = Path(__file__).parent
 
     predicates = {}
@@ -48,11 +48,11 @@ def _get_all_predicate_evaluators() -> dict[str, type[BasePredicateEvaluator]]:
 
         predicates_all_based = []
         for predicate in module_predicates:
-            if not issubclass(predicate, BasePredicateEvaluator):
+            if not issubclass(predicate, AbstractPredicate):
                 _LOGGER.warning(
                     "Discarding '%s' as possible predicate, because it is not based on '%s'",
                     predicate,
-                    BasePredicateEvaluator,
+                    AbstractPredicate,
                 )
                 continue
 
@@ -96,7 +96,7 @@ class PredicateRegistry:
     """
 
     _instance: "PredicateRegistry | None" = None
-    _predicate_evaluators: dict[str, type[BasePredicateEvaluator]]
+    _predicate_evaluators: dict[str, type[AbstractPredicate]]
     _extensions: dict[type[PredicateRegistryExtension], PredicateRegistryExtension]
 
     def __init__(self) -> None:
@@ -117,13 +117,13 @@ class PredicateRegistry:
 
     def get_predicate_evaluator(
         self, predicate_name: str | PredicateName
-    ) -> type[BasePredicateEvaluator]:
+    ) -> type[AbstractPredicate]:
         if predicate_name not in self._predicate_evaluators:
             raise UnkownPredicateError(predicate_name)
 
         return self._predicate_evaluators[predicate_name]
 
-    def register_predicate_evaluator(self, predicate: type[BasePredicateEvaluator]) -> None:
+    def register_predicate_evaluator(self, predicate: type[AbstractPredicate]) -> None:
         if predicate.predicate_name in self._predicate_evaluators:
             _LOGGER.warning(
                 "Predicate %s is already in registry. Existing predicate will be overriden.",
@@ -148,7 +148,7 @@ class PredicateRegistry:
 
 def _get_all_predicate_evaluators_for_name_list(
     name_list: list[str],
-) -> list[type[BasePredicateEvaluator]]:
+) -> list[type[AbstractPredicate]]:
     registry = PredicateRegistry.get_registry()
     return [registry.get_predicate_evaluator(name) for name in name_list]
 
