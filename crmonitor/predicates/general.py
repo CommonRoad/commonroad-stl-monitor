@@ -142,15 +142,13 @@ class PredCutIn(AbstractPredicate):
         cutting_vehicle = world.vehicle_by_id(vehicle_ids[0])
         cutted_vehicle = world.vehicle_by_id(vehicle_ids[1])
         # For model-free evaluation, there is no mpr_world.
-        single_lane = self._single_lane_evaluator.evaluate_robustness_with_cache(
+        single_lane = self._single_lane_evaluator.evaluate_robustness(
             world,
             time_step,
             # TODO: Why is this rewrapped?
             (vehicle_ids[0],),
         )
-        same_lane = self._same_lane_evaluator.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
-        )
+        same_lane = self._same_lane_evaluator.evaluate_robustness(world, time_step, vehicle_ids)
 
         cutting_lane = cutting_vehicle.get_lane(time_step)
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
@@ -188,7 +186,7 @@ class PredCutIn(AbstractPredicate):
             vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
         )
         # For model-free evaluation, there is no mpr_world
-        latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        latest_value = self.evaluate_robustness(world, time_step, vehicle_ids)
         latest_value_normalized = (latest_value + 1) / 2
         violation_color = self._get_color_map()(latest_value_normalized)
         violation_color_hex = matplotlib.colors.rgb2hex(violation_color)
@@ -882,15 +880,11 @@ class PredTurningSamePriorityBase(AbstractPredicate):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: tuple[int, ...]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
-            world, time_step, (ego_vehicle_id,)
-        )
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, (ego_vehicle_id,))
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, time_step, (target_vehicle_id,)
         )
-        rob_same_priority = self._same_priority.evaluate_robustness_with_cache(
-            world, time_step, vehicle_ids
-        )
+        rob_same_priority = self._same_priority.evaluate_robustness(world, time_step, vehicle_ids)
         rob = min(rob_turning_ego, rob_turning_target, rob_same_priority)
         return rob
 
@@ -1019,13 +1013,11 @@ class PredTurningHasPriorityBase(AbstractPredicate):
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, time_step, (target_vehicle_id,)
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
-            world, time_step, (ego_vehicle_id,)
-        )
-        rob_target_has_priority = self._target_has_priority.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, (ego_vehicle_id,))
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, time_step, (target_vehicle_id, ego_vehicle_id)
         )
         rob = min(rob_turning_target, rob_turning_ego, rob_target_has_priority)
@@ -1077,16 +1069,14 @@ class PredRightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriorityB
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, time_step, (target_vehicle_id,)
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
-            world, time_step, (ego_vehicle_id,)
-        )
-        rob_target_has_priority = self._target_has_priority.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, (ego_vehicle_id,))
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, time_step, (target_vehicle_id, ego_vehicle_id)
         )
-        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness_with_cache(
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
             world, time_step, (target_vehicle_id, ego_vehicle_id)
         )
         rob = min(
@@ -1132,16 +1122,16 @@ class PredRightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, None, time_step, [target_vehicle_id]
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(
             world, None, time_step, [ego_vehicle_id]
         )
-        rob_target_has_priority = self._target_has_priority.evaluate_robustness_with_cache(
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
-        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness_with_cache(
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(
@@ -1242,16 +1232,16 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, None, time_step, [target_vehicle_id]
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(
             world, None, time_step, [ego_vehicle_id]
         )
-        rob_target_has_priority = self._target_has_priority.evaluate_robustness_with_cache(
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
-        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness_with_cache(
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(
@@ -1297,16 +1287,16 @@ class PredStraightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityB
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        rob_turning_target = self._turning_target.evaluate_robustness_with_cache(
+        rob_turning_target = self._turning_target.evaluate_robustness(
             world, None, time_step, [target_vehicle_id]
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness_with_cache(
+        rob_turning_ego = self._turning_ego.evaluate_robustness(
             world, None, time_step, [ego_vehicle_id]
         )
-        rob_target_has_priority = self._target_has_priority.evaluate_robustness_with_cache(
+        rob_target_has_priority = self._target_has_priority.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
-        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness_with_cache(
+        rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
             world, None, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(

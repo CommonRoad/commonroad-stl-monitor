@@ -109,24 +109,6 @@ class AbstractPredicate(abc.ABC):
     ) -> float:
         pass
 
-    def evaluate_robustness_with_cache(
-        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
-    ) -> float:
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        value = vehicle.predicate_cache.get_robustness(time_step, self.predicate_name, vehicle_ids)
-        if value is None:
-            # _LOGGER.debug(
-            #     "Evaluating predicate %s at time step %d with vehicles %s using model-free robustness.",
-            #     self.predicate_name,
-            #     time_step,
-            #     " ,".join(str(vehicle_id) for vehicle_id in vehicle_ids),
-            # )
-            value = self.evaluate_robustness(world, time_step, vehicle_ids)
-            vehicle.predicate_cache.set_robustness(
-                time_step, self.predicate_name, vehicle_ids[1:], value
-            )
-        return value
-
     def visualize(
         self,
         vehicle_ids: List[int],
@@ -151,7 +133,7 @@ class AbstractPredicate(abc.ABC):
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
         predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
-            self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+            self.evaluate_robustness(world, time_step, vehicle_ids)
         )
 
     @staticmethod
