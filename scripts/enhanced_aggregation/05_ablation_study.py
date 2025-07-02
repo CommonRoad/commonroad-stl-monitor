@@ -73,7 +73,7 @@ def process_scenario_with_rule(
         mpr=MprPredicateEvaluatorConfig(
             sampler_config=FutureStateSamplerConfig(
                 SwitchableEndStateOptions(
-                    modes={VelocityMode.HIGH_VELOCITY_MODE: EndStateOptions(number=100)}
+                    high_velocity_mode=EndStateOptions(number=100, d_radius=5, d_dot_radius=3)
                 )
             )
         ),
@@ -89,13 +89,12 @@ def process_scenario_with_rule(
     )
     rule_evaluator = OfflineRuleEvaluator.create_for_rule(
         rule,
-        world,
-        ego_vehicle.id,
+        world.dt,
         output_type=output_type,
         predicate_interface_config=predicate_interface_config,
     )
     # Either step through time steps sequentially
-    robustness = rule_evaluator.evaluate()
+    robustness = rule_evaluator.evaluate(world, ego_vehicle_id)
 
     return {
         "scenario_id": str(scenario.scenario_id),

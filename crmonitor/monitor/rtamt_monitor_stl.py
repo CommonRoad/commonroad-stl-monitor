@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Tuple
 
 import rtamt
 from rtamt.pastifier.stl.pastifier import StlPastifier
@@ -111,14 +111,13 @@ class RtamtStlMonitor:
         self._dt = dt
 
         self._spec = _create_rtamt_spec(rule_str, output_type, predicates, dt)
-        self._ast_node_values = {}
 
     @property
     def dt(self) -> float:
         return self._dt
 
     @property
-    def ast_node_values(self) -> Dict[str, float]:
+    def ast_node_values(self) -> dict[str, float]:
         if len(self._spec.offline_interpreter.ast_node_values) > 0:
             return self._spec.offline_interpreter.ast_node_values
         else:
@@ -130,8 +129,8 @@ class RtamtStlMonitor:
         return rob
 
     def evaluate_monitor_offline(
-        self, predicates: List[Tuple[str, List[float]]], marker: Optional[str] = None
-    ) -> List[float]:
+        self, predicates: list[tuple[str, list[float]]], marker: str | None = None
+    ) -> list[float]:
         dataset = {}
         max_time = 0
         for i, (predicate_name, values) in enumerate(predicates):

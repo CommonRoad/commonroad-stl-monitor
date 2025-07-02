@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Generator, Iterable
+from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
@@ -127,10 +128,10 @@ class EndStateOptions:
 
     """The selected sampling orders for each sampling dimension."""
     lon_orders: frozenset[SamplingOrder] = field(
-        default_factory=lambda: _DEFAULT_SAMPLING_ORDERS_LON
+        default_factory=lambda: deepcopy(_DEFAULT_SAMPLING_ORDERS_LON)
     )
     lat_orders: frozenset[SamplingOrder] = field(
-        default_factory=lambda: _DEFAULT_SAMPLING_ORDERS_LAT
+        default_factory=lambda: deepcopy(_DEFAULT_SAMPLING_ORDERS_LAT)
     )
 
     s_d_max: float = float("inf")

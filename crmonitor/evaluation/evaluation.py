@@ -2,37 +2,28 @@
 Module for the public evaluation interface. The classes in this module can be used to evaluate traffic rules.
 """
 
-import copy
 import logging
-import warnings
 from abc import ABC, abstractmethod
-from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from commonroad.visualization.mp_renderer import MPRenderer
+from typing_extensions import Self, override
 
-from crmonitor.common import Vehicle, VehicleParameters, World
+from crmonitor.common import World
 from crmonitor.common.config import (
-    get_traffic_rule_config,
     get_traffic_rule_from_config,
 )
-from crmonitor.common.helper import merge_dicts_recursively
 from crmonitor.monitor import (
-    AstNodeValueCollectorMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
     MonitorNode,
-    MPRGradientCollectorMonitorTreeVisitor,
     OutputType,
     PredicateValueCollectorMonitorTreeVisitor,
-    PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
-from crmonitor.monitor.visitors import PredicateNameCollectionMonitorTreeVisitor
-from crmonitor.predicates import (
-    AbstractPredicate,
+from crmonitor.monitor.visitors import (
+    MonitorToStringVisitor,
+    PredicateNameCollectionMonitorTreeVisitor,
 )
-from crmonitor.rule import RuleAstNode, RuleParser, RuleTreeVisitorInterface
+from crmonitor.rule import RuleAstNode, RuleParser
 from crmonitor.visualization import (
     VisualizationController,
 )
@@ -55,11 +46,10 @@ class RuleEvaluatorInterface(ABC):
     def create_for_rule(
         cls,
         rule_name: str,
-        world: World,
-        ego_id: int,
+        dt: float,
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
-    ):
+    ) -> Self:
         rule_str = get_traffic_rule_from_config(rule_name)
         if rule_str is None:
             _LOGGER.debug(
@@ -69,45 +59,39 @@ class RuleEvaluatorInterface(ABC):
 
         rule_node = RuleParser().parse(rule_str, name=rule_name)
 
-        return cls(rule_node, world, ego_id, output_type, predicate_interface_config)
+        return cls(rule_node, dt, output_type, predicate_interface_config)
 
     def __init__(
         self,
         rule: RuleAstNode,
-        world: World,
-        ego_id: int,
+        dt: float,
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         self._rule = rule
-        self._ego_id = ego_id
-        self._world = copy.deepcopy(world)
-        ego_vehicle = self._world.vehicle_by_id(self._ego_id)
-        if ego_vehicle is None:
-            raise RuntimeError(
-                f"Cannot create rule evaluator for rule {rule}: Ego vehicle {ego_id} is not part of the scenario!"
-            )
-        ego_vehicle.vehicle_param = VehicleParameters.create_for_ego_vehicle(
-            self._world.scenario.dt
-        )
-        self._ego_vehicle = ego_vehicle
         self._predicate_interface_config = predicate_interface_config
+        self._dt = dt
 
         monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
-        self._monitor = monitor_creation_visitor.visit(self._rule, world.dt, output_type)
+        self._monitor = monitor_creation_visitor.visit(self._rule, self._dt, output_type)
 
     @property
     def monitor(self) -> MonitorNode:
         return self._monitor
 
     @property
-    def ego_vehicle(self) -> Vehicle:
-        return self._ego_vehicle
+    def dt(self) -> float:
+        return self._dt
 
     @abstractmethod
     def evaluate(
-        self, start_time: int | None = None, end_time: int | None = None
+        self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
     ) -> list[float]: ...
+
+    def reset(self) -> None:
+        """ """
+        reset_visitor = ResetMonitorTreeVisitor()
+        reset_visitor.reset(self.monitor)
 
     def visualize(self) -> None:
         """Visualize the result of the evaluation."""
@@ -118,21 +102,32 @@ class RuleEvaluatorInterface(ABC):
         predicate_collector = PredicateValueCollectorMonitorTreeVisitor()
         return predicate_collector.collect_predicate_values(self.monitor)
 
+    def get_predicate_names(self) -> list[str]:
+        return PredicateNameCollectionMonitorTreeVisitor().collect_predicate_names(self.monitor)
+
+    def get_rule_str(self) -> str:
+        return MonitorToStringVisitor().to_string(self.monitor)
+
 
 class OfflineRuleEvaluator(RuleEvaluatorInterface):
-    def evaluate(self, start_time: int | None = None, end_time: int | None = None) -> list[float]:
+    def evaluate(
+        self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
+    ) -> list[float]:
+        if world.dt != self.dt:
+            raise ValueError()
+
+        ego_vehicle = world.vehicle_by_id(ego_id)
+        if ego_vehicle is None:
+            raise ValueError()
+
         if start_time is None:
-            start_time = self.ego_vehicle.start_time
+            start_time = ego_vehicle.start_time
 
         if end_time is None:
-            end_time = self.ego_vehicle.end_time
-
-        predicate_names = PredicateNameCollectionMonitorTreeVisitor().collect_predicate_names(
-            self._monitor
-        )
+            end_time = ego_vehicle.end_time
 
         predicate_interface = PredicateEvaluationInterface(
-            predicate_names, self._predicate_interface_config
+            self.get_predicate_names(), self._predicate_interface_config
         )
 
         eval_visitor = OfflineEvaluationMonitorTreeVisitor(
@@ -141,8 +136,8 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
         )
         return eval_visitor.evaluate(
             self._monitor,
-            self._world,
-            self.ego_vehicle,
+            world,
+            ego_vehicle,
             start_time,
             end_time,
         )
@@ -152,12 +147,11 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
     def __init__(
         self,
         rule: RuleAstNode,
-        world: World,
-        ego_id: int,
+        dt: float,
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
-        super().__init__(rule, world, ego_id, output_type, predicate_interface_config)
+        super().__init__(rule, dt, output_type, predicate_interface_config)
         self._eval_visitor = OnlineEvaluationMonitorTreeVisitor(
             self._predicate_interface_config.base.scale_rob,
             use_boolean=self._predicate_interface_config.mode == PredicateEvaluationMode.BOOLEAN,
@@ -166,273 +160,62 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
 
-    def evaluate(self, start_time: int | None = None, end_time: int | None = None) -> list[float]:
+    @property
+    def last_evaluation_time_step(self) -> int:
+        return self._last_evaluation_time_step
+
+    @property
+    def rule_value_course(self) -> list[float]:
+        return self._rule_value_course
+
+    def evaluate(
+        self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
+    ) -> list[float]:
+        if world.dt != self.dt:
+            raise ValueError()
+
+        ego_vehicle = world.vehicle_by_id(ego_id)
+        if ego_vehicle is None:
+            raise ValueError()
+
         if start_time is None:
             start_time = self._last_evaluation_time_step + 1
 
         if end_time is None:
-            end_time = self.ego_vehicle.end_time
+            end_time = ego_vehicle.end_time
 
         robustness_values = []
         for _ in range(start_time, end_time):
-            robustness_values.append(self.update())
+            robustness_values.append(self.update(world, ego_id))
         return robustness_values
 
-    def update(self) -> float:
+    def update(self, world: World, ego_id: int) -> float:
+        ego_vehicle = world.vehicle_by_id(ego_id)
+        if ego_vehicle is None:
+            raise ValueError()
+
         self._last_evaluation_time_step += 1
         if (
-            self.ego_vehicle.start_time > self._last_evaluation_time_step
-            or self._last_evaluation_time_step > self.ego_vehicle.end_time
+            ego_vehicle.start_time > self._last_evaluation_time_step
+            or self._last_evaluation_time_step > ego_vehicle.end_time
         ):
-            _LOGGER.warning("Evaluating vehicle outside its lifetime!")
+            _LOGGER.warning("Evaluating vehicle %s outside its lifetime!", ego_id)
             return np.inf
 
         rule_value = self._eval_visitor.update(
             self._monitor,
-            self._world,
+            world,
             self._last_evaluation_time_step,
-            self.ego_vehicle,
+            ego_vehicle,
         )
+
+        # TODO: Shouldn't the scaling be handled by the evaluation visitor?
         rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
         return rule_value
 
-
-class RuleEvaluator:
-    @classmethod
-    def create_from_config(
-        cls,
-        world: World,
-        ego_id: Optional[Union[int, Vehicle]],
-        rule: str = "R_G1",
-        traffic_rules_config=None,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-        monitor_creation_visitor: Optional[RuleTreeVisitorInterface] = None,
-        monitor_evaluation_visitor: Optional[RuleTreeVisitorInterface] = None,
-    ):
-        if traffic_rules_config is None:
-            traffic_rules_config = get_traffic_rule_config()
-        rule_str_dict = traffic_rules_config["traffic_rules"]
-
-        # Flat copy vehicles of the world to update ego vehicle parameters
-        world = copy.copy(world)
-        world.vehicles = copy.copy(world.vehicles)
-
-        if isinstance(ego_id, Vehicle):
-            warnings.warn(
-                "Passing a vehicle instance is deprecated and will be removed in the future!",
-                DeprecationWarning,
-            )
-            assert ego_id is world.vehicle_by_id(ego_id.id)
-            ego_id = ego_id.id
-
-        ego_vehicle = copy.copy(world.vehicle_by_id(ego_id))
-        world.vehicles.remove(world.vehicle_by_id(ego_id))
-
-        ego_vehicle.vehicle_param = VehicleParameters.create_for_ego_vehicle(world.scenario.dt)
-        world.vehicles.add(ego_vehicle)
-
-        monitor = RuleParser().parse(rule_str_dict[rule], name=rule)
-
-        return cls(
-            monitor,
-            ego_vehicle.id,
-            world,
-            use_boolean=use_boolean,
-            output_type=output_type,
-            monitor_creation_visitor=monitor_creation_visitor,
-            monitor_evaluation_visitor=monitor_evaluation_visitor,
-        )
-
-    def __init__(
-        self,
-        rule: RuleAstNode,
-        ego_id: Optional[Union[Vehicle, int]] = None,
-        world: Optional[World] = None,
-        start_time_step=None,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-        monitor_creation_visitor: Optional[RuleTreeVisitorInterface[MonitorNode]] = None,
-        monitor_evaluation_visitor: Optional[RuleTreeVisitorInterface] = None,
-    ):
-        if monitor_creation_visitor is None:
-            monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
-        self._rule = rule
-        self._monitor = monitor_creation_visitor.visit(rule)
-        self._predicate_collector_visitor = PredicateValueCollectorMonitorTreeVisitor()
-        self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
-        self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
-        self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
-        if monitor_evaluation_visitor is None:
-            self._eval_visitor = OnlineEvaluationMonitorTreeVisitor(
-                use_boolean=use_boolean, output_type=output_type
-            )
-        else:
-            self._eval_visitor = monitor_evaluation_visitor
+    @override
+    def reset(self) -> None:
+        super().reset()
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
-        self._ego_id = None
-        self._world = None
-        if ego_id is not None:
-            assert world is not None
-            self.reset(ego_id, world, start_time_step)
-
-    @property
-    def current_time(self) -> int:
-        return self._last_evaluation_time_step
-
-    def get_predicates(self) -> Dict[str, float]:
-        predicate_values = dict(self._predicate_collector_visitor.visit(self._monitor))
-        return predicate_values
-
-    def get_mpr_gradient(self) -> Dict[str, list]:
-        # with the mpr gradient flag to be true
-        mpr_gradient_values = dict(self._mpr_gradient_visitor.visit(self._monitor))
-        return mpr_gradient_values
-
-    def ast_node_values(self) -> Dict[str, float]:
-        node_values = dict(self._ast_node_value_collector_visitor.visit(self._monitor))
-        return node_values
-
-    def update(self) -> float:
-        """
-        Advance the monitor state by one time step and return the corresponding
-        rule evaluation value.
-
-        :return: robustness or boolean rule value
-        """
-        self._last_evaluation_time_step += 1
-        if (
-            self.ego_vehicle.start_time > self._last_evaluation_time_step
-            or self._last_evaluation_time_step > self.ego_vehicle.end_time
-        ):
-            _LOGGER.warning("Evaluating vehicle outside its lifetime!")
-            return np.inf
-        rule_value = self._eval_visitor.update(
-            self._monitor,
-            self._world,
-            self._mpr_world,
-            self._last_evaluation_time_step,
-            self.ego_vehicle,
-        )
-        rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
-        self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
-        return rule_value
-
-    def evaluate(self) -> np.ndarray:
-        """
-        Evaluate the rule exhaustively until the final time step of the vehicle object
-        is reached.
-
-        Caution: This will change the time step of the world object!
-
-        :return: Array of all rule values for all time steps of the vehicle's known
-            trajectory
-        """
-        robustness_values = []
-        for i in range(self._last_evaluation_time_step + 1, self.ego_vehicle.end_time + 1):
-            robustness_values.append(self.update())
-        return np.array(robustness_values)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self._last_evaluation_time_step + 1 < self.ego_vehicle.end_time + 1:
-            return self.update()
-        else:
-            raise StopIteration
-
-    def visualize_predicates(
-        self,
-        vehicle2draw_params: Dict,
-        visualization_config: Dict[str, any],
-    ) -> Tuple[
-        Dict[str, AbstractPredicate],
-        Dict[Any, Dict],
-        List,
-        List[Callable[[MPRenderer], None]],
-    ]:
-        """
-        Renders a scenario visualization using the MPRenderer and adds plots of the
-        predicates. In general, only
-        predicate instances belonging to an effective group within all enclosing all-
-        and exist-quantifiers of the
-        considered rule are visualized; here, "effective group" denotes the group
-        giving the minimum resp. maximum
-        value for an all- resp. exist-quantifier.
-        :visualization_config: predicate-name | 'default' -> {
-            show_non_effective_predicate_instances_for_vehicles: List[Tuple[int]],
-            # show predicate value for certain
-            # vehicle-ids
-        }. Allows predicate-type wise configuration of the visualization
-        :plot_scenario_legend: whether the legend for the scenario visualization
-        should be plotted. If None, it is
-        plotted for the first time-step only
-        :scenario_fig_size: figure size of the scenario only
-        :scenario_scale_compared_to_other_plots: scale describing how much larger
-        than the other bar-chart and the
-        rule-robustness chart the scenario should be drawn
-        :plot_predicate_bar_chart: whether a bar chart showing the predicate values
-        should be plotted. The
-        predicate instances included in the visualization are the same as the ones
-        shown in the scenario visualization
-        :bar_chart_plot_limits: minimum and maximum value of the bar-chart
-        :plot_rule_robustness_course: whether the rule robustness should be plotted
-        :rule_robustness_course_plot_limits: minimum and maximum y-value of the rule
-        robustness course
-        :scenario_plot_limits: [xmin, xmax, ymin, ymax] for the scenario plotting
-        """
-
-        def add_vehicle_draw_params(vehicle_id: int, draw_params: any):
-            vehicle2draw_params[vehicle_id] = merge_dicts_recursively(
-                vehicle2draw_params.get(vehicle_id, {}), draw_params
-            )
-
-        predicate_names2vehicle_ids2values = defaultdict(dict)
-
-        predicate_name2predicate_evaluator = {}
-
-        draw_functions = self._visualizer_visitor.visit(
-            self._monitor,
-            add_vehicle_draw_params,
-            predicate_names2vehicle_ids2values,
-            predicate_name2predicate_evaluator,
-            self._world,
-            self.current_time,
-            visualization_config,
-        )
-
-        return (
-            predicate_name2predicate_evaluator,
-            predicate_names2vehicle_ids2values,
-            self._rule_value_course,
-            draw_functions,
-        )
-
-    @property
-    def other_ids(self) -> Tuple[int]:
-        return self._eval_visitor.other_ids[1:]
-
-    @property
-    def all_values_all_ids(self) -> Dict[int, List[Tuple[int, float]]]:
-        return self._eval_visitor.all_values_all_ids
-
-    def reset(self, ego_id: Union[Vehicle, int], world: World, start_time_step=None):
-        if isinstance(ego_id, Vehicle):
-            warnings.warn(
-                "Passing a vehicle instance is deprecated and will be removed in the future!",
-                DeprecationWarning,
-            )
-            assert ego_id is world.vehicle_by_id(ego_id.id)
-            ego_id = ego_id.id
-        self._ego_id = ego_id
-        self._world = world
-        self._last_evaluation_time_step = (
-            start_time_step - 1 if start_time_step is not None else self.ego_vehicle.start_time - 1
-        )
-        self._rule_value_course = []
-        # Reset monitor
-        reset_visitor = ResetMonitorTreeVisitor()
-        reset_visitor.visit(self._monitor)

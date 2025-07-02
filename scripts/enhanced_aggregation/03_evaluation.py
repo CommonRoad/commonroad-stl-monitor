@@ -68,13 +68,12 @@ predicate_interface_config = PredicateEvaluationInterfaceConfig(
 
 rule_evaluator = OfflineRuleEvaluator.create_for_rule(
     traffic_rule,
-    world,
-    ego_vehicle.id,
+    dt=world.dt,
     output_type=output_type,
     predicate_interface_config=predicate_interface_config,
 )
 # Either step through time steps sequentially
-robustness = rule_evaluator.evaluate(end_time=10)
+robustness = rule_evaluator.evaluate(world, ego_vehicle.id, end_time=10)
 print(f"robustness is {robustness}")
 
 rule_evaluator.visualize()

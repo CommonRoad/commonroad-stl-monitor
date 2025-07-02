@@ -1,13 +1,21 @@
+from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
 _K = TypeVar(name="_K")
 _V = TypeVar("_V")
 
 
-class TimeStepCache(Generic[_K, _V]):
+class TimeStepCache(Generic[_K, _V], ABC):
+    @abstractmethod
     def set_at_time_step(self, time_step: int, key: _K, value: _V) -> None: ...
 
+    @abstractmethod
     def get_at_time_step(self, time_step: int, key: _K) -> _V | None: ...
+
+
+class BasicTimeStepCache(TimeStepCache[_K, _V]):
+    def __init__(self) -> None:
+        self._cache = {}
 
 
 class LinearTimeStepCache(TimeStepCache[_K, _V]):
