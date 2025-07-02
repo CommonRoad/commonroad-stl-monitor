@@ -24,12 +24,12 @@ from crmonitor.mpr import (
 from crmonitor.predicates.base import PredicateConfig
 
 logging.basicConfig(level=logging.WARN)
-logging.getLogger("crmonitor").setLevel(logging.DEBUG)
+logging.getLogger("crmonitor").setLevel(logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
 scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 scenario_id = "DEU_LocationELower15-1_1510041_T-10291"
-predicate_evaluation_mode = PredicateEvaluationMode.MPR
+predicate_evaluation_mode = PredicateEvaluationMode.MFR
 # If True (default), robustness values will be normalized to the interval [-1.0, 1.0]. If False, robustness values are not normalized and may lay in the interval [-inf, +inf].
 # Disable with caution when use_mpr is also enabled, as mpr with gaussian processes does not perform any normalization on its own.
 scale_rob = True  # not use_mpr
@@ -38,7 +38,7 @@ scale_rob = True  # not use_mpr
 model_path = Path(__file__).parent.parent.joinpath("output/models")
 
 # Specify the traffic rule you want to evaluate. For an overview of the available traffic rules, see `traffic_rules_rtamt.yaml`.
-traffic_rule = "R_G3"
+traffic_rule = "R_G2"
 
 # Set to `OutputType.OUTPUT_ROBUSTNESS` for IA-STL, and to `OutputType.STANDARD` for standard STL.
 output_type = OutputType.OUTPUT_ROBUSTNESS

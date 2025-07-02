@@ -1,11 +1,9 @@
 import copy
 import logging
 import math
-from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
-from functools import partial
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import List
 
 import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
@@ -14,7 +12,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.state import CustomState, InitialState, State
+from commonroad.scenario.state import CustomState, InitialState, State, TraceState
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_clcs.clcs import CurvilinearCoordinateSystem
 from commonroad_clcs.util import (
@@ -27,11 +25,13 @@ from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import DictConfig
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
+from typing_extensions import Self
 from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import Lane, RoadNetwork
+from crmonitor.common.scenario_type import ScenarioType
 
 rot_mat_factors = np.array([[1.0, 1.0, -1.0, -1.0], [1.0, -1.0, 1.0, -1.0]])
 
@@ -58,20 +58,21 @@ def calc_s(s, width, length, theta):
     return s
 
 
+@dataclass(slots=True, frozen=True)
 class StateLongitudinal:
     """
     Longitudinal state in curvilinear coordinate system
     """
 
-    __slots__ = ["s", "v", "a", "j", "j_dot"]
-
-    def __init__(self, **kwargs):
-        """Elements of state vector are determined during runtime."""
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+    time_step: int
+    s: float
+    v: float
+    a: float
+    j: float
+    j_dot: float
 
     @property
-    def attributes(self) -> List[str]:
+    def attributes(self) -> list[str]:
         """Returns all dynamically set attributes of an instance of State.
 
         :return: subset of slots which are dynamically assigned to the object.
@@ -90,17 +91,18 @@ class StateLongitudinal:
         return state
 
 
+@dataclass(slots=True, frozen=True)
 class StateLateral:
     """
     Lateral state in curvilinear coordinate system
     """
 
-    __slots__ = ["d", "theta", "kappa", "kappa_dot", "kappa_dot_dot"]
-
-    def __init__(self, **kwargs):
-        """Elements of state vector are determined during runtime."""
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+    time_step: int
+    d: float
+    theta: float
+    kappa: float
+    kappa_dot: float
+    kappa_dot_dot: float
 
     @property
     def attributes(self) -> List[str]:
@@ -148,9 +150,10 @@ class CurvilinearVehicleTrajectory:
         dt: float,
         s: np.ndarray,
         d: np.ndarray,
-        v: np.ndarray | None,
-        a: np.ndarray | None,
-        kappa: np.ndarray | None,
+        v: np.ndarray | None = None,
+        a: np.ndarray | None = None,
+        kappa: np.ndarray | None = None,
+        theta: np.ndarray | None = None,
         vehicle_dynamics: VehicleDynamics = CUSTOM_DEFAULT_VEHICLE_DYNAMICS,
     ) -> None:
         self.initial_time_step = initial_time_step
@@ -168,13 +171,44 @@ class CurvilinearVehicleTrajectory:
         self._a = self._compute_a_from_v(self._v) if a is None else a
         self._jerk = self._compute_jerk_from_a(self._a)
         self._jerk_dot = self._compute_j_dot_from_j(self._jerk)
-        self._theta = compute_orientation_from_polyline(self._polyline)
+        self._theta = compute_orientation_from_polyline(self._polyline) if theta is None else theta
         self._kappa = pycrccosy.Util.compute_curvature(self._polyline) if kappa is None else kappa
         self._kappa_dot = self._compute_kappa_dot_from_kappa(self._kappa)
         self._kappa_ddot = self._compute_kappa_ddot_from_kappa_dot(self._kappa_dot)
         self._steering_angle = self._compute_steering_angle_from_kappa(self._kappa)
         self._steering_angle_speed = self._compute_steering_angle_speed_from_kappa_and_kappa_dot(
             self._kappa, self._kappa_dot
+        )
+
+    @classmethod
+    def from_cartesian_state_list(
+        cls,
+        initial_time_step: int,
+        final_time_step: int,
+        state_list: list[TraceState],
+        dt: float,
+        lane: Lane,
+    ) -> Self:
+        # TODO: validate whether states have required attributes.
+        cartesian_coords = [state.position for state in state_list]
+        curvilinear_coords = np.array(
+            lane.clcs.convert_list_of_points_to_curvilinear_coords(cartesian_coords, 1)
+        )
+        s = curvilinear_coords.T[0]
+        d = curvilinear_coords.T[1]
+
+        v = np.array([state.velocity for state in state_list])
+        a = np.array([state.acceleration for state in state_list])
+
+        thetas = []
+        for i, state in enumerate(state_list):
+            theta_cl = lane.orientation(s[i]) % (2 * math.pi)
+            orientation = state.orientation % (2 * math.pi)
+            theta = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
+            thetas.append(theta)
+
+        return cls(
+            initial_time_step, final_time_step, dt=dt, s=s, d=d, v=v, a=a, theta=np.array(thetas)
         )
 
     def _time_step_to_index(self, time_step: int) -> int:
@@ -204,6 +238,24 @@ class CurvilinearVehicleTrajectory:
     def orientation(self, time_step: int) -> float:
         return self._theta[self._time_step_to_index(time_step)]
 
+    def theta(self, time_step: int) -> float:
+        return self._theta[self._time_step_to_index(time_step)]
+
+    def jerk(self, time_step: int) -> float:
+        return self._jerk[self._time_step_to_index(time_step)]
+
+    def jerk_dot(self, time_step: int) -> float:
+        return self._jerk_dot[self._time_step_to_index(time_step)]
+
+    def kappa(self, time_step: int) -> float:
+        return self._kappa[self._time_step_to_index(time_step)]
+
+    def kappa_dot(self, time_step: int) -> float:
+        return self._kappa_dot[self._time_step_to_index(time_step)]
+
+    def kappa_dot_dot(self, time_step: int) -> float:
+        return self._kappa_ddot[self._time_step_to_index(time_step)]
+
     def steering_angle(self, time_step: int) -> float:
         return self._steering_angle[self._time_step_to_index(time_step)]
 
@@ -219,6 +271,26 @@ class CurvilinearVehicleTrajectory:
             velocity=self.velocity(time_step),
             acceleration=self.acceleration(time_step),
             orientation=self.orientation(time_step),
+        )
+
+    def lon_state_at_time_step(self, time_step: int) -> StateLongitudinal:
+        return StateLongitudinal(
+            time_step=time_step,
+            s=self.s(time_step),
+            v=self.velocity(time_step),
+            a=self.acceleration(time_step),
+            j=self.jerk(time_step),
+            j_dot=self.jerk_dot(time_step),
+        )
+
+    def lat_state_at_time_step(self, time_step: int) -> StateLateral:
+        return StateLateral(
+            time_step,
+            d=self.d(time_step),
+            theta=self.theta(time_step),
+            kappa=self.kappa(time_step),
+            kappa_dot=self.kappa_dot(time_step),
+            kappa_dot_dot=self.kappa_dot_dot(time_step),
         )
 
     def initial_state_at_time_step(
@@ -301,179 +373,6 @@ class CurvilinearVehicleTrajectory:
         return self._l_wb * kappa_dot / (1 + self._l_wb**2 * kappa**2)
 
 
-class Input:
-    """
-    Lateral and longitudinal vehicle input
-    """
-
-    __slots__ = ["a", "kappa_dot_dot"]
-
-    @property
-    def attributes(self) -> List[str]:
-        """Returns all dynamically set attributes of an instance of State.
-
-        :return: subset of slots which are dynamically assigned to the object.
-        """
-        attributes = list()
-        for slot in self.__slots__:
-            if hasattr(self, slot):
-                attributes.append(slot)
-        return attributes
-
-    def __str__(self):
-        state = "\n"
-        for attr in self.attributes:
-            state += attr
-            state += "= {}\n".format(self.__getattribute__(attr))
-        return state
-
-
-@dataclass
-class CurvilinearStateManager:
-    """
-    Manage, cache curvilinear states
-    """
-
-    road_network: RoadNetwork
-    cache: Dict[Tuple[State, Lane], Tuple[StateLongitudinal, StateLateral]] = field(
-        default_factory=dict
-    )
-
-    @staticmethod
-    def _compute_curvilinear_state(
-        state: State, lane: Lane
-    ) -> Optional[Tuple[StateLongitudinal, StateLateral]]:
-        try:
-            s, d = lane.clcs.convert_to_curvilinear_coords(*state.position)
-        except ValueError:
-            _LOGGER.debug("Vehicle out of projection domain: consider large clcs")
-            try:
-                s, d = lane.clcs_large_step.convert_to_curvilinear_coords(*state.position)
-            except ValueError:
-                _LOGGER.debug("Vehicle out of projection domain: State will not be considered")
-                return None
-        # Originally, the speed was calcuclated as the magnitude of the combined directed vector of velocity and velocity_y.
-        # However, this resulted in issues because the orientation of the vehicle was not considered relative to the lane orientation.
-        # This could result in negative velocities (=reversing) even though the vehicle was driving forward (https://gitlab.lrz.de/cps/commonroad/commonroad-stl-monitor/-/issues/59).
-        # As velocity_y is usually very small, and velocity is good enough, we can also simply use the velocity.
-        speed = state.velocity
-        if hasattr(state, "acceleration"):
-            # Similarly to speed, this was originally calculated from acceleration and acceleration_y.
-            accel = state.acceleration
-            if hasattr(state, "jerk"):
-                if hasattr(state, "jerk_dot"):
-                    x_lon = StateLongitudinal(
-                        s=s,
-                        v=speed,
-                        a=accel,
-                        j=state.jerk,
-                        j_dot=state.jerk_dot,
-                    )
-                else:
-                    x_lon = StateLongitudinal(s=s, v=speed, a=accel, j=state.jerk)
-            else:
-                x_lon = StateLongitudinal(s=s, v=speed, a=accel)
-        else:
-            x_lon = StateLongitudinal(s=s, v=speed)
-
-        # Make sure the resulting theta lies in [-pi, +pi].
-        theta_cl = lane.orientation(s) % (2 * math.pi)
-        orientation = state.orientation % (2 * math.pi)
-        theta = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
-        if (
-            hasattr(state, "kappa")
-            and hasattr(state, "kappa_dot")
-            and hasattr(state, "kappa_dot_dot")
-        ):
-            x_lat = StateLateral(
-                d=d,
-                theta=theta,
-                kappa=state.kappa,
-                kappa_dot=state.kappa_dot,
-                kappa_dot_dot=state.kappa_dot_dot,
-            )
-        elif hasattr(state, "kappa") and hasattr(state, "kappa_dot"):
-            x_lat = StateLateral(
-                d=d,
-                theta=theta,
-                kappa=state.kappa,
-                kappa_dot=state.kappa_dot,
-            )
-        elif hasattr(state, "kappa"):
-            x_lat = StateLateral(d=d, theta=theta, kappa=state.kappa)
-        else:
-            x_lat = StateLateral(d=d, theta=theta)
-        return x_lon, x_lat
-
-    def get_curvilinear_state(
-        self, state: State, lane: Lane
-    ) -> Tuple[StateLongitudinal, StateLateral]:
-        """
-
-        :param state:
-        :param lane: Reference lane
-        :return:
-        """
-        key = (state.time_step, lane.lane_id)
-        ccosy_state = self.cache.get(key)
-        if ccosy_state is None:
-            ccosy_state = self._compute_curvilinear_state(state, lane)
-            self.cache[key] = ccosy_state
-        return ccosy_state
-
-
-@dataclass
-class PredicateCache:
-    # Levels: time step, predicate name, agent_ids
-    cache: Dict[int, Dict[str, Dict[int, float]]] = field(
-        default_factory=partial(defaultdict, partial(defaultdict, dict))
-    )
-
-    def get_robustness(
-        self, time_step: int, predicate_name: str, other_ids: Union[Tuple[int], int]
-    ) -> Optional[float]:
-        return self.cache[time_step][predicate_name].get(other_ids)
-
-    def set_robustness(
-        self,
-        time_step: int,
-        predicate_name: str,
-        other_ids: Union[Tuple[int], int],
-        robustness: float,
-    ):
-        self.cache[time_step][predicate_name][other_ids] = robustness
-
-    def __contains__(self, item):
-        assert isinstance(item, tuple) and len(item) == 3
-        time_step, predicate_name, other_ids = item
-        rob = self.cache[time_step][predicate_name].get(other_ids)
-        return rob is not None
-
-    def __getitem__(self, item):
-        assert isinstance(item, tuple) and len(item) == 3
-        time_step = item[0]
-        predicate_name = item[1]
-        ids = item[2]
-        if isinstance(predicate_name, slice):
-            # Only accept slice over all predicates
-            assert (
-                predicate_name.start is None
-                and predicate_name.stop is None
-                and predicate_name.step is None
-            )
-            return {
-                n: pred_vals[ids]
-                for n, pred_vals in self.cache[time_step].items()
-                if len(pred_vals) > 0 and len(list(pred_vals.keys())[0]) == 1
-            }
-        else:
-            return self.get_robustness(*item)
-
-    def __setitem__(self, key, value):
-        assert isinstance(key, tuple) and len(key) == 3
-        self.set_robustness(*key, value)
-
-
 # The vehicle parameters somewhat duplicate the existing paramters from commonroad-vehicle-models.
 # TODO: Are they still required, or could they be merged with the paramters from commonroad-vehicle-models?
 @dataclass
@@ -532,17 +431,17 @@ class VehicleParameters:
 class Vehicle:
     def __init__(
         self,
-        id,
-        obstacle_type,
-        vehicle_param: VehicleParameters,
+        id: int,
+        obstacle_type: ObstacleType,
         shape,
         states_cr,
         signal_series,
-        ccosy_cache,
-        lanelet_assignment: Dict[int, Set[int]],
-        predicate_cache=None,
-        road_network: Optional[RoadNetwork] = None,
+        lanelet_assignment: dict[int, set[int]],
+        road_network: RoadNetwork,
+        dt: float,
         goal=None,
+        vehicle_param: VehicleParameters | None = None,
+        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
     ):
         self.id = id
         self.obstacle_type = obstacle_type
@@ -550,11 +449,15 @@ class Vehicle:
         self.shape = shape
         self.states_cr = states_cr
         self.signal_series = signal_series
-        self.ccosy_cache = ccosy_cache
         self.lanelet_assignment = lanelet_assignment
-        self.predicate_cache = predicate_cache or PredicateCache()
-        self.road_network = road_network
-        if self.road_network is None:
+        self._road_network = road_network
+        self._dt = dt
+
+        if vehicle_param is None:
+            vehicle_param = VehicleParameters()
+        self.vehicle_param = vehicle_param
+
+        if scenario_type == ScenarioType.INTERSTATE:
             self.lanelets_dir = None
             self.ref_path_lane = None
             self.lanelets_dir_center_vertices = None
@@ -569,8 +472,8 @@ class Vehicle:
                 self.lanelets_dir_center_vertices,
                 self.lanelets_dir_left_vertices,
                 self.lanelets_dir_right_vertices,
-            ) = self._initial_lanelets_dir(self.road_network, goal)
-            self.incoming_intersection = self.road_network.find_incoming_intersection(
+            ) = self._initial_lanelets_dir(self._road_network, goal)
+            self.incoming_intersection = self._road_network.find_incoming_intersection(
                 self.lanelets_dir
             )
             # three circle approximation
@@ -579,7 +482,55 @@ class Vehicle:
                 self.circle_radius,
             ) = self._initial_circle_approximation()
 
-    def rear_s(self, time_step: int, lane: Lane = None) -> float:
+        self._curvilinear_trajectories = {}
+        self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
+        self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
+
+    @classmethod
+    def from_dynamic_obstacle(
+        cls,
+        obstacle: DynamicObstacle,
+        road_network: RoadNetwork,
+        dt: float,
+        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
+        vehicle_param: VehicleParameters | None = None,
+    ) -> Self:
+        lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
+        if obstacle.signal_series is not None:
+            signal_series = {state.time_step: state for state in obstacle.signal_series}
+        else:
+            signal_series = None
+
+        states_cr = {
+            state.time_step: state
+            for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
+        }
+
+        return cls(
+            id=obstacle.obstacle_id,
+            obstacle_type=obstacle.obstacle_type,
+            shape=obstacle.obstacle_shape,
+            states_cr=states_cr,
+            road_network=road_network,
+            dt=dt,
+            lanelet_assignment=lanelet_assignment,
+            signal_series=signal_series,
+            vehicle_param=vehicle_param,
+            scenario_type=scenario_type,
+        )
+
+    def get_curvilinear_trajectory(self, lane: Lane) -> CurvilinearVehicleTrajectory:
+        if lane.lane_id in self._curvilinear_trajectories:
+            return self._curvilinear_trajectories[lane.lane_id]
+
+        curvilinear_trajectory = CurvilinearVehicleTrajectory.from_cartesian_state_list(
+            self.start_time, self.end_time, list(self.states_cr.values()), self._dt, lane
+        )
+
+        self._curvilinear_trajectories[lane.lane_id] = curvilinear_trajectory
+        return curvilinear_trajectory
+
+    def rear_s(self, time_step: int, lane: Lane | None = None) -> float:
         """
         Calculates rear s-coordinate of vehicle
 
@@ -589,18 +540,16 @@ class Vehicle:
         lane = lane or self.get_lane(time_step)
         if lane is None:
             return None
-        curvi_state = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
-        if curvi_state is None:
-            return None
-        state_lon, state_lat = curvi_state
-        center_s = state_lon.s
+
+        curvi_trajectory = self.get_curvilinear_trajectory(lane)
+        center_s = curvi_trajectory.s(time_step)
         width = self.shape.width
         length = self.shape.length
-        theta = state_lat.theta
+        theta = curvi_trajectory.theta(time_step)
         rear_s = np.min(calc_s(center_s, width, length, theta))
         return rear_s
 
-    def front_s(self, time_step: int, lane: Lane = None) -> float:
+    def front_s(self, time_step: int, lane: Lane | None = None) -> float:
         """
         Calculates front s-coordinate of vehicle
 
@@ -608,18 +557,19 @@ class Vehicle:
         :returns front s-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        curvi_state = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
-        if curvi_state is None:
+        if lane is None:
             return None
-        state_lon, state_lat = curvi_state
-        center_s = state_lon.s
+
+        curvi_trajectory = self.get_curvilinear_trajectory(lane)
+
+        center_s = curvi_trajectory.s(time_step)
         width = self.shape.width
         length = self.shape.length
-        theta = state_lat.theta
+        theta = curvi_trajectory.theta(time_step)
         front_s = np.max(calc_s(center_s, width, length, theta))
         return front_s
 
-    def left_d(self, time_step: int, lane: Lane = None) -> float:
+    def left_d(self, time_step: int, lane: Lane | None = None) -> float:
         """
         Calculates left d-coordinate of vehicle
 
@@ -627,13 +577,14 @@ class Vehicle:
         :returns left d-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
-        d = state_lat.d
+        if lane is None:
+            return None
+
+        curvi_trajectory = self.get_curvilinear_trajectory(lane)
+        d = curvi_trajectory.d(time_step)
         width = self.shape.width
         length = self.shape.length
-        theta = state_lat.theta
+        theta = curvi_trajectory.theta(time_step)
         return max(
             (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
             (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
@@ -641,7 +592,7 @@ class Vehicle:
             (-width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
         )
 
-    def right_d(self, time_step: int, lane: Lane = None) -> float:
+    def right_d(self, time_step: int, lane: Lane | None = None) -> float:
         """
         Calculates right d-coordinate of vehicle
 
@@ -649,13 +600,14 @@ class Vehicle:
         :returns right d-coordinate [m]
         """
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
-        d = state_lat.d
+        if lane is None:
+            return None
+
+        curvi_trajectory = self.get_curvilinear_trajectory(lane)
+        d = curvi_trajectory.d(time_step)
         width = self.shape.width
         length = self.shape.length
-        theta = state_lat.theta
+        theta = curvi_trajectory.theta(time_step)
         return min(
             (width / 2) * np.cos(theta) - (length / 2) * np.sin(theta) + d,
             (width / 2) * np.cos(theta) - (-length / 2) * np.sin(theta) + d,
@@ -665,15 +617,11 @@ class Vehicle:
 
     def get_lat_state(self, time_step: int, lane: Lane = None) -> StateLateral:
         lane = lane or self.get_lane(time_step)
-        state_lon, state_lat = self.ccosy_cache.get_curvilinear_state(
-            self.states_cr[time_step], lane
-        )
-        return state_lat
+        return self.get_curvilinear_trajectory(lane).lat_state_at_time_step(time_step)
 
     def get_lon_state(self, time_step: int, lane: Lane = None) -> StateLongitudinal:
         lane = lane or self.get_lane(time_step)
-        states = self.ccosy_cache.get_curvilinear_state(self.states_cr[time_step], lane)
-        return states[0] if states is not None else None
+        return self.get_curvilinear_trajectory(lane).lon_state_at_time_step(time_step)
 
     def occupancy_at_time_step(self, time_step) -> Rectangle:
         state = self.states_cr[time_step]
@@ -701,32 +649,49 @@ class Vehicle:
         new_shape = affinity.affine_transform(shape, mat)
         return new_shape
 
-    def is_valid(self, time_step):
+    def is_valid(self, time_step: int):
         state = self.states_cr.get(time_step)
         return state is not None
 
-    def lanes_at_state(self, time_step) -> Set[Lane]:
+    def lanes_at_state(self, time_step: int) -> set[Lane]:
         lanelets = self.lanelet_assignment[time_step]
-        return self.ccosy_cache.road_network.find_lanes_by_lanelets(lanelets)
+        return self._road_network.find_lanes_by_lanelets(lanelets)
 
-    def get_lane(self, time_step):
+    def get_lane(self, time_step: int) -> Lane | None:
         # Todo: How to decide lane assignment generally?
         lanes = self.lanes_at_state(time_step)
         return lanes.pop() if len(lanes) > 0 else None
 
+    def get_state_at_time_step(self, time_step: int) -> TraceState:
+        return self.states_cr[time_step]
+
+    def set_state_at_time_step(self, time_step: int, state: TraceState) -> None:
+        self.states_cr[time_step] = state
+
+        # The curvilinear trajectories must be invalidated.
+        # TODO: Since this only affects one time step, we could also just recompute for this time step.
+        # Currently this is however not supported by the `CurvilinearVehicleTrajectory`.
+        self._curvilinear_trajectories = {}
+        loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
+        self.lanelet_assignment[state.time_step] = (
+            self._road_network.lanelet_network.find_lanelet_by_shape(loc_shape)
+        )
+
     @property
     def end_time(self) -> int:
-        return max(map(lambda state: state.time_step, self.states_cr.values()))
+        return self._end_time
 
     @property
     def start_time(self) -> int:
-        return min(map(lambda state: state.time_step, self.states_cr.values()))
+        return self._start_time
 
     @property
     def state_list_cr(self) -> List[State]:
         return list(self.states_cr.values())
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(object, Vehicle):
+            return False
         return self.id == other.id
 
     def __hash__(self):
@@ -1043,7 +1008,6 @@ class ControlledVehicle(Vehicle):
     ):
         states_cr = {inital_state.time_step: inital_state}
         signal_series = {inital_state.time_step: initial_signal}
-        ccosy_cache = CurvilinearStateManager(road_network)
         self.lanelet_network = road_network.lanelet_network
         initial_lanelets = road_network.lanelet_network.find_lanelet_by_shape(
             shape.rotate_translate_local(inital_state.position, inital_state.orientation)
@@ -1056,7 +1020,6 @@ class ControlledVehicle(Vehicle):
             shape,
             states_cr,
             signal_series,
-            ccosy_cache,
             lanelet_assignment,
         )
 
@@ -1067,58 +1030,3 @@ class ControlledVehicle(Vehicle):
             loc_shape
         )
         self.signal_series[state.time_step] = signal_state
-
-
-class DynamicObstacleVehicle(Vehicle):
-    """
-    Vehicle with state and input profiles and other information for complete
-    simulation horizon.
-    """
-
-    def __init__(
-        self,
-        obstacle: DynamicObstacle,
-        ccosy_cache: CurvilinearStateManager,
-        vehicle_param: Optional[VehicleParameters] = None,
-        predicate_cache=None,
-        road_network=None,
-        goal=None,
-    ):
-        lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
-        id = obstacle.obstacle_id
-        obstacle_type = obstacle.obstacle_type
-        states_cr = {
-            state.time_step: state
-            for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
-        }
-        shape = obstacle.obstacle_shape
-        if obstacle.signal_series is not None:
-            signal_series = {state.time_step: state for state in obstacle.signal_series}
-        else:
-            signal_series = None
-        ccosy_cache = ccosy_cache
-        lanelet_assignment[obstacle.initial_state.time_step] = obstacle.initial_shape_lanelet_ids
-
-        if vehicle_param is None:
-            vehicle_param = VehicleParameters()
-        super().__init__(
-            id,
-            obstacle_type,
-            vehicle_param,
-            shape,
-            states_cr,
-            signal_series,
-            ccosy_cache,
-            lanelet_assignment,
-            predicate_cache,
-            road_network,
-            goal,
-        )
-
-    # @property
-    # def states_lon(self) -> Dict[int, StateLongitudinal]:
-    #     return self._states_lon
-    #
-    # @property
-    # def states_lat(self) -> Dict[int, StateLateral]:
-    #     return self._states_lat

@@ -90,14 +90,6 @@ class PredInSameLane(AbstractPredicate):
         True: Minimum lateral displacement to not be in the same lane anymore
         False: Minimum distance to lanes of other
         """
-        # Predicate is symmetric
-        vehicle_ids_tuple = tuple(reversed(vehicle_ids))
-        value = world.vehicle_by_id(vehicle_ids_tuple[0]).predicate_cache[
-            time_step, self.predicate_name, vehicle_ids_tuple[1:]
-        ]
-        if value is not None:
-            return value
-
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
