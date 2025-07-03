@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import rtamt
 from rtamt.semantics.abstract_discrete_time_offline_interpreter import (
     discrete_time_offline_interpreter_factory,
@@ -27,7 +25,7 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
         self._ast_node_values = dict()
 
     @property
-    def ast_node_values(self) -> Dict[str, float]:
+    def ast_node_values(self) -> dict[str, float]:
         return self._ast_node_values
 
     def visit(self, node, *args, **kwargs):
@@ -44,7 +42,7 @@ class DiscreteTimeOfflineEvaluationVisitorDict(StlDiscreteTimeOfflineAstVisitor)
     """
 
     @property
-    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
+    def ast_node_values(self) -> dict[RtamtAbstractNode, list[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -69,7 +67,7 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
     """
 
     @property
-    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
+    def ast_node_values(self) -> dict[RtamtAbstractNode, list[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -97,11 +95,13 @@ def stl_discrete_time_online_specification_factory(
     elif semantics == rtamt.Semantics.STANDARD:
         offline_visitor = DiscreteTimeOfflineEvaluationVisitorDict
         online_visitor = StlDiscreteTimeOnlineAstVisitor
-
     else:
         raise ValueError(
             f"Cannot create spec for rtamt semantics {semantics}. Choose a valid semantic from {rtamt.Semantics.OUTPUT_ROBUSTNESS} and {rtamt.Semantics.STANDARD}."
         )
+
+    ast.semantics = semantics
+
     offline_interpreter = discrete_time_offline_interpreter_factory(offline_visitor)()
 
     online_interpreter = discrete_time_online_interpreter_factory(online_visitor)()

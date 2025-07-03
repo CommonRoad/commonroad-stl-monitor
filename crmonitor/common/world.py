@@ -98,8 +98,8 @@ class World:
     def create_from_scenario(
         cls,
         scenario: Scenario,
-        config: Optional[WorldConfig] = None,
-        road_network=None,
+        config: WorldConfig | None = None,
+        road_network: RoadNetwork | None = None,
         cache_dir=None,
     ) -> "World":
         if config is None:
@@ -111,12 +111,14 @@ class World:
             )
         else:
             road_network = road_network
-        vehicles = set()
+
         if cache_dir is not None:
             cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
             cache = shelve.open(str(cache_file), writeback=True)
         else:
             cache = {}
+
+        vehicles = set()
         for obs in filter(
             lambda o: o.obstacle_type
             in [

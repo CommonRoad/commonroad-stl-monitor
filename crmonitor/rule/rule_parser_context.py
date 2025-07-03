@@ -1,6 +1,6 @@
 class RuleParserContext:
     def __init__(self) -> None:
-        self._sub_rule_counter = 0
+        self._sub_rule_counter = -1
 
     def generate_new_unique_sub_rule_name(self) -> str:
         """

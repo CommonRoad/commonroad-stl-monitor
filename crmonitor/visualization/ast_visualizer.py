@@ -56,6 +56,7 @@ class AstVisualizer:
         self._artist_to_node = {}
         # To achieve an efficient layout networkx + graphiz is used.
         self._graph = nx.DiGraph()
+        self._depth = 0
 
     def build_graph(self, node: MonitorNode | RtamtAbstractNode) -> str:
         """
