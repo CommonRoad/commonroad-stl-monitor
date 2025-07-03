@@ -23,7 +23,7 @@ pre_commit:
   stage: style
   before_script:
     - *default_before_script
-    - poetry install --only dev
+    - poetry install --extras dev
   script:
     - poetry run pre-commit run --all-files --show-diff-on-failure
 
@@ -31,7 +31,7 @@ unittest:
   stage: test
   before_script:
     - *default_before_script
-    - poetry install -vvv --with test
+    - poetry install -vvv --extras test
   script:
     - coverage run --source=./crmonitor -m unittest discover tests
     - coverage report -m || true
@@ -60,7 +60,7 @@ sphinx:
   before_script:
     - *default_before_script
     - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --with doc
+    - poetry install --extras doc
   script:
     - cd docs/source && sphinx-build -b html -W . ../build
 
@@ -71,7 +71,7 @@ pages:
   before_script:
     - *default_before_script
     - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --with doc
+    - poetry install --extras doc
   script:
     - cd docs/source && sphinx-build -b html . ../../public
   artifacts:
