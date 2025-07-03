@@ -1,17 +1,15 @@
 from typing import Optional, Tuple, Type
 
 import pytest
-from rtamt.semantics.interval.interval import Interval
-
 from crmonitor.rule import (
-    IOType,
-    PredicateNode,
-    RtamtRuleNode,
-    RuleParser,
-    QuantNode,
     AllNode,
     ExistNode,
     ExistsMultipleNode,
+    IOType,
+    PredicateNode,
+    QuantNode,
+    RtamtRuleNode,
+    RuleParser,
     SumIfPositiveNode,
 )
 from crmonitor.rule.rule_node import CompareToThresholdScaledNode, RuleAstNode

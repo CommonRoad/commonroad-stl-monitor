@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -8,16 +8,15 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
-from crmonitor.common.config import get_traffic_rule_from_config
 from crmonitor.common import (
     RoadNetwork,
+    ScenarioType,
     Vehicle,
     VehicleParameters,
     World,
     WorldConfig,
-    ScenarioType,
 )
+from crmonitor.common.config import get_traffic_rule_from_config
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator, OnlineRuleEvaluator
 from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RtamtRuleNode, RuleAstNode
 from crmonitor.rule.rule_parser import RuleParser

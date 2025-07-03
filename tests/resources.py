@@ -4,6 +4,8 @@ from pathlib import Path
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
 
+from crmonitor.common import World
+
 _SCENARIOS_PATH = Path(__file__).parents[1] / "scenarios"
 
 
@@ -13,6 +15,9 @@ class _Scenarios(Enum):
     def get_commonroad_scenario(self) -> Scenario:
         scenario, _ = CommonRoadFileReader(self.get_path()).open(lanelet_assignment=True)
         return scenario
+
+    def get_world(self) -> World:
+        return World.create_from_scenario(self.get_commonroad_scenario())
 
 
 class InterstateScenarios(_Scenarios):

@@ -1,26 +1,23 @@
 import pytest
-
 from crmonitor.monitor import (
     MonitorCreationRuleTreeVisitor,
     PredicateMonitorNode,
-    RtamtRuleMonitorNode,
 )
 from crmonitor.monitor.monitor_node import AllMonitorNode, ExistMonitorNode
 from crmonitor.rule import (
-    PredicateNode,
-    IOType,
-    RuleAstNode,
-    RtamtRuleNode,
     AllNode,
+    CompareToThresholdScaledNode,
     ExistNode,
-    SigmoidNode,
+    ExistsMultipleNode,
     HistoricallyDurationNode,
     HistoricallyDurationSeverityNode,
-    CompareToThresholdScaledNode,
+    IOType,
+    PredicateNode,
+    RtamtRuleNode,
+    RuleAstNode,
+    SigmoidNode,
     SumIfPositiveNode,
-    ExistsMultipleNode,
 )
-
 
 PREDICATE_MONITOR_CREATION_TEST_DATA = [
     PredicateNode(

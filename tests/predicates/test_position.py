@@ -2,7 +2,6 @@ import os
 import unittest
 from pathlib import Path
 
-from commonroad.common.reader.file_reader_protobuf import ScenarioInformationFactory
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
@@ -14,8 +13,7 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-
-from crmonitor.common import World, RoadNetwork, WorldConfig, ScenarioType
+from crmonitor.common import RoadNetwork, ScenarioType, World, WorldConfig
 from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.position import (
     PredDrivesLeftmost,

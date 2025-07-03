@@ -1,7 +1,6 @@
 import pytest
-
+from crmonitor.mpr.prediction import SamplingDimension, SamplingError, SamplingOrder
 from crmonitor.mpr.prediction.sampling_x_dimensional import DimensionData, LonLatData
-from crmonitor.mpr.prediction import SamplingError, SamplingOrder, SamplingDimension
 
 
 class TestDimensionData:

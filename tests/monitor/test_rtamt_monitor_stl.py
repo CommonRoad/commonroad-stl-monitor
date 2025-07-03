@@ -1,5 +1,4 @@
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.monitor import OutputType
 from crmonitor.rule.rule_node import IOType
 
 

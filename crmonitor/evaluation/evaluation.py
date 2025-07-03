@@ -57,19 +57,20 @@ class RuleEvaluatorInterface(ABC):
             )
             rule_str = rule_name
 
-        rule_node = RuleParser().parse(rule_str, name=rule_name)
-
-        return cls(rule_node, dt, output_type, predicate_interface_config)
+        return cls.create_for_rule_str(
+            rule_str, dt, rule_name, output_type, predicate_interface_config
+        )
 
     @classmethod
     def create_for_rule_str(
         cls,
         rule_str: str,
         dt: float,
+        rule_name: str | None = None,
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> Self:
-        rule_node = RuleParser().parse(rule_str)
+        rule_node = RuleParser().parse(rule_str, name=rule_name)
 
         return cls(rule_node, dt, output_type, predicate_interface_config)
 

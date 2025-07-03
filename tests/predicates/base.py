@@ -1,9 +1,8 @@
-from typing import Type, List
 from pathlib import Path
+from typing import List, Type
 
-from commonroad.common.file_reader import CommonRoadFileReader
 import pytest
-
+from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.world import World
 from crmonitor.predicates.base import AbstractPredicate, PredicateConfig
 from crmonitor.predicates.position import PredInSameLane
