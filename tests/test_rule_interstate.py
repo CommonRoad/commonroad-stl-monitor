@@ -1,25 +1,16 @@
-import os
-import unittest
-from pathlib import Path
-import pytest
-
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
+import pytest
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from crmonitor.common import (
     RoadNetwork,
-    ScenarioType,
     Vehicle,
     VehicleParameters,
     World,
-    WorldConfig,
 )
-from crmonitor.evaluation.evaluation import OfflineRuleEvaluator, OnlineRuleEvaluator
-from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RtamtRuleNode, RuleAstNode
-from crmonitor.rule.rule_parser import RuleParser
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 
 from tests.resources import InterstateScenarios
 from tests.util import parallel_lanes

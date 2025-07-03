@@ -1,4 +1,5 @@
 from copy import deepcopy
+
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
 from crmonitor.rule.rule_node import IOType
 

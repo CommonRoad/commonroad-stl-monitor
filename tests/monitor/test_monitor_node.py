@@ -67,7 +67,7 @@ class TestMonitorNodeBase:
         node = MonitorNode("test")
         assert node != "test"
         assert node != 123
-        assert node != None
+        assert node is not None
 
     def test_name_equality(self):
         """Test equality based on name."""

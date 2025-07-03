@@ -1,10 +1,9 @@
+import warnings
 from enum import Enum
 from pathlib import Path
-import warnings
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
-
 from crmonitor.common import World
 
 _SCENARIOS_PATH = Path(__file__).parents[1] / "scenarios"

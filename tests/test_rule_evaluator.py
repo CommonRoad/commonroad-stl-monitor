@@ -1,5 +1,5 @@
-from copy import deepcopy
 import unittest
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -135,8 +135,8 @@ class TestOfflineEvaluator:
         # Create scenario and lanelet network
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(1, 500.0)
-        for l in lanelets:
-            lanelet_network.add_lanelet(l)
+        for lanelet in lanelets:
+            lanelet_network.add_lanelet(lanelet)
 
         dt = 0.2  # s
         velocity = 70.0  # m/s
