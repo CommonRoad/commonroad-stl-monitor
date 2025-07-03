@@ -1,4 +1,5 @@
 import textwrap
+from collections.abc import Iterable
 from copy import deepcopy
 from functools import singledispatchmethod
 from typing import Dict, Optional, Tuple, Union
@@ -8,6 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
+from rtamt.syntax.node.ltl.constant import Constant as RtamtContantNode
 
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
@@ -68,6 +70,9 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
         self._map_legend_to_line = {}
         self._active_nodes = []
         self._lines = {}
+
+        # Track different constants to only plot each constant once.
+        self._tracked_constants = set()
 
         self._to_string_visitor = MonitorToStringVisitor()
 
@@ -216,12 +221,13 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
             name_replacements[child.name] = child_label
 
         values = node.monitor.ast_node_values
-        for rtamt_ast_node, trace in values.items():
+        for rtamt_ast_node in self._filter_unique_rtamt_nodes(values.keys()):
             name = rtamt_ast_node.name
             for target_name, name_replacement in name_replacements.items():
                 if target_name in name:
                     name = name.replace(target_name, name_replacement)
 
+            trace = values[rtamt_ast_node]
             # rtamt operators might return traces with +-inf. As +-inf cannot be shown
             # in a plot, the lines will be missing from the plot. For the case, where
             # robustness scaling is enabled, we can normalize the intermediate traces, such that they are displayed in the plot.
@@ -251,3 +257,13 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
     def _(self, node: PredicateMonitorNode, vehicle_ids: Dict[int, int]) -> None:
         label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
+
+    def _filter_unique_rtamt_nodes(self, nodes: Iterable) -> Iterable:
+        for node in nodes:
+            if isinstance(node, RtamtContantNode):
+                if node.val in self._tracked_constants:
+                    continue
+                else:
+                    self._tracked_constants.add(node.val)
+
+            yield node
