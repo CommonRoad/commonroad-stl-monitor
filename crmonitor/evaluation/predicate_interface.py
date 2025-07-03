@@ -22,22 +22,46 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PredicateEvaluationMode(Enum):
-    BOOLEAN = auto()
+    """Supported predicate evaluation modes."""
+
     MFR = auto()
+    """Model-free robustness."""
+
     MPR = auto()
+    """Model-predictive robustness."""
+
     MPR_GP = auto()
+    """Model-predictive robustness with gaussian processes."""
 
 
 @dataclass
 class PredicateEvaluationInterfaceConfig:
+    """Configuration for predicate evaluation interface."""
+
     mode: PredicateEvaluationMode = PredicateEvaluationMode.MFR
+    """Select the mode in which predicates will be evaluated. All predicates will be evaluated with the same mode."""
 
     base: PredicateConfig = field(default_factory=PredicateConfig)
+    """Provide configuration for the basic predicate evaluator."""
+
     mpr: MprPredicateEvaluatorConfig | None = None
+    """Optionally configure the model-predictive evaluation. If None is set and MPR is selected as predicate evaluation mode, the default config is used."""
+
     mpr_gp: MprGpPredicateEvaluatorConfig | None = None
+    """Optionally configure the model-predictive evaluation with gaussian processes. If None is set and MPR_GP is selected as predicate evaluation mode, the default config is used."""
 
 
 class SinglePredicateEvaluationInterface:
+    """Interface for evaluating a single predicate across different modes.
+
+    Handles mode-specific setup and provides a unified evaluation API. Automatically
+    falls back from MPR-GP to MPR when model loading fails, ensuring robust operation
+    even when pre-trained models are unavailable.
+
+    The interface abstracts away the complexity of different evaluation modes while
+    maintaining consistent behavior across all modes.
+    """
+
     _config: PredicateEvaluationInterfaceConfig
     _predicate_evaluator: AbstractPredicate
     _mpr_gp_evaluator: MprGpPredicateEvaluator | None = None
@@ -49,6 +73,12 @@ class SinglePredicateEvaluationInterface:
         config: PredicateEvaluationInterfaceConfig | None = None,
         mpr_cache: MprSampledStatesCache | None = None,
     ) -> None:
+        """Initialize the predicate evaluation interface.
+
+        :param predicate: Predicate class or name to evaluate.
+        :param config: Evaluation configuration.
+        :param mpr_cache: Shared cache for MPR state sampling results.
+        """
         if config is None:
             config = PredicateEvaluationInterfaceConfig()
         self._config = config
@@ -62,11 +92,16 @@ class SinglePredicateEvaluationInterface:
 
     @property
     def predicate_name(self) -> PredicateName:
+        """Get the name of the predicate being evaluated.
+
+        :returns: The predicate name
+        """
         return self._predicate_evaluator.predicate_name
 
     def _setup_predicate_evaluator(
         self, predicate: type[AbstractPredicate] | str | PredicateName
     ) -> None:
+        """Setup the base predicate evaluator from class or registry lookup."""
         if isinstance(predicate, str):
             self._predicate_evaluator = PredicateRegistry.get_registry().get_predicate_evaluator(
                 predicate
@@ -75,6 +110,7 @@ class SinglePredicateEvaluationInterface:
             self._predicate_evaluator = predicate(self._config.base)
 
     def _setup_mpr_evaluator(self, mpr_cache: MprSampledStatesCache | None) -> None:
+        """Setup standard MPR evaluator with optional state caching."""
         self._mpr_evaluator = MprPredicateEvaluator(
             predicates=[self._predicate_evaluator],
             config=self._config.mpr,
@@ -82,6 +118,11 @@ class SinglePredicateEvaluationInterface:
         )
 
     def _setup_mpr_gp_evaluator(self, mpr_cache: MprSampledStatesCache | None) -> None:
+        """Setup MPR-GP evaluator with automatic fallback to standard MPR.
+
+        Attempts to load pre-trained models for GP-based evaluation. If model loading
+        fails, automatically falls back to standard MPR evaluation.
+        """
         try:
             self._mpr_gp_evaluator = MprGpPredicateEvaluator(
                 [self._predicate_evaluator], config=self._config.mpr_gp
@@ -93,6 +134,17 @@ class SinglePredicateEvaluationInterface:
                 e.model_path,
             )
             self._setup_mpr_evaluator(mpr_cache)
+
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
+        """Evaluate predicate as a boolean value.
+
+        :param world: World for evaluation.
+        :param time_step: Time step to evaluate at.
+        :param vehicle_ids: Vehicle IDs to evaluate for.
+
+        :returns: Boolean evaluation result
+        """
+        return self._predicate_evaluator.evaluate_boolean(world, time_step, vehicle_ids)
 
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
@@ -134,6 +186,13 @@ class SinglePredicateEvaluationInterface:
 
 
 class _MprSampledStateCacheWrapper:
+    """Internal wrapper for caching MPR state sampling results.
+
+    Provides a simplified interface for caching expensive state sampling computations
+    that can be shared across multiple predicates. Uses time-step based caching to
+    efficiently store and retrieve results.
+    """
+
     _internal_cache: TimeStepCache[int, StateBasedSamplingResult]
 
     def __init__(self) -> None:
@@ -154,6 +213,17 @@ class _MprSampledStateCacheWrapper:
 
 
 class PredicateEvaluationInterface:
+    """Main interface for evaluating multiple predicates with shared caching.
+
+    Groups predicates under a common interface to enable consistent caching across
+    all predicates. State sampling results are shared between predicates to avoid
+    redundant computation, significantly improving performance when evaluating
+    multiple predicates on the same scenario.
+
+    The interface provides a unified API regardless of the underlying evaluation
+    modes, making it easy to switch between different evaluation strategies.
+    """
+
     def __init__(
         self,
         predicates: Iterable[type[AbstractPredicate] | str],
@@ -165,6 +235,13 @@ class PredicateEvaluationInterface:
         for predicate in predicates:
             predicate_interface = SinglePredicateEvaluationInterface(predicate, config, mpr_cache)
             self._predicate_interfaces[predicate_interface.predicate_name] = predicate_interface
+
+    def evaluate_boolean(
+        self, predicate: str, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> bool:
+        predicate_interface = self._predicate_interfaces[predicate]
+
+        return predicate_interface.evaluate_boolean(world, time_step, vehicle_ids)
 
     def evaluate_robustness(
         self, predicate: str, world: World, time_step: int, vehicle_ids: tuple[int, ...]

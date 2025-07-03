@@ -18,6 +18,7 @@ __all__ = [
     "ConstantTraceMonitorNode",
     "MonitorCreationRuleTreeVisitor",
     "OutputType",
+    "MonitorVisitorInterface",
     "AstNodeValueCollectorMonitorTreeVisitor",
     "MPRGradientCollectorMonitorTreeVisitor",
     "PredicateValueCollectorMonitorTreeVisitor",
@@ -51,6 +52,7 @@ from .rtamt_monitor_stl import OutputType
 from .visitors import (
     AstNodeValueCollectorMonitorTreeVisitor,
     BaseValueMonitorTreeVisitor,
+    MonitorVisitorInterface,
     MPRGradientCollectorMonitorTreeVisitor,
     PredicateValueCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,

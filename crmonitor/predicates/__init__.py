@@ -1,4 +1,4 @@
-__all__ = ["AbstractPredicate", "PredicateName"]
+__all__ = ["AbstractPredicate", "PredicateName", "RobustnessScaler"]
 
 from .base import AbstractPredicate, PredicateName
 from .predicate_registry import (
@@ -10,3 +10,4 @@ from .predicate_registry import (
     CHANGED_TO_META_PREDICATES,
     PredicateRegistry,
 )
+from .scaling import RobustnessScaler
