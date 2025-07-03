@@ -61,6 +61,18 @@ class RuleEvaluatorInterface(ABC):
 
         return cls(rule_node, dt, output_type, predicate_interface_config)
 
+    @classmethod
+    def create_for_rule_str(
+        cls,
+        rule_str: str,
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
+    ) -> Self:
+        rule_node = RuleParser().parse(rule_str)
+
+        return cls(rule_node, dt, output_type, predicate_interface_config)
+
     def __init__(
         self,
         rule: RuleAstNode,

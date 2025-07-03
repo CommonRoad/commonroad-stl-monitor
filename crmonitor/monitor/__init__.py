@@ -23,6 +23,7 @@ __all__ = [
     "PredicateValueCollectorMonitorTreeVisitor",
     "PredicateVisualizerMonitorTreeVisitor",
     "ResetMonitorTreeVisitor",
+    "BaseValueMonitorTreeVisitor",
 ]
 
 
@@ -49,6 +50,7 @@ from .monitor_node import (
 from .rtamt_monitor_stl import OutputType
 from .visitors import (
     AstNodeValueCollectorMonitorTreeVisitor,
+    BaseValueMonitorTreeVisitor,
     MPRGradientCollectorMonitorTreeVisitor,
     PredicateValueCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,

@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 
+import pytest
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.solution import (
@@ -25,85 +26,42 @@ from commonroad.scenario.state import (
 )
 from commonroad.scenario.trajectory import Trajectory
 from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule.rule_node import AllNode, ExistNode, IOType, PredicateNode, RuleAstNode
-from ruamel.yaml import YAML
 
 from crmonitor.rule.rule_parser import RuleParser
 from tests.util import parallel_lanes
+from tests.resources import InterstateScenarios
+
+
+RULES = [
+    "A a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
+    "A a1: (in_front_of(a0, a1)) and single_lane(a0)",
+    "E a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
+    "E a1: (in_front_of(a0, a1)) and single_lane(a0)",
+    "single_lane(a0)",
+    "single_lane(a0) and single_lane(a0)",
+    "A a1: (in_front_of(a0, a1))",
+]
+
+
+class TestOfflineEvaluator:
+    @classmethod
+    def setup_class(cls) -> None:
+        cls._world = World.create_from_scenario(
+            InterstateScenarios.SAFE_DISTANCE_LANE_CHANGE.get_commonroad_scenario()
+        )
+
+    @pytest.mark.parametrize("rule_str", RULES)
+    def test_smoke(self, rule_str: str) -> None:
+        evaluator = OfflineRuleEvaluator.create_for_rule_str(rule_str, dt=self._world.scenario.dt)
+
+        robustness = evaluator.evaluate(self._world, ego_id=1001)
+        assert isinstance(robustness, list)
 
 
 class TestRuleEvaluator(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        root_path = Path(__file__).parents[1] / "crmonitor"
-        config_path = root_path / "config.yaml"
-        self.config = YAML().load(config_path)
-        rules_path = root_path / "traffic_rules_rtamt.yaml"
-        self.traffic_rule_params = YAML().load(rules_path)
-        self.scenario_root_path = root_path.parent / "scenarios/test_interstate"
-        self.parse_rule = RuleParser().parse
-
-    def test_smoke(self):
-        rules = [
-            "A a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
-            "A a1: (in_front_of(a0, a1)) and single_lane(a0)",
-            "E a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
-            "E a1: (in_front_of(a0, a1)) and single_lane(a0)",
-            "single_lane(a0)",
-            "single_lane(a0) and single_lane(a0)",
-            "A a1: (in_front_of(a0, a1))",
-        ]
-
-        scenario, _ = CommonRoadFileReader(
-            str(self.scenario_root_path / "DEU_test_safe_distance_lane_change.xml")
-        ).open(True)
-
-        for r in rules:
-            rule = self.parse_rule(r)
-            ws = World.create_from_scenario(scenario)
-            ego_vehicle = ws.vehicle_by_id(1001)
-            evaluator = RuleEvaluator(rule, ego_vehicle, ws)
-            rob = evaluator.update()
-            predicates = evaluator.get_predicates()
-            node_values = evaluator.ast_node_values()
-
-    def test_parsing(self):
-        rule = self.parse_rule(
-            "A a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
-        )
-        self.assertTrue(isinstance(rule, AllNode))
-        rule = self.parse_rule(
-            "A a1: (in_front_of(a0, a1)) and single_lane(a0)",
-        )
-        self.assertTrue(isinstance(rule, RuleAstNode))
-        rule = self.parse_rule(
-            "E a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
-        )
-        self.assertTrue(isinstance(rule, ExistNode))
-        rule = self.parse_rule(
-            "E a1: (in_front_of(a0, a1)) and single_lane(a0)",
-        )
-        self.assertTrue(isinstance(rule, RuleAstNode))
-        rule = self.parse_rule(
-            "single_lane(a0)",
-        )
-        self.assertTrue(isinstance(rule, RuleAstNode))
-        rule = self.parse_rule(
-            "single_lane(a0) and single_lane(a0)",
-        )
-        self.assertTrue(isinstance(rule, RuleAstNode))
-
-        rule = self.parse_rule(
-            "A a1: (in_front_of(a0, a1)) and single_lane(a0)_i",
-        )
-        self.assertTrue(isinstance(rule, RuleAstNode))
-
-        self.assertTrue(isinstance(rule.children[1], PredicateNode))
-        self.assertEqual(rule.children[1].io_type, IOType.INPUT)
-        self.assertEqual(rule.children[0].children[0].children[0].io_type, IOType.OUTPUT)
-
     def test_solution(self):
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(1, 500.0)

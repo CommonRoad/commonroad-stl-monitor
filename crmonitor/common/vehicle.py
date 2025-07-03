@@ -198,7 +198,10 @@ class CurvilinearVehicleTrajectory:
         d = curvilinear_coords.T[1]
 
         v = np.array([state.velocity for state in state_list])
-        a = np.array([state.acceleration for state in state_list])
+
+        a = None
+        if all(state.has_value("acceleration") for state in state_list):
+            a = np.array([state.acceleration for state in state_list])
 
         thetas = []
         for i, state in enumerate(state_list):
@@ -435,10 +438,10 @@ class Vehicle:
         obstacle_type: ObstacleType,
         shape,
         states_cr,
-        signal_series,
         lanelet_assignment: dict[int, set[int]],
         road_network: RoadNetwork,
         dt: float,
+        signal_series=None,
         goal=None,
         vehicle_param: VehicleParameters | None = None,
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,

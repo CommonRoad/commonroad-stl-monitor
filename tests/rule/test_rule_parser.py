@@ -14,7 +14,7 @@ from crmonitor.rule import (
     ExistsMultipleNode,
     SumIfPositiveNode,
 )
-from crmonitor.rule.rule_node import CompareToThresholdScaledNode
+from crmonitor.rule.rule_node import CompareToThresholdScaledNode, RuleAstNode
 from crmonitor.rule.rule_parser import RuleParseError
 
 TEST_PARSE_PREDICATE_TEST_DATA = [
@@ -41,6 +41,16 @@ TEST_PARSE_COMPARE_TO_THRESHOLD_SCALED_NODE_TEST_DATA = [
 TEST_PARSE_EXISTS_MULTIPLE_TEST_DATA = [
     ("exists_multiple[3] a1: (foo(a0))", 3, None),
     ("exists_multiple[-1] a1: (foo(a0))", -1, RuleParseError),
+]
+
+
+TEST_PARSE_RULES_DATA = [
+    "A a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
+    "A a1: (in_front_of(a0, a1)) and single_lane(a0)",
+    "E a1: (in_front_of(a0, a1) and cut_in(a0, a1))",
+    "E a1: (in_front_of(a0, a1)) and single_lane(a0)",
+    "A a1: (in_front_of(a0, a1)) and single_lane(a0)_i",
+    "single_lane(a0) and single_lane(a0)",
 ]
 
 
@@ -89,3 +99,8 @@ class TestRuleParser:
         else:
             with pytest.raises(error):
                 RuleParser().parse(rule_str)
+
+    @pytest.mark.parametrize("rule_str", TEST_PARSE_RULES_DATA)
+    def test_parse_rules(self, rule_str: str) -> None:
+        rule = RuleParser().parse(rule_str)
+        assert isinstance(rule, RuleAstNode)

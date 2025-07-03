@@ -10,9 +10,9 @@ from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
+from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
+from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.general import (
     PredGoingStraight,
     PredInCongestion,
@@ -30,7 +30,7 @@ class TestIntersectionGeneralPredicates(unittest.TestCase):
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.config = PredicateConfig(scale_rob=True, d_sl=1.0, mode=PredicateEvaluationMode.MFR)
+        self.config = PredicateConfig(scale_rob=True, d_sl=1.0)
 
     def testTurningRight(self):
         scenario_file = os.path.join(
@@ -87,7 +87,7 @@ class TestIntersectionGeneralPredicates(unittest.TestCase):
 class TestInterstateGeneralPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.config = PredicateConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
+        self.config = PredicateConfig(scale_rob=False)
 
         right_vertices_lane_1 = np.array(
             [

@@ -14,11 +14,9 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from crmonitor.common.config import ScenarioType
-from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
-from crmonitor.common.world import World, WorldConfig
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
+
+from crmonitor.common import World, RoadNetwork, WorldConfig, ScenarioType
+from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.position import (
     PredDrivesLeftmost,
     PredDrivesRightmost,
@@ -156,7 +154,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
 class TestInterstatePositionPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.predicate_config = PredicateConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
+        self.predicate_config = PredicateConfig(scale_rob=False)
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSTATE)
 
         right_vertices_lane_1 = np.array(
