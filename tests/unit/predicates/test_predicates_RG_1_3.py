@@ -28,7 +28,6 @@ from crmonitor.predicates.position import (
     PredSingleLane,
 )
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
-
 from tests.util import parallel_lanes
 
 

@@ -11,7 +11,6 @@ from crmonitor.common import (
     World,
 )
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
-
 from tests.resources import InterstateScenarios
 from tests.util import parallel_lanes
 

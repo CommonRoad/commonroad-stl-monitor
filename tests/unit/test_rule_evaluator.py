@@ -25,7 +25,6 @@ from commonroad.scenario.state import (
 from commonroad.scenario.trajectory import Trajectory
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
-
 from tests.resources import InterstateScenarios
 from tests.util import parallel_lanes
 
