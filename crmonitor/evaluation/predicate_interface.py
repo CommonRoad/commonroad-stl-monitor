@@ -3,8 +3,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
+from commonroad.scenario.scenario import ScenarioID
+
 from crmonitor.common import World
-from crmonitor.common.cache import LinearTimeStepCache, TimeStepCache
+from crmonitor.common.cache import BasicTimeStepCache, TimeStepCache
 from crmonitor.mpr import (
     ModelLoadError,
     MprGpPredicateEvaluator,
@@ -51,6 +53,9 @@ class PredicateEvaluationInterfaceConfig:
     """Optionally configure the model-predictive evaluation with gaussian processes. If None is set and MPR_GP is selected as predicate evaluation mode, the default config is used."""
 
 
+PredicateCache = TimeStepCache[tuple[ScenarioID, str, tuple[int, ...]], float]
+
+
 class SinglePredicateEvaluationInterface:
     """Interface for evaluating a single predicate across different modes.
 
@@ -71,6 +76,7 @@ class SinglePredicateEvaluationInterface:
         self,
         predicate: type[AbstractPredicate] | str,
         config: PredicateEvaluationInterfaceConfig | None = None,
+        predicate_cache: PredicateCache | None = None,
         mpr_cache: MprSampledStatesCache | None = None,
     ) -> None:
         """Initialize the predicate evaluation interface.
@@ -82,6 +88,7 @@ class SinglePredicateEvaluationInterface:
         if config is None:
             config = PredicateEvaluationInterfaceConfig()
         self._config = config
+        self._predicate_cache = predicate_cache
 
         self._setup_predicate_evaluator(predicate)
 
@@ -149,6 +156,10 @@ class SinglePredicateEvaluationInterface:
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
+        cached_robustness = self._get_predicate_cache_entry(world, time_step, vehicle_ids)
+        if cached_robustness is not None:
+            return cached_robustness
+
         if self._mpr_gp_evaluator is not None:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with gaussian processes.",
@@ -159,7 +170,7 @@ class SinglePredicateEvaluationInterface:
             )
             mpr_gp_result_dict = self._mpr_gp_evaluator.evaluate(world, time_step, vehicle_ids)
 
-            return mpr_gp_result_dict[self._predicate_evaluator.predicate_name].robustness
+            robustness = mpr_gp_result_dict[self._predicate_evaluator.predicate_name].robustness
         elif self._mpr_evaluator is not None:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with model-predictive robustness",
@@ -170,7 +181,7 @@ class SinglePredicateEvaluationInterface:
             )
             mpr_result_dict = self._mpr_evaluator.evaluate(world, time_step, vehicle_ids)
 
-            return mpr_result_dict[self._predicate_evaluator.predicate_name].robustness
+            robustness = mpr_result_dict[self._predicate_evaluator.predicate_name].robustness
         else:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with model-free robustness",
@@ -182,7 +193,30 @@ class SinglePredicateEvaluationInterface:
             robustness = self._predicate_evaluator.evaluate_robustness(
                 world, time_step, vehicle_ids
             )
-            return robustness
+
+        self._set_predicate_cache_entry(world, time_step, vehicle_ids, robustness)
+
+        return robustness
+
+    def _get_predicate_cache_entry(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float | None:
+        if self._predicate_cache is None:
+            return None
+
+        return self._predicate_cache.get_at_time_step(
+            time_step, (world.scenario.scenario_id, self.predicate_name, vehicle_ids)
+        )
+
+    def _set_predicate_cache_entry(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...], robustness: float
+    ) -> None:
+        if self._predicate_cache is None:
+            return None
+
+        self._predicate_cache.set_at_time_step(
+            time_step, (world.scenario.scenario_id, self.predicate_name, vehicle_ids), robustness
+        )
 
 
 class _MprSampledStateCacheWrapper:
@@ -196,7 +230,7 @@ class _MprSampledStateCacheWrapper:
     _internal_cache: TimeStepCache[int, StateBasedSamplingResult]
 
     def __init__(self) -> None:
-        self._internal_cache = LinearTimeStepCache()
+        self._internal_cache = BasicTimeStepCache()
 
     def set_sampling_result(
         self,
@@ -210,6 +244,9 @@ class _MprSampledStateCacheWrapper:
         self, time_step: int, vehicle_id: int
     ) -> StateBasedSamplingResult | None:
         return self._internal_cache.get_at_time_step(time_step, vehicle_id)
+
+    def invalidate(self) -> None:
+        self._internal_cache.invalidate()
 
 
 class PredicateEvaluationInterface:
@@ -229,11 +266,14 @@ class PredicateEvaluationInterface:
         predicates: Iterable[type[AbstractPredicate] | str],
         config: PredicateEvaluationInterfaceConfig | None = None,
     ) -> None:
-        mpr_cache = _MprSampledStateCacheWrapper()
+        self._predicate_cache = BasicTimeStepCache()
+        self._mpr_cache = _MprSampledStateCacheWrapper()
 
         self._predicate_interfaces = {}
         for predicate in predicates:
-            predicate_interface = SinglePredicateEvaluationInterface(predicate, config, mpr_cache)
+            predicate_interface = SinglePredicateEvaluationInterface(
+                predicate, config, self._predicate_cache, self._mpr_cache
+            )
             self._predicate_interfaces[predicate_interface.predicate_name] = predicate_interface
 
     def evaluate_boolean(
@@ -249,3 +289,7 @@ class PredicateEvaluationInterface:
         predicate_interface = self._predicate_interfaces[predicate]
 
         return predicate_interface.evaluate_robustness(world, time_step, vehicle_ids)
+
+    def reset(self) -> None:
+        self._predicate_cache.invalidate()
+        self._mpr_cache.invalidate()

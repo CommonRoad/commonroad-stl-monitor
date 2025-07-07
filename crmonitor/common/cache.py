@@ -22,8 +22,27 @@ class BasicTimeStepCache(TimeStepCache[_K, _V]):
     def __init__(self) -> None:
         self._cache = {}
 
+    @override
+    def set_at_time_step(self, time_step: int, key: _K, value: _V) -> None:
+        self._cache[(time_step, key)] = value
+
+    @override
+    def get_at_time_step(self, time_step: int, key: _K) -> _V | None:
+        return self._cache.get((time_step, key))
+
+    def invalidate(self) -> None:
+        del self._cache
+        self._cache = {}
+
 
 class LinearTimeStepCache(TimeStepCache[_K, _V]):
+    """
+    Special time step cache, which assumes linear ordering of time steps.
+
+    This cache is useful for online evaluations, where the time step is strictly increasing.
+    For offline evaluations this is currently not the case.
+    """
+
     def __init__(self) -> None:
         self._cache = {}
         self._last_time_step = None

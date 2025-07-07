@@ -56,7 +56,7 @@ class GenericSpeedLimit(AbstractPredicate, ABC):
             rob = math.inf
         else:
             rob = speed_limit + self.config.eps - vehicle.get_lon_state(time_step).v
-        rob = self._scale_speed(rob)
+        rob = self._scaler.scale_speed(rob)
         return rob
 
 

@@ -127,7 +127,9 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
         self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
     ) -> list[float]:
         if world.dt != self.dt:
-            raise ValueError()
+            raise ValueError(
+                f"The configured dt '{self.dt}' for this rule evaluator does not match the dt of the world '{world.dt}'"
+            )
 
         ego_vehicle = world.vehicle_by_id(ego_id)
         if ego_vehicle is None:
@@ -165,7 +167,12 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         super().__init__(rule, dt, output_type, predicate_interface_config)
+
+        self._predicate_evaluation_interface = PredicateEvaluationInterface(
+            self.get_predicate_names(), self._predicate_interface_config
+        )
         self._eval_visitor = OnlineEvaluationMonitorTreeVisitor(
+            self._predicate_evaluation_interface,
             self._predicate_interface_config.base.scale_rob,
             use_boolean=self._predicate_interface_config.mode == PredicateEvaluationMode.BOOLEAN,
             output_type=output_type,
@@ -232,3 +239,5 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         super().reset()
         self._last_evaluation_time_step = -1
         self._rule_value_course = []
+
+        self._predicate_evaluation_interface.reset()

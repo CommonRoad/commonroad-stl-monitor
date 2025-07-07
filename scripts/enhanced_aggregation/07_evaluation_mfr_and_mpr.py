@@ -8,15 +8,15 @@ import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.util import Interval
 from commonroad.scenario.scenario import Scenario
-from commonroad_mpr.common.observation import World as WorldMPR
-from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
 from crmonitor.common.world import World
-from crmonitor.predicate_grouping import (
-    ALL_GENERAL_PREDICATES,
+from crmonitor.evaluation.predicate_interface import PredicateEvaluationInterfaceConfig
+from crmonitor.predicates import (
+    ALL_GENERAL_PREDICATE_NAMES,
     ALL_INTERSTATE_PREDICATE_NAMES,
-    changed_to_meta,
+    CHANGED_TO_META_PREDICATE_NAMES,
 )
-from crmonitor.predicates.base import PredicateConfig, PredicateMprConfig
+from crmonitor.predicates.base import PredicateConfig
+from crmonitor.mpr import MprGpPredicateEvaluatorConfig, mpr_gp_predicate_evaluator
 from crmonitor.predicates.predicate_factory import PredicateFactory
 
 logging.basicConfig(level=logging.INFO)
@@ -31,34 +31,10 @@ metrics_output_path.parent.mkdir(exist_ok=True, parents=True)
 scenarios_load_path = Path(__file__).parents[3] / "scenarios-for-semantic-aware-stl" / "highD"
 iterations = 1000
 models_path = Path(__file__).parent.parent / "output" / "models"
-selected_predicates = ALL_GENERAL_PREDICATES + ALL_INTERSTATE_PREDICATE_NAMES + changed_to_meta
-rand_seed = 12345
-
-MprCfg.build_configuration(
-    config={
-        "common": {
-            "scenario": "interstate",
-            "lane": {
-                # Increased the default parameters to work around projection limit issues in MPR
-                "lateral_projection_domain_limit": 500,
-                "extend_length": 500,
-                "large_resampling_step": 3.5,
-                "num_chankins_corner_cutting": 1,
-            },
-            "road_network": {
-                "interstate": {
-                    "use_phantom_lane": True
-                }  # Must disable phantom lanes, because otherwise commonroad-dc segfaults...
-            },
-        },
-    },
-    # Path root must point to a local revision of commonroad-model-predictive-robustness.
-    # This configuration, assumes that the repo is in the same directory as stl-monitor repo.
-    # If this is not the case for your setup, adjust the path here accordingly.
-    path_root=str(Path(__file__).parent.parent.parent / "commonroad-model-predictive-robustness"),
-    folder_config="config_files",
-    default_profile="default",
+selected_predicates = (
+    ALL_GENERAL_PREDICATE_NAMES + ALL_INTERSTATE_PREDICATE_NAMES + CHANGED_TO_META_PREDICATE_NAMES
 )
+rand_seed = 12345
 
 
 def get_scenario_final_time_step(scenario: Scenario) -> int:
@@ -89,12 +65,16 @@ if len(scenarios) == 0:
 
 predicate_evaluator_config = PredicateConfig(
     scale_rob=True,
-    mpr=PredicateMprConfig(enabled=True, model_path=models_path, rectification=False),
 )
 predicate_factory = PredicateFactory(predicate_evaluator_config)
 predicates = [
     predicate_factory.get_predicate(predicate_name) for predicate_name in selected_predicates
 ]
+
+mpr_gp_evaluator = mpr_gp_predicate_evaluator.MprGpPredicateEvaluator(
+    predicates, config=MprGpPredicateEvaluatorConfig(model_path=models_path)
+)
+
 random = Random(rand_seed)
 
 mpr_rob = defaultdict(list)  # GP predicted
@@ -106,7 +86,6 @@ for i in range(0, iterations):
 
     scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
     world = World.create_from_scenario(scenario)
-    mpr_world = WorldMPR.create_from_scenario(scenario)
 
     # Search for a time step, where at least two vehicles are present.
     end_time = get_scenario_final_time_step(scenario)
@@ -114,43 +93,31 @@ for i in range(0, iterations):
     time_steps = [i for i in range(0, end_time + 1)]
     time_step = 0
     vehicle_ids_at_time_step = []
-    # WorldMPR does not necessarily create a vehicle for each dynamic obstacle at it only considers vehicles which have a trajetory which covers more then one time step.
-    are_vehicles_in_both_worlds = False
     are_enough_vehicles_at_time_step = False
-    while (not are_enough_vehicles_at_time_step or not are_vehicles_in_both_worlds) and len(
-        time_steps
-    ) > 0:
+    while (not are_enough_vehicles_at_time_step) and len(time_steps) > 0:
         time_step = time_steps.pop(random.randint(0, len(time_steps) - 1))
         vehicle_ids_at_time_step = world.vehicle_ids_for_time_step(time_step)
 
-        are_vehicles_in_both_worlds = all(
-            mpr_world.has_vehicle(vehicle_id) for vehicle_id in vehicle_ids_at_time_step
-        )
         are_enough_vehicles_at_time_step = len(vehicle_ids_at_time_step) >= 2
 
-    if not are_enough_vehicles_at_time_step or not are_vehicles_in_both_worlds:
+    if not are_enough_vehicles_at_time_step:
         _LOGGER.warning(
             f"Cannot process scenario {scenario.scenario_id}: No time step with at least two active vehicles in both worlds was found!"
         )
         continue
 
     ego_vehicle_id, other_vehicle_id = random.sample(vehicle_ids_at_time_step, 2)
+    vehicle_ids = (ego_vehicle_id, other_vehicle_id)
+
+    mpr_gp_robustness_values = mpr_gp_evaluator.evaluate(world, time_step, vehicle_ids)
 
     for predicate_evaluator in predicates:
-        # TODO the evaluate_mpr_ml method has two drawbacks
-        #  - by default, it performs rectification
-        #  - It must recompute the features for each predicate
-        #  Therefore, please implement a solution that directly makes use of the ExactGPModel.predict method.
-        mpr_robustness = predicate_evaluator.evaluate_mpr_ml(
-            world, mpr_world, time_step, [ego_vehicle_id, other_vehicle_id]
-        )
+        mpr_robustness = mpr_gp_robustness_values[predicate_evaluator.predicate_name].robustness
         if (not -1 <= mpr_robustness <= 1) or np.isnan(mpr_robustness):
             _LOGGER.warning(f"MPR: {mpr_robustness:.3f}")
             continue
 
-        mfr_robustness = predicate_evaluator.evaluate_robustness(
-            world, time_step, [ego_vehicle_id, other_vehicle_id]
-        )
+        mfr_robustness = predicate_evaluator.evaluate_robustness(world, time_step, vehicle_ids)
         # print(scenario.scenario_id, time_step, ego_vehicle_id, mpr_robustness, mfr_robustness)
         mfr_rob[predicate_evaluator.predicate_name].append(mfr_robustness)
         mpr_rob[predicate_evaluator.predicate_name].append(mpr_robustness)
