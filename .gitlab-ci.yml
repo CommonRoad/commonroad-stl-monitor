@@ -62,7 +62,7 @@ sphinx:
     - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
     - poetry install --extras doc
   script:
-    - cd docs/source && sphinx-build -b html -W . ../build
+    - cd docs/source && poetry run sphinx-build -b html -W . ../build
 
 pages:
   stage: deploy
