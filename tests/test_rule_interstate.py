@@ -16,61 +16,17 @@ from tests.resources import InterstateScenarios
 from tests.util import parallel_lanes
 
 
-class TestRuleInterface:
+class TestRuleInterstate:
     def _base_test_rule(
         self, rule_name: str, world: World, ego_id: int, exp_violation: bool
     ) -> None:
-        rule_eval = OfflineRuleEvaluator.create_for_rule("R_G2", world.scenario.dt)
+        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_name, 0.1)
         rule_robustness = np.array(rule_eval.evaluate(world, ego_id))
         bool_value = rule_robustness >= 0.0
-        assert exp_violation == np.all(bool_value)
 
-    @pytest.mark.parametrize(
-        "ego_id, exp_violation",
-        [
-            (1000, True),
-            (1001, True),
-            (1002, False),
-            (1005, True),
-            (1006, True),
-            (1007, True),
-        ],
-    )
-    def test_unnecessary_braking(self, ego_id: int, exp_violation: bool) -> None:
-        # one vehicle accelerates (1000)
-        # one vehicle drives with constant velocity (1001)
-        # one vehicle which has no leading vehicle violates acceleration constraint (1002)
-        # two leading vehicle which brake only minimal (1005, 1007)
-        # one vehicle following another vehicle which brakes normal (1006)
-        world = InterstateScenarios.UNNECESSARY_BRAKING.get_world()
-        self._base_test_rule("R_I2", world, ego_id, exp_violation)
-
-    @pytest.mark.parametrize(
-        "ego_id,exp_violation",
-        [
-            (1000, True),
-            (1001, False),
-            (1002, True),
-            (1003, True),
-            (1004, True),
-            (1005, True),
-            (1006, True),
-            (1007, True),
-            (1008, True),
-            (1009, True),
-            (1010, True),
-        ],
-    )
-    def test_standstill(self, ego_id: int, exp_violation: bool) -> None:
-        # one vehicle which is in standstill with a leading vehicle in standstill(1000)
-        # one vehicle which is in standstill without a leading vehicle in standstill and which is not
-        # part of a congestion a leading vehicle in standstill (1001)
-        # one vehicle which drives with higher velocity (1002)
-        # seven vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1008, 1009,
-        # 1010)
-        # one vehicle which is in standstill and part of a congestion (1005)
-        world = InterstateScenarios.STANDSTILL.get_world()
-        self._base_test_rule("R_I1", world, ego_id, exp_violation)
+        assert exp_violation == np.all(bool_value), (
+            f"expected violation {exp_violation} but got violation {np.all(bool_value)} for robustness trace {rule_robustness}."
+        )
 
     @pytest.mark.parametrize(
         "ego_id, exp_violation",
@@ -78,19 +34,6 @@ class TestRuleInterface:
             (1000, False),
             (1001, True),
             (1002, False),
-            (1003, True),
-        ],
-    )
-    def test_speed_limit(self, ego_id: int, exp_violation: bool) -> None:
-        world = InterstateScenarios.MAX_SPEED_LIMIT.get_world()
-        self._base_test_rule("R_G2", world, ego_id, exp_violation)
-
-    @pytest.mark.parametrize(
-        "ego_id, exp_violation",
-        [
-            (1000, False),
-            (1001, False),
-            (1002, True),
             (1003, True),
             (1004, True),
             (1005, True),
@@ -110,6 +53,39 @@ class TestRuleInterface:
         [
             (1000, True),
             (1001, True),
+            (1002, False),
+            (1005, True),
+            (1006, True),
+            (1007, True),
+        ],
+    )
+    def test_unnecessary_braking(self, ego_id: int, exp_violation: bool) -> None:
+        # one vehicle accelerates (1000)
+        # one vehicle drives with constant velocity (1001)
+        # one vehicle which has no leading vehicle violates acceleration constraint (1002)
+        # two leading vehicle which brake only minimal (1005, 1007)
+        # one vehicle following another vehicle which brakes normal (1006)
+        world = InterstateScenarios.UNNECESSARY_BRAKING.get_world()
+        self._base_test_rule("R_G2", world, ego_id, exp_violation)
+
+    @pytest.mark.parametrize(
+        "ego_id, exp_violation",
+        [
+            (1000, False),
+            (1001, True),
+            (1002, False),
+            (1003, True),
+        ],
+    )
+    def test_speed_limit(self, ego_id: int, exp_violation: bool) -> None:
+        world = InterstateScenarios.MAX_SPEED_LIMIT.get_world()
+        self._base_test_rule("R_G3", world, ego_id, exp_violation)
+
+    @pytest.mark.parametrize(
+        "ego_id, exp_violation",
+        [
+            (1000, True),
+            (1001, True),
             (1002, True),
             (1003, False),
             (1004, True),
@@ -123,6 +99,34 @@ class TestRuleInterface:
         # one vehicle which drives to alone and slow on single lane -> according rule false (1005)
         world = InterstateScenarios.PRESERVE_TRAFFIC_FLOW.get_world()
         self._base_test_rule("R_G4", world, ego_id, exp_violation)
+
+    @pytest.mark.parametrize(
+        "ego_id,exp_violation",
+        [
+            (1000, True),
+            (1001, False),
+            (1002, True),
+            (1003, True),
+            (1004, True),
+            (1005, True),
+            (1006, True),
+            (1007, True),
+            (1008, False),
+            (1009, True),
+            (1010, True),
+        ],
+    )
+    def test_standstill(self, ego_id: int, exp_violation: bool) -> None:
+        # one vehicle which is in standstill with a leading vehicle in standstill(1000)
+        # one vehicle which is in standstill without a leading vehicle in standstill and which is not
+        # part of a congestion a leading vehicle in standstill (1001)
+        # one vehicle which drives with higher velocity (1002)
+        # 1008 drives slow, but neither is a congestions nor is the leading vehicle slow enough
+        # six vehicles which are in a congestion and drive with slow velocity (1003, 1004, 1006, 1007, 1009,
+        # 1010)
+        # one vehicle which is in standstill and part of a congestion (1005)
+        world = InterstateScenarios.STANDSTILL.get_world()
+        self._base_test_rule("R_I1", world, ego_id, exp_violation)
 
     @pytest.mark.parametrize(
         "ego_id, exp_violation",

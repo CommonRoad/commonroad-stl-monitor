@@ -1,4 +1,3 @@
-import unittest
 from copy import deepcopy
 
 import numpy as np
@@ -85,7 +84,7 @@ class TestOfflineEvaluator:
             ego_vehicle.set_state_at_time_step(time_step, state)
 
         modified_robustness = evaluator.evaluate(world_copy, ego_id)
-        assert not np.all(np.isclose(orig_robustness, modified_robustness))
+        assert not np.any(np.isclose(orig_robustness, modified_robustness))
 
     @pytest.mark.parametrize(
         "vehicle_model,trajectory_factory",
@@ -166,7 +165,3 @@ class TestOfflineEvaluator:
 
         # Assert all robustness values are negative
         assert np.all(np.array(robs) < 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

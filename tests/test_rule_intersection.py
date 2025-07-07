@@ -17,12 +17,14 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
+_PREDICATE_CONFIG = PredicateConfig(scale_rob=True, d_sl=1.0)
+
 
 class RuleTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        self.predicate_config = PredicateConfig(scale_rob=True, d_sl=1.0)
+        self.predicate_config = _PREDICATE_CONFIG
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
 
         self.traffic_rules = get_traffic_rule_config()
