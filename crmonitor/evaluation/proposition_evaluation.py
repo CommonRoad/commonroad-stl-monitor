@@ -1,7 +1,4 @@
 import copy
-from typing import Optional
-
-from commonroad_mpr.common.observation import World as WorldMPR
 
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
@@ -37,7 +34,6 @@ class PropositionRuleEvaluator(RuleEvaluator):
         rule: RuleAstNode,
         ego_id: int,
         world: World,
-        world_mpr: Optional[WorldMPR] = (None,),
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -48,7 +44,6 @@ class PropositionRuleEvaluator(RuleEvaluator):
             rule,
             ego_id,
             world,
-            world_mpr,
             start_time_step,
             use_boolean,
             output_type,

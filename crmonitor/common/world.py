@@ -20,8 +20,8 @@ from commonroad_dc.feasibility.solution_checker import (
     _simulate_trajectory_if_input_vector,
 )
 
-from crmonitor.common.config import ScenarioType
 from crmonitor.common.road_network import RoadNetwork, RoadNetworkParam
+from crmonitor.common.scenario_type import ScenarioType
 from crmonitor.common.vehicle import (
     ControlledVehicle,
     CurvilinearStateManager,
@@ -106,7 +106,7 @@ class World:
         config: Optional[WorldConfig] = None,
         road_network=None,
         cache_dir=None,
-    ):
+    ) -> "World":
         if config is None:
             config = WorldConfig()
 

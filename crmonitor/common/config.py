@@ -1,15 +1,13 @@
-from enum import Enum, auto
 from functools import lru_cache
 from importlib import resources as pkg_resources
 from pathlib import Path
-from typing import Dict, Union
 
 from ruamel.yaml import YAML
 
 import crmonitor
 
 
-def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
+def load_yaml(file_name: Path | str) -> dict | None:
     """
     Loads configuration setup from a yaml file
 
@@ -21,7 +19,7 @@ def load_yaml(file_name: Union[Path, str]) -> Union[Dict, None]:
 
 
 @lru_cache(maxsize=None)
-def get_traffic_rule_config() -> Dict:
+def get_traffic_rule_config() -> dict:
     with pkg_resources.path(crmonitor, "traffic_rules_rtamt.yaml") as traffic_rules_path:
         traffic_rules_config = load_yaml(traffic_rules_path)
 
@@ -38,8 +36,3 @@ def get_traffic_rule_from_config(rule_name: str) -> str | None:
     traffic_rules = traffic_rules_config["traffic_rules"]
 
     return traffic_rules.get(rule_name)
-
-
-class ScenarioType(Enum):
-    INTERSTATE = auto()
-    INTERSECTION = auto()

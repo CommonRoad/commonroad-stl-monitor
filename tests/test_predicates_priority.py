@@ -11,7 +11,7 @@ from commonroad.scenario.state import CustomState
 from commonroad.scenario.trajectory import Trajectory
 from crmonitor.common.config import ScenarioType
 from crmonitor.common.world import World, WorldConfig
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
 from crmonitor.predicates.priority import (
     PredAtTrafficSignStop,  # not covered
     PredRelevantTrafficLight,  # not covered
@@ -24,9 +24,7 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.predicate_config = PredicateEvaluatorConfig(
-            scale_rob=True, mode=PredicateEvaluationMode.MFR
-        )
+        self.predicate_config = PredicateConfig(scale_rob=True, mode=PredicateEvaluationMode.MFR)
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
 
     def testAtTrafficSign(self):

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from functools import singledispatchmethod
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, TypeVar
 
 from rtamt.semantics.interval.interval import Interval
 
@@ -39,7 +39,7 @@ class UnaryNode(RuleAstNode):
 @dataclass(unsafe_hash=True)
 class VaradicNode(RuleAstNode):
     # children are a tuple because they are immutable. This helps with hashing.
-    children: Tuple[RuleAstNode, ...]
+    children: tuple[RuleAstNode, ...]
     """Children that are referenced in the RTAMT rule."""
 
 
@@ -84,12 +84,12 @@ class SigmoidNode(UnaryNode): ...
 
 @dataclass(unsafe_hash=True)
 class HistoricallyDurationNode(UnaryNode):
-    interval: Optional[Interval]
+    interval: Interval | None
 
 
 @dataclass(unsafe_hash=True)
 class HistoricallyDurationSeverityNode(UnaryNode):
-    interval: Optional[Interval]
+    interval: Interval | None
 
 
 @dataclass(unsafe_hash=True)
@@ -102,10 +102,10 @@ class PredicateNode(NullaryNode):
     base_name: str
     """The name of the predicate, which can be resolved to an predicate evaluator."""
 
-    agent_placeholders: Tuple[int, ...]
+    agent_placeholders: tuple[int, ...]
     """The agent placeholder IDs (`a0`, `a1`, ...) which were passed to this predicate."""
 
-    io_type: Optional[IOType] = IOType.OUTPUT
+    io_type: IOType | None = IOType.OUTPUT
     """Specifies whether this predicate is an input or output predicate. If None, the I/O type must be set when this node is embeded (e.g. during meta-predicate replacement) into another tree."""
 
 
@@ -113,10 +113,10 @@ class PredicateNode(NullaryNode):
 class MetaPredicateNode(NullaryNode):
     metapredicate_name: str
 
-    agent_placeholders: Tuple[int, ...]
+    agent_placeholders: tuple[int, ...]
     """The agent placeholder IDs (`a0`, `a1`, ...) which can be set with the invocation of this meta-predicate."""
 
-    io_type: Optional[IOType] = IOType.OUTPUT
+    io_type: IOType | None = IOType.OUTPUT
     """Specifies whether this predicate is an input or output predicate. If None, the I/O type must be set when this node is embeded (e.g. during meta-predicate replacement) into another tree."""
 
 

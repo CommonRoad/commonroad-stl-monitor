@@ -5,7 +5,7 @@ from pathlib import Path
 from commonroad.common.file_reader import CommonRoadFileReader
 from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
 
 
 class TestIntersectionAccelerationPredicates(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestIntersectionAccelerationPredicates(unittest.TestCase):
         root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.confg = PredicateEvaluatorConfig(
+        self.confg = PredicateConfig(
             scale_rob=True,
             mode=PredicateEvaluationMode.MFR,
             d_br=15.0,

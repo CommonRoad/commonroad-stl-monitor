@@ -5,7 +5,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 import pytest
 
 from crmonitor.common.world import World
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
+from crmonitor.predicates.base import AbstractPredicate, PredicateConfig
 from crmonitor.predicates.position import PredInSameLane
 
 PREDICATE_TEST_CASES = [(PredInSameLane, "", 30, [30, 31])]
@@ -13,12 +13,12 @@ PREDICATE_TEST_CASES = [(PredInSameLane, "", 30, [30, 31])]
 
 @pytest.parameterize("predicate_cls,scenario_path,time_step,vehicle_ids", PREDICATE_TEST_CASES)
 def test_predicates_boolean_matches_mfr_robustness(
-    predicate_cls: Type[BasePredicateEvaluator],
+    predicate_cls: Type[AbstractPredicate],
     scenario_path: str,
     time_step: int,
     vehicle_ids: List[int],
 ) -> None:
-    config = PredicateEvaluatorConfig()
+    config = PredicateConfig()
     predicate_evaluator = predicate_cls(config)
 
     scenario_path = Path(__file__).parents[2] / "scenarios" / scenario_path

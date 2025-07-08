@@ -20,7 +20,7 @@ from crmonitor.common.vehicle import (
     Vehicle,
 )
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
     PredInFrontOf,
@@ -37,7 +37,7 @@ from tests.util import parallel_lanes
 class TestPredicate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.config = PredicateEvaluatorConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
+        self.config = PredicateConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
 
     def test_cut_in(self):
         # expected solutions

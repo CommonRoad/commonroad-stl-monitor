@@ -18,7 +18,7 @@ from crmonitor.common.config import ScenarioType
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
 from crmonitor.common.world import World, WorldConfig
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
 from crmonitor.predicates.position import (
     PredDrivesLeftmost,
     PredDrivesRightmost,
@@ -45,7 +45,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
         root_path = Path(__file__).parents[1] / "crmonitor"
         self.scenario_root_path = root_path.parent / "scenarios"
         self.world_confg = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
-        self.prediicate_config = PredicateEvaluatorConfig()
+        self.prediicate_config = PredicateConfig()
 
     def testStopLineInFront(self):
         scenario_file = os.path.join(
@@ -156,9 +156,7 @@ class TestIntersectionPositionPredicates(unittest.TestCase):
 class TestInterstatePositionPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.predicate_config = PredicateEvaluatorConfig(
-            scale_rob=False, mode=PredicateEvaluationMode.MFR
-        )
+        self.predicate_config = PredicateConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSTATE)
 
         right_vertices_lane_1 = np.array(
@@ -1032,7 +1030,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_11, sol_robustness_monitor_mode_11 >= 0)
 
     def test_drives_leftmost(self):
-        predicate_evaluator_config = PredicateEvaluatorConfig(
+        predicate_evaluator_config = PredicateConfig(
             close_to_lane_border=0.2, close_to_other_vehicle=0.5
         )
 
@@ -1138,9 +1136,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
 
     def test_drives_rightmost(self):
-        evaluator_config = PredicateEvaluatorConfig(
-            close_to_lane_border=0.2, close_to_other_vehicle=0.5
-        )
+        evaluator_config = PredicateConfig(close_to_lane_border=0.2, close_to_other_vehicle=0.5)
 
         # expected solutions for rightmost
         exp_sol_monitor_mode_1 = True

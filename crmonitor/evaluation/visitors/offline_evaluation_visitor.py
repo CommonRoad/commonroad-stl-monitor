@@ -3,15 +3,16 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import singledispatchmethod
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from commonroad.common.util import Interval as CommonRoadInterval
-from commonroad_mpr.common.observation import World as MprWorld
 
 from crmonitor.common.helper import rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from crmonitor.evaluation.predicate_interface import (
+    PredicateEvaluationInterface,
+)
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     CompareToThresholdScaledMonitorNode,
@@ -40,16 +41,15 @@ class OfflineEvaluationMonitorTreeVisitorContext:
     """
 
     world: World
-    mpr_world: Optional[MprWorld]
     start_time_step: int
     final_time_step: int
-    captured_agents: Dict[int, Tuple[int, CommonRoadInterval]]
+    captured_agents: dict[int, tuple[int, CommonRoadInterval]]
     """
     Optionally provide one other vehicle that should be considered for the evaluation of binary predicates. This field is populated during the evaluation by the quantifiers.
     """
 
     def capture_agent(
-        self, capture_id: int, agent_info: Tuple[int, CommonRoadInterval]
+        self, capture_id: int, agent_info: tuple[int, CommonRoadInterval]
     ) -> "OfflineEvaluationMonitorTreeVisitorContext":
         """
         Update the context with a newly captured vehicle during quantification.
@@ -61,22 +61,23 @@ class OfflineEvaluationMonitorTreeVisitorContext:
         new_captured_agents[capture_id] = agent_info
         return OfflineEvaluationMonitorTreeVisitorContext(
             self.world,
-            self.mpr_world,
             self.start_time_step,
             self.final_time_step,
             new_captured_agents,
         )
 
     @property
-    def vehicle_ids(self) -> List[int]:
+    def vehicle_ids(self) -> list[int]:
         return [params[0] for params in self.captured_agents.values()]
 
 
-class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
+class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
     def __init__(
         self,
+        predicate_evaluation_interface: PredicateEvaluationInterface,
         scale_rob: bool = True,
     ) -> None:
+        self._predicate_interface = predicate_evaluation_interface
         self._rob_scaler = RobustnessScaler(scale=scale_rob)
 
     def evaluate(
@@ -86,24 +87,24 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         ego_vehicle: Vehicle,
         start_time_step: int,
         end_time_step: int,
-        mpr_world: Optional[MprWorld] = None,
     ):
         vehicles = {0: (ego_vehicle.id, CommonRoadInterval(start_time_step, end_time_step))}
         ctx = OfflineEvaluationMonitorTreeVisitorContext(
-            world, mpr_world, start_time_step, end_time_step, vehicles
+            world, start_time_step, end_time_step, vehicles
         )
+
         return self.visit(node, ctx)
 
     @singledispatchmethod
     def visit(
         self, node: MonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         raise NotImplementedError
 
     @visit.register
     def visit_rule_node(
         self, node: RtamtRuleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
 
         sample_return = node.evaluate(list(child_values.items()), marker=str(ctx.vehicle_ids[-1]))
@@ -124,7 +125,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_all_node(
         self, node: AllMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         # Mostly the same as visit_all_node of EvaluationMonitorTreeVisitor, except that it handles time series data (because of the offline evaluation)
         samples, selected_ids = self._visit_quant_node(node, ctx)
         robustness_values = []
@@ -154,7 +155,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_exist_node(
         self, node: ExistMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, selected_ids = self._visit_quant_node(node, ctx)
 
         robustness_values = []
@@ -184,7 +185,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_sigmoid_node(
         self, node: SigmoidMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
 
         scaling_param = 5
@@ -199,7 +200,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_historically_duration_node(
         self, node: HistoricallyDurationMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
         if node.interval is not None:
             interval = rtamt_interval_to_commonroad_interval(node.interval, ctx.world.scenario)
@@ -232,7 +233,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         self,
         node: HistoricallyDurationSeverityMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
 
         if node.interval is not None:
@@ -264,7 +265,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_sum_if_positive_node(
         self, node: SumIfPositiveMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, _ = self._visit_quant_node(node, ctx)
 
         samples_return = []
@@ -285,7 +286,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         self,
         node: CompareToThresholdScaledMonitorNode,
         ctx: OfflineEvaluationMonitorTreeVisitorContext,
-    ) -> List[float]:
+    ) -> list[float]:
         samples = self.visit(node.child, ctx)
         samples_return = [
             1 - 2 * math.exp(-sample / node.threshold * math.log(2)) for sample in samples
@@ -296,7 +297,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_exists_multiple_node(
         self, node: ExistsMultipleMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         samples, _ = self._visit_quant_node(node, ctx)
 
         samples_return = []
@@ -315,7 +316,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_predicate_node(
         self, node: PredicateMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         vehicle_ids = []
         start_time = 0
         end_time = ctx.final_time_step
@@ -332,12 +333,10 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
                 samples.append(float("nan"))
                 continue
 
-            if self._should_use_boolean_predicate_evaluation(node):
-                value = node.evaluate_boolean(ctx.world, time_step, vehicle_ids)
-                value = self._rob_scaler.max if value else self._rob_scaler.min
-            else:
-                value = node.evaluate_robustness(ctx.world, ctx.mpr_world, time_step, vehicle_ids)
-            samples.append(value)
+            robustness = self._predicate_interface.evaluate_robustness(
+                node.predicate_name, ctx.world, time_step, tuple(vehicle_ids)
+            )
+            samples.append(robustness)
 
         node.values = samples
         return samples
@@ -345,12 +344,12 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
     @visit.register
     def visit_constant_trace_node(
         self, node: ConstantTraceMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> List[float]:
+    ) -> list[float]:
         return node.trace
 
     def _visit_quant_node(
         self, node: QuantMonitorNode, ctx: OfflineEvaluationMonitorTreeVisitorContext
-    ) -> Tuple[List[List[float]], List[int]]:
+    ) -> tuple[list[list[float]], list[int]]:
         """
         Performs the quantification of vehicles for quant operators.
 
@@ -359,7 +358,7 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         """
         # Track when each vehicle first appears (enters) and when it is no longer present (leaves).
         # This is necessary to define the active time intervals for each vehicle in the scenario.
-        # Otherwise we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
+        # Otherwise, we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
         vehicle_start_times = {}
         vehicle_end_times = defaultdict(lambda: ctx.final_time_step)
         for time_step in range(ctx.start_time_step, ctx.final_time_step):
@@ -408,11 +407,3 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[List[float]]):
         # values is a list of lists with time step ordered samples for each predicate.
         # This transforms values into a time step ordered list of list of samples, where each list of samples contains the values for each predicate at this time step.
         return list(zip(*values)), ret_selected_ids
-
-    def _should_use_boolean_predicate_evaluation(self, node: PredicateMonitorNode) -> bool:
-        # TODO: When should boolean evaluation be used?
-        return False
-        # Disabled for now, since it is not clear whether this also applies to MPR.
-        # return self._use_boolean or (
-        #     node.io_type == IOType.INPUT and self._output_type == OutputType.OUTPUT_ROBUSTNESS
-        # )

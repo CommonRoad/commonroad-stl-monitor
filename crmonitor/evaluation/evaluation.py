@@ -1,3 +1,7 @@
+"""
+Module for the public evaluation interface. The classes in this module can be used to evaluate traffic rules.
+"""
+
 import copy
 import logging
 import warnings
@@ -7,36 +11,40 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad_mpr.common.observation import World as WorldMPR
 
+from crmonitor.common import Vehicle, VehicleParameters, World
 from crmonitor.common.config import (
     get_traffic_rule_config,
     get_traffic_rule_from_config,
 )
 from crmonitor.common.helper import merge_dicts_recursively
-from crmonitor.common.vehicle import Vehicle, VehicleParameters
-from crmonitor.common.world import World
-from crmonitor.evaluation.visitor import (
+from crmonitor.monitor import (
     AstNodeValueCollectorMonitorTreeVisitor,
+    MonitorCreationRuleTreeVisitor,
+    MonitorNode,
     MPRGradientCollectorMonitorTreeVisitor,
-    PredicateCollectorMonitorTreeVisitor,
+    OutputType,
+    PredicateValueCollectorMonitorTreeVisitor,
     PredicateVisualizerMonitorTreeVisitor,
     ResetMonitorTreeVisitor,
 )
-from crmonitor.evaluation.visitors import (
-    OfflineEvaluationMonitorTreeVisitor,
-    OnlineEvaluationMonitorTreeVisitor,
+from crmonitor.monitor.visitors import PredicateNameCollectionMonitorTreeVisitor
+from crmonitor.predicates import (
+    AbstractPredicate,
 )
-from crmonitor.monitor import MonitorCreationRuleTreeVisitor, MonitorNode, OutputType
-from crmonitor.predicates.base import (
-    BasePredicateEvaluator,
-    PredicateEvaluationMode,
-    PredicateEvaluatorConfig,
-)
-from crmonitor.rule.rule_node import RuleAstNode, RuleTreeVisitorInterface
-from crmonitor.rule.rule_parser import RuleParser
+from crmonitor.rule import RuleAstNode, RuleParser, RuleTreeVisitorInterface
 from crmonitor.visualization import (
     VisualizationController,
+)
+
+from .predicate_interface import (
+    PredicateEvaluationInterface,
+    PredicateEvaluationInterfaceConfig,
+    PredicateEvaluationMode,
+)
+from .visitors import (
+    OfflineEvaluationMonitorTreeVisitor,
+    OnlineEvaluationMonitorTreeVisitor,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,32 +54,30 @@ class RuleEvaluatorInterface(ABC):
     @classmethod
     def create_for_rule(
         cls,
-        rule: str,
+        rule_name: str,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ):
-        rule_str = get_traffic_rule_from_config(rule)
+        rule_str = get_traffic_rule_from_config(rule_name)
         if rule_str is None:
             _LOGGER.debug(
-                f"Rule {rule} is not a known rule identifier. Interpreting it as the rule definition."
+                f"Rule {rule_name} is not a known rule identifier. Interpreting it as the rule definition."
             )
-            rule_str = rule
+            rule_str = rule_name
 
-        rule_node = RuleParser().parse(rule_str, name=rule)
+        rule_node = RuleParser().parse(rule_str, name=rule_name)
 
-        return cls(rule_node, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
+        return cls(rule_node, world, ego_id, output_type, predicate_interface_config)
 
     def __init__(
         self,
         rule: RuleAstNode,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         self._rule = rule
         self._ego_id = ego_id
@@ -85,18 +91,14 @@ class RuleEvaluatorInterface(ABC):
             self._world.scenario.dt
         )
         self._ego_vehicle = ego_vehicle
-        self._use_boolean = use_boolean
-        self._predicate_evaluator_config = predicate_evaluator_config
+        self._predicate_interface_config = predicate_interface_config
 
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor(predicate_evaluator_config)
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
         self._monitor = monitor_creation_visitor.visit(self._rule, world.dt, output_type)
-        if (
-            self._predicate_evaluator_config.mode == PredicateEvaluationMode.MPR
-            or self._predicate_evaluator_config.mode == PredicateEvaluationMode.MPR_GP
-        ):
-            self._mpr_world = WorldMPR.create_from_scenario(self._world.scenario)
-        else:
-            self._mpr_world = None
+
+    @property
+    def monitor(self) -> MonitorNode:
+        return self._monitor
 
     @property
     def ego_vehicle(self) -> Vehicle:
@@ -110,25 +112,32 @@ class RuleEvaluatorInterface(ABC):
     def visualize(self) -> None:
         """Visualize the result of the evaluation."""
         ctrl = VisualizationController()
-        ctrl.visualize(self._monitor)
+        ctrl.visualize(self.monitor)
 
     def get_predicate_values(self) -> dict[str, float]:
-        predicate_collector = PredicateCollectorMonitorTreeVisitor()
-        return predicate_collector.collect_predicate_values(self._monitor)
+        predicate_collector = PredicateValueCollectorMonitorTreeVisitor()
+        return predicate_collector.collect_predicate_values(self.monitor)
 
 
 class OfflineRuleEvaluator(RuleEvaluatorInterface):
-    def evaluate(
-        self, start_time: Optional[int] = None, end_time: Optional[int] = None
-    ) -> List[float]:
+    def evaluate(self, start_time: int | None = None, end_time: int | None = None) -> list[float]:
         if start_time is None:
             start_time = self.ego_vehicle.start_time
 
         if end_time is None:
             end_time = self.ego_vehicle.end_time
 
+        predicate_names = PredicateNameCollectionMonitorTreeVisitor().collect_predicate_names(
+            self._monitor
+        )
+
+        predicate_interface = PredicateEvaluationInterface(
+            predicate_names, self._predicate_interface_config
+        )
+
         eval_visitor = OfflineEvaluationMonitorTreeVisitor(
-            self._predicate_evaluator_config.scale_rob,
+            predicate_interface,
+            self._predicate_interface_config.base.scale_rob,
         )
         return eval_visitor.evaluate(
             self._monitor,
@@ -136,7 +145,6 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
             self.ego_vehicle,
             start_time,
             end_time,
-            self._mpr_world,
         )
 
 
@@ -146,14 +154,13 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         rule: RuleAstNode,
         world: World,
         ego_id: int,
-        use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
-        super().__init__(rule, world, ego_id, use_boolean, output_type, predicate_evaluator_config)
+        super().__init__(rule, world, ego_id, output_type, predicate_interface_config)
         self._eval_visitor = OnlineEvaluationMonitorTreeVisitor(
-            self._predicate_evaluator_config.scale_rob,
-            use_boolean=use_boolean,
+            self._predicate_interface_config.base.scale_rob,
+            use_boolean=self._predicate_interface_config.mode == PredicateEvaluationMode.BOOLEAN,
             output_type=output_type,
         )
         self._last_evaluation_time_step = -1
@@ -185,7 +192,6 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
             self._world,
             self._last_evaluation_time_step,
             self.ego_vehicle,
-            self._mpr_world,
         )
         rule_value = rule_value if np.isfinite(rule_value) else np.sign(rule_value) * 1.0
         self._rule_value_course.append((self._last_evaluation_time_step, rule_value))
@@ -229,15 +235,10 @@ class RuleEvaluator:
 
         monitor = RuleParser().parse(rule_str_dict[rule], name=rule)
 
-        if traffic_rules_config["traffic_rules_param"]["use_mpr"]:
-            world_mpr = WorldMPR.create_from_scenario(world.scenario)
-        else:
-            world_mpr = None
         return cls(
             monitor,
             ego_vehicle.id,
             world,
-            world_mpr=world_mpr,
             use_boolean=use_boolean,
             output_type=output_type,
             monitor_creation_visitor=monitor_creation_visitor,
@@ -249,7 +250,6 @@ class RuleEvaluator:
         rule: RuleAstNode,
         ego_id: Optional[Union[Vehicle, int]] = None,
         world: Optional[World] = None,
-        world_mpr: Optional[WorldMPR] = None,
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
@@ -260,7 +260,7 @@ class RuleEvaluator:
             monitor_creation_visitor = MonitorCreationRuleTreeVisitor(world.dt, output_type)
         self._rule = rule
         self._monitor = monitor_creation_visitor.visit(rule)
-        self._predicate_collector_visitor = PredicateCollectorMonitorTreeVisitor()
+        self._predicate_collector_visitor = PredicateValueCollectorMonitorTreeVisitor()
         self._mpr_gradient_visitor = MPRGradientCollectorMonitorTreeVisitor()
         self._ast_node_value_collector_visitor = AstNodeValueCollectorMonitorTreeVisitor()
         self._visualizer_visitor = PredicateVisualizerMonitorTreeVisitor()
@@ -274,7 +274,6 @@ class RuleEvaluator:
         self._rule_value_course = []
         self._ego_id = None
         self._world = None
-        self._mpr_world = world_mpr
         if ego_id is not None:
             assert world is not None
             self.reset(ego_id, world, start_time_step)
@@ -350,7 +349,7 @@ class RuleEvaluator:
         vehicle2draw_params: Dict,
         visualization_config: Dict[str, any],
     ) -> Tuple[
-        Dict[str, BasePredicateEvaluator],
+        Dict[str, AbstractPredicate],
         Dict[Any, Dict],
         List,
         List[Callable[[MPRenderer], None]],

@@ -1,9 +1,9 @@
 from matplotlib import pyplot as plt
 
-from crmonitor.evaluation.visitor import MonitorToStringVisitor
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
 )
+from crmonitor.monitor.visitors import MonitorToStringVisitor
 
 from .ast_visualizer import AstVisualizer
 from .trace_visualization_visitor import TraceVisualizationVisitor

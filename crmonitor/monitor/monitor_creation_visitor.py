@@ -14,8 +14,6 @@ from crmonitor.monitor.monitor_node import (
     SumIfPositiveMonitorNode,
 )
 from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
-from crmonitor.predicates.base import PredicateEvaluatorConfig
-from crmonitor.predicates.predicate_factory import PredicateFactory
 from crmonitor.rule import (
     AllNode,
     CompareToThresholdScaledNode,
@@ -36,12 +34,6 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     """
     This visitor is used to transform a rule tree to a monitor tree.
     """
-
-    def __init__(
-        self,
-        predicate_evaluator_config: PredicateEvaluatorConfig = PredicateEvaluatorConfig(),
-    ):
-        self._predicate_factory = PredicateFactory(predicate_evaluator_config)
 
     def create_monitors(
         self, rule_node: RuleAstNode, dt: float, output_type: OutputType = OutputType.STANDARD
@@ -107,5 +99,9 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
         if node.io_type is None:
             raise RuntimeError(f"I/O type of predicate {node.base_name} is not set!")
 
-        evaluator = self._predicate_factory.get_predicate(node.base_name)
-        return PredicateMonitorNode(node.name, evaluator, node.agent_placeholders, node.io_type)
+        return PredicateMonitorNode(
+            node.name,
+            node.base_name,
+            node.agent_placeholders,
+            node.io_type,
+        )

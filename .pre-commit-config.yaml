@@ -1,19 +1,20 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v3.2.0
+  rev: v5.0.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
   - id: check-yaml
   - id: check-added-large-files
+    exclude: crmonitor/mpr/models
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.9.9
+  rev: v0.12.0
   hooks:
   # TODO: Enable linting with ruff. It is disable for now, because too much of the code base has linting errors.
   - id: ruff
     args: [--fix]
   - id: ruff-format
 - repo: https://github.com/python-poetry/poetry
-  rev: 2.0.0
+  rev: 2.1.3
   hooks:
   - id: poetry-check

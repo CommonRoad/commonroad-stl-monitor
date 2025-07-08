@@ -1,61 +1,5 @@
 # List of all predicates that are needed for
-all_general_predicates = [
-    "in_front_of",
-    "in_same_lane",
-    "keeps_safe_distance_prec",
-    "brakes_abruptly",
-    "brakes_abruptly_relative",
-    "single_lane",
-    "keeps_lane_speed_limit",
-    "keeps_type_speed_limit",
-    "keeps_lane_speed_limit_star",
-    "preserves_traffic_flow",
-    "slow_as_leading_vehicle",
-]
 
-all_interstate_predicates = [
-    "velocity_below_five",
-    "velocity_below_15",
-    "velocity_below_20",
-    "has_congestion_velocity",
-    "has_slow_moving_velocity",
-    "drives_faster",
-    "drives_with_slightly_higher_speed",
-    "on_shoulder",
-    "in_leftmost_lane",
-    "in_rightmost_lane",
-    "main_carriageway_right_lane",
-    "has_queue_velocity",
-    "close_to_left_bound",
-    "close_to_right_bound",
-    "lat_left_of",
-    "heading_right",
-    "lat_left_of_vehicle",
-    "rear_behind_front",
-    "lat_close_to_vehicle_left",
-    "lat_close_to_vehicle_right",
-]
-
-changed_to_meta = [
-    "slow_leading_vehicle",  # arity
-    "exist_standing_leading_vehicle",  # arity
-    "in_congestion",  # arity; threshold
-    "in_slow_moving_traffic",  # arity; threshold
-    "in_queue_of_vehicles",  # arity; threshold
-    "precedes",  # arity
-    "drives_leftmost",  # scarcity
-    "drives_rightmost",  # scarcity
-    "cut_in",  # scarcity
-    "left_of",  # scarcity
-]
-
-meta_only = [
-    "lon_intersecting_vehicles",
-    "close_to_vehicle_left",
-    "close_to_vehicle_right",
-    "approach_from_left",
-    "approach_from_right",
-]
 
 yuanfei_predicates = [
     "in_front_of",
@@ -69,10 +13,4 @@ yuanfei_predicates = [
     "keeps_type_speed_limit",
     "keeps_brake_speed_limit",
     "keeps_fov_speed_limit",
-]
-
-insufficient = [
-    "drives_with_slightly_higher_speed",
-    "has_congestion_velocity",
-    "heading_right",
 ]

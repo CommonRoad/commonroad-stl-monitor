@@ -10,8 +10,8 @@ from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
 
 from crmonitor.common.world import World
 from crmonitor.predicates.base import (
-    BasePredicateEvaluator,
-    PredicateEvaluatorConfig,
+    AbstractPredicate,
+    PredicateConfig,
     PredicateName,
 )
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
@@ -42,7 +42,7 @@ class VelocityPredicates(PredicateName):
     VelocityBelow20 = "velocity_below_20"
 
 
-class GenericSpeedLimit(BasePredicateEvaluator, ABC):
+class GenericSpeedLimit(AbstractPredicate, ABC):
     @abstractmethod
     def get_speed_limit(
         self, world: World, time_step: int, vehicle_ids: List[int]
@@ -64,7 +64,7 @@ class PredLaneSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsLaneSpeedLimit
     arity = 1
 
-    def __init__(self, config: PredicateEvaluatorConfig):
+    def __init__(self, config: PredicateConfig):
         super().__init__(config)
         self.country = SupportedTrafficSignCountry(config.country)
 
@@ -179,7 +179,7 @@ class PredVelocityBelow20(GenericSpeedLimit):
         return 20.0 / 3.6
 
 
-class PredReverses(BasePredicateEvaluator):
+class PredReverses(AbstractPredicate):
     """
     Evaluates if a vehicle drives backwards
     """
@@ -200,7 +200,7 @@ class PredReverses(BasePredicateEvaluator):
         )
 
 
-class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
+class PredSlowAsLeadingVehicle(AbstractPredicate):
     """
     Predicate to evaluate whether a vehicle is 'slow' when driving as a leading vehicle of an ego vehicle.
     """
@@ -227,7 +227,7 @@ class PredSlowAsLeadingVehicle(BasePredicateEvaluator):
         )
 
 
-class PredSlowLeadingVehicle(BasePredicateEvaluator):
+class PredSlowLeadingVehicle(AbstractPredicate):
     """
     Predicate which evaluates if a slow leading vehicle exists if front of a vehicle
     """
@@ -310,7 +310,7 @@ class PredSlowLeadingVehicle(BasePredicateEvaluator):
         return max(rob_slow_leading_list)
 
 
-class PredPreservesTrafficFlow(BasePredicateEvaluator):
+class PredPreservesTrafficFlow(AbstractPredicate):
     """
     Predicate for minimum speed limit evaluation
     """
@@ -370,7 +370,7 @@ class PredPreservesTrafficFlow(BasePredicateEvaluator):
         )
 
 
-class PredInStandStill(BasePredicateEvaluator):
+class PredInStandStill(AbstractPredicate):
     """
     Evaluation if vehicle is standing
     """
@@ -408,7 +408,7 @@ class PredInStandStill(BasePredicateEvaluator):
         )
 
 
-class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
+class PredExistStandingLeadingVehicle(AbstractPredicate):
     """
     Predicate which checks if a standing leading vehicle exist in front of a vehicle
     """
@@ -466,7 +466,7 @@ class PredExistStandingLeadingVehicle(BasePredicateEvaluator):
         return max(rob_standstill_list)
 
 
-class PredDrivesFaster(BasePredicateEvaluator):
+class PredDrivesFaster(AbstractPredicate):
     """
     Predicate which checks if the kth vehicle drives faster than the pth vehicle
     """
@@ -484,7 +484,7 @@ class PredDrivesFaster(BasePredicateEvaluator):
         )
 
 
-class PredDrivesWithSlightlyHigherSpeed(BasePredicateEvaluator):
+class PredDrivesWithSlightlyHigherSpeed(AbstractPredicate):
     """
     Predicate which checks if the kth vehicle drives maximum with slightly higher speed than the pth vehicle
     """
