@@ -39,8 +39,8 @@ class LinearTimeStepCache(TimeStepCache[_K, _V]):
     """
     Special time step cache, which assumes linear ordering of time steps.
 
-    This cache is useful for online evaluations, where the time step is strictly increasing.
-    For offline evaluations this is currently not the case.
+    This cache is useful for online evaluations, where time steps are strictly increasing.
+    For offline evaluations this is currently not the case, so this caching approach is not beneficial.
     """
 
     def __init__(self) -> None:

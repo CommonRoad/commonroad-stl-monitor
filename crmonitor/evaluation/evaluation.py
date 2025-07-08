@@ -50,6 +50,13 @@ class RuleEvaluatorInterface(ABC):
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> Self:
+        """Create a new rule evaluator for a pre-defined given traffic rule (e.g. R_G1, R_I2, etc.).
+
+        :param rule_name: The name of the traffic rule which this rule evaluator will evaluate.
+        :param dt: Time step size the input scenarios have. Required for the sampling frequency of RTAMT.
+        :param output_type: Switch between 'normal' STL and IA-STL.
+        :param predicate_interface_config: Adjust how predicates in the traffic rules are evaluated.
+        """
         rule_str = get_traffic_rule_from_config(rule_name)
         if rule_str is None:
             _LOGGER.debug(
@@ -70,6 +77,14 @@ class RuleEvaluatorInterface(ABC):
         output_type: OutputType = OutputType.STANDARD,
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> Self:
+        """Create a new rule evaluator for a custom traffic rule.
+
+        :param rule_str: Custom traffic rule.
+        :param dt: Time step size the input scenarios have. Required for the sampling frequency of RTAMT.
+        :param rule_name: Optionally provide the name of rule, which will be used for debugging.
+        :param output_type: Switch between 'normal' STL and IA-STL.
+        :param predicate_interface_config: Adjust how predicates in the traffic rules are evaluated.
+        """
         rule_node = RuleParser().parse(rule_str, name=rule_name)
 
         return cls(rule_node, dt, output_type, predicate_interface_config)
@@ -90,6 +105,7 @@ class RuleEvaluatorInterface(ABC):
 
     @property
     def monitor(self) -> MonitorNode:
+        """The root node of the STL monitor tree."""
         return self._monitor
 
     @property
@@ -102,20 +118,25 @@ class RuleEvaluatorInterface(ABC):
     ) -> list[float]: ...
 
     def reset(self) -> None:
-        """ """
+        """Resets the evaluator so that it can be reused to evaluate other scenarios.
+
+        This will also clear all cached predicate values, MPR GP gradients and invalidate all relevant caches.
+        """
         reset_visitor = ResetMonitorTreeVisitor()
         reset_visitor.reset(self.monitor)
 
     def visualize(self) -> None:
-        """Visualize the result of the evaluation."""
+        """Visualizes the result of the evaluation."""
         ctrl = VisualizationController()
         ctrl.visualize(self.monitor)
 
     def get_predicate_values(self) -> dict[str, float]:
+        """Retrive the last value of each predicate."""
         predicate_collector = PredicateValueCollectorMonitorTreeVisitor()
         return predicate_collector.collect_predicate_values(self.monitor)
 
     def get_predicate_names(self) -> list[str]:
+        """Retrive a list of the predicates in the traffic rule."""
         return PredicateNameCollectionMonitorTreeVisitor().collect_predicate_names(self.monitor)
 
     def get_rule_str(self) -> str:
@@ -123,9 +144,23 @@ class RuleEvaluatorInterface(ABC):
 
 
 class OfflineRuleEvaluator(RuleEvaluatorInterface):
+    """
+    Stateless rule evaluator, which evaluates traffic rules in offline mode.
+    """
+
+    @override
     def evaluate(
         self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
     ) -> list[float]:
+        """Evaluate the traffic rule for `world` and `ego_id` in offline mode.
+
+        :param world: The world in which `ego_id` can be found. The time step size of the world must match the time step size of the rule evaluator.
+        :param ego_id: Ego vehicle for which the traffic rule is evaluated.
+        :param start_time: Optionally provide a start time step, after which the rule is evaluated. If `None` is given, the start time of the ego vehicle is used.
+        :param end_time: Optionally provide an end time step, until which the rule is evaluated. If `None` is given, the end time of the ego vehicle is used.
+
+        :returns: The robustness trace.
+        """
         if world.dt != self.dt:
             raise ValueError(
                 f"The configured dt '{self.dt}' for this rule evaluator does not match the dt of the world '{world.dt}'"
@@ -141,6 +176,7 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
         if end_time is None:
             end_time = ego_vehicle.end_time
 
+        # Create the evaluation interface for the predicates in the traffic rule.
         predicate_interface = PredicateEvaluationInterface(
             self.get_predicate_names(), self._predicate_interface_config
         )
@@ -159,6 +195,8 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
 
 
 class OnlineRuleEvaluator(RuleEvaluatorInterface):
+    """Stateful traffic rule evaluator, which evaluates traffic rules in online mode."""
+
     def __init__(
         self,
         rule: RuleAstNode,
@@ -168,6 +206,7 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
     ) -> None:
         super().__init__(rule, dt, output_type, predicate_interface_config)
 
+        # Create the evaluation interface for the predicates in the traffic rule.
         self._predicate_evaluation_interface = PredicateEvaluationInterface(
             self.get_predicate_names(), self._predicate_interface_config
         )
@@ -188,6 +227,7 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
     def rule_value_course(self) -> list[float]:
         return self._rule_value_course
 
+    @override
     def evaluate(
         self, world: World, ego_id: int, start_time: int | None = None, end_time: int | None = None
     ) -> list[float]:

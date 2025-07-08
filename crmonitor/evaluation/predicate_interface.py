@@ -53,7 +53,8 @@ class PredicateEvaluationInterfaceConfig:
     """Optionally configure the model-predictive evaluation with gaussian processes. If None is set and MPR_GP is selected as predicate evaluation mode, the default config is used."""
 
 
-PredicateCache = TimeStepCache[tuple[ScenarioID, str, tuple[int, ...]], float]
+FloatPredicateCache = TimeStepCache[tuple[ScenarioID, str, tuple[int, ...]], float]
+BoolPredicateCache = TimeStepCache[tuple[ScenarioID, str, tuple[int, ...]], bool]
 
 
 class SinglePredicateEvaluationInterface:
@@ -71,12 +72,15 @@ class SinglePredicateEvaluationInterface:
     _predicate_evaluator: AbstractPredicate
     _mpr_gp_evaluator: MprGpPredicateEvaluator | None = None
     _mpr_evaluator: MprPredicateEvaluator | None = None
+    _robustness_predicate_cache: FloatPredicateCache | None
+    _satisfied_predicate_cache: BoolPredicateCache | None
 
     def __init__(
         self,
         predicate: type[AbstractPredicate] | str,
         config: PredicateEvaluationInterfaceConfig | None = None,
-        predicate_cache: PredicateCache | None = None,
+        robustness_predicate_cache: FloatPredicateCache | None = None,
+        satisfied_predicate_cache: BoolPredicateCache | None = None,
         mpr_cache: MprSampledStatesCache | None = None,
     ) -> None:
         """Initialize the predicate evaluation interface.
@@ -88,7 +92,8 @@ class SinglePredicateEvaluationInterface:
         if config is None:
             config = PredicateEvaluationInterfaceConfig()
         self._config = config
-        self._predicate_cache = predicate_cache
+        self._robustness_predicate_cache = robustness_predicate_cache
+        self._satisfied_predicate_cache = satisfied_predicate_cache
 
         self._setup_predicate_evaluator(predicate)
 
@@ -151,12 +156,44 @@ class SinglePredicateEvaluationInterface:
 
         :returns: Boolean evaluation result
         """
-        return self._predicate_evaluator.evaluate_boolean(world, time_step, vehicle_ids)
+
+        cached_satisfied = self._get_bool_predicate_cache_entry(world, time_step, vehicle_ids)
+        if cached_satisfied is not None:
+            return cached_satisfied
+        predicate_satisfied = self._predicate_evaluator.evaluate_boolean(
+            world, time_step, vehicle_ids
+        )
+
+        self._set_bool_predicate_cache_entry(world, time_step, vehicle_ids, predicate_satisfied)
+
+        return predicate_satisfied
+
+    def _get_bool_predicate_cache_entry(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> bool | None:
+        if self._satisfied_predicate_cache is None:
+            return None
+
+        return self._satisfied_predicate_cache.get_at_time_step(
+            time_step, (world.scenario.scenario_id, vehicle_ids)
+        )
+
+    def _set_bool_predicate_cache_entry(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...], satisfied: bool
+    ) -> None:
+        if self._robustness_predicate_cache is None:
+            return None
+
+        self._robustness_predicate_cache.set_at_time_step(
+            time_step,
+            (world.scenario.scenario_id, vehicle_ids),
+            satisfied,
+        )
 
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
-        cached_robustness = self._get_predicate_cache_entry(world, time_step, vehicle_ids)
+        cached_robustness = self._get_float_predicate_cache_entry(world, time_step, vehicle_ids)
         if cached_robustness is not None:
             return cached_robustness
 
@@ -194,29 +231,38 @@ class SinglePredicateEvaluationInterface:
                 world, time_step, vehicle_ids
             )
 
-        self._set_predicate_cache_entry(world, time_step, vehicle_ids, robustness)
+        self._set_float_predicate_cache_entry(world, time_step, vehicle_ids, robustness)
 
         return robustness
 
-    def _get_predicate_cache_entry(
+    def _get_float_predicate_cache_entry(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float | None:
-        if self._predicate_cache is None:
+        if self._robustness_predicate_cache is None:
             return None
 
-        return self._predicate_cache.get_at_time_step(
-            time_step, (world.scenario.scenario_id, self.predicate_name, vehicle_ids)
+        return self._robustness_predicate_cache.get_at_time_step(
+            time_step, (world.scenario.scenario_id, vehicle_ids, float)
         )
 
-    def _set_predicate_cache_entry(
+    def _set_float_predicate_cache_entry(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...], robustness: float
     ) -> None:
-        if self._predicate_cache is None:
+        if self._robustness_predicate_cache is None:
             return None
 
-        self._predicate_cache.set_at_time_step(
-            time_step, (world.scenario.scenario_id, self.predicate_name, vehicle_ids), robustness
+        self._robustness_predicate_cache.set_at_time_step(
+            time_step,
+            (world.scenario.scenario_id, vehicle_ids, float),
+            robustness,
         )
+
+    def reset(self) -> None:
+        if self._robustness_predicate_cache:
+            self._robustness_predicate_cache.invalidate()
+
+        if self._satisfied_predicate_cache:
+            self._satisfied_predicate_cache.invalidate()
 
 
 class _MprSampledStateCacheWrapper:
@@ -266,19 +312,33 @@ class PredicateEvaluationInterface:
         predicates: Iterable[type[AbstractPredicate] | str],
         config: PredicateEvaluationInterfaceConfig | None = None,
     ) -> None:
-        self._predicate_cache = BasicTimeStepCache()
+        # The MPR state sampling cache must be setup at this level or hight, to make sure that
+        # we really benefit from the caching. Each single predicate evaluator, might sample
+        # for the same vehicle, so a cache that is shared across all predicates makes sure
+        # we do not have to resample that often.
         self._mpr_cache = _MprSampledStateCacheWrapper()
 
         self._predicate_interfaces = {}
         for predicate in predicates:
             predicate_interface = SinglePredicateEvaluationInterface(
-                predicate, config, self._predicate_cache, self._mpr_cache
+                predicate,
+                config,
+                # The robustness and satisfied caches are specific to each predicate.
+                # Since we moved to meta predicates, there is also no recursive predicate invocation anymore
+                # so shared caching is not necessary anymore.
+                robustness_predicate_cache=BasicTimeStepCache(),
+                satisfied_predicate_cache=BasicTimeStepCache(),
+                mpr_cache=self._mpr_cache,
             )
             self._predicate_interfaces[predicate_interface.predicate_name] = predicate_interface
 
     def evaluate_boolean(
         self, predicate: str, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> bool:
+        if predicate not in self._predicate_interfaces:
+            raise ValueError(
+                f"Cannot evaluate predicate '{predicate}': predicate is not setup for this predicate interface!"
+            )
         predicate_interface = self._predicate_interfaces[predicate]
 
         return predicate_interface.evaluate_boolean(world, time_step, vehicle_ids)
@@ -286,10 +346,16 @@ class PredicateEvaluationInterface:
     def evaluate_robustness(
         self, predicate: str, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
+        if predicate not in self._predicate_interfaces:
+            raise ValueError(
+                f"Cannot evaluate predicate '{predicate}': predicate is not setup for this predicate interface!"
+            )
         predicate_interface = self._predicate_interfaces[predicate]
 
         return predicate_interface.evaluate_robustness(world, time_step, vehicle_ids)
 
     def reset(self) -> None:
-        self._predicate_cache.invalidate()
         self._mpr_cache.invalidate()
+
+        for predicate_interface in self._predicate_interfaces.values():
+            predicate_interface.reset()
