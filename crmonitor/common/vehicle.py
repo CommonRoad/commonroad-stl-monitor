@@ -1,14 +1,11 @@
 import copy
-from decimal import Decimal
 import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass, field
+from decimal import Decimal
 from functools import partial
 from typing import Dict, List, Optional, Set, Tuple, Union
-from omegaconf import DictConfig
-from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
-from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 
 # import numba
 import numpy as np
@@ -19,8 +16,11 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState, InitialState, State
 from commonroad_route_planner.route_planner import RoutePlanner
+from omegaconf import DictConfig
 from shapely import affinity, unary_union
 from shapely.geometry import Point, Polygon
+from vehiclemodels.parameters_vehicle1 import parameters_vehicle1
+from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
 from vehiclemodels.parameters_vehicle3 import parameters_vehicle3
 
 from crmonitor.common.road_network import Lane, RoadNetwork
@@ -32,10 +32,10 @@ logger = logging.getLogger(__name__)
 
 # @numba.njit
 # todo: the decorator is removed as it might take a lot of time to initialize
-def calc_s(s, w, l, theta):
+def calc_s(s, width, length, theta):
     s = (
-        rot_mat_factors[0] * l / 2.0 * np.cos(theta)
-        - rot_mat_factors[1] * w / 2 * np.sin(theta)
+        rot_mat_factors[0] * length / 2.0 * np.cos(theta)
+        - rot_mat_factors[1] * width / 2 * np.sin(theta)
         + s
     )
     return s
@@ -519,11 +519,11 @@ class Vehicle:
         return lanes.pop() if len(lanes) > 0 else None
 
     @property
-    def end_time(self):
+    def end_time(self) -> int:
         return max(map(lambda state: state.time_step, self.states_cr.values()))
 
     @property
-    def start_time(self):
+    def start_time(self) -> int:
         return min(map(lambda state: state.time_step, self.states_cr.values()))
 
     @property
@@ -580,7 +580,7 @@ class Vehicle:
             end_orientation = goal["end_orientation"]
         try:
             route = self._route_planner(initial_state, attributes, road_network)
-        except:
+        except Exception:
             route = None
         # replan route to fix no solution from route planner
         replanned_route = self._replan_route(
@@ -703,7 +703,7 @@ class Vehicle:
                         attributes=attributes,
                         road_network=road_network,
                     )
-                except:
+                except Exception:
                     route = None
                 if route is not None:
                     yield route

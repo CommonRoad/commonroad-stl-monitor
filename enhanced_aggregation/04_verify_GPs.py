@@ -2,18 +2,12 @@ import itertools
 import logging
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from commonroad_mpr.learning import DataLoader, ModelEvaluator
 from commonroad_mpr.learning.gp_regression import read_model
 from commonroad_mpr.utils.configuration_builder import ConfigurationBuilder as MprCfg
-from crmonitor.predicate_grouping import (
-    all_general_predicates,
-    all_interstate_predicates,
-    meta_only,
-)
-from crmonitor.predicates.predicate_factory import PredicateFactory
-import matplotlib.pyplot as plt
 
 logging.basicConfig(level=logging.INFO)
 

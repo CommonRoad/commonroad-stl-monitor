@@ -1,11 +1,10 @@
 import copy
-import importlib.resources as pkg_resources
 import logging
 import shelve
 import warnings
 from collections import defaultdict
-from dataclasses import dataclass
-from functools import lru_cache, partial
+from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Optional, Set, Union
 
@@ -21,9 +20,8 @@ from commonroad_dc.feasibility.solution_checker import (
     _simulate_trajectory_if_input_vector,
 )
 
-import crmonitor
-from crmonitor.common.helper import load_yaml
-from crmonitor.common.road_network import RoadNetwork
+from crmonitor.common.config import ScenarioType
+from crmonitor.common.road_network import RoadNetwork, RoadNetworkParam
 from crmonitor.common.vehicle import (
     ControlledVehicle,
     CurvilinearStateManager,
@@ -35,11 +33,10 @@ from crmonitor.common.vehicle import (
 l_wb = 2.578  # for BMW_320i
 
 
-@lru_cache(maxsize=None)
-def get_world_config():
-    with pkg_resources.path(crmonitor, "config.yaml") as config_path:
-        config = load_yaml(config_path)
-    return config
+@dataclass
+class WorldConfig:
+    scenario_type: ScenarioType = ScenarioType.INTERSTATE
+    road_network_param: RoadNetworkParam = field(default_factory=RoadNetworkParam)
 
 
 @dataclass
@@ -104,16 +101,19 @@ class World:
 
     @classmethod
     def create_from_scenario(
-        cls, scenario: Scenario, config=None, road_network=None, cache_dir=None
+        cls,
+        scenario: Scenario,
+        config: Optional[WorldConfig] = None,
+        road_network=None,
+        cache_dir=None,
     ):
         if config is None:
-            config = get_world_config()
+            config = WorldConfig()
+
         if road_network is None:
-            if config.get("scenario") == "intersection":
-                params = config.get("intersection_road_network_param")
-            else:  # interstate scenarios
-                params = config.get("road_network_param")
-            road_network = RoadNetwork(scenario.lanelet_network, params, config.get("scenario"))
+            road_network = RoadNetwork(
+                scenario.lanelet_network, config.road_network_param, config.scenario_type
+            )
         else:
             road_network = road_network
         vehicles = set()
@@ -141,7 +141,7 @@ class World:
                 )
             ):
                 continue
-            if config.get("scenario") == "intersection":
+            if config.scenario_type == ScenarioType.INTERSECTION:
                 # only consider cars and prediction steps must larger than 2
                 # obs must not be static
                 if (
@@ -194,7 +194,7 @@ class World:
         return [v.id for v in self.vehicles if v.is_valid(time_step)]
 
     @staticmethod
-    def static_vehicle(dynamic_obstacle: "DynamicObstacle"):
+    def static_vehicle(dynamic_obstacle: DynamicObstacle):
         """
         Checks whether the obstacle is static.
         """

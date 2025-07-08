@@ -9,10 +9,10 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from crmonitor.common.helper import load_yaml
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
 from crmonitor.common.world import World
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
 from crmonitor.predicates.general import (
     PredGoingStraight,
     PredInCongestion,
@@ -29,13 +29,10 @@ class TestIntersectionGeneralPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = True
-        self.config["d_sl"] = 1.0
-        self.config["scenario"] = "intersection"
-        self.config["use_mpr"] = False
+        self.config = PredicateEvaluatorConfig(
+            scale_rob=True, d_sl=1.0, mode=PredicateEvaluationMode.MFR
+        )
 
     def testTurningRight(self):
         scenario_file = os.path.join(
@@ -43,7 +40,7 @@ class TestIntersectionGeneralPredicates(unittest.TestCase):
             "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario)
         ego_vehicle = world.vehicle_by_id(30)
 
         for time in range(ego_vehicle.end_time + 1):
@@ -92,10 +89,7 @@ class TestIntersectionGeneralPredicates(unittest.TestCase):
 class TestInterstateGeneralPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = False
-        self.config["use_mpr"] = False
+        self.config = PredicateEvaluatorConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
 
         right_vertices_lane_1 = np.array(
             [

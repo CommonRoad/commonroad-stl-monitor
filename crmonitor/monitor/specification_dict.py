@@ -20,6 +20,7 @@ from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 
 class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
     def __init__(self) -> None:
+        super().__init__()
         self._ast_node_values = dict()
 
     @property

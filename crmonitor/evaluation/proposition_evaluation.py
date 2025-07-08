@@ -7,11 +7,9 @@ from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 from crmonitor.evaluation.visitor import (
     BaseValueMonitorTreeVisitor,
-    MonitorCreationRuleTreeVisitor,
 )
-from crmonitor.monitor.monitor_node import RtamtRuleMonitorNode
+from crmonitor.monitor import MonitorCreationRuleTreeVisitor, OutputType, RtamtRuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
-from crmonitor.monitor.rtamt_monitor_stl import OutputType
 from crmonitor.rule.rule_node import PredicateNode, RuleAstNode
 
 

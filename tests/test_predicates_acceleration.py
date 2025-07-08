@@ -3,9 +3,9 @@ import unittest
 from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from crmonitor.common.helper import load_yaml
 from crmonitor.common.world import World
 from crmonitor.predicates.acceleration import PredCausesBrakingIntersection
+from crmonitor.predicates.base import PredicateEvaluationMode, PredicateEvaluatorConfig
 
 
 class TestIntersectionAccelerationPredicates(unittest.TestCase):
@@ -14,12 +14,12 @@ class TestIntersectionAccelerationPredicates(unittest.TestCase):
         root_path = Path(__file__).parents[1] / "crmonitor"
         config_path = Path(__file__).parents[1] / "crmonitor" / "config.yaml"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.config = load_yaml(str(config_path))
-        self.config["scale_rob"] = True
-        self.config["d_br"] = 15.0
-        self.config["a_br"] = -1.0
-        self.config["scenario"] = "intersection"
-        self.config["use_mpr"] = False
+        self.confg = PredicateEvaluatorConfig(
+            scale_rob=True,
+            mode=PredicateEvaluationMode.MFR,
+            d_br=15.0,
+            a_br=-1.0,
+        )
 
     def testCausesBrakingIntersection(self):
         scenario_file = os.path.join(

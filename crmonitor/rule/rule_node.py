@@ -37,14 +37,6 @@ class UnaryNode(RuleAstNode):
 
 
 @dataclass(unsafe_hash=True)
-class BinaryNode(RuleAstNode):
-    """Rule nodes that have two children. This is used for binary operators"""
-
-    left_child: RuleAstNode
-    right_child: RuleAstNode
-
-
-@dataclass(unsafe_hash=True)
 class VaradicNode(RuleAstNode):
     # children are a tuple because they are immutable. This helps with hashing.
     children: Tuple[RuleAstNode, ...]
@@ -82,6 +74,11 @@ class SumIfPositiveNode(QuantNode): ...
 
 
 @dataclass(unsafe_hash=True)
+class ExistsMultipleNode(QuantNode):
+    threshold: int
+
+
+@dataclass(unsafe_hash=True)
 class SigmoidNode(UnaryNode): ...
 
 
@@ -101,14 +98,9 @@ class CompareToThresholdScaledNode(UnaryNode):
 
 
 @dataclass(unsafe_hash=True)
-class ExistsMultipleNode(QuantNode):
-    threshold: int
-
-
-@dataclass(unsafe_hash=True)
 class PredicateNode(NullaryNode):
     base_name: str
-    """The name of the predicate, which can be resolved to an predicate  evaluator."""
+    """The name of the predicate, which can be resolved to an predicate evaluator."""
 
     agent_placeholders: Tuple[int, ...]
     """The agent placeholder IDs (`a0`, `a1`, ...) which were passed to this predicate."""

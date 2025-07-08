@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from enum import Enum
 from typing import List
 
 import numpy as np
@@ -8,12 +7,16 @@ from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
-from crmonitor.predicates.base import BasePredicateEvaluator, PredicateEvaluatorConfig
+from crmonitor.predicates.base import (
+    BasePredicateEvaluator,
+    PredicateEvaluatorConfig,
+    PredicateName,
+)
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
-class PriorityPredicates(str, Enum):
+class PriorityPredicates(PredicateName):
     SamePriorityBase = "same_priority_base"
     SamePriorityRightRight = "same_priority_right_right"
     SamePriorityRightLeft = "same_priority_right_left"
@@ -216,20 +219,20 @@ class PredRelevantTrafficLight(BasePredicateEvaluator):
             [
                 ref_path.clcs.convert_to_curvilinear_coords(
                     *utils.get_lanelet_start_line(
-                        world.road_network.lanelet_network.find_lanelet_by_id(l)
+                        world.road_network.lanelet_network.find_lanelet_by_id(lanelet)
                     )[0]
                 )[0]
-                for l in lanelet_with_active_tl
+                for lanelet in lanelet_with_active_tl
             ]
         )
         lanelet_end_s = np.array(
             [
                 ref_path.clcs.convert_to_curvilinear_coords(
                     *utils.get_lanelet_end_line(
-                        world.road_network.lanelet_network.find_lanelet_by_id(l)
+                        world.road_network.lanelet_network.find_lanelet_by_id(lanelet)
                     )[0]
                 )[0]
-                for l in lanelet_with_active_tl
+                for lanelet in lanelet_with_active_tl
             ]
         )
         for i in range(lanelet_start_s.shape[0]):

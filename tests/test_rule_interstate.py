@@ -1,7 +1,6 @@
-import logging
 import os
-import unittest
 from pathlib import Path
+import unittest
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -9,41 +8,31 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from crmonitor.common.helper import load_yaml
+from crmonitor.common.config import ScenarioType, get_traffic_rule_from_config
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle
-from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RuleAstNode
+from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
+from crmonitor.common.world import World, WorldConfig
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator, OnlineRuleEvaluator, RuleEvaluator
+from crmonitor.rule.rule_node import AllNode, ExistNode, PredicateNode, RtamtRuleNode, RuleAstNode
 
 from crmonitor.rule.rule_parser import RuleParser
 from tests.util import parallel_lanes
 
-logging.basicConfig(
-    format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
-    datefmt="%Y-%m-%d:%H:%M:%S",
-    level=logging.INFO,
-)
 
-
-class RuleTest(unittest.TestCase):
+class TestRuleInterstate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        config_path = root_path / "config.yaml"
-        self.config = load_yaml(str(config_path))
-        rules_path = root_path / "traffic_rules_rtamt.yaml"
-        self.traffic_rules = load_yaml(str(rules_path))
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.parse_rule = RuleParser().parse
+        self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSTATE)
 
     def test_single_vehicle(self):
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(1)
         lanelet_network.add_lanelet(lanelets[0])
-        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(lanelet_network)
 
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -86,23 +75,17 @@ class RuleTest(unittest.TestCase):
         world = World({ego_vehicle, other_vehicle_1}, road_network)
 
         rule_str = "A a1: (in_front_of(a0, a1))"
-        rule = self.parse_rule(rule_str)
-        rule_eval = RuleEvaluator(rule, ego_vehicle, world)
+        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_str, world, ego_vehicle.id)
         rule_robustness = rule_eval.evaluate()
-        preds = rule_eval.get_predicates()
-        self.assertEqual(rule_robustness[4], 1.0)
+        preds = rule_eval.get_predicate_values()
+        assert rule_robustness[4] == 1.0
         np.testing.assert_allclose(np.array(list(preds.values())), 1.0)
 
         rule_str = "E a1: (in_front_of(a0, a1))"
-        rule = self.parse_rule(rule_str)
-        rule_eval = RuleEvaluator(rule, ego_vehicle, world)
-        rule_robustness = []
-        for i in range(ego_vehicle.end_time + 1):
-            rob = rule_eval.update()
-            rule_robustness.append(rob)
-        rule_robustness = np.array(rule_robustness)
-        self.assertEqual(rule_robustness[4], -1.0)
-        preds = rule_eval.get_predicates()
+        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_str, world, ego_vehicle.id)
+        rule_robustness = rule_eval.evaluate()
+        assert rule_robustness[4] == -1.0
+        preds = rule_eval.get_predicate_values()
         np.testing.assert_allclose(np.array(list(preds.values())), -1.0)
 
     def test_safe_distance(self):
@@ -304,7 +287,7 @@ class RuleTest(unittest.TestCase):
         #                          f"Test failed for ego_id={ego_id} and o_id={o_id}")
 
         for ego_id, exp_violation in exp_floating:
-            world = World.create_from_scenario(scenario, self.config)
+            world = World.create_from_scenario(scenario, self.world_config)
             ego_vehicle = world.vehicle_by_id(ego_id)
             rule_eval = RuleEvaluator.create_from_config(
                 world, ego_vehicle.id, "R_G1", self.traffic_rules
@@ -373,17 +356,15 @@ class RuleTest(unittest.TestCase):
             1006: True,
             1007: True,
         }
-        rule_str = self.traffic_rules["traffic_rules"]["R_G2"]
-        self.traffic_rules["scale_rob"] = False
-        rule = self.parse_rule(rule_str, name="UnnecessaryBraking")
-        self.assertTrue(isinstance(rule, RuleAstNode))
+        rule = RuleParser().parse(get_traffic_rule_from_config("R_G2"), name="UnnecessaryBraking")
+        self.assertTrue(isinstance(rule, RtamtRuleNode))
         self.assertEqual(len(rule.children), 2)
         self.assertTrue(any([isinstance(c, PredicateNode) for c in rule.children]))
         self.assertTrue(any([isinstance(c, ExistNode) for c in rule.children]))
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator(rule, ego_vehicle, world)
+            rule_eval = OnlineRuleEvaluator(rule, world, ego_id)
             rule_robustness = []
             for i in range(ego_vehicle.end_time + 1):
                 rob = rule_eval.update()
@@ -441,12 +422,10 @@ class RuleTest(unittest.TestCase):
         exp_result = {1000: False, 1001: True, 1002: False, 1003: True}
 
         # standard robustness
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
-            rule_eval = RuleEvaluator.create_from_config(
-                world, ego_vehicle.id, "R_G3", self.traffic_rules
-            )
+            rule_eval = OnlineRuleEvaluator.create_for_rule("R_G2", world, ego_id)
             rule = rule_eval._rule
             self.assertTrue(isinstance(rule, RuleAstNode))
             self.assertEqual(len(rule.children), 4)
@@ -480,7 +459,7 @@ class RuleTest(unittest.TestCase):
             1004: True,
             1005: False,
         }
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
@@ -525,7 +504,7 @@ class RuleTest(unittest.TestCase):
             1010: True,
         }
 
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
@@ -677,7 +656,7 @@ class RuleTest(unittest.TestCase):
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
         for ego_id, exp_violation in exp_floating:
-            world = World.create_from_scenario(scenario, self.config)
+            world = World.create_from_scenario(scenario, self.world_config)
             ego_vehicle = world.vehicle_by_id(ego_id)
             rule_eval = RuleEvaluator.create_from_config(
                 world, ego_vehicle.id, "R_I2", self.traffic_rules
@@ -705,7 +684,7 @@ class RuleTest(unittest.TestCase):
         )
         exp_result = {1000: False, 1001: False, 1002: False, 1003: True}
 
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
 
         for ego_id, exp_violation in exp_result.items():
             ego_vehicle = world.vehicle_by_id(ego_id)
@@ -767,7 +746,7 @@ class RuleTest(unittest.TestCase):
         }
 
         for ego_id, exp_violation in exp_result.items():
-            world = World.create_from_scenario(scenario, self.config)
+            world = World.create_from_scenario(scenario, self.world_config)
             ego_vehicle = world.vehicle_by_id(ego_id)
             rule_eval = RuleEvaluator.create_from_config(
                 world, ego_vehicle.id, "R_I4", self.traffic_rules
@@ -798,7 +777,7 @@ class RuleTest(unittest.TestCase):
             (1001, {1000: True, 1002: True}),
             (1002, {1000: True, 1001: True}),
         ]
-        world = World.create_from_scenario(scenario, self.config)
+        world = World.create_from_scenario(scenario, self.world_config)
 
         exp_floating = [(ego, all(val.values())) for ego, val in exp_result]
 
