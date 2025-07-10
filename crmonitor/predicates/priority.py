@@ -148,7 +148,7 @@ class PredRelevantTrafficLight(AbstractPredicate):
     predicate_name = PriorityPredicates.RelevantTrafficLight
     arity = 1
 
-    def __init__(self, config: PredicateConfig):
+    def __init__(self, config: PredicateConfig | None = None):
         super().__init__(config)
         self._dict_lanelets_traffic_light = defaultdict(lambda: None)
 
@@ -256,7 +256,7 @@ class PredSamePriorityBase(AbstractPredicate):
     second_direction = None
     traffic_sign_priority = TrafficSignPriority()
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         road_network = world.road_network
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])

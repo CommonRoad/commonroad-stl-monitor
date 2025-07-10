@@ -235,6 +235,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
 
     def test_reverses(self):
         predicate_config = PredicateConfig(scale_rob=False, standstill_error=0.001)
+        dt = 0.1
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego has velocity of zero
         exp_sol_monitor_mode_2 = False  # ego vehicle has positive velocity
@@ -260,14 +261,14 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {2}}
         ego_vehicle = Vehicle(
-            0,
-            ObstacleType.CAR,
-            VehicleParameters.create_for_ego_vehicle(dt=0.1),
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
-            lanelet_assignments_ego,
+            id=0,
+            obstacle_type=ObstacleType.CAR,
+            vehicle_param=VehicleParameters.create_for_ego_vehicle(dt),
+            dt=0.1,
+            road_network=self.road_network,
+            shape=Rectangle(5, 2),
+            states_cr=cr_state_list_ego,
+            lanelet_assignment=lanelet_assignments_ego,
         )
 
         pred = PredReverses(predicate_config)
@@ -323,12 +324,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         # other vehicle 1
@@ -341,12 +342,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         # other vehicle 2
@@ -359,12 +360,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_2,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         # other vehicle 3
@@ -376,12 +377,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_3 = Vehicle(
             3,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_other_3,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_3,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         # other vehicle 4
@@ -393,12 +394,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_4 = Vehicle(
             4,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_other_4,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_4,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         pred = PredSlowLeadingVehicle(predicate_config)
@@ -444,7 +445,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         )
 
         ego_vehicle_params = VehicleParameters.create_for_ego_vehicle(
-            dt=0.1, breaking_speed_limit=50, fov_speed_limit=35, road_condition_speed_limit=50
+            dt=0.1, braking_speed_limit=50, fov_speed_limit=35, road_condition_speed_limit=50
         )
 
         # expected solutions
@@ -462,12 +463,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_params,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_params,
         )
 
         pred = PredPreservesTrafficFlow(predicate_config)
@@ -510,12 +511,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         pred = PredInStandStill(predicate_config)
@@ -564,12 +565,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 1
@@ -582,12 +583,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 2
@@ -600,12 +601,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_2,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 3
@@ -617,12 +618,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_3 = Vehicle(
             3,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_3,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_3,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 4
@@ -634,12 +635,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_4 = Vehicle(
             4,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_4,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_4,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         pred = PredExistStandingLeadingVehicle(predicate_config)
@@ -694,12 +695,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 1
@@ -712,12 +713,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         pred = PredDrivesFaster(predicate_config)
@@ -765,12 +766,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 1
@@ -784,12 +785,12 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            dt=0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         pred = PredDrivesWithSlightlyHigherSpeed(predicate_config)
@@ -816,3 +817,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+
+
+class TestPredSlowLeadingVehicle:
+    def test_evaluate_robustness(self): ...

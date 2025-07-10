@@ -60,91 +60,26 @@ class Lane:
         if road_network_param is None:
             road_network_param = RoadNetworkParam()
 
-        if scenario_type == ScenarioType.INTERSECTION:
-            # intersection, to avoid outside projection domain in clcs
-            # TODO: currently only consider AAH1 map
-            weight_left, smooth_factor_left = self._get_smooth_parameter(contained_lanelets, "left")
-            (
-                self.clcs_left,
-                new_left_vertices,
-                self.clcs_left_large_step,
-                left_vertices_resample_large_step,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.left_vertices,
-                weight=weight_left,
-                smooth_factor=smooth_factor_left,
-                road_network_param=road_network_param,
-            )
-            weight_right, smooth_factor_right = self._get_smooth_parameter(
-                contained_lanelets, "right"
-            )
-            (
-                self.clcs_right,
-                new_right_vertices,
-                self.clcs_right_large_step,
-                right_vertices_resample_large_step,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.right_vertices,
-                weight=weight_right,
-                smooth_factor=smooth_factor_right,
-                road_network_param=road_network_param,
-            )
-            weight, smooth_factor = self._get_smooth_parameter(contained_lanelets, "center")
-            (
-                self._clcs,
-                new_center_vertices,
-                self.clcs_large_step,
-                _,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.center_vertices,
-                weight=weight,
-                smooth_factor=smooth_factor,
-                road_network_param=road_network_param,
-            )
-            # TODO: there are some errors when using smoothed vertices in hand draft maps (crdesigner).
-            if road_network_param.map_type == MapType.HAND_DRAFT:
-                self._orientation = compute_orientation_from_polyline(
-                    merged_lanelet.center_vertices
-                )
-                self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
-                self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
-                self._width = self._compute_width_from_lanalet_boundary(
-                    merged_lanelet.left_vertices, merged_lanelet.right_vertices
-                )
-            else:
-                self._orientation = compute_orientation_from_polyline(new_center_vertices)
-                self._curvature = pycrccosy.Util.compute_curvature(new_center_vertices)
-                self._path_length = compute_pathlength_from_polyline(new_center_vertices)
-                self._width = self._compute_width_from_lanalet_boundary(
-                    new_left_vertices, new_right_vertices
-                )
+        self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.left_vertices, road_network_param
+        )
+        self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.right_vertices, road_network_param
+        )
+        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.center_vertices, road_network_param
+        )
+        self._orientation = compute_orientation_from_polyline(merged_lanelet.center_vertices)
+        self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
+        self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
+        self._width = self._compute_width_from_lanalet_boundary(
+            merged_lanelet.left_vertices, merged_lanelet.right_vertices
+        )
 
-            self._adj_left = None
-            self._adj_right = None
-
-            self.center_vertices = merged_lanelet.center_vertices
-            self.smoothed_vertices = new_center_vertices
-        else:
-            self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.left_vertices, road_network_param
-            )
-            self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.right_vertices, road_network_param
-            )
-            self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.center_vertices, road_network_param
-            )
-            self._orientation = compute_orientation_from_polyline(merged_lanelet.center_vertices)
-            self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
-            self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
-            self._width = self._compute_width_from_lanalet_boundary(
-                merged_lanelet.left_vertices, merged_lanelet.right_vertices
-            )
-
-            self._adj_left = None
-            self._adj_right = None
-            self.center_vertices = None
-            self.smoothed_vertices = None
+        self._adj_left = None
+        self._adj_right = None
+        self.center_vertices = None
+        self.smoothed_vertices = None
 
     def __lt__(self, other):
         assert isinstance(other, Lane)

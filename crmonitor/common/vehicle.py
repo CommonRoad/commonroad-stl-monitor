@@ -189,8 +189,9 @@ class CurvilinearVehicleTrajectory:
         dt: float,
         lane: Lane,
     ) -> Self:
-        # TODO: validate whether states have required attributes.
-        cartesian_coords = [state.position for state in state_list]
+        # Make sure to convert to position to np.ndarray with dtype `float` since commonroad_clcs
+        # requires this type.
+        cartesian_coords = [np.array(state.position, dtype=float) for state in state_list]
         curvilinear_coords = np.array(
             lane.clcs.convert_list_of_points_to_curvilinear_coords(cartesian_coords, 1)
         )
@@ -459,6 +460,9 @@ class Vehicle:
         if vehicle_param is None:
             vehicle_param = VehicleParameters()
         self.vehicle_param = vehicle_param
+        self._curvilinear_trajectories = {}
+        self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
+        self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
 
         if scenario_type == ScenarioType.INTERSTATE:
             self.lanelets_dir = None
@@ -484,10 +488,6 @@ class Vehicle:
                 self.circle_appr_geo,
                 self.circle_radius,
             ) = self._initial_circle_approximation()
-
-        self._curvilinear_trajectories = {}
-        self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
-        self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
 
     @classmethod
     def from_dynamic_obstacle(
@@ -744,15 +744,15 @@ class Vehicle:
             end_position = goal["end_position"]
             end_orientation = goal["end_orientation"]
         try:
-            route = self._route_planner(initial_state, attributes, road_network)
-        except Exception:
-            route = None
-        # replan route to fix no solution from route planner
-        replanned_route = self._replan_route(
-            initial_state, end_position, end_orientation, attributes, road_network
-        )
-        if route is None:
+            routes = self._route_planner(initial_state, attributes, road_network)
+            route = routes[0]
+        except ValueError as e:
+            _LOGGER.debug("Route planner failed for vehicle %s: %s", self.id, e)
+            replanned_route = self._replan_route(
+                initial_state, end_position, end_orientation, attributes, road_network
+            )
             route = next(replanned_route)
+
         # extend lanelets from route
         lanelets_leading_to_goal = self._extend_route_plan(route.lanelet_ids, road_network)
         # get reference lane from lanelets_leading_to_goal
@@ -798,9 +798,8 @@ class Vehicle:
             lanelet_network=road_network.lanelet_network,
             planning_problem=planning_problem,
         )
-        candidate_holder = route_planner.plan_routes()
-        route = candidate_holder.retrieve_first_route()
-        return route
+        routes = route_planner.plan_routes()
+        return routes
 
     def _replan_route(
         self,

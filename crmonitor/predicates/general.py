@@ -109,7 +109,7 @@ class PredCutIn(AbstractPredicate):
     predicate_name = GeneralPredicates.CutIn
     arity = 2
 
-    def __init__(self, config: PredicateConfig):
+    def __init__(self, config: PredicateConfig | None = None):
         super().__init__(config)
         self._same_lane_evaluator = PredInSameLane(config)
         self._single_lane_evaluator = PredSingleLane(config)

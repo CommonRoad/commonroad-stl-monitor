@@ -1,9 +1,7 @@
-import os
+import pytest
 import unittest
-from pathlib import Path
 
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import (
     Lanelet,
@@ -14,7 +12,8 @@ from commonroad.scenario.lanelet import (
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from crmonitor.common import RoadNetwork, ScenarioType, World, WorldConfig
-from crmonitor.predicates.base import PredicateConfig
+from crmonitor.common.vehicle import Vehicle, VehicleParameters
+from crmonitor.predicates.base import AbstractPredicate, PredicateConfig
 from crmonitor.predicates.position import (
     PredDrivesLeftmost,
     PredDrivesRightmost,
@@ -33,128 +32,43 @@ from crmonitor.predicates.position import (
     PredRightOfBroadLaneMarking,
     PredStopLineInFront,
 )
+from tests.resources import IntersectionScenarios
 
 
-class TestIntersectionPositionPredicates(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        root_path = Path(__file__).parents[1] / "crmonitor"
-        self.scenario_root_path = root_path.parent / "scenarios"
-        self.world_confg = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
-        self.prediicate_config = PredicateConfig()
+@pytest.mark.parametrize(
+    "scenario,predicate,ego_id,other_id",
+    [
+        (IntersectionScenarios.R_IN1, PredStopLineInFront(), 31, None),
+        (IntersectionScenarios.R_IN3, PredOnIncomingLeftOf(), 30, 31),
+        (IntersectionScenarios.R_IN3, PredInIntersectionConflictArea(), 31, 30),
+        (IntersectionScenarios.R_IN1, PredOnLaneletWithTypeIntersection(), 31, None),
+        (IntersectionScenarios.INTERSECTION, PredOnOncomOf(), 32, 31),
+    ],
+)
+def test_intersection_position_predicates(
+    scenario: IntersectionScenarios, predicate: AbstractPredicate, ego_id: int, other_id: int | None
+):
+    world = scenario.get_world()
+    ego_vehicle = world.vehicle_by_id(ego_id)
+    if other_id:
+        other_vehicle = world.vehicle_by_id(other_id)
+        end_time = min(ego_vehicle.end_time, other_vehicle.end_time)
+        vehicle_ids = (ego_id, other_id)
+    else:
+        end_time = ego_vehicle.end_time
+        vehicle_ids = (ego_id,)
 
-    def testStopLineInFront(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario)
-        ego_vehicle = world.vehicle_by_id(31)
+    for time in range(end_time + 1):
+        sol_monitor_1 = predicate.evaluate_boolean(world, time, vehicle_ids)
 
-        for time in range(ego_vehicle.end_time + 1):
-            pred = PredStopLineInFront()
-            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
+        sol_monitor_2 = predicate.evaluate_robustness(world, time, vehicle_ids)
 
-            sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-    def testOnIncomingLeftOf(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario)
-        ego_vehicle = world.vehicle_by_id(30)
-        target_vehicle = world.vehicle_by_id(31)
-        for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredOnIncomingLeftOf()
-            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
-
-            sol_monitor_2 = pred.evaluate_robustness(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-    def testInIntersectionConflictArea(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.world_confg)
-        ego_vehicle = world.vehicle_by_id(31)
-        target_vehicle = world.vehicle_by_id(30)
-        rob = list()
-        for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredInIntersectionConflictArea(self.prediicate_config)
-            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
-
-            sol_monitor_2 = pred.evaluate_robustness(
-                world, time, [ego_vehicle.id, target_vehicle.id]
-            )
-            rob.append(sol_monitor_2)
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-        # fig = plt.figure()
-        # ax = fig.gca()
-        # ax.plot(
-        #     range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1), rob, "b-"
-        # )
-        # for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-        #     if rob[time] <= 0:
-        #         ax.plot(time, rob[time], "rx")
-        #     else:
-        #         ax.plot(time, rob[time], "g.")
-        # ax.plot([24, 24], [-1, 1], "black")
-        # ax.set_ylim([-1, 1])
-        # ax.grid(True)
-        # ax.set_title("in_intersection_conflict_area__a1_a0")
-        # plt.show()
-
-    def testOnLaneletWithTypeIntersection(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.world_confg)
-        ego_vehicle = world.vehicle_by_id(31)
-        for time in range(ego_vehicle.end_time + 1):
-            pred = PredOnLaneletWithTypeIntersection()
-            sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
-
-            sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-    def testOnOncomOf(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersection.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.world_confg)
-        ego_vehicle = world.vehicle_by_id(32)
-        target_vehicle = world.vehicle_by_id(31)
-        for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
-            pred = PredOnOncomOf(self.prediicate_config)
-            sol_monitor_1 = pred.evaluate_boolean(world, time, [target_vehicle.id, ego_vehicle.id])
-
-            sol_monitor_2 = pred.evaluate_robustness(
-                world, time, [target_vehicle.id, ego_vehicle.id]
-            )
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+        assert sol_monitor_1 == (sol_monitor_2 >= 0)
 
 
-class TestInterstatePositionPredicates(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        self.predicate_config = PredicateConfig(scale_rob=False)
-        self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSTATE)
-
+class TestInterstatePositionPredicates:
+    @pytest.fixture
+    def road_network(self):
         right_vertices_lane_1 = np.array(
             [
                 [0, 0],
@@ -451,7 +365,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
                 [70, 18],
                 [80, 18],
                 [90, 18],
-                [00, 18],
+                [100, 18],
                 [110, 18],
             ]
         )
@@ -471,8 +385,10 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
         lanelet_network.add_lanelet(self._lanelet_5)
-        self.road_network = RoadNetwork(lanelet_network)
+        return RoadNetwork(lanelet_network)
 
+    @pytest.fixture
+    def ego_vehicle(self, road_network):
         # ego vehicle
         cr_state_list_ego = {
             0: CustomState(position=[0, 0], time_step=0, orientation=0),
@@ -493,373 +409,221 @@ class TestInterstatePositionPredicates(unittest.TestCase):
             6: {2, 3},
         }
         ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
-        self.ego_vehicle = Vehicle(
+        return Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
-    def test_Left_right_of_broad_lane_marking(self):
-        # expected solutions
-        exp_sol_monitor_mode_1_left = False
-        exp_sol_monitor_mode_2_left = False
-        exp_sol_monitor_mode_3_left = True
-        exp_sol_monitor_mode_4_left = True
-        exp_sol_monitor_mode_5_left = True
-        exp_sol_monitor_mode_6_left = False
-        exp_sol_monitor_mode_7_left = False
+    @pytest.mark.parametrize(
+        "time_step, exp_violation",
+        [
+            (0, True),
+            (1, True),
+            (2, False),
+            (3, False),
+            (4, False),
+            (5, False),
+            (6, False),
+        ],
+    )
+    def test_right_of_broad_lane_marking(
+        self, time_step: int, exp_violation: bool, road_network, ego_vehicle
+    ):
+        world = World({ego_vehicle}, road_network)
 
-        exp_sol_monitor_mode_1_right = True
-        exp_sol_monitor_mode_2_right = True
-        exp_sol_monitor_mode_3_right = False
-        exp_sol_monitor_mode_4_right = False
-        exp_sol_monitor_mode_5_right = False
-        exp_sol_monitor_mode_6_right = False
-        exp_sol_monitor_mode_7_right = False
+        vehicle_ids = [ego_vehicle.id]
+        pred = PredRightOfBroadLaneMarking()
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == sol_monitor_mode_1
+        assert exp_violation == (sol_robustness_monitor_mode_1 > 0)
 
-        world = World({self.ego_vehicle}, self.road_network)
+    @pytest.mark.parametrize(
+        "time_step, exp_violation",
+        [
+            (0, False),
+            (1, False),
+            (2, True),
+            (3, True),
+            (4, True),
+            (5, False),
+            (6, False),
+        ],
+    )
+    def test_left_of_broad_lane_marking(
+        self, time_step: int, exp_violation: bool, road_network, ego_vehicle
+    ):
+        world = World({ego_vehicle}, road_network)
+        vehicle_ids = [ego_vehicle.id]
+        pred = PredLeftOfBroadLaneMarking()
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == sol_monitor_mode_1
+        assert exp_violation == (sol_robustness_monitor_mode_1 > 0)
 
-        # Right of broad lane markings
-        pred = PredRightOfBroadLaneMarking(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
-
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1_right, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1_right, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2_right, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2_right, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3_right, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3_right, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4_right, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4_right, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5_right, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5_right, sol_robustness_monitor_mode_5 > 0)
-
-        sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids)
-        sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_6_right, sol_monitor_mode_6)
-        self.assertEqual(exp_sol_monitor_mode_6_right, sol_robustness_monitor_mode_6 > 0)
-
-        sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids)
-        sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_7_right, sol_monitor_mode_7)
-        self.assertEqual(exp_sol_monitor_mode_7_right, sol_robustness_monitor_mode_7 > 0)
-
-        # Left of broad lane markings
-        pred = PredLeftOfBroadLaneMarking(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
-
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1_left, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1_left, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2_left, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2_left, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3_left, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3_left, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4_left, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4_left, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5_left, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5_left, sol_robustness_monitor_mode_5 > 0)
-
-        sol_monitor_mode_6 = pred.evaluate_boolean(world, 5, vehicle_ids)
-        sol_robustness_monitor_mode_6 = pred.evaluate_robustness(world, 5, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_6_left, sol_monitor_mode_6)
-        self.assertEqual(exp_sol_monitor_mode_6_left, sol_robustness_monitor_mode_6 > 0)
-
-        sol_monitor_mode_7 = pred.evaluate_boolean(world, 6, vehicle_ids)
-        sol_robustness_monitor_mode_7 = pred.evaluate_robustness(world, 6, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_7_left, sol_monitor_mode_7)
-        self.assertEqual(exp_sol_monitor_mode_7_left, sol_robustness_monitor_mode_7 > 0)
-
-    def test_on_access_ramp(self):
-        exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
-        exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = False  # ego vehicle on main carriageway
-        exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
-        exp_sol_monitor_mode_5 = True  # ego vehicle on access ramp
-
-        world = World({self.ego_vehicle}, self.road_network)
+    @pytest.mark.parametrize(
+        "time_step,exp_violation",
+        [
+            (0, False),
+            (1, False),
+            (2, False),
+            (3, False),
+            (4, True),
+        ],
+    )
+    def test_on_access_ramp(self, time_step: int, exp_violation: bool, road_network, ego_vehicle):
+        world = World({ego_vehicle}, road_network)
 
         # Left of broad lane markings
-        pred = PredOnAccessRamp(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
+        pred = PredOnAccessRamp()
+        vehicle_ids = [ego_vehicle.id]
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == sol_monitor_mode_1
+        assert exp_violation == (sol_robustness_monitor_mode_1 > 0)
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
-
-    def test_on_shoulder(self):
-        exp_sol_monitor_mode_1 = True  # ego vehicle on shoulder
-        exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = False  # ego vehicle on main carriageway
-        exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
-        exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
-
-        world = World({self.ego_vehicle}, self.road_network)
+    @pytest.mark.parametrize(
+        "time_step, exp_violation",
+        [
+            (0, True),
+            (1, False),
+            (2, False),
+            (3, False),
+            (4, False),
+        ],
+    )
+    def test_on_shoulder(self, time_step: int, exp_violation: bool, road_network, ego_vehicle):
+        world = World({ego_vehicle}, road_network)
 
         # Left of broad lane markings
-        pred = PredOnShoulder(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
+        pred = PredOnShoulder()
+        vehicle_ids = [ego_vehicle.id]
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == sol_monitor_mode_1
+        assert exp_violation == (sol_robustness_monitor_mode_1 > 0)
 
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    @pytest.mark.parametrize(
+        "time_step,exp_violation",
+        [
+            (0, False),
+            (1, False),
+            (2, True),
+            (3, False),
+            (4, False),
+        ],
+    )
+    def test_on_main_carriage_way(self, time_step, exp_violation, road_network, ego_vehicle):
+        world = World({ego_vehicle}, road_network)
 
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        pred = PredOnMainCarriageway()
+        vehicle_ids = [ego_vehicle.id]
+        sol_monitor_mode_1 = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == sol_monitor_mode_1
+        assert exp_violation == (sol_robustness_monitor_mode_1 > 0)
 
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+    @pytest.mark.parametrize(
+        "time_step, exp_violation",
+        [
+            (0, False),
+            (1, False),
+            (2, True),
+            (3, False),
+            (4, False),
+        ],
+    )
+    def test_main_carriage_way_right_lane(
+        self, time_step, exp_violation, road_network, ego_vehicle
+    ):
+        world = World({ego_vehicle}, road_network)
 
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+        pred = PredMainCarriageWayRightLane()
+        vehicle_ids = [ego_vehicle.id]
 
-    def test_on_main_carriage_way(self):
-        exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
-        exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = True  # ego vehicle on main carriageway
-        exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
-        exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
+        # # fix the lanelet assignment
+        for time, lanelet in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
 
-        world = World({self.ego_vehicle}, self.road_network)
+            ego_vehicle.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
+                    shape.rotate_translate_local(state.position, state.orientation)
+                )
+            )
+        pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == pred_satisfied
+        assert exp_violation == (pred_robustness > 0)
 
-        pred = PredOnMainCarriageway(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
+    @pytest.mark.parametrize(
+        "time_step, exp_violation",
+        [
+            (0, True),
+            (1, True),
+            (2, False),
+            (3, False),
+            (4, False),
+        ],
+    )
+    def test_in_rightmost_lane(self, time_step, exp_violation, road_network, ego_vehicle):
+        world = World({ego_vehicle}, road_network)
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
-
-    def PredMainCarriageWayRightLane(self):
-        exp_sol_monitor_mode_1 = False  # ego vehicle on shoulder
-        exp_sol_monitor_mode_2 = False  # no specific type
-        exp_sol_monitor_mode_3 = True  # ego vehicle on main carriageway (the right one)
-        exp_sol_monitor_mode_4 = False  # ego vehicle on exit ramp
-        exp_sol_monitor_mode_5 = False  # ego vehicle on access ramp
-
-        world = World({self.ego_vehicle}, self.road_network)
-
-        pred = PredMainCarriageWayRightLane(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
+        pred = PredInRightmostLane()
+        vehicle_ids = [ego_vehicle.id]
 
         # fix the lanelet assignment
-        for time, lanelet in self.ego_vehicle.lanelet_assignment.items():
-            shape = self.ego_vehicle.shape
-            state = self.ego_vehicle.states_cr[time]
+        for time, lanelet in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
 
-            self.ego_vehicle.lanelet_assignment[time] = (
-                self.road_network.lanelet_network.find_lanelet_by_shape(
+            ego_vehicle.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
                     shape.rotate_translate_local(state.position, state.orientation)
                 )
             )
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == pred_satisfied
+        assert exp_violation == (pred_robustness > 0)
 
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+    @pytest.mark.parametrize(
+        "time_step,exp_violation",
+        [
+            (0, False),
+            (1, False),
+            (2, False),
+            (3, False),
+            (4, True),
+        ],
+    )
+    def test_in_leftmost_lane(self, time_step, exp_violation, road_network, ego_vehicle):
+        world = World({ego_vehicle}, road_network)
 
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        pred = PredInLeftmostLane()
+        vehicle_ids = [ego_vehicle.id]
+        for time, lanelet in ego_vehicle.lanelet_assignment.items():
+            shape = ego_vehicle.shape
+            state = ego_vehicle.states_cr[time]
 
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
-
-    def test_in_rightmost_lane(self):
-        # expected solutions
-        exp_sol_monitor_mode_1 = True
-        exp_sol_monitor_mode_2 = True
-        exp_sol_monitor_mode_3 = False
-        exp_sol_monitor_mode_4 = False
-        exp_sol_monitor_mode_5 = False
-
-        world = World({self.ego_vehicle}, self.road_network)
-
-        pred = PredInRightmostLane(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
-
-        # fix the lanelet assignment
-        for time, lanelet in self.ego_vehicle.lanelet_assignment.items():
-            shape = self.ego_vehicle.shape
-            state = self.ego_vehicle.states_cr[time]
-
-            self.ego_vehicle.lanelet_assignment[time] = (
-                self.road_network.lanelet_network.find_lanelet_by_shape(
+            ego_vehicle.lanelet_assignment[time] = (
+                road_network.lanelet_network.find_lanelet_by_shape(
                     shape.rotate_translate_local(state.position, state.orientation)
                 )
             )
 
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
-
-    def test_in_leftmost_lane(self):
-        # expected solutions
-        exp_sol_monitor_mode_1 = False
-        exp_sol_monitor_mode_2 = False
-        exp_sol_monitor_mode_3 = False
-        exp_sol_monitor_mode_4 = False
-        exp_sol_monitor_mode_5 = True
-
-        world = World({self.ego_vehicle}, self.road_network)
-
-        pred = PredInLeftmostLane(self.predicate_config)
-        vehicle_ids = [self.ego_vehicle.id]
-
-        # fix the lanelet assignment
-        for time, lanelet in self.ego_vehicle.lanelet_assignment.items():
-            shape = self.ego_vehicle.shape
-            state = self.ego_vehicle.states_cr[time]
-
-            self.ego_vehicle.lanelet_assignment[time] = (
-                self.road_network.lanelet_network.find_lanelet_by_shape(
-                    shape.rotate_translate_local(state.position, state.orientation)
-                )
-            )
-
-        sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
-        sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
-
-        sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
-        sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
-
-        sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
-        sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
-
-        sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
-        sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
-
-        sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
-        sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+        pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
+        pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
+        assert exp_violation == pred_satisfied
+        assert exp_violation == (pred_robustness > 0)
 
     def test_left_of(self):
         exp_sol_monitor_mode_1 = False  # other vehicle in left lane but not adjacent
@@ -1131,7 +895,7 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
         self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
 
-    def test_drives_rightmost(self):
+    def test_drives_rightmost(self, road_network: RoadNetwork):
         evaluator_config = PredicateConfig(close_to_lane_border=0.2, close_to_other_vehicle=0.5)
 
         # expected solutions for rightmost
@@ -1140,11 +904,6 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         exp_sol_monitor_mode_3 = True
         exp_sol_monitor_mode_4 = False
         exp_sol_monitor_mode_5 = False
-
-        lanelet_network = LaneletNetwork()
-        lanelet_network.add_lanelet(self._lanelet_1)
-        lanelet_network.add_lanelet(self._lanelet_2)
-        road_network = RoadNetwork(lanelet_network)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -1159,12 +918,12 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_ego,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # fix the lanelet assignment
@@ -1188,12 +947,12 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_other_1,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         for time, lanelet in other_vehicle_1.lanelet_assignment.items():
@@ -1210,27 +969,28 @@ class TestInterstatePositionPredicates(unittest.TestCase):
         vehicle_ids = [ego_vehicle.id]
 
         world = World({ego_vehicle, other_vehicle_1}, road_network)
+
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        assert exp_sol_monitor_mode_1 == sol_monitor_mode_1
+        assert exp_sol_monitor_mode_1 == (sol_robustness_monitor_mode_1 > 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        assert exp_sol_monitor_mode_2 == sol_monitor_mode_2
+        assert exp_sol_monitor_mode_2 == (sol_robustness_monitor_mode_2 > 0)
 
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        assert exp_sol_monitor_mode_3 == sol_monitor_mode_3
+        assert exp_sol_monitor_mode_3 == (sol_robustness_monitor_mode_3 > 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        assert exp_sol_monitor_mode_4 == sol_monitor_mode_4
+        assert exp_sol_monitor_mode_4 == (sol_robustness_monitor_mode_4 > 0)
 
         sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+        assert exp_sol_monitor_mode_5 == sol_monitor_mode_5
+        assert exp_sol_monitor_mode_5 == (sol_robustness_monitor_mode_5 > 0)

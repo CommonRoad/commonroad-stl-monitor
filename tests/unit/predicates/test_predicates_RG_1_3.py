@@ -16,6 +16,7 @@ from crmonitor.common.vehicle import (
     StateLateral,
     StateLongitudinal,
     Vehicle,
+    VehicleParameters,
 )
 from crmonitor.common.world import World
 from crmonitor.predicates.base import PredicateConfig
@@ -32,10 +33,6 @@ from tests.util import parallel_lanes
 
 
 class TestPredicate(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        self.config = PredicateConfig(scale_rob=False)
-
     def test_cut_in(self):
         dt = 0.1
         # expected solutions
@@ -55,9 +52,9 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(3)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(lanelet_network)
 
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt)
 
         # ego vehicle
         # Constant velocity, Lane switches 1 -> 1, 2 -> 2 -> 2, 1 with 45 degree
@@ -129,7 +126,7 @@ class TestPredicate(unittest.TestCase):
 
         world = World({ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network)
 
-        pred = PredCutIn(self.config)
+        pred = PredCutIn()
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, [ego_vehicle.id, other_vehicle_1.id])
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, [ego_vehicle.id, other_vehicle_1.id])
@@ -160,9 +157,9 @@ class TestPredicate(unittest.TestCase):
         lanelets = parallel_lanes(2)
         for l in lanelets:
             lanelet_network.add_lanelet(l)
-        road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        road_network = RoadNetwork(lanelet_network)
 
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
 
         # ego vehicle
         cr_state_list_ego = {
@@ -188,12 +185,12 @@ class TestPredicate(unittest.TestCase):
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_ego,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 1
@@ -205,14 +202,14 @@ class TestPredicate(unittest.TestCase):
         }
         lanelet_assignments_other_1 = {0: {1}, 1: {1}, 2: {1, 2}, 3: {2}}
         other_vehicle_1 = Vehicle(
-            1,
+            2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_other_1,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 2
@@ -226,17 +223,17 @@ class TestPredicate(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_other_2,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         world = World({ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network)
 
-        pred = PredInSameLane(self.config)
+        pred = PredInSameLane()
 
         sol_monitor_mode_1 = pred.evaluate_robustness(
             world, 0, [ego_vehicle.id, other_vehicle_1.id]
