@@ -112,11 +112,14 @@ class FeatureExtractor:
                 labels.append(("inputs", agent_combination.value, feature_variable.name))
 
         if predicate is not None:
-            if isinstance(pre)
+            if isinstance(predicate, str):
+                predicate_name = predicate
+            else:
+                predicate_name = str(predicate.predicate_name)
             labels.append(
                 (
                     "predicates",
-                    str(predicate.predicate_name),
+                    predicate_name,
                     self.desired_predicate_evaluation.value,
                 )
             )

@@ -10,7 +10,8 @@ import gpytorch
 import numpy as np
 import torch
 
-import crmonitor.mpr.models as pre_trained_models
+import crmonitor.mpr.models.intersection as pre_trained_intersection_models
+import crmonitor.mpr.models.interstate as pre_trained_interstate_models
 from crmonitor.common import ScenarioType
 
 from .feature_variables import (
@@ -184,10 +185,8 @@ class ExactGPModelContainer:
             ) from e
 
         if "features" not in dict_:
-            #     raise ValueError(f"Model of version {model_version} requires field 'features'.")
-            features = default_feature_variable_classes_for_scenario_type(scenario_type)
-        else:
-            features = cls._deserialize_desired_feature(dict_["features"])
+            raise ValueError(f"Model of version {model_version} requires field 'features'.")
+        features = cls._deserialize_desired_feature(dict_["features"])
 
         model = ExactGPModel.create_new_model(dict_["train_X"], dict_["train_y"], scenario_type)
         try:
@@ -271,7 +270,7 @@ class ExactGPModelContainer:
                     all_available_features[raw_desired_feature]
                 )
 
-            agent_combination = FeatureVariableAgentCombination[raw_agent_combination]
+            agent_combination = FeatureVariableAgentCombination(raw_agent_combination)
             parsed_desired_features[agent_combination] = desired_features_for_agent_combination
 
         return parsed_desired_features
@@ -306,16 +305,20 @@ def read_model(
     :param model_path: Optionally provide a path where models can be found. If None is given, the models from the repo are used.
     :param scenario_type: Specify the scenario type on which the models were trained.
 
-    :returns: The model.
+    :returns: The model container.
+
+    :raises ModelLoadError: If the model could not be loaded.
     """
     if predicate_name not in _MODELS_CACHE:
-        model_container = _load_model_container(predicate_name, model_path)
+        model_container = _load_model_container(predicate_name, model_path, scenario_type)
         _MODELS_CACHE[predicate_name] = model_container
     return _MODELS_CACHE[predicate_name]
 
 
 def _load_model_container(
-    predicate_name: str, model_path: Path | None = None
+    predicate_name: str,
+    model_path: Path | None = None,
+    scenario_type: ScenarioType = ScenarioType.INTERSTATE,
 ) -> ExactGPModelContainer:
     predicate_file_name = f"{predicate_name}.p"
     if model_path is not None:
@@ -328,7 +331,12 @@ def _load_model_container(
             )
             return ExactGPModelContainer.read_from_file(predicate_path)
 
-    with importlib.resources.path(pre_trained_models, predicate_file_name) as predicate_path:
+    if scenario_type == ScenarioType.INTERSTATE:
+        pre_trained_models_path = pre_trained_interstate_models
+    else:
+        pre_trained_models_path = pre_trained_intersection_models
+
+    with importlib.resources.path(pre_trained_models_path, predicate_file_name) as predicate_path:
         if predicate_path.exists():
             _LOGGER.debug(
                 "Loaded pre-trained model for predicate '%s' from '%s'",

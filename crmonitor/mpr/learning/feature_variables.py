@@ -2,7 +2,7 @@ import enum
 import inspect
 import sys
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import numpy as np
 from commonroad.geometry.transform import rotate_translate
@@ -928,7 +928,7 @@ class FeatureVariableAgentCombination(enum.Enum):
         )
 
 
-DesiredFeatureVariables = dict[
+DesiredFeatureVariables = Mapping[
     FeatureVariableAgentCombination, Iterable[type[AbstractFeatureVariable]]
 ]
 

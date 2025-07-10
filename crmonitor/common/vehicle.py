@@ -661,9 +661,10 @@ class Vehicle:
         return self._road_network.find_lanes_by_lanelets(lanelets)
 
     def get_lane(self, time_step: int) -> Lane | None:
-        # Todo: How to decide lane assignment generally?
         lanes = self.lanes_at_state(time_step)
-        return lanes.pop() if len(lanes) > 0 else None
+        # Sort lanes by their ID (assuming each lane has a unique id attribute)
+        sorted_lanes = sorted(lanes, key=lambda lane: lane.lane_id)
+        return sorted_lanes[0] if len(sorted_lanes) > 0 else None
 
     def get_state_at_time_step(self, time_step: int) -> TraceState:
         return self.states_cr[time_step]
