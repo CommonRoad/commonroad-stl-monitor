@@ -15,7 +15,7 @@ from crmonitor.predicates import AbstractPredicate
 
 from ._split_data import split_data
 from .data_loader import DataLoader
-from .exact_gp_model import ExactGPModelContainer, read_model
+from .exact_gp_model import ExactGPModel, ExactGPModelContainer, read_model
 from .feature_extractor import FeatureExtractor
 
 
@@ -63,7 +63,9 @@ class ModelEvaluator:
         self._models_path = models_path
         self._eps = eps
 
-    def evaluate(self, predicates: Iterable[AbstractPredicate]) -> dict[str, EvaluationMetrics]:
+    def evaluate(
+        self, predicates: Iterable[type[AbstractPredicate]]
+    ) -> dict[str, EvaluationMetrics]:
         """plot the comparison between ground truth and prediction,
         and calculate mean squared error for all predicate models.
 
@@ -78,7 +80,7 @@ class ModelEvaluator:
 
         return results
 
-    def evaluate_predicate(self, predicate: AbstractPredicate) -> EvaluationMetrics:
+    def evaluate_predicate(self, predicate: type[AbstractPredicate]) -> EvaluationMetrics:
         """Evaluate a single predicate and return its metrics.
 
         Args:
@@ -89,7 +91,10 @@ class ModelEvaluator:
         """
         # Load model and data
         model_container = read_model(predicate.predicate_name, self._models_path)
-        X, y, y_mfr = self._data_loader.Xy(predicate, mfr_data=True)
+
+        feature_extractor = FeatureExtractor(model_container.features)
+        index_features = feature_extractor.feature_variable_labels(predicate)
+        X, y, y_mfr = self._data_loader.Xy(predicate, index_features, mfr_data=True)
 
         # Split data
         X_train, X_test, y_train, y_test, y_mfr_train, y_mfr_test = split_data(X, y, y_mfr)
@@ -146,15 +151,13 @@ class ModelEvaluator:
         # Add SHAP analysis if enabled
         run_shap = False  # This could be a parameter
         if run_shap:
-            shap_values = self._calculate_shap_values(
-                model_container, None, predicate.predicate_name
-            )
+            shap_values = self._calculate_shap_values(model_container, None, predicate)
             metrics.shap_values = shap_values
 
         return metrics
 
     def _make_predictions(
-        self, model: ExactGPModelContainer, X_test: np.ndarray
+        self, model: ExactGPModel, X_test: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
         """Make predictions using the model and clip results."""
         y_pred, std = model.predict(X_test.astype(float))
@@ -176,19 +179,12 @@ class ModelEvaluator:
         balanced_indices = np.concatenate([indices_true, indices_false])
         return X_test[balanced_indices].astype(np.float32)
 
-    def _get_feature_indices(self, predicate: AbstractPredicate) -> list[tuple[str, str, Any]]:
-        """Get feature indices for a given predicate."""
-        feature_extractor = FeatureExtractor.for_predicate_evaluator(predicate)
-        index_features = feature_extractor.feature_variable_labels()
-
-        index_features += [
-            ("predicates", predicate.predicate_name, feature_extractor.desired_predicate_evaluation)
-        ]
-
-        return index_features
-
     def _calculate_shap_values(
-        self, model: Any, data_split: Any, predicate_name: str, n_samples_each: int = 100
+        self,
+        model_container: ExactGPModelContainer,
+        data_split: Any,
+        predicate: type[AbstractPredicate],
+        n_samples_each: int = 100,
     ) -> Any:
         """Calculate SHAP values for feature importance analysis."""
         # Balance the test set for SHAP analysis
@@ -196,12 +192,12 @@ class ModelEvaluator:
             data_split.X_test, data_split.y_test, n_samples_each
         )
 
-        # Get feature information
-        index_features = self._get_feature_indices(predicate_name)
+        feature_extractor = FeatureExtractor(model_container.features)
+        index_features = feature_extractor.feature_variable_labels(predicate)
 
         # Calculate SHAP values
         shap_explainer = shap.Explainer(
-            lambda x: model.predict(x)[0], data_split.X_train.astype(np.float32)
+            lambda x: model_container.model.predict(x)[0], data_split.X_train.astype(np.float32)
         )
         shap_values = shap_explainer(X_test_balanced)
 

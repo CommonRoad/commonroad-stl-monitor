@@ -11,12 +11,6 @@ from crmonitor.mpr.state_context import StateContext
 from crmonitor.predicates import AbstractPredicate
 
 from .feature_variables import AbstractFeatureVariable, DesiredFeatureVariables
-from .predicate_features import (
-    get_desired_features_for_predicate,
-    initialize_feature_predicate_registry_extension,
-)
-
-initialize_feature_predicate_registry_extension()
 
 
 class DesiredPredicateEvaluation(Enum):
@@ -37,22 +31,18 @@ class FeatureVariablesValueCollection:
     ) -> None:
         self._feature_values[agent_combination].update(feature_values)
 
-    def as_list(self, include: DesiredFeatureVariables | None = None) -> list[float]:
+    def as_list(self, include: DesiredFeatureVariables) -> list[float]:
         feature_values_list = []
+        label_list = []
 
-        for agent_combination in FeatureVariableAgentCombination:
-            feature_values = self._feature_values[agent_combination]
-            for label, feature_value in feature_values.items():
-                if include is None:
-                    feature_values_list.append(feature_value)
-                    continue
+        for agent_combination, desired_features in include.items():
+            for desired_feature in desired_features:
+                for label, value in self._feature_values[agent_combination].items():
+                    if not desired_feature.provides(label):
+                        continue
 
-                if agent_combination not in include:
-                    continue
-
-                for feature_variable in include[agent_combination]:
-                    if feature_variable.provides(label):
-                        feature_values_list.append(feature_value)
+                    feature_values_list.append(value)
+                    label_list.append(label)
 
         return feature_values_list
 
@@ -75,23 +65,15 @@ class FeatureExtractor:
     def desired_predicate_evaluation(self) -> DesiredPredicateEvaluation:
         return self._desired_predicate_evaluation
 
+    @property
+    def desired_feature_variables(self) -> DesiredFeatureVariables:
+        return self._feature_variables
+
     @classmethod
     def for_scenario_type(
         cls, scenario_type: ScenarioType = ScenarioType.INTERSTATE
     ) -> "FeatureExtractor":
         return cls(default_feature_variable_classes_for_scenario_type(scenario_type))
-
-    @classmethod
-    def for_predicate_evaluator(
-        cls,
-        predicate_evaluator: AbstractPredicate,
-        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
-    ) -> "FeatureExtractor":
-        feature_variables = get_desired_features_for_predicate(predicate_evaluator)
-        if feature_variables is None:
-            return cls.for_scenario_type(scenario_type)
-        else:
-            return cls(feature_variables)
 
     def extract_feature_values(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
@@ -117,9 +99,24 @@ class FeatureExtractor:
 
         return feature_variables_value_collection
 
-    def feature_variable_labels(self) -> Iterable[tuple[str, str, str]]:
+    def feature_variable_labels(
+        self, predicate: type[AbstractPredicate] | AbstractPredicate | str | None = None
+    ) -> list[tuple[str, str, str]]:
         labels = []
         for agent_combination, feature_variables in self._feature_variables.items():
             for feature_variable in feature_variables:
                 labels.append(("inputs", agent_combination.value, feature_variable.name))
+
+        if predicate is not None:
+            if isinstance(predicate, str):
+                predicate_name = predicate
+            else:
+                predicate_name = str(predicate.predicate_name)
+            labels.append(
+                (
+                    "predicates",
+                    predicate_name,
+                    self.desired_predicate_evaluation.value,
+                )
+            )
         return labels

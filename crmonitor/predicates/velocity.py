@@ -1,7 +1,7 @@
 import logging
 import math
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
@@ -45,10 +45,12 @@ class VelocityPredicates(PredicateName):
 class GenericSpeedLimit(AbstractPredicate, ABC):
     @abstractmethod
     def get_speed_limit(
-        self, world: World, time_step: int, vehicle_ids: List[int]
-    ) -> Optional[float]: ...
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float | None: ...
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         time_step = time_step
         speed_limit = self.get_speed_limit(world, time_step, vehicle_ids)

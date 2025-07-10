@@ -87,9 +87,6 @@ def _get_all_predicate_evaluators() -> dict[str, type[AbstractPredicate]]:
     return predicates
 
 
-class PredicateRegistryExtension: ...
-
-
 class PredicateRegistry:
     """
     A singleton which provides an overview of all predicates.
@@ -97,7 +94,6 @@ class PredicateRegistry:
 
     _instance: "PredicateRegistry | None" = None
     _predicate_evaluators: dict[str, type[AbstractPredicate]]
-    _extensions: dict[type[PredicateRegistryExtension], PredicateRegistryExtension]
 
     def __init__(self) -> None:
         raise RuntimeError(
@@ -131,19 +127,6 @@ class PredicateRegistry:
             )
 
         self._predicate_evaluators[predicate.predicate_name] = predicate
-
-    def register_extension(self, registry_extension: PredicateRegistryExtension) -> None:
-        extension_key = type(registry_extension)
-        if extension_key in self._extensions:
-            _LOGGER.warning(
-                "Extension %s already registered. Existing extension will be overriden."
-            )
-        self._extensions[extension_key] = registry_extension
-
-    def get_extension(
-        self, registry_extension_type: type[PredicateRegistryExtension]
-    ) -> PredicateRegistryExtension | None:
-        return self._extensions.get(registry_extension_type)
 
 
 def _get_all_predicate_evaluators_for_name_list(

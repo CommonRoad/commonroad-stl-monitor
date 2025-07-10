@@ -1,4 +1,4 @@
-__all__ = ["AbstractPredicate", "PredicateName", "RobustnessScaler"]
+__all__ = ["AbstractPredicate", "PredicateName", "RobustnessScaler", "PredicateRegistry"]
 
 from .base import AbstractPredicate, PredicateName
 from .predicate_registry import (

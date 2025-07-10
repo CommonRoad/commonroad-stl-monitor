@@ -19,7 +19,7 @@ class TestRuleInterstate:
     def _base_test_rule(
         self, rule_name: str, world: World, ego_id: int, exp_violation: bool
     ) -> None:
-        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_name, 0.1)
+        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_name, world.dt)
         rule_robustness = np.array(rule_eval.evaluate(world, ego_id))
         bool_value = rule_robustness >= 0.0
 

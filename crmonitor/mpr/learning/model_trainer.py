@@ -7,11 +7,15 @@ import numpy as np
 import torch
 
 from crmonitor.common import ScenarioType
+from crmonitor.mpr.learning.feature_extractor import FeatureExtractor
 from crmonitor.predicates import AbstractPredicate
 
 from ._split_data import split_data
 from .data_loader import DataLoader
 from .exact_gp_model import ExactGPModel, ExactGPModelContainer, ExactGPModelContainerVersion
+from .feature_variables import (
+    DesiredFeatureVariables,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,23 +40,36 @@ class ModelTrainer:
             models[predicate.predicate_name] = res
         return models
 
-    def train_predicate(self, predicate: type[AbstractPredicate]) -> ExactGPModelContainer:
+    def train_predicate(
+        self,
+        predicate: type[AbstractPredicate],
+        desired_features: DesiredFeatureVariables | None = None,
+    ) -> ExactGPModelContainer:
         _LOGGER.info(
             "training predicate %s for scenario type %s",
             predicate.predicate_name,
             self._scenario_type,
         )
-        X, y = self._data_loader.Xy(predicate)
+        if desired_features is None:
+            feature_extractor = FeatureExtractor.for_scenario_type(self._scenario_type)
+        else:
+            feature_extractor = FeatureExtractor(desired_features)
+        index_features = feature_extractor.feature_variable_labels(predicate)
+
+        X, y = self._data_loader.Xy(predicate, index_features)
         # 4:1 split
         X_train, _, y_train, _ = split_data(X, y)
         # train GPR
         train_X = torch.Tensor(X_train.astype(np.float64))  # TODO would np.float32 be enough?
         train_y = torch.Tensor(y_train.astype(np.float64))
         model = self._train_model(train_X, train_y)
+
         return ExactGPModelContainer(
             version=ExactGPModelContainerVersion.VERSION_1_0,
             name=predicate.predicate_name,
             model=model,
+            features=feature_extractor.desired_feature_variables,
+            scenario_type=self._scenario_type,
         )
 
     def _train_model(self, train_X: torch.Tensor, train_y: torch.Tensor) -> ExactGPModel:
