@@ -7,7 +7,7 @@ import numpy as np
 
 from crmonitor.common import ScenarioType
 from crmonitor.common.world import World
-from crmonitor.mpr.learning import FeatureExtractor, get_desired_features_for_predicate, read_model
+from crmonitor.mpr.learning import FeatureExtractor, read_model
 from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
 
@@ -68,32 +68,20 @@ class MprGpPredicateEvaluator:
             config = MprGpPredicateEvaluatorConfig()
         self._config = config
 
-        self._setup_gp_models(predicates, scenario_type)
-        self._setup_feature_extractor(predicates)
-
-    def _setup_feature_extractor(self, predicates: Iterable[AbstractPredicate]) -> None:
-        self._predicates_desired_features = {}
+        self._gp_models = {}
         all_predicates_desired_features = defaultdict(set)
         for predicate in predicates:
-            desired_features = get_desired_features_for_predicate(predicate)
-            self._predicates_desired_features[predicate.predicate_name] = desired_features
+            model_container = read_model(
+                str(predicate.predicate_name), self._config.model_path, scenario_type
+            )
+            self._gp_models[predicate.predicate_name] = model_container
 
-            for agent_combination, feature_variables in desired_features.items():
+            for agent_combination, feature_variables in model_container.features.items():
                 all_predicates_desired_features[agent_combination].update(feature_variables)
 
         self._feature_extractor = FeatureExtractor(
             dict(all_predicates_desired_features),
         )
-
-    def _setup_gp_models(
-        self, predicates: Iterable[AbstractPredicate], scenario_type: ScenarioType
-    ):
-        self._gp_models = {
-            predicate.predicate_name: read_model(
-                str(predicate.predicate_name), self._config.model_path, scenario_type
-            )
-            for predicate in predicates
-        }
 
     def evaluate(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
@@ -122,8 +110,7 @@ class MprGpPredicateEvaluator:
 
             # The feature extractor is configured to extract the union of all desired features variables.
             # Therefore, we need to narrow the feature values to only the desired values for the current predicate.
-            desired_features = self._predicates_desired_features[predicate.predicate_name]
-            feature_values_list = feature_values.as_list(desired_features)
+            feature_values_list = feature_values.as_list(model_container.features)
 
             # Each model always requires the characteristic values as feature.
             # TODO: This is not very elegant.

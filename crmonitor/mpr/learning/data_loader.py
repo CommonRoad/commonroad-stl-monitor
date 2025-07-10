@@ -11,7 +11,6 @@ import pandas as pd
 from crmonitor.common import ScenarioType
 from crmonitor.predicates.base import AbstractPredicate
 
-from .feature_extractor import FeatureExtractor
 from .feature_variables import (
     default_feature_variable_classes_for_scenario_type,
 )
@@ -171,7 +170,8 @@ class DataLoader:
 
     def Xy(
         self,
-        predicate: AbstractPredicate,
+        predicate: type[AbstractPredicate],
+        index_features: list[tuple[str, str, str]],
         mfr_data: bool = False,
     ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         """get the input X and output y of the predicate for training and testing regression models.
@@ -186,16 +186,6 @@ class DataLoader:
             Z : information
         """
 
-        feature_extractor = FeatureExtractor.for_predicate_evaluator(predicate)
-        index_features = feature_extractor.feature_variable_labels()
-
-        index_features += [
-            (
-                "predicates",
-                str(predicate.predicate_name),
-                feature_extractor.desired_predicate_evaluation.value,
-            )
-        ]
         if predicate.arity == 1:
             # reset index
             data = self.data.reset_index(ENTRY_ID_NAMES[-1])
@@ -219,7 +209,7 @@ class DataLoader:
             return X.values, y.values
 
     def _clean_data(
-        self, data: pd.DataFrame, predicate_name: str, feature_indices: list[tuple]
+        self, data: pd.DataFrame, predicate_name: str, feature_indices: list[tuple[str, str, str]]
     ) -> pd.DataFrame:
         """
         Clean the data by removing NaN values and invalid samples.

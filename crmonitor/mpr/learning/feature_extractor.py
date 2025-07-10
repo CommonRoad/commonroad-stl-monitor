@@ -11,12 +11,6 @@ from crmonitor.mpr.state_context import StateContext
 from crmonitor.predicates import AbstractPredicate
 
 from .feature_variables import AbstractFeatureVariable, DesiredFeatureVariables
-from .predicate_features import (
-    get_desired_features_for_predicate,
-    initialize_feature_predicate_registry_extension,
-)
-
-initialize_feature_predicate_registry_extension()
 
 
 class DesiredPredicateEvaluation(Enum):
@@ -75,23 +69,15 @@ class FeatureExtractor:
     def desired_predicate_evaluation(self) -> DesiredPredicateEvaluation:
         return self._desired_predicate_evaluation
 
+    @property
+    def desired_feature_variables(self) -> DesiredFeatureVariables:
+        return self._feature_variables
+
     @classmethod
     def for_scenario_type(
         cls, scenario_type: ScenarioType = ScenarioType.INTERSTATE
     ) -> "FeatureExtractor":
         return cls(default_feature_variable_classes_for_scenario_type(scenario_type))
-
-    @classmethod
-    def for_predicate_evaluator(
-        cls,
-        predicate_evaluator: AbstractPredicate,
-        scenario_type: ScenarioType = ScenarioType.INTERSTATE,
-    ) -> "FeatureExtractor":
-        feature_variables = get_desired_features_for_predicate(predicate_evaluator)
-        if feature_variables is None:
-            return cls.for_scenario_type(scenario_type)
-        else:
-            return cls(feature_variables)
 
     def extract_feature_values(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
@@ -117,9 +103,21 @@ class FeatureExtractor:
 
         return feature_variables_value_collection
 
-    def feature_variable_labels(self) -> Iterable[tuple[str, str, str]]:
+    def feature_variable_labels(
+        self, predicate: type[AbstractPredicate] | AbstractPredicate | str | None = None
+    ) -> list[tuple[str, str, str]]:
         labels = []
         for agent_combination, feature_variables in self._feature_variables.items():
             for feature_variable in feature_variables:
                 labels.append(("inputs", agent_combination.value, feature_variable.name))
+
+        if predicate is not None:
+            if isinstance(pre)
+            labels.append(
+                (
+                    "predicates",
+                    str(predicate.predicate_name),
+                    self.desired_predicate_evaluation.value,
+                )
+            )
         return labels

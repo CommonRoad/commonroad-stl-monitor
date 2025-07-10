@@ -1,4 +1,6 @@
 import enum
+import inspect
+import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 
@@ -993,3 +995,25 @@ def default_feature_variable_classes_for_scenario_type(
         return DEFAULT_INTERSTATE_FEATURE_VARIABLES
     else:
         return DEFAULT_INTERSECTION_FEATURE_VARIABLES
+
+
+def get_all_available_feature_variables() -> dict[str, AbstractFeatureVariable]:
+    classmembers = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+
+    # Simple pre-filter to sort out other types, e.g., type aliases which are also considered
+    # classes by `inspect.isclass` but not by `issubclass`...
+    classes_with_name = filter(lambda cls: hasattr(cls[1], "name"), classmembers)
+
+    classes_with_feature_variable_base = filter(
+        lambda cls: issubclass(cls[1], AbstractFeatureVariable), classes_with_name
+    )
+    public_classes = filter(
+        lambda cls: not cls[0].startswith("_"), classes_with_feature_variable_base
+    )
+    non_abstract_classes = filter(lambda cls: not inspect.isabstract(cls[1]), public_classes)
+
+    feature_variables = {}
+    for feature_variable_tuple in non_abstract_classes:
+        feature_variables[feature_variable_tuple[1].name] = feature_variable_tuple[1]
+
+    return feature_variables

@@ -8,7 +8,6 @@ __all__ = [
     "ExactGPModelContainer",
     "ModelLoadError",
     "DataGenerator",
-    "get_desired_features_for_predicate",
 ]
 
 from .data_generation import DataGenerator
@@ -18,4 +17,3 @@ from .feature_extractor import FeatureExtractor
 from .feature_variables import FeatureVariableAgentCombination
 from .model_evaluator import ModelEvaluator
 from .model_trainer import ModelTrainer
-from .predicate_features import get_desired_features_for_predicate

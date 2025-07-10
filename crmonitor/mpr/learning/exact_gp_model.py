@@ -13,6 +13,13 @@ import torch
 import crmonitor.mpr.models as pre_trained_models
 from crmonitor.common import ScenarioType
 
+from .feature_variables import (
+    DesiredFeatureVariables,
+    FeatureVariableAgentCombination,
+    default_feature_variable_classes_for_scenario_type,
+    get_all_available_feature_variables,
+)
+
 _DEVICE = torch.device(
     f"cuda:{torch.cuda.device_count() - 2}" if torch.cuda.is_available() else "cpu"
 )
@@ -140,18 +147,21 @@ class ExactGPModelContainer:
 
     model: ExactGPModel
 
+    features: DesiredFeatureVariables
     scenario_type: ScenarioType = ScenarioType.INTERSTATE
 
     def to_dict(self) -> dict[str, Any]:
         state_dict = self.model.state_dict()
         train_X = self.model.train_inputs[0]
         train_y = self.model.train_targets
+        features = self._serialize_desired_feature(self.features)
         return {
             "version": self.version.value,
             "name": self.name,
             "state_dict": state_dict,
             "train_X": train_X,
             "train_y": train_y,
+            "features": features,
             "scenario_type": self.scenario_type.value,
         }
 
@@ -173,6 +183,12 @@ class ExactGPModelContainer:
                 f"Scenario type {dict_['scenario_type']} of model {model_name} is not supported!"
             ) from e
 
+        if "features" not in dict_:
+            #     raise ValueError(f"Model of version {model_version} requires field 'features'.")
+            features = default_feature_variable_classes_for_scenario_type(scenario_type)
+        else:
+            features = cls._deserialize_desired_feature(dict_["features"])
+
         model = ExactGPModel.create_new_model(dict_["train_X"], dict_["train_y"], scenario_type)
         try:
             model.load_state_dict(dict_["state_dict"], strict=False)
@@ -184,6 +200,7 @@ class ExactGPModelContainer:
             model_version,
             model_name,
             model,
+            features,
             scenario_type,
         )
 
@@ -205,9 +222,59 @@ class ExactGPModelContainer:
             model = ExactGPModel.create_new_model(train_X, train_y, ScenarioType.INTERSTATE)
             model.load_state_dict(state_dict, strict=False)
 
-            return cls(ExactGPModelContainerVersion.NO_METADATA, file.stem, model)
+            return cls(
+                ExactGPModelContainerVersion.NO_METADATA,
+                file.stem,
+                model,
+                default_feature_variable_classes_for_scenario_type(ScenarioType.INTERSTATE),
+            )
         else:
             return cls.from_dict(model_content)
+
+    @staticmethod
+    def _serialize_desired_feature(
+        desired_features: DesiredFeatureVariables,
+    ) -> dict[str, list[str]]:
+        raw_desired_features = {}
+
+        for (
+            agent_combination,
+            desired_feature_variables_for_agent_combination,
+        ) in desired_features.items():
+            raw_desired_feature_variables_for_agent_combination = [
+                feature_variable.name
+                for feature_variable in desired_feature_variables_for_agent_combination
+            ]
+            raw_desired_features[agent_combination.value] = (
+                raw_desired_feature_variables_for_agent_combination
+            )
+
+        return raw_desired_features
+
+    @staticmethod
+    def _deserialize_desired_feature(
+        raw_desired_features: dict[str, list[str]],
+    ) -> DesiredFeatureVariables:
+        all_available_features = get_all_available_feature_variables()
+
+        parsed_desired_features = {}
+        for (
+            raw_agent_combination,
+            raw_desired_features_for_agent_combination,
+        ) in raw_desired_features.items():
+            desired_features_for_agent_combination = []
+            for raw_desired_feature in raw_desired_features_for_agent_combination:
+                if raw_desired_feature not in all_available_features:
+                    raise RuntimeError()
+
+                desired_features_for_agent_combination.append(
+                    all_available_features[raw_desired_feature]
+                )
+
+            agent_combination = FeatureVariableAgentCombination[raw_agent_combination]
+            parsed_desired_features[agent_combination] = desired_features_for_agent_combination
+
+        return parsed_desired_features
 
 
 class ModelLoadError(Exception):
