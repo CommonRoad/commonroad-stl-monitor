@@ -19,7 +19,6 @@ from crmonitor.common.vehicle import (
     VehicleParameters,
 )
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
     PredInFrontOf,

@@ -195,6 +195,11 @@ class CurvilinearVehicleTrajectory:
         curvilinear_coords = np.array(
             lane.clcs.convert_list_of_points_to_curvilinear_coords(cartesian_coords, 1)
         )
+        if len(cartesian_coords) > len(curvilinear_coords):
+            raise RuntimeError(
+                "Failed to convert cartesian coordinates to curvilinear. Some points are probably out of the projection domain."
+            )
+
         s = curvilinear_coords.T[0]
         d = curvilinear_coords.T[1]
 

@@ -1,11 +1,8 @@
 import math
-import os
 import unittest
-from pathlib import Path
 
 import pytest
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType

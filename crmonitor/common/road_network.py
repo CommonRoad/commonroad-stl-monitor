@@ -31,7 +31,7 @@ class RoadNetworkParam:
     polyline_resampling_step: float = 0.5
     large_resampling_step: float = 3.5
     merging_length: int = 10000
-    lateral_projection_domain_limit: int = 50
+    lateral_projection_domain_limit: int = 80
     lateral_eps: float = 0.1
     map_type: MapType = MapType.DATASET
 
@@ -232,7 +232,11 @@ class Lane:
         new_ref_path = resample_polyline(new_ref_path, road_network_param.polyline_resampling_step)
 
         curvilinear_cosy = CurvilinearCoordinateSystem(
-            new_ref_path, CLCSParams(), preprocess_path=False
+            new_ref_path,
+            CLCSParams(
+                default_proj_domain_limit=road_network_param.lateral_projection_domain_limit
+            ),
+            preprocess_path=False,
         )  # 20, 0.1, 5.0)
 
         return curvilinear_cosy
