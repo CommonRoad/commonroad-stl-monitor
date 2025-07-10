@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -9,6 +10,8 @@ from crmonitor.common import ScenarioType
 from crmonitor.common.world import World
 from crmonitor.mpr.learning import FeatureExtractor, read_model
 from crmonitor.predicates.base import AbstractPredicate, PredicateName
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

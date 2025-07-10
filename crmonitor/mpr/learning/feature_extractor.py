@@ -31,22 +31,18 @@ class FeatureVariablesValueCollection:
     ) -> None:
         self._feature_values[agent_combination].update(feature_values)
 
-    def as_list(self, include: DesiredFeatureVariables | None = None) -> list[float]:
+    def as_list(self, include: DesiredFeatureVariables) -> list[float]:
         feature_values_list = []
+        label_list = []
 
-        for agent_combination in FeatureVariableAgentCombination:
-            feature_values = self._feature_values[agent_combination]
-            for label, feature_value in feature_values.items():
-                if include is None:
-                    feature_values_list.append(feature_value)
-                    continue
+        for agent_combination, desired_features in include.items():
+            for desired_feature in desired_features:
+                for label, value in self._feature_values[agent_combination].items():
+                    if not desired_feature.provides(label):
+                        continue
 
-                if agent_combination not in include:
-                    continue
-
-                for feature_variable in include[agent_combination]:
-                    if feature_variable.provides(label):
-                        feature_values_list.append(feature_value)
+                    feature_values_list.append(value)
+                    label_list.append(label)
 
         return feature_values_list
 

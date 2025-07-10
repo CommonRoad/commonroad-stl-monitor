@@ -956,7 +956,6 @@ DEFAULT_INTERSTATE_FEATURE_VARIABLES = {
         VelocityFeatureVariable,
         AccelerationFeatureVariable,
         JerkFeatureVariable,
-        JerkDotFeatureVariable,
         LateralPositionFeatureVariable,
         OrientationFeatureVariable,
         CurvatureFeatureVariable,
