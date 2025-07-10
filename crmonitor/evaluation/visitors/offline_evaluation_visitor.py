@@ -10,9 +10,6 @@ from commonroad.common.util import Interval as CommonRoadInterval
 from crmonitor.common.helper import rtamt_interval_to_commonroad_interval
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.predicate_interface import (
-    PredicateEvaluationInterface,
-)
 from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     CompareToThresholdScaledMonitorNode,
@@ -22,14 +19,16 @@ from crmonitor.monitor.monitor_node import (
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
     MonitorNode,
-    MonitorVisitorInterface,
     PredicateMonitorNode,
     QuantMonitorNode,
     RtamtRuleMonitorNode,
     SigmoidMonitorNode,
     SumIfPositiveMonitorNode,
 )
-from crmonitor.predicates.scaling import RobustnessScaler
+from crmonitor.monitor.rtamt_monitor_stl import OutputType
+from crmonitor.rule.rule_node import IOType
+
+from ._base import BaseEvaluationMonitorTreeVisitor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,15 +70,7 @@ class OfflineEvaluationMonitorTreeVisitorContext:
         return [params[0] for params in self.captured_agents.values()]
 
 
-class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
-    def __init__(
-        self,
-        predicate_evaluation_interface: PredicateEvaluationInterface,
-        scale_rob: bool = True,
-    ) -> None:
-        self._predicate_interface = predicate_evaluation_interface
-        self._rob_scaler = RobustnessScaler(scale=scale_rob)
-
+class OfflineEvaluationMonitorTreeVisitor(BaseEvaluationMonitorTreeVisitor[list[float]]):
     def evaluate(
         self,
         node: MonitorNode,
@@ -333,9 +324,8 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
                 samples.append(float("nan"))
                 continue
 
-            robustness = self._predicate_interface.evaluate_robustness(
-                node.predicate_name, ctx.world, time_step, tuple(vehicle_ids)
-            )
+            robustness = self._do_evaluate_predicate(node, ctx.world, time_step, tuple(vehicle_ids))
+
             samples.append(robustness)
 
         node.values = samples
@@ -407,3 +397,8 @@ class OfflineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[list[float]]):
         # values is a list of lists with time step ordered samples for each predicate.
         # This transforms values into a time step ordered list of list of samples, where each list of samples contains the values for each predicate at this time step.
         return list(zip(*values)), ret_selected_ids
+
+    def _should_use_boolean_predicate_evaluation(self, node: PredicateMonitorNode) -> bool:
+        return self._use_boolean or (
+            node.io_type == IOType.INPUT and self._output_type == OutputType.OUTPUT_ROBUSTNESS
+        )

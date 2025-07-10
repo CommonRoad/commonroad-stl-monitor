@@ -9,16 +9,12 @@ from crmonitor.monitor.monitor_node import (
     AllMonitorNode,
     ExistMonitorNode,
     MonitorNode,
-    MonitorVisitorInterface,
     PredicateMonitorNode,
     QuantMonitorNode,
     RtamtRuleMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.predicates.scaling import RobustnessScaler
-from crmonitor.rule.rule_node import (
-    IOType,
-)
+
+from ._base import BaseEvaluationMonitorTreeVisitor
 
 
 @dataclass
@@ -45,18 +41,7 @@ class OnlineEvaluationMonitorTreeVisitorContext:
         )
 
 
-class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
-    def __init__(
-        self,
-        scale_rob: bool,
-        use_boolean: bool = False,
-        output_type: OutputType = OutputType.STANDARD,
-    ):
-        self._use_boolean = use_boolean
-        self._output_type = output_type
-
-        self._rob_scaler = RobustnessScaler(scale=scale_rob)
-
+class OnlineEvaluationMonitorTreeVisitor(BaseEvaluationMonitorTreeVisitor[float]):
     def update(
         self,
         node: MonitorNode,
@@ -131,19 +116,12 @@ class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
     ) -> float:
         values, selected_ids = self._visit_quant_node(node, ctx)
 
-        self.all_values_all_ids = {}  # reset to empty
-        self.all_props_all_ids = {}  # reset to empty
-
         if len(values) > 0:
             idx = np.argmax(values)
             val = values[idx]
 
             pivotal_monitor = node.monitors[selected_ids[idx]]
             node.last_selected = pivotal_monitor
-
-            # Loop through all selected_ids and populate the dictionary
-            for i, sid in enumerate(selected_ids):
-                self.all_values_all_ids[sid[-1]] = values[i]
         else:
             val = self._rob_scaler.min
             node.last_selected = None
@@ -161,21 +139,8 @@ class OnlineEvaluationMonitorTreeVisitor(MonitorVisitorInterface[float]):
             vehicle_id = ctx.captured_agents[agent_placeholder]
             vehicle_ids.append(vehicle_id)
 
-        if (
-            self._use_boolean
-            or node.io_type == IOType.INPUT
-            and self._output_type == OutputType.OUTPUT_ROBUSTNESS
-        ):
-            value = node.evaluate_boolean(ctx.world, ctx.time_step, tuple(vehicle_ids))
-            value = self._rob_scaler.max if value else self._rob_scaler.min
-        else:
-            value = node.evaluate_robustness(ctx.world, ctx.time_step, tuple(vehicle_ids))
+        value = self._do_evaluate_predicate(node, ctx.world, ctx.time_step, tuple(vehicle_ids))
 
         node.last_value = value
 
         return value
-
-    def _should_use_boolean_predicate_evaluation(self, node: PredicateMonitorNode) -> bool:
-        return self._use_boolean or (
-            node.io_type == IOType.INPUT and self._output_type == OutputType.OUTPUT_ROBUSTNESS
-        )

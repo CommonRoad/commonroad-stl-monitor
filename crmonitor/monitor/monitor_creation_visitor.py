@@ -38,6 +38,9 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     def create_monitors(
         self, rule_node: RuleAstNode, dt: float, output_type: OutputType = OutputType.STANDARD
     ) -> MonitorNode:
+        """
+        :param dt: The dt is required for RTAMT monitors, since they need to be pre-configured with the sampling frequency.
+        """
         return self.visit(rule_node, dt, output_type)
 
     @singledispatchmethod

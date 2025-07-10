@@ -1,5 +1,6 @@
+from copy import deepcopy
+
 from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
-from crmonitor.monitor import OutputType
 from crmonitor.rule.rule_node import IOType
 
 
@@ -41,11 +42,9 @@ class TestRtamtStlMonitor:
         monitor = RtamtStlMonitor(self.formula, self.predicates, self.dt)
         a = [1, 1, 0]
         b = [1, 0, 1]
-        marker = "run1"
-        result = monitor.evaluate_monitor_offline([("a", a), ("b", b)], marker=marker)
+        result = monitor.evaluate_monitor_offline([("a", a), ("b", b)])
         expected = [1.0, 0.0, 0.0]
         assert result == expected, f"Expected {expected}, got {result}"
-        assert marker in monitor.ast_node_values
 
     def test_online_evaluation_correctness(self):
         monitor = RtamtStlMonitor(self.formula, self.predicates, self.dt)
@@ -56,17 +55,14 @@ class TestRtamtStlMonitor:
 
     def test_copy_preserves_behavior(self):
         monitor = RtamtStlMonitor(self.formula, self.predicates, self.dt)
-        monitor_copy = monitor.copy()
+        monitor_copy = deepcopy(monitor)
 
         a = [1, 1, 0]
         b = [1, 0, 1]
-        result_orig = monitor.evaluate_monitor_offline([("a", a), ("b", b)], marker="orig")
-        result_copy = monitor_copy.evaluate_monitor_offline([("a", a), ("b", b)], marker="copy")
+        result_orig = monitor.evaluate_monitor_offline([("a", a), ("b", b)])
+        result_copy = monitor_copy.evaluate_monitor_offline([("a", a), ("b", b)])
 
         assert result_orig == result_copy
-        assert (
-            monitor.ast_node_values["orig"] != monitor_copy.ast_node_values["copy"]
-        )  # Values same, but stored separately
 
     def test_reset_clears_internal_state(self):
         monitor = RtamtStlMonitor(self.formula, self.predicates, self.dt)

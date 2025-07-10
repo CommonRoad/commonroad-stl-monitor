@@ -9,9 +9,8 @@ from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.state import CustomState
 from commonroad.scenario.trajectory import Trajectory
-from crmonitor.common.config import ScenarioType
-from crmonitor.common.world import World, WorldConfig
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
+from crmonitor.common import ScenarioType, World, WorldConfig
+from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.priority import (
     PredAtTrafficSignStop,  # not covered
     PredRelevantTrafficLight,  # not covered
@@ -24,7 +23,7 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
         self.scenario_root_path = root_path.parent / "scenarios"
-        self.predicate_config = PredicateConfig(scale_rob=True, mode=PredicateEvaluationMode.MFR)
+        self.predicate_config = PredicateConfig(scale_rob=True)
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
 
     def testAtTrafficSign(self):
@@ -121,7 +120,7 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
             "test_intersection/DEU_TestIntersectionRIN3.xml",
         )
         scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = Worldcreate_from_scenario(scenario, self.world_config)
+        world = World.create_from_scenario(scenario, self.world_config)
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
 

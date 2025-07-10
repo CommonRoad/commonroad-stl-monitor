@@ -2,9 +2,7 @@ import copy
 import logging
 import shelve
 import warnings
-from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import partial
 from pathlib import Path
 from typing import Optional, Set, Union
 
@@ -24,9 +22,6 @@ from crmonitor.common.road_network import RoadNetwork, RoadNetworkParam
 from crmonitor.common.scenario_type import ScenarioType
 from crmonitor.common.vehicle import (
     ControlledVehicle,
-    CurvilinearStateManager,
-    DynamicObstacleVehicle,
-    PredicateCache,
     Vehicle,
 )
 
@@ -41,9 +36,9 @@ class WorldConfig:
 
 @dataclass
 class World:
-    vehicles: Set[Vehicle]
+    vehicles: set[Vehicle]
     road_network: RoadNetwork
-    scenario: Optional[Scenario] = None
+    scenario: Scenario | None = None
     cache: Union[None, shelve.Shelf, dict] = None
 
     @classmethod
@@ -103,8 +98,8 @@ class World:
     def create_from_scenario(
         cls,
         scenario: Scenario,
-        config: Optional[WorldConfig] = None,
-        road_network=None,
+        config: WorldConfig | None = None,
+        road_network: RoadNetwork | None = None,
         cache_dir=None,
     ) -> "World":
         if config is None:
@@ -116,12 +111,14 @@ class World:
             )
         else:
             road_network = road_network
-        vehicles = set()
+
         if cache_dir is not None:
             cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
             cache = shelve.open(str(cache_file), writeback=True)
         else:
             cache = {}
+
+        vehicles = set()
         for obs in filter(
             lambda o: o.obstacle_type
             in [
@@ -150,18 +147,12 @@ class World:
                     and (obs.prediction.final_time_step - obs.prediction.initial_time_step > 1)
                     and (not cls.static_vehicle(obs))
                 ):
-                    cls.augment_state_longitudinal(scenario.dt, obs)
-                    cls.augment_state_lateral(scenario.dt, obs)
-                    curvi_cache, predicate_dict = cache.setdefault(
-                        str(obs.obstacle_id),
-                        (dict(), defaultdict(partial(defaultdict, dict))),
-                    )
                     vehicles.add(
-                        DynamicObstacleVehicle(
+                        Vehicle.from_dynamic_obstacle(
                             obs,
-                            CurvilinearStateManager(road_network, curvi_cache),
-                            predicate_cache=PredicateCache(predicate_dict),
                             road_network=road_network,
+                            dt=scenario.dt,
+                            scenario_type=config.scenario_type,
                         )
                     )
             else:  # interstate scenarios
@@ -170,18 +161,12 @@ class World:
                     or obs.prediction.final_time_step - obs.prediction.initial_time_step < 2
                 ):
                     continue
-                cls.augment_state_longitudinal(scenario.dt, obs)
-                cls.augment_state_lateral(scenario.dt, obs)
-                curvi_cache, predicate_dict = cache.setdefault(
-                    str(obs.obstacle_id),
-                    (dict(), defaultdict(partial(defaultdict, dict))),
-                )
                 vehicles.add(
-                    DynamicObstacleVehicle(
+                    Vehicle.from_dynamic_obstacle(
                         obs,
-                        CurvilinearStateManager(road_network, curvi_cache),
-                        predicate_cache=PredicateCache(predicate_dict),
-                        road_network=None,
+                        road_network=road_network,
+                        dt=scenario.dt,
+                        scenario_type=config.scenario_type,
                     )
                 )
         return cls(vehicles, road_network, scenario, cache)

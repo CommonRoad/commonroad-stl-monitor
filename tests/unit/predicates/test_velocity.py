@@ -6,9 +6,9 @@ from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import CurvilinearStateManager, Vehicle, VehicleParameters
+from crmonitor.common.vehicle import Vehicle, VehicleParameters
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
+from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.velocity import (
     PredDrivesFaster,
     PredDrivesWithSlightlyHigherSpeed,
@@ -234,9 +234,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         self.road_network = RoadNetwork(lanelet_network)
 
     def test_reverses(self):
-        predicate_config = PredicateConfig(
-            scale_rob=False, mode=PredicateEvaluationMode.MFR, standstill_error=0.001
-        )
+        predicate_config = PredicateConfig(scale_rob=False, standstill_error=0.001)
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego has velocity of zero
         exp_sol_monitor_mode_2 = False  # ego vehicle has positive velocity
@@ -300,7 +298,6 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
     def test_slow_leading_vehicle(self):
         predicate_config = PredicateConfig(
             scale_rob=False,
-            mode=PredicateEvaluationMode.MFR,
             min_velocity_diff=15,
             desired_interstate_velocity=36.11,
             country="DEU",
@@ -441,7 +438,6 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
     def test_preserves_traffic_flow(self):
         predicate_config = PredicateConfig(
             scale_rob=False,
-            mode=PredicateEvaluationMode.MFR,
             min_velocity_diff=15,
             country="DEU",
             desired_interstate_velocity=36.11,
@@ -495,9 +491,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
 
     def test_in_standstill(self):
-        predicate_config = PredicateConfig(
-            scale_rob=False, mode=PredicateEvaluationMode.MFR, standstill_error=0.01
-        )
+        predicate_config = PredicateConfig(scale_rob=False, standstill_error=0.01)
         # expected solutions
         exp_sol_monitor_mode_1 = False
         exp_sol_monitor_mode_2 = True
@@ -550,9 +544,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
     def test_exists_standing_leading_vehicle(self):
-        predicate_config = PredicateConfig(
-            scale_rob=False, mode=PredicateEvaluationMode.MFR, standstill_error=0.01
-        )
+        predicate_config = PredicateConfig(scale_rob=False, standstill_error=0.01)
 
         # expected solutions
         exp_sol_monitor_mode_1 = False  # no leading vehicle at all
@@ -685,9 +677,7 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
     def test_drives_faster(self):
-        predicate_config = PredicateConfig(
-            scale_rob=False, mode=PredicateEvaluationMode.MFR, standstill_error=0.001
-        )
+        predicate_config = PredicateConfig(scale_rob=False, standstill_error=0.001)
         # expected solutions
         exp_sol_monitor_mode_1 = False  # ego vehicle has lower velocity
         exp_sol_monitor_mode_2 = False  # ego vehicle has same velocity
@@ -753,7 +743,6 @@ class TestInterstateVelocityPredicates(unittest.TestCase):
     def test_drives_with_slightly_higher_speed(self):
         predicate_config = PredicateConfig(
             scale_rob=False,
-            mode=PredicateEvaluationMode.MFR,
             standstill_error=0.001,
             slightly_higher_speed_difference=5.55,
         )

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-from crmonitor.common.config import ScenarioType, get_traffic_rule_config
-from crmonitor.common.world import World, WorldConfig
+from crmonitor.common import ScenarioType, World, WorldConfig
+from crmonitor.common.config import get_traffic_rule_config
 from crmonitor.evaluation.proposition_evaluation import PropositionRuleEvaluator
 from crmonitor.predicates.base import PredicateConfig
 from crmonitor.rule.rule_node import AllNode, PredicateNode, RuleAstNode
@@ -17,12 +17,14 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
+_PREDICATE_CONFIG = PredicateConfig(scale_rob=True, d_sl=1.0)
+
 
 class RuleTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         root_path = Path(__file__).parents[1] / "crmonitor"
-        self.predicate_config = PredicateConfig(scale_rob=True, d_sl=1.0)
+        self.predicate_config = _PREDICATE_CONFIG
         self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
 
         self.traffic_rules = get_traffic_rule_config()

@@ -1,6 +1,5 @@
 import math
 import unittest
-from pathlib import Path
 
 import numpy as np
 from commonroad.geometry.shape import Rectangle
@@ -14,13 +13,12 @@ from commonroad.scenario.traffic_sign import (
 )
 from crmonitor.common.road_network import RoadNetwork
 from crmonitor.common.vehicle import (
-    CurvilinearStateManager,
     StateLateral,
     StateLongitudinal,
     Vehicle,
 )
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateEvaluationMode, PredicateConfig
+from crmonitor.predicates.base import PredicateConfig
 from crmonitor.predicates.general import PredCutIn
 from crmonitor.predicates.position import (
     PredInFrontOf,
@@ -30,16 +28,16 @@ from crmonitor.predicates.position import (
     PredSingleLane,
 )
 from crmonitor.predicates.velocity import PredLaneSpeedLimit
-
 from tests.util import parallel_lanes
 
 
 class TestPredicate(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.config = PredicateConfig(scale_rob=False, mode=PredicateEvaluationMode.MFR)
+        self.config = PredicateConfig(scale_rob=False)
 
     def test_cut_in(self):
+        dt = 0.1
         # expected solutions
         exp_sol_monitor_mode_1 = (
             False
@@ -81,14 +79,14 @@ class TestPredicate(unittest.TestCase):
         }
         lanelet_assignments_ego = {0: {1}, 1: {1, 2}, 2: {1}, 3: {1, 2}}
         ego_vehicle = Vehicle(
-            0,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            Rectangle(5, 2),
-            cr_state_list_ego,
-            None,
-            CurvilinearStateManager(road_network),
-            lanelet_assignments_ego,
+            id=0,
+            obstacle_type=ObstacleType.CAR,
+            shape=Rectangle(5, 2),
+            dt=dt,
+            vehicle_param=ego_vehicle_param,
+            states_cr=cr_state_list_ego,
+            lanelet_assignment=lanelet_assignments_ego,
+            road_network=road_network,
         )
 
         # other vehicle 1
@@ -101,14 +99,14 @@ class TestPredicate(unittest.TestCase):
         }
         lanelet_assignments_other_1 = {0: {2}, 1: {2}, 2: {2}, 3: {2}}
         other_vehicle_1 = Vehicle(
-            1,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            Rectangle(5, 2),
-            cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(road_network),
-            lanelet_assignments_other_1,
+            id=1,
+            obstacle_type=ObstacleType.CAR,
+            vehicle_param=ego_vehicle_param,
+            shape=Rectangle(5, 2),
+            states_cr=cr_state_list_other_1,
+            road_network=road_network,
+            dt=dt,
+            lanelet_assignment=lanelet_assignments_other_1,
         )
 
         # other vehicle 2
@@ -119,14 +117,14 @@ class TestPredicate(unittest.TestCase):
         }
         lanelet_assignments_other_2 = {1: {3}}
         other_vehicle_2 = Vehicle(
-            2,
-            ObstacleType.CAR,
-            ego_vehicle_param,
-            Rectangle(5, 2),
-            cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(road_network),
-            lanelet_assignments_other_2,
+            id=2,
+            obstacle_type=ObstacleType.CAR,
+            vehicle_param=ego_vehicle_param,
+            shape=Rectangle(5, 2),
+            states_cr=cr_state_list_other_2,
+            road_network=road_network,
+            dt=dt,
+            lanelet_assignment=lanelet_assignments_other_2,
         )
 
         world = World({ego_vehicle, other_vehicle_1, other_vehicle_2}, road_network)

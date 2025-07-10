@@ -98,6 +98,9 @@ class PredicateValueCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
 
 
 class MPRGradientCollectorMonitorTreeVisitor(PredicateValueCollectorMonitorTreeVisitor):
+    def collect_mpr_gradient(self, root_node: MonitorNode) -> dict[str, float]:
+        return self.visit(root_node)
+
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         return [(predicate_node.name, predicate_node.mpr_gradient)]
 
@@ -199,12 +202,6 @@ class ResetMonitorTreeVisitor(MonitorVisitorInterface[None]):
 
     @singledispatchmethod
     def visit(self, node: MonitorNode, *args, **kwargs) -> None:
-        node.reset()
-
-    @visit.register
-    def _(self, node: QuantMonitorNode, *args, **kwargs) -> None:
-        for monitor in node.monitors.values():
-            self.visit(monitor, *args, **kwargs)
         node.reset()
 
 

@@ -19,10 +19,11 @@ class PredAbruptBreaking(AbstractPredicate):
     predicate_name = AccelerationPredicates.BrakesAbruptly
     arity = 1
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        accel = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step].acceleration
+    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
+        accel = ego_vehicle.get_lon_state(time_step).a
         rob = self.config.a_abrupt - accel
-        return self._scale_acc(rob)
+        return self._scaler.scale_acc(rob)
 
 
 class PredAbruptBreakingRelative(AbstractPredicate):
@@ -30,10 +31,10 @@ class PredAbruptBreakingRelative(AbstractPredicate):
     arity = 2
 
     def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
-        accel_k = world.vehicle_by_id(vehicle_ids[0]).states_cr[time_step].acceleration
-        accel_p = world.vehicle_by_id(vehicle_ids[1]).states_cr[time_step].acceleration
+        accel_k = world.vehicle_by_id(vehicle_ids[0]).get_lon_state(time_step).a
+        accel_p = world.vehicle_by_id(vehicle_ids[1]).get_lon_state(time_step).a
         rob = -accel_k + accel_p + self.config.a_abrupt
-        return self._scale_acc(rob)
+        return self._scaler.scale_acc(rob)
 
 
 class PredCausesBrakingIntersection(AbstractPredicate):

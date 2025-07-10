@@ -90,14 +90,6 @@ class PredInSameLane(AbstractPredicate):
         True: Minimum lateral displacement to not be in the same lane anymore
         False: Minimum distance to lanes of other
         """
-        # Predicate is symmetric
-        vehicle_ids_tuple = tuple(reversed(vehicle_ids))
-        value = world.vehicle_by_id(vehicle_ids_tuple[0]).predicate_cache[
-            time_step, self.predicate_name, vehicle_ids_tuple[1:]
-        ]
-        if value is not None:
-            return value
-
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
@@ -307,8 +299,7 @@ class PredSafeDistPrec(AbstractPredicate):
         self._gather_predicate_values_to_plot(
             vehicle_ids, world, time_step, predicate_names2vehicle_ids2values
         )
-        # TODO: FIXME mpr world
-        latest_value = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        latest_value = self.evaluate_robustness(world, time_step, vehicle_ids)
         latest_value_unscaled = (
             latest_value * self._scaler._scale_constants.MAX_LONG_DIST
         )  # un-scale to actual range and make positive
@@ -398,7 +389,7 @@ class PredPreceding(AbstractPredicate):
         veh_lon_dist = self._get_candidates(world, time_step, rear_veh)
         veh_front_dist = [_ for _ in veh_lon_dist if _[0] >= 0 and _[3]]
         bool_val = len(veh_front_dist) > 0 and veh_front_dist[0][1].id == vehicle_ids[1]
-        same_lane = self.same_lane.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        same_lane = self.same_lane.evaluate_robustness(world, time_step, vehicle_ids)
         if bool_val:
             assert same_lane >= -self.config.eps
             same_lane = max(same_lane, 0.0)

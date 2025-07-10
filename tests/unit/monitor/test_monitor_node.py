@@ -1,28 +1,27 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from rtamt.semantics.interval.interval import Interval
-
 from crmonitor.monitor import (
-    MonitorNode,
-    UnaryMonitorNode,
-    VaradicMonitorNode,
-    QuantMonitorNode,
-    SelectiveQuantMonitorNode,
-    ZeroArityMonitorNode,
-    RtamtRuleMonitorNode,
     AllMonitorNode,
+    CompareToThresholdScaledMonitorNode,
+    ConstantTraceMonitorNode,
     ExistMonitorNode,
-    SigmoidMonitorNode,
+    ExistsMultipleMonitorNode,
     HistoricallyDurationMonitorNode,
     HistoricallyDurationSeverityMonitorNode,
-    SumIfPositiveMonitorNode,
-    CompareToThresholdScaledMonitorNode,
-    ExistsMultipleMonitorNode,
+    MonitorNode,
     PredicateMonitorNode,
-    ConstantTraceMonitorNode,
+    QuantMonitorNode,
+    RtamtRuleMonitorNode,
+    SelectiveQuantMonitorNode,
+    SigmoidMonitorNode,
+    SumIfPositiveMonitorNode,
+    UnaryMonitorNode,
+    VaradicMonitorNode,
+    ZeroArityMonitorNode,
 )
 from crmonitor.rule.rule_node import IOType
+from rtamt.semantics.interval.interval import Interval
 
 
 class TestMonitorNodeBase:
@@ -68,7 +67,7 @@ class TestMonitorNodeBase:
         node = MonitorNode("test")
         assert node != "test"
         assert node != 123
-        assert node != None
+        assert node is not None
 
     def test_name_equality(self):
         """Test equality based on name."""

@@ -9,7 +9,10 @@ cache:
 
 stages:
   - style
-  - test
+  # test-unit runs simple unit tests which are quickly executed.
+  - test-unit
+  # test-integration runs more complex integration tests, e.g. rule evaluation which is quite resources intensive.
+  - test-integration
   - deploy
 
 before_script: &default_before_script
@@ -23,19 +26,35 @@ pre_commit:
   stage: style
   before_script:
     - *default_before_script
-    - poetry install --only dev
+    - poetry install --extras dev
   script:
     - poetry run pre-commit run --all-files --show-diff-on-failure
 
-unittest:
-  stage: test
+test_python_unit:
+  stage: test-unit
   before_script:
     - *default_before_script
-    - poetry install -vvv --with test
+    - poetry install -vvv --extras test
   script:
-    - coverage run --source=./crmonitor -m unittest discover tests
-    - coverage report -m || true
-    - coverage xml
+    - poetry run coverage run --source=./crmonitor -m pytest tests/unit
+    - poetry run coverage report -m || true
+    - poetry run coverage xml
+  coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+test_python_integration:
+  stage: test-integration
+  before_script:
+    - *default_before_script
+    - poetry install -vvv --extras test
+  script:
+    - poetry run coverage run --source=./crmonitor -m pytest tests/integration
+    - poetry run coverage report -m || true
+    - poetry run coverage xml
   coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
   artifacts:
     reports:
@@ -55,14 +74,14 @@ deploy_master:
     - tags
 
 sphinx:
-  stage: test
+  stage: test-unit
   needs: []
   before_script:
     - *default_before_script
     - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --with doc
+    - poetry install --extras doc
   script:
-    - cd docs/source && sphinx-build -b html -W . ../build
+    - cd docs/source && poetry run sphinx-build -b html -W . ../build
 
 pages:
   stage: deploy
@@ -71,7 +90,7 @@ pages:
   before_script:
     - *default_before_script
     - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --with doc
+    - poetry install --extras doc
   script:
     - cd docs/source && sphinx-build -b html . ../../public
   artifacts:

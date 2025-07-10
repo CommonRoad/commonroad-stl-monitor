@@ -1,20 +1,21 @@
-from typing import Dict, List
-
 import rtamt
-from rtamt import Language, StlDiscreteTimeSpecification
 from rtamt.semantics.abstract_discrete_time_offline_interpreter import (
     discrete_time_offline_interpreter_factory,
 )
 from rtamt.semantics.abstract_discrete_time_online_interpreter import (
     DiscreteTimeOnlineUpdateVisitor,
+    discrete_time_online_interpreter_factory,
 )
 from rtamt.semantics.iastl.discrete_time.offline.ast_visitor import (
     IAStlOutputRobustnessDiscreteTimeOfflineAstVisitor,
 )
+from rtamt.semantics.iastl.discrete_time.online.ast_visitor import IAStlDiscreteTimeOnlineAstVisitor
 from rtamt.semantics.stl.discrete_time.offline.ast_visitor import (
     StlDiscreteTimeOfflineAstVisitor,
 )
+from rtamt.semantics.stl.discrete_time.online.ast_visitor import StlDiscreteTimeOnlineAstVisitor
 from rtamt.spec.abstract_specification import AbstractOfflineOnlineSpecification
+from rtamt.syntax.ast.parser.abstract_ast_parser import AbstractAst
 from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 
 
@@ -24,7 +25,7 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
         self._ast_node_values = dict()
 
     @property
-    def ast_node_values(self) -> Dict[str, float]:
+    def ast_node_values(self) -> dict[str, float]:
         return self._ast_node_values
 
     def visit(self, node, *args, **kwargs):
@@ -41,7 +42,7 @@ class DiscreteTimeOfflineEvaluationVisitorDict(StlDiscreteTimeOfflineAstVisitor)
     """
 
     @property
-    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
+    def ast_node_values(self) -> dict[RtamtAbstractNode, list[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -66,7 +67,7 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
     """
 
     @property
-    def ast_node_values(self) -> Dict[RtamtAbstractNode, List[float]]:
+    def ast_node_values(self) -> dict[RtamtAbstractNode, list[float]]:
         """
         Retrive the mapping from node names to their traces.
         """
@@ -82,23 +83,30 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
 
 
 def stl_discrete_time_online_specification_factory(
-    semantics: rtamt.Semantics,
+    semantics: rtamt.Semantics, ast: AbstractAst
 ) -> AbstractOfflineOnlineSpecification:
     """
     Creates a new rtamt specification with custom interpreters, that collect the values of each rtamt AST node.
     """
     # To collect the values of each AST node, we need to inject a custom visitor that intercepts the traces.
     if semantics == rtamt.Semantics.OUTPUT_ROBUSTNESS:
-        visitor = IAStlDiscreteTimeOfflineEvaluationVisitorDict
+        offline_visitor = IAStlDiscreteTimeOfflineEvaluationVisitorDict
+        online_visitor = IAStlDiscreteTimeOnlineAstVisitor
     elif semantics == rtamt.Semantics.STANDARD:
-        visitor = DiscreteTimeOfflineEvaluationVisitorDict
+        offline_visitor = DiscreteTimeOfflineEvaluationVisitorDict
+        online_visitor = StlDiscreteTimeOnlineAstVisitor
     else:
         raise ValueError(
             f"Cannot create spec for rtamt semantics {semantics}. Choose a valid semantic from {rtamt.Semantics.OUTPUT_ROBUSTNESS} and {rtamt.Semantics.STANDARD}."
         )
-    offline_interpreter = discrete_time_offline_interpreter_factory(visitor)()
 
-    spec = StlDiscreteTimeSpecification(semantics, Language.PYTHON)
-    spec.online_interpreter.updateVisitor = DiscreteTimeOnlineUpdateVisitorDict()
-    spec.offline_interpreter = offline_interpreter
-    return spec
+    ast.semantics = semantics
+
+    offline_interpreter = discrete_time_offline_interpreter_factory(offline_visitor)()
+
+    online_interpreter = discrete_time_online_interpreter_factory(online_visitor)()
+    online_interpreter.updateVisitor = DiscreteTimeOnlineUpdateVisitorDict()
+
+    return AbstractOfflineOnlineSpecification(
+        ast, offlineInterpreter=offline_interpreter, onlineInterpreter=online_interpreter
+    )

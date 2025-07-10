@@ -1,11 +1,13 @@
 import copy
 
 from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.evaluation.visitor import (
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
+from crmonitor.monitor import (
     BaseValueMonitorTreeVisitor,
+    MonitorCreationRuleTreeVisitor,
+    OutputType,
+    RtamtRuleMonitorNode,
 )
-from crmonitor.monitor import MonitorCreationRuleTreeVisitor, OutputType, RtamtRuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
 from crmonitor.rule.rule_node import PredicateNode, RuleAstNode
 
@@ -28,7 +30,7 @@ class PropositionCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
         raise NotImplementedError()
 
 
-class PropositionRuleEvaluator(RuleEvaluator):
+class PropositionRuleEvaluator(OfflineRuleEvaluator):
     def __init__(
         self,
         rule: RuleAstNode,

@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from antlr4 import CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
@@ -41,7 +41,7 @@ class PropagatingErrorListener(ErrorListener):
 
 
 class RuleParser(RuleParserInterface):
-    def __init__(self, meta_predicates: Optional[Dict[str, str]] = None):
+    def __init__(self, meta_predicates: dict[str, str] | None = None):
         if meta_predicates is None:
             self._meta_predicates = get_traffic_rule_config()["meta_predicates"]
         else:
@@ -50,9 +50,10 @@ class RuleParser(RuleParserInterface):
         self._meta_predicate_lookup_table = MetaPredicateLookupTable.from_dict(
             self._meta_predicates
         )
+        self._parser_context = RuleParserContext()
 
     def parse(
-        self, rule: str, name: Optional[str] = None, replace_meta_predicates: bool = True
+        self, rule: str, name: str | None = None, replace_meta_predicates: bool = True
     ) -> RuleAstNode:
         stream = InputStream(rule)
         lexer = FaStlLexer(stream)
@@ -68,8 +69,7 @@ class RuleParser(RuleParserInterface):
 
         tree = parser.compile_unit()
 
-        parser_context = RuleParserContext()
-        visitor = TrafficRuleParseTreeVisitor(stream, parser_context)
+        visitor = TrafficRuleParseTreeVisitor(stream, self._parser_context)
         rule_node_tree = visitor.visit(tree)[0]
         if name is not None:
             rule_node_tree.name = name
