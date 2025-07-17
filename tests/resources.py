@@ -64,6 +64,9 @@ class IntersectionScenarios(_Scenarios):
     # TODO: The name is very undescriptive.
     INTERSECTION = "DEU_TestIntersection.xml"
 
+    R_IN4 = "DEU_AAH1-2_176000_T-6149.xml"
+    R_IN5 = "DEU_AAH1-2_7900_T-1049.xml"
+
     @property
     def scenario_type(self) -> "ScenarioType":
         return ScenarioType.INTERSECTION

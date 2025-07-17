@@ -1,5 +1,4 @@
 import pytest
-import unittest
 
 import numpy as np
 from commonroad.geometry.shape import Rectangle
@@ -11,7 +10,7 @@ from commonroad.scenario.lanelet import (
 )
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
-from crmonitor.common import RoadNetwork, ScenarioType, World, WorldConfig
+from crmonitor.common import RoadNetwork, World
 from crmonitor.common.vehicle import Vehicle, VehicleParameters
 from crmonitor.predicates.base import AbstractPredicate, PredicateConfig
 from crmonitor.predicates.position import (
@@ -68,7 +67,7 @@ def test_intersection_position_predicates(
 
 class TestInterstatePositionPredicates:
     @pytest.fixture
-    def road_network(self):
+    def lanelet_1(self) -> Lanelet:
         right_vertices_lane_1 = np.array(
             [
                 [0, 0],
@@ -79,7 +78,7 @@ class TestInterstatePositionPredicates:
                 [50, 0],
                 [60, 0],
                 [70, 0],
-                [80, 1],
+                [80, 0],
                 [90, 0],
                 [100, 0],
                 [110, 0],
@@ -95,7 +94,7 @@ class TestInterstatePositionPredicates:
                 [50, 4],
                 [60, 4],
                 [70, 4],
-                [80, 1],
+                [80, 4],
                 [90, 4],
                 [100, 4],
                 [110, 4],
@@ -111,13 +110,13 @@ class TestInterstatePositionPredicates:
                 [50, 2],
                 [60, 2],
                 [70, 2],
-                [80, 1],
+                [80, 2],
                 [90, 2],
                 [100, 2],
                 [110, 2],
             ]
         )
-        self._lanelet_1 = Lanelet(
+        return Lanelet(
             left_vertices_lane_1,
             center_vertices_lane_1,
             right_vertices_lane_1,
@@ -127,6 +126,8 @@ class TestInterstatePositionPredicates:
             lanelet_type={LaneletType.INTERSTATE, LaneletType.SHOULDER},
         )
 
+    @pytest.fixture
+    def lanelet_2(self) -> Lanelet:
         right_vertices_lane_2 = np.array(
             [
                 [0, 4],
@@ -175,7 +176,7 @@ class TestInterstatePositionPredicates:
                 [110, 6],
             ]
         )
-        self._lanelet_2 = Lanelet(
+        return Lanelet(
             left_vertices_lane_2,
             center_vertices_lane_2,
             right_vertices_lane_2,
@@ -188,6 +189,8 @@ class TestInterstatePositionPredicates:
             line_marking_left_vertices=LineMarking.BROAD_DASHED,
         )
 
+    @pytest.fixture
+    def lanelet_3(self) -> Lanelet:
         right_vertices_lane_3 = np.array(
             [
                 [0, 8],
@@ -236,7 +239,7 @@ class TestInterstatePositionPredicates:
                 [110, 10],
             ]
         )
-        self._lanelet_3 = Lanelet(
+        return Lanelet(
             left_vertices_lane_3,
             center_vertices_lane_3,
             right_vertices_lane_3,
@@ -249,6 +252,8 @@ class TestInterstatePositionPredicates:
             line_marking_right_vertices=LineMarking.BROAD_DASHED,
         )
 
+    @pytest.fixture
+    def lanelet_4(self) -> Lanelet:
         right_vertices_lane_4 = np.array(
             [
                 [0, 12],
@@ -297,7 +302,7 @@ class TestInterstatePositionPredicates:
                 [110, 14],
             ]
         )
-        self._lanelet_4 = Lanelet(
+        return Lanelet(
             left_vertices_lane_4,
             center_vertices_lane_4,
             right_vertices_lane_4,
@@ -309,18 +314,8 @@ class TestInterstatePositionPredicates:
             lanelet_type={LaneletType.INTERSTATE, LaneletType.EXIT_RAMP},
         )
 
-        self._lanelet_4_2 = Lanelet(
-            left_vertices_lane_4,
-            center_vertices_lane_4,
-            right_vertices_lane_4,
-            lanelet_id=4,
-            adjacent_left=5,
-            adjacent_left_same_direction=True,
-            adjacent_right=3,
-            adjacent_right_same_direction=True,
-            lanelet_type={LaneletType.INTERSTATE, LaneletType.MAIN_CARRIAGE_WAY},
-        )
-
+    @pytest.fixture
+    def lanelet_5(self) -> Lanelet:
         right_vertices_lane_5 = np.array(
             [
                 [0, 16],
@@ -369,7 +364,7 @@ class TestInterstatePositionPredicates:
                 [110, 18],
             ]
         )
-        self._lanelet_5 = Lanelet(
+        return Lanelet(
             left_vertices_lane_5,
             center_vertices_lane_5,
             right_vertices_lane_5,
@@ -379,12 +374,21 @@ class TestInterstatePositionPredicates:
             lanelet_type={LaneletType.INTERSTATE, LaneletType.ACCESS_RAMP},
         )
 
+    @pytest.fixture
+    def road_network(
+        self,
+        lanelet_1: Lanelet,
+        lanelet_2: Lanelet,
+        lanelet_3: Lanelet,
+        lanelet_4: Lanelet,
+        lanelet_5: Lanelet,
+    ):
         lanelet_network = LaneletNetwork()
-        lanelet_network.add_lanelet(self._lanelet_1)
-        lanelet_network.add_lanelet(self._lanelet_2)
-        lanelet_network.add_lanelet(self._lanelet_3)
-        lanelet_network.add_lanelet(self._lanelet_4)
-        lanelet_network.add_lanelet(self._lanelet_5)
+        lanelet_network.add_lanelet(lanelet_1)
+        lanelet_network.add_lanelet(lanelet_2)
+        lanelet_network.add_lanelet(lanelet_3)
+        lanelet_network.add_lanelet(lanelet_4)
+        lanelet_network.add_lanelet(lanelet_5)
         return RoadNetwork(lanelet_network)
 
     @pytest.fixture
@@ -536,7 +540,7 @@ class TestInterstatePositionPredicates:
             (0, False),
             (1, False),
             (2, True),
-            (3, False),
+            (3, True),
             (4, False),
         ],
     )
@@ -566,9 +570,9 @@ class TestInterstatePositionPredicates:
     @pytest.mark.parametrize(
         "time_step, exp_violation",
         [
-            (0, True),
+            (0, False),
             (1, True),
-            (2, False),
+            (2, True),
             (3, False),
             (4, False),
         ],
@@ -683,6 +687,7 @@ class TestInterstatePositionPredicates:
             1: CustomState(position=[10, 4], time_step=1, orientation=0, velocity=10),
             2: CustomState(position=[21, 4], time_step=2, orientation=0, velocity=10),
             3: CustomState(position=[29, 4], time_step=3, orientation=0, velocity=10),
+            4: CustomState(position=[40, 4], time_step=4, orientation=0, velocity=10),
             5: CustomState(position=[55, 0], time_step=5, orientation=0, velocity=10),
             6: CustomState(position=[65, -4], time_step=6, orientation=0, velocity=10),
             7: CustomState(position=[70, -4], time_step=7, orientation=0, velocity=10),
@@ -713,8 +718,17 @@ class TestInterstatePositionPredicates:
 
         # other vehicle 2
         cr_state_list_other_2 = {
-            4: CustomState(position=[40, 4], time_step=0, orientation=0, velocity=10),
-            10: CustomState(position=[100, -4], time_step=1, orientation=0, velocity=10),
+            0: CustomState(position=[40, 4], time_step=0, orientation=0, velocity=10),
+            1: CustomState(position=[40, 4], time_step=1, orientation=0, velocity=10),
+            2: CustomState(position=[40, 4], time_step=2, orientation=0, velocity=10),
+            3: CustomState(position=[40, 4], time_step=3, orientation=0, velocity=10),
+            4: CustomState(position=[40, 4], time_step=4, orientation=0, velocity=10),
+            5: CustomState(position=[40, 4], time_step=5, orientation=0, velocity=10),
+            6: CustomState(position=[40, 4], time_step=6, orientation=0, velocity=10),
+            7: CustomState(position=[40, 4], time_step=7, orientation=0, velocity=10),
+            8: CustomState(position=[40, 4], time_step=8, orientation=0, velocity=10),
+            9: CustomState(position=[40, 4], time_step=9, orientation=0, velocity=10),
+            10: CustomState(position=[100, -4], time_step=10, orientation=0, velocity=10),
         }
         lanelet_assignments_other_2 = {4: {4}, 10: {2}}
         other_vehicle_2 = Vehicle(
@@ -789,7 +803,7 @@ class TestInterstatePositionPredicates:
         assert exp_sol_monitor_mode_11 == sol_monitor_mode_11
         assert exp_sol_monitor_mode_11 == (sol_robustness_monitor_mode_11 >= 0)
 
-    def test_drives_leftmost(self):
+    def test_drives_leftmost(self, lanelet_1: Lanelet, lanelet_2: Lanelet):
         predicate_evaluator_config = PredicateConfig(
             close_to_lane_border=0.2, close_to_other_vehicle=0.5
         )
@@ -798,20 +812,20 @@ class TestInterstatePositionPredicates:
         exp_sol_monitor_mode_1 = True
         exp_sol_monitor_mode_2 = False
         exp_sol_monitor_mode_3 = True
-        exp_sol_monitor_mode_4 = False
+        exp_sol_monitor_mode_4 = True
         exp_sol_monitor_mode_5 = False
 
         lanelet_network = LaneletNetwork()
-        lanelet_network.add_lanelet(self._lanelet_1)
-        lanelet_network.add_lanelet(self._lanelet_2)
+        lanelet_network.add_lanelet(lanelet_1)
+        lanelet_network.add_lanelet(lanelet_2)
         road_network = RoadNetwork(lanelet_network)
 
         # ego vehicle
         cr_state_list_ego = {
-            0: CustomState(position=[0, 8], time_step=0, orientation=0, velocity=10),
+            0: CustomState(position=[0, 9], time_step=0, orientation=0, velocity=10),
             1: CustomState(position=[10, 6.5], time_step=1, orientation=0, velocity=10),
-            2: CustomState(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
-            3: CustomState(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+            2: CustomState(position=[20, 5], time_step=2, orientation=0, velocity=10),
+            3: CustomState(position=[30, 5], time_step=3, orientation=0, velocity=10),
             4: CustomState(position=[40, 2], time_step=4, orientation=0, velocity=10),
         }
         lanelet_assignments_ego = {0: {2}, 1: {2}, 2: {1, 2}, 3: {1, 2}, 4: {1}}
@@ -819,12 +833,12 @@ class TestInterstatePositionPredicates:
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_ego,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # fix the lanelet assignment
@@ -848,12 +862,12 @@ class TestInterstatePositionPredicates:
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(road_network),
             lanelet_assignments_other_1,
+            road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         for time, lanelet in other_vehicle_1.lanelet_assignment.items():
@@ -872,28 +886,28 @@ class TestInterstatePositionPredicates:
         world = World({ego_vehicle, other_vehicle_1}, road_network)
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
         sol_robustness_monitor_mode_1 = pred.evaluate_robustness(world, 0, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_monitor_mode_1)
-        self.assertEqual(exp_sol_monitor_mode_1, sol_robustness_monitor_mode_1 > 0)
+        assert exp_sol_monitor_mode_1 == sol_monitor_mode_1
+        assert exp_sol_monitor_mode_1 == (sol_robustness_monitor_mode_1 > 0)
 
         sol_monitor_mode_2 = pred.evaluate_boolean(world, 1, vehicle_ids)
         sol_robustness_monitor_mode_2 = pred.evaluate_robustness(world, 1, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_monitor_mode_2)
-        self.assertEqual(exp_sol_monitor_mode_2, sol_robustness_monitor_mode_2 > 0)
+        assert exp_sol_monitor_mode_2 == sol_monitor_mode_2
+        assert exp_sol_monitor_mode_2 == (sol_robustness_monitor_mode_2 > 0)
 
         sol_monitor_mode_3 = pred.evaluate_boolean(world, 2, vehicle_ids)
         sol_robustness_monitor_mode_3 = pred.evaluate_robustness(world, 2, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_monitor_mode_3)
-        self.assertEqual(exp_sol_monitor_mode_3, sol_robustness_monitor_mode_3 > 0)
+        assert exp_sol_monitor_mode_3 == sol_monitor_mode_3
+        assert exp_sol_monitor_mode_3 == (sol_robustness_monitor_mode_3 > 0)
 
         sol_monitor_mode_4 = pred.evaluate_boolean(world, 3, vehicle_ids)
         sol_robustness_monitor_mode_4 = pred.evaluate_robustness(world, 3, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode_4)
-        self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
+        assert exp_sol_monitor_mode_4 == sol_monitor_mode_4
+        assert exp_sol_monitor_mode_4 == (sol_robustness_monitor_mode_4 > 0)
 
         sol_monitor_mode_5 = pred.evaluate_boolean(world, 4, vehicle_ids)
         sol_robustness_monitor_mode_5 = pred.evaluate_robustness(world, 4, vehicle_ids)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode_5)
-        self.assertEqual(exp_sol_monitor_mode_5, sol_robustness_monitor_mode_5 > 0)
+        assert exp_sol_monitor_mode_5 == sol_monitor_mode_5
+        assert exp_sol_monitor_mode_5 == (sol_robustness_monitor_mode_5 > 0)
 
     def test_drives_rightmost(self, road_network: RoadNetwork):
         evaluator_config = PredicateConfig(close_to_lane_border=0.2, close_to_other_vehicle=0.5)
@@ -902,15 +916,15 @@ class TestInterstatePositionPredicates:
         exp_sol_monitor_mode_1 = True
         exp_sol_monitor_mode_2 = False
         exp_sol_monitor_mode_3 = True
-        exp_sol_monitor_mode_4 = False
-        exp_sol_monitor_mode_5 = False
+        exp_sol_monitor_mode_4 = True
+        exp_sol_monitor_mode_5 = True
 
         # ego vehicle
         cr_state_list_ego = {
             0: CustomState(position=[0, 1.0], time_step=0, orientation=0, velocity=10),
             1: CustomState(position=[10, 2.5], time_step=1, orientation=0, velocity=10),
             2: CustomState(position=[20, 4.6], time_step=2, orientation=0, velocity=10),
-            3: CustomState(position=[30, 4.6], time_step=3, orientation=0, velocity=10),
+            3: CustomState(position=[30, 4.9], time_step=3, orientation=0, velocity=10),
             4: CustomState(position=[40, 7], time_step=4, orientation=0, velocity=10),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1, 2}, 3: {1, 2}, 4: {2}}

@@ -526,7 +526,7 @@ class PredTurningRight(AbstractPredicate):
     predicate_name = GeneralPredicates.TurningRight
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -554,7 +554,9 @@ class PredTurningRight(AbstractPredicate):
             else:
                 return True
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -1119,20 +1121,20 @@ class PredRightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityBase
             and bool_on_oncoming_of
         )
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
         rob_turning_target = self._turning_target.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id]
+            world, time_step, (target_vehicle_id,)
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, None, time_step, [ego_vehicle_id]
-        )
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(
             rob_turning_target,

@@ -341,7 +341,7 @@ class PredPreceding(AbstractPredicate):
     predicate_name = PositionPredicates.Precedes
     arity = 2
 
-    def __init__(self, config: PredicateConfig | None):
+    def __init__(self, config: PredicateConfig | None = None):
         super().__init__(config)
         self.same_lane = PredInSameLane(config)
 
@@ -631,7 +631,7 @@ class PredInRightmostLane(AbstractPredicate):
     predicate_name = PositionPredicates.InRightmostLane
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
@@ -653,7 +653,9 @@ class PredInRightmostLane(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         rightmost_lanelet_ids = [
             lanelet.lanelet_id
@@ -892,27 +894,28 @@ class PredDrivesRightmost(AbstractPredicate):
     predicate_name = PositionPredicates.DrivesRightmost
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
+        ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicles = [
             world.vehicle_by_id(v_id)
             for v_id in world.vehicle_ids_for_time_step(time_step)
-            if v_id != vehicle.id
+            if v_id != ego_vehicle.id
         ]
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
-        veh_dir_r = vehicle_directly_right(time_step, vehicle, other_vehicles)
+        veh_dir_r = vehicle_directly_right(time_step, ego_vehicle, other_vehicles)
         if veh_dir_r is not None:
-            share_lane = vehicle.get_lane(time_step)
+            share_lane = ego_vehicle.get_lane(time_step)
             if (
-                -veh_dir_r.left_d(time_step, share_lane) + vehicle.right_d(time_step, share_lane)
+                -veh_dir_r.left_d(time_step, share_lane)
+                + ego_vehicle.right_d(time_step, share_lane)
                 < self.config.close_to_other_vehicle
             ):
                 return True
 
+        lanelet_ids_occ = ego_vehicle.lanelet_assignment[time_step]
         lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
         for lane in lanes:
-            right_position = vehicle.right_d(time_step, lane)
-            s_ego = vehicle.get_lon_state(time_step, lane).s
+            right_position = ego_vehicle.right_d(time_step, lane)
+            s_ego = ego_vehicle.get_lon_state(time_step, lane).s
             if 0.5 * lane.width(s_ego) + right_position < self.config.close_to_lane_border:
                 return True
 

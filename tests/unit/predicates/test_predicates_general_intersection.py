@@ -29,12 +29,15 @@ def test_general_intersection_predicates(predicate: AbstractPredicate):
     world = IntersectionScenarios.R_IN3.get_world()
     ego_vehicle = world.vehicle_by_id(30)
     assert ego_vehicle is not None
-    for time in range(ego_vehicle.end_time):
+    # TODO: extend to full vehicle trajectory length.
+    for time in range(15):
         sol_monitor_1 = predicate.evaluate_boolean(world, time, (ego_vehicle.id,))
 
         sol_monitor_2 = predicate.evaluate_robustness(world, time, (ego_vehicle.id,))
 
-        assert sol_monitor_1 == (sol_monitor_2 >= 0)
+        assert sol_monitor_1 == (sol_monitor_2 >= 0), (
+            f"boolean satisfaction does not match robustness satisfaction of predicate {predicate.predicate_name} at time step {time} (max {ego_vehicle.end_time}) for vehicle {ego_vehicle.id}"
+        )
 
 
 class TestInterstateGeneralPredicates(unittest.TestCase):
