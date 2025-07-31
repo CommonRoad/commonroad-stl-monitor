@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 class UnkownPredicateError(Exception): ...
 
 
-PREDICATE_MODULES = {"general", "position", "velocity", "acceleration"}
+PREDICATE_MODULES = {"general", "position", "velocity", "acceleration", "priority"}
 
 
 def _get_all_predicate_evaluators() -> dict[str, type[AbstractPredicate]]:

@@ -66,9 +66,9 @@ class PredLaneSpeedLimit(GenericSpeedLimit):
     predicate_name = VelocityPredicates.KeepsLaneSpeedLimit
     arity = 1
 
-    def __init__(self, config: PredicateConfig):
+    def __init__(self, config: PredicateConfig | None = None):
         super().__init__(config)
-        self.country = SupportedTrafficSignCountry(config.country)
+        self.country = SupportedTrafficSignCountry(self.config.country)
 
     def get_speed_limit(self, world, time_step, vehicle_ids):
         vehicle = world.vehicle_by_id(vehicle_ids[0])

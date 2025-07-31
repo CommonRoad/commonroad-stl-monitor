@@ -563,10 +563,7 @@ def distance_to_left_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
     occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
     distance = list()
     for point in occ_points:
-        try:
-            d_left = lane.clcs_left.convert_to_curvilinear_coords(*point)[1]
-        except ValueError:
-            d_left = lane.clcs_left_large_step.convert_to_curvilinear_coords(*point)[1]
+        d_left = lane.distance_to_left(*point)
         distance.append(d_left)
     return distance
 
@@ -576,10 +573,7 @@ def distance_to_right_bounds_clcs(vehicle: Vehicle, lane: Lane, time_step):
     occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
     distance = list()
     for point in occ_points:
-        try:
-            d_right = lane.clcs_right.convert_to_curvilinear_coords(*point)[1]
-        except ValueError:
-            d_right = lane.clcs_right_large_step.convert_to_curvilinear_coords(*point)[1]
+        d_right = lane.distance_to_right(*point)
         distance.append(d_right)
     return distance
 

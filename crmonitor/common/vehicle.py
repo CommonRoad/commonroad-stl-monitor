@@ -189,11 +189,18 @@ class CurvilinearVehicleTrajectory:
         dt: float,
         lane: Lane,
     ) -> Self:
-        # TODO: validate whether states have required attributes.
-        cartesian_coords = [state.position for state in state_list]
+        # Make sure to convert the position to np.ndarray with dtype `float` since commonroad_clcs
+        # requires this type.
+        cartesian_coords = [np.array(state.position, dtype=float) for state in state_list]
         curvilinear_coords = np.array(
             lane.clcs.convert_list_of_points_to_curvilinear_coords(cartesian_coords, 1)
         )
+        if len(cartesian_coords) > len(curvilinear_coords):
+            # TODO: better error reporting. We could check for the exact point that failed and report the boundaries.
+            raise RuntimeError(
+                f"Failed to convert {len(cartesian_coords) - len(curvilinear_coords)} cartesian coordinates to curvilinear. Some points are probably out of the projection domain."
+            )
+
         s = curvilinear_coords.T[0]
         d = curvilinear_coords.T[1]
 
@@ -216,11 +223,19 @@ class CurvilinearVehicleTrajectory:
 
     def _time_step_to_index(self, time_step: int) -> int:
         if time_step > self.final_time_step:
-            raise ValueError()
+            raise ValueError(
+                f"Time step {time_step} is larger than final time step of trajectory {self.final_time_step}."
+            )
         if time_step < self.initial_time_step:
-            raise ValueError()
+            raise ValueError(
+                f"Time step {time_step} is smaller than final time step of trajectory {self.initial_time_step}."
+            )
 
         return time_step - self.initial_time_step
+
+    @property
+    def length(self) -> int:
+        return self.final_time_step - self.initial_time_step + 1
 
     def s(self, time_step: int) -> float:
         return self._s[self._time_step_to_index(time_step)]
@@ -350,21 +365,33 @@ class CurvilinearVehicleTrajectory:
         return self._convert_to_commonroad_trajectory(self.state_at_time_step, clcs)
 
     def _compute_v_from_pathlength(self, pathlength: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(pathlength, self._dt)
 
     def _compute_a_from_v(self, v: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(v, self._dt)
 
     def _compute_jerk_from_a(self, a: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(a, self._dt)
 
     def _compute_j_dot_from_j(self, j: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(j, self._dt)
 
     def _compute_kappa_dot_from_kappa(self, kappa: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(kappa, self._pathlength)
 
     def _compute_kappa_ddot_from_kappa_dot(self, kappa_dot: np.ndarray) -> np.ndarray:
+        if self.length <= 1:
+            return np.array([0.0])
         return np.gradient(kappa_dot, self._pathlength)
 
     def _compute_steering_angle_from_kappa(self, kappa: np.ndarray) -> np.ndarray:
@@ -459,6 +486,9 @@ class Vehicle:
         if vehicle_param is None:
             vehicle_param = VehicleParameters()
         self.vehicle_param = vehicle_param
+        self._curvilinear_trajectories = {}
+        self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
+        self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
 
         if scenario_type == ScenarioType.INTERSTATE:
             self.lanelets_dir = None
@@ -484,10 +514,6 @@ class Vehicle:
                 self.circle_appr_geo,
                 self.circle_radius,
             ) = self._initial_circle_approximation()
-
-        self._curvilinear_trajectories = {}
-        self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
-        self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
 
     @classmethod
     def from_dynamic_obstacle(
@@ -525,6 +551,13 @@ class Vehicle:
     def get_curvilinear_trajectory(self, lane: Lane) -> CurvilinearVehicleTrajectory:
         if lane.lane_id in self._curvilinear_trajectories:
             return self._curvilinear_trajectories[lane.lane_id]
+
+        state_list_cr = list(self.states_cr.values())
+
+        if len(state_list_cr) != (self.end_time - self.start_time + 1):
+            raise ValueError(
+                f"Cannot create curvilinear trajectory for vehicle {self.id}: The state list of length {len(state_list_cr)} is not continous over the time frame from {self.start_time} to {self.end_time}"
+            )
 
         curvilinear_trajectory = CurvilinearVehicleTrajectory.from_cartesian_state_list(
             self.start_time, self.end_time, list(self.states_cr.values()), self._dt, lane
@@ -657,10 +690,12 @@ class Vehicle:
         return state is not None
 
     def lanes_at_state(self, time_step: int) -> set[Lane]:
+        # TODO: Either return lanelet ids or store lane ids, so the reference on RoadNetwork can be removed.
         lanelets = self.lanelet_assignment[time_step]
         return self._road_network.find_lanes_by_lanelets(lanelets)
 
     def get_lane(self, time_step: int) -> Lane | None:
+        # TODO: Either return lanelet ids or store lane ids, so the reference on RoadNetwork can be removed.
         lanes = self.lanes_at_state(time_step)
         # Sort lanes by their ID (assuming each lane has a unique id attribute)
         sorted_lanes = sorted(lanes, key=lambda lane: lane.lane_id)
@@ -694,7 +729,7 @@ class Vehicle:
         return list(self.states_cr.values())
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(object, Vehicle):
+        if not isinstance(other, Vehicle):
             return False
         return self.id == other.id
 
@@ -744,15 +779,15 @@ class Vehicle:
             end_position = goal["end_position"]
             end_orientation = goal["end_orientation"]
         try:
-            route = self._route_planner(initial_state, attributes, road_network)
-        except Exception:
-            route = None
-        # replan route to fix no solution from route planner
-        replanned_route = self._replan_route(
-            initial_state, end_position, end_orientation, attributes, road_network
-        )
-        if route is None:
+            routes = self._route_planner(initial_state, attributes, road_network)
+            route = routes[0]
+        except ValueError as e:
+            _LOGGER.debug("Route planner failed for vehicle %s: %s", self.id, e)
+            replanned_route = self._replan_route(
+                initial_state, end_position, end_orientation, attributes, road_network
+            )
             route = next(replanned_route)
+
         # extend lanelets from route
         lanelets_leading_to_goal = self._extend_route_plan(route.lanelet_ids, road_network)
         # get reference lane from lanelets_leading_to_goal
@@ -798,9 +833,8 @@ class Vehicle:
             lanelet_network=road_network.lanelet_network,
             planning_problem=planning_problem,
         )
-        candidate_holder = route_planner.plan_routes()
-        route = candidate_holder.retrieve_first_route()
-        return route
+        routes = route_planner.plan_routes()
+        return routes
 
     def _replan_route(
         self,

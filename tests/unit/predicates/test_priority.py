@@ -7,7 +7,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.state import CustomState
+from commonroad.scenario.state import CustomState, InitialState
 from commonroad.scenario.trajectory import Trajectory
 from crmonitor.common import ScenarioType, World, WorldConfig
 from crmonitor.predicates.base import PredicateConfig
@@ -16,38 +16,30 @@ from crmonitor.predicates.priority import (
     PredRelevantTrafficLight,  # not covered
     PredSamePriorityRightStraight,  # not covered
 )
+from tests.resources import IntersectionScenarios
 
 
 class TestIntersectionPriorityPredicates(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        root_path = Path(__file__).parents[1] / "crmonitor"
-        self.scenario_root_path = root_path.parent / "scenarios"
-        self.predicate_config = PredicateConfig(scale_rob=True)
-        self.world_config = WorldConfig(scenario_type=ScenarioType.INTERSECTION)
-
     def testAtTrafficSign(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        world = World.create_from_scenario(scenario, self.world_config)
+        world = IntersectionScenarios.R_IN1.get_world()
         ego_vehicle = world.vehicle_by_id(31)
 
-        pred = PredAtTrafficSignStop(self.predicate_config)
+        pred = PredAtTrafficSignStop()
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
             sol_monitor_2 = pred.evaluate_robustness(world, time, [ego_vehicle.id])
 
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
+            assert sol_monitor_1 == (sol_monitor_2 >= 0)
 
     def testRelevantTrafficLight(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path, "test_intersection/DEU_TestRIN1-3_1_T-1.xml"
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(lanelet_assignment=True)
-        dynamic_obstacle_initial_state = CustomState(
-            position=np.array([5, 0.0]), velocity=15, orientation=0.0, time_step=0
+        scenario = IntersectionScenarios.R_IN1.get_commonroad_scenario()
+        dynamic_obstacle_initial_state = InitialState(
+            position=np.array([5, 0.0]),
+            velocity=15,
+            orientation=0.0,
+            time_step=0,
+            yaw_rate=0.0,
+            slip_angle=0.0,
         )
         state_list_ego = []
         state_list_ego.append(
@@ -103,10 +95,10 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
             initial_shape_lanelet_ids={1},
         )
         scenario.add_objects(dynamic_obstacle)
-        world = World.create_from_scenario(scenario, self.world_config)
+        world = World.create_from_scenario(scenario, WorldConfig(ScenarioType.INTERSECTION))
         ego_vehicle = world.vehicle_by_id(dynamic_obstacle_id)
 
-        pred = PredRelevantTrafficLight(self.predicate_config)
+        pred = PredRelevantTrafficLight()
         for time in range(ego_vehicle.end_time + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id])
 
@@ -115,16 +107,11 @@ class TestIntersectionPriorityPredicates(unittest.TestCase):
             self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
     def testSamePriority(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.world_config)
+        world = IntersectionScenarios.R_IN3.get_world()
         ego_vehicle = world.vehicle_by_id(30)
         target_vehicle = world.vehicle_by_id(31)
 
-        pred = PredSamePriorityRightStraight(self.predicate_config)
+        pred = PredSamePriorityRightStraight()
         for time in range(min(ego_vehicle.end_time, target_vehicle.end_time) + 1):
             sol_monitor_1 = pred.evaluate_boolean(world, time, [ego_vehicle.id, target_vehicle.id])
 

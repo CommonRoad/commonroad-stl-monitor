@@ -31,7 +31,7 @@ class RoadNetworkParam:
     polyline_resampling_step: float = 0.5
     large_resampling_step: float = 3.5
     merging_length: int = 10000
-    lateral_projection_domain_limit: int = 50
+    lateral_projection_domain_limit: int = 80
     lateral_eps: float = 0.1
     map_type: MapType = MapType.DATASET
 
@@ -60,91 +60,35 @@ class Lane:
         if road_network_param is None:
             road_network_param = RoadNetworkParam()
 
-        if scenario_type == ScenarioType.INTERSECTION:
-            # intersection, to avoid outside projection domain in clcs
-            # TODO: currently only consider AAH1 map
-            weight_left, smooth_factor_left = self._get_smooth_parameter(contained_lanelets, "left")
-            (
-                self.clcs_left,
-                new_left_vertices,
-                self.clcs_left_large_step,
-                left_vertices_resample_large_step,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.left_vertices,
-                weight=weight_left,
-                smooth_factor=smooth_factor_left,
-                road_network_param=road_network_param,
-            )
-            weight_right, smooth_factor_right = self._get_smooth_parameter(
-                contained_lanelets, "right"
-            )
-            (
-                self.clcs_right,
-                new_right_vertices,
-                self.clcs_right_large_step,
-                right_vertices_resample_large_step,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.right_vertices,
-                weight=weight_right,
-                smooth_factor=smooth_factor_right,
-                road_network_param=road_network_param,
-            )
-            weight, smooth_factor = self._get_smooth_parameter(contained_lanelets, "center")
-            (
-                self._clcs,
-                new_center_vertices,
-                self.clcs_large_step,
-                _,
-            ) = self._create_clcs_from_reference(
-                merged_lanelet.center_vertices,
-                weight=weight,
-                smooth_factor=smooth_factor,
-                road_network_param=road_network_param,
-            )
-            # TODO: there are some errors when using smoothed vertices in hand draft maps (crdesigner).
-            if road_network_param.map_type == MapType.HAND_DRAFT:
-                self._orientation = compute_orientation_from_polyline(
-                    merged_lanelet.center_vertices
-                )
-                self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
-                self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
-                self._width = self._compute_width_from_lanalet_boundary(
-                    merged_lanelet.left_vertices, merged_lanelet.right_vertices
-                )
-            else:
-                self._orientation = compute_orientation_from_polyline(new_center_vertices)
-                self._curvature = pycrccosy.Util.compute_curvature(new_center_vertices)
-                self._path_length = compute_pathlength_from_polyline(new_center_vertices)
-                self._width = self._compute_width_from_lanalet_boundary(
-                    new_left_vertices, new_right_vertices
-                )
+        self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.left_vertices, road_network_param
+        )
+        self.clcs_left_large_step = Lane.create_large_step_clcs_from_reference(
+            merged_lanelet.left_vertices, road_network_param
+        )
 
-            self._adj_left = None
-            self._adj_right = None
+        self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.right_vertices, road_network_param
+        )
+        self.clcs_right_large_step = Lane.create_large_step_clcs_from_reference(
+            merged_lanelet.right_vertices, road_network_param
+        )
 
-            self.center_vertices = merged_lanelet.center_vertices
-            self.smoothed_vertices = new_center_vertices
-        else:
-            self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.left_vertices, road_network_param
-            )
-            self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.right_vertices, road_network_param
-            )
-            self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
-                merged_lanelet.center_vertices, road_network_param
-            )
-            self._orientation = compute_orientation_from_polyline(merged_lanelet.center_vertices)
-            self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
-            self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
-            self._width = self._compute_width_from_lanalet_boundary(
-                merged_lanelet.left_vertices, merged_lanelet.right_vertices
-            )
+        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
+            merged_lanelet.center_vertices, road_network_param
+        )
 
-            self._adj_left = None
-            self._adj_right = None
-            self.center_vertices = None
-            self.smoothed_vertices = None
+        self._orientation = compute_orientation_from_polyline(merged_lanelet.center_vertices)
+        self._curvature = pycrccosy.Util.compute_curvature(merged_lanelet.center_vertices)
+        self._path_length = compute_pathlength_from_polyline(merged_lanelet.center_vertices)
+        self._width = self._compute_width_from_lanalet_boundary(
+            merged_lanelet.left_vertices, merged_lanelet.right_vertices
+        )
+
+        self._adj_left = None
+        self._adj_right = None
+        self.center_vertices = None
+        self.smoothed_vertices = None
 
     def __lt__(self, other):
         assert isinstance(other, Lane)
@@ -198,72 +142,6 @@ class Lane:
         self._adj_left = adj_left
         self._adj_right = adj_right
 
-    # todo fixme: in MPR, commonroad_dc.geometry.util.compute_orientation_from_polyline is used
-    @staticmethod
-    def _compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
-        """
-        Computes orientation along a polyline
-
-        :param polyline: polyline for which orientation should be calculated
-        :return: orientation along polyline
-        """
-        assert (
-            isinstance(polyline, np.ndarray)
-            and len(polyline) > 1
-            and polyline.ndim == 2
-            and len(polyline[0, :]) == 2
-        ), "<Math>: not a valid polyline. polyline = {}".format(polyline)
-        if len(polyline) < 2:
-            raise ValueError("Cannot create orientation from polyline of length < 2")
-
-        orientation = [0]
-        for i in range(1, len(polyline)):
-            pt1 = polyline[i - 1]
-            pt2 = polyline[i]
-            tmp = pt2 - pt1
-            orientation.append(np.arctan2(tmp[1], tmp[0]))
-
-        return np.array(orientation)
-
-    # todo fixme: in MPR, pycrccosy.Util.compute_curvature is used
-    @staticmethod
-    def _compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
-        """
-        Computes curvature along a polyline
-
-        :param polyline: polyline for which curvature should be calculated
-        :return: curvature along  polyline
-        """
-        assert (
-            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
-        ), "Polyline malformed for curvature computation p={}".format(polyline)
-
-        x_d = np.gradient(polyline[:, 0])
-        x_dd = np.gradient(x_d)
-        y_d = np.gradient(polyline[:, 1])
-        y_dd = np.gradient(y_d)
-
-        return (x_d * y_dd - x_dd * y_d) / ((x_d**2 + y_d**2) ** (3.0 / 2.0))
-
-    # todo fixme: in MPR, commonroad_dc.geometry.util.compute_pathlength_from_polyline is used
-    @staticmethod
-    def _compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
-        """
-        Computes the path length of a polyline
-
-        :param polyline: polyline for which path length should be calculated
-        :return: path length along polyline
-        """
-        assert (
-            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
-        ), "Polyline malformed for pathlenth computation p={}".format(polyline)
-
-        distance = np.zeros((len(polyline),))
-        for i in range(1, len(polyline)):
-            distance[i] = distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1])
-
-        return np.array(distance)
-
     @staticmethod
     def _compute_width_from_lanalet_boundary(
         left_polyline: np.ndarray, right_polyline: np.ndarray
@@ -281,6 +159,26 @@ class Lane:
         return width_along_lanelet
 
     @staticmethod
+    def _do_create_clcs_from_reference(
+        ref_path: np.ndarray, resampling_step: float, road_network_param: RoadNetworkParam
+    ) -> CurvilinearCoordinateSystem:
+        new_ref_path = ref_path
+        for _ in range(0, road_network_param.num_chankins_corner_cutting):
+            new_ref_path = chaikins_corner_cutting(new_ref_path)
+        new_ref_path = resample_polyline(new_ref_path, resampling_step)
+
+        curvilinear_cosy = CurvilinearCoordinateSystem(
+            new_ref_path,
+            CLCSParams(
+                default_proj_domain_limit=road_network_param.lateral_projection_domain_limit,
+                eps=road_network_param.lateral_eps,
+            ),
+            preprocess_path=False,
+        )
+
+        return curvilinear_cosy
+
+    @staticmethod
     def create_curvilinear_coordinate_system_from_reference(
         ref_path: np.ndarray, road_network_param: RoadNetworkParam
     ) -> CurvilinearCoordinateSystem:
@@ -291,36 +189,17 @@ class Lane:
         :param road_network_param: dictionary containing parameters of the road network
         :returns curvilinear coordinate system for reference path
         """
-        new_ref_path = ref_path
-        for _ in range(0, road_network_param.num_chankins_corner_cutting):
-            new_ref_path = chaikins_corner_cutting(new_ref_path)
-        new_ref_path = resample_polyline(new_ref_path, road_network_param.polyline_resampling_step)
-
-        curvilinear_cosy = CurvilinearCoordinateSystem(
-            new_ref_path, CLCSParams(), preprocess_path=False
-        )  # 20, 0.1, 5.0)
-
-        return curvilinear_cosy
+        return Lane._do_create_clcs_from_reference(
+            ref_path, road_network_param.polyline_resampling_step, road_network_param
+        )
 
     @staticmethod
-    def _get_smooth_parameter(contained_lanelets: List[int], bound: str) -> (float, float):
-        """
-        Gets smooth parameters for different lanes.
-        """
-        # TODO: currently only consider AAH1 map.
-        if 7 in contained_lanelets and bound == "left":
-            weight = 5.0
-            smooth_factor = 1.5
-        elif {0, 1, 2, 3}.intersection(contained_lanelets) and bound == "right":
-            weight = 25.0
-            smooth_factor = 1.5
-        # elif 4 in contained_lanelets:
-        #     weight = 10.0
-        #     smooth_factor = 1.5
-        else:
-            weight = 12.0
-            smooth_factor = 1.5
-        return weight, smooth_factor
+    def create_large_step_clcs_from_reference(
+        ref_path: np.ndarray, road_network_param: RoadNetworkParam
+    ) -> CurvilinearCoordinateSystem:
+        return Lane._do_create_clcs_from_reference(
+            ref_path, road_network_param.large_resampling_step, road_network_param
+        )
 
     def _create_clcs_from_reference(
         self,
@@ -431,15 +310,12 @@ class Lane:
                 return -np.inf
 
     def distance_to_right(self, x: float, y: float) -> float:
-        try:
+        if self.clcs_right.cartesian_point_inside_projection_domain(x, y):
             return self.clcs_right.convert_to_curvilinear_coords(x, y)[1]
-        except CartesianProjectionDomainError:
-            # A CartesianProjectionDomainError occurs if x and/or y are outside of the projection domain.
-            # If this is the case, we can retry with the larger sampled CLCS, which sometimes works.
-            try:
-                return self.clcs_right_large_step.convert_to_curvilinear_coords(x, y)[1]
-            except CartesianProjectionDomainError:
-                return np.inf
+
+        if self.clcs_right_large_step.cartesian_point_inside_projection_domain(x, y):
+            return self.clcs_right_large_step.convert_to_curvilinear_coords(x, y)[1]
+        return np.inf
 
     def min_max_distance_to_left(self, points: np.ndarray) -> tuple[float, float]:
         minimum = np.inf

@@ -1,18 +1,16 @@
 import math
-import os
 import unittest
-from pathlib import Path
 
+import pytest
 import numpy as np
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.state import CustomState
 from crmonitor.common.road_network import RoadNetwork
-from crmonitor.common.vehicle import Vehicle
+from crmonitor.common.vehicle import Vehicle, VehicleParameters
 from crmonitor.common.world import World
-from crmonitor.predicates.base import PredicateConfig
+from crmonitor.predicates.base import AbstractPredicate, PredicateConfig
 from crmonitor.predicates.general import (
     PredGoingStraight,
     PredInCongestion,
@@ -23,71 +21,28 @@ from crmonitor.predicates.general import (
     PredTurningLeft,
     PredTurningRight,
 )
+from tests.resources import IntersectionScenarios
 
 
-class TestIntersectionGeneralPredicates(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        root_path = Path(__file__).parents[1] / "crmonitor"
-        self.scenario_root_path = root_path.parent / "scenarios"
-        self.config = PredicateConfig(scale_rob=True, d_sl=1.0)
+@pytest.mark.parametrize("predicate", [PredTurningRight(), PredTurningLeft(), PredGoingStraight()])
+def test_general_intersection_predicates(predicate: AbstractPredicate):
+    world = IntersectionScenarios.R_IN3.get_world()
+    ego_vehicle = world.vehicle_by_id(30)
+    assert ego_vehicle is not None
+    # TODO: extend to full vehicle trajectory length.
+    for time in range(15):
+        sol_monitor_1 = predicate.evaluate_boolean(world, time, (ego_vehicle.id,))
 
-    def testTurningRight(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
+        sol_monitor_2 = predicate.evaluate_robustness(world, time, (ego_vehicle.id,))
+
+        assert sol_monitor_1 == (sol_monitor_2 >= 0), (
+            f"boolean satisfaction does not match robustness satisfaction of predicate {predicate.predicate_name} at time step {time} (max {ego_vehicle.end_time}) for vehicle {ego_vehicle.id}"
         )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario)
-        ego_vehicle = world.vehicle_by_id(30)
-
-        for time in range(ego_vehicle.end_time + 1):
-            pred_test = PredTurningRight(self.config)
-            sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-
-            sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-    def testTurningLeft(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
-        ego_vehicle = world.vehicle_by_id(30)
-
-        for time in range(ego_vehicle.end_time + 1):
-            pred_test = PredTurningLeft(self.config)
-            sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-
-            sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
-
-    def testGoingStraight(self):
-        scenario_file = os.path.join(
-            self.scenario_root_path,
-            "test_intersection/DEU_TestIntersectionRIN3.xml",
-        )
-        scenario, _ = CommonRoadFileReader(scenario_file).open(True)
-        world = World.create_from_scenario(scenario, self.config)
-        ego_vehicle = world.vehicle_by_id(30)
-
-        for time in range(ego_vehicle.end_time + 1):
-            pred_test = PredGoingStraight(self.config)
-            sol_monitor_1 = pred_test.evaluate_boolean(world, time, [ego_vehicle.id])
-
-            sol_monitor_2 = pred_test.evaluate_robustness(world, time, [ego_vehicle.id])
-
-            self.assertEqual(sol_monitor_1, sol_monitor_2 >= 0)
 
 
 class TestInterstateGeneralPredicates(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.config = PredicateConfig(scale_rob=False)
 
         right_vertices_lane_1 = np.array(
             [
@@ -298,11 +253,9 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         lanelet_network.add_lanelet(self._lanelet_2)
         lanelet_network.add_lanelet(self._lanelet_3)
         lanelet_network.add_lanelet(self._lanelet_4)
-        self.road_network = RoadNetwork(lanelet_network, self.config.get("road_network_param"))
+        self.road_network = RoadNetwork(lanelet_network)
 
     def test_interstate_broad_enough(self):
-        self.config["min_interstate_width"] = 7.0
-
         # expected solutions
         exp_sol_1 = True
         exp_sol_2 = True
@@ -316,22 +269,23 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
             3: CustomState(position=[30, 16], time_step=3, orientation=0, velocity=1),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {4}, 3: {4}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         world = World({ego_vehicle}, self.road_network)
 
         # Right of broad lane markings
-        pred = PredInterstateBroadEnough(self.config)
+        config = PredicateConfig(min_interstate_width=7.0)
+        pred = PredInterstateBroadEnough(config)
         vehicle_ids = [ego_vehicle.id]
 
         sol_monitor_mode_1 = pred.evaluate_boolean(world, 0, vehicle_ids)
@@ -350,9 +304,6 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_3, sol_robustness_monitor_mode_3 > 0)
 
     def test_in_congestion(self):
-        self.config["num_veh_congestion"] = 3
-        self.config["max_congestion_velocity"] = 2.78
-
         # expected solutions
         exp_sol_monitor_mode_1 = False  # no leading vehicle
         exp_sol_monitor_mode_2 = False  # only two leading vehicles
@@ -369,16 +320,16 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
             3: CustomState(position=[6, 0], time_step=3, orientation=0, velocity=2),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 1
@@ -391,12 +342,12 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 2
@@ -409,12 +360,12 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_2,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
         # other vehicle 3
@@ -426,15 +377,15 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_3 = Vehicle(
             3,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_3,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_3,
+            self.road_network,
+            0.1,
         )
 
-        pred = PredInCongestion(self.config)
+        config = PredicateConfig(num_veh_congestion=3, max_congestion_velocity=2.78)
+        pred = PredInCongestion(config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World(
@@ -462,9 +413,6 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
     def test_in_slow_moving_traffic(self):
-        self.config["num_veh_slow_moving_traffic"] = 3
-        self.config["max_slow_moving_traffic_velocity"] = 8.33
-
         # expected solutions
         exp_sol_monitor_mode_1 = False  # no leading vehicle
         exp_sol_monitor_mode_2 = False  # only two leading vehicles
@@ -481,18 +429,18 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
             3: CustomState(position=[6, 0], time_step=3, orientation=0, velocity=6),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
+
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
-
         # other vehicle 1
         cr_state_list_other_1 = {
             1: CustomState(position=[16, 0], time_step=1, orientation=0, velocity=6),
@@ -503,14 +451,12 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
         )
-
         # other vehicle 2
         cr_state_list_other_2 = {
             1: CustomState(position=[26, 0], time_step=1, orientation=0, velocity=6),
@@ -521,14 +467,12 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_2,
+            self.road_network,
+            0.1,
         )
-
         # other vehicle 3
         cr_state_list_other_3 = {
             2: CustomState(position=[42, 0], time_step=2, orientation=0, velocity=12),
@@ -538,15 +482,17 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_3 = Vehicle(
             3,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_3,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_3,
+            self.road_network,
+            0.1,
         )
 
-        pred = PredInSlowMovingTraffic(self.config)
+        config = PredicateConfig(
+            num_veh_slow_moving_traffic=3, max_slow_moving_traffic_velocity=8.33
+        )
+        pred = PredInSlowMovingTraffic(config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World(
@@ -574,9 +520,6 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
     def test_in_queue_of_vehicles(self):
-        self.config["num_veh_queue_of_vehicles"] = 3
-        self.config["max_queue_of_vehicles_velocity"] = 16.67
-
         # expected solutions
         exp_sol_monitor_mode_1 = False  # no leading vehicle
         exp_sol_monitor_mode_2 = False  # only two leading vehicles
@@ -593,18 +536,17 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
             3: CustomState(position=[45, 0], time_step=3, orientation=0, velocity=15),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
-
         # other vehicle 1
         cr_state_list_other_1 = {
             1: CustomState(position=[30, 0], time_step=1, orientation=0, velocity=15),
@@ -615,14 +557,13 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_1 = Vehicle(
             1,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_1,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_1,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
-
         # other vehicle 2
         cr_state_list_other_2 = {
             1: CustomState(position=[45, 0], time_step=1, orientation=0, velocity=15),
@@ -633,14 +574,13 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_2 = Vehicle(
             2,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_2,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_2,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
-
         # other vehicle 3
         cr_state_list_other_3 = {
             2: CustomState(position=[75, 0], time_step=2, orientation=0, velocity=20),
@@ -650,15 +590,17 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         other_vehicle_3 = Vehicle(
             3,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_other_3,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_other_3,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
-        pred = PredInQueueOfVehicles(self.config)
+        config = PredicateConfig(num_veh_queue_of_vehicles=3, max_queue_of_vehicles_velocity=16.67)
+
+        pred = PredInQueueOfVehicles(config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World(
@@ -686,8 +628,6 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_robustness_monitor_mode_4 > 0)
 
     def test_makes_u_turn(self):
-        self.config["u_turn"] = 1.57
-
         exp_sol_monitor_mode_1 = False  # theta = 0
         exp_sol_monitor_mode_2 = False  # theta = (1/8) * math.pi
         exp_sol_monitor_mode_3 = True  # theta = (1/2) * math.pi
@@ -716,19 +656,20 @@ class TestInterstateGeneralPredicates(unittest.TestCase):
             ),
         }
         lanelet_assignments_ego = {0: {1}, 1: {1}, 2: {1}, 3: {1}}
-        ego_vehicle_param = self.config.get("ego_vehicle_param")
+        ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
-            ego_vehicle_param,
             Rectangle(5, 2),
             cr_state_list_ego,
-            None,
-            CurvilinearStateManager(self.road_network),
             lanelet_assignments_ego,
+            self.road_network,
+            0.1,
+            vehicle_param=ego_vehicle_param,
         )
 
-        pred = PredMakesUTurn(self.config)
+        config = PredicateConfig(u_turn=1.57)
+        pred = PredMakesUTurn(config)
         vehicle_ids = [ego_vehicle.id]
 
         world = World({ego_vehicle}, self.road_network)
