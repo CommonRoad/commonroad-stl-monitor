@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
+import numpy as np
 from commonroad.scenario.scenario import ScenarioID
 
 from crmonitor.common import World
@@ -98,7 +99,9 @@ class SinglePredicateEvaluationInterface:
         self._setup_predicate_evaluator(predicate)
 
         if self._config.mode == PredicateEvaluationMode.MPR_GP:
-            self._setup_mpr_gp_evaluator(mpr_cache)
+            self._setup_mpr_gp_evaluator()
+            # Also setup the MPR evaluator to enable automatic fallback from GPs.
+            self._setup_mpr_evaluator(mpr_cache)
         elif self._config.mode == PredicateEvaluationMode.MPR:
             self._setup_mpr_evaluator(mpr_cache)
 
@@ -129,7 +132,7 @@ class SinglePredicateEvaluationInterface:
             state_sampling_cache=mpr_cache,
         )
 
-    def _setup_mpr_gp_evaluator(self, mpr_cache: MprSampledStatesCache | None) -> None:
+    def _setup_mpr_gp_evaluator(self) -> None:
         """Setup MPR-GP evaluator with automatic fallback to standard MPR.
 
         Attempts to load pre-trained models for GP-based evaluation. If model loading
@@ -145,7 +148,6 @@ class SinglePredicateEvaluationInterface:
                 e.predicate_name,
                 e.model_path,
             )
-            self._setup_mpr_evaluator(mpr_cache)
 
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         """Evaluate predicate as a boolean value.
@@ -160,6 +162,7 @@ class SinglePredicateEvaluationInterface:
         cached_satisfied = self._get_bool_predicate_cache_entry(world, time_step, vehicle_ids)
         if cached_satisfied is not None:
             return cached_satisfied
+
         predicate_satisfied = self._predicate_evaluator.evaluate_boolean(
             world, time_step, vehicle_ids
         )
@@ -190,6 +193,22 @@ class SinglePredicateEvaluationInterface:
             satisfied,
         )
 
+    def _evaluate_robustness_mpr(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
+        assert self._mpr_evaluator is not None
+        _LOGGER.debug(
+            "Evaluating predicate %s on %s at time step %s for vehicles %s with model-predictive robustness",
+            self.predicate_name,
+            world.scenario.scenario_id,
+            time_step,
+            vehicle_ids,
+        )
+        mpr_result_dict = self._mpr_evaluator.evaluate(world, time_step, vehicle_ids)
+
+        robustness = mpr_result_dict[self._predicate_evaluator.predicate_name].robustness
+        return robustness
+
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
@@ -205,20 +224,24 @@ class SinglePredicateEvaluationInterface:
                 time_step,
                 vehicle_ids,
             )
-            mpr_gp_result_dict = self._mpr_gp_evaluator.evaluate(world, time_step, vehicle_ids)
+            mpr_gp_results_dict = self._mpr_gp_evaluator.evaluate(world, time_step, vehicle_ids)
 
-            robustness = mpr_gp_result_dict[self._predicate_evaluator.predicate_name].robustness
+            # The MPR GP results are a dict indexed by predicate names. We only require the result for the predicate tracked by this evaluator.
+            predicate_mpr_gp_result = mpr_gp_results_dict[self.predicate_name]
+
+            if not predicate_mpr_gp_result.prediction_matches_reality():
+                # MPR evaluation with GPs might produce robustness values which do not match the real satisfaction of the predicate.
+                # If this happens the robustness can either be rectified to a pre-defined robustness,
+                # or we fallback to evaluating the predicate with standard MPR.
+                if self._mpr_gp_evaluator.config.rectification:
+                    robustness = float(1e-3) * np.sign(predicate_mpr_gp_result.characteristic_value)
+                else:
+                    robustness = self._evaluate_robustness_mpr(world, time_step, vehicle_ids)
+            else:
+                robustness = predicate_mpr_gp_result.robustness
+
         elif self._mpr_evaluator is not None:
-            _LOGGER.debug(
-                "Evaluating predicate %s on %s at time step %s for vehicles %s with model-predictive robustness",
-                self.predicate_name,
-                world.scenario.scenario_id,
-                time_step,
-                vehicle_ids,
-            )
-            mpr_result_dict = self._mpr_evaluator.evaluate(world, time_step, vehicle_ids)
-
-            robustness = mpr_result_dict[self._predicate_evaluator.predicate_name].robustness
+            robustness = self._evaluate_robustness_mpr(world, time_step, vehicle_ids)
         else:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with model-free robustness",

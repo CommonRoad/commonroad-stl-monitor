@@ -32,6 +32,11 @@ class MprGpPredicateEvaluationResult:
     gradient: float | None = None
     """Optional gradient information for sensitivity analysis."""
 
+    @property
+    def characteristic_value(self) -> float:
+        characteristic_value = -1.0 if self.satisfied else 1.0
+        return characteristic_value
+
     def prediction_matches_reality(self) -> bool:
         """
         Check if the GP model's robustness prediction aligns with actual predicate satisfaction.
@@ -39,8 +44,7 @@ class MprGpPredicateEvaluationResult:
         Returns:
             True if the prediction sign matches the expected sign based on satisfaction.
         """
-        characteristic_value = -1.0 if self.satisfied else 1.0
-        return np.sign(self.robustness) == np.sign(characteristic_value)
+        return np.sign(self.robustness) == np.sign(self.characteristic_value)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -85,6 +89,10 @@ class MprGpPredicateEvaluator:
         self._feature_extractor = FeatureExtractor(
             dict(all_predicates_desired_features),
         )
+
+    @property
+    def config(self) -> MprGpPredicateEvaluatorConfig:
+        return self._config
 
     def evaluate(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
