@@ -12,14 +12,13 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
-from commonroad.scenario.state import CustomState, InitialState, State, TraceState
+from commonroad.scenario.state import CustomState, InitialState, InputState, State, TraceState
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_clcs.clcs import CurvilinearCoordinateSystem
 from commonroad_clcs.util import (
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
 )
-from commonroad_dc.feasibility.feasibility_checker import InputState
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleDynamics, VehicleType
 from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import DictConfig
@@ -189,17 +188,9 @@ class CurvilinearVehicleTrajectory:
         dt: float,
         lane: Lane,
     ) -> Self:
-        # Make sure to convert the position to np.ndarray with dtype `float` since commonroad_clcs
-        # requires this type.
-        cartesian_coords = [np.array(state.position, dtype=float) for state in state_list]
         curvilinear_coords = np.array(
-            lane.clcs.convert_list_of_points_to_curvilinear_coords(cartesian_coords, 1)
+            [lane.convert_to_curvilinear_coords(*state.position) for state in state_list]
         )
-        if len(cartesian_coords) > len(curvilinear_coords):
-            # TODO: better error reporting. We could check for the exact point that failed and report the boundaries.
-            raise RuntimeError(
-                f"Failed to convert {len(cartesian_coords) - len(curvilinear_coords)} cartesian coordinates to curvilinear. Some points are probably out of the projection domain."
-            )
 
         s = curvilinear_coords.T[0]
         d = curvilinear_coords.T[1]

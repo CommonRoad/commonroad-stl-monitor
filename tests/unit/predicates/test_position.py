@@ -62,7 +62,9 @@ def test_intersection_position_predicates(
 
         sol_monitor_2 = predicate.evaluate_robustness(world, time, vehicle_ids)
 
-        assert sol_monitor_1 == (sol_monitor_2 >= 0)
+        assert sol_monitor_1 == (sol_monitor_2 >= 0), (
+            f"Boolean satisfaction does not match robustness for predicate {predicate.predicate_name} at time step {time}"
+        )
 
 
 class TestInterstatePositionPredicates:

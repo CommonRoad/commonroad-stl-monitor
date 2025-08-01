@@ -14,7 +14,7 @@ class TestMprGpPredicateEvaluator:
         "predicate,scenario,time_step,vehicle_ids,robustness",
         [
             (PredVelocityBelow5, InterstateScenarios.SAFE_DISTANCE_LANE_CHANGE, 10, (1002,), -0.94),
-            (PredInFrontOf, InterstateScenarios.SAFE_DISTANCE_LANE_CHANGE, 50, (1005, 1004), 0.02),
+            (PredInFrontOf, InterstateScenarios.SAFE_DISTANCE_LANE_CHANGE, 20, (1003, 1001), 0.2),
         ],
     )
     def test_evaluation(self, predicate, scenario, time_step, vehicle_ids, robustness):

@@ -1,9 +1,7 @@
 import logging
-import unittest
 
 import numpy as np
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
-from crmonitor.predicates.base import PredicateConfig
 from tests.resources import IntersectionScenarios
 
 logging.basicConfig(
@@ -12,10 +10,8 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-_PREDICATE_CONFIG = PredicateConfig(scale_rob=True, d_sl=1.0)
 
-
-class RuleTest(unittest.TestCase):
+class TestRulesIntersection:
     def test_R_IN1(self):
         exp_violation_time_step = 24
         world = IntersectionScenarios.R_IN1.get_world()
@@ -23,8 +19,8 @@ class RuleTest(unittest.TestCase):
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN1", world.scenario.dt)
         rule_robustness = rule_eval.evaluate(world, ego_vehicle.id)
         rule_robustness = np.array(rule_robustness)
-        self.assertTrue(rule_robustness[exp_violation_time_step - 1] >= 0)
-        self.assertTrue(rule_robustness[exp_violation_time_step] < 0)
+        assert rule_robustness[exp_violation_time_step - 1] >= 0
+        assert rule_robustness[exp_violation_time_step] < 0
 
     def test_R_IN3(self):
         rtamt_further_time_range = 10

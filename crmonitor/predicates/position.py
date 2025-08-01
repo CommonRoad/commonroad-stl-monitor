@@ -227,8 +227,8 @@ class PredSafeDistPrec(AbstractPredicate):
             vehicle_lanes = vehicle_lanes[::-1]
         reference_lane = vehicle_lead.get_lane(time_step)
         # get the Cartesian coordinate of the safe distance
-        safe_pos_cart = reference_lane.clcs.convert_to_cartesian_coords(unsafe_s, 0)
-        lead_rear_cart = reference_lane.clcs.convert_to_cartesian_coords(
+        safe_pos_cart = reference_lane.convert_to_cartesian_coords(unsafe_s, 0)
+        lead_rear_cart = reference_lane.convert_to_cartesian_coords(
             vehicle_lead.rear_s(time_step), 0.0
         )
         # left vertices
@@ -236,7 +236,7 @@ class PredSafeDistPrec(AbstractPredicate):
             vehicle_lead.rear_s(time_step), 0.0
         )
         safe_pos_left_cart = vehicle_lanes[0].clcs_left.convert_to_cartesian_coords(unsafe_s, 0)
-        reference_left = np.vstack(vehicle_lanes[0].clcs_left.reference_path())
+        reference_left = np.vstack(vehicle_lanes[0].clcs_left.clcs.reference_path())
         vertices_left = reference_left[
             (reference_left[:, 0] > safe_pos_left_cart[0])
             & (reference_left[:, 0] < front_rear_left_cart[0]),
@@ -250,7 +250,7 @@ class PredSafeDistPrec(AbstractPredicate):
             vehicle_lead.rear_s(time_step), 0.0
         )
         safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(unsafe_s, 0)
-        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.reference_path())
+        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.clcs.reference_path())
         vertices_right = reference_right[
             (reference_right[:, 0] > safe_pos_left_cart[0])
             & (reference_right[:, 0] < front_rear_left_cart[0]),
@@ -1445,7 +1445,7 @@ class PredOnLaneletWithTypeIntersection(AbstractPredicate):
     predicate_name = PositionPredicates.OnLaneletWithTypeIntersection
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelets_assignment = vehicle.lanelet_assignment[time_step]
@@ -1455,7 +1455,9 @@ class PredOnLaneletWithTypeIntersection(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         rob = -np.inf
         road_network = world.road_network
         vehicle = world.vehicle_by_id(vehicle_ids[0])
@@ -1480,11 +1482,13 @@ class PredOnLaneletWithTypeIntersection(AbstractPredicate):
         for i in range(len(lanelets_occ_intersection)):
             front_s = vehicle.front_s(time_step, lane_occ_intersection[i])
             rear_s = vehicle.rear_s(time_step, lane_occ_intersection[i])
-            lanelet_start_s = lane_occ_intersection[i].clcs.convert_to_curvilinear_coords(
-                *utils.get_lanelet_start_line(lanelets_occ_intersection[i])[0]
+
+            lanelet_occ = lanelets_occ_intersection[i]
+            lanelet_start_s = lane_occ_intersection[i].convert_to_curvilinear_coords(
+                *lanelet_occ.center_vertices[0]
             )[0]
-            lanelet_end_s = lane_occ_intersection[i].clcs.convert_to_curvilinear_coords(
-                *utils.get_lanelet_end_line(lanelets_occ_intersection[i])[0]
+            lanelet_end_s = lane_occ_intersection[i].convert_to_curvilinear_coords(
+                *lanelet_occ.center_vertices[-1]
             )[0]
             # lanelet in front of vehicle
             if (front_s - lanelet_start_s) < 0 < (lanelet_end_s - rear_s):

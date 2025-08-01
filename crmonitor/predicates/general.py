@@ -544,9 +544,7 @@ class PredTurningRight(AbstractPredicate):
         # vehicle occupies right turning lanelet
         else:
             state = vehicle.states_cr[time_step]
-            d_center_to_left = right_turn_lane.clcs_left.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_left = right_turn_lane.distance_to_left(*state.position)
             # center of vehicle in right turning lanelet
             if d_center_to_left > 0:
                 return False
@@ -586,9 +584,7 @@ class PredTurningRight(AbstractPredicate):
         # case 2: vehicle occupies right turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0:
             state = vehicle.states_cr[time_step]
-            d_center_to_left = right_turn_lane.clcs_left.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_left = right_turn_lane.distance_to_left(*state.position)
             if d_center_to_left > 0:
                 # out of right turning lanelet
                 d_left = utils.distance_to_left_bounds_clcs(vehicle, right_turn_lane, time_step)
@@ -653,9 +649,7 @@ class PredTurningLeft(AbstractPredicate):
             return False
         else:
             state = vehicle.states_cr[time_step]
-            d_center_to_right = left_turn_lane.clcs_right.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_right = left_turn_lane.distance_to_right(*state.position)
             if d_center_to_right < 0:
                 # out of left turning lanelet
                 return False
@@ -693,9 +687,7 @@ class PredTurningLeft(AbstractPredicate):
         # case 2: vehicle occupies left turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_left)) > 0:
             state = vehicle.states_cr[time_step]
-            d_center_to_right = left_turn_lane.clcs_right.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_right = left_turn_lane.distance_to_right(*state.position)
             if d_center_to_right < 0:
                 # out of left turning lanelet
                 d_right = utils.distance_to_right_bounds_clcs(vehicle, left_turn_lane, time_step)
@@ -742,7 +734,7 @@ class PredGoingStraight(AbstractPredicate):
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -758,12 +750,8 @@ class PredGoingStraight(AbstractPredicate):
             return False
         else:
             state = vehicle.states_cr[time_step]
-            d_center_to_left = straight_lane.clcs_left.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
-            d_center_to_right = straight_lane.clcs_right.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_left = straight_lane.distance_to_left(*state.position)
+            d_center_to_right = straight_lane.distance_to_right(*state.position)
             if (d_center_to_left > 0) or (d_center_to_right < 0):
                 # out of going straight lanelet
                 return False
@@ -801,12 +789,8 @@ class PredGoingStraight(AbstractPredicate):
         # case 2: vehicle occupies left turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_straight)) > 0:
             state = vehicle.states_cr[time_step]
-            d_center_to_left = straight_lane.clcs_left.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
-            d_center_to_right = straight_lane.clcs_right.convert_to_curvilinear_coords(
-                *state.position
-            )[1]
+            d_center_to_left = straight_lane.distance_to_left(*state.position)
+            d_center_to_right = straight_lane.distance_to_right(*state.position)
             if d_center_to_left > 0:
                 # out of straight going lanelet
                 d_left = utils.distance_to_left_bounds_clcs(vehicle, straight_lane, time_step)
@@ -1235,16 +1219,14 @@ class PredStraightTargetLeftEgoTargetHasPriorityNotOncoming(PredTurningHasPriori
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
         rob_turning_target = self._turning_target.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id]
+            world, time_step, [target_vehicle_id]
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, None, time_step, [ego_vehicle_id]
-        )
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(
             rob_turning_target,
@@ -1290,16 +1272,14 @@ class PredStraightTargetLeftEgoTargetHasPriorityOncoming(PredTurningHasPriorityB
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
         rob_turning_target = self._turning_target.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id]
+            world, time_step, [target_vehicle_id]
         )
-        rob_turning_ego = self._turning_ego.evaluate_robustness(
-            world, None, time_step, [ego_vehicle_id]
-        )
+        rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, [ego_vehicle_id])
         rob_target_has_priority = self._target_has_priority.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob_on_oncoming_of = self._on_oncoming_of.evaluate_robustness(
-            world, None, time_step, [target_vehicle_id, ego_vehicle_id]
+            world, time_step, [target_vehicle_id, ego_vehicle_id]
         )
         rob = min(
             rob_turning_target,

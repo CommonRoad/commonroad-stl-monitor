@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum, auto
 from typing import Dict, List, Optional, Set, Union
 
 import commonroad_clcs.pycrccosy as pycrccosy
@@ -7,33 +6,161 @@ import numpy as np
 from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
 from commonroad_clcs.clcs import CurvilinearCoordinateSystem
-from commonroad_clcs.config import CLCSParams
-from commonroad_clcs.pycrccosy import CartesianProjectionDomainError
+from commonroad_clcs.config import CLCSParams, ProcessingOption, ResamplingParams
 from commonroad_clcs.util import (
     chaikins_corner_cutting,
     compute_orientation_from_polyline,
     compute_pathlength_from_polyline,
     resample_polyline,
 )
-from scipy.interpolate import splev, splprep
 
 from .scenario_type import ScenarioType
-
-
-class MapType(Enum):
-    HAND_DRAFT = auto()
-    DATASET = auto()
 
 
 @dataclass
 class RoadNetworkParam:
     num_chankins_corner_cutting: int = 1
+    """Number of refinements used in chankins corner cutting when constructing curvilinear coordinate systems for lanes."""
+
     polyline_resampling_step: float = 0.5
+    """Resampling step when constructing cuvrilinear coordinate systems for lanes."""
+
     large_resampling_step: float = 3.5
+    """Larger resampling step used when constructing large step curvilinear coordinate systems for lanes."""
+
     merging_length: int = 10000
     lateral_projection_domain_limit: int = 80
     lateral_eps: float = 0.1
-    map_type: MapType = MapType.DATASET
+
+
+class VariableStepCurvilinearCoordinateSystem:
+    """
+    Wrapper around `CurvilinearCoordinateSystem`s to circumvent frequent projection domain issues.
+
+    Use `VariableStepCurvilinearCoordinateSystem.create_from_reference_path` to construct this from a polyline, e.g., a lenelet vertex.
+    """
+
+    def __init__(
+        self, clcs: CurvilinearCoordinateSystem, clcs_large_step: CurvilinearCoordinateSystem
+    ) -> None:
+        self._clcs = clcs
+        self._clcs_large_step = clcs_large_step
+
+    @property
+    def clcs(self) -> CurvilinearCoordinateSystem:
+        """The internal curvilinear coordinate system."""
+        return self._clcs
+
+    @property
+    def clcs_large_step(self) -> CurvilinearCoordinateSystem:
+        """The internal large step curvilinear coordinate system."""
+        return self._clcs_large_step
+
+    @classmethod
+    def create_from_reference_path(
+        cls, ref_path: np.ndarray, road_network_param: RoadNetworkParam
+    ) -> "VariableStepCurvilinearCoordinateSystem":
+        """
+        Create a new variable step curvilinear coordinate system from a reference polyline, e.g. the vertices of a lanelet.
+
+        :param ref_path: The reference polyline. The polyline will be resampled based on the steps set in `road_network_param`.
+        :param road_network_param: Additional configuration for the path pre-processing and the curvilinear coordinate system.
+
+        :returns: A new `VariableStepCurvilinearCoordinateSystem`.
+        """
+        new_ref_path = chaikins_corner_cutting(
+            ref_path, road_network_param.num_chankins_corner_cutting
+        )
+
+        clcs = cls._create_variable_step_clcs_from_reference(
+            new_ref_path, road_network_param.polyline_resampling_step, road_network_param
+        )
+
+        clcs_large_step = cls._create_variable_step_clcs_from_reference(
+            new_ref_path, road_network_param.large_resampling_step, road_network_param
+        )
+
+        return cls(clcs, clcs_large_step)
+
+    def convert_to_curvilinear_coords(self, x: float, y: float) -> tuple[float, float]:
+        """
+        Convert cartesian coordinates to curvilinear coordinates.
+
+        Automatically tries to recover from projection issues, by falling back to curvilinear
+        coordinate systems with large step size.
+
+        :param x: Cartesian x coordinate.
+        :param y: Cartesian y coordinate.
+
+        :returns: Tuple with corresponding curvilinear coords: (s, d).
+
+        :raises ValueError: If cartesian coordinates are outside of projection domain.
+        """
+        if self._clcs.cartesian_point_inside_projection_domain(x, y):
+            return self._clcs.convert_to_curvilinear_coords(x, y)
+
+        if self._clcs_large_step.cartesian_point_inside_projection_domain(x, y):
+            return self._clcs_large_step.convert_to_curvilinear_coords(x, y)
+
+        raise ValueError(
+            f"Cartesian coordinates ({x},{y}) are outside the curvilinear projection domain"
+        )
+
+    def convert_to_cartesian_coords(self, s: float, d: float) -> tuple[float, float]:
+        """
+        Convert curvilinear coordinates to cartesian coordinates.
+
+        Automatically tries to recover from projection issues, by falling back to curvilinear
+        coordinate systems with large step size.
+
+        :param s: Curvilinear s coordinate.
+        :param d: Curvilinear d coordinate.
+
+        :returns: Tuple with corresponding cartesian coords: (x, y).
+
+        :raises ValueError: If curvilinear coordinates are outside of projection domain.
+        """
+        if self._clcs.curvilinear_point_inside_projection_domain(s, d):
+            return self._clcs.convert_to_cartesian_coords(s, d)
+
+        if self._clcs_large_step.curvilinear_point_inside_projection_domain(s, d):
+            return self._clcs_large_step.convert_to_cartesian_coords(s, d)
+
+        raise ValueError(
+            f"Curvilinear coordinates ({s},{d}) are outside the cartesian projection domain"
+        )
+
+    @staticmethod
+    def _create_variable_step_clcs_from_reference(
+        ref_path: np.ndarray, resampling_step: float, road_network_param: RoadNetworkParam
+    ) -> CurvilinearCoordinateSystem:
+        """
+        Create the internal curvilinear coordinate systems based on the reference path.
+
+        :param ref_path: Reference polyline for the curvilinear coordinate system.
+        :param resampling_step: Step with which the reference path is resampled.
+        :param road_network_param: Additional parameters used to construct the curvilinear coordinate system.
+
+        :returns: A new `CurvilinearCoordinateSystem` for the reference path.
+        """
+        # The path has to be pre-processed before the curvilinear coordinate system can be constructed.
+        # `CurvilinearCoordinateSystem` enforces a maximum allowed orientation difference, which
+        # is frequently exceeded due to the merging of lanelets.
+        # By resampling the polyline we make sure that the polyline is valid.
+        new_ref_path = resample_polyline(ref_path, resampling_step)
+
+        curvilinear_cosy = CurvilinearCoordinateSystem(
+            new_ref_path,
+            CLCSParams(
+                default_proj_domain_limit=road_network_param.lateral_projection_domain_limit,
+                eps=road_network_param.lateral_eps,
+                processing_option=ProcessingOption.ELASTIC_BAND,
+                resampling=ResamplingParams(fixed_step=resampling_step),
+            ),
+            preprocess_path=True,
+        )
+
+        return curvilinear_cosy
 
 
 class Lane:
@@ -60,21 +187,13 @@ class Lane:
         if road_network_param is None:
             road_network_param = RoadNetworkParam()
 
-        self.clcs_left = Lane.create_curvilinear_coordinate_system_from_reference(
+        self._clcs_left = VariableStepCurvilinearCoordinateSystem.create_from_reference_path(
             merged_lanelet.left_vertices, road_network_param
         )
-        self.clcs_left_large_step = Lane.create_large_step_clcs_from_reference(
-            merged_lanelet.left_vertices, road_network_param
-        )
-
-        self.clcs_right = Lane.create_curvilinear_coordinate_system_from_reference(
+        self._clcs_right = VariableStepCurvilinearCoordinateSystem.create_from_reference_path(
             merged_lanelet.right_vertices, road_network_param
         )
-        self.clcs_right_large_step = Lane.create_large_step_clcs_from_reference(
-            merged_lanelet.right_vertices, road_network_param
-        )
-
-        self._clcs = Lane.create_curvilinear_coordinate_system_from_reference(
+        self._clcs = VariableStepCurvilinearCoordinateSystem.create_from_reference_path(
             merged_lanelet.center_vertices, road_network_param
         )
 
@@ -109,8 +228,19 @@ class Lane:
         return self._contained_lanelets
 
     @property
-    def clcs(self) -> CurvilinearCoordinateSystem:
+    def clcs(self) -> VariableStepCurvilinearCoordinateSystem:
+        """The curvilinear coordinate system based on the center reference line."""
         return self._clcs
+
+    @property
+    def clcs_left(self) -> VariableStepCurvilinearCoordinateSystem:
+        """The curvilinear coordinate system corresponding to the left lane boundary."""
+        return self._clcs_left
+
+    @property
+    def clcs_right(self) -> VariableStepCurvilinearCoordinateSystem:
+        """The curvilinear coordinate system corresponding to the right lane boundary."""
+        return self._clcs_right
 
     def orientation(self, position) -> float:
         """
@@ -158,164 +288,37 @@ class Lane:
             width_along_lanelet[i] = np.linalg.norm(left_polyline[i] - right_polyline[i])
         return width_along_lanelet
 
-    @staticmethod
-    def _do_create_clcs_from_reference(
-        ref_path: np.ndarray, resampling_step: float, road_network_param: RoadNetworkParam
-    ) -> CurvilinearCoordinateSystem:
-        new_ref_path = ref_path
-        for _ in range(0, road_network_param.num_chankins_corner_cutting):
-            new_ref_path = chaikins_corner_cutting(new_ref_path)
-        new_ref_path = resample_polyline(new_ref_path, resampling_step)
-
-        curvilinear_cosy = CurvilinearCoordinateSystem(
-            new_ref_path,
-            CLCSParams(
-                default_proj_domain_limit=road_network_param.lateral_projection_domain_limit,
-                eps=road_network_param.lateral_eps,
-            ),
-            preprocess_path=False,
-        )
-
-        return curvilinear_cosy
-
-    @staticmethod
-    def create_curvilinear_coordinate_system_from_reference(
-        ref_path: np.ndarray, road_network_param: RoadNetworkParam
-    ) -> CurvilinearCoordinateSystem:
-        """
-        Generates curvilinear coordinate system for a reference path
-
-        :param ref_path: reference path (polyline)
-        :param road_network_param: dictionary containing parameters of the road network
-        :returns curvilinear coordinate system for reference path
-        """
-        return Lane._do_create_clcs_from_reference(
-            ref_path, road_network_param.polyline_resampling_step, road_network_param
-        )
-
-    @staticmethod
-    def create_large_step_clcs_from_reference(
-        ref_path: np.ndarray, road_network_param: RoadNetworkParam
-    ) -> CurvilinearCoordinateSystem:
-        return Lane._do_create_clcs_from_reference(
-            ref_path, road_network_param.large_resampling_step, road_network_param
-        )
-
-    def _create_clcs_from_reference(
-        self,
-        ref_path: np.ndarray,
-        weight: float,
-        smooth_factor: float,
-        road_network_param: RoadNetworkParam,
-    ) -> (
-        CurvilinearCoordinateSystem,
-        np.ndarray,
-        CurvilinearCoordinateSystem,
-        np.ndarray,
-    ):
-        if road_network_param.map_type == MapType.HAND_DRAFT:
-            reference_path_smooth = resample_polyline(
-                ref_path, road_network_param.polyline_resampling_step
-            )
-        else:
-            reference_path = self._extrapolate_resample_polyline(ref_path)
-            reference_path_smooth = self._smoothing_reference_path(
-                reference_path, smooth_factor=smooth_factor, weight_coefficient=weight
-            )
-
-        clcs_params = CLCSParams(
-            default_proj_domain_limit=road_network_param.lateral_projection_domain_limit,
-            eps=road_network_param.lateral_eps,
-        )
-        curvilinear_cosy = CurvilinearCoordinateSystem(
-            reference_path_smooth, clcs_params, preprocess_path=False
-        )
-
-        ref_path_resample_large_step = resample_polyline(
-            reference_path_smooth, road_network_param.large_resampling_step
-        )
-        curvilinear_cosy_large_step = CurvilinearCoordinateSystem(
-            ref_path_resample_large_step, clcs_params, preprocess_path=False
-        )
-        return (
-            curvilinear_cosy,
-            reference_path_smooth,
-            curvilinear_cosy_large_step,
-            ref_path_resample_large_step,
-        )
-
-    @staticmethod
-    def _smoothing_reference_path(
-        reference_path: np.ndarray, smooth_factor=None, weight_coefficient=None
-    ) -> np.ndarray:
-        """
-        generates a smooth reference path using splprep
-        """
-        transposed_reference_path = reference_path.T
-        okay = np.where(
-            np.abs(np.diff(transposed_reference_path[0]))
-            + np.abs(np.diff(transposed_reference_path[1]))
-            > 0
-        )
-        xp = np.r_[transposed_reference_path[0][okay], transposed_reference_path[0][-1]]
-        yp = np.r_[transposed_reference_path[1][okay], transposed_reference_path[1][-1]]
-
-        curvature = pycrccosy.Util.compute_curvature(np.array([xp, yp]).T)
-        # set weights for interpolation:
-        # see details: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splprep.html
-        weights = np.exp(-weight_coefficient * (abs(curvature) - np.min(abs(curvature))))
-        # B spline interpolation
-        tck, u = splprep([xp, yp], s=smooth_factor, w=weights)
-        u_new = np.linspace(u.min(), u.max(), 2000)
-        x_new, y_new = splev(u_new, tck, der=0)
-        ref_path_smooth = np.array([x_new, y_new]).transpose()
-        return ref_path_smooth
-
-    @staticmethod
-    def _extrapolate_resample_polyline(polyline: np.ndarray, step: float = 2.0) -> np.ndarray:
-        """
-        Extrapolates polyline for resampling.
-        """
-        # extend start point
-        p = np.poly1d(np.polyfit(polyline[:2, 0], polyline[:2, 1], 1))
-
-        x = 2 * polyline[0, 0] - polyline[1, 0]
-        a = np.array([[x, p(x)]])
-        polyline = np.concatenate((a, polyline), axis=0)
-
-        # extend end point
-        # extrapolate final point
-        p = np.poly1d(np.polyfit(polyline[-2:, 0], polyline[-2:, 1], 1))
-
-        # this extension helps the ego vehicle can drive to the end of the lane.
-        x = polyline[-1, 0] + 99 * (polyline[-1, 0] - polyline[-2, 0])
-        a = np.array([[x, p(x)]])
-        polyline_extend = resample_polyline(
-            np.concatenate((polyline[-1, np.newaxis], a), axis=0), step=20.0
-        )
-        polyline_origin = resample_polyline(polyline, step=step)
-
-        return np.concatenate((polyline_origin, polyline_extend[1:, :]), axis=0)
-
     def distance_to_left(self, x: float, y: float) -> float:
-        # inside lane is positive
+        """
+        Distance of point to left boundary of lane.
+
+        :param x: Cartesian x coordinate.
+        :param y: Cartesian y coordinate.
+
+        :returns: Distance to left boundary of lane, or -inf if the point is outside the projection domain.
+        """
         try:
-            return -self.clcs_left.convert_to_curvilinear_coords(x, y)[1]
-        except CartesianProjectionDomainError:
-            # A CartesianProjectionDomainError occurs if x and/or y are outside of the projection domain.
-            # If this is the case, we can retry with the larger sampled CLCS, which sometimes works.
-            try:
-                return -self.clcs_left_large_step.convert_to_curvilinear_coords(x, y)[1]
-            except CartesianProjectionDomainError:
-                return -np.inf
+            _, d = self._clcs_left.convert_to_curvilinear_coords(x, y)
+        except ValueError:
+            return -np.inf
+
+        return -d
 
     def distance_to_right(self, x: float, y: float) -> float:
-        if self.clcs_right.cartesian_point_inside_projection_domain(x, y):
-            return self.clcs_right.convert_to_curvilinear_coords(x, y)[1]
+        """
+        Distance of point to right boundary of lane.
 
-        if self.clcs_right_large_step.cartesian_point_inside_projection_domain(x, y):
-            return self.clcs_right_large_step.convert_to_curvilinear_coords(x, y)[1]
-        return np.inf
+        :param x: Cartesian x coordinate.
+        :param y: Cartesian y coordinate.
+
+        :returns: Distance to right boundary of lane, or inf if the point is outside the projection domain.
+        """
+        try:
+            _, d = self._clcs_right.convert_to_curvilinear_coords(x, y)
+        except ValueError:
+            return np.inf
+
+        return d
 
     def min_max_distance_to_left(self, points: np.ndarray) -> tuple[float, float]:
         minimum = np.inf
@@ -334,6 +337,32 @@ class Lane:
             minimum = min(minimum, distance)
             maximum = max(maximum, distance)
         return minimum, maximum
+
+    def convert_to_curvilinear_coords(self, x: float, y: float) -> tuple[float, float]:
+        """
+        Convert cartesian coordinates to curvilinear coordinates.
+
+        :param x: Cartesian x coordinate.
+        :param y: Cartesian y coordinate.
+
+        :returns: Tuple with corresponding curvilinear coords: (s, d).
+
+        :raises ValueError: If cartesian coordinates are outside of projection domain.
+        """
+        return self._clcs.convert_to_curvilinear_coords(x, y)
+
+    def convert_to_cartesian_coords(self, s: float, d: float) -> tuple[float, float]:
+        """
+        Convert curvilinear coordinates to cartesian coordinates.
+
+        :param s: Curvilinear s coordinate.
+        :param d: Curvilinear d coordinate.
+
+        :returns: Tuple with corresponding cartesian coords: (x, y).
+
+        :raises ValueError: If curvilinear coordinates are outside of projection domain.
+        """
+        return self._clcs.convert_to_cartesian_coords(s, d)
 
 
 class RoadNetwork:
@@ -746,12 +775,8 @@ class RoadNetwork:
         for lanelet_id in lanelets_id:
             lanelet = self.lanelet_network.find_lanelet_by_id(lanelet_id)
             # TODO: check: now assume start and end lines vertical to reference lane
-            start_s = reference_lane.clcs.convert_to_curvilinear_coords(
-                *lanelet.right_vertices[0, :]
-            )[0]
-            end_s = reference_lane.clcs.convert_to_curvilinear_coords(
-                *lanelet.right_vertices[-1, :]
-            )[0]
+            start_s = reference_lane.convert_to_curvilinear_coords(*lanelet.right_vertices[0, :])[0]
+            end_s = reference_lane.convert_to_curvilinear_coords(*lanelet.right_vertices[-1, :])[0]
             lanelets_start_s = min(lanelets_start_s, start_s)
             lanelets_end_s = max(lanelets_end_s, end_s)
         return lanelets_start_s, lanelets_end_s
