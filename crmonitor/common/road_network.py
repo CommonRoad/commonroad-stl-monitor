@@ -46,6 +46,16 @@ class VariableStepCurvilinearCoordinateSystem:
         self._clcs = clcs
         self._clcs_large_step = clcs_large_step
 
+    @property
+    def clcs(self) -> CurvilinearCoordinateSystem:
+        """The internal curvilinear coordinate system."""
+        return self._clcs
+
+    @property
+    def clcs_large_step(self) -> CurvilinearCoordinateSystem:
+        """The internal large step curvilinear coordinate system."""
+        return self._clcs_large_step
+
     @classmethod
     def create_from_reference_path(
         cls, ref_path: np.ndarray, road_network_param: RoadNetworkParam
@@ -332,9 +342,6 @@ class Lane:
         """
         Convert cartesian coordinates to curvilinear coordinates.
 
-        Automatically tries to recover from projection issues, by falling back to curvilinear
-        coordinate systems with large step size.
-
         :param x: Cartesian x coordinate.
         :param y: Cartesian y coordinate.
 
@@ -347,9 +354,6 @@ class Lane:
     def convert_to_cartesian_coords(self, s: float, d: float) -> tuple[float, float]:
         """
         Convert curvilinear coordinates to cartesian coordinates.
-
-        Automatically tries to recover from projection issues, by falling back to curvilinear
-        coordinate systems with large step size.
 
         :param s: Curvilinear s coordinate.
         :param d: Curvilinear d coordinate.

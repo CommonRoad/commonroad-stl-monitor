@@ -236,7 +236,7 @@ class PredSafeDistPrec(AbstractPredicate):
             vehicle_lead.rear_s(time_step), 0.0
         )
         safe_pos_left_cart = vehicle_lanes[0].clcs_left.convert_to_cartesian_coords(unsafe_s, 0)
-        reference_left = np.vstack(vehicle_lanes[0].clcs_left._clcs.reference_path())
+        reference_left = np.vstack(vehicle_lanes[0].clcs_left.clcs.reference_path())
         vertices_left = reference_left[
             (reference_left[:, 0] > safe_pos_left_cart[0])
             & (reference_left[:, 0] < front_rear_left_cart[0]),
@@ -250,7 +250,7 @@ class PredSafeDistPrec(AbstractPredicate):
             vehicle_lead.rear_s(time_step), 0.0
         )
         safe_pos_right_cart = vehicle_lanes[-1].clcs_right.convert_to_cartesian_coords(unsafe_s, 0)
-        reference_right = np.vstack(vehicle_lanes[-1].clcs_right._clcs.reference_path())
+        reference_right = np.vstack(vehicle_lanes[-1].clcs_right.clcs.reference_path())
         vertices_right = reference_right[
             (reference_right[:, 0] > safe_pos_left_cart[0])
             & (reference_right[:, 0] < front_rear_left_cart[0]),
