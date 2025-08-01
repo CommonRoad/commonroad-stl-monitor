@@ -101,30 +101,6 @@ def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, tim
     return np.fmin(d_left, d_right)
 
 
-def distance_veh_center_to_lane_boundaries(vehicle_i: Vehicle, lane: Lane, time_step: int):
-    """
-    Distance of the vehicle center to the boundaries of the lane
-    """
-    veh_position = vehicle_i.states_cr[time_step].position
-    try:
-        dis_to_left = -lane.clcs_left.convert_to_curvilinear_coords(
-            veh_position[0], veh_position[1]
-        )[1]
-    except ValueError:
-        dis_to_left = -lane.clcs_left_large_step.convert_to_curvilinear_coords(
-            veh_position[0], veh_position[1]
-        )[1]
-    try:
-        dis_to_right = lane.clcs_right.convert_to_curvilinear_coords(
-            veh_position[0], veh_position[1]
-        )[1]
-    except ValueError:
-        dis_to_right = lane.clcs_right_large_step.convert_to_curvilinear_coords(
-            veh_position[0], veh_position[1]
-        )[1]
-    return dis_to_left, dis_to_right
-
-
 def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
     """
     Extracts all lanelet IDs left of a given lanelet based on adjacency relations
