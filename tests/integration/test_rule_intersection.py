@@ -1,9 +1,6 @@
 import logging
 
 import numpy as np
-from crmonitor.common import (
-    World,
-)
 from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
 from tests.resources import IntersectionScenarios
 
@@ -15,17 +12,6 @@ logging.basicConfig(
 
 
 class TestRulesIntersection:
-    def _base_test_rule(
-        self, rule_name: str, world: World, ego_id: int, exp_violation: bool
-    ) -> None:
-        rule_eval = OfflineRuleEvaluator.create_for_rule(rule_name, world.dt)
-        rule_robustness = np.array(rule_eval.evaluate(world, ego_id))
-        bool_value = rule_robustness >= 0.0
-
-        assert exp_violation == np.all(bool_value), (
-            f"expected violation {exp_violation} but got violation {np.all(bool_value)} for robustness trace {rule_robustness}."
-        )
-
     def test_R_IN1(self):
         exp_violation_time_step = 24
         world = IntersectionScenarios.R_IN1.get_world()

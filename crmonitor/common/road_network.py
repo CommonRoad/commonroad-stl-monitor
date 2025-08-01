@@ -54,16 +54,20 @@ class VariableStepCurvilinearCoordinateSystem:
         Create a new variable step curvilinear coordinate system from a reference polyline, e.g. the vertices of a lanelet.
 
         :param ref_path: The reference polyline. The polyline will be resampled based on the steps set in `road_network_param`.
-        :param road_network_param: Configuration for resampling.
+        :param road_network_param: Additional configuration for the path pre-processing and the curvilinear coordinate system.
 
         :returns: A new `VariableStepCurvilinearCoordinateSystem`.
         """
+        new_ref_path = chaikins_corner_cutting(
+            ref_path, road_network_param.num_chankins_corner_cutting
+        )
+
         clcs = cls._create_variable_step_clcs_from_reference(
-            ref_path, road_network_param.polyline_resampling_step, road_network_param
+            new_ref_path, road_network_param.polyline_resampling_step, road_network_param
         )
 
         clcs_large_step = cls._create_variable_step_clcs_from_reference(
-            ref_path, road_network_param.large_resampling_step, road_network_param
+            new_ref_path, road_network_param.large_resampling_step, road_network_param
         )
 
         return cls(clcs, clcs_large_step)
@@ -120,11 +124,20 @@ class VariableStepCurvilinearCoordinateSystem:
     def _create_variable_step_clcs_from_reference(
         ref_path: np.ndarray, resampling_step: float, road_network_param: RoadNetworkParam
     ) -> CurvilinearCoordinateSystem:
-        new_ref_path = chaikins_corner_cutting(
-            ref_path, road_network_param.num_chankins_corner_cutting
-        )
+        """
+        Create the internal curvilinear coordinate systems based on the reference path.
 
-        new_ref_path = resample_polyline(new_ref_path, resampling_step)
+        :param ref_path: Reference polyline for the curvilinear coordinate system.
+        :param resampling_step: Step with which the reference path is resampled.
+        :param road_network_param: Additional parameters used to construct the curvilinear coordinate system.
+
+        :returns: A new `CurvilinearCoordinateSystem` for the reference path.
+        """
+        # The path has to be pre-processed before the curvilinear coordinate system can be constructed.
+        # `CurvilinearCoordinateSystem` enforces a maximum allowed orientation difference, which
+        # is frequently exceeded due to the merging of lanelets.
+        # By resampling the polyline we make sure that the polyline is valid.
+        new_ref_path = resample_polyline(ref_path, resampling_step)
 
         curvilinear_cosy = CurvilinearCoordinateSystem(
             new_ref_path,
