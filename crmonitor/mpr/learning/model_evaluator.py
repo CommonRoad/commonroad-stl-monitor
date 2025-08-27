@@ -26,8 +26,8 @@ class EvaluationMetrics:
     y_test: npt.NDArray[np.float64]
     y_pred: npt.NDArray[np.float64]
     size: int
-    bool_pred: npt.NDArray[np.bool]
-    bool_gt: npt.NDArray[np.bool]
+    bool_pred: npt.NDArray[np.bool_]
+    bool_gt: npt.NDArray[np.bool_]
     TP: int
     FP: int
     FN: int
