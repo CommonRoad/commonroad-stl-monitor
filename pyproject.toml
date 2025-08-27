@@ -10,7 +10,7 @@ dependencies = [
     "commonroad-route-planner (>=2025.1.0,<2026.0.0)",
     "commonroad-clcs (>=2025.1.1,<2026.0.0)",
     "commonroad-drivability-checker (>=2025.1,<2026.0.0)",
-    "matplotlib (>=3.10.1)", # Although it makes more sense to include matplotlib in the visualization extra, it is used quite extensively throught the library and the codebase is not yet modular enough for this dependency to be optional.
+    "matplotlib (>=3.5,<4.0)", # Although it makes more sense to include matplotlib in the visualization extra, it is used quite extensively throught the library and the codebase is not yet modular enough for this dependency to be optional.
     "typing-extensions (>=4.14.0,<5.0.0)",
     "pandas (>=2.3.0,<3.0.0)",
     # TODO: The following mpr dependencies are quite heavy. Maybe we can move them to an extra, to make the installation more lightweight for non-mpr use cases.
