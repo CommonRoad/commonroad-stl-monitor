@@ -1,10 +1,7 @@
 import copy
 import logging
-import shelve
-import warnings
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional, Set, Union
+from typing import Optional, Set
 
 import numpy as np
 from commonroad.common.solution import PlanningProblemSolution, vehicle_parameters
@@ -39,7 +36,6 @@ class World:
     vehicles: set[Vehicle]
     road_network: RoadNetwork
     scenario: Scenario | None = None
-    cache: Union[None, shelve.Shelf, dict] = None
 
     @classmethod
     def create_from_solution(
@@ -77,22 +73,11 @@ class World:
         ego_vehicle = world.vehicle_by_id(obstacle.obstacle_id)
         return world, ego_vehicle
 
-    def _warn_persistent_cache(self):
-        if len(self.controlled_vehicle_ids) > 0 and isinstance(self.cache, shelve.Shelf):
-            warnings.warn(
-                "Using controlled vehicles with persistent caching may result in inconsistent caches and is therfore discouraged!"
-            )
-
-    def __post_init__(self):
-        self._warn_persistent_cache()
-
     def add_vehicle(self, vehicle: Vehicle):
         self.vehicles.add(vehicle)
-        self._warn_persistent_cache()
 
     def remove_vehicle(self, vehicle: Vehicle):
         self.vehicles.remove(vehicle)
-        self._warn_persistent_cache()
 
     @classmethod
     def create_from_scenario(
@@ -100,7 +85,6 @@ class World:
         scenario: Scenario,
         config: WorldConfig | None = None,
         road_network: RoadNetwork | None = None,
-        cache_dir=None,
     ) -> "World":
         if config is None:
             config = WorldConfig()
@@ -111,12 +95,6 @@ class World:
             )
         else:
             road_network = road_network
-
-        if cache_dir is not None:
-            cache_file = Path(cache_dir) / f"{scenario.scenario_id}"
-            cache = shelve.open(str(cache_file), writeback=True)
-        else:
-            cache = {}
 
         vehicles = set()
         for obs in filter(
@@ -169,7 +147,7 @@ class World:
                         scenario_type=config.scenario_type,
                     )
                 )
-        return cls(vehicles, road_network, scenario, cache)
+        return cls(vehicles, road_network, scenario)
 
     @property
     def controlled_vehicle_ids(self) -> Set[int]:
@@ -273,8 +251,3 @@ class World:
             return self.scenario.dt
         else:
             return 0.1
-
-    def __del__(self):
-        if isinstance(self.cache, shelve.Shelf):
-            logging.info("Cache close!")
-            self.cache.close()
