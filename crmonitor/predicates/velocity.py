@@ -7,6 +7,7 @@ import numpy as np
 from commonroad.scenario.obstacle import ObstacleType
 from commonroad.scenario.traffic_sign import SupportedTrafficSignCountry
 from commonroad.scenario.traffic_sign_interpreter import TrafficSignInterpreter
+from typing_extensions import override
 
 from crmonitor.common.world import World
 from crmonitor.predicates.base import (
@@ -48,6 +49,7 @@ class GenericSpeedLimit(AbstractPredicate, ABC):
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float | None: ...
 
+    @override
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
@@ -70,9 +72,12 @@ class PredLaneSpeedLimit(GenericSpeedLimit):
         super().__init__(config)
         self.country = SupportedTrafficSignCountry(self.config.country)
 
-    def get_speed_limit(self, world, time_step, vehicle_ids):
+    @override
+    def get_speed_limit(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float | None:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids = vehicle.lanelet_assignment[time_step]
+        lanelet_ids = vehicle.lanelet_ids_at_time_step(time_step)
         ts_interpreter = TrafficSignInterpreter(self.country, world.road_network.lanelet_network)
         speed_limit = ts_interpreter.speed_limit(frozenset(lanelet_ids))
         return speed_limit

@@ -5,6 +5,7 @@ import matplotlib.colors
 import numpy as np
 from commonroad.common.util import subtract_orientations
 from matplotlib import pyplot as plt
+from typing_extensions import override
 
 from crmonitor.common.world import World
 from crmonitor.predicates import utils
@@ -126,7 +127,7 @@ class PredCutIn(AbstractPredicate):
         same_lane = self._same_lane_evaluator.evaluate_boolean(world, time_step, vehicle_ids)
         if not same_lane:
             return False
-        cutting_lane = cutting_vehicle.get_lane(time_step)
+        cutting_lane = cutting_vehicle.lane_at_time_step(time_step)
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
         d_p = cutted_lat.d
@@ -150,7 +151,7 @@ class PredCutIn(AbstractPredicate):
         )
         same_lane = self._same_lane_evaluator.evaluate_robustness(world, time_step, vehicle_ids)
 
-        cutting_lane = cutting_vehicle.get_lane(time_step)
+        cutting_lane = cutting_vehicle.lane_at_time_step(time_step)
         cutted_lat = cutted_vehicle.get_lat_state(time_step, cutting_lane)
         cutting_lat = cutting_vehicle.get_lat_state(time_step)
         r_l_dist = cutted_lat.d - cutting_lat.d
@@ -489,18 +490,22 @@ class PredMakesUTurn(AbstractPredicate):
     predicate_name = GeneralPredicates.MakesUTurn
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
-        for la in lanes:
-            if self.config.u_turn <= abs(vehicle.get_lat_state(time_step, la).theta):
+        lanes = vehicle.lanes_at_time_step(time_step)
+        for lane in lanes:
+            if self.config.u_turn <= abs(vehicle.get_lat_state(time_step, lane).theta):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         robustness_values = []
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(vehicle.lanelet_assignment[time_step])
+        lanes = vehicle.lanes_at_time_step(time_step)
         for la in lanes:
             robustness_values.append(
                 self._scale_angle(

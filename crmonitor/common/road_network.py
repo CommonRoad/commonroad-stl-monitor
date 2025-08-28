@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Union
 
@@ -471,7 +472,7 @@ class RoadNetwork:
 
         return lane_ids
 
-    def find_lane_ids_by_lanelets(self, lanelets: Set[int]) -> Set[int]:
+    def find_lane_ids_by_lanelets(self, lanelets: Iterable[int]) -> set[int]:
         """
         Finds the lanes given set of lanelets belong to and returns their IDs
 
@@ -486,7 +487,7 @@ class RoadNetwork:
 
         return lane_ids
 
-    def find_lanes_by_lanelets(self, lanelets: Set[int]) -> Set[Lane]:
+    def find_lanes_by_lanelets(self, lanelets: Iterable[int]) -> set[Lane]:
         """
         Finds the lanes to which a given set of lanelets belongs to
 
