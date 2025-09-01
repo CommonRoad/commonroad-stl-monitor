@@ -37,7 +37,7 @@ road_network_param:
 ego_vehicle_param:
   vehicle_number: 2
   a_max: 3
-  a_min: -10.0
+  a_min: -6
   a_corr: 0.0
   j_max: 10
   j_min: -10
@@ -71,7 +71,7 @@ other_vehicles_param:
   v_max: 60
   v_min: 0
   a_max: 5
-  a_min: -10.5
+  a_min: -12
   j_max: 10
   j_min: -10
   t_react: 0.4   # for safe distance calculation of preceding vehicles
