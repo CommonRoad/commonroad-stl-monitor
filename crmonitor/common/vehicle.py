@@ -18,7 +18,6 @@ from shapely.geometry import Point, Polygon
 from crmonitor.common.road_network import Lane, RoadNetwork
 
 from commonroad_route_planner.route_planner import RoutePlanner
-from commonroad_route_planner.route import Route
 from commonroad.planning.goal import GoalRegion
 from commonroad.common.util import Interval, AngleInterval
 from commonroad.geometry.shape import Rectangle
