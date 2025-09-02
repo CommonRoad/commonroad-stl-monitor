@@ -534,11 +534,16 @@ class Vehicle:
         else:
             signal_series = None
 
-        states_cr = {
-            state.time_step: state
-            for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
-        }
+        # A dynamic obstacle might not have a trajectory prediction.
+        # Then the resulting states only consist of the initial state.
+        state_list = []
+        if isinstance(obstacle.prediction, TrajectoryPrediction):
+            state_list = obstacle.prediction.trajectory.state_list
 
+        states_cr = {state.time_step: state for state in [obstacle.initial_state] + state_list}
+
+        # If the obstacle already has lanelet assignments (e.g., because `CommonRoadFileReader`
+        #  was invoked with `lanelet_assignment=True`), those can be used to speed up processing.
         lanelet_assignment = None
         if (
             isinstance(obstacle.prediction, TrajectoryPrediction)
