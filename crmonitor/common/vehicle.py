@@ -747,7 +747,7 @@ class Vehicle:
             lane = self._road_network.find_lane_by_id(lane_id)
             if lane is None:
                 raise RuntimeError(
-                    f"Invalid lane assignment at time step {time_step}: lane {lane_id} is not part of the road network"
+                    f"Invalid lane assignment for vehicle {self.id} at time step {time_step}: lane {lane_id} is not part of the road network"
                 )
 
             lanes.add(lane)

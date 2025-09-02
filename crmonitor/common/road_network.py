@@ -483,7 +483,7 @@ class RoadNetwork:
         for lane in self.lanes:
             for lanelet_id in lanelets:
                 if lanelet_id in lane.contained_lanelets:
-                    lane_ids.add(lane.lanelet.lanelet_id)
+                    lane_ids.add(lane.lane_id)
 
         return lane_ids
 
