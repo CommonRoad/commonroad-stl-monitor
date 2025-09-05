@@ -44,7 +44,8 @@ dev = [
 [tool.poetry]
 packages = [
     {include = "crmonitor"},
-    # Vendor rtamt to let omegaconf decide on the antlr version.
+    # Vendor rtamt directly to let omegaconf decide on the antlr version.
+    # Also, the new rtamt versions (>3.5.0) are not published on PyPI.
     { from = "external/rtamt", include = "rtamt" }
 ]
 
