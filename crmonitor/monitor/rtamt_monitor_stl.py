@@ -1,18 +1,24 @@
+from abc import ABC, abstractmethod
 from enum import Enum
 from functools import lru_cache
-from typing import Callable, Iterable, List, Tuple
+from typing import Callable, Iterable, TypeVar
 
 import rtamt
-from rtamt.pastifier.stl.pastifier import StlPastifier
 from rtamt.spec.abstract_specification import (
-    AbstractOfflineOnlineSpecification,
+    AbstractOfflineSpecification,
+    AbstractOnlineSpecification,
+    AbstractSpecification,
 )
 from rtamt.syntax.ast.parser.abstract_ast_parser import AbstractAst
 from rtamt.syntax.ast.parser.stl.specification_parser import StlAst
+from typing_extensions import Self, override
 
 from crmonitor.rule.rule_node import IOType, PredicateNode, RtamtRuleNode
 
-from .specification_dict import stl_discrete_time_online_specification_factory
+from .specification_dict import (
+    stl_discrete_time_offline_specification_factory,
+    stl_discrete_time_online_specification_factory,
+)
 
 
 class OutputType(Enum):
@@ -48,10 +54,10 @@ def _parse_rtamt_formula(formula: str, predicates: Iterable[tuple[str, IOType]])
 
     ast.parse()
 
-    pastifier = StlPastifier()
-    pastified_ast = pastifier.pastify(ast)
+    return ast
 
-    return pastified_ast
+
+_T = TypeVar("_T", bound=AbstractSpecification)
 
 
 def _create_rtamt_spec(
@@ -60,9 +66,9 @@ def _create_rtamt_spec(
     predicates: Iterable[tuple[str, IOType]],
     dt: float,
     spec_factory: Callable[
-        [rtamt.Semantics, AbstractAst], AbstractOfflineOnlineSpecification
+        [rtamt.Semantics, AbstractAst], _T
     ] = stl_discrete_time_online_specification_factory,
-) -> AbstractOfflineOnlineSpecification:
+) -> _T:
     """Creates a fresh STL spec with a unique online interpreter.
 
     :param formula: The formula for which this spec is created.
@@ -81,17 +87,28 @@ def _create_rtamt_spec(
 
     spec.set_sampling_period(dt, "s")
 
-    spec.online_interpreter.set_ast(spec.ast)
-    spec.offline_interpreter.set_ast(spec.ast)
-
     return spec
 
 
-class RtamtStlMonitor:
+class AbstractRtamtStlMonitor(ABC):
+    """
+    A wrapper around a RTAMT spec.
+
+    Can be implemented to provide specific evaluation logic for a RTAMT spec, e.g., online/offline evaluation.
+    """
+
+    _rule: str
+    _predicates: list[tuple[str, IOType]]
+    _dt: float
+    _output_type: OutputType
+
     @classmethod
     def create_from_rule_node(
         cls, rule_node: RtamtRuleNode, dt: float, output_type: OutputType = OutputType.STANDARD
-    ):
+    ) -> Self:
+        """
+        Create a new monitor from a given RTAMT node.
+        """
         predicates = [
             (
                 c.name,
@@ -103,38 +120,103 @@ class RtamtStlMonitor:
         ]
         return cls(rule_node.rule_str, predicates, dt, output_type)
 
-    def __init__(self, rule_str, predicates, dt, output_type=OutputType.STANDARD):
+    def __init__(
+        self,
+        rule_str: str,
+        predicates: list[tuple[str, IOType]],
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+    ):
         self._rule = rule_str
         self._predicates = predicates
-        self._output_type = output_type
         self._dt = dt
-
-        self._spec = _create_rtamt_spec(rule_str, output_type, predicates, dt)
-
-        self._once_online_evaluated = False
+        self._output_type = output_type
 
     @property
     def dt(self) -> float:
         return self._dt
 
     @property
-    def ast_node_values(self) -> dict[str, float]:
-        if not self._once_online_evaluated:
-            return self._spec.offline_interpreter.ast_node_values
-        else:
-            return self._spec.online_interpreter.updateVisitor.ast_node_values
+    @abstractmethod
+    def ast_node_values(self) -> dict[str, float]: ...
 
-    def evaluate_monitor_online(self, time_step: int, predicates: List[Tuple[str, float]]) -> float:
+    @abstractmethod
+    def evaluate_monitor_online(
+        self, time_step: int, predicates: list[tuple[str, float]]
+    ) -> float: ...
+
+    @abstractmethod
+    def evaluate_monitor_offline(
+        self, predicates: list[tuple[str, list[float]]]
+    ) -> list[float]: ...
+
+    def __deepcopy__(self, memo):
+        return type(self)(self._rule, self._predicates, self.dt, self._output_type)
+
+    def reset(self) -> None:
+        self._spec.reset()
+
+
+class OnlineRtamtStlMonitor(AbstractRtamtStlMonitor):
+    _spec: AbstractOnlineSpecification
+
+    def __init__(
+        self,
+        rule_str: str,
+        predicates: list[tuple[str, IOType]],
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+    ) -> None:
+        super().__init__(rule_str, predicates, dt, output_type)
+
+        self._spec = _create_rtamt_spec(
+            rule_str, output_type, predicates, dt, stl_discrete_time_online_specification_factory
+        )
+
+    @property
+    @override
+    def ast_node_values(self) -> dict[str, float]:
+        return self._spec.online_interpreter.updateVisitor.ast_node_values
+
+    @override
+    def evaluate_monitor_online(self, time_step: int, predicates: list[tuple[str, float]]) -> float:
         time = time_step * self.dt
         rob: float = self._spec.update(time, predicates)
 
-        self._once_online_evaluated = True
-
         return rob
 
-    def evaluate_monitor_offline(
-        self, predicates: list[tuple[str, list[float]]], marker: str | None = None
-    ) -> list[float]:
+    @override
+    def evaluate_monitor_offline(self, predicates: list[tuple[str, list[float]]]) -> list[float]:
+        raise RuntimeError("Cannot evaluate `OnlineRtamtStlMonitor` in offline mode")
+
+
+class OfflineRtamtStlMonitor(AbstractRtamtStlMonitor):
+    _spec: AbstractOfflineSpecification
+
+    def __init__(
+        self,
+        rule_str: str,
+        predicates: list[tuple[str, IOType]],
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+    ) -> None:
+        super().__init__(rule_str, predicates, dt, output_type)
+
+        self._spec = _create_rtamt_spec(
+            rule_str, output_type, predicates, dt, stl_discrete_time_offline_specification_factory
+        )
+
+    @property
+    @override
+    def ast_node_values(self) -> dict[str, float]:
+        return self._spec.offline_interpreter.ast_node_values
+
+    @override
+    def evaluate_monitor_online(self, time_step: int, predicates: list[tuple[str, float]]) -> float:
+        raise RuntimeError("Cannot evaluate `OfflineRtamtStlMonitor` in online mode")
+
+    @override
+    def evaluate_monitor_offline(self, predicates: list[tuple[str, list[float]]]) -> list[float]:
         max_time = 0
         dataset = {}
         for i, (predicate_name, values) in enumerate(predicates):
@@ -149,12 +231,3 @@ class RtamtStlMonitor:
 
         # The robustness values are of the form [[time_step, robustness_value], [time_step + 1, robustness_value]]
         return [entry[1] for entry in robustness_values]
-
-    def __deepcopy__(self, memo):
-        return type(self)(self._rule, self._predicates, self.dt, self._output_type)
-
-    def reset(self) -> None:
-        # We only need to reset the spec, if we performed online evaluations.
-        if self._once_online_evaluated:
-            self._once_online_evaluated = False
-            self._spec.reset()

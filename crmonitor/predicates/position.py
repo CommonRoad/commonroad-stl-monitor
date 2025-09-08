@@ -91,6 +91,7 @@ class PredInSameLane(AbstractPredicate):
         True: Minimum lateral displacement to not be in the same lane anymore
         False: Minimum distance to lanes of other
         """
+
         vehicle_k = world.vehicle_by_id(vehicle_ids[0])
         vehicle_p = world.vehicle_by_id(vehicle_ids[1])
 
@@ -644,6 +645,7 @@ class PredInRightmostLane(AbstractPredicate):
                 return True
         return False
 
+    @override
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
@@ -676,7 +678,8 @@ class PredInLeftmostLane(AbstractPredicate):
     predicate_name = PositionPredicates.InLeftmostLane
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
@@ -685,13 +688,17 @@ class PredInLeftmostLane(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         leftmost_lanelet_ids = [
             lanelet.lanelet_id
             for lanelet in world.road_network.lanelet_network.lanelets
             if lanelet.adj_left_same_direction is None
         ]
+
         dis_to_lane = distance_to_lanes(vehicle, leftmost_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
 
@@ -902,8 +909,7 @@ class PredDrivesRightmost(AbstractPredicate):
             ):
                 return True
 
-        lanelet_ids_occ = ego_vehicle.lanelet_assignment[time_step]
-        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        lanes = ego_vehicle.lanes_at_time_step(time_step)
         for lane in lanes:
             right_position = ego_vehicle.right_d(time_step, lane)
             s_ego = ego_vehicle.get_lon_state(time_step, lane).s
@@ -912,15 +918,17 @@ class PredDrivesRightmost(AbstractPredicate):
 
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         other_vehicles = [
             world.vehicle_by_id(v_id)
             for v_id in world.vehicle_ids_for_time_step(time_step)
             if v_id != vehicle.id
         ]
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
-        lanes = world.road_network.find_lanes_by_lanelets(lanelet_ids_occ)
+        lanes = vehicle.lanes_at_time_step(time_step)
         lane_bound_dist = np.inf
         for lane in lanes:
             dists_to_right_bounds = map(
@@ -944,9 +952,13 @@ class PredCloseToLeftBound(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToLeftBound
     arity = 1
 
-    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(ego_vehicle.lanelet_assignment[time_step])
+        assert ego_vehicle is not None
+        lanes = ego_vehicle.lanes_at_time_step(time_step)
 
         dist = np.inf
         for lane in lanes:
@@ -961,16 +973,20 @@ class PredCloseToRightBound(AbstractPredicate):
     predicate_name = PositionPredicates.CloseToRightBound
     arity = 1
 
-    def evaluate_robustness(self, world: World, time_step: int, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         ego_vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanes = world.road_network.find_lanes_by_lanelets(ego_vehicle.lanelet_assignment[time_step])
+        assert ego_vehicle is not None
+
+        lanes = ego_vehicle.lanes_at_time_step(time_step)
 
         dist = np.inf
         for lane in lanes:
             dists_to_right_bounds = map(
                 abs, distance_to_right_bounds_clcs(ego_vehicle, lane, time_step)
             )
-
             dist = min(min(dists_to_right_bounds), dist)
         return self._scale_lat_dist(self.config.close_to_lane_border - dist)
 

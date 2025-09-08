@@ -63,9 +63,10 @@ def distance_to_right_bounds(
 
 
 def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
-    state = vehicle_i.states_cr[time_step]
+    state = vehicle_i.get_cr_state(time_step)
     occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
     lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
+
     left_bounds = tuple(
         [
             lanelet.left_vertices
@@ -94,11 +95,22 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
     return d_left, d_right
 
 
-def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world, time_step):
-    d_left, d_right = distance_to_bounds(vehicle_i, lanelet_ids, world, time_step)
-    d_left = -np.min(d_left) if d_left.size > 0 else np.inf
-    d_right = np.max(d_right) if d_right.size > 0 else np.inf
-    return np.fmin(d_left, d_right)
+def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
+    state = vehicle_i.get_cr_state(time_step)
+    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
+
+    lanes = [world.road_network.find_lane_by_lanelet(lanelet_id) for lanelet_id in lanelet_ids]
+
+    d_left = -np.inf
+    d_right = -np.inf
+    for lane in lanes:
+        for point in occ_points:
+            min_left = lane.distance_to_left(*point)
+            min_right = lane.distance_to_right(*point)
+            d_left = max(min_left, d_left)
+            d_right = max(min_right, d_right)
+
+    return min(d_left, d_right)
 
 
 def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:

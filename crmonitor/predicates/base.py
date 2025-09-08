@@ -21,7 +21,7 @@ class PredicateConfig:
 
     min_interstate_width: float = 7.0
 
-    max_congestion_velocity: float = 2.78
+    max_congestion_velocity: float = 4
     """Determines the velocity of vehicles, when they are considered in congestion. Used for the predicates `PredInCongestion` and `PredHasCongestionVelocity`."""
 
     num_veh_congestion: float = 3.0

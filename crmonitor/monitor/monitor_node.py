@@ -7,7 +7,7 @@ from typing import Dict, Generic, Optional, TypeVar
 
 from rtamt.semantics.interval.interval import Interval as RtamtInterval
 
-from crmonitor.monitor.rtamt_monitor_stl import RtamtStlMonitor
+from crmonitor.monitor.rtamt_monitor_stl import AbstractRtamtStlMonitor
 from crmonitor.rule.rule_node import IOType
 
 
@@ -137,7 +137,7 @@ class RtamtRuleMonitorNode(VaradicMonitorNode):
     """
 
     def __init__(
-        self, name: str, children: Iterable[MonitorNode], monitor: RtamtStlMonitor
+        self, name: str, children: Iterable[MonitorNode], monitor: AbstractRtamtStlMonitor
     ) -> None:
         super().__init__(name, tuple(children))
         self.monitor = monitor
@@ -145,10 +145,8 @@ class RtamtRuleMonitorNode(VaradicMonitorNode):
     def update(self, time: int, values: list[tuple[str, float]]) -> float:
         return self.monitor.evaluate_monitor_online(time, values)
 
-    def evaluate(
-        self, values: list[tuple[str, list[float]]], marker: Optional[str] = None
-    ) -> list[float]:
-        return self.monitor.evaluate_monitor_offline(values, marker)
+    def evaluate(self, values: list[tuple[str, list[float]]]) -> list[float]:
+        return self.monitor.evaluate_monitor_offline(values)
 
     def __deepcopy__(self, memo):
         return type(self)(

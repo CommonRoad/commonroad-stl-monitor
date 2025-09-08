@@ -178,7 +178,7 @@ class SinglePredicateEvaluationInterface:
             return None
 
         return self._satisfied_predicate_cache.get_at_time_step(
-            time_step, (world.scenario.scenario_id, vehicle_ids)
+            time_step, (world.scenario_id, self.predicate_name, vehicle_ids)
         )
 
     def _set_bool_predicate_cache_entry(
@@ -189,7 +189,7 @@ class SinglePredicateEvaluationInterface:
 
         self._robustness_predicate_cache.set_at_time_step(
             time_step,
-            (world.scenario.scenario_id, vehicle_ids),
+            (world.scenario_id, self.predicate_name, vehicle_ids),
             satisfied,
         )
 
@@ -200,7 +200,7 @@ class SinglePredicateEvaluationInterface:
         _LOGGER.debug(
             "Evaluating predicate %s on %s at time step %s for vehicles %s with model-predictive robustness",
             self.predicate_name,
-            world.scenario.scenario_id,
+            world.scenario_id,
             time_step,
             vehicle_ids,
         )
@@ -220,7 +220,7 @@ class SinglePredicateEvaluationInterface:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with gaussian processes.",
                 self.predicate_name,
-                world.scenario.scenario_id,
+                world.scenario_id,
                 time_step,
                 vehicle_ids,
             )
@@ -246,7 +246,7 @@ class SinglePredicateEvaluationInterface:
             _LOGGER.debug(
                 "Evaluating predicate %s on %s at time step %s for vehicles %s with model-free robustness",
                 self.predicate_name,
-                world.scenario.scenario_id,
+                world.scenario_id,
                 time_step,
                 vehicle_ids,
             )
@@ -265,7 +265,7 @@ class SinglePredicateEvaluationInterface:
             return None
 
         return self._robustness_predicate_cache.get_at_time_step(
-            time_step, (world.scenario.scenario_id, vehicle_ids, float)
+            time_step, (world.scenario_id, self.predicate_name, vehicle_ids)
         )
 
     def _set_float_predicate_cache_entry(
@@ -276,7 +276,7 @@ class SinglePredicateEvaluationInterface:
 
         self._robustness_predicate_cache.set_at_time_step(
             time_step,
-            (world.scenario.scenario_id, vehicle_ids, float),
+            (world.scenario_id, self.predicate_name, vehicle_ids),
             robustness,
         )
 

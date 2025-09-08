@@ -42,6 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class RuleEvaluatorInterface(ABC):
+    _monitor: MonitorNode
+
     @classmethod
     def create_for_rule(
         cls,
@@ -100,9 +102,6 @@ class RuleEvaluatorInterface(ABC):
         self._predicate_interface_config = predicate_interface_config
         self._dt = dt
 
-        monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
-        self._monitor = monitor_creation_visitor.visit(self._rule, self._dt, output_type)
-
     @property
     def monitor(self) -> MonitorNode:
         """The root node of the STL monitor tree."""
@@ -147,6 +146,20 @@ class OfflineRuleEvaluator(RuleEvaluatorInterface):
     """
     Stateless rule evaluator, which evaluates traffic rules in offline mode.
     """
+
+    def __init__(
+        self,
+        rule: RuleAstNode,
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+        predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
+    ) -> None:
+        super().__init__(rule, dt, output_type, predicate_interface_config)
+
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
+        self._monitor = monitor_creation_visitor.visit(
+            self._rule, self._dt, output_type, online=False
+        )
 
     @override
     def evaluate(
@@ -205,6 +218,11 @@ class OnlineRuleEvaluator(RuleEvaluatorInterface):
         predicate_interface_config: PredicateEvaluationInterfaceConfig = PredicateEvaluationInterfaceConfig(),
     ) -> None:
         super().__init__(rule, dt, output_type, predicate_interface_config)
+
+        monitor_creation_visitor = MonitorCreationRuleTreeVisitor()
+        self._monitor = monitor_creation_visitor.visit(
+            self._rule, self._dt, output_type, online=True
+        )
 
         # Create the evaluation interface for the predicates in the traffic rule.
         self._predicate_evaluation_interface = PredicateEvaluationInterface(

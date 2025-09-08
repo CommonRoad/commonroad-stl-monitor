@@ -9,7 +9,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.scenario.obstacle import DynamicObstacle
-from commonroad.scenario.scenario import ObstacleType, Scenario
+from commonroad.scenario.scenario import ObstacleType, Scenario, ScenarioID
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_dc.feasibility.solution_checker import (
     _simulate_trajectory_if_input_vector,
@@ -248,3 +248,10 @@ class World:
             return self.scenario.dt
         else:
             return 0.1
+
+    @property
+    def scenario_id(self) -> ScenarioID:
+        if self.scenario is not None:
+            return self.scenario.scenario_id
+        else:
+            return ScenarioID()
