@@ -95,22 +95,51 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
     return d_left, d_right
 
 
-def distance_to_lanes(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
+def distance_to_lanes(
+    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step: int
+) -> float:
+    """
+    Determine the minimum distance the vehicle would not to move, to either no longer occupy the lanes or to occupy at least one of the lanes.
+    """
     state = vehicle_i.get_cr_state(time_step)
     occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
 
-    lanes = [world.road_network.find_lane_by_lanelet(lanelet_id) for lanelet_id in lanelet_ids]
+    target_lanes = {
+        world.road_network.find_lane_by_lanelet(lanelet_id) for lanelet_id in lanelet_ids
+    }
 
-    d_left = -np.inf
-    d_right = -np.inf
-    for lane in lanes:
-        for point in occ_points:
-            min_left = lane.distance_to_left(*point)
-            min_right = lane.distance_to_right(*point)
-            d_left = max(min_left, d_left)
-            d_right = max(min_right, d_right)
+    if len(target_lanes) == 0:
+        return -np.inf
 
-    return min(d_left, d_right)
+    occupied_lanes = vehicle_i.lanes_at_time_step(time_step)
+    occupied_target_lanes = occupied_lanes.intersection(target_lanes)
+    if len(occupied_target_lanes) > 0:
+        min_distance = np.inf
+        for lane in occupied_target_lanes:
+            _, max_dist_left = lane.min_max_distance_to_left(occ_points)
+            _, max_dist_right = lane.min_max_distance_to_right(occ_points)
+            min_distance = min(max_dist_left, max_dist_right, min_distance)
+
+        return min_distance
+    else:
+        min_distance = np.inf
+        for lane in target_lanes:
+            lane_min_distance = np.inf
+            for point in occ_points:
+                d_left = lane.distance_to_left(*point)
+                d_right = lane.distance_to_right(*point)
+
+                if abs(d_left) <= abs(d_right):
+                    point_min_distance = d_left
+                else:
+                    point_min_distance = d_right
+
+                if abs(point_min_distance) <= abs(lane_min_distance):
+                    lane_min_distance = point_min_distance
+
+            min_distance = min(lane_min_distance, min_distance)
+
+        return min_distance
 
 
 def lanelets_left_of_lanelet(lanelet: Lanelet, lanelet_network: LaneletNetwork) -> Set[Lanelet]:
@@ -159,7 +188,7 @@ def lanelets_left_of_vehicle(
     :returns set of lanelet objects
     """
     left_lanelets = set()
-    occupied_lanelets = vehicle.lanelet_assignment[time_step]
+    occupied_lanelets = vehicle.lanelet_ids_at_time_step(time_step)
     for occ_l in occupied_lanelets:
         new_lanelets = lanelets_left_of_lanelet(
             lanelet_network.find_lanelet_by_id(occ_l), lanelet_network
@@ -182,7 +211,7 @@ def lanelets_right_of_vehicle(
     :returns set of lanelet objects
     """
     right_lanelets = set()
-    occupied_lanelets = vehicle.lanelet_assignment[time_step]
+    occupied_lanelets = vehicle.lanelet_ids_at_time_step(time_step)
     for occ_l in occupied_lanelets:
         new_lanelets = lanelets_right_of_lanelet(
             lanelet_network.find_lanelet_by_id(occ_l), lanelet_network

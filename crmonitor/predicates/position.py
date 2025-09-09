@@ -478,9 +478,11 @@ class PredLeftOfBroadLaneMarking(AbstractPredicate):
     predicate_name = PositionPredicates.LeftOfBroadLaneMarking
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
+        print(lanelet_ids_occ)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
@@ -500,9 +502,12 @@ class PredLeftOfBroadLaneMarking(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
@@ -623,9 +628,12 @@ class PredInRightmostLane(AbstractPredicate):
     predicate_name = PositionPredicates.InRightmostLane
     arity = 1
 
+    @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        assert vehicle is not None
+
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
@@ -666,6 +674,7 @@ class PredInRightmostLane(AbstractPredicate):
                 )
             )
         ]
+
         dis_to_lane = distance_to_lanes(vehicle, rightmost_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
 
@@ -681,7 +690,9 @@ class PredInLeftmostLane(AbstractPredicate):
     @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        assert vehicle is not None
+
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if lanelet.adj_left_same_direction is None:
@@ -711,7 +722,8 @@ class PredMainCarriageWayRightLane(AbstractPredicate):
     predicate_name = PositionPredicates.MainCarriagewayRightLane
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
         for l_id in lanelet_ids_occ:
@@ -726,7 +738,10 @@ class PredMainCarriageWayRightLane(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         main_carriageway_right_lanelet_ids = [
             lanelet.lanelet_id

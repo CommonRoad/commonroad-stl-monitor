@@ -1,3 +1,7 @@
+"""
+This module provides special visitors for RTAMT to enable recording of the robustness values during  evaluation.
+"""
+
 import rtamt
 from rtamt.pastifier.stl.pastifier import StlPastifier
 from rtamt.semantics.abstract_discrete_time_offline_interpreter import (
@@ -24,6 +28,12 @@ from rtamt.syntax.node.abstract_node import AbstractNode as RtamtAbstractNode
 
 
 class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
+    """
+    Custom visitor to collect the traces of all nodes in the RTAMT AST during online evaluation.
+
+    Use with `discrete_time_online_interpreter_factory` from RTAMT to create a new offline interpreter.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._ast_node_values = dict()
@@ -40,9 +50,10 @@ class DiscreteTimeOnlineUpdateVisitorDict(DiscreteTimeOnlineUpdateVisitor):
 
 class DiscreteTimeOfflineEvaluationVisitorDict(StlDiscreteTimeOfflineAstVisitor):
     """
-    Custom visitor to collect the traces of all nodes in the rtamt AST. This visitor is used for the standard STL semantics, for IA-STL semantics use `IAStlDiscreteTimeOfflineEvaluationVisitorDict`.
+    Custom visitor to collect the traces of all nodes in the RTAMT AST during offline evaluation.
+    This visitor is used for the standard STL semantics, for IA-STL semantics use `IAStlDiscreteTimeOfflineEvaluationVisitorDict`.
 
-    Use with `discrete_time_offline_interpreter_factory` to create a new offline interpreter.
+    Use with `discrete_time_offline_interpreter_factory` from RTAMT to create a new offline interpreter.
     """
 
     @property
@@ -65,7 +76,7 @@ class IAStlDiscreteTimeOfflineEvaluationVisitorDict(
     IAStlOutputRobustnessDiscreteTimeOfflineAstVisitor
 ):
     """
-    Custom visitor to collect the traces of all nodes in the rtamt AST. This visitor is used for the IA-STL semantics, for standard STL semantics use `DiscreteTimeOfflineEvaluationVisitorDict`.
+    Custom visitor to collect the traces of all nodes in the RTAMT AST. This visitor is used for the IA-STL semantics, for standard STL semantics use `DiscreteTimeOfflineEvaluationVisitorDict`.
 
     Use with `discrete_time_offline_interpreter_factory` to create a new offline interpreter.
     """

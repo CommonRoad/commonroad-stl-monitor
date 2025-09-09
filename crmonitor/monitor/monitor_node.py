@@ -133,7 +133,7 @@ class RtamtRuleMonitorNode(VaradicMonitorNode):
 
     :param name: Unique name for the monitor node.
     :param children: Iterable of child monitor nodes.
-    :param monitor: RtamtStlMonitor instance for evaluation.
+    :param monitor: AbstractRtamtStlMonitor instance for evaluation.
     """
 
     def __init__(

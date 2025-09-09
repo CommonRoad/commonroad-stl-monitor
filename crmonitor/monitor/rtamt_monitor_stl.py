@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from enum import Enum
 from functools import lru_cache
 from typing import Callable, Iterable, TypeVar
@@ -69,7 +70,10 @@ def _create_rtamt_spec(
         [rtamt.Semantics, AbstractAst], _T
     ] = stl_discrete_time_online_specification_factory,
 ) -> _T:
-    """Creates a fresh STL spec with a unique online interpreter.
+    """Creates a fresh STL spec with a unique online/offline interpreter.
+
+    Custom spec factories can be provided to change what kind of spec is created.
+    This is useful to create online and offline specs through a similar interface.
 
     :param formula: The formula for which this spec is created.
     :param output_type: Output type for the spec.
@@ -138,7 +142,11 @@ class AbstractRtamtStlMonitor(ABC):
 
     @property
     @abstractmethod
-    def ast_node_values(self) -> dict[str, float]: ...
+    def ast_node_values(self) -> dict[str, list[float]]:
+        """
+        The robustness trace of all internal RTAMT nodes over of the last evaluation time steps.
+        """
+        ...
 
     @abstractmethod
     def evaluate_monitor_online(
@@ -151,13 +159,26 @@ class AbstractRtamtStlMonitor(ABC):
     ) -> list[float]: ...
 
     def __deepcopy__(self, memo):
+        """
+        Copy the monitor, but recreate the spec.
+        This ensures that we always start from a clean spec, and do not accidently copy
+        old values during online evaluation.
+        """
         return type(self)(self._rule, self._predicates, self.dt, self._output_type)
 
+    @abstractmethod
     def reset(self) -> None:
-        self._spec.reset()
+        """
+        Reset the monitor for re-evaluation.
+        """
+        ...
 
 
 class OnlineRtamtStlMonitor(AbstractRtamtStlMonitor):
+    """
+    A monitor for RTAMT STL formulas which supports online evaluation.
+    """
+
     _spec: AbstractOnlineSpecification
 
     def __init__(
@@ -172,16 +193,23 @@ class OnlineRtamtStlMonitor(AbstractRtamtStlMonitor):
         self._spec = _create_rtamt_spec(
             rule_str, output_type, predicates, dt, stl_discrete_time_online_specification_factory
         )
+        self._ast_node_values: dict[str, list[float]] = defaultdict(list)
 
     @property
     @override
-    def ast_node_values(self) -> dict[str, float]:
-        return self._spec.online_interpreter.updateVisitor.ast_node_values
+    def ast_node_values(self) -> dict[str, list[float]]:
+        return dict(self._ast_node_values)
 
     @override
     def evaluate_monitor_online(self, time_step: int, predicates: list[tuple[str, float]]) -> float:
         time = time_step * self.dt
         rob: float = self._spec.update(time, predicates)
+
+        for (
+            node_name,
+            node_rob,
+        ) in self._spec.online_interpreter.updateVisitor.ast_node_values.items():
+            self._ast_node_values[node_name].append(node_rob)
 
         return rob
 
@@ -189,8 +217,19 @@ class OnlineRtamtStlMonitor(AbstractRtamtStlMonitor):
     def evaluate_monitor_offline(self, predicates: list[tuple[str, list[float]]]) -> list[float]:
         raise RuntimeError("Cannot evaluate `OnlineRtamtStlMonitor` in offline mode")
 
+    @override
+    def reset(self) -> None:
+        self._spec.reset()
+
+        del self._ast_node_values
+        self._ast_node_values = defaultdict(list)
+
 
 class OfflineRtamtStlMonitor(AbstractRtamtStlMonitor):
+    """
+    A monitor for RTAMT STL formulas which supports offline evaluation.
+    """
+
     _spec: AbstractOfflineSpecification
 
     def __init__(
@@ -208,7 +247,7 @@ class OfflineRtamtStlMonitor(AbstractRtamtStlMonitor):
 
     @property
     @override
-    def ast_node_values(self) -> dict[str, float]:
+    def ast_node_values(self) -> dict[str, list[float]]:
         return self._spec.offline_interpreter.ast_node_values
 
     @override
@@ -231,3 +270,8 @@ class OfflineRtamtStlMonitor(AbstractRtamtStlMonitor):
 
         # The robustness values are of the form [[time_step, robustness_value], [time_step + 1, robustness_value]]
         return [entry[1] for entry in robustness_values]
+
+    @override
+    def reset(self) -> None:
+        # For offline evaluation, reset is a noop.
+        pass

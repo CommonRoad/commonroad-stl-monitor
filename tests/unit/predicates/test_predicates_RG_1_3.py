@@ -1,11 +1,12 @@
 import math
 import unittest
+import pytest
 
 import numpy as np
 from commonroad.geometry.shape import Rectangle
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import ObstacleType
-from commonroad.scenario.state import CustomState
+from commonroad.scenario.state import CustomState, State
 from commonroad.scenario.traffic_sign import (
     TrafficSign,
     TrafficSignElement,
@@ -149,7 +150,7 @@ class TestPredicate(unittest.TestCase):
         exp_sol_monitor_mode_5 = (
             3.0  # vehicles completely on same lane, but other vehicle is behind
         )
-        exp_sol_monitor_mode_6 = np.inf  # both vehicles in two lanes
+        exp_sol_monitor_mode_6 = 0.5  # both vehicles in two lanes
         exp_sol_monitor_mode_7 = 0.5  # ego vehicle less in right lane
         exp_sol_monitor_mode_8 = 1.5  # ego vehicle more in right lane
 

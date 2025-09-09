@@ -13,7 +13,7 @@ logging.basicConfig(
 
 class TestRulesIntersection:
     def test_R_IN1(self):
-        exp_violation_time_step = 24
+        exp_violation_time_step = 27
         world = IntersectionScenarios.R_IN1.get_world()
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN1", world.scenario.dt)

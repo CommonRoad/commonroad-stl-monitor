@@ -269,10 +269,8 @@ class TestRtamtRuleMonitorNode:
         mock_monitor = Mock()
         mock_monitor.evaluate_monitor_offline.return_value = [0.1, 0.2]
         node = RtamtRuleMonitorNode("rule", [], mock_monitor)
-        result = node.evaluate([("var", [1.0, 2.0])], "marker")
-        mock_monitor.evaluate_monitor_offline.assert_called_once_with(
-            [("var", [1.0, 2.0])], "marker"
-        )
+        result = node.evaluate([("var", [1.0, 2.0])])
+        mock_monitor.evaluate_monitor_offline.assert_called_once_with([("var", [1.0, 2.0])])
         assert result == [0.1, 0.2]
 
     def test_reset(self):

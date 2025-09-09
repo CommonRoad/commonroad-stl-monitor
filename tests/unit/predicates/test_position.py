@@ -405,22 +405,13 @@ class TestInterstatePositionPredicates:
             5: CustomState(position=[50, -2], time_step=5, orientation=0),
             6: CustomState(position=[60, -2], time_step=6, orientation=0),
         }
-        lanelet_assignments_ego = {
-            0: {1},
-            1: {2},
-            2: {3},
-            3: {4},
-            4: {5},
-            5: {2, 3},
-            6: {2, 3},
-        }
         ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(dt=0.1)
         return Vehicle(
             0,
             ObstacleType.CAR,
             Rectangle(5, 2),
             cr_state_list_ego,
-            lanelet_assignments_ego,
+            None,
             road_network,
             0.1,
             vehicle_param=ego_vehicle_param,
@@ -455,7 +446,7 @@ class TestInterstatePositionPredicates:
         [
             (0, False),
             (1, False),
-            (2, True),
+            (2, False),
             (3, True),
             (4, True),
             (5, False),
@@ -498,7 +489,7 @@ class TestInterstatePositionPredicates:
         "time_step, exp_violation",
         [
             (0, True),
-            (1, False),
+            (1, True),
             (2, False),
             (3, False),
             (4, False),
@@ -522,7 +513,7 @@ class TestInterstatePositionPredicates:
             (0, False),
             (1, False),
             (2, True),
-            (3, False),
+            (3, True),
             (4, False),
         ],
     )
@@ -554,16 +545,6 @@ class TestInterstatePositionPredicates:
         pred = PredMainCarriageWayRightLane()
         vehicle_ids = [ego_vehicle.id]
 
-        # # fix the lanelet assignment
-        for time, lanelet in ego_vehicle.lanelet_assignment.items():
-            shape = ego_vehicle.shape
-            state = ego_vehicle.states_cr[time]
-
-            ego_vehicle.lanelet_assignment[time] = (
-                road_network.lanelet_network.find_lanelet_by_shape(
-                    shape.rotate_translate_local(state.position, state.orientation)
-                )
-            )
         pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
         pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
         assert exp_violation == pred_satisfied
@@ -572,9 +553,9 @@ class TestInterstatePositionPredicates:
     @pytest.mark.parametrize(
         "time_step, exp_violation",
         [
-            (0, False),
-            (1, True),
-            (2, True),
+            (0, False),  # on shoulder
+            (1, True),  # on rightmost main carriage way
+            (2, True),  # on rightmost main carriage way
             (3, False),
             (4, False),
         ],
@@ -583,23 +564,12 @@ class TestInterstatePositionPredicates:
         world = World({ego_vehicle}, road_network)
 
         pred = PredInRightmostLane()
-        vehicle_ids = [ego_vehicle.id]
-
-        # fix the lanelet assignment
-        for time, lanelet in ego_vehicle.lanelet_assignment.items():
-            shape = ego_vehicle.shape
-            state = ego_vehicle.states_cr[time]
-
-            ego_vehicle.lanelet_assignment[time] = (
-                road_network.lanelet_network.find_lanelet_by_shape(
-                    shape.rotate_translate_local(state.position, state.orientation)
-                )
-            )
+        vehicle_ids = (ego_vehicle.id,)
 
         pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
         pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
         assert exp_violation == pred_satisfied
-        assert exp_violation == (pred_robustness > 0)
+        assert exp_violation == (pred_robustness >= 0)
 
     @pytest.mark.parametrize(
         "time_step,exp_violation",
@@ -615,21 +585,12 @@ class TestInterstatePositionPredicates:
         world = World({ego_vehicle}, road_network)
 
         pred = PredInLeftmostLane()
-        vehicle_ids = [ego_vehicle.id]
-        for time, lanelet in ego_vehicle.lanelet_assignment.items():
-            shape = ego_vehicle.shape
-            state = ego_vehicle.states_cr[time]
-
-            ego_vehicle.lanelet_assignment[time] = (
-                road_network.lanelet_network.find_lanelet_by_shape(
-                    shape.rotate_translate_local(state.position, state.orientation)
-                )
-            )
+        vehicle_ids = (ego_vehicle.id,)
 
         pred_satisfied = pred.evaluate_boolean(world, time_step, vehicle_ids)
         pred_robustness = pred.evaluate_robustness(world, time_step, vehicle_ids)
         assert exp_violation == pred_satisfied
-        assert exp_violation == (pred_robustness > 0)
+        assert exp_violation == (pred_robustness >= 0)
 
     def test_left_of(self, road_network):
         exp_sol_monitor_mode_1 = False  # other vehicle in left lane but not adjacent
