@@ -193,7 +193,7 @@ def vehicles_adjacent(
     :returns list of adjacent vehicles of a vehicle
     """
     vehicles_adj = []
-    lane_share = vehicle.get_lane(time_step)
+    lane_share = vehicle.lane_at_time_step(time_step)
     for veh in other_vehicles:
         if veh.get_lon_state(time_step, lane_share) is None:
             continue
@@ -229,7 +229,7 @@ def vehicles_left(time_step: int, vehicle: Vehicle, other_vehicles: List[Vehicle
     :returns list of vehicles left of a vehicle
     """
     vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
-    lane_share = vehicle.get_lane(time_step)
+    lane_share = vehicle.lane_at_time_step(time_step)
     vehicles_left = [
         veh
         for veh in vehicles_adj
@@ -249,7 +249,7 @@ def vehicle_directly_left(
     else:
         vehicle_directly_left = vehicle_left[0]
         for veh in vehicle_left:
-            lane_share = veh.get_lane(time_step)
+            lane_share = veh.lane_at_time_step(time_step)
             if (
                 veh.get_lat_state(time_step, lane_share).d
                 < vehicle_directly_left.get_lat_state(time_step, lane_share).d
@@ -270,7 +270,7 @@ def vehicles_right(
     :returns list of vehicles left of a vehicle
     """
     vehicles_adj = vehicles_adjacent(time_step, vehicle, other_vehicles)
-    lane_share = vehicle.get_lane(time_step)
+    lane_share = vehicle.lane_at_time_step(time_step)
     vehicles_right = [
         veh
         for veh in vehicles_adj
@@ -290,7 +290,7 @@ def vehicle_directly_right(
     else:
         vehicle_directly_right = vehicle_right[0]
         for veh in vehicle_right:
-            lane_share = veh.get_lane(time_step)
+            lane_share = veh.lane_at_time_step(time_step)
             if (
                 veh.get_lat_state(time_step, lane_share).d
                 > vehicle_directly_right.get_lat_state(time_step, lane_share).d

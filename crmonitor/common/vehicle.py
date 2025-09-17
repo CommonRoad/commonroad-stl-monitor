@@ -11,7 +11,7 @@ from commonroad.common.util import AngleInterval, Interval
 from commonroad.geometry.shape import Rectangle
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem
-from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType, TrajectoryPrediction
 from commonroad.scenario.state import CustomState, InitialState, InputState, State, TraceState
 from commonroad.scenario.trajectory import Trajectory
 from commonroad_clcs.clcs import CurvilinearCoordinateSystem
@@ -456,7 +456,7 @@ class Vehicle:
         obstacle_type: ObstacleType,
         shape,
         states_cr,
-        lanelet_assignment: dict[int, set[int]],
+        lanelet_assignment: dict[int, set[int]] | None,
         road_network: RoadNetwork,
         dt: float,
         signal_series=None,
@@ -470,13 +470,23 @@ class Vehicle:
         self.shape = shape
         self.states_cr = states_cr
         self.signal_series = signal_series
-        self.lanelet_assignment = lanelet_assignment
         self._road_network = road_network
         self._dt = dt
+
+        # Mappings to improve lookup speed for lanelet and lane queries.
+        # Currently, the two assignments are tracked separately to ensure compatability with old implementations,
+        # since those might directly access the lanelet assignments dict, and do not use the query
+        # methods from below.
+        if lanelet_assignment is not None:
+            self._lanelet_assignment = lanelet_assignment
+        else:
+            self._lanelet_assignment = self._initialize_lanelet_assignment()
+        self._lane_assignment: dict[int, set[int]] = dict()
 
         if vehicle_param is None:
             vehicle_param = VehicleParameters()
         self.vehicle_param = vehicle_param
+
         self._curvilinear_trajectories = {}
         self._start_time = min(map(lambda state: state.time_step, self.states_cr.values()))
         self._end_time = max(map(lambda state: state.time_step, self.states_cr.values()))
@@ -506,6 +516,10 @@ class Vehicle:
                 self.circle_radius,
             ) = self._initial_circle_approximation()
 
+    @property
+    def lanelet_assignment(self) -> dict[int, set[int]]:
+        return self._lanelet_assignment
+
     @classmethod
     def from_dynamic_obstacle(
         cls,
@@ -515,16 +529,27 @@ class Vehicle:
         scenario_type: ScenarioType = ScenarioType.INTERSTATE,
         vehicle_param: VehicleParameters | None = None,
     ) -> Self:
-        lanelet_assignment = obstacle.prediction.shape_lanelet_assignment.copy()
         if obstacle.signal_series is not None:
             signal_series = {state.time_step: state for state in obstacle.signal_series}
         else:
             signal_series = None
 
-        states_cr = {
-            state.time_step: state
-            for state in [obstacle.initial_state] + obstacle.prediction.trajectory.state_list
-        }
+        # A dynamic obstacle might not have a trajectory prediction.
+        # Then the resulting states only consist of the initial state.
+        state_list = []
+        if isinstance(obstacle.prediction, TrajectoryPrediction):
+            state_list = obstacle.prediction.trajectory.state_list
+
+        states_cr = {state.time_step: state for state in [obstacle.initial_state] + state_list}
+
+        # If the obstacle already has lanelet assignments (e.g., because `CommonRoadFileReader`
+        #  was invoked with `lanelet_assignment=True`), those can be used to speed up processing.
+        lanelet_assignment = None
+        if (
+            isinstance(obstacle.prediction, TrajectoryPrediction)
+            and obstacle.prediction.shape_lanelet_assignment is not None
+        ):
+            lanelet_assignment = copy.deepcopy(obstacle.prediction.shape_lanelet_assignment)
 
         return cls(
             id=obstacle.obstacle_id,
@@ -564,7 +589,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns rear s-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
             return None
 
@@ -583,7 +608,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns front s-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
             return None
 
@@ -603,7 +628,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns left d-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
             return None
 
@@ -626,7 +651,7 @@ class Vehicle:
         :param time_step: time step to consider
         :returns right d-coordinate [m]
         """
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
             return None
 
@@ -643,11 +668,11 @@ class Vehicle:
         )
 
     def get_lat_state(self, time_step: int, lane: Lane = None) -> StateLateral:
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         return self.get_curvilinear_trajectory(lane).lat_state_at_time_step(time_step)
 
     def get_lon_state(self, time_step: int, lane: Lane = None) -> StateLongitudinal:
-        lane = lane or self.get_lane(time_step)
+        lane = lane or self.lane_at_time_step(time_step)
         return self.get_curvilinear_trajectory(lane).lon_state_at_time_step(time_step)
 
     def occupancy_at_time_step(self, time_step) -> Rectangle:
@@ -676,21 +701,126 @@ class Vehicle:
         new_shape = affinity.affine_transform(shape, mat)
         return new_shape
 
-    def is_valid(self, time_step: int):
+    def is_valid(self, time_step: int) -> bool:
         state = self.states_cr.get(time_step)
         return state is not None
 
-    def lanes_at_state(self, time_step: int) -> set[Lane]:
-        # TODO: Either return lanelet ids or store lane ids, so the reference on RoadNetwork can be removed.
-        lanelets = self.lanelet_assignment[time_step]
-        return self._road_network.find_lanes_by_lanelets(lanelets)
+    def _find_lane_ids_at_time_step(self, time_step: int) -> set[int]:
+        """
+        Determine the IDs of lanes on which the vehicle is at the time step.
 
-    def get_lane(self, time_step: int) -> Lane | None:
-        # TODO: Either return lanelet ids or store lane ids, so the reference on RoadNetwork can be removed.
-        lanes = self.lanes_at_state(time_step)
-        # Sort lanes by their ID (assuming each lane has a unique id attribute)
-        sorted_lanes = sorted(lanes, key=lambda lane: lane.lane_id)
-        return sorted_lanes[0] if len(sorted_lanes) > 0 else None
+        Uses the internal lanelet assignment to determine the lane at a time step.
+        """
+        # By using the internal lanelet assignment, backwards compatability is ensured.
+        # This makes it possible to override the lane and lanelet assignment, which is currently used in some tests.
+        lanelet_ids = self.lanelet_ids_at_time_step(time_step)
+        lane_ids = self._road_network.find_lane_ids_by_lanelets(lanelet_ids)
+        return lane_ids
+
+    def lane_ids_at_time_step(self, time_step: int) -> set[int]:
+        """
+        Determine the lane IDs which are occupied by the vehicle at the time step.
+
+        :param time_step: Time step for which the lane IDs for this vehicle should be determined. Must be in the interval [start_time, end_time].
+
+        :returns: The set of occupied lane IDs. Might be empty, if the vehicle does not occupy any lanes at the time step.
+        """
+        if time_step in self._lane_assignment:
+            return self._lane_assignment[time_step]
+
+        lane_ids = self._find_lane_ids_at_time_step(time_step)
+        self._lane_assignment[time_step] = lane_ids
+        return lane_ids
+
+    def lanes_at_time_step(self, time_step: int) -> set[Lane]:
+        """
+        Determine the lanes which are occupied by the vehicle at the time step.
+
+        :param time_step: Time step for which the lanes for this vehicle should be determined. Must be in the interval [start_time, end_time].
+
+        :returns: The set of occupied lanes. Might be empty, if the vehicle does not occupy any lanes at the time step.
+        """
+        lane_ids = self.lane_ids_at_time_step(time_step)
+
+        lanes = set()
+        for lane_id in lane_ids:
+            lane = self._road_network.find_lane_by_id(lane_id)
+            if lane is None:
+                raise RuntimeError(
+                    f"Invalid lane assignment for vehicle {self.id} at time step {time_step}: lane {lane_id} is not part of the road network"
+                )
+
+            lanes.add(lane)
+
+        return lanes
+
+    def _find_lanelet_ids_at_time_step(self, time_step: int) -> set[int]:
+        state = self.get_state_at_time_step(time_step)
+        loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
+        lanelet_ids = self._road_network.lanelet_network.find_lanelet_by_shape(loc_shape)
+        return set(lanelet_ids)
+
+    def lanelet_ids_at_time_step(self, time_step: int) -> set[int]:
+        """
+        Determine the lanelet IDs which are occupied by the vehicle at the time step.
+
+        :param time_step: Time step for which the lanelet IDs for this vehicle should be determined. Must be in the interval [start_time, end_time].
+
+        :returns: The set of occupied lanelet IDs. Might be empty, if the vehicle does not occupy any lanelets at the time step.
+        """
+        if time_step in self._lanelet_assignment:
+            return self._lanelet_assignment[time_step]
+
+        lanelet_ids = self._find_lanelet_ids_at_time_step(time_step)
+        self._lanelet_assignment[time_step] = lanelet_ids
+        return lanelet_ids
+
+    def _initialize_lanelet_assignment(self) -> dict[int, set[int]]:
+        """
+        Compute the internal lanelet assignment.
+
+        Queries the occupied lanelets for every state in the state list of the vehicles.
+        """
+        lanelet_assignment = {}
+        for time_step in self.states_cr.keys():
+            lanelet_assignment[time_step] = self._find_lanelet_ids_at_time_step(time_step)
+
+        return lanelet_assignment
+
+    def lane_id_at_time_step(self, time_step: int) -> int | None:
+        """
+        Determine the ID of the most likely lane at the state of the time step.
+
+        To improve efficiency, this method will use its internal lane assignment for the lookup, if possible.
+
+        :param time_step: Time step for which the lane ID for this vehicle should be determined. Must be in the interval [start_time, end_time].
+
+        :returns: The smallest lane ID which the vehicle occupies at the time step, or None, if it occupies no lanes at the time step.
+        """
+        lane_ids = self.lane_ids_at_time_step(time_step)
+        if len(lane_ids) == 0:
+            return None
+
+        # Sort the lanes by ID, and selected the one with the smallest ID.
+        stored_lane_ids = sorted(lane_ids)
+        return stored_lane_ids[0]
+
+    def lane_at_time_step(self, time_step: int) -> Lane | None:
+        """
+        Determine the most likely lane at the state of the time step.
+
+        To improve efficiency, this method will use its internal lane assignment for the lookup, if possible.
+
+        :param time_step: Time step for which the lane for this vehicle should be determined. Must be in the interval [start_time, end_time].
+
+        :returns: The lane with the smallest ID which the vehicle occupies at the time step, or None, if it occupies no lanes at the time step.
+        """
+        lane_id = self.lane_id_at_time_step(time_step)
+        if lane_id is None:
+            return None
+
+        lane = self._road_network.find_lane_by_id(lane_id)
+        return lane
 
     def get_state_at_time_step(self, time_step: int) -> TraceState:
         return self.states_cr[time_step]
@@ -702,10 +832,8 @@ class Vehicle:
         # TODO: Since this only affects one time step, we could also just recompute for this time step.
         # Currently this is however not supported by the `CurvilinearVehicleTrajectory`.
         self._curvilinear_trajectories = {}
-        loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
-        self.lanelet_assignment[state.time_step] = (
-            self._road_network.lanelet_network.find_lanelet_by_shape(loc_shape)
-        )
+        del self._lanelet_assignment[time_step]
+        del self._lane_assignment[time_step]
 
     @property
     def end_time(self) -> int:
@@ -1032,6 +1160,7 @@ class ControlledVehicle(Vehicle):
         shape,
         road_network: RoadNetwork,
         inital_state,
+        dt: float,
         obstacle_type=ObstacleType.CAR,
         initial_signal=None,
     ):
@@ -1043,19 +1172,17 @@ class ControlledVehicle(Vehicle):
         )
         lanelet_assignment = {inital_state.time_step: initial_lanelets}
         super().__init__(
-            obstacle_id,
-            obstacle_type,
-            vehicle_param,
-            shape,
-            states_cr,
-            signal_series,
-            lanelet_assignment,
+            id=obstacle_id,
+            obstacle_type=obstacle_type,
+            shape=shape,
+            states_cr=states_cr,
+            lanelet_assignment=lanelet_assignment,
+            road_network=road_network,
+            dt=dt,
+            signal_series=signal_series,
+            vehicle_param=vehicle_param,
         )
 
     def add_state(self, state: State, signal_state=None):
-        self.states_cr[state.time_step] = state
-        loc_shape = self.shape.rotate_translate_local(state.position, state.orientation)
-        self.lanelet_assignment[state.time_step] = self.lanelet_network.find_lanelet_by_shape(
-            loc_shape
-        )
+        self.set_state_at_time_step(state.time_step, state)
         self.signal_series[state.time_step] = signal_state

@@ -400,18 +400,12 @@ def _inject_sampled_state_into_vehicle_trajectory(
     """
     sampled_time_step = sampled_state.time_step
 
-    vehicle.states_cr[sampled_time_step] = sampled_state
+    vehicle.set_state_at_time_step(sampled_time_step, sampled_state)
 
-    # Many predicates rely on the pre-computed lanelet assignments.
-    # To make sure they match the sampled state, the lanelet assignment must also be updated.
-    ego_loc_shape = vehicle.shape.rotate_translate_local(
-        sampled_state.position, sampled_state.orientation
-    )
-    lanelet_assignment = world.road_network.lanelet_network.find_lanelet_by_shape(ego_loc_shape)
+    # Verify that the lanelet assignment is valid.
+    lanelet_assignment = vehicle.lanelet_ids_at_time_step(sampled_time_step)
     if len(lanelet_assignment) == 0:
         # The state sampler created a state outside the lanelet network.
         return False
-
-    vehicle.lanelet_assignment[sampled_time_step] = lanelet_assignment
 
     return True

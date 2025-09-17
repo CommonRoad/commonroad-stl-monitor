@@ -542,7 +542,7 @@ class InterstateFutureStateSampler(AbstractFutureStateSampler):
         ctx: StateContext,
         vehicle_dynamics: VehicleDynamics,
     ) -> StateBasedSamplingResult:
-        ref_lane = ctx.vehicle(0).get_lane(ctx.time_step)
+        ref_lane = ctx.vehicle(0).lane_at_time_step(ctx.time_step)
         start_long_lat_state = LonLatState.long_lat_state_from_curvilinear_state(
             (ctx.lon_state(0), ctx.lat_state(0)), ref_lane.clcs
         )

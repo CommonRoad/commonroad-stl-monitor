@@ -24,6 +24,16 @@ from crmonitor.common.vehicle import (
 
 l_wb = 2.578  # for BMW_320i
 
+# Obstacle types which are currently supported as vehicles.
+# Used to filter unsupported obstacles during World creation.
+_SUPPORTED_VEHICLE_OBSTACLE_TYPES = {
+    ObstacleType.CAR,
+    ObstacleType.BUS,
+    ObstacleType.TRUCK,
+    ObstacleType.MOTORCYCLE,
+    ObstacleType.TAXI,
+}
+
 
 @dataclass
 class WorldConfig:
@@ -86,6 +96,9 @@ class World:
         config: WorldConfig | None = None,
         road_network: RoadNetwork | None = None,
     ) -> "World":
+        """
+        Create a new `World` object from a CommonRoad scenario.
+        """
         if config is None:
             config = WorldConfig()
 
@@ -96,57 +109,41 @@ class World:
         else:
             road_network = road_network
 
-        vehicles = set()
-        for obs in filter(
-            lambda o: o.obstacle_type
-            in [
-                ObstacleType.CAR,
-                ObstacleType.BUS,
-                ObstacleType.TRUCK,
-                ObstacleType.MOTORCYCLE,
-                ObstacleType.TAXI,
-            ],
+        # Only convert dynamic obstacles, which have a currently supported obstacle type.
+        supported_vehicle_obstacles = filter(
+            lambda o: o.obstacle_type in _SUPPORTED_VEHICLE_OBSTACLE_TYPES,
             scenario.dynamic_obstacles,
-        ):
-            # Skip obstacles that go out of the road
-            if any(
-                map(
-                    lambda a: len(a) == 0,
-                    obs.prediction.shape_lanelet_assignment.values(),
-                )
-            ):
-                continue
-            if config.scenario_type == ScenarioType.INTERSECTION:
-                # only consider cars and prediction steps must larger than 2
-                # obs must not be static
-                if (
-                    (obs.obstacle_type == ObstacleType.CAR)
-                    and (obs.prediction is not None)
-                    and (obs.prediction.final_time_step - obs.prediction.initial_time_step > 1)
-                    and (not cls.static_vehicle(obs))
-                ):
-                    vehicles.add(
-                        Vehicle.from_dynamic_obstacle(
-                            obs,
-                            road_network=road_network,
-                            dt=scenario.dt,
-                            scenario_type=config.scenario_type,
-                        )
-                    )
-            else:  # interstate scenarios
-                if (
-                    obs.prediction is None
-                    or obs.prediction.final_time_step - obs.prediction.initial_time_step < 2
-                ):
-                    continue
-                vehicles.add(
-                    Vehicle.from_dynamic_obstacle(
-                        obs,
-                        road_network=road_network,
-                        dt=scenario.dt,
-                        scenario_type=config.scenario_type,
-                    )
-                )
+        )
+
+        # Only convert dynamic obstacle, which have a valid prediction.
+        vehicle_obstacles_with_prediction = filter(
+            lambda obstacle: obstacle.prediction is not None
+            and obstacle.prediction.final_time_step - obstacle.prediction.initial_time_step > 1,
+            supported_vehicle_obstacles,
+        )
+
+        # For intersection scenarios, some more restrictions are placed on the valid vehicles.
+        if config.scenario_type == ScenarioType.INTERSECTION:
+            valid_vehicle_obstacles = filter(
+                lambda obs: obs.obstacle_type == ObstacleType.CAR and not cls.static_vehicle(obs),
+                vehicle_obstacles_with_prediction,
+            )
+        else:
+            valid_vehicle_obstacles = vehicle_obstacles_with_prediction
+
+        # Convert the selected dynamic obstacles to vehicles.
+        vehicles = set(
+            map(
+                lambda obs: Vehicle.from_dynamic_obstacle(
+                    obs,
+                    road_network=road_network,
+                    dt=scenario.dt,
+                    scenario_type=config.scenario_type,
+                ),
+                valid_vehicle_obstacles,
+            )
+        )
+
         return cls(vehicles, road_network, scenario)
 
     @property

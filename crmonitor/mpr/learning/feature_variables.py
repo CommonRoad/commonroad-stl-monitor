@@ -17,7 +17,7 @@ from .error import FeatureExtractionError
 def _find_right_most_real_lane_for_vehicle_at_time_step(
     vehicle: Vehicle, time_step: int, road_network: RoadNetwork
 ) -> Lane:
-    current_right_most_lane = vehicle.get_lane(time_step)
+    current_right_most_lane = vehicle.lane_at_time_step(time_step)
     while current_right_most_lane.adj_right is not None:
         # new_right_most_lane = road_network.find_lane_by_id(current_right_most_lane.adj_right)
         new_right_most_lane = current_right_most_lane.adj_right
@@ -34,7 +34,7 @@ def _find_right_most_real_lane_for_vehicle_at_time_step(
 def _find_left_most_real_lane_for_vehicle_at_time_step(
     vehicle: Vehicle, time_step: int, road_network: RoadNetwork
 ):
-    current_left_most_lane = vehicle.get_lane(time_step)
+    current_left_most_lane = vehicle.lane_at_time_step(time_step)
     while current_left_most_lane.adj_left is not None:
         # new_left_most_lane = road_network.find_lane_by_id(current_left_most_lane.adj_left)
         new_left_most_lane = current_left_most_lane.adj_left
@@ -184,7 +184,7 @@ class LaneCurvatureFeatureVariable(AbstractSingleFeatureVariable):
 
     @classmethod
     def extract_single(cls, ctx: StateContext) -> float:
-        ref_lane = ctx.vehicle(0).get_lane(ctx.time_step)
+        ref_lane = ctx.vehicle(0).lane_at_time_step(ctx.time_step)
         return ref_lane.curvature(ctx.lon_state(0).s)
 
 
@@ -193,7 +193,7 @@ class LaneCurvatureDotFeatureVariable(AbstractSingleFeatureVariable):
 
     @classmethod
     def extract_single(cls, ctx: StateContext) -> float:
-        ref_lane = ctx.vehicle(0).get_lane(ctx.time_step)
+        ref_lane = ctx.vehicle(0).lane_at_time_step(ctx.time_step)
         return ref_lane.curvature_prime(ctx.lon_state(0).s)
 
 
@@ -391,7 +391,7 @@ class DistanceToRefLaneLeft(_AbstractDistanceToLaneSide):
 
     @classmethod
     def get_lane(cls, ctx: StateContext) -> Lane:
-        return ctx.vehicle(0).get_lane(ctx.time_step)
+        return ctx.vehicle(0).lane_at_time_step(ctx.time_step)
 
     @classmethod
     def get_side(cls, ctx: StateContext) -> _AbstractDistanceToLaneSide.Side:
@@ -403,7 +403,7 @@ class DistanceToRefLaneRight(_AbstractDistanceToLaneSide):
 
     @classmethod
     def get_lane(cls, ctx: StateContext) -> Lane:
-        return ctx.vehicle(0).get_lane(ctx.time_step)
+        return ctx.vehicle(0).lane_at_time_step(ctx.time_step)
 
     @classmethod
     def get_side(cls, ctx: StateContext) -> _AbstractDistanceToLaneSide.Side:
