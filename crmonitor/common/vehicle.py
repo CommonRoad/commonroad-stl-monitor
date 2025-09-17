@@ -587,7 +587,7 @@ class Vehicle:
         Calculates rear s-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns rear s-coordinate [m]
+        :returns: rear s-coordinate [m]
         """
         lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
@@ -606,7 +606,7 @@ class Vehicle:
         Calculates front s-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns front s-coordinate [m]
+        :returns: front s-coordinate [m]
         """
         lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
@@ -626,7 +626,7 @@ class Vehicle:
         Calculates left d-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns left d-coordinate [m]
+        :returns: left d-coordinate [m]
         """
         lane = lane or self.lane_at_time_step(time_step)
         if lane is None:
@@ -649,7 +649,7 @@ class Vehicle:
         Calculates right d-coordinate of vehicle
 
         :param time_step: time step to consider
-        :returns right d-coordinate [m]
+        :returns: right d-coordinate [m]
         """
         lane = lane or self.lane_at_time_step(time_step)
         if lane is None:

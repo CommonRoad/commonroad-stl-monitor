@@ -42,7 +42,7 @@ from crmonitor.predicates.priority import (
 )
 from crmonitor.predicates.utils import cal_road_width
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class GeneralPredicates(PredicateName):

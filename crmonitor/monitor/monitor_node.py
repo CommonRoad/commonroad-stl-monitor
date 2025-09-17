@@ -357,7 +357,7 @@ class PredicateMonitorNode(ZeroArityMonitorNode):
     Monitor node for evaluating a predicate.
 
     :param name: Unique name.
-    :param evaluator: BasePredicateEvaluator instance.
+    :param predicate_name: Name of the predicate.
     :param agent_placeholders: tuple of agent placeholder indices.
     :param io_type: IOType representing the input/output type.
     """
