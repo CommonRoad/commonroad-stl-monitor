@@ -17,7 +17,7 @@ from crmonitor.predicates.base import (
 )
 from crmonitor.predicates.position import PredInFrontOf, PredInSameLane
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class VelocityPredicates(PredicateName):

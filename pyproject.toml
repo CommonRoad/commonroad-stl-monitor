@@ -32,9 +32,11 @@ test = [
     "pytest>=8.3.5,<9.0.0",
     "pytest-xdist[psutil]>=3.8.0"
 ]
-doc = [
-    "sphinx>=5.3.0",
-    "myst-parser>=0.18.1",
+docs = [
+    "mkdocs (>=1.6, <2.0)",
+    "mkdocstrings-python (>=1.10, <2.0)",
+    "mkdocs-autorefs (>=1.0, <2.0)",
+    "mkdocs-material (>=9.5, <10.0)",
 ]
 dev = [
     "pre-commit>=3.7.1",

@@ -6,7 +6,7 @@ import numpy as np
 from crmonitor.common.world import World
 from crmonitor.predicates.base import AbstractPredicate, PredicateName
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class AccelerationPredicates(PredicateName):

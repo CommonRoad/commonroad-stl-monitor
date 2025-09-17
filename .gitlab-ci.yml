@@ -76,28 +76,21 @@ deploy_master:
   except:
     - tags
 
-sphinx:
-  stage: test-unit
-  needs: []
-  before_script:
-    - *default_before_script
-    - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --extras doc
-  script:
-    - cd docs/source && poetry run sphinx-build -b html -W . ../build
-
 pages:
+  # push the latest documentation of the develop branch to the Gitlab pages.
+  # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor
   stage: deploy
-  needs:
-  - sphinx
+  only:
+    - master
+  publish: site
   before_script:
     - *default_before_script
-    - apt-get update && apt-get install -y build-essential graphviz graphviz-dev
-    - poetry install --extras doc
+    - poetry install --extras docs
   script:
-    - cd docs/source && sphinx-build -b html . ../../public
+    - poetry run mkdocs build
   artifacts:
     paths:
-    - public
-  only:
-    - development
+      - site
+  environment:
+    name: Gitlab Pages
+    url: https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor
