@@ -13,6 +13,7 @@ from typing_extensions import override
 from crmonitor.common.road_network import Lane
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
+from crmonitor.errors import PredicateEvaluationError
 from crmonitor.predicates import utils
 from crmonitor.predicates.base import (
     AbstractPredicate,
@@ -100,7 +101,13 @@ class PredInSameLane(AbstractPredicate):
 
         if len(lanelet_ids_k) == 0 or len(lanelet_ids_p) == 0:
             # Vehicles outside the road network are currently not supported.
-            return np.nan
+            raise PredicateEvaluationError(
+                self.predicate_name,
+                world,
+                time_step,
+                vehicle_ids,
+                "Vehicles are outside the road network",
+            )
 
         rob = np.fmin(
             distance_to_lanes(vehicle_k, lanelet_ids_p, world, time_step),
@@ -113,7 +120,10 @@ class PredInFrontOf(AbstractPredicate):
     predicate_name = PositionPredicates.InFrontOf
     arity = 2
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         rear = world.vehicle_by_id(vehicle_ids[0])
         front = world.vehicle_by_id(vehicle_ids[1])
         ref_lane = rear.lane_at_time_step(time_step)
@@ -140,24 +150,19 @@ class PredSingleLane(AbstractPredicate):
         If false: 1 - the largest fractional overlap with occupied lanes
         If true: Distance to lane polygon boundary
         """
-        # single_lane_boolean = self.evaluate_boolean(world, vehicle_ids)
-        vehicle_k = world.vehicle_by_id(vehicle_ids[0])
-        k_lanes = sorted(vehicle_k.lanes_at_time_step(time_step))
-        assert len(k_lanes) > 0, (
-            f"Vehicle must be assigned to at least one lane! "
-            f"{str(world.scenario.scenario_id)}, "
-            f"id={vehicle_ids[0]}, t={time_step}"
-        )
+        vehicle = world.vehicle_by_id(vehicle_ids[0])
 
-        ref_point = np.array(vehicle_k.states_cr[time_step].position)
-        ref_lanes = [
-            lanelet for lanelet in k_lanes if lanelet.lanelet.polygon.contains_point(ref_point)
-        ]
-        ref_lane = ref_lanes[0] if len(ref_lanes) > 0 else k_lanes[0]
+        ref_lane = vehicle.lane_at_time_step(time_step)
+        if ref_lane is None:
+            raise PredicateEvaluationError(
+                self.predicate_name,
+                world,
+                time_step,
+                vehicle_ids,
+                "Vehicle is outside of road network",
+            )
 
-        d_left, d_right = distance_to_bounds(
-            vehicle_k, ref_lane.contained_lanelets, world, time_step
-        )
+        d_left, d_right = distance_to_bounds(vehicle, ref_lane.contained_lanelets, world, time_step)
         d_left = -np.max(d_left) if d_left.size > 0 else np.inf
         d_right = np.min(d_right) if d_right.size > 0 else np.inf
         rob = np.fmin(d_left, d_right)
@@ -179,7 +184,10 @@ class PredSafeDistPrec(AbstractPredicate):
 
         return d_safe
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle_follow = world.vehicle_by_id(vehicle_ids[0])
         vehicle_lead = world.vehicle_by_id(vehicle_ids[1])
 
@@ -382,6 +390,7 @@ class PredPreceding(AbstractPredicate):
             veh.append((dist, vehicle_front, lane, same_lane))
         return sorted(veh, key=lambda d: d[0])
 
+    @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         rear_vehicle_id = vehicle_ids[0]
         front_vehicle_id = vehicle_ids[1]
@@ -390,6 +399,7 @@ class PredPreceding(AbstractPredicate):
         pred_veh = [elem for elem in candidates if elem[0] >= 0.0 and elem[3]]
         return len(pred_veh) > 0 and pred_veh[0][1].id == front_vehicle_id
 
+    @override
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
@@ -430,9 +440,10 @@ class PredRightOfBroadLaneMarking(AbstractPredicate):
     predicate_name = PositionPredicates.RightOfBroadLaneMarking
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
@@ -452,9 +463,12 @@ class PredRightOfBroadLaneMarking(AbstractPredicate):
                 return True
         return False
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        lanelet_ids_occ = vehicle.lanelet_assignment[time_step]
+        lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (
@@ -564,10 +578,6 @@ class _AbstractPredOnLaneletType(AbstractPredicate, ABC):
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        if vehicle is None:
-            raise ValueError(
-                f"Failed to evaluate predicate {self.predicate_name} at time step {time_step}: Vehicle {vehicle_ids[0]} could not be found in world"
-            )
 
         lanelet_type = self.get_lanelet_type()
 
@@ -636,7 +646,6 @@ class PredInRightmostLane(AbstractPredicate):
     @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        assert vehicle is not None
 
         lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
@@ -698,7 +707,6 @@ class PredInLeftmostLane(AbstractPredicate):
     @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
-        assert vehicle is not None
 
         lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
         for l_id in lanelet_ids_occ:
@@ -779,7 +787,8 @@ class PredLeftOf(AbstractPredicate):
     predicate_name = PositionPredicates.LeftOf
     arity = 2
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         """
         Evaluates if the kth vehicle is left of the pth vehicle
         """

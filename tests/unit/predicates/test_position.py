@@ -397,7 +397,7 @@ class TestInterstatePositionPredicates:
     def ego_vehicle(self, road_network):
         # ego vehicle
         cr_state_list_ego = {
-            0: CustomState(position=[0, 0], time_step=0, orientation=0),
+            0: CustomState(position=[5, 0], time_step=0, orientation=0),
             1: CustomState(position=[10, 4], time_step=1, orientation=0),
             2: CustomState(position=[20, 8], time_step=2, orientation=0),
             3: CustomState(position=[30, 12], time_step=3, orientation=0),

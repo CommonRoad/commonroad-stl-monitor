@@ -9,7 +9,6 @@ from commonroad.scenario.lanelet import Lanelet, LaneletNetwork, LaneletType
 from commonroad.scenario.traffic_sign import TrafficSignIDGermany
 from shapely.geometry import LineString, Polygon
 
-from crmonitor.common.helper import cartesian_to_curvilinear
 from crmonitor.common.road_network import Lane, RoadNetwork
 from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
@@ -17,83 +16,28 @@ from crmonitor.common.world import World
 _LOGGER = logging.getLogger(__name__)
 
 
-def distance_to_left_bounds(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
-):
-    state = vehicle_i.states_cr[time_step]
-    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
-    lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
-    left_bounds = tuple(
-        [
-            lanelet.left_vertices
-            for lanelet in lanelets
-            if lanelet.adj_left is None
-            or lanelet.adj_left not in lanelet_ids
-            and not lanelet.adj_left_same_direction
-        ]
-    )
-    if len(left_bounds) > 0:
-        d_left = np.array(cartesian_to_curvilinear(left_bounds, occ_points))[..., 1].ravel()
-        d_left = d_left[~np.isnan(d_left)]
-    else:
-        d_left = np.array([])
-    return d_left
+def distance_to_bounds(
+    vehicle: Vehicle, lanelet_ids: Iterable[int], world: World, time_step: int
+) -> tuple[np.ndarray, np.ndarray]:
+    state = vehicle.get_cr_state(time_step)
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
 
+    # Map the lanelets to lanes.
+    target_lanes = {
+        world.road_network.find_lane_by_lanelet(lanelet_id) for lanelet_id in lanelet_ids
+    }
 
-def distance_to_right_bounds(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step
-):
-    state = vehicle_i.states_cr[time_step]
-    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
-    lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
-    right_bounds = tuple(
-        [
-            lanelet.right_vertices
-            for lanelet in lanelets
-            if lanelet.adj_right is None
-            or lanelet.adj_right not in lanelet_ids
-            and not lanelet.adj_left_same_direction
-        ]
-    )
-    if len(right_bounds) > 0:
-        d_right = np.array(cartesian_to_curvilinear(right_bounds, occ_points))[..., 1].ravel()
-        d_right = d_right[~np.isnan(d_right)]
-    else:
-        d_right = np.array([])
-    return d_right
+    ds_left = []
+    ds_right = []
+    for lane in target_lanes:
+        for point in occ_points:
+            d_left = -lane.distance_to_left(*point)
+            d_right = lane.distance_to_right(*point)
 
+            ds_left.append(d_left)
+            ds_right.append(d_right)
 
-def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step):
-    state = vehicle_i.get_cr_state(time_step)
-    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
-    lanelets = [world.road_network.lanelet_network.find_lanelet_by_id(i) for i in lanelet_ids]
-
-    left_bounds = tuple(
-        [
-            lanelet.left_vertices
-            for lanelet in lanelets
-            if lanelet.adj_left is not None and lanelet.adj_left not in lanelet_ids
-        ]
-    )
-    right_bounds = tuple(
-        [
-            lanelet.right_vertices
-            for lanelet in lanelets
-            if lanelet.adj_right is not None and lanelet.adj_right not in lanelet_ids
-        ]
-    )
-    if len(left_bounds) > 0:
-        d_left = np.array(cartesian_to_curvilinear(left_bounds, occ_points))[..., 1].ravel()
-        d_left = d_left[~np.isnan(d_left)]
-    else:
-        d_left = np.array([])
-    if len(right_bounds) > 0:
-        d_right = np.array(cartesian_to_curvilinear(right_bounds, occ_points))[..., 1].ravel()
-        d_right = d_right[~np.isnan(d_right)]
-    else:
-        d_right = np.array([])
-
-    return d_left, d_right
+    return np.array(ds_left), np.array(ds_right)
 
 
 def distance_to_lanes(
@@ -390,10 +334,6 @@ def cal_road_width(lanelet: Lanelet, road_network: RoadNetwork, position: float)
     for lanelet in list(adj_lanelets):
         road_width += road_network.find_lane_by_lanelet(lanelet.lanelet_id).width(position)
     return road_width
-
-
-def bool_to_num(bool_value):
-    return 1 if bool_value else -1
 
 
 def traffic_sign_type(lanelet_ids, road_network: RoadNetwork):

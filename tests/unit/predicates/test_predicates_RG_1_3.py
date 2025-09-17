@@ -468,7 +468,6 @@ class TestPredicate(unittest.TestCase):
         exp_sol_monitor_mode_4 = False
         exp_sol_monitor_mode_5 = False
         exp_sol_monitor_mode_6 = False
-        exp_sol_monitor_mode_7 = False
 
         lanelet_network = LaneletNetwork()
         lanelets = parallel_lanes(3)
@@ -479,31 +478,21 @@ class TestPredicate(unittest.TestCase):
         ego_vehicle_param = VehicleParameters.create_for_ego_vehicle(0.1)
 
         # ego vehicle
-        # ego vehicle
         cr_state_list_ego = {
-            0: CustomState(position=(0, 1), time_step=0, velocity=10, orientation=0),
+            0: CustomState(position=(5, 1), time_step=0, velocity=10, orientation=0),
             1: CustomState(position=(10, 2), time_step=1, velocity=10, orientation=0),
             2: CustomState(position=(20, 3), time_step=2, velocity=10, orientation=0),
             3: CustomState(position=(30, 3.5), time_step=3, velocity=10, orientation=0),
             4: CustomState(position=(40, 4), time_step=4, velocity=10, orientation=0),
             5: CustomState(position=(50, 4.5), time_step=5, velocity=10, orientation=0),
-            6: CustomState(position=(50, 100), time_step=5, velocity=10, orientation=0),
         }
-        lanelet_assignments_ego = {
-            0: {1},
-            1: {1},
-            2: {1},
-            3: {1, 2},
-            4: {1, 2},
-            5: {1, 2},
-            6: {1},
-        }
+
         ego_vehicle = Vehicle(
             0,
             ObstacleType.CAR,
             Rectangle(5, 2),
             cr_state_list_ego,
-            lanelet_assignments_ego,
+            None,
             road_network,
             0.1,
             vehicle_param=ego_vehicle_param,
@@ -515,7 +504,6 @@ class TestPredicate(unittest.TestCase):
 
         vehicle_ids = [ego_vehicle.id]
         sol_monitor_mode = []
-        assert len(cr_state_list_ego) == len(lanelet_assignments_ego)
         for i in range(len(cr_state_list_ego)):
             sol_monitor_mode.append(pred.evaluate_robustness(world, i, vehicle_ids))
 
@@ -525,7 +513,6 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(exp_sol_monitor_mode_4, sol_monitor_mode[3] >= 0)
         self.assertEqual(exp_sol_monitor_mode_5, sol_monitor_mode[4] >= 0)
         self.assertEqual(exp_sol_monitor_mode_6, sol_monitor_mode[5] >= 0)
-        self.assertEqual(exp_sol_monitor_mode_7, sol_monitor_mode[6] >= 0)
 
     def test_speed_limit(self):
         # expected solutions
