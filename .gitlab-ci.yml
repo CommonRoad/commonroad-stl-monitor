@@ -4,6 +4,9 @@ variables:
   GIT_SUBMODULE_STRATEGY: normal
 
 cache:
+  key:
+    files:
+      - poetry.lock
   paths:
     - .venv
 
