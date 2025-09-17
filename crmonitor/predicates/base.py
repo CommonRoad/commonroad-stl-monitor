@@ -21,7 +21,7 @@ class PredicateConfig:
 
     min_interstate_width: float = 7.0
 
-    max_congestion_velocity: float = 4
+    max_congestion_velocity: float = 2.78
     """Determines the velocity of vehicles, when they are considered in congestion. Used for the predicates `PredInCongestion` and `PredHasCongestionVelocity`."""
 
     num_veh_congestion: float = 3.0
@@ -106,8 +106,7 @@ class AbstractPredicate(abc.ABC):
     @abc.abstractmethod
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
-    ) -> float:
-        pass
+    ) -> float: ...
 
     def visualize(
         self,

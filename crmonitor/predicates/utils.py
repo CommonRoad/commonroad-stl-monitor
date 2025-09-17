@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Collection
 from typing import Iterable, List, Set, Union
 
 import numpy as np
@@ -96,24 +97,39 @@ def distance_to_bounds(vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: Wo
 
 
 def distance_to_lanes(
-    vehicle_i: Vehicle, lanelet_ids: Iterable[int], world: World, time_step: int
+    vehicle: Vehicle, lanelet_ids: Collection[int], world: World, time_step: int
 ) -> float:
     """
     Determine the minimum distance the vehicle would not to move, to either no longer occupy the lanes or to occupy at least one of the lanes.
-    """
-    state = vehicle_i.get_cr_state(time_step)
-    occ_points = rotate_translate(vehicle_i.shape.vertices[:-1], state.position, state.orientation)
 
+    :param vehicle: The vehicle for which the distance to the lanes should be determined.
+    :param lanelet_ids: Collection of lanelets, to which the distance should be determined.
+    :param world: The world which contains vehicle and the lanelets.
+    :param time_step: The time step at which the distance of the vehicle should be evaluated.
+
+    :returns:
+    """
+    if len(lanelet_ids) == 0:
+        return np.nan
+
+    # Use the vehicle state to determine which coordinates the vehicle occupies at the time step.
+    state = vehicle.get_cr_state(time_step)
+    occ_points = rotate_translate(vehicle.shape.vertices[:-1], state.position, state.orientation)
+
+    # Map the lanelets to lanes.
     target_lanes = {
         world.road_network.find_lane_by_lanelet(lanelet_id) for lanelet_id in lanelet_ids
     }
 
-    if len(target_lanes) == 0:
-        return -np.inf
-
-    occupied_lanes = vehicle_i.lanes_at_time_step(time_step)
+    # Determine whether the vehicle is in at least one of the target lanes.
+    # This is necessary, because we need to differentiate between the cases where the vehicle
+    # is in one of the target lanes and when it is not in any target lane.
+    occupied_lanes = vehicle.lanes_at_time_step(time_step)
     occupied_target_lanes = occupied_lanes.intersection(target_lanes)
+
     if len(occupied_target_lanes) > 0:
+        # If the vehicle occupies at least one target lane the result is the distance
+        # that is required such that any of its occupancy points is outside all target lanes.
         min_distance = np.inf
         for lane in occupied_target_lanes:
             _, max_dist_left = lane.min_max_distance_to_left(occ_points)
@@ -122,13 +138,17 @@ def distance_to_lanes(
 
         return min_distance
     else:
+        # If the vehicle occupies no target lane the result is the distance
+        # that is required such that any of its occupancy points enters any target lane.
         min_distance = np.inf
         for lane in target_lanes:
+            # Determine the minimum distance for each lane individually.
             lane_min_distance = np.inf
             for point in occ_points:
                 d_left = lane.distance_to_left(*point)
                 d_right = lane.distance_to_right(*point)
 
+                # Use the magnitude of the distance vector to determine the minimum.
                 if abs(d_left) <= abs(d_right):
                     point_min_distance = d_left
                 else:

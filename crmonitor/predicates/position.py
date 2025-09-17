@@ -97,6 +97,11 @@ class PredInSameLane(AbstractPredicate):
 
         lanelet_ids_k = vehicle_k.lanelet_ids_at_time_step(time_step)
         lanelet_ids_p = vehicle_p.lanelet_ids_at_time_step(time_step)
+
+        if len(lanelet_ids_k) == 0 or len(lanelet_ids_p) == 0:
+            # Vehicles outside the road network are currently not supported.
+            return np.nan
+
         rob = np.fmin(
             distance_to_lanes(vehicle_k, lanelet_ids_p, world, time_step),
             distance_to_lanes(vehicle_p, lanelet_ids_k, world, time_step),
@@ -675,6 +680,9 @@ class PredInRightmostLane(AbstractPredicate):
             )
         ]
 
+        if len(rightmost_lanelet_ids) == 0:
+            return self._scaler.scale_lat_dist(-np.inf)
+
         dis_to_lane = distance_to_lanes(vehicle, rightmost_lanelet_ids, world, time_step)
         return self._scale_lat_dist(dis_to_lane)
 
@@ -710,8 +718,11 @@ class PredInLeftmostLane(AbstractPredicate):
             if lanelet.adj_left_same_direction is None
         ]
 
+        if len(leftmost_lanelet_ids) == 0:
+            return self._scaler.scale_lat_dist(-np.inf)
+
         dis_to_lane = distance_to_lanes(vehicle, leftmost_lanelet_ids, world, time_step)
-        return self._scale_lat_dist(dis_to_lane)
+        return self._scaler.scale_lat_dist(dis_to_lane)
 
 
 class PredMainCarriageWayRightLane(AbstractPredicate):
@@ -755,10 +766,13 @@ class PredMainCarriageWayRightLane(AbstractPredicate):
                 ).lanelet_type
             )
         ]
+        if len(main_carriageway_right_lanelet_ids) == 0:
+            return self._scaler.scale_lat_dist(-np.inf)
+
         dis_to_lane = distance_to_lanes(
             vehicle, main_carriageway_right_lanelet_ids, world, time_step
         )
-        return self._scale_lat_dist(dis_to_lane)
+        return self._scaler.scale_lat_dist(dis_to_lane)
 
 
 class PredLeftOf(AbstractPredicate):

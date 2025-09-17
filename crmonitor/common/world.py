@@ -1,7 +1,6 @@
 import copy
-import logging
 from dataclasses import dataclass, field
-from typing import Optional, Set
+from typing import Set
 
 import numpy as np
 from commonroad.common.solution import PlanningProblemSolution, vehicle_parameters
@@ -224,14 +223,12 @@ class World:
             if k_ddot is not None:
                 state.kappa_dot_dot = k_ddot
 
-    def vehicle_by_id(self, id) -> Optional[Vehicle]:
+    def vehicle_by_id(self, vehicle_id: int) -> Vehicle:
         for veh in self.vehicles:
-            if veh.id == id:
-                break
-        else:
-            logging.warning(f"Vehicle with ID {id} not found!")
-            veh = None
-        return veh
+            if veh.id == vehicle_id:
+                return veh
+
+        raise RuntimeError(f"Vehicle {vehicle_id} is not part of world {self.scenario_id}")
 
     def vehicle_ids(self):
         """
