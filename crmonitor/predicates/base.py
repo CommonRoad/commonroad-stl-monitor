@@ -106,8 +106,7 @@ class AbstractPredicate(abc.ABC):
     @abc.abstractmethod
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
-    ) -> float:
-        pass
+    ) -> float: ...
 
     def visualize(
         self,

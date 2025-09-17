@@ -14,7 +14,6 @@ from rtamt.syntax.node.ltl.constant import Constant as RtamtContantNode
 from crmonitor.monitor.monitor_node import (
     MonitorNode,
     MonitorVisitorInterface,
-    PredicateMonitorNode,
     QuantMonitorNode,
     RtamtRuleMonitorNode,
     UnaryMonitorNode,
@@ -73,6 +72,7 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
 
         # Track different constants to only plot each constant once.
         self._tracked_constants = set()
+        self._tracked_rtamt_expressions = set()
 
         self._to_string_visitor = MonitorToStringVisitor()
 
@@ -227,6 +227,10 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
                 if target_name in name:
                     name = name.replace(target_name, name_replacement)
 
+            if name in self._tracked_rtamt_expressions:
+                continue
+            self._tracked_rtamt_expressions.add(name)
+
             trace = values[rtamt_ast_node]
             # rtamt operators might return traces with +-inf. As +-inf cannot be shown
             # in a plot, the lines will be missing from the plot. For the case, where
@@ -250,11 +254,6 @@ class TraceVisualizationVisitor(MonitorVisitorInterface[None]):
             new_vehicle_ids = deepcopy(vehicle_ids)
             new_vehicle_ids[node.quantified_agent] = vehicle_id
             self.visit(monitor, new_vehicle_ids)
-        label = self._to_string_visitor.to_string(node, vehicle_ids)
-        self._plot_node(node, label)
-
-    @visit.register
-    def _(self, node: PredicateMonitorNode, vehicle_ids: Dict[int, int]) -> None:
         label = self._to_string_visitor.to_string(node, vehicle_ids)
         self._plot_node(node, label)
 

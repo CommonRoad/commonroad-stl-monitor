@@ -98,7 +98,7 @@ class OfflineEvaluationMonitorTreeVisitor(BaseEvaluationMonitorTreeVisitor[list[
     ) -> list[float]:
         child_values = {child.name: self.visit(child, ctx) for child in node.children}
 
-        sample_return = node.evaluate(list(child_values.items()), marker=str(ctx.vehicle_ids[-1]))
+        sample_return = node.evaluate(list(child_values.items()))
 
         # When the rule is evaluated with IA-STL, some robustness values might be +inf.
         # This can lead to problems if the user expects scaled values.
@@ -351,7 +351,7 @@ class OfflineEvaluationMonitorTreeVisitor(BaseEvaluationMonitorTreeVisitor[list[
         # Otherwise, we run into problems, when predicates are evaluated for vehicles which are not available at the evaluated time steps.
         vehicle_start_times = {}
         vehicle_end_times = defaultdict(lambda: ctx.final_time_step)
-        for time_step in range(ctx.start_time_step, ctx.final_time_step):
+        for time_step in range(ctx.start_time_step, ctx.final_time_step + 1):
             all_ids = set(ctx.world.vehicle_ids_for_time_step(time_step))
 
             # Identify vehicles entering the scene at this timestep.

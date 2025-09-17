@@ -13,7 +13,11 @@ from crmonitor.monitor.monitor_node import (
     SigmoidMonitorNode,
     SumIfPositiveMonitorNode,
 )
-from crmonitor.monitor.rtamt_monitor_stl import OutputType, RtamtStlMonitor
+from crmonitor.monitor.rtamt_monitor_stl import (
+    OfflineRtamtStlMonitor,
+    OnlineRtamtStlMonitor,
+    OutputType,
+)
 from crmonitor.rule import (
     AllNode,
     CompareToThresholdScaledNode,
@@ -36,12 +40,16 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
     """
 
     def create_monitors(
-        self, rule_node: RuleAstNode, dt: float, output_type: OutputType = OutputType.STANDARD
+        self,
+        rule_node: RuleAstNode,
+        dt: float,
+        output_type: OutputType = OutputType.STANDARD,
+        online: bool = False,
     ) -> MonitorNode:
         """
         :param dt: The dt is required for RTAMT monitors, since they need to be pre-configured with the sampling frequency.
         """
-        return self.visit(rule_node, dt, output_type)
+        return self.visit(rule_node, dt, output_type, online)
 
     @singledispatchmethod
     def visit(self, node: RuleAstNode, *args, **kwargs) -> MonitorNode:
@@ -50,10 +58,19 @@ class MonitorCreationRuleTreeVisitor(RuleTreeVisitorInterface[MonitorNode]):
         )
 
     @visit.register
-    def _(self, node: RtamtRuleNode, dt: float, output_type: OutputType) -> MonitorNode:
-        children = [self.visit(child, dt, output_type) for child in node.children]
-        monitor = RtamtStlMonitor.create_from_rule_node(node, dt, output_type)
-        return RtamtRuleMonitorNode(node.name, children, monitor)
+    def _(
+        self, node: RtamtRuleNode, dt: float, output_type: OutputType, online: bool
+    ) -> MonitorNode:
+        children = [self.visit(child, dt, output_type, online) for child in node.children]
+
+        if online:
+            rtamt_monitor_node_type = OnlineRtamtStlMonitor
+        else:
+            rtamt_monitor_node_type = OfflineRtamtStlMonitor
+
+        rtamt_monitor = rtamt_monitor_node_type.create_from_rule_node(node, dt, output_type)
+
+        return RtamtRuleMonitorNode(node.name, children, rtamt_monitor)
 
     @visit.register
     def _(self, node: AllNode, *args, **kwargs) -> MonitorNode:

@@ -675,6 +675,9 @@ class Vehicle:
         lane = lane or self.lane_at_time_step(time_step)
         return self.get_curvilinear_trajectory(lane).lon_state_at_time_step(time_step)
 
+    def get_cr_state(self, time_step: int) -> State:
+        return self.states_cr[time_step]
+
     def occupancy_at_time_step(self, time_step) -> Rectangle:
         state = self.states_cr[time_step]
         orientation = state.orientation
