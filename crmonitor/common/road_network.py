@@ -248,7 +248,7 @@ class Lane:
         Calculates orientation of lane given a longitudinal position along lane
 
         :param position: longitudinal position
-        :returns orientation of lane at a given position
+        :returns: orientation of lane at a given position
         """
         return np.interp(position, self._path_length, self._orientation)
 
@@ -257,7 +257,7 @@ class Lane:
         Calculates width of lane given a longitudinal position along lane
 
         :param s_position: longitudinal position
-        :returns width of lane at a given position
+        :returns: width of lane at a given position
         """
         return np.interp(s_position, self._path_length, self._width)
 
@@ -477,7 +477,7 @@ class RoadNetwork:
         Finds the lanes given set of lanelets belong to and returns their IDs
 
         :param lanelets: list of lanelet IDs
-        :returns set of lanelet IDs
+        :returns: set of lanelet IDs
         """
         lane_ids = set()
         for lane in self.lanes:
@@ -492,7 +492,7 @@ class RoadNetwork:
         Finds the lanes to which a given set of lanelets belongs to
 
         :param lanelets: list of lanelet IDs
-        :returns set of lane objects
+        :returnsi: set of lane objects
         """
         lanes = set()
         for lane in self.lanes:
@@ -507,7 +507,7 @@ class RoadNetwork:
         Finds the lane a lanelet belongs to
 
         :param lanelet_id: CommonRoad lanelet ID
-        :returns lane object
+        :returns: lane object
         """
         for lane in self.lanes:
             if lanelet_id in lane.contained_lanelets:
@@ -522,7 +522,7 @@ class RoadNetwork:
         :param obs_lanelet_center: IDs of lanelet the obstacle center is on
             (use only first one)
         :param obs_lanelet_shape: IDs of lanelet the obstacle shape is on
-        :returns lane the obstacle center is on
+        :returns: lane the obstacle center is on
         """
 
         occupied_lanes = set()
