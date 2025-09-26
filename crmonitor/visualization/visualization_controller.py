@@ -16,8 +16,8 @@ class VisualizationController:
 
         gs = self._fig.add_gridspec(2, 2)
         self._trace_ax = self._fig.add_subplot(gs[0, 0])
-        self._ast_ax = self._fig.add_subplot(gs[0, 1])
-        self._leg_ax = self._fig.add_subplot(gs[1, :])
+        self._ast_ax = self._fig.add_subplot(gs[1, :])
+        self._leg_ax = self._fig.add_subplot(gs[0, 1])
         self._fig.tight_layout(pad=0.0)
         self._fig.subplots_adjust(
             wspace=0.01, hspace=0.01, left=0.03, right=0.99, top=0.95, bottom=0.05

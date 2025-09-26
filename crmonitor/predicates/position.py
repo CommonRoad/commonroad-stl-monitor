@@ -501,7 +501,6 @@ class PredLeftOfBroadLaneMarking(AbstractPredicate):
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         lanelet_ids_occ = vehicle.lanelet_ids_at_time_step(time_step)
-        print(lanelet_ids_occ)
         for l_id in lanelet_ids_occ:
             lanelet = world.road_network.lanelet_network.find_lanelet_by_id(l_id)
             if (

@@ -531,6 +531,7 @@ class PredTurningRight(AbstractPredicate):
     predicate_name = GeneralPredicates.TurningRight
     arity = 1
 
+    @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
@@ -539,7 +540,7 @@ class PredTurningRight(AbstractPredicate):
         if incoming is None:
             return False
         # find corresponding right turn lane and lanelets in intersection
-        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        lanelets_assignment_current = vehicle.lanelet_ids_at_time_step(time_step)
         right_turn_lane = road_network.find_lanes_incoming_by_id(incoming.incoming_id)[
             0
         ]  # lanes: [right, straight, left]
@@ -548,15 +549,16 @@ class PredTurningRight(AbstractPredicate):
             return False
         # vehicle occupies right turning lanelet
         else:
-            state = vehicle.states_cr[time_step]
+            state = vehicle.get_cr_state(time_step)
             d_center_to_left = right_turn_lane.distance_to_left(*state.position)
             # center of vehicle in right turning lanelet
-            if d_center_to_left > 0:
+            if d_center_to_left <= 0:
                 return False
             # center of vehicle outside right turning lanelet
             else:
                 return True
 
+    @override
     def evaluate_robustness(
         self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
     ) -> float:
@@ -567,7 +569,7 @@ class PredTurningRight(AbstractPredicate):
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
         # find corresponding right turn lane and lanelets in intersection
-        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        lanelets_assignment_current = vehicle.lanelet_ids_at_time_step(time_step)
         right_turn_lane = road_network.find_lanes_incoming_by_id(incoming.incoming_id)[
             0
         ]  # lanes: [right, straight, left]
@@ -588,7 +590,7 @@ class PredTurningRight(AbstractPredicate):
             rob = self._scale_lon_dist(front_s - right_turn_start_s)
         # case 2: vehicle occupies right turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_right)) > 0:
-            state = vehicle.states_cr[time_step]
+            state = vehicle.get_cr_state(time_step)
             d_center_to_left = right_turn_lane.distance_to_left(*state.position)
             if d_center_to_left > 0:
                 # out of right turning lanelet
@@ -596,7 +598,7 @@ class PredTurningRight(AbstractPredicate):
                 if len(d_left) == 0:
                     rob = -np.inf
                 else:
-                    rob = -np.max(d_left, initial=-np.inf)
+                    rob = np.max(d_left, initial=-np.inf)
                 rob = self._scale_lat_dist(rob)
             else:
                 # in right turning lanelet
@@ -637,7 +639,8 @@ class PredTurningLeft(AbstractPredicate):
     predicate_name = GeneralPredicates.TurningLeft
     arity = 1
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -662,7 +665,10 @@ class PredTurningLeft(AbstractPredicate):
                 # in left turning lanelet
                 return True
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -691,7 +697,7 @@ class PredTurningLeft(AbstractPredicate):
             rob = self._scale_lon_dist(front_s - left_turn_start_s)
         # case 2: vehicle occupies left turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_left)) > 0:
-            state = vehicle.states_cr[time_step]
+            state = vehicle.get_cr_state(time_step)
             d_center_to_right = left_turn_lane.distance_to_right(*state.position)
             if d_center_to_right < 0:
                 # out of left turning lanelet
@@ -739,6 +745,7 @@ class PredGoingStraight(AbstractPredicate):
     predicate_name = GeneralPredicates.GoingStraight
     arity = 1
 
+    @override
     def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
@@ -757,14 +764,17 @@ class PredGoingStraight(AbstractPredicate):
             state = vehicle.states_cr[time_step]
             d_center_to_left = straight_lane.distance_to_left(*state.position)
             d_center_to_right = straight_lane.distance_to_right(*state.position)
-            if (d_center_to_left > 0) or (d_center_to_right < 0):
+            if (d_center_to_left < 0) or (d_center_to_right < 0):
                 # out of going straight lanelet
                 return False
             else:
                 # in going straight lanelet
                 return True
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: List[int]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         vehicle = world.vehicle_by_id(vehicle_ids[0])
         road_network = world.road_network
         # find incoming lanelet
@@ -772,7 +782,7 @@ class PredGoingStraight(AbstractPredicate):
         if incoming is None:
             return self._scale_lon_dist(-np.inf)
         # find corresponding left turn lane and lanelets in intersection
-        lanelets_assignment_current = vehicle.lanelet_assignment[time_step]
+        lanelets_assignment_current = vehicle.lanelet_ids_at_time_step(time_step)
         straight_lane = road_network.find_lanes_incoming_by_id(incoming.incoming_id)[
             1
         ]  # lanes: [right, straight, left]
@@ -793,7 +803,7 @@ class PredGoingStraight(AbstractPredicate):
             rob = self._scale_lon_dist(front_s - straight_start_s)
         # case 2: vehicle occupies left turning at intersection
         elif len(lanelets_assignment_current.intersection(incoming.successors_straight)) > 0:
-            state = vehicle.states_cr[time_step]
+            state = vehicle.get_cr_state(time_step)
             d_center_to_left = straight_lane.distance_to_left(*state.position)
             d_center_to_right = straight_lane.distance_to_right(*state.position)
             if d_center_to_left > 0:
@@ -802,7 +812,7 @@ class PredGoingStraight(AbstractPredicate):
                 if len(d_left) == 0:
                     rob = -np.inf
                 else:
-                    rob = -np.max(d_left, initial=-np.inf)
+                    rob = np.max(d_left, initial=-np.inf)
                 rob = self._scale_lat_dist(rob)
             elif d_center_to_right < 0:
                 # out of straight going lanelet
@@ -858,17 +868,21 @@ class PredTurningSamePriorityBase(AbstractPredicate):
         self._turning_ego = PredTurningRight(config)
         self._turning_target = PredTurningRight(config)
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    @override
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
-        bool_turning_ego = self._turning_ego.evaluate_boolean(world, time_step, [ego_vehicle_id])
+        bool_turning_ego = self._turning_ego.evaluate_boolean(world, time_step, (ego_vehicle_id,))
         bool_turning_target = self._turning_target.evaluate_boolean(
-            world, time_step, [target_vehicle_id]
+            world, time_step, (target_vehicle_id,)
         )
         bool_same_priority = self._same_priority.evaluate_boolean(world, time_step, vehicle_ids)
         return bool_turning_ego and bool_turning_target and bool_same_priority
 
-    def evaluate_robustness(self, world: World, time_step, vehicle_ids: tuple[int, ...]) -> float:
+    @override
+    def evaluate_robustness(
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float:
         ego_vehicle_id = vehicle_ids[0]
         target_vehicle_id = vehicle_ids[1]
         rob_turning_ego = self._turning_ego.evaluate_robustness(world, time_step, (ego_vehicle_id,))
