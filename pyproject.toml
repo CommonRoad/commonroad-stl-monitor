@@ -1,6 +1,6 @@
 [project]
 name = "commonroad-stl-monitor"
-version = "2024.1"
+version = "2025.1"
 authors = [{name = "Luis Gressenbuch", email = "luis.gressenbuch@tum.de"}, {name = "Yuanfei Lin", email = "yuanfei.lin@tum.de"}]
 readme = "README.md"
 requires-python = ">=3.10,<3.12"
