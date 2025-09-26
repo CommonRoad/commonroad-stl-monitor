@@ -1,14 +1,15 @@
 image: python:3.10
 
 variables:
+  # Change pip's cache directory to be inside the project directory since we can only cache local items.
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: normal
 
 cache:
-  key:
-    files:
-      - poetry.lock
   paths:
-    - .venv
+    # Cache the poetry installation for all jobs.
+    # We could also cache all project dependencies, but the up-/download of the cache takes longer than installing only the relevant dependencies in each job.
+    - .cache/pip
 
 stages:
   - style

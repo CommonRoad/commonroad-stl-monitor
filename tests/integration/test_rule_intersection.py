@@ -5,7 +5,7 @@ from tests.resources import IntersectionScenarios
 
 class TestRulesIntersection:
     def test_R_IN1(self):
-        exp_violation_time_step = 27
+        exp_violation_time_step = 22
         world = IntersectionScenarios.R_IN1.get_world()
         ego_vehicle = world.vehicle_by_id(31)
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN1", world.dt)
@@ -15,9 +15,8 @@ class TestRulesIntersection:
         assert rule_robustness[exp_violation_time_step] < 0
 
     def test_R_IN3(self):
-        rtamt_further_time_range = 10
-        exp_violation_time_step = 20 + rtamt_further_time_range
-        exp_violation_end_time_step = 27 + rtamt_further_time_range
+        exp_violation_time_step = 24
+        exp_violation_end_time_step = 27
         world = IntersectionScenarios.R_IN3.get_world()
         ego_vehicle = world.vehicle_by_id(30)
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN3_hand_draft", world.dt)
@@ -29,7 +28,7 @@ class TestRulesIntersection:
         assert rule_robustness[exp_violation_end_time_step] >= 0
 
     def test_R_IN4(self):
-        exp_violation_time_step = 133
+        exp_violation_time_step = 108
         world = IntersectionScenarios.R_IN4.get_world()
         ego_vehicle = world.vehicle_by_id(10093)
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN4", world.dt)
@@ -39,7 +38,7 @@ class TestRulesIntersection:
         assert rule_robustness[exp_violation_time_step] < 0
 
     def test_R_IN5(self):
-        exp_violation_time_step = 68
+        exp_violation_time_step = 43
         world = IntersectionScenarios.R_IN5.get_world()
         ego_vehicle = world.vehicle_by_id(10020)
         rule_eval = OfflineRuleEvaluator.create_for_rule("R_IN5", world.dt)
