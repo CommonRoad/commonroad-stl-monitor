@@ -7,17 +7,31 @@ The toolbox is installable as a regular pypi package. However, it is currently n
 Installation by:
 
 ```bash
-pip install git+ssh://git@gitlab.lrz.de/cps/commonroad-stl-monitor
+pip install git+git@gitlab.lrz.de:cps/commonroad-stl-monitor
 ```
 
 
 ## Development setup
-This project uses [poetry](https://python-poetry.org/). Please follow the instructions to create the virtual development environment.
+
+This project uses [poetry](https://python-poetry.org/) for the python environment and dependency management.
+
+You can set up your development environment using poetry:
+```bash
+$ poetry install --extras dev
+$ poetry run pre-commit install
+```
+
+Additionally, you can install extras like `visualization` to enable advanced AST visualizations. The visualization requires a working `graphiz` installation, which you should be able to source from your distros package registry.
+```bash
+$ poetry install --extras visualization
+```
 
 ## Run the tests
-```
-cd crmonitor/tests
-python -m unittest
+
+```bash
+$ poetry install --extras test
+$ cd crmonitor/tests
+$ python -m unittest
 ```
 
 ## Getting Started

@@ -1,50 +1,46 @@
-from typing import Optional
+import copy
 
-from crmonitor.common.vehicle import Vehicle
 from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
-from crmonitor.evaluation.visitor import (
+from crmonitor.evaluation.evaluation import OfflineRuleEvaluator
+from crmonitor.monitor import (
     BaseValueMonitorTreeVisitor,
     MonitorCreationRuleTreeVisitor,
-    RuleTreeVisitor,
+    OutputType,
+    RtamtRuleMonitorNode,
 )
-from crmonitor.monitor.monitor_node import RuleMonitorNode
 from crmonitor.monitor.proposition_robustness import PropositionRobustnessMonitor
-from crmonitor.monitor.rtamt_monitor_stl import OutputType
-from crmonitor.rule.rule_node import PredicateNode, RuleNode, VisitorNode
+from crmonitor.rule.rule_node import PredicateNode, RuleAstNode
 
 
 class PropositionMonitorRuleTreeVisitor(MonitorCreationRuleTreeVisitor):
-    def visit_rule_node(self, rule_node: RuleNode, *ctx):
+    def visit_rule_node(self, rule_node: RuleAstNode, *ctx):
         children = [c.visit(self, *ctx) for c in rule_node.children]
         monitor = PropositionRobustnessMonitor.create_from_rule_node(
             rule_node, self.dt, self.output_type
         )
-        return RuleMonitorNode(rule_node.name, children, monitor)
+        return RtamtRuleMonitorNode(rule_node.name, children, monitor)
 
 
 class PropositionCollectorMonitorTreeVisitor(BaseValueMonitorTreeVisitor):
     @staticmethod
-    def visit_rule_node(rule_node: "RuleMonitorNode", *ctx):
+    def visit_rule_node(rule_node: "RtamtRuleMonitorNode", *ctx):
         return list(rule_node.monitor.ast_node_values.items())
 
     def visit_predicate_node(self, predicate_node: PredicateNode, *ctx):
         raise NotImplementedError()
 
 
-class PropositionRuleEvaluator(RuleEvaluator):
+class PropositionRuleEvaluator(OfflineRuleEvaluator):
     def __init__(
         self,
-        rule: VisitorNode,
+        rule: RuleAstNode,
         ego_id: int,
         world: World,
         start_time_step=None,
         use_boolean: bool = False,
         output_type: OutputType = OutputType.STANDARD,
     ):
-        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(
-            world.dt, output_type
-        )
+        monitor_creation_visitor = PropositionMonitorRuleTreeVisitor(world.dt, output_type)
         self.proposition_collector = PropositionCollectorMonitorTreeVisitor()
         super().__init__(
             rule,
@@ -55,6 +51,13 @@ class PropositionRuleEvaluator(RuleEvaluator):
             output_type,
             monitor_creation_visitor,
         )
+        monitor_copied = copy.copy(self._monitor)
+        while not isinstance(monitor_copied, RtamtRuleMonitorNode):
+            if isinstance(monitor_copied, list):
+                monitor_copied = copy.copy(monitor_copied[0])
+            else:
+                monitor_copied = monitor_copied.children
+        self.rule_str_original = monitor_copied.monitor._rule
 
     def get_propositions(self):
         """
@@ -80,14 +83,55 @@ class PropositionRuleEvaluator(RuleEvaluator):
             if any(hasattr(child, "monitors") for child in self._monitor.children):
                 other_id = self._eval_visitor.other_ids[-1]
                 props = self._monitor.monitor._propositions
-                quant_nodes = [
-                    node for node in self._monitor.children if hasattr(node, "monitors")
-                ]
-                # for quant_node in quant_nodes:
-                #    for key in [key for key in props.keys() if quant_node.name in key]:
-                #        props.pop(key)
-                #    props.update(quant_node.monitors[other_id].monitor._props)
             else:
                 props = self._monitor.monitor._propositions
 
         return props, other_id, self._last_evaluation_time_step
+
+    def get_propositions_all(self):
+        # New dictionary structure
+        transformed_all_props_all_ids = {}
+
+        if not self._eval_visitor.all_props_all_ids:
+            # Iterate over all vehicle IDs stored in all_values_all_ids
+            veh_id = self.ego_vehicle.id
+            vehicle_props = self._monitor.monitor._propositions
+
+            # Populate the props dictionary with proposition names as keys
+            for prop_name, robustness_value in vehicle_props.items():
+                if prop_name not in transformed_all_props_all_ids:
+                    transformed_all_props_all_ids[prop_name] = {}
+                transformed_all_props_all_ids[prop_name][veh_id] = robustness_value
+
+        else:
+            # Iterate over the original dictionary
+            for time_step, props in self._eval_visitor.all_props_all_ids.items():
+                for v_id, value in props.items():
+                    # If the feature is not in the new dictionary, initialize it with an empty dictionary
+                    if v_id not in transformed_all_props_all_ids:
+                        transformed_all_props_all_ids[v_id] = {}
+                    # Add the time_step and its corresponding value to the feature's dictionary
+                    transformed_all_props_all_ids[v_id][time_step] = value
+
+        # Determine the violation other_id used
+        other_id = (
+            self._eval_visitor.other_ids[-1]
+            if self._eval_visitor.other_ids
+            else self.ego_vehicle.id
+        )
+
+        # Collect the props for the other_id separately
+        if other_id == self.ego_vehicle.id:
+            other_id_props = self._monitor.monitor._propositions
+        else:
+            other_id_props = {
+                prop_name: robustness_value.get(other_id, None)
+                for prop_name, robustness_value in transformed_all_props_all_ids.items()
+            }
+
+        return (
+            transformed_all_props_all_ids,
+            other_id_props,
+            self._eval_visitor.all_values_all_ids,
+            self._last_evaluation_time_step,
+        )

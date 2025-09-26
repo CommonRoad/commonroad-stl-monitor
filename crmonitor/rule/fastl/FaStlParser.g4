@@ -12,7 +12,12 @@ vehicle
     : VEHICLE IntegerLiteral;
 
 predicate
-    : Identifier LPAREN vehicle (COMMA vehicle)* RPAREN IO_TYPE_INPUT?;
+    : Identifier LPAREN vehicle (COMMA vehicle)* RPAREN IO_TYPE?;
+
+threshold
+	: LBRACK GreaterOrEqualOperator literal RBRACK;
+
+
 
 spec
 	:
@@ -22,6 +27,7 @@ spec
 
     | EXIST vehicle COLON LPAREN spec RPAREN              #SpecQuantExist
 	| FORALL vehicle COLON LPAREN spec RPAREN             #SpecQuantForall
+	| SumIfPositiveOperator vehicle COLON LPAREN spec RPAREN #SpecQuantSumIfPositive
 
     | spec AndOperator spec                               #SpecNested
     | spec OrOperator spec                                #SpecNested
@@ -29,6 +35,11 @@ spec
     | spec IffOperator spec                               #SpecNested
     | spec XorOperator spec                               #SpecNested
 
+	| SigmoidOperator spec                                #SpecSigmoid
+    | HistoricallyDurationOperator ( interval )? spec     #SpecHistoricallyDuration
+	| HistoricallyDurationSeverityOperator ( interval )? spec #SpecHistoricallyDurationSeverity
+	| CompareToThresholdScaledOperator threshold spec     #specCompareToThresholdScaled
+	| ExistsMultipleOperator LBRACK IntegerLiteral RBRACK vehicle COLON LPAREN spec RPAREN   #specExistsMultiple
 	| AlwaysOperator ( interval )? spec                   #SpecNested
     | EventuallyOperator ( interval )? spec               #SpecNested
     | spec UntilOperator ( interval )? spec               #SpecNested
@@ -43,9 +54,9 @@ spec
 	;
 
 real_expression:
-     literal                                                   #ExprLiteral
-    | predicate                                                  #ExprPred
-    | real_expression comparisonOp real_expression                          #ExprComp
+     literal                                                    #ExprLiteral
+    | predicate                                                 #ExprPred
+    | real_expression comparisonOp real_expression              #ExprComp
     | real_expression PLUS real_expression                      #ExprAddition
 	| real_expression MINUS real_expression                     #ExprSubtraction
 	| real_expression TIMES real_expression                     #ExprMultiplication

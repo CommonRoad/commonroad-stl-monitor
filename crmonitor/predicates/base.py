@@ -1,29 +1,89 @@
 import abc
 import logging
+from dataclasses import dataclass
+from enum import Enum
 from typing import Callable, Dict, List, Tuple
 
 from commonroad.visualization.renderer import IRenderer
-from ruamel.yaml.comments import CommentedMap
 
 from crmonitor.common.world import World
-from crmonitor.predicates.scaling import RobustnessScaler
 
-logger = logging.getLogger(__name__)
+from .scaling import IRobustnessScaler, RobustnessScaler
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class BasePredicateEvaluator(abc.ABC):
+@dataclass(kw_only=True)
+class PredicateConfig:
+    scale_rob: bool = True
+
+    eps: float = 1e-17
+
+    min_interstate_width: float = 7.0
+
+    max_congestion_velocity: float = 2.78
+    """Determines the velocity of vehicles, when they are considered in congestion. Used for the predicates `PredInCongestion` and `PredHasCongestionVelocity`."""
+
+    num_veh_congestion: float = 3.0
+    """Determines the number of vehicles, when it is considered as congestion. Used for the predicate `PredInCongestion`."""
+
+    max_slow_moving_traffic_velocity: float = 8.33
+    """Determines the velocity of vehicles when they are considered in slow moving traffic. Used for the predicates `PredInSlowMovingTraffic` and `PredHasSlowMovingVelocity`."""
+
+    num_veh_slow_moving_traffic: float = 3.0
+    """Determines the number of vehicles, when it is considered as in slow moving traffic. Used for the predicate `PredInSlowMovingTraffic`."""
+
+    max_queue_of_vehicles_velocity: float = 16.67
+    """Determines the velocity of vehicles when they are considered in a queue of vehicles. Used for the predicates `PredInQueueOfVehicles` and `PredHasQueueVelocity`."""
+
+    num_veh_queue_of_vehicles: float = 3.0
+    """Determines the number of vehicles, when it is considered as in a queue of vehicles. Used for the predicate `PredInQueueOfVehicles`."""
+
+    max_interstate_speed_truck: float = 22.22
+    desired_interstate_velocity: float = 36.11
+
+    u_turn: float = 1.57
+
+    standstill_error: float = 0.01
+
+    min_velocity_diff: float = 15
+
+    slightly_higher_speed_difference: float = 5.55
+
+    close_to_other_vehicle: float = 0.75
+    close_to_lane_border: float = 0.2
+
+    d_sl: float = 1.0
+    d_br: float = 15.0
+    a_br: float = -1.0
+
+    a_abrupt: float = -2.0
+
+    country: str = "DEU"
+
+
+class PredicateName(str, Enum):
+    def __str__(self) -> str:
+        return self.value
+
+
+class AbstractPredicate(abc.ABC):
     """
     Base class for the predicate evaluator
     """
 
-    predicate_name = "interface"
+    predicate_name: PredicateName
+    arity: int
 
-    def __init__(self, config: CommentedMap, scaler=None):
+    def __init__(
+        self,
+        config: PredicateConfig | None = None,
+        scaler: IRobustnessScaler | None = None,
+    ) -> None:
+        if config is None:
+            config = PredicateConfig()
         self.config = config
-        self.eps = 1e-5
-        self._scaler = scaler or RobustnessScaler(
-            scale=config.setdefault("scale_rob", True)
-        )
+        self._scaler = scaler or RobustnessScaler(self.config.scale_rob)
 
     def _scale_speed(self, x):
         return self._scaler.scale_speed(x)
@@ -40,35 +100,13 @@ class BasePredicateEvaluator(abc.ABC):
     def _scale_angle(self, x):
         return self._scaler.scale_angle(x)
 
-    def evaluate_boolean(self, world: World, time_step, vehicle_ids: List[int]) -> bool:
+    def evaluate_boolean(self, world: World, time_step: int, vehicle_ids: tuple[int, ...]) -> bool:
         return self.evaluate_robustness(world, time_step, vehicle_ids) >= 0.0
 
     @abc.abstractmethod
     def evaluate_robustness(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-        pass
-
-    def evaluate_robustness_with_cache(
-        self, world: World, time_step, vehicle_ids: List[int]
-    ) -> float:
-        vehicle = world.vehicle_by_id(vehicle_ids[0])
-        vehicle_ids_tuple = tuple(vehicle_ids)
-        value = vehicle.predicate_cache.get_robustness(
-            time_step, self.predicate_name, vehicle_ids_tuple[1:]
-        )
-        if value is None:
-            logger.debug(
-                "Evaluating predicate %s , t=%d, ids=%s",
-                self.predicate_name,
-                time_step,
-                vehicle_ids_tuple,
-            )
-            value = self.evaluate_robustness(world, time_step, vehicle_ids)
-            vehicle.predicate_cache.set_robustness(
-                time_step, self.predicate_name, vehicle_ids_tuple[1:], value
-            )
-        return value
+        self, world: World, time_step: int, vehicle_ids: tuple[int, ...]
+    ) -> float: ...
 
     def visualize(
         self,
@@ -93,9 +131,9 @@ class BasePredicateEvaluator(abc.ABC):
         time_step: int,
         predicate_names2vehicle_ids2values: Dict[str, Dict[Tuple[int, ...], float]],
     ):
-        predicate_names2vehicle_ids2values[self.predicate_name][
-            tuple(vehicle_ids)
-        ] = self.evaluate_robustness_with_cache(world, time_step, vehicle_ids)
+        predicate_names2vehicle_ids2values[self.predicate_name][tuple(vehicle_ids)] = (
+            self.evaluate_robustness(world, time_step, vehicle_ids)
+        )
 
     @staticmethod
     def plot_predicate_visualization_legend(ax):

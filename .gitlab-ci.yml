@@ -1,29 +1,48 @@
-image: python:3.8
+image: python:3.10
 
 variables:
+  # Change pip's cache directory to be inside the project directory since we can only cache local items.
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: normal
 
 cache:
   paths:
-  - .venv
+    # Cache the poetry installation for all jobs.
+    # We could also cache all project dependencies, but the up-/download of the cache takes longer than installing only the relevant dependencies in each job.
+    - .cache/pip
 
 stages:
-- style
-- test
-- deploy
+  - style
+  # test-unit runs simple unit tests which are quickly executed.
+  - test-unit
+  # test-integration runs more complex integration tests, e.g. rule evaluation which is quite resources intensive.
+  - test-integration
+  - deploy
 
-before_script:
-- pip install poetry
-- poetry config virtualenvs.in-project true
-- poetry install --with test
-- source .venv/bin/activate
+before_script: &default_before_script
+  - pip install poetry
+  - poetry config virtualenvs.in-project true
+  - poetry config system-git-client true
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
 
-unittest:
-  stage: test
+
+pre_commit:
+  stage: style
+  before_script:
+    - *default_before_script
+    - poetry install --extras dev
   script:
-  - coverage run --source=./crmonitor -m unittest discover tests
-  - coverage report -m || true
-  - coverage xml
+    - poetry run pre-commit run --all-files --show-diff-on-failure
+
+test_python_unit:
+  stage: test-unit
+  before_script:
+    - *default_before_script
+    - poetry install --extras test
+  script:
+    - poetry run coverage run --source=./crmonitor -m pytest tests/unit
+    - poetry run coverage report -m || true
+    - poetry run coverage xml
   coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
   artifacts:
     reports:
@@ -31,56 +50,56 @@ unittest:
         coverage_format: cobertura
         path: coverage.xml
 
-
-flake8:
-  stage: style
-  needs: []
-  image: python:3.8-buster
-  before_script: []
-  cache: []
-  allow_failure: true
+test_python_integration:
+  stage: test-integration
+  before_script:
+    - *default_before_script
+    - poetry install --extras test
   script:
-  - pip install flake8 flake8-todo
-  - flake8 crmonitor
+    - poetry run coverage run --source=./crmonitor -m pytest tests/integration
+    - poetry run coverage report -m || true
+    - poetry run coverage xml
+  coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
-black:
-  stage: style
-  needs: []
-  image: pyfound/black:23.1.0
-  before_script: []
-  cache: []
-  script:
-  - black --check --verbose --diff --color crmonitor
-  - black --check --verbose --diff --color tests
-
-deploy_master:
+build_and_push_to_pypi_test:
   stage: deploy
-  script:
-  - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
-  - poetry build
-  - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
+  when: manual
   only:
-  - master
-  except:
-  - tags
-
-
-sphinx:
-  stage: test
-  needs: []
+    - main
   script:
-  - poetry install --with doc
-  - cd docs/source && sphinx-build -b html -W . ../build
+    - poetry config repositories.test https://test.pypi.org/legacy/
+    - poetry build
+    - poetry publish --repository test -u __token__ -p ${CR_PYPI_TEST_API_TOKEN}
+
+build_and_push_to_pypi_release:
+  stage: deploy
+  when: manual
+  only:
+    - main
+  script:
+    - poetry build
+    - poetry publish -u __token__ -p ${CR_PYPI_RELEASE_API_TOKEN}
 
 pages:
+  # push the latest documentation of the develop branch to the Gitlab pages.
+  # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor
   stage: deploy
-  needs:
-  - sphinx
+  only:
+    - main
+  publish: site
+  before_script:
+    - *default_before_script
+    - poetry install --extras docs
   script:
-  - poetry install --with doc
-  - cd docs/source && sphinx-build -b html . ../../public
+    - poetry run mkdocs build
   artifacts:
     paths:
-    - public
-  only:
-  - development
+      - site
+  environment:
+    name: Gitlab Pages
+    url: https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor

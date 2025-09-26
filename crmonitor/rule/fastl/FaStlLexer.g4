@@ -13,9 +13,27 @@ FORALL
 VEHICLE
     : 'a' ;
 
+SigmoidOperator
+    : 'sigmoid' ;
+
+HistoricallyDurationOperator
+	: 'historicallyDuration' ;
+
+HistoricallyDurationSeverityOperator
+	: 'historicallyDurationSeverity' ;
+
+SumIfPositiveOperator
+	: 'sum_if_positive' ;
+
+CompareToThresholdScaledOperator
+	: 'compare_to_threshold_scaled' ;
+
+ExistsMultipleOperator
+	: 'exists_multiple' ;
+
 // Preserve whitespace
 WHITESPACE
 	: [ \t\r\u000C]+ -> channel(HIDDEN) ;
 
-IO_TYPE_INPUT
-	: '_i';
+IO_TYPE
+	: ('_i' | '_x');

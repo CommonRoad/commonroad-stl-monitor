@@ -4,27 +4,44 @@ from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
+from typing_extensions import override
 
 
 class IRobustnessScaler(metaclass=ABCMeta):
+    @property
     @abstractmethod
-    def scale_speed(self, x):
+    def max(self) -> float:
+        """
+        The maximum robustness value. Should be used for clipping and as default value, instead of hardcoding.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def min(self) -> float:
+        """
+        The minimal robustness value. Should be used for clipping and as default value, instead of hardcoding.
+        """
+        ...
+
+    @abstractmethod
+    def scale_speed(self, x: float) -> float:
         pass
 
     @abstractmethod
-    def scale_acc(self, x):
+    def scale_acc(self, x: float) -> float:
         pass
 
     @abstractmethod
-    def scale_lon_dist(self, x):
+    def scale_lon_dist(self, x: float) -> float:
         pass
 
     @abstractmethod
-    def scale_lat_dist(self, x):
+    def scale_lat_dist(self, x: float) -> float:
         pass
 
     @abstractmethod
-    def scale_angle(self, x):
+    def scale_angle(self, x: float) -> float:
         pass
 
 
@@ -46,20 +63,35 @@ class RobustnessScaler(IRobustnessScaler):
         self._scale_constants = scale_constants or RobustnessScalingConstants()
         self.scale = scale
 
-    def _scale(self, x, max_value):
-        return np.clip(x / max_value, -1.0, 1.0) if self.scale else x
+    def _scale(self, x: float, max_value: float) -> float:
+        return np.clip(x / max_value, self.min, self.max) if self.scale else x
 
-    def scale_speed(self, x):
+    @property
+    @override
+    def max(self) -> float:
+        return 1.0 if self.scale else float("inf")
+
+    @property
+    @override
+    def min(self) -> float:
+        return -1.0 if self.scale else float("-inf")
+
+    @override
+    def scale_speed(self, x: float) -> float:
         return self._scale(x, self._scale_constants.MAX_SPEED)
 
-    def scale_acc(self, x):
+    @override
+    def scale_acc(self, x: float) -> float:
         return self._scale(x, self._scale_constants.MAX_ACC)
 
-    def scale_lon_dist(self, x):
+    @override
+    def scale_lon_dist(self, x: float) -> float:
         return self._scale(x, self._scale_constants.MAX_LONG_DIST)
 
-    def scale_lat_dist(self, x):
+    @override
+    def scale_lat_dist(self, x: float) -> float:
         return self._scale(x, self._scale_constants.MAX_LAT_DIST)
 
-    def scale_angle(self, x):
+    @override
+    def scale_angle(self, x: float) -> float:
         return self._scale(x, self._scale_constants.MAX_ANGLE)

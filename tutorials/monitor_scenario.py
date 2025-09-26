@@ -1,5 +1,4 @@
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from crmonitor.common.world import World
 from crmonitor.evaluation.evaluation import RuleEvaluator
 
@@ -16,7 +15,7 @@ world = World.create_from_scenario(scenario)
 # Create a rule evaluator
 # Provide the vehicle to evaluate traffic rules for as ego vehicle
 ego_vehicle = next(iter(world.vehicles))
-rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
+rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle.id)
 
 # Either step through time steps sequentially
 robustness = rule_evaluator.update()
@@ -29,8 +28,9 @@ predicate_robustness = rule_evaluator.get_predicates()
 robustness_array = rule_evaluator.evaluate()
 
 rule_evaluator.reset(ego_vehicle, world)
+print(robustness_array)
 
-nodedicts = rule_evaluator.get_node_dicts()
-
-for n in nodedicts:
-    print(n)
+# nodedicts = rule_evaluator.get_node_dicts()
+#
+# for n in nodedicts:
+#     print(n)

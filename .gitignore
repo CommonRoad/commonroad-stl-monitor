@@ -9,6 +9,9 @@
 *.aux
 *.log
 
+# antlr4
+*.interp
+
 # PyCharm
 __pycache__
 .idea
@@ -26,3 +29,4 @@ build
 # binaries
 *.so
 
+output/
