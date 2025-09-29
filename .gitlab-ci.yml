@@ -70,7 +70,7 @@ build_and_push_to_pypi_test:
   stage: deploy
   when: manual
   only:
-    - main
+    - master
   script:
     - poetry config repositories.test https://test.pypi.org/legacy/
     - poetry build
@@ -80,7 +80,7 @@ build_and_push_to_pypi_release:
   stage: deploy
   when: manual
   only:
-    - main
+    - master
   script:
     - poetry build
     - poetry publish -u __token__ -p ${CR_PYPI_RELEASE_API_TOKEN}
@@ -90,7 +90,7 @@ pages:
   # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor
   stage: deploy
   only:
-    - main
+    - master
   publish: site
   before_script:
     - *default_before_script
