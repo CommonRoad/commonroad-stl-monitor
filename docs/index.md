@@ -5,4 +5,4 @@
 [![PyPI download month](https://img.shields.io/pypi/dm/commonroad-stl-monitor.svg?label=PyPI%20downloads)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
 [![PyPI license](https://img.shields.io/pypi/l/commonroad-stl-monitor.svg)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
 
-The CommonRoad STL Monitor is a toolbox to evaluate the robustness of traffic rules on interstate and intersection CommonRoad scenarios.
+CommonRoad STL Monitor is a toolbox to evaluate the robustness of model-free and model-predictive robustness on CommonRoad scenarios using signal temporal logic.

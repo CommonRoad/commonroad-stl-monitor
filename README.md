@@ -1,87 +1,54 @@
+# CommonRoad STL Monitor
+
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/commonroad-stl-monitor.svg)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
+[![PyPI version fury.io](https://badge.fury.io/py/commonroad-stl-monitor.svg)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
+[![PyPI download month](https://img.shields.io/pypi/dm/commonroad-stl-monitor.svg?label=PyPI%20downloads)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
+[![PyPI license](https://img.shields.io/pypi/l/commonroad-stl-monitor.svg)](https://pypi.python.org/pypi/commonroad-stl-monitor/)
+
+CommonRoad STL Monitor is a toolbox to evaluate the robustness of model-free and model-predictive robustness on CommonRoad scenarios using signal temporal logic.
+
 # Getting Started
 
-## Toolbox installation
+## Installation
 
-The toolbox is installable as a regular pypi package. However, it is currently not available under the public index.
-
-Installation by:
+The toolbox is installable as a regular PyPI package:
 
 ```bash
-pip install git+git@gitlab.lrz.de:cps/commonroad-stl-monitor
-```
-
-
-## Development setup
-
-This project uses [poetry](https://python-poetry.org/) for the python environment and dependency management.
-
-You can set up your development environment using poetry:
-```bash
-$ poetry install --extras dev
-$ poetry run pre-commit install
+pip install commonroad-stl-monitor
 ```
 
 Additionally, you can install extras like `visualization` to enable advanced AST visualizations. The visualization requires a working `graphiz` installation, which you should be able to source from your distros package registry.
-```bash
-$ poetry install --extras visualization
-```
-
-## Run the tests
 
 ```bash
-$ poetry install --extras test
-$ cd crmonitor/tests
-$ python -m unittest
+pip install commonroad-stl-monitor[visualization]
 ```
 
-## Getting Started
-Checkout the minimum working example at `tutorials/monitor_scenario.py`
+## Example Usage
 
 ```python
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from crmonitor.common.world import World
-from crmonitor.evaluation.evaluation import RuleEvaluator
+from crmonitor.common import World
+from crmonitor.evaluation import OfflineRuleEvaluator
 
 scenario_path = "../scenarios/test_interstate/DEU_test_safe_distance.xml"
 
 # Open the scenario
-# Make sure to call with lanelet_assignment=True
-scenario, _ = CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+scenario, _ = CommonRoadFileReader(scenario_path)
 
 # Create a world state, which is a holder class for intermediate results produced by the monitoring.
 # Use the convenience class method to create with default configuration from a scenario.
 world = World.create_from_scenario(scenario)
 
-# Create a rule evaluator
-# Provide the vehicle to evaluate traffic rules for as ego vehicle
+# Create a rule evaluator for the traffic rule 'R_G1'
+rule_evaluator = OfflineRuleEvaluator.create_for_rule("R_G1", dt=world.dt)
+
+
 ego_vehicle = next(iter(world.vehicles))
-rule_evaluator = RuleEvaluator.create_from_config(world, ego_vehicle)
-
-# Either step through time steps sequentially
-robustness = rule_evaluator.update()
-current_time_step = rule_evaluator.current_time
-
-# Also all predicate robustness values are available
-predicate_robustness = rule_evaluator.get_predicates()
-
-# Or evaluate for all time steps of the vehicle
-robustness_array = rule_evaluator.evaluate()
+# Evaluate the robustness across the whole time frame the ego vehicle is defined.
+robustness = rule_evaluator.evaluate(world, ego_vehicle.vehicle_id)
 ```
 
-# Concepts
+## Documentation
 
-## Visitors
-
-We view rules as abstract syntax trees (AST) which can be traversed by visitor objects. The AST has the following node types:
-
-* Predicate node: A single predicate in a rule. This node does not have any descendants (leaf).
-* Rule node: A simple temporal logic rule containing temporal and boolean operators. Its descendants are the predicates
-it contains.
-* For-all node: A temporal logic rule `A o: r(o)` where an object is bound by a for-all quantifier. This is merely syntactic sugar for:
-`r(o_1) and r(o_2) and ... r(o_n)` where `o` are objects from a finite set and `r` is the rule.
-* Exists node: A temporal logic rule `E o: r(o)` where an object is bound by an existential quantifier. This is merely syntactic sugar for:
-`r(o_1) or r(o_2) or ... r(o_n)` where `o` are objects from a finite set and `r` is the rule.
-
-The rule strings are parsed into the AST. The nodes itself in the AST are not functional, but they encode the type of each node.
-Functional copies of the AST can be created with other visitors e.g. `MonitorCreationRuleTreeVisitor`.
+The full documentation can be found at [cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor](https://cps.pages.gitlab.lrz.de/commonroad/commonroad-stl-monitor/).

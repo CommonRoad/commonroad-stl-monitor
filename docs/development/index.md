@@ -8,6 +8,8 @@ To get started with development, install the necessary dependencies:
 $ poetry install --extras test --extras dev --extras visualization --extras docs
 ```
 
+Additionally, you can install extras like `visualization` to enable advanced AST visualizations. The visualization requires a working `graphiz` installation, which you should be able to source from your distros package registry.
+
 ## Tests
 
 To run the tests you can use:
