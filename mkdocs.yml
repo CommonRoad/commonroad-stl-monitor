@@ -8,7 +8,9 @@ nav:
     - api/rule.md
     - api/common.md
     - api/mpr.md
-  - development.md
+  - Development:
+    - development/index.md
+    - development/visitors.md
 theme:
   name: material
   logo: img/commonroad_white150.png
