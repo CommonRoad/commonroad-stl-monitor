@@ -188,12 +188,31 @@ class CurvilinearVehicleTrajectory:
         dt: float,
         lane: Lane,
     ) -> Self:
-        curvilinear_coords = np.array(
-            [lane.convert_to_curvilinear_coords(*state.position) for state in state_list]
-        )
+        s_list = []
+        d_list = []
+        theta_list = []
 
-        s = curvilinear_coords.T[0]
-        d = curvilinear_coords.T[1]
+        for state in state_list:
+            try:
+                s_i, d_i = lane.convert_to_curvilinear_coords(*state.position)
+
+                theta_cl = lane.orientation(s_i) % (2 * math.pi)
+                orientation = state.orientation % (2 * math.pi)
+                theta_i = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
+
+            except ValueError:
+                # for state outside the projection domain, use nan for state elements
+                s_i = np.nan
+                d_i = np.nan
+                theta_i = np.nan
+
+            s_list.append(s_i)
+            d_list.append(d_i)
+            theta_list.append(theta_i)
+
+        s = np.array(s_list, dtype=float)
+        d = np.array(d_list, dtype=float)
+        theta = np.array(theta_list, dtype=float)
 
         v = np.array([state.velocity for state in state_list])
 
@@ -201,15 +220,15 @@ class CurvilinearVehicleTrajectory:
         if all(state.has_value("acceleration") for state in state_list):
             a = np.array([state.acceleration for state in state_list])
 
-        thetas = []
-        for i, state in enumerate(state_list):
-            theta_cl = lane.orientation(s[i]) % (2 * math.pi)
-            orientation = state.orientation % (2 * math.pi)
-            theta = (orientation - theta_cl + math.pi) % (2 * math.pi) - math.pi
-            thetas.append(theta)
-
         return cls(
-            initial_time_step, final_time_step, dt=dt, s=s, d=d, v=v, a=a, theta=np.array(thetas)
+            initial_time_step,
+            final_time_step,
+            dt=dt,
+            s=s,
+            d=d,
+            v=v,
+            a=a,
+            theta=theta,
         )
 
     def _time_step_to_index(self, time_step: int) -> int:
@@ -599,6 +618,7 @@ class Vehicle:
         length = self.shape.length
         theta = curvi_trajectory.theta(time_step)
         rear_s = np.min(calc_s(center_s, width, length, theta))
+        assert rear_s != np.nan, "rear_s returns nan"
         return rear_s
 
     def front_s(self, time_step: int, lane: Lane | None = None) -> float:
@@ -619,6 +639,7 @@ class Vehicle:
         length = self.shape.length
         theta = curvi_trajectory.theta(time_step)
         front_s = np.max(calc_s(center_s, width, length, theta))
+        assert front_s != np.nan, "front_s returns nan"
         return front_s
 
     def left_d(self, time_step: int, lane: Lane | None = None) -> float:
@@ -900,6 +921,7 @@ class Vehicle:
             attributes = goal["attributes"]
             end_position = goal["end_position"]
             end_orientation = goal["end_orientation"]
+        replanned_route = None
         try:
             routes = self._route_planner(initial_state, attributes, road_network)
             route = routes[0]
@@ -916,7 +938,11 @@ class Vehicle:
         ref_path_lanes = self._initial_ref_path_lane(road_network, lanelets_leading_to_goal)
         # if no reference lane is found, replan the route
         while len(ref_path_lanes) == 0 and route is not None:
-            route = next(replanned_route)
+            if replanned_route is None:
+                replanned_route = self._replan_route(
+                    initial_state, end_position, end_orientation, attributes, road_network
+                )
+            route = next(replanned_route)[0]
             lanelets_leading_to_goal = self._extend_route_plan(route.lanelet_ids, road_network)
             ref_path_lanes = self._initial_ref_path_lane(road_network, lanelets_leading_to_goal)
         # get properties from reference lane

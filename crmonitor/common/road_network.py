@@ -76,10 +76,14 @@ class VariableStepCurvilinearCoordinateSystem:
         clcs = cls._create_variable_step_clcs_from_reference(
             new_ref_path, road_network_param.polyline_resampling_step, road_network_param
         )
-
-        clcs_large_step = cls._create_variable_step_clcs_from_reference(
-            new_ref_path, road_network_param.large_resampling_step, road_network_param
-        )
+        try:
+            clcs_large_step = cls._create_variable_step_clcs_from_reference(
+                new_ref_path, road_network_param.large_resampling_step, road_network_param
+            )
+        except AssertionError:
+            clcs_large_step = cls._create_variable_step_clcs_from_reference(
+                new_ref_path, road_network_param.polyline_resampling_step, road_network_param
+            )
 
         return cls(clcs, clcs_large_step)
 
@@ -760,7 +764,7 @@ class RoadNetwork:
                     subset_find = False
             if not subset_find:
                 selected_lanes.append(lane)
-        return selected_lanes[0]
+        return selected_lanes[0] if len(selected_lanes) > 0 else None
 
     def get_lanelets_start_end_s(
         self, lanelets_id: "Union[List, Set]", reference_lane: "Lane"
@@ -786,9 +790,9 @@ class RoadNetwork:
         """
         Finds adjacent lanelets by given lanelets
 
-        :param lanelets_id: list of IDs of given lanelets
+        :param lanelets_id: set of IDs of given lanelets
         """
-        for lanelet_id in lanelets_id:
+        for lanelet_id in list(lanelets_id):
             la = self.lanelet_network.find_lanelet_by_id(lanelet_id)
             while la is not None and la.adj_left is not None:
                 if la.adj_left_same_direction:

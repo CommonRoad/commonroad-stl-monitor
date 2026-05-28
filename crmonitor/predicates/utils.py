@@ -472,7 +472,9 @@ def get_right_turning_lane_by_lanelets(
     searched incoming
     """
     for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
-        if lanes_incoming[0].contained_lanelets.intersection(lanelets_id):
+        if lanes_incoming[0] is not None and lanes_incoming[0].contained_lanelets.intersection(
+            lanelets_id
+        ):
             return road_network.incoming[incoming_id], lanes_incoming[0]
     return None, None
 
@@ -485,6 +487,8 @@ def get_left_turning_lane_by_lanelets(
     searched incoming
     """
     for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
+        if lanes_incoming[2] is None:
+            break
         if lanes_incoming[2].contained_lanelets.intersection(lanelets_id):
             return road_network.incoming[incoming_id], lanes_incoming[2]
     return None, None
@@ -498,6 +502,8 @@ def get_straight_going_lane_by_lanelets(
     searched incoming
     """
     for incoming_id, lanes_incoming in road_network.lanes_incoming.items():
+        if lanes_incoming[1] is None:
+            break
         if lanes_incoming[1].contained_lanelets.intersection(lanelets_id):
             return road_network.incoming[incoming_id], lanes_incoming[1]
     return None, None
@@ -512,9 +518,14 @@ def get_lanelets_start_s(
     lanelets_start_s = np.inf
     for lanelet_id in lanelets_ids:
         lanelet = road_network.lanelet_network.find_lanelet_by_id(lanelet_id)
-        start_s = reference_lane.clcs.convert_to_curvilinear_coords(
-            *get_lanelet_start_line(lanelet)[0]
-        )[0]
+        try:
+            start_s = reference_lane.clcs.convert_to_curvilinear_coords(
+                *get_lanelet_start_line(lanelet)[0]
+            )[0]
+        except ValueError:
+            start_s = reference_lane.clcs.convert_to_curvilinear_coords(
+                *get_lanelet_start_line(lanelet)[1]
+            )[0]
         lanelets_start_s = min(lanelets_start_s, start_s)
     return lanelets_start_s
 
